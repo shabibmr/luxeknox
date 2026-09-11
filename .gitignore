@@ -19,3 +19,6 @@ build/
 .env
 .env.local
 *.log
+
+# Local ignore directory
+.ignore/
