@@ -1,0 +1,27 @@
+import 'package:test/test.dart';
+import 'package:api_client/api_client.dart';
+
+// tests for LoginRequest
+void main() {
+  final instance = LoginRequestBuilder();
+  // TODO add properties to the builder and call build()
+
+  group(LoginRequest, () {
+    // String email
+    test('to test the property `email`', () async {
+      // TODO
+    });
+
+    // E.164
+    // String phoneNumber
+    test('to test the property `phoneNumber`', () async {
+      // TODO
+    });
+
+    // String password
+    test('to test the property `password`', () async {
+      // TODO
+    });
+
+  });
+}

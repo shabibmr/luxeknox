@@ -1,0 +1,228 @@
+import { sql } from 'drizzle-orm';
+import type { DrizzleDb } from '../client';
+import { roles } from '../schema/roles';
+import { permissions } from '../schema/permissions';
+import { rolePermissions } from '../schema/role-permissions';
+
+export interface SystemRoleDefinition {
+  slug: string;
+  name: string;
+  description: string;
+  permissionSlugs: readonly string[] | 'all';
+}
+
+export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
+  {
+    slug: 'super_admin',
+    name: 'Super Admin',
+    description: 'System owner with full unrestricted access to all modules and configurations',
+    permissionSlugs: 'all',
+  },
+  {
+    slug: 'admin',
+    name: 'Admin / Manager',
+    description: 'Operational manager with access to operations, reports, staff, and settings',
+    permissionSlugs: [
+      'auth.login',
+      'auth.logout',
+      'auth.session_read',
+      'auth.session_revoke',
+      'rbac.roles_read',
+      'rbac.permissions_read',
+      'members.read',
+      'members.write',
+      'trainers.read',
+      'trainers.write',
+      'employees.read',
+      'employees.write',
+      'health.read',
+      'health.write',
+      'health.pii_read',
+      'memberships.read',
+      'memberships.write',
+      'memberships.freeze',
+      'memberships.extend',
+      'schedules.read',
+      'schedules.write',
+      'schedules.book',
+      'schedules.cancel',
+      'attendance.read',
+      'attendance.checkin',
+      'attendance.checkout',
+      'attendance.override',
+      'attendance.ingest',
+      'payments.read',
+      'payments.create',
+      'payments.refund',
+      'payments.pos',
+      'workouts.read',
+      'workouts.write',
+      'workouts.templates_write',
+      'exercises.read',
+      'exercises.create',
+      'exercises.update',
+      'diets.read',
+      'diets.write',
+      'diets.templates_write',
+      'goals.read',
+      'goals.write',
+      'notifications.read',
+      'notifications.send',
+      'dashboard.admin',
+      'reports.read',
+      'reports.export',
+      'settings.read',
+      'audit.read',
+      'media.read',
+      'media.write',
+    ],
+  },
+  {
+    slug: 'trainer',
+    name: 'Trainer',
+    description: 'Fitness trainer managing assigned clients, workout/diet plans, schedules, and progress',
+    permissionSlugs: [
+      'auth.login',
+      'auth.logout',
+      'members.read',
+      'trainers.read',
+      'health.read',
+      'schedules.read',
+      'schedules.write',
+      'schedules.book',
+      'schedules.cancel',
+      'attendance.read',
+      'attendance.checkin',
+      'workouts.read',
+      'workouts.write',
+      'workouts.templates_write',
+      'exercises.read',
+      'diets.read',
+      'diets.write',
+      'diets.templates_write',
+      'goals.read',
+      'goals.write',
+      'notifications.read',
+      'dashboard.trainer',
+      'media.read',
+      'media.write',
+    ],
+  },
+  {
+    slug: 'employee',
+    name: 'Employee / Front Desk',
+    description: 'Staff member managing front desk, attendance, bookings, and POS transactions',
+    permissionSlugs: [
+      'auth.login',
+      'auth.logout',
+      'members.read',
+      'members.write',
+      'trainers.read',
+      'memberships.read',
+      'schedules.read',
+      'schedules.book',
+      'schedules.cancel',
+      'attendance.read',
+      'attendance.checkin',
+      'attendance.checkout',
+      'payments.read',
+      'payments.create',
+      'payments.pos',
+      'notifications.read',
+      'media.read',
+    ],
+  },
+  {
+    slug: 'member',
+    name: 'Member',
+    description: 'Gym member accessing personal profile, classes, workouts, diets, and goals',
+    permissionSlugs: [
+      'auth.login',
+      'auth.logout',
+      'members.read',
+      'trainers.read',
+      'health.read',
+      'health.write',
+      'memberships.read',
+      'schedules.read',
+      'schedules.book',
+      'schedules.cancel',
+      'attendance.read',
+      'payments.read',
+      'workouts.read',
+      'workouts.write',
+      'exercises.read',
+      'diets.read',
+      'diets.write',
+      'goals.read',
+      'goals.write',
+      'notifications.read',
+      'dashboard.member',
+      'media.read',
+      'media.write',
+    ],
+  },
+] as const;
+
+/**
+ * Seeds system roles and their permission mappings idempotently.
+ */
+export async function seedRoles(db: DrizzleDb<any>): Promise<void> {
+  const now = new Date();
+
+  // 1. Insert or update system roles
+  for (const roleDef of SYSTEM_ROLES) {
+    await db
+      .insert(roles)
+      .values({
+        name: roleDef.name,
+        slug: roleDef.slug,
+        description: roleDef.description,
+        is_system: true,
+        created_at: now,
+        updated_at: now,
+      })
+      .onDuplicateKeyUpdate({
+        set: {
+          name: sql`VALUES(\`name\`)`,
+          description: sql`VALUES(\`description\`)`,
+          is_system: true,
+          updated_at: now,
+        },
+      });
+  }
+
+  // 2. Fetch all roles and permissions from DB
+  const allRoles = await db.select().from(roles);
+  const allPerms = await db.select().from(permissions);
+
+  const roleBySlug = new Map(allRoles.map((r) => [r.slug, r]));
+  const permBySlug = new Map(allPerms.map((p) => [p.slug, p]));
+
+  // 3. Link role_permissions
+  for (const roleDef of SYSTEM_ROLES) {
+    const roleRecord = roleBySlug.get(roleDef.slug);
+    if (!roleRecord) continue;
+
+    let targetPerms = allPerms;
+    if (roleDef.permissionSlugs !== 'all') {
+      const allowed = new Set(roleDef.permissionSlugs as readonly string[]);
+      targetPerms = allPerms.filter((p) => allowed.has(p.slug));
+    }
+
+    for (const perm of targetPerms) {
+      await db
+        .insert(rolePermissions)
+        .values({
+          role_id: roleRecord.id,
+          permission_id: perm.id,
+          created_at: now,
+        })
+        .onDuplicateKeyUpdate({
+          set: {
+            role_id: sql`VALUES(\`role_id\`)`,
+          },
+        });
+    }
+  }
+}

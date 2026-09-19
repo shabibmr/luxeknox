@@ -1,0 +1,204 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'member_create.dart';
+
+// **************************************************************************
+// BuiltValueGenerator
+// **************************************************************************
+
+class _$MemberCreate extends MemberCreate {
+  @override
+  final String? email;
+  @override
+  final String? phoneNumber;
+  @override
+  final String? password;
+  @override
+  final String firstName;
+  @override
+  final String lastName;
+  @override
+  final String? gender;
+  @override
+  final Date? dateOfBirth;
+  @override
+  final String? address;
+  @override
+  final int? assignedTrainerId;
+  @override
+  final String? notes;
+
+  factory _$MemberCreate([void Function(MemberCreateBuilder)? updates]) =>
+      (MemberCreateBuilder()..update(updates))._build();
+
+  _$MemberCreate._(
+      {this.email,
+      this.phoneNumber,
+      this.password,
+      required this.firstName,
+      required this.lastName,
+      this.gender,
+      this.dateOfBirth,
+      this.address,
+      this.assignedTrainerId,
+      this.notes})
+      : super._();
+  @override
+  MemberCreate rebuild(void Function(MemberCreateBuilder) updates) =>
+      (toBuilder()..update(updates)).build();
+
+  @override
+  MemberCreateBuilder toBuilder() => MemberCreateBuilder()..replace(this);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(other, this)) return true;
+    return other is MemberCreate &&
+        email == other.email &&
+        phoneNumber == other.phoneNumber &&
+        password == other.password &&
+        firstName == other.firstName &&
+        lastName == other.lastName &&
+        gender == other.gender &&
+        dateOfBirth == other.dateOfBirth &&
+        address == other.address &&
+        assignedTrainerId == other.assignedTrainerId &&
+        notes == other.notes;
+  }
+
+  @override
+  int get hashCode {
+    var _$hash = 0;
+    _$hash = $jc(_$hash, email.hashCode);
+    _$hash = $jc(_$hash, phoneNumber.hashCode);
+    _$hash = $jc(_$hash, password.hashCode);
+    _$hash = $jc(_$hash, firstName.hashCode);
+    _$hash = $jc(_$hash, lastName.hashCode);
+    _$hash = $jc(_$hash, gender.hashCode);
+    _$hash = $jc(_$hash, dateOfBirth.hashCode);
+    _$hash = $jc(_$hash, address.hashCode);
+    _$hash = $jc(_$hash, assignedTrainerId.hashCode);
+    _$hash = $jc(_$hash, notes.hashCode);
+    _$hash = $jf(_$hash);
+    return _$hash;
+  }
+
+  @override
+  String toString() {
+    return (newBuiltValueToStringHelper(r'MemberCreate')
+          ..add('email', email)
+          ..add('phoneNumber', phoneNumber)
+          ..add('password', password)
+          ..add('firstName', firstName)
+          ..add('lastName', lastName)
+          ..add('gender', gender)
+          ..add('dateOfBirth', dateOfBirth)
+          ..add('address', address)
+          ..add('assignedTrainerId', assignedTrainerId)
+          ..add('notes', notes))
+        .toString();
+  }
+}
+
+class MemberCreateBuilder
+    implements Builder<MemberCreate, MemberCreateBuilder> {
+  _$MemberCreate? _$v;
+
+  String? _email;
+  String? get email => _$this._email;
+  set email(String? email) => _$this._email = email;
+
+  String? _phoneNumber;
+  String? get phoneNumber => _$this._phoneNumber;
+  set phoneNumber(String? phoneNumber) => _$this._phoneNumber = phoneNumber;
+
+  String? _password;
+  String? get password => _$this._password;
+  set password(String? password) => _$this._password = password;
+
+  String? _firstName;
+  String? get firstName => _$this._firstName;
+  set firstName(String? firstName) => _$this._firstName = firstName;
+
+  String? _lastName;
+  String? get lastName => _$this._lastName;
+  set lastName(String? lastName) => _$this._lastName = lastName;
+
+  String? _gender;
+  String? get gender => _$this._gender;
+  set gender(String? gender) => _$this._gender = gender;
+
+  Date? _dateOfBirth;
+  Date? get dateOfBirth => _$this._dateOfBirth;
+  set dateOfBirth(Date? dateOfBirth) => _$this._dateOfBirth = dateOfBirth;
+
+  String? _address;
+  String? get address => _$this._address;
+  set address(String? address) => _$this._address = address;
+
+  int? _assignedTrainerId;
+  int? get assignedTrainerId => _$this._assignedTrainerId;
+  set assignedTrainerId(int? assignedTrainerId) =>
+      _$this._assignedTrainerId = assignedTrainerId;
+
+  String? _notes;
+  String? get notes => _$this._notes;
+  set notes(String? notes) => _$this._notes = notes;
+
+  MemberCreateBuilder() {
+    MemberCreate._defaults(this);
+  }
+
+  MemberCreateBuilder get _$this {
+    final $v = _$v;
+    if ($v != null) {
+      _email = $v.email;
+      _phoneNumber = $v.phoneNumber;
+      _password = $v.password;
+      _firstName = $v.firstName;
+      _lastName = $v.lastName;
+      _gender = $v.gender;
+      _dateOfBirth = $v.dateOfBirth;
+      _address = $v.address;
+      _assignedTrainerId = $v.assignedTrainerId;
+      _notes = $v.notes;
+      _$v = null;
+    }
+    return this;
+  }
+
+  @override
+  void replace(MemberCreate other) {
+    _$v = other as _$MemberCreate;
+  }
+
+  @override
+  void update(void Function(MemberCreateBuilder)? updates) {
+    if (updates != null) updates(this);
+  }
+
+  @override
+  MemberCreate build() => _build();
+
+  _$MemberCreate _build() {
+    final _$result = _$v ??
+        _$MemberCreate._(
+          email: email,
+          phoneNumber: phoneNumber,
+          password: password,
+          firstName: BuiltValueNullFieldError.checkNotNull(
+              firstName, r'MemberCreate', 'firstName'),
+          lastName: BuiltValueNullFieldError.checkNotNull(
+              lastName, r'MemberCreate', 'lastName'),
+          gender: gender,
+          dateOfBirth: dateOfBirth,
+          address: address,
+          assignedTrainerId: assignedTrainerId,
+          notes: notes,
+        );
+    replace(_$result);
+    return _$result;
+  }
+}
+
+// ignore_for_file: deprecated_member_use_from_same_package,type=lint

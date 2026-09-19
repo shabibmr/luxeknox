@@ -1,0 +1,24 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: luxeknox-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: luxeknox
+      MYSQL_USER: luxeknox
+      MYSQL_PASSWORD: luxeknox_secret
+      MYSQL_ROOT_PASSWORD: root_secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./apps/api/docker/mysql.cnf:/etc/mysql/conf.d/custom.cnf:ro
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-proot_secret"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  mysql_data:

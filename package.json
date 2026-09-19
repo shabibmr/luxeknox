@@ -1,0 +1,17 @@
+{
+  "name": "luxeknox",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "api:dev": "pnpm --filter api start:dev",
+    "api:build": "pnpm --filter api build",
+    "api:start": "pnpm --filter api start",
+    "api:test": "pnpm --filter api test",
+    "api:test:e2e": "pnpm --filter api test:e2e",
+    "api:lint": "pnpm --filter api lint",
+    "api:typecheck": "pnpm --filter api typecheck",
+    "api:migrate": "pnpm --filter api db:migrate",
+    "api:seed": "pnpm --filter api db:seed"
+  }
+}

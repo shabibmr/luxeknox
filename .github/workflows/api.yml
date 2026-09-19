@@ -1,0 +1,79 @@
+name: API CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Lint, Typecheck, Unit & E2E
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: luxeknox
+          MYSQL_USER: luxeknox
+          MYSQL_PASSWORD: luxeknox_secret
+          MYSQL_ROOT_PASSWORD: root_secret
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -proot_secret"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      NODE_ENV: test
+      PORT: 3000
+      DATABASE_URL: mysql://luxeknox:luxeknox_secret@127.0.0.1:3306/luxeknox
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: luxeknox
+      DB_PASSWORD: luxeknox_secret
+      DB_NAME: luxeknox
+      DB_ADMIN_USER: root
+      DB_ADMIN_PASSWORD: root_secret
+      BOOTSTRAP_ADMIN_EMAIL: admin@luxeknox.com
+      BOOTSTRAP_ADMIN_PASSWORD: AdminSecurePassword123!
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm --filter api lint
+
+      - name: Typecheck
+        run: pnpm --filter api typecheck
+
+      - name: Run migrations & seed
+        run: |
+          pnpm --filter api db:migrate
+          pnpm --filter api seed
+
+      - name: Unit tests
+        run: pnpm --filter api test
+
+      - name: E2E tests
+        run: pnpm --filter api test:e2e
+
+      - name: Dump OpenAPI
+        run: pnpm --filter api openapi:dump

@@ -32,6 +32,7 @@ graph TD
     Home --> HW2[Today's Schedule]
     Home --> HW3[Attendance Summary]
     Home --> HW4[Current Workout]
+    HW4 --> HW4a[Exercise Instructions & Demo]
     Home --> HW5[Current Diet]
     Home --> HW6[Goals/Progress Summary]
     Home --> Notif[Notifications Tray]
@@ -68,6 +69,7 @@ graph TD
 * **`Home` Stack**:
   * `/home` (Dashboard root)
   * `/home/workout/active` (Workout Session live tracker)
+  * `/home/workout/exercises/:id` (Exercise instructions & demo, opened from the active workout — browse-only, per FR-WORK-002)
   * `/home/diet/meal/:id` (Meal Details)
   * `/notifications` (Notification list and detail)
 * **`Membership` Stack**:
@@ -132,6 +134,7 @@ graph TD
 
     Plans --> WPlans[Workout Plans Builder & Library]
     WPlans --> WCreate[Create / Edit Workout Plan]
+    WPlans --> WExerciseLib[Browse Exercise Library]
     WPlans --> WExercise[Add Exercises & Exercise Details]
     WPlans --> WSession[Start Live Workout Session]
     Plans --> DPlans[Diet Plans Builder & Library]
@@ -164,6 +167,7 @@ graph TD
   * `/trainer/plans/workouts/:id` (Workout plan details & exercises)
   * `/trainer/plans/diets/create` (Diet builder)
   * `/trainer/plans/diets/:id` (Diet plan details & meals)
+  * `/trainer/plans/exercises` (Browse/search exercise library, per FR-WORK-002 — search text, muscle, equipment, difficulty)
   * `/trainer/plans/exercises/:id` (Exercise instructions & demo)
 * **`Profile` Stack**:
   * `/trainer/profile` (Trainer credentials & settings)

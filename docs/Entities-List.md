@@ -1,15 +1,22 @@
 # Entities List
 
+Canonical physical names: [`database-entities.md`](./database-entities.md) (56 tables).
+
 ## 1. Master Entities
 - User
+- Session
+- Role
+- Permission
+- Role Permission
 - Employee
 - Member
 - Trainer
 - Membership Product
 - Exercise
 - Food
-- Goal Metric
+- Goal Metric *(also “Measurement Type”)*
 - Schedule Type
+- Facility
 - Notification Type
 - Gym Setting
 
@@ -28,12 +35,12 @@
 - Membership Extension
 
 ## 4. Attendance
-- Attendance
-- Attendance History
+- Attendance *(per check-in/out)*
+- Attendance History *(daily aggregate, not a scan log)*
 
 ## 5. Payments
-- Payment
-- Payment History
+- Payment *(invoice)*
+- Payment History *(tenders, refunds, adjustments)*
 - Payment Method
 - Payment Receipt
 
@@ -46,24 +53,22 @@
 ## 7. Workout
 - Workout Plan
 - Workout Plan Version
-- Workout Plan Exercise
-- Workout Session
+- Workout Plan Exercise *(on version, not plan root)*
+- Workout Session *(this is workout history)*
 - Workout Session Exercise
-- Workout History
 
 ## 8. Diet
 - Diet Plan
 - Diet Plan Version
-- Diet Plan Meal
+- Diet Plan Meal *(on version, not plan root)*
 - Diet Plan Food
 - Diet History
 
 ## 9. Goals & Progress
 - Goal
-- Goal Version / History
+- Goal History *(also “Goal Version / History”)*
 - Measurement
-- Measurement Type
-- Measurement History
+- Measurement Values *(also “Measurement History”)*
 - Progress Photo
 - Progress Note
 
@@ -73,7 +78,4 @@
 - Notification Delivery
 
 ## 11. System / Audit
-- Role
-- Permission
-- Role Permission
 - Audit Log
