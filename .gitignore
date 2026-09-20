@@ -11,6 +11,11 @@ Desktop.ini
 
 # Claude Code scratch
 .claude/scratch/
+.claude/settings.json
+.claude/settings.local.json
+
+# Local agent review notes
+.grok/
 
 # Node & Package Managers
 node_modules/
