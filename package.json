@@ -12,6 +12,8 @@
     "api:lint": "pnpm --filter api lint",
     "api:typecheck": "pnpm --filter api typecheck",
     "api:migrate": "pnpm --filter api db:migrate",
-    "api:seed": "pnpm --filter api db:seed"
+    "api:seed": "pnpm --filter api db:seed",
+    "build": "deploy/build.sh",
+    "deploy": "deploy/deploy.sh"
   }
 }
