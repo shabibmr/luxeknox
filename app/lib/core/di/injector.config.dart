@@ -38,6 +38,57 @@ import '../../features/exercises/presentation/bloc/exercise_list_bloc.dart'
     as _i757;
 import '../../features/exercises/presentation/cubit/exercise_detail_cubit.dart'
     as _i756;
+import '../../features/foods/data/datasources/food_remote_datasource.dart'
+    as _i822;
+import '../../features/foods/data/repositories/food_repository_impl.dart'
+    as _i64;
+import '../../features/foods/domain/repositories/food_repository.dart' as _i728;
+import '../../features/foods/domain/usecases/create_food_usecase.dart' as _i420;
+import '../../features/foods/domain/usecases/deactivate_food_usecase.dart'
+    as _i517;
+import '../../features/foods/domain/usecases/get_food_usecase.dart' as _i463;
+import '../../features/foods/domain/usecases/get_foods_usecase.dart' as _i687;
+import '../../features/foods/domain/usecases/update_food_usecase.dart' as _i897;
+import '../../features/foods/presentation/bloc/food_list_bloc.dart' as _i710;
+import '../../features/foods/presentation/cubit/food_detail_cubit.dart'
+    as _i168;
+import '../../features/people/domain/repositories/document_repository.dart'
+    as _i210;
+import '../../features/people/domain/repositories/people_repository.dart'
+    as _i646;
+import '../../features/people/domain/repositories/profile_repository.dart'
+    as _i121;
+import '../../features/people/domain/usecases/create_emergency_contact_usecase.dart'
+    as _i580;
+import '../../features/people/domain/usecases/create_medical_record_usecase.dart'
+    as _i525;
+import '../../features/people/domain/usecases/delete_document_usecase.dart'
+    as _i770;
+import '../../features/people/domain/usecases/delete_emergency_contact_usecase.dart'
+    as _i776;
+import '../../features/people/domain/usecases/delete_medical_record_usecase.dart'
+    as _i148;
+import '../../features/people/domain/usecases/get_health_info_usecase.dart'
+    as _i311;
+import '../../features/people/domain/usecases/get_member_usecase.dart' as _i562;
+import '../../features/people/domain/usecases/list_documents_usecase.dart'
+    as _i1023;
+import '../../features/people/domain/usecases/list_emergency_contacts_usecase.dart'
+    as _i343;
+import '../../features/people/domain/usecases/list_medical_records_usecase.dart'
+    as _i578;
+import '../../features/people/domain/usecases/list_members_usecase.dart'
+    as _i436;
+import '../../features/people/domain/usecases/update_emergency_contact_usecase.dart'
+    as _i735;
+import '../../features/people/domain/usecases/update_health_info_usecase.dart'
+    as _i62;
+import '../../features/people/domain/usecases/update_medical_record_usecase.dart'
+    as _i196;
+import '../../features/people/domain/usecases/update_member_usecase.dart'
+    as _i862;
+import '../../features/people/domain/usecases/upload_document_usecase.dart'
+    as _i438;
 import '../../session/data/datasources/session_remote_datasource.dart' as _i963;
 import '../../session/data/repositories/session_repository_impl.dart' as _i803;
 import '../../session/domain/repositories/session_repository.dart' as _i158;
@@ -48,6 +99,9 @@ import '../../session/domain/usecases/refresh_session_usecase.dart' as _i898;
 import '../../session/domain/usecases/restore_session_usecase.dart' as _i123;
 import '../../session/presentation/session_cubit.dart' as _i893;
 import '../config/app_config.dart' as _i650;
+import '../media/media_picker.dart' as _i763;
+import '../media/media_uploader.dart' as _i510;
+import '../media/signed_media_resolver.dart' as _i700;
 import '../monitoring/crash_reporter.dart' as _i668;
 import '../storage/token_storage.dart' as _i973;
 import 'register_module.dart' as _i291;
@@ -64,19 +118,87 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i558.FlutterSecureStorage>(
       () => registerModule.secureStorage,
     );
+    gh.lazySingleton<_i763.MediaPicker>(() => _i763.MediaPicker());
     gh.lazySingleton<_i668.CrashReporter>(
       () => const _i668.NoOpCrashReporter(),
     );
     gh.singleton<_i973.TokenStorage>(
       () => registerModule.tokenStorage(gh<_i558.FlutterSecureStorage>()),
     );
+    gh.lazySingleton<_i562.GetMemberUseCase>(
+      () => _i562.GetMemberUseCase(gh<_i646.PeopleRepository>()),
+    );
+    gh.lazySingleton<_i436.ListMembersUseCase>(
+      () => _i436.ListMembersUseCase(gh<_i646.PeopleRepository>()),
+    );
+    gh.lazySingleton<_i862.UpdateMemberUseCase>(
+      () => _i862.UpdateMemberUseCase(gh<_i646.PeopleRepository>()),
+    );
+    gh.lazySingleton<_i580.CreateEmergencyContactUseCase>(
+      () => _i580.CreateEmergencyContactUseCase(gh<_i121.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i525.CreateMedicalRecordUseCase>(
+      () => _i525.CreateMedicalRecordUseCase(gh<_i121.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i776.DeleteEmergencyContactUseCase>(
+      () => _i776.DeleteEmergencyContactUseCase(gh<_i121.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i148.DeleteMedicalRecordUseCase>(
+      () => _i148.DeleteMedicalRecordUseCase(gh<_i121.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i311.GetHealthInfoUseCase>(
+      () => _i311.GetHealthInfoUseCase(gh<_i121.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i343.ListEmergencyContactsUseCase>(
+      () => _i343.ListEmergencyContactsUseCase(gh<_i121.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i578.ListMedicalRecordsUseCase>(
+      () => _i578.ListMedicalRecordsUseCase(gh<_i121.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i735.UpdateEmergencyContactUseCase>(
+      () => _i735.UpdateEmergencyContactUseCase(gh<_i121.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i62.UpdateHealthInfoUseCase>(
+      () => _i62.UpdateHealthInfoUseCase(gh<_i121.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i196.UpdateMedicalRecordUseCase>(
+      () => _i196.UpdateMedicalRecordUseCase(gh<_i121.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i770.DeleteDocumentUseCase>(
+      () => _i770.DeleteDocumentUseCase(gh<_i210.DocumentRepository>()),
+    );
+    gh.lazySingleton<_i1023.ListDocumentsUseCase>(
+      () => _i1023.ListDocumentsUseCase(gh<_i210.DocumentRepository>()),
+    );
+    gh.lazySingleton<_i438.UploadDocumentUseCase>(
+      () => _i438.UploadDocumentUseCase(gh<_i210.DocumentRepository>()),
+    );
     gh.singleton<_i361.Dio>(
       () => registerModule.dio(gh<_i650.AppConfig>(), gh<_i973.TokenStorage>()),
     );
     gh.singleton<_i633.AUTHApi>(() => registerModule.authApi(gh<_i361.Dio>()));
     gh.singleton<_i633.WORKApi>(() => registerModule.workApi(gh<_i361.Dio>()));
+    gh.singleton<_i633.DIETApi>(() => registerModule.dietApi(gh<_i361.Dio>()));
+    gh.singleton<_i633.PEOPLEApi>(
+      () => registerModule.peopleApi(gh<_i361.Dio>()),
+    );
+    gh.singleton<_i633.HEALTHApi>(
+      () => registerModule.healthApi(gh<_i361.Dio>()),
+    );
+    gh.singleton<_i633.MEDIAApi>(
+      () => registerModule.mediaApi(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i963.SessionRemoteDataSource>(
       () => _i963.SessionRemoteDataSourceImpl(gh<_i633.AUTHApi>()),
+    );
+    gh.lazySingleton<_i510.MediaUploader>(
+      () => _i510.MediaUploader(gh<_i633.MEDIAApi>()),
+    );
+    gh.lazySingleton<_i700.SignedMediaResolver>(
+      () => _i700.SignedMediaResolver(gh<_i633.MEDIAApi>()),
+    );
+    gh.lazySingleton<_i822.FoodRemoteDataSource>(
+      () => _i822.FoodRemoteDataSourceImpl(gh<_i633.DIETApi>()),
     );
     gh.lazySingleton<_i100.ExerciseRemoteDataSource>(
       () => _i100.ExerciseRemoteDataSourceImpl(gh<_i633.WORKApi>()),
@@ -101,6 +223,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i123.RestoreSessionUseCase>(
       () => _i123.RestoreSessionUseCase(gh<_i158.SessionRepository>()),
+    );
+    gh.lazySingleton<_i728.FoodRepository>(
+      () => _i64.FoodRepositoryImpl(gh<_i822.FoodRemoteDataSource>()),
     );
     gh.singleton<_i893.SessionCubit>(
       () => _i893.SessionCubit(
@@ -140,6 +265,27 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i757.ExerciseListBloc(
         getExercisesUseCase: gh<_i870.GetExercisesUseCase>(),
       ),
+    );
+    gh.lazySingleton<_i420.CreateFoodUseCase>(
+      () => _i420.CreateFoodUseCase(gh<_i728.FoodRepository>()),
+    );
+    gh.lazySingleton<_i517.DeactivateFoodUseCase>(
+      () => _i517.DeactivateFoodUseCase(gh<_i728.FoodRepository>()),
+    );
+    gh.lazySingleton<_i463.GetFoodUseCase>(
+      () => _i463.GetFoodUseCase(gh<_i728.FoodRepository>()),
+    );
+    gh.lazySingleton<_i687.GetFoodsUseCase>(
+      () => _i687.GetFoodsUseCase(gh<_i728.FoodRepository>()),
+    );
+    gh.lazySingleton<_i897.UpdateFoodUseCase>(
+      () => _i897.UpdateFoodUseCase(gh<_i728.FoodRepository>()),
+    );
+    gh.factory<_i168.FoodDetailCubit>(
+      () => _i168.FoodDetailCubit(gh<_i463.GetFoodUseCase>()),
+    );
+    gh.factory<_i710.FoodListBloc>(
+      () => _i710.FoodListBloc(getFoodsUseCase: gh<_i687.GetFoodsUseCase>()),
     );
     return this;
   }

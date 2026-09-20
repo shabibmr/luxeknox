@@ -45,8 +45,11 @@ dependencies:
   dio: ^5.11.1
   flutter_secure_storage: ^11.2.0
   url_launcher: ^6.3.2
+  meta: ^1.16.0
   api_client:
     path: ../packages/api_client
+  image_picker: ^1.2.3
+  file_picker: ^13.1.0
 
 dev_dependencies:
   flutter_test:

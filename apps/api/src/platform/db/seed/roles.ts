@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { and, eq, notInArray, sql } from 'drizzle-orm';
 import type { DrizzleDb } from '../client';
 import { roles } from '../schema/roles';
 import { permissions } from '../schema/permissions';
@@ -31,12 +31,20 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'rbac.permissions_read',
       'members.read',
       'members.write',
+      'members.create',
+      'members.update',
       'trainers.read',
       'trainers.write',
+      'trainers.create',
+      'trainers.update',
       'employees.read',
       'employees.write',
+      'employees.create',
+      'employees.update',
       'health.read',
       'health.write',
+      'health.update',
+      'health.approve',
       'health.pii_read',
       'memberships.read',
       'memberships.write',
@@ -64,6 +72,9 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'diets.read',
       'diets.write',
       'diets.templates_write',
+      'diet.read',
+      'diet.create',
+      'diet.update',
       'goals.read',
       'goals.write',
       'notifications.read',
@@ -75,6 +86,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'audit.read',
       'media.read',
       'media.write',
+      'media.create',
+      'roles.update',
     ],
   },
   {
@@ -97,15 +110,17 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'workouts.write',
       'workouts.templates_write',
       'exercises.read',
+      'exercises.create',
       'diets.read',
       'diets.write',
       'diets.templates_write',
+      'diet.read',
       'goals.read',
       'goals.write',
       'notifications.read',
       'dashboard.trainer',
       'media.read',
-      'media.write',
+      // media.write / media.create stripped — no unrestricted upload (V3-01)
     ],
   },
   {
@@ -117,6 +132,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'auth.logout',
       'members.read',
       'members.write',
+      'members.create',
+      'members.update',
       'trainers.read',
       'memberships.read',
       'schedules.read',
@@ -143,6 +160,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'trainers.read',
       'health.read',
       'health.write',
+      'health.update',
       'memberships.read',
       'schedules.read',
       'schedules.book',
@@ -154,12 +172,13 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'exercises.read',
       'diets.read',
       'diets.write',
+      'diet.read',
       'goals.read',
       'goals.write',
       'notifications.read',
       'dashboard.member',
       'media.read',
-      'media.write',
+      // media.write / media.create stripped — purpose-scoped upload lands with V3-11
     ],
   },
 ] as const;
@@ -223,6 +242,23 @@ export async function seedRoles(db: DrizzleDb<any>): Promise<void> {
             role_id: sql`VALUES(\`role_id\`)`,
           },
         });
+    }
+
+    // 4. Prune grants removed from the system role matrix (e.g. strip media.write).
+    if (roleDef.permissionSlugs !== 'all') {
+      const allowedIds = targetPerms.map((p) => p.id);
+      if (allowedIds.length === 0) {
+        await db.delete(rolePermissions).where(eq(rolePermissions.role_id, roleRecord.id));
+      } else {
+        await db
+          .delete(rolePermissions)
+          .where(
+            and(
+              eq(rolePermissions.role_id, roleRecord.id),
+              notInArray(rolePermissions.permission_id, allowedIds),
+            ),
+          );
+      }
     }
   }
 }

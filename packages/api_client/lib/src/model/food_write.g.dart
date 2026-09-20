@@ -25,6 +25,8 @@ class _$FoodWrite extends FoodWrite {
   final num? fiberGrams;
   @override
   final bool? isVerified;
+  @override
+  final bool? isActive;
 
   factory _$FoodWrite([void Function(FoodWriteBuilder)? updates]) =>
       (FoodWriteBuilder()..update(updates))._build();
@@ -38,7 +40,8 @@ class _$FoodWrite extends FoodWrite {
       this.carbsGrams,
       this.fatGrams,
       this.fiberGrams,
-      this.isVerified})
+      this.isVerified,
+      this.isActive})
       : super._();
   @override
   FoodWrite rebuild(void Function(FoodWriteBuilder) updates) =>
@@ -59,7 +62,8 @@ class _$FoodWrite extends FoodWrite {
         carbsGrams == other.carbsGrams &&
         fatGrams == other.fatGrams &&
         fiberGrams == other.fiberGrams &&
-        isVerified == other.isVerified;
+        isVerified == other.isVerified &&
+        isActive == other.isActive;
   }
 
   @override
@@ -74,6 +78,7 @@ class _$FoodWrite extends FoodWrite {
     _$hash = $jc(_$hash, fatGrams.hashCode);
     _$hash = $jc(_$hash, fiberGrams.hashCode);
     _$hash = $jc(_$hash, isVerified.hashCode);
+    _$hash = $jc(_$hash, isActive.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -89,7 +94,8 @@ class _$FoodWrite extends FoodWrite {
           ..add('carbsGrams', carbsGrams)
           ..add('fatGrams', fatGrams)
           ..add('fiberGrams', fiberGrams)
-          ..add('isVerified', isVerified))
+          ..add('isVerified', isVerified)
+          ..add('isActive', isActive))
         .toString();
   }
 }
@@ -133,6 +139,10 @@ class FoodWriteBuilder implements Builder<FoodWrite, FoodWriteBuilder> {
   bool? get isVerified => _$this._isVerified;
   set isVerified(bool? isVerified) => _$this._isVerified = isVerified;
 
+  bool? _isActive;
+  bool? get isActive => _$this._isActive;
+  set isActive(bool? isActive) => _$this._isActive = isActive;
+
   FoodWriteBuilder() {
     FoodWrite._defaults(this);
   }
@@ -149,6 +159,7 @@ class FoodWriteBuilder implements Builder<FoodWrite, FoodWriteBuilder> {
       _fatGrams = $v.fatGrams;
       _fiberGrams = $v.fiberGrams;
       _isVerified = $v.isVerified;
+      _isActive = $v.isActive;
       _$v = null;
     }
     return this;
@@ -181,6 +192,7 @@ class FoodWriteBuilder implements Builder<FoodWrite, FoodWriteBuilder> {
           fatGrams: fatGrams,
           fiberGrams: fiberGrams,
           isVerified: isVerified,
+          isActive: isActive,
         );
     replace(_$result);
     return _$result;

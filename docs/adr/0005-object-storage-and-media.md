@@ -2,11 +2,11 @@
 
 | | |
 | :--- | :--- |
-| **Status** | **Deferred** — no decision made, and none needed yet |
+| **Status** | **Superseded by [ADR-0008](./0008-object-storage-and-media.md)** — Vertical 3 PEOPLE onboarding triggered MEDIA |
 | **Date** | 2026-09-16 |
-| **Revision** | Replaces a draft that selected the S3 API with MinIO on the VPS (never accepted). File uploads are out of MVP scope; this record is kept as a placeholder so the open question stays visible. |
-| **Resolves** | Nothing yet. `backend-frd.md` §21 (`MEDIA`) remains open |
-| **Related** | [ADR-0003](./0003-api-style-and-authentication.md), [ADR-0007](./0007-first-delivery-vertical.md) |
+| **Revision** | Originally deferred uploads. Vertical 3 (ID proof / waiver / photo) is the revisit trigger; decisions live in ADR-0008. |
+| **Resolves** | Nothing (placeholder). See ADR-0008 for the accepted storage decision. |
+| **Related** | [ADR-0003](./0003-api-style-and-authentication.md), [ADR-0007](./0007-first-delivery-vertical.md), [ADR-0008](./0008-object-storage-and-media.md) |
 
 ## Context
 

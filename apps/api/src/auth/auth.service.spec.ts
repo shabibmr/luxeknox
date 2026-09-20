@@ -12,6 +12,7 @@ import type { Session } from '../platform/db/schema/sessions';
 import type { RoleRepository } from '../rbac/role.repository';
 import type { PermissionCache } from '../rbac/permission-cache';
 import type { Role } from '../platform/db/schema/roles';
+import type { PersonFactory } from '../people/person.factory';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -21,6 +22,7 @@ describe('AuthService', () => {
   let loginThrottle: LoginThrottle;
   let roleRepository: RoleRepository;
   let permissionCache: PermissionCache;
+  let personFactory: PersonFactory;
 
   const validPassword = 'CorrectPassword123!';
   let validPasswordHash: string;
@@ -77,6 +79,10 @@ describe('AuthService', () => {
       getResolvedSlugs: vi.fn().mockResolvedValue(['members.read']),
     } as unknown as PermissionCache;
 
+    personFactory = {
+      resolveProfileId: vi.fn().mockResolvedValue(77),
+    } as unknown as PersonFactory;
+
     authService = new AuthService(
       userRepository,
       sessionRepository,
@@ -84,6 +90,7 @@ describe('AuthService', () => {
       loginThrottle,
       roleRepository,
       permissionCache,
+      personFactory,
     );
   });
 
@@ -102,16 +109,18 @@ describe('AuthService', () => {
         user_type: 'member',
         role: 'member',
         role_id: 1,
-        profile_id: null,
+        profile_id: 77,
         permissions: ['members.read'],
       });
       expect(permissionCache.getResolvedSlugs).toHaveBeenCalledWith(1);
       expect(result.principal?.permissions).not.toContain('*');
+      expect(personFactory.resolveProfileId).toHaveBeenCalledWith(mockUser.id, 'member');
 
       expect(sessionRepository.createSession).toHaveBeenCalledTimes(1);
       const sessionArg = (sessionRepository.createSession as any).mock.calls[0][0];
       expect(sessionArg.user_id).toBe(mockUser.id);
       expect(sessionArg.user_type).toBe(mockUser.user_type);
+      expect(sessionArg.profile_id).toBe(77);
       expect(sessionArg.family_id).toBeDefined();
     });
 

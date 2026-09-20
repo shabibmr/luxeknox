@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { AuditService } from '../platform/audit/audit.service';
+import {
+  canBrowseUnrestricted,
+  requireVisibleCatalogueRow,
+} from '../platform/catalogue/browse-policy';
 import type { Exercise, NewExercise } from '../platform/db/schema/exercises';
 import { NotFoundError } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
@@ -8,6 +12,7 @@ import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { PermissionCache } from '../rbac/permission-cache';
 import { exerciseFilterQuerySchema, type ExerciseUpdateDto, type ExerciseWriteDto } from './exercise.dto';
 import { ExerciseRepository } from './exercise.repository';
+import { normalizeSecondaryMuscles } from './normalize-secondary-muscles';
 
 const SEE_INACTIVE_PERMISSION = 'exercises.update';
 
@@ -20,13 +25,12 @@ export class ExerciseService {
     private readonly permissionCache: PermissionCache,
   ) {}
 
-  /**
-   * Admins/managers (holders of `exercises.update`) see inactive exercises too;
-   * everyone else only sees the active catalog. Deactivated exercises are treated
-   * as gone for non-privileged callers, matching the soft-deactivate convention.
-   */
-  private async canSeeInactive(actor: AuthenticatedUser): Promise<boolean> {
-    return this.permissionCache.hasPermission(actor.roleId, SEE_INACTIVE_PERMISSION);
+  /** Ensures outbound rows match OpenAPI (`secondary_muscles: string[] | null`). */
+  private present(exercise: Exercise): Exercise {
+    return {
+      ...exercise,
+      secondary_muscles: normalizeSecondaryMuscles(exercise.secondary_muscles),
+    };
   }
 
   async list(
@@ -36,20 +40,24 @@ export class ExerciseService {
     const filters = exerciseFilterQuerySchema.parse(rawQuery);
     const pagination = await this.paginationHelper.normalizeParams(rawQuery);
     const offset = pagination.offset ?? 0;
-    const showInactive = await this.canSeeInactive(actor);
+    const unrestricted = await canBrowseUnrestricted(
+      this.permissionCache,
+      actor.roleId,
+      SEE_INACTIVE_PERMISSION,
+    );
 
     const { rows, total } = await this.repository.findManyFiltered({
       q: filters.q,
       primaryMuscleGroup: filters.primary_muscle_group,
       equipmentNeeded: filters.equipment_needed,
       difficultyLevel: filters.difficulty_level,
-      activeOnly: !showInactive,
+      activeOnly: !unrestricted,
       limit: pagination.limit,
       offset,
     });
 
     return createPaginatedResponse({
-      items: rows,
+      items: rows.map((row) => this.present(row)),
       limit: pagination.limit,
       offset,
       total,
@@ -57,12 +65,20 @@ export class ExerciseService {
   }
 
   async getById(id: number, actor: AuthenticatedUser): Promise<Exercise> {
-    const showInactive = await this.canSeeInactive(actor);
-    const exercise = await this.repository.findById(id, !showInactive);
-    if (!exercise) {
-      throw new NotFoundError('Exercise not found');
-    }
-    return exercise;
+    const unrestricted = await canBrowseUnrestricted(
+      this.permissionCache,
+      actor.roleId,
+      SEE_INACTIVE_PERMISSION,
+    );
+    // Load without activeOnly so we can 404 consistently via shared catalogue policy.
+    const exercise = await this.repository.findById(id);
+    const visible = requireVisibleCatalogueRow(exercise, {
+      unrestricted,
+      isVisible: (row) => row.is_active === true,
+      notFoundMessage: 'Exercise not found',
+      NotFoundError,
+    });
+    return this.present(visible);
   }
 
   async create(dto: ExerciseWriteDto, actor: AuthenticatedUser): Promise<Exercise> {
@@ -84,15 +100,17 @@ export class ExerciseService {
       throw new NotFoundError('Exercise not found after creation');
     }
 
+    const presented = this.present(created);
+
     await this.auditService.recordAudit({
       actorUserId: actor.id,
       action: 'exercise.created',
       entityName: 'exercises',
       entityId: id,
-      afterState: created,
+      afterState: presented,
     });
 
-    return created;
+    return presented;
   }
 
   /**
@@ -125,15 +143,18 @@ export class ExerciseService {
       throw new NotFoundError('Exercise not found after update');
     }
 
+    const presentedBefore = this.present(before);
+    const presentedAfter = this.present(after);
+
     await this.auditService.recordAudit({
       actorUserId: actor.id,
       action: 'exercise.updated',
       entityName: 'exercises',
       entityId: id,
-      beforeState: before,
-      afterState: after,
+      beforeState: presentedBefore,
+      afterState: presentedAfter,
     });
 
-    return after;
+    return presentedAfter;
   }
 }

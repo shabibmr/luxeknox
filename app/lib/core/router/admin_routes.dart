@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/widgets/sign_out_tile.dart';
 import '../../features/exercises/presentation/screens/exercise_library_screen.dart';
+import '../../features/foods/presentation/screens/food_library_screen.dart';
 import '../l10n/shell_strings.dart';
 import '../widgets/adaptive_shell.dart';
 import '../widgets/more_hub_screen.dart';
@@ -88,8 +89,7 @@ StatefulShellRoute createAdminBranchRoute() {
           ),
           GoRoute(
             path: Routes.adminDietLibrary,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.dietLibrary),
+            builder: (context, state) => const FoodLibraryScreen(),
           ),
           GoRoute(
             path: Routes.adminGoalMetrics,

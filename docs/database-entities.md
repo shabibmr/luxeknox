@@ -90,6 +90,12 @@ pie title Database Entities Distribution (56 Tables)
 * **Purpose**: Member-specific profile details.
 * **Supporting Screens**: Profile Screen, Edit Profile, Members Directory, Member Dossier.
 * **Key Attributes**: `id`, `user_id` (FK), `membership_number`, `first_name`, `last_name`, `gender`, `date_of_birth`, `address`, `assigned_trainer_id` (FK to trainers), `joined_date`, `notes`.
+* **`membership_number`**: format `M` + 8 zero-padded digits (`M00000001`, …); unique and immutable after insert. Allocated via single-row `membership_number_counters` (`SELECT … FOR UPDATE` inside the person-create transaction).
+
+### `membership_number_counters`
+
+* **Purpose**: MariaDB-safe sequence for `members.membership_number` (single row `id = 1`, `next_value`).
+* **Key Attributes**: `id`, `next_value`.
 
 ### `trainers`
 
@@ -101,7 +107,7 @@ pie title Database Entities Distribution (56 Tables)
 
 * **Purpose**: Staff records for front desk, management, and maintenance. Emergency contacts use `emergency_contacts` via `user_id` (not a column here).
 * **Supporting Screens**: Staff Directory & Roles, Employee Profile.
-* **Key Attributes**: `id`, `user_id` (FK), `job_title`, `department`, `hire_date`, `status` (active, on_probation, suspended, terminated).
+* **Key Attributes**: `id`, `user_id` (FK), `first_name`, `last_name`, `job_title`, `department`, `hire_date`, `status` (active, on_probation, suspended, terminated).
 
 ---
 
@@ -313,7 +319,7 @@ Same versioning rule as workouts: meals (and their foods) hang off `diet_plan_ve
 
 * **Purpose**: Nutritional database items.
 * **Supporting Screens**: Food Library Screen, Diet Plan Builder.
-* **Key Attributes**: `id`, `name`, `serving_unit` (grams, ml, pieces), `serving_size`, `calories`, `protein_grams`, `carbs_grams`, `fat_grams`, `fiber_grams`, `is_verified`.
+* **Key Attributes**: `id`, `name`, `serving_unit` (grams, ml, pieces), `serving_size`, `calories`, `protein_grams`, `carbs_grams`, `fat_grams`, `fiber_grams`, `is_verified`, `is_active`.
 
 ### `diet_plans`
 

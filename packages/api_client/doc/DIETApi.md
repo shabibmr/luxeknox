@@ -366,7 +366,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **listFoods**
-> FoodPage listFoods(limit, offset, q)
+> FoodPage listFoods(limit, offset, q, isVerified, isActive)
 
 Food library
 
@@ -378,9 +378,11 @@ final api = ApiClient().getDIETApi();
 final int limit = 56; // int | Default from gym_settings pagination.default_page_size.
 final int offset = 56; // int | Admin tables that need page numbers.
 final String q = q_example; // String | Case-insensitive search (FR-API-014).
+final bool isVerified = true; // bool | 
+final bool isActive = true; // bool | 
 
 try {
-    final response = api.listFoods(limit, offset, q);
+    final response = api.listFoods(limit, offset, q, isVerified, isActive);
     print(response);
 } on DioException catch (e) {
     print('Exception when calling DIETApi->listFoods: $e\n');
@@ -394,6 +396,8 @@ Name | Type | Description  | Notes
  **limit** | **int**| Default from gym_settings pagination.default_page_size. | [optional] 
  **offset** | **int**| Admin tables that need page numbers. | [optional] 
  **q** | **String**| Case-insensitive search (FR-API-014). | [optional] 
+ **isVerified** | **bool**|  | [optional] 
+ **isActive** | **bool**|  | [optional] 
 
 ### Return type
 

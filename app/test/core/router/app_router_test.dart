@@ -223,5 +223,52 @@ void main() {
       await tester.pump();
       expect(router.routeInformationProvider.value.uri.path, Routes.splash);
     });
+
+    group('trainer routing skeleton', () {
+      Future<GoRouter> pumpTrainerRouter(WidgetTester tester) => pumpRouter(
+        tester,
+        const SessionAuthenticated(
+          principal: trainerPrincipal,
+          capabilities: emptyCaps,
+        ),
+      );
+
+      for (final path in <String>[
+        Routes.trainerHome,
+        Routes.trainerSessionsToday,
+        Routes.trainerNotifications,
+        Routes.trainerMembers,
+        '/trainer/members/123',
+        '/trainer/members/123/health',
+        '/trainer/members/123/goals',
+        '/trainer/members/123/goals/add-measurement',
+        '/trainer/members/123/membership',
+        '/trainer/members/123/attendance',
+        '/trainer/members/123/schedule',
+        '/trainer/members/123/payments',
+        '/trainer/members/123/workout-history',
+        '/trainer/members/123/diet-history',
+        Routes.trainerSchedule,
+        '/trainer/schedule/45',
+        Routes.trainerScheduleAvailability,
+        Routes.trainerScheduleHistory,
+        Routes.trainerPlans,
+        Routes.trainerPlansWorkoutsCreate,
+        Routes.trainerPlansWorkoutsHistory,
+        '/trainer/plans/workouts/9',
+        Routes.trainerPlansDietsCreate,
+        Routes.trainerPlansDietsHistory,
+        '/trainer/plans/diets/9',
+        Routes.trainerProfile,
+        Routes.trainerProfileEdit,
+      ]) {
+        testWidgets('$path is reachable and does not redirect', (tester) async {
+          final router = await pumpTrainerRouter(tester);
+          router.go(path);
+          await tester.pumpAndSettle();
+          expect(router.routeInformationProvider.value.uri.path, path);
+        });
+      }
+    });
   });
 }

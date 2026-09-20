@@ -321,5 +321,57 @@ describe('AuthGuard & PermissionGuard', () => {
       const canActivate = await permissionGuard.canActivate(ctx);
       expect(canActivate).toBe(true);
     });
+
+    it('accepts OpenAPI members.create when the role has that slug', async () => {
+      vi.spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValueOnce(false)
+        .mockReturnValueOnce(['members.create']);
+
+      vi.spyOn(permissionCache, 'getPermissionsForRole').mockResolvedValueOnce(
+        new Set(['members.read', 'members.create', 'members.write']),
+      );
+
+      const ctx = createMockExecutionContext({
+        path: '/v1/members',
+        user: {
+          id: 2,
+          email: 'admin@example.com',
+          phoneNumber: null,
+          userType: 'admin',
+          roleId: 2,
+          profileId: null,
+          sessionId: 11,
+        },
+      });
+
+      await expect(permissionGuard.canActivate(ctx)).resolves.toBe(true);
+    });
+
+    it('rejects legacy members.write alone when route requires members.create', async () => {
+      vi.spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValueOnce(false)
+        .mockReturnValueOnce(['members.create']);
+
+      vi.spyOn(permissionCache, 'getPermissionsForRole').mockResolvedValueOnce(
+        new Set(['members.read', 'members.write']),
+      );
+
+      const ctx = createMockExecutionContext({
+        path: '/v1/members',
+        user: {
+          id: 4,
+          email: 'employee@example.com',
+          phoneNumber: null,
+          userType: 'employee',
+          roleId: 4,
+          profileId: 4,
+          sessionId: 12,
+        },
+      });
+
+      const err = await permissionGuard.canActivate(ctx).catch((e) => e);
+      expect(err).toBeInstanceOf(ForbiddenError);
+      expect(err.message).toContain("missing required permission 'members.create'");
+    });
   });
 });

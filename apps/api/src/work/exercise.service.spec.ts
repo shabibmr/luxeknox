@@ -126,21 +126,21 @@ describe('ExerciseService', () => {
       await expect(service.getById(999, MEMBER_USER)).rejects.toThrow(NotFoundError);
     });
 
-    it('passes activeOnly=true for a caller without exercises.update', async () => {
-      vi.mocked(repository.findById!).mockResolvedValue(makeExercise());
+    it('404s inactive rows for a caller without exercises.update', async () => {
+      vi.mocked(permissionCache.hasPermission!).mockResolvedValue(false);
+      vi.mocked(repository.findById!).mockResolvedValue(makeExercise({ is_active: false }));
 
-      await service.getById(1, MEMBER_USER);
-
-      expect(repository.findById).toHaveBeenCalledWith(1, true);
+      await expect(service.getById(1, MEMBER_USER)).rejects.toThrow(NotFoundError);
+      expect(repository.findById).toHaveBeenCalledWith(1);
     });
 
-    it('passes activeOnly=false for a caller with exercises.update', async () => {
+    it('returns inactive rows for a caller with exercises.update', async () => {
       vi.mocked(permissionCache.hasPermission!).mockResolvedValue(true);
       vi.mocked(repository.findById!).mockResolvedValue(makeExercise({ is_active: false }));
 
       const result = await service.getById(1, ADMIN_USER);
 
-      expect(repository.findById).toHaveBeenCalledWith(1, false);
+      expect(repository.findById).toHaveBeenCalledWith(1);
       expect(result.is_active).toBe(false);
     });
   });

@@ -4,16 +4,63 @@ import * as path from 'path';
 import YAML from 'yaml';
 
 /**
- * Asserts every `x-status: module-0` operation in docs/openapi/v1.yaml exists in the
- * live Nest dump (docs/openapi/v1.json) with a matching HTTP method and path.
+ * Asserts live Nest dump (docs/openapi/v1.json) covers:
+ * 1) every `x-status: module-0` operation in docs/openapi/v1.yaml
+ * 2) every implemented mvp operation:
+ *    - preferred: yaml `x-parity: required`
+ *    - transitional fallback: IMPLEMENTED_MVP_PATH_ALLOWLIST (V1+V2+V3)
+ *
+ * medical-histories and health-conditions stay deferred and must not be
+ * required for mvp parity.
+ *
  * operationIds are not compared — Nest auto-names differ from the hand-authored contract.
  */
 
 const HTTP_METHODS = new Set(['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace']);
 
+/**
+ * Transitional allowlist for implemented catalogue + PEOPLE/MEDIA/HEALTH routes
+ * that do not yet carry `x-parity: required` in yaml. Prefer annotating yaml and
+ * shrinking this set over time.
+ */
+const IMPLEMENTED_MVP_PATH_ALLOWLIST = new Set([
+  // Vertical 1 — Exercise Library
+  '/exercises',
+  '/exercises/{id}',
+  // Vertical 2 — Food Library
+  '/foods',
+  '/foods/{id}',
+  // Vertical 3 — PEOPLE / MEDIA / HEALTH onboarding
+  '/members',
+  '/members/{id}',
+  '/members/{id}/assign-trainer',
+  '/trainers',
+  '/trainers/{id}',
+  '/trainers/{id}/members',
+  '/employees',
+  '/employees/{id}',
+  '/employees/{id}/role',
+  '/employees/{id}/status',
+  '/users/{id}/emergency-contacts',
+  '/users/{id}/emergency-contacts/{contactId}',
+  '/members/{id}/health',
+  '/members/{id}/documents',
+  '/members/{id}/documents/{documentId}/verify',
+  '/members/{id}/documents/{documentId}',
+  '/members/{id}/photos',
+  '/members/{id}/photos/{photoId}/avatar',
+  '/media/uploads',
+  '/media/{key}',
+]);
+
 function normalizePath(p: string): string {
   const withPrefix = p.startsWith('/v1/') || p === '/v1' ? p : `/v1${p.startsWith('/') ? p : `/${p}`}`;
   return withPrefix.replace(/\{[^}]+\}/g, '{}');
+}
+
+function stripV1(p: string): string {
+  if (p === '/v1') return '/';
+  return p.startsWith('/v1/') ? p.slice(3) : p;
 }
 
 function collectDumpRoutes(dump: any): Set<string> {
@@ -27,21 +74,40 @@ function collectDumpRoutes(dump: any): Set<string> {
   return routes;
 }
 
-function collectModule0Routes(spec: any): Array<{ key: string; operationId: string }> {
-  const routes: Array<{ key: string; operationId: string }> = [];
+type SpecRoute = {
+  key: string;
+  operationId: string;
+  rawPath: string;
+  xParity?: string;
+};
+
+function collectRoutesByStatus(spec: any, status: string): SpecRoute[] {
+  const routes: SpecRoute[] = [];
   for (const [rawPath, item] of Object.entries(spec.paths || {})) {
     for (const [method, op] of Object.entries(item as object)) {
       if (!HTTP_METHODS.has(method.toLowerCase())) continue;
       if (!op || typeof op !== 'object') continue;
-      const operation = op as { 'x-status'?: string; operationId?: string };
-      if (operation['x-status'] !== 'module-0') continue;
+      const operation = op as { 'x-status'?: string; 'x-parity'?: string; operationId?: string };
+      if (operation['x-status'] !== status) continue;
       routes.push({
         key: `${method.toUpperCase()} ${normalizePath(rawPath)}`,
         operationId: operation.operationId || '(missing operationId)',
+        rawPath: stripV1(rawPath.startsWith('/v1/') ? rawPath : rawPath),
+        xParity: operation['x-parity'],
       });
     }
   }
   return routes;
+}
+
+function isImplementedMvp(route: SpecRoute): boolean {
+  if (route.xParity === 'required') return true;
+  if (route.xParity === 'skip' || route.xParity === 'optional') return false;
+  return IMPLEMENTED_MVP_PATH_ALLOWLIST.has(route.rawPath);
+}
+
+function isDeferredPath(rawPath: string): boolean {
+  return rawPath.includes('medical-histories') || rawPath.includes('health-conditions');
 }
 
 function main(): void {
@@ -62,18 +128,52 @@ function main(): void {
   const dumpDoc = JSON.parse(fs.readFileSync(dumpPath, 'utf-8'));
 
   const dumpRoutes = collectDumpRoutes(dumpDoc);
-  const required = collectModule0Routes(yamlDoc);
-  const missing = required.filter((r) => !dumpRoutes.has(r.key));
 
-  if (missing.length > 0) {
-    const lines = missing.map((m) => `  - ${m.key} (operationId: ${m.operationId})`).join('\n');
+  // --- module-0 ---
+  const module0 = collectRoutesByStatus(yamlDoc, 'module-0');
+  const missingModule0 = module0.filter((r) => !dumpRoutes.has(r.key));
+  if (missingModule0.length > 0) {
+    const lines = missingModule0.map((m) => `  - ${m.key} (operationId: ${m.operationId})`).join('\n');
     throw new Error(
-      `OpenAPI parity failed: ${missing.length} module-0 operation(s) missing from live dump:\n${lines}`,
+      `OpenAPI parity failed: ${missingModule0.length} module-0 operation(s) missing from live dump:\n${lines}`,
     );
   }
 
+  // --- implemented mvp (x-parity: required OR V1/V2/V3 allowlist) ---
+  const mvpAll = collectRoutesByStatus(yamlDoc, 'mvp');
+  const mvpRequired = mvpAll.filter(isImplementedMvp);
+  const missingMvp = mvpRequired.filter((r) => !dumpRoutes.has(r.key));
+  if (missingMvp.length > 0) {
+    const lines = missingMvp.map((m) => `  - ${m.key} (operationId: ${m.operationId})`).join('\n');
+    throw new Error(
+      `OpenAPI parity failed: ${missingMvp.length} implemented mvp operation(s) missing from live dump:\n${lines}`,
+    );
+  }
+
+  const deferredLeaked = mvpRequired.filter((r) => isDeferredPath(r.rawPath));
+  if (deferredLeaked.length > 0) {
+    const lines = deferredLeaked.map((m) => `  - ${m.key}`).join('\n');
+    throw new Error(
+      `OpenAPI parity failed: deferred medical-histories/health-conditions appeared in required mvp set:\n${lines}`,
+    );
+  }
+
+  const deferredYaml = [...collectRoutesByStatus(yamlDoc, 'deferred')].filter((r) =>
+    isDeferredPath(r.rawPath),
+  );
+  if (deferredYaml.length === 0) {
+    throw new Error(
+      'OpenAPI parity failed: expected medical-histories/health-conditions to remain x-status: deferred in yaml',
+    );
+  }
+
+  const viaAnnotation = mvpRequired.filter((r) => r.xParity === 'required').length;
+  const viaAllowlist = mvpRequired.length - viaAnnotation;
+
   console.log(
-    `[OpenAPI parity] OK — ${required.length} module-0 operation(s) present in live dump.`,
+    `[OpenAPI parity] OK — ${module0.length} module-0 + ${mvpRequired.length} implemented mvp ` +
+      `(${viaAnnotation} x-parity:required, ${viaAllowlist} allowlist) present in live dump; ` +
+      `${deferredYaml.length} deferred medical/conditions ops excluded.`,
   );
 }
 

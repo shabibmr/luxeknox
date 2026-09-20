@@ -97,4 +97,17 @@ export class SessionRepository extends BaseRepository<typeof sessions, Session, 
       },
     );
   }
+
+  /**
+   * Revokes every active session for a user (suspend / terminate / global logout).
+   */
+  async revokeAllForUser(userId: number, revokedAt: Date = new Date()): Promise<void> {
+    await this.update(
+      and(eq(sessions.user_id, userId), isNull(sessions.revoked_at))!,
+      {
+        revoked_at: revokedAt,
+        updated_at: revokedAt,
+      },
+    );
+  }
 }

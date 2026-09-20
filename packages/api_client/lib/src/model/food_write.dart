@@ -20,6 +20,7 @@ part 'food_write.g.dart';
 /// * [fatGrams] 
 /// * [fiberGrams] 
 /// * [isVerified] 
+/// * [isActive] 
 @BuiltValue()
 abstract class FoodWrite implements Built<FoodWrite, FoodWriteBuilder> {
   @BuiltValueField(wireName: r'name')
@@ -48,6 +49,9 @@ abstract class FoodWrite implements Built<FoodWrite, FoodWriteBuilder> {
 
   @BuiltValueField(wireName: r'is_verified')
   bool? get isVerified;
+
+  @BuiltValueField(wireName: r'is_active')
+  bool? get isActive;
 
   FoodWrite._();
 
@@ -128,6 +132,13 @@ class _$FoodWriteSerializer implements PrimitiveSerializer<FoodWrite> {
       yield r'is_verified';
       yield serializers.serialize(
         object.isVerified,
+        specifiedType: const FullType(bool),
+      );
+    }
+    if (object.isActive != null) {
+      yield r'is_active';
+      yield serializers.serialize(
+        object.isActive,
         specifiedType: const FullType(bool),
       );
     }
@@ -223,6 +234,14 @@ class _$FoodWriteSerializer implements PrimitiveSerializer<FoodWrite> {
           ) as bool?;
           if (valueDes == null) continue;
           result.isVerified = valueDes;
+          break;
+        case r'is_active':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(bool),
+          ) as bool?;
+          if (valueDes == null) continue;
+          result.isActive = valueDes;
           break;
         default:
           unhandled.add(key);

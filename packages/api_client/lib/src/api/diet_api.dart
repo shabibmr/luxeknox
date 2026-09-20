@@ -773,6 +773,8 @@ class DIETApi {
   /// * [limit] - Default from gym_settings pagination.default_page_size.
   /// * [offset] - Admin tables that need page numbers.
   /// * [q] - Case-insensitive search (FR-API-014).
+  /// * [isVerified] 
+  /// * [isActive] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -786,6 +788,8 @@ class DIETApi {
     int? limit,
     int? offset,
     String? q,
+    bool? isVerified,
+    bool? isActive,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -816,6 +820,8 @@ class DIETApi {
       if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
       if (offset != null) r'offset': encodeQueryParameter(_serializers, offset, const FullType(int)),
       if (q != null) r'q': encodeQueryParameter(_serializers, q, const FullType(String)),
+      if (isVerified != null) r'is_verified': encodeQueryParameter(_serializers, isVerified, const FullType(bool)),
+      if (isActive != null) r'is_active': encodeQueryParameter(_serializers, isActive, const FullType(bool)),
     };
 
     final _response = await _dio.request<Object>(

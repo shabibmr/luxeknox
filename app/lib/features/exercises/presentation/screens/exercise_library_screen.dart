@@ -98,11 +98,18 @@ class _ExerciseLibraryViewState extends State<_ExerciseLibraryView> {
             IconButton(
               icon: const Icon(Icons.add),
               tooltip: ExerciseStrings.addTooltip,
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const ExerciseFormScreen(),
-                ),
-              ),
+              onPressed: () async {
+                final created = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute<bool>(
+                    builder: (_) => const ExerciseFormScreen(),
+                  ),
+                );
+                if (created == true && context.mounted) {
+                  context.read<ExerciseListBloc>().add(
+                    const ExerciseListRefreshed(),
+                  );
+                }
+              },
             ),
         ],
       ),

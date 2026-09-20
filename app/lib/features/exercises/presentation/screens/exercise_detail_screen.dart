@@ -5,10 +5,12 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../domain/entities/exercise.dart';
+import '../bloc/exercise_list_bloc.dart';
+import '../bloc/exercise_list_event.dart';
 import '../cubit/exercise_detail_cubit.dart';
+import '../exercise_strings.dart';
 import '../widgets/exercise_media.dart';
 import 'exercise_form_screen.dart';
-import '../exercise_strings.dart';
 
 /// Exercise Details screen (screen 30). Pushed on phone; shown as the
 /// detail pane on desktop/tablet (K11) via [embedded], which suppresses
@@ -38,6 +40,23 @@ class _ExerciseDetailView extends StatelessWidget {
   final String exerciseId;
   final bool embedded;
 
+  Future<void> _openEditor(BuildContext context, Exercise exercise) async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => ExerciseFormScreen(exercise: exercise),
+      ),
+    );
+    if (saved != true || !context.mounted) return;
+
+    // Reload detail; refresh the library list when this screen is under it.
+    context.read<ExerciseDetailCubit>().loadExercise(exerciseId);
+    try {
+      context.read<ExerciseListBloc>().add(const ExerciseListRefreshed());
+    } catch (_) {
+      // Opened outside the library shell (e.g. deep link) — no list to refresh.
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final canEdit = context.can('exercises.update');
@@ -57,11 +76,7 @@ class _ExerciseDetailView extends StatelessWidget {
                 return IconButton(
                   icon: const Icon(Icons.edit),
                   tooltip: ExerciseStrings.editTooltip,
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => ExerciseFormScreen(exercise: exercise),
-                    ),
-                  ),
+                  onPressed: () => _openEditor(context, exercise),
                 );
               },
             ),

@@ -43,5 +43,17 @@ abstract class RegisterModule {
   WORKApi workApi(Dio dio) => WORKApi(dio, standardSerializers);
 
   @singleton
+  DIETApi dietApi(Dio dio) => DIETApi(dio, standardSerializers);
+
+  @singleton
+  PEOPLEApi peopleApi(Dio dio) => PEOPLEApi(dio, standardSerializers);
+
+  @singleton
+  HEALTHApi healthApi(Dio dio) => HEALTHApi(dio, standardSerializers);
+
+  @singleton
+  MEDIAApi mediaApi(Dio dio) => MEDIAApi(dio, standardSerializers);
+
+  @singleton
   GoRouter router(SessionCubit session) => createRouter(session);
 }

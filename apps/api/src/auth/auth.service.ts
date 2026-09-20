@@ -12,6 +12,7 @@ import { UnauthorizedError } from '../platform/errors/app-error';
 import type { AuthResponse } from './auth.dto';
 import { PermissionCache } from '../rbac/permission-cache';
 import { RoleRepository } from '../rbac/role.repository';
+import { PersonFactory } from '../people/person.factory';
 
 /** Access token lifespan in seconds (30 minutes) per ADR-0003 */
 export const ACCESS_TOKEN_EXPIRY_SECONDS = 1800;
@@ -28,6 +29,7 @@ export class AuthService {
     private readonly loginThrottle: LoginThrottle,
     private readonly roleRepository: RoleRepository,
     private readonly permissionCache: PermissionCache,
+    private readonly personFactory: PersonFactory,
   ) {}
 
   /**
@@ -66,9 +68,15 @@ export class AuthService {
     // 5. Successful authentication: reset identifier throttle only
     this.loginThrottle.recordSuccess(identifier);
 
-    // 6. Issue tokens and persist new session
+    // 6. Resolve PEOPLE profile id (null for Super Admin without employee row)
+    const profileId = await this.personFactory.resolveProfileId(
+      userResult.id,
+      userResult.user_type,
+    );
+
+    // 7. Issue tokens and persist new session (stamp sessions.profile_id)
     const familyId = randomUUID();
-    return this.createSessionAndIssueTokens(userResult, familyId);
+    return this.createSessionAndIssueTokens(userResult, familyId, profileId);
   }
 
   /**

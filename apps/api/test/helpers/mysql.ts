@@ -17,7 +17,7 @@ export interface TestAppInstance {
 
 export const ADMIN_CREDENTIALS = {
   email: process.env.BOOTSTRAP_ADMIN_EMAIL || 'admin@luxeknox.com',
-  password: process.env.BOOTSTRAP_ADMIN_PASSWORD || 'AdminSecurePassword123!',
+  password: process.env.BOOTSTRAP_ADMIN_PASSWORD || '123456',
 };
 
 export const MEMBER_CREDENTIALS = {
@@ -38,8 +38,47 @@ export const INACTIVE_USER_CREDENTIALS = {
 /**
  * Clears per-test rows. Does not touch seeded roles, permissions or settings.
  * audit_logs is intentionally omitted — the app user has no DELETE on it after F-03.
+ * PEOPLE child rows are removed before users to satisfy FK constraints.
  */
 export async function resetTestData(db: DrizzleDb<any>): Promise<void> {
+  await db.execute(sql`
+    DELETE md FROM member_documents md
+    INNER JOIN members m ON m.id = md.member_id
+    INNER JOIN users u ON u.id = m.user_id
+    WHERE u.email LIKE 'e2e_%@luxeknox.test'
+  `);
+  await db.execute(sql`
+    DELETE mp FROM member_photos mp
+    INNER JOIN members m ON m.id = mp.member_id
+    INNER JOIN users u ON u.id = m.user_id
+    WHERE u.email LIKE 'e2e_%@luxeknox.test'
+  `);
+  await db.execute(sql`
+    DELETE mh FROM member_health mh
+    INNER JOIN members m ON m.id = mh.member_id
+    INNER JOIN users u ON u.id = m.user_id
+    WHERE u.email LIKE 'e2e_%@luxeknox.test'
+  `);
+  await db.execute(sql`
+    DELETE ec FROM emergency_contacts ec
+    INNER JOIN users u ON u.id = ec.user_id
+    WHERE u.email LIKE 'e2e_%@luxeknox.test'
+  `);
+  await db.execute(sql`
+    DELETE m FROM members m
+    INNER JOIN users u ON u.id = m.user_id
+    WHERE u.email LIKE 'e2e_%@luxeknox.test'
+  `);
+  await db.execute(sql`
+    DELETE t FROM trainers t
+    INNER JOIN users u ON u.id = t.user_id
+    WHERE u.email LIKE 'e2e_%@luxeknox.test'
+  `);
+  await db.execute(sql`
+    DELETE e FROM employees e
+    INNER JOIN users u ON u.id = e.user_id
+    WHERE u.email LIKE 'e2e_%@luxeknox.test'
+  `);
   await db.execute(sql`DELETE FROM sessions`);
   await db.execute(sql`DELETE FROM users WHERE email LIKE 'e2e_%@luxeknox.test'`);
 }

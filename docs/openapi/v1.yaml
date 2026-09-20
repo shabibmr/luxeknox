@@ -496,6 +496,7 @@ paths:
       summary: Member directory (scoped by role)
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: members.read
       security:
         - bearerAuth: []
@@ -534,6 +535,7 @@ paths:
       summary: Onboard a member (user + profile, one transaction)
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: members.create
       security:
         - bearerAuth: []
@@ -570,6 +572,7 @@ paths:
       summary: Member dossier (role-scoped)
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: members.read
       security:
         - bearerAuth: []
@@ -601,6 +604,7 @@ paths:
       summary: Update member profile
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: members.update
       security:
         - bearerAuth: []
@@ -639,6 +643,7 @@ paths:
       summary: Assign or reassign a trainer
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: members.update
       security:
         - bearerAuth: []
@@ -677,6 +682,7 @@ paths:
       summary: Trainer directory
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: trainers.read
       security:
         - bearerAuth: []
@@ -710,6 +716,7 @@ paths:
       summary: Create a trainer
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: trainers.create
       security:
         - bearerAuth: []
@@ -746,6 +753,7 @@ paths:
       summary: Trainer profile (rate hidden from members)
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: trainers.read
       security:
         - bearerAuth: []
@@ -777,6 +785,7 @@ paths:
       summary: Update trainer
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: trainers.update
       security:
         - bearerAuth: []
@@ -815,6 +824,7 @@ paths:
       summary: Members assigned to a trainer
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: members.read
       security:
         - bearerAuth: []
@@ -849,6 +859,7 @@ paths:
       summary: Staff directory
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: employees.read
       security:
         - bearerAuth: []
@@ -882,6 +893,7 @@ paths:
       summary: Create an employee
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: employees.create
       security:
         - bearerAuth: []
@@ -918,6 +930,7 @@ paths:
       summary: Employee profile
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: employees.read
       security:
         - bearerAuth: []
@@ -949,6 +962,7 @@ paths:
       summary: Update employee
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: employees.update
       security:
         - bearerAuth: []
@@ -987,6 +1001,7 @@ paths:
       summary: Assign exactly one role
       tags: [RBAC]
       x-status: mvp
+      x-parity: required
       x-permission: roles.update
       security:
         - bearerAuth: []
@@ -1025,6 +1040,7 @@ paths:
       summary: Change employment status; suspend revokes sessions
       tags: [PEOPLE]
       x-status: mvp
+      x-parity: required
       x-permission: employees.update
       security:
         - bearerAuth: []
@@ -1063,6 +1079,7 @@ paths:
       summary: Current health row
       tags: [HEALTH]
       x-status: mvp
+      x-parity: required
       x-permission: health.read
       security:
         - bearerAuth: []
@@ -1094,6 +1111,7 @@ paths:
       summary: Replace current health row
       tags: [HEALTH]
       x-status: mvp
+      x-parity: required
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1131,7 +1149,7 @@ paths:
       operationId: listHealthConditions
       summary: Condition catalog
       tags: [HEALTH]
-      x-status: mvp
+      x-status: deferred
       x-permission: health.read
       security:
         - bearerAuth: []
@@ -1163,7 +1181,7 @@ paths:
       operationId: createHealthCondition
       summary: Create a condition
       tags: [HEALTH]
-      x-status: mvp
+      x-status: deferred
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1199,7 +1217,7 @@ paths:
       operationId: updateHealthCondition
       summary: Update a condition
       tags: [HEALTH]
-      x-status: mvp
+      x-status: deferred
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1237,7 +1255,7 @@ paths:
       operationId: listMedicalHistories
       summary: Medical history list
       tags: [HEALTH]
-      x-status: mvp
+      x-status: deferred
       x-permission: health.read
       security:
         - bearerAuth: []
@@ -1270,7 +1288,7 @@ paths:
       operationId: createMedicalHistory
       summary: Add a medical history row
       tags: [HEALTH]
-      x-status: mvp
+      x-status: deferred
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1308,7 +1326,7 @@ paths:
       operationId: updateMedicalHistory
       summary: Update a medical history row
       tags: [HEALTH]
-      x-status: mvp
+      x-status: deferred
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1346,7 +1364,7 @@ paths:
       operationId: deleteMedicalHistory
       summary: Soft-remove a medical history row
       tags: [HEALTH]
-      x-status: mvp
+      x-status: deferred
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1376,6 +1394,7 @@ paths:
       summary: Emergency contacts for a user
       tags: [HEALTH]
       x-status: mvp
+      x-parity: required
       x-permission: health.read
       security:
         - bearerAuth: []
@@ -1407,6 +1426,7 @@ paths:
       summary: Add an emergency contact
       tags: [HEALTH]
       x-status: mvp
+      x-parity: required
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1445,6 +1465,7 @@ paths:
       summary: Update an emergency contact
       tags: [HEALTH]
       x-status: mvp
+      x-parity: required
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1483,6 +1504,7 @@ paths:
       summary: Remove an emergency contact
       tags: [HEALTH]
       x-status: mvp
+      x-parity: required
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1509,9 +1531,10 @@ paths:
   /members/{id}/documents:
     get:
       operationId: listMemberDocuments
-      summary: Member documents (deferred uploads)
+      summary: Member documents
       tags: [HEALTH]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: health.read
       security:
         - bearerAuth: []
@@ -1540,9 +1563,10 @@ paths:
           $ref: "#/components/responses/Error429"
     post:
       operationId: createMemberDocument
-      summary: Attach a document metadata row (deferred)
+      summary: Attach a document metadata row
       tags: [HEALTH]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1578,9 +1602,10 @@ paths:
   /members/{id}/documents/{documentId}/verify:
     post:
       operationId: verifyMemberDocument
-      summary: Verify a document (deferred)
+      summary: Verify a document
       tags: [HEALTH]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: health.approve
       security:
         - bearerAuth: []
@@ -1611,9 +1636,10 @@ paths:
   /members/{id}/documents/{documentId}:
     delete:
       operationId: deleteMemberDocument
-      summary: Delete a document row (deferred)
+      summary: Delete a document row
       tags: [HEALTH]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1640,9 +1666,10 @@ paths:
   /members/{id}/photos:
     get:
       operationId: listMemberPhotos
-      summary: Member gallery (deferred)
+      summary: Member gallery
       tags: [HEALTH]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: health.read
       security:
         - bearerAuth: []
@@ -1671,9 +1698,10 @@ paths:
           $ref: "#/components/responses/Error429"
     post:
       operationId: createMemberPhoto
-      summary: Add a gallery photo (deferred)
+      summary: Add a gallery photo
       tags: [HEALTH]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1709,9 +1737,10 @@ paths:
   /members/{id}/photos/{photoId}/avatar:
     post:
       operationId: setMemberAvatar
-      summary: Set current avatar from a gallery shot (deferred)
+      summary: Set current avatar from a gallery shot
       tags: [HEALTH]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -3408,6 +3437,7 @@ paths:
       summary: Exercise library
       tags: [WORK]
       x-status: mvp
+      x-parity: required
       x-permission: exercises.read
       security:
         - bearerAuth: []
@@ -3444,6 +3474,7 @@ paths:
       summary: Create an exercise
       tags: [WORK]
       x-status: mvp
+      x-parity: required
       x-permission: exercises.create
       security:
         - bearerAuth: []
@@ -3480,6 +3511,7 @@ paths:
       summary: Exercise detail
       tags: [WORK]
       x-status: mvp
+      x-parity: required
       x-permission: exercises.read
       security:
         - bearerAuth: []
@@ -3511,6 +3543,7 @@ paths:
       summary: Update or deactivate an exercise
       tags: [WORK]
       x-status: mvp
+      x-parity: required
       x-permission: exercises.update
       security:
         - bearerAuth: []
@@ -3967,6 +4000,7 @@ paths:
       summary: Food library
       tags: [DIET]
       x-status: mvp
+      x-parity: required
       x-permission: diet.read
       security:
         - bearerAuth: []
@@ -3974,6 +4008,8 @@ paths:
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Q"
+        - { name: is_verified, in: query, schema: { type: boolean } }
+        - { name: is_active, in: query, schema: { type: boolean } }
       responses:
         "200":
           description: OK
@@ -4000,6 +4036,7 @@ paths:
       summary: Create a food
       tags: [DIET]
       x-status: mvp
+      x-parity: required
       x-permission: diet.create
       security:
         - bearerAuth: []
@@ -4036,6 +4073,7 @@ paths:
       summary: Food detail
       tags: [DIET]
       x-status: mvp
+      x-parity: required
       x-permission: diet.read
       security:
         - bearerAuth: []
@@ -4067,6 +4105,7 @@ paths:
       summary: Update a food
       tags: [DIET]
       x-status: mvp
+      x-parity: required
       x-permission: diet.update
       security:
         - bearerAuth: []
@@ -5488,9 +5527,10 @@ paths:
   /media/uploads:
     post:
       operationId: createMediaUpload
-      summary: Signed PUT slot (deferred — ADR-0005)
+      summary: Signed PUT slot (ADR-0008)
       tags: [MEDIA]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: media.create
       security:
         - bearerAuth: []
@@ -5524,9 +5564,10 @@ paths:
   /media/{key}:
     get:
       operationId: getMediaUrl
-      summary: Short-lived signed GET (deferred — ADR-0005)
+      summary: Short-lived signed GET (ADR-0008)
       tags: [MEDIA]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: media.read
       security:
         - bearerAuth: []
@@ -5981,7 +6022,12 @@ components:
           $ref: "#/components/schemas/User"
     MemberCreate:
       type: object
-      required: [first_name, last_name]
+      required: [first_name, last_name, password]
+      description: >
+        Supply email or phone_number (at least one identifier) plus password for
+        login creation (FR-AUTH-008). Profile fields create the members row in the
+        same transaction; photo/waiver/emergency contact are follow-up routes
+        (FR-PEOPLE-001 MVP carve-out).
       properties:
         email:
           type: string
@@ -6034,13 +6080,25 @@ components:
         - type: object
           properties:
             membership:
-              $ref: "#/components/schemas/Membership"
+              allOf:
+                - $ref: "#/components/schemas/Membership"
+              nullable: true
+              description: Null until MEMB vertical populates membership contracts.
             outstanding_balance:
-              $ref: "#/components/schemas/Money"
+              allOf:
+                - $ref: "#/components/schemas/Money"
+              nullable: true
+              description: Null until PAY vertical.
             last_check_in:
-              $ref: "#/components/schemas/DateTime"
+              allOf:
+                - $ref: "#/components/schemas/DateTime"
+              nullable: true
+              description: Null until ATTN vertical.
             next_schedule:
-              $ref: "#/components/schemas/Schedule"
+              allOf:
+                - $ref: "#/components/schemas/Schedule"
+              nullable: true
+              description: Null until SCHED vertical.
     AssignTrainerRequest:
       type: object
       required: [trainer_id]
@@ -7588,7 +7646,7 @@ components:
           $ref: "#/components/schemas/PageMeta"
     Food:
       type: object
-      required: [id, name, serving_unit]
+      required: [id, name, serving_unit, is_active]
       properties:
         id:
           $ref: "#/components/schemas/Id"
@@ -7609,6 +7667,8 @@ components:
         fiber_grams:
           type: number
         is_verified:
+          type: boolean
+        is_active:
           type: boolean
     FoodWrite:
       type: object
@@ -7631,6 +7691,8 @@ components:
         fiber_grams:
           type: number
         is_verified:
+          type: boolean
+        is_active:
           type: boolean
     FoodPage:
       type: object

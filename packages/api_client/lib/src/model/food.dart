@@ -21,6 +21,7 @@ part 'food.g.dart';
 /// * [fatGrams] 
 /// * [fiberGrams] 
 /// * [isVerified] 
+/// * [isActive] 
 @BuiltValue()
 abstract class Food implements Built<Food, FoodBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -52,6 +53,9 @@ abstract class Food implements Built<Food, FoodBuilder> {
 
   @BuiltValueField(wireName: r'is_verified')
   bool? get isVerified;
+
+  @BuiltValueField(wireName: r'is_active')
+  bool get isActive;
 
   Food._();
 
@@ -140,6 +144,11 @@ class _$FoodSerializer implements PrimitiveSerializer<Food> {
         specifiedType: const FullType(bool),
       );
     }
+    yield r'is_active';
+    yield serializers.serialize(
+      object.isActive,
+      specifiedType: const FullType(bool),
+    );
   }
 
   @override
@@ -239,6 +248,13 @@ class _$FoodSerializer implements PrimitiveSerializer<Food> {
           ) as bool?;
           if (valueDes == null) continue;
           result.isVerified = valueDes;
+          break;
+        case r'is_active':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.isActive = valueDes;
           break;
         default:
           unhandled.add(key);

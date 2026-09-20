@@ -17,6 +17,7 @@ Name | Type | Description | Notes
 **fatGrams** | **num** |  | [optional] 
 **fiberGrams** | **num** |  | [optional] 
 **isVerified** | **bool** |  | [optional] 
+**isActive** | **bool** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

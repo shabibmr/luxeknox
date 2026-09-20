@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthController } from './auth.controller';
 import { MeController } from './me.controller';
@@ -9,9 +9,10 @@ import { SessionCache } from './session.cache';
 import { LoginThrottle } from './login-throttle';
 import { AuthGuard } from './auth.guard';
 import { RbacModule } from '../rbac/rbac.module';
+import { PeopleModule } from '../people/people.module';
 
 @Module({
-  imports: [RbacModule],
+  imports: [RbacModule, forwardRef(() => PeopleModule)],
   controllers: [AuthController, MeController],
   providers: [
     AuthService,

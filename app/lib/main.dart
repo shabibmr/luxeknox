@@ -20,6 +20,7 @@ class LuxeKnoxApp extends StatelessWidget {
       value: getIt<SessionCubit>(),
       child: MaterialApp.router(
         title: 'LuxeKnox',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorSchemeSeed: const Color(0xFF1B1B1B),
           useMaterial3: true,

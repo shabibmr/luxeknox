@@ -72,6 +72,16 @@ class Routes {
   static const String trainerMembersGoals = '/trainer/members/:id/goals';
   static const String trainerMembersGoalsAddMeasurement =
       '/trainer/members/:id/goals/add-measurement';
+  static const String trainerMembersMembership =
+      '/trainer/members/:id/membership';
+  static const String trainerMembersAttendance =
+      '/trainer/members/:id/attendance';
+  static const String trainerMembersSchedule = '/trainer/members/:id/schedule';
+  static const String trainerMembersPayments = '/trainer/members/:id/payments';
+  static const String trainerMembersWorkoutHistory =
+      '/trainer/members/:id/workout-history';
+  static const String trainerMembersDietHistory =
+      '/trainer/members/:id/diet-history';
 
   // Schedule Stack
   static const String trainerSchedule = '/trainer/schedule';
@@ -91,6 +101,11 @@ class Routes {
   static const String trainerPlansExercises = '/trainer/plans/exercises';
   static const String trainerPlansExercisesDetail =
       '/trainer/plans/exercises/:id';
+  static const String trainerPlansFoods = '/trainer/plans/foods';
+  static const String trainerPlansFoodsDetail = '/trainer/plans/foods/:id';
+  static const String trainerPlansWorkoutsHistory =
+      '/trainer/plans/workouts/history';
+  static const String trainerPlansDietsHistory = '/trainer/plans/diets/history';
 
   // Profile Stack
   static const String trainerProfile = '/trainer/profile';

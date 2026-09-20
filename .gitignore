@@ -38,3 +38,4 @@ docs/openapi/v1.json
 
 # Local ignore directory
 .ignore/
+.media/

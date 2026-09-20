@@ -27,6 +27,8 @@ class _$Food extends Food {
   final num? fiberGrams;
   @override
   final bool? isVerified;
+  @override
+  final bool isActive;
 
   factory _$Food([void Function(FoodBuilder)? updates]) =>
       (FoodBuilder()..update(updates))._build();
@@ -41,7 +43,8 @@ class _$Food extends Food {
       this.carbsGrams,
       this.fatGrams,
       this.fiberGrams,
-      this.isVerified})
+      this.isVerified,
+      required this.isActive})
       : super._();
   @override
   Food rebuild(void Function(FoodBuilder) updates) =>
@@ -63,7 +66,8 @@ class _$Food extends Food {
         carbsGrams == other.carbsGrams &&
         fatGrams == other.fatGrams &&
         fiberGrams == other.fiberGrams &&
-        isVerified == other.isVerified;
+        isVerified == other.isVerified &&
+        isActive == other.isActive;
   }
 
   @override
@@ -79,6 +83,7 @@ class _$Food extends Food {
     _$hash = $jc(_$hash, fatGrams.hashCode);
     _$hash = $jc(_$hash, fiberGrams.hashCode);
     _$hash = $jc(_$hash, isVerified.hashCode);
+    _$hash = $jc(_$hash, isActive.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -95,7 +100,8 @@ class _$Food extends Food {
           ..add('carbsGrams', carbsGrams)
           ..add('fatGrams', fatGrams)
           ..add('fiberGrams', fiberGrams)
-          ..add('isVerified', isVerified))
+          ..add('isVerified', isVerified)
+          ..add('isActive', isActive))
         .toString();
   }
 }
@@ -143,6 +149,10 @@ class FoodBuilder implements Builder<Food, FoodBuilder> {
   bool? get isVerified => _$this._isVerified;
   set isVerified(bool? isVerified) => _$this._isVerified = isVerified;
 
+  bool? _isActive;
+  bool? get isActive => _$this._isActive;
+  set isActive(bool? isActive) => _$this._isActive = isActive;
+
   FoodBuilder() {
     Food._defaults(this);
   }
@@ -160,6 +170,7 @@ class FoodBuilder implements Builder<Food, FoodBuilder> {
       _fatGrams = $v.fatGrams;
       _fiberGrams = $v.fiberGrams;
       _isVerified = $v.isVerified;
+      _isActive = $v.isActive;
       _$v = null;
     }
     return this;
@@ -192,6 +203,8 @@ class FoodBuilder implements Builder<Food, FoodBuilder> {
           fatGrams: fatGrams,
           fiberGrams: fiberGrams,
           isVerified: isVerified,
+          isActive: BuiltValueNullFieldError.checkNotNull(
+              isActive, r'Food', 'isActive'),
         );
     replace(_$result);
     return _$result;

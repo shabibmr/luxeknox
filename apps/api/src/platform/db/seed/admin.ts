@@ -1,18 +1,26 @@
+import { eq } from 'drizzle-orm';
 import type { DrizzleDb } from '../client';
 import { users } from '../schema/users';
 import { roles } from '../schema/roles';
+import { members, membershipNumberCounters } from '../schema/members';
+import { trainers } from '../schema/trainers';
 import { hashPassword } from '../../../auth/password';
 
 /** Documented bootstrap fallback — matches `.env.example` and e2e helpers. */
 export const DEFAULT_BOOTSTRAP_EMAIL = 'admin@luxeknox.com';
-export const DEFAULT_BOOTSTRAP_PASSWORD = 'AdminSecurePassword123!';
 
-/** Convenience password for non-bootstrap seed users (trainer/member) in development. */
+/** Shared development password for all seeded demo accounts (admin/trainer/member). */
 export const DEFAULT_DEV_USER_PASSWORD = '123456';
+
+/** @deprecated Prefer {@link DEFAULT_DEV_USER_PASSWORD}; kept as an alias for callers. */
+export const DEFAULT_BOOTSTRAP_PASSWORD = DEFAULT_DEV_USER_PASSWORD;
 
 /**
  * Seeds the default users (admin, trainer, member) idempotently.
  * Bootstrap admin defaults match `.env.example` / e2e when `BOOTSTRAP_*` is unset.
+ *
+ * Set `SEED_RESET_PASSWORDS=1` to also rewrite `password_hash` on re-seed
+ * (dev convenience; off by default so rotated credentials are preserved).
  */
 export async function seedUsers(db: DrizzleDb<any>): Promise<void> {
   const rawBootstrapPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD;
@@ -26,6 +34,7 @@ export async function seedUsers(db: DrizzleDb<any>): Promise<void> {
   const adminEmail = process.env.BOOTSTRAP_ADMIN_EMAIL || DEFAULT_BOOTSTRAP_EMAIL;
   const adminPassword = rawBootstrapPassword || DEFAULT_BOOTSTRAP_PASSWORD;
   const defaultPassword = DEFAULT_DEV_USER_PASSWORD;
+  const resetPasswords = process.env.SEED_RESET_PASSWORDS === '1';
 
   const roleRows = await db.select().from(roles);
   const superAdminRole = roleRows.find((r) => r.slug === 'super_admin');
@@ -81,13 +90,93 @@ export async function seedUsers(db: DrizzleDb<any>): Promise<void> {
       })
       .onDuplicateKeyUpdate({
         set: {
-          // password_hash is intentionally not updated: re-seeding must not reset a rotated admin password.
+          // password_hash is omitted unless SEED_RESET_PASSWORDS=1 so re-seeding
+          // does not clobber a rotated credential.
+          ...(resetPasswords ? { password_hash: u.password_hash } : {}),
           user_type: u.user_type,
           role_id: u.role_id,
           status: u.status,
           updated_at: now,
         },
       });
+  }
+
+  await seedDemoProfiles(db, now);
+}
+
+/**
+ * Ensures demo trainer/member login users have matching PEOPLE profile rows.
+ * Super Admin intentionally has no employee profile (FR-AUTH-009).
+ */
+async function seedDemoProfiles(db: DrizzleDb<any>, now: Date): Promise<void> {
+  const allUsers = await db.select().from(users);
+  const trainerUser = allUsers.find((u) => u.email === 'trainer' && u.user_type === 'trainer');
+  const memberUser = allUsers.find((u) => u.email === 'member' && u.user_type === 'member');
+
+  if (trainerUser) {
+    const existing = await db
+      .select({ id: trainers.id })
+      .from(trainers)
+      .where(eq(trainers.user_id, trainerUser.id))
+      .limit(1);
+    if (!existing[0]) {
+      await db.insert(trainers).values({
+        user_id: trainerUser.id,
+        first_name: 'Demo',
+        last_name: 'Trainer',
+        bio: 'Seeded demo trainer',
+        specializations: ['strength', 'conditioning'],
+        hourly_rate: '75.00',
+        rating: null,
+        max_clients_capacity: 20,
+        is_active: true,
+        created_at: now,
+        updated_at: now,
+      });
+    }
+  }
+
+  if (memberUser) {
+    const existing = await db
+      .select({ id: members.id })
+      .from(members)
+      .where(eq(members.user_id, memberUser.id))
+      .limit(1);
+    if (!existing[0]) {
+      // Ensure counter row exists, then allocate one membership_number.
+      await db
+        .insert(membershipNumberCounters)
+        .values({ id: 1, next_value: 1 })
+        .onDuplicateKeyUpdate({ set: { id: 1 } });
+
+      const counterRows = await db
+        .select()
+        .from(membershipNumberCounters)
+        .where(eq(membershipNumberCounters.id, 1))
+        .limit(1);
+      const nextValue = Number(counterRows[0]?.next_value ?? 1);
+      const membershipNumber = `M${String(nextValue).padStart(8, '0')}`;
+
+      await db
+        .update(membershipNumberCounters)
+        .set({ next_value: nextValue + 1 })
+        .where(eq(membershipNumberCounters.id, 1));
+
+      await db.insert(members).values({
+        user_id: memberUser.id,
+        membership_number: membershipNumber,
+        first_name: 'Demo',
+        last_name: 'Member',
+        gender: null,
+        date_of_birth: null,
+        address: null,
+        assigned_trainer_id: null,
+        joined_date: now.toISOString().slice(0, 10),
+        notes: 'Seeded demo member',
+        created_at: now,
+        updated_at: now,
+      });
+    }
   }
 }
 

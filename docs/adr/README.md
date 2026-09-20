@@ -13,7 +13,7 @@ Each record: Status · Context · Decision · Consequences · Alternatives consi
 Statuses: `Proposed` → `Accepted` → (`Superseded by ADR-XXXX` | `Deprecated`).
 `Deferred` marks a question deliberately left open with no decision made — a placeholder, not a choice.
 
-ADR-0001–0004 and 0007 are `Accepted`. ADR-0005 is `Deferred`. ADR-0006 is `Proposed`.
+ADR-0001–0004, 0007, and 0008 are `Accepted`. ADR-0005 is `Superseded by ADR-0008`. ADR-0006 is `Proposed`.
 
 ## Index
 
@@ -23,16 +23,16 @@ ADR-0001–0004 and 0007 are `Accepted`. ADR-0005 is `Deferred`. ADR-0006 is `Pr
 | [0002](./0002-database-engine-and-data-access.md) | Database engine & ORM — **MySQL 8.4 + Drizzle** | Accepted | FRD §26.2 |
 | [0003](./0003-api-style-and-authentication.md) | API style & auth tokens — **REST + opaque server-side tokens (no JWT)** | Accepted | FRD §26.1 |
 | [0004](./0004-tenancy-model.md) | Tenancy — **single-tenant, deploy-per-gym** | Accepted | FRD §26.3, project-context §10.3 |
-| [0005](./0005-object-storage-and-media.md) | Object storage & media — **deferred; no file uploads in MVP** | Deferred | placeholder for FRD §21 |
+| [0005](./0005-object-storage-and-media.md) | Object storage & media — **deferred placeholder** | Superseded by 0008 | historical deferral |
 | [0006](./0006-flutter-state-management-and-routing.md) | Flutter architecture, state & routing — **Clean Architecture + flutter_bloc + go_router** | Proposed | project-context §10.2 |
 | [0007](./0007-first-delivery-vertical.md) | First delivery vertical — **Exercise Library** | Accepted | delivery sequencing |
+| [0008](./0008-object-storage-and-media.md) | Object storage & MEDIA — **S3-compatible + local disk; signed PUT/GET** | Accepted | FRD §21, Vertical 3 |
 
 ## Deliberately not decided yet
 
 | Open item | Source | Why deferred | Decide when |
 | :--- | :--- | :--- | :--- |
 | Payment gateway vs desk-only POS | FRD §26.4 | `PAY` module is vertical 6+. Desk POS (cash/card/UPI capture) needs no gateway; only member self-pay does. | Before the `PAY` vertical starts |
-| Object store / `MEDIA` module | [ADR-0005](./0005-object-storage-and-media.md) | No upload feature ships before vertical 3. Exercise media is an externally hosted URL until then. | Before the `PEOPLE` vertical (document capture) |
 | Attendance hardware vendor | FRD §26.5 | `ATTN` accepts QR / RFID / biometric / manual. Manual + QR need no vendor. Ingest is one adapter behind a device-credential endpoint. | Before turnstile integration |
 
 ## Product decisions, not architecture

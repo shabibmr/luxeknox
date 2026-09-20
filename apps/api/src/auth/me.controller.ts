@@ -4,6 +4,13 @@ import { CurrentUser } from './current-user.decorator';
 import type { AuthenticatedUser } from './auth.guard';
 import { PermissionCache } from '../rbac/permission-cache';
 import { RoleRepository } from '../rbac/role.repository';
+import { UserRepository } from './user.repository';
+import { PersonFactory } from '../people/person.factory';
+import { MemberRepository } from '../people/member.repository';
+import { TrainerRepository } from '../people/trainer.repository';
+import { EmployeeRepository } from '../people/employee.repository';
+import { normalizeSpecializations } from '../people/normalize-specializations';
+import { roundMoney } from '../platform/money/money';
 
 export interface MeUserDto {
   id: number;
@@ -36,7 +43,8 @@ export interface MeResponseDto {
   principal?: MePrincipalDto;
   role: MeRoleDto | null;
   slugs: string[];
-  profile: null;
+  /** Null for Super Admin without an employee row (FR-AUTH-009). */
+  profile: unknown | null;
 }
 
 @ApiTags('Auth')
@@ -46,13 +54,18 @@ export class MeController {
   constructor(
     private readonly roleRepository: RoleRepository,
     private readonly permissionCache: PermissionCache,
+    private readonly userRepository: UserRepository,
+    private readonly personFactory: PersonFactory,
+    private readonly memberRepository: MemberRepository,
+    private readonly trainerRepository: TrainerRepository,
+    private readonly employeeRepository: EmployeeRepository,
   ) {}
 
   @Get()
   @ApiOperation({
     summary: 'Get current authenticated user profile and permissions',
     description:
-      'Returns the authenticated user details, assigned role, resolved permission slug list, and profile stub (null in Module 0).',
+      'Returns the authenticated user details, assigned role, resolved permission slug list, and PEOPLE profile when present.',
   })
   @ApiResponse({
     status: 200,
@@ -64,8 +77,14 @@ export class MeController {
   })
   async getMe(@CurrentUser() currentUser: AuthenticatedUser): Promise<MeResponseDto> {
     const role = await this.roleRepository.findById(currentUser.roleId);
-
     const slugs = await this.permissionCache.getResolvedSlugs(currentUser.roleId);
+    const userRow = await this.userRepository.findById(currentUser.id);
+
+    const profileId =
+      currentUser.profileId ??
+      (await this.personFactory.resolveProfileId(currentUser.id, currentUser.userType));
+
+    const profile = await this.loadProfile(currentUser.userType, profileId);
 
     return {
       user: {
@@ -75,7 +94,7 @@ export class MeController {
         roleId: currentUser.roleId,
         user_type: currentUser.userType,
         role_id: currentUser.roleId,
-        status: 'active',
+        status: userRow?.status ?? 'active',
         phone_number: currentUser.phoneNumber,
       },
       principal: {
@@ -83,7 +102,7 @@ export class MeController {
         user_type: currentUser.userType,
         role: role ? role.slug : currentUser.userType,
         role_id: currentUser.roleId,
-        profile_id: currentUser.profileId ?? null,
+        profile_id: profileId,
         permissions: slugs,
       },
       role: role
@@ -94,7 +113,36 @@ export class MeController {
           }
         : null,
       slugs,
-      profile: null,
+      profile,
     };
+  }
+
+  private async loadProfile(
+    userType: AuthenticatedUser['userType'],
+    profileId: number | null,
+  ): Promise<unknown | null> {
+    if (profileId == null) {
+      return null;
+    }
+
+    if (userType === 'member') {
+      return this.memberRepository.findById(profileId);
+    }
+    if (userType === 'trainer') {
+      const trainer = await this.trainerRepository.findById(profileId);
+      if (!trainer) return null;
+      return {
+        ...trainer,
+        specializations: normalizeSpecializations(trainer.specializations),
+        hourly_rate:
+          trainer.hourly_rate == null || trainer.hourly_rate === ''
+            ? null
+            : roundMoney(String(trainer.hourly_rate)),
+      };
+    }
+    if (userType === 'employee') {
+      return this.employeeRepository.findByIdWithRole(profileId);
+    }
+    return null;
   }
 }

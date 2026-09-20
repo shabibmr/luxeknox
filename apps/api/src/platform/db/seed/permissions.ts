@@ -2,6 +2,20 @@ import { sql } from 'drizzle-orm';
 import type { DrizzleDb } from '../client';
 import { permissions } from '../schema/permissions';
 
+/**
+ * Permission slug convention (freeze for V4+):
+ * - Catalogue libraries: `{resource}.read|create|update` where resource matches the
+ *   HTTP collection (`exercises.*`, OpenAPI food library uses `diet.*` — exception;
+ *   reserved `diets.*` is for future plans/meals/logs, not food CRUD).
+ * - PEOPLE/HEALTH/MEDIA mutates: OpenAPI granular `*.create|update` (and
+ *   `health.approve`, `media.create`, `roles.update`) dual-seeded beside legacy
+ *   `*.write` / `rbac.roles_write` until clients stop sending legacy slugs.
+ * - Controllers enforce OpenAPI slugs only; do not map `diets.write` → food mutate.
+ * - Prefer not granting future-module slugs on new roles until that vertical ships;
+ *   existing SYSTEM_ROLES future grants are grandfathered and pruned only when
+ *   explicitly removed from the matrix.
+ */
+
 export interface PermissionDefinition {
   module: string;
   action: string;
@@ -16,22 +30,31 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'AUTH', action: 'session_read', slug: 'auth.session_read', description: 'View active sessions' },
   { module: 'AUTH', action: 'session_revoke', slug: 'auth.session_revoke', description: 'Revoke active sessions' },
 
-  // RBAC
+  // RBAC — roles.update is OpenAPI (PUT /employees/{id}/role); rbac.roles_write kept legacy
   { module: 'RBAC', action: 'roles_read', slug: 'rbac.roles_read', description: 'View roles catalog' },
   { module: 'RBAC', action: 'roles_write', slug: 'rbac.roles_write', description: 'Create and update roles' },
+  { module: 'RBAC', action: 'roles_update', slug: 'roles.update', description: 'Assign or replace a role on an employee' },
   { module: 'RBAC', action: 'permissions_read', slug: 'rbac.permissions_read', description: 'View system permissions catalog' },
 
-  // PEOPLE
+  // PEOPLE — *.create|update are OpenAPI; *.write kept legacy
   { module: 'PEOPLE', action: 'read', slug: 'members.read', description: 'View members directory and details' },
   { module: 'PEOPLE', action: 'write', slug: 'members.write', description: 'Create and update members' },
+  { module: 'PEOPLE', action: 'members_create', slug: 'members.create', description: 'Onboard a member (user + profile)' },
+  { module: 'PEOPLE', action: 'members_update', slug: 'members.update', description: 'Update member profile or trainer assignment' },
   { module: 'PEOPLE', action: 'read', slug: 'trainers.read', description: 'View trainers directory and details' },
   { module: 'PEOPLE', action: 'write', slug: 'trainers.write', description: 'Create and update trainers' },
+  { module: 'PEOPLE', action: 'trainers_create', slug: 'trainers.create', description: 'Create a trainer (user + profile)' },
+  { module: 'PEOPLE', action: 'trainers_update', slug: 'trainers.update', description: 'Update trainer profile or active flag' },
   { module: 'PEOPLE', action: 'read', slug: 'employees.read', description: 'View employees directory and details' },
   { module: 'PEOPLE', action: 'write', slug: 'employees.write', description: 'Create and update employees' },
+  { module: 'PEOPLE', action: 'employees_create', slug: 'employees.create', description: 'Create an employee (user + profile)' },
+  { module: 'PEOPLE', action: 'employees_update', slug: 'employees.update', description: 'Update employee profile or employment status' },
 
-  // HEALTH
+  // HEALTH — health.update|approve are OpenAPI; health.write kept legacy
   { module: 'HEALTH', action: 'read', slug: 'health.read', description: 'View health profile and vital records' },
   { module: 'HEALTH', action: 'write', slug: 'health.write', description: 'Update health profile and medical history' },
+  { module: 'HEALTH', action: 'update', slug: 'health.update', description: 'Update health profile, emergency contacts, and documents' },
+  { module: 'HEALTH', action: 'approve', slug: 'health.approve', description: 'Verify member health documents' },
   { module: 'HEALTH', action: 'pii_read', slug: 'health.pii_read', description: 'View sensitive medical documents and PII' },
 
   // MEMB
@@ -67,10 +90,13 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'WORK', action: 'exercises_create', slug: 'exercises.create', description: 'Add exercises to the library' },
   { module: 'WORK', action: 'exercises_update', slug: 'exercises.update', description: 'Update or deactivate exercises in the library' },
 
-  // DIET
+  // DIET — diets.* reserved for plans/logs; diet.* is the food library (OpenAPI)
   { module: 'DIET', action: 'read', slug: 'diets.read', description: 'View diet plans and food intake logs' },
   { module: 'DIET', action: 'write', slug: 'diets.write', description: 'Create or update diet plans and intake logs' },
   { module: 'DIET', action: 'templates_write', slug: 'diets.templates_write', description: 'Create and publish master diet templates' },
+  { module: 'DIET', action: 'foods_read', slug: 'diet.read', description: 'View the food library' },
+  { module: 'DIET', action: 'foods_create', slug: 'diet.create', description: 'Add foods to the library' },
+  { module: 'DIET', action: 'foods_update', slug: 'diet.update', description: 'Update or deactivate foods in the library' },
 
   // GOAL
   { module: 'GOAL', action: 'read', slug: 'goals.read', description: 'View fitness goals, measurements and progress photos' },
@@ -93,9 +119,10 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'SYS', action: 'read', slug: 'settings.read', description: 'View gym settings' },
   { module: 'SYS', action: 'read', slug: 'audit.read', description: 'View system audit logs' },
 
-  // MEDIA
+  // MEDIA — media.create is OpenAPI; media.write kept legacy
   { module: 'MEDIA', action: 'read', slug: 'media.read', description: 'Access uploaded media and documents' },
   { module: 'MEDIA', action: 'write', slug: 'media.write', description: 'Upload media files and attachments' },
+  { module: 'MEDIA', action: 'create', slug: 'media.create', description: 'Create a signed media upload slot' },
 ] as const;
 
 /**
