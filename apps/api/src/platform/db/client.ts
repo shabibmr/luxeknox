@@ -1,4 +1,4 @@
-import mysql, { type Pool, type PoolOptions } from 'mysql2/promise';
+import { createPool, type Pool, type PoolOptions } from 'mysql2/promise';
 import { drizzle, type MySql2Database } from 'drizzle-orm/mysql2';
 
 export interface DatabaseConfig {
@@ -25,7 +25,7 @@ function requireEnv(name: string): string {
  */
 export function createConnectionPool(options: DatabaseConfig = {}): Pool {
   if (process.env.DATABASE_URL && !options.host && !options.user) {
-    return mysql.createPool({
+    return createPool({
       uri: process.env.DATABASE_URL,
       waitForConnections: true,
       connectionLimit: options.connectionLimit ?? 10,
@@ -48,7 +48,7 @@ export function createConnectionPool(options: DatabaseConfig = {}): Pool {
     dateStrings: false,
   };
 
-  return mysql.createPool(poolOptions);
+  return createPool(poolOptions);
 }
 
 /**

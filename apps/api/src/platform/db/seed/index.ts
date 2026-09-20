@@ -3,7 +3,7 @@ import { createConnectionPool, createDrizzleClient } from '../client';
 import * as schema from '../schema';
 import { seedPermissions } from './permissions';
 import { seedRoles } from './roles';
-import { seedAdmin } from './admin';
+import { seedUsers } from './admin';
 import { seedSettings } from './settings';
 
 export async function runSeeds(): Promise<void> {
@@ -18,8 +18,8 @@ export async function runSeeds(): Promise<void> {
     console.log('[Seed] Seeding system roles & role_permissions...');
     await seedRoles(db);
 
-    console.log('[Seed] Seeding Super Admin user...');
-    await seedAdmin(db);
+    console.log('[Seed] Seeding default users (admin, trainer, member)...');
+    await seedUsers(db);
 
     console.log('[Seed] Seeding gym settings...');
     await seedSettings(db);

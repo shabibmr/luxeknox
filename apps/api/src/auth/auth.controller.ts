@@ -43,13 +43,17 @@ export class AuthController {
     @Body(new ZodValidationPipe(loginSchema)) dto: LoginDto,
     @Req() req: Request,
   ): Promise<AuthResponseDto> {
-    const ipAddress =
-      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ??
-      req.ip ??
-      req.socket.remoteAddress ??
-      'unknown';
+    const ipAddress = req.ip ?? req.socket.remoteAddress ?? 'unknown';
 
-    return this.authService.login(dto.identifier, dto.password, ipAddress);
+    const identifier = (
+      dto.identifier ||
+      dto.email ||
+      dto.phone_number ||
+      dto.phoneNumber ||
+      ''
+    ).trim();
+
+    return this.authService.login(identifier, dto.password, ipAddress);
   }
 
   @Post('refresh')
@@ -71,7 +75,8 @@ export class AuthController {
   async refresh(
     @Body(new ZodValidationPipe(refreshTokenSchema)) dto: RefreshTokenDto,
   ): Promise<AuthResponseDto> {
-    return this.authService.refresh(dto.refreshToken);
+    const token = (dto.refreshToken || dto.refresh_token || '').trim();
+    return this.authService.refresh(token);
   }
 
   @Post('logout')

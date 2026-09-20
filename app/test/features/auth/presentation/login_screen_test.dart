@@ -6,6 +6,7 @@ import 'package:app/features/auth/presentation/cubit/login_cubit.dart';
 import 'package:app/features/auth/presentation/screens/login_screen.dart';
 import 'package:app/session/domain/entities/capabilities.dart';
 import 'package:app/session/domain/entities/principal.dart';
+import 'package:app/session/domain/entities/user_type.dart';
 import 'package:app/session/presentation/session_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,7 +20,7 @@ void main() {
 
   const tPrincipal = Principal(
     userId: 'user-1',
-    userType: 'member',
+    userType: UserType.member,
     displayName: 'Member One',
     profileId: 'prof-1',
   );

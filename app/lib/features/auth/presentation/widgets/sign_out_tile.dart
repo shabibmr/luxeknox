@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../session/presentation/session_cubit.dart';
+import '../auth_strings.dart';
 
 /// Sign-out action for the Profile tab. Confirms before clearing the
 /// session; the router reacts to the resulting `SessionUnauthenticated`
@@ -14,16 +15,16 @@ class SignOutTile extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Sign out'),
-        content: const Text('Are you sure you want to sign out?'),
+        title: const Text(AuthStrings.signOut),
+        content: const Text(AuthStrings.signOutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
+            child: const Text(AuthStrings.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Sign out'),
+            child: const Text(AuthStrings.signOut),
           ),
         ],
       ),
@@ -38,7 +39,7 @@ class SignOutTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: const Icon(Icons.logout),
-      title: const Text('Sign out'),
+      title: const Text(AuthStrings.signOut),
       onTap: () => _confirmAndSignOut(context),
     );
   }

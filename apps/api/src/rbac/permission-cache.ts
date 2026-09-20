@@ -1,10 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
-import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
-import type { DrizzleDb } from '../platform/db/client';
-import { roles, type Role } from '../platform/db/schema/roles';
-import { permissions, type Permission } from '../platform/db/schema/permissions';
-import { rolePermissions } from '../platform/db/schema/role-permissions';
+import { Injectable } from '@nestjs/common';
+import { RoleRepository } from './role.repository';
+import { PermissionRepository } from './permission.repository';
+
+/** Sentinel used as the guard fast-path for super_admin; never published to clients. */
+export const WILDCARD_SLUG = '*';
 
 /**
  * In-memory cache mapping roleId -> Set<string> of permission slugs.
@@ -18,8 +17,8 @@ export class PermissionCache {
   private readonly roleSlugToId = new Map<string, number>();
 
   constructor(
-    @Inject(DRIZZLE_DB_TOKEN)
-    private readonly db: DrizzleDb<any>,
+    private readonly roleRepository: RoleRepository,
+    private readonly permissionRepository: PermissionRepository,
   ) {}
 
   /**
@@ -37,69 +36,46 @@ export class PermissionCache {
     return this.loadPermissionsForRole(roleId);
   }
 
+  /** Permission slugs for a role as published to clients — never includes the wildcard sentinel. */
+  async getResolvedSlugs(roleId: number): Promise<string[]> {
+    const slugs = await this.getPermissionsForRole(roleId);
+    return Array.from(slugs)
+      .filter((s) => s !== WILDCARD_SLUG)
+      .sort();
+  }
+
   /**
    * Checks if a role has the specified permission slug.
-   * Special case: '*' or 'all' grants all permissions.
-   *
-   * @param roleId Primary key of the role
-   * @param slug Permission slug to check
+   * Special case: WILDCARD_SLUG grants all permissions.
    */
   async hasPermission(roleId: number, slug: string): Promise<boolean> {
     const permissions = await this.getPermissionsForRole(roleId);
-    if (permissions.has('*') || permissions.has('all')) {
+    if (permissions.has(WILDCARD_SLUG)) {
       return true;
     }
     return permissions.has(slug);
   }
 
   /**
-   * Checks if a role has all of the specified permission slugs.
-   *
-   * @param roleId Primary key of the role
-   * @param slugs Permission slugs required
-   */
-  async hasAllPermissions(roleId: number, slugs: string[]): Promise<boolean> {
-    const rolePerms = await this.getPermissionsForRole(roleId);
-    if (rolePerms.has('*') || rolePerms.has('all')) {
-      return true;
-    }
-    return slugs.every((s) => rolePerms.has(s));
-  }
-
-  /**
    * Loads role permissions from DB and stores in cache.
    */
   private async loadPermissionsForRole(roleId: number): Promise<Set<string>> {
-    // 1. Check if the role is super_admin
-    const roleRows = await (this.db as any)
-      .select()
-      .from(roles)
-      .where(eq(roles.id, roleId))
-      .limit(1);
-
-    const role: Role | undefined = roleRows[0];
+    const role = await this.roleRepository.findById(roleId);
     const permSet = new Set<string>();
 
     if (role) {
       this.roleSlugToId.set(role.slug, role.id);
       if (role.slug === 'super_admin') {
-        permSet.add('*');
+        permSet.add(WILDCARD_SLUG);
+        for (const slug of await this.permissionRepository.findAllSlugs()) {
+          permSet.add(slug);
+        }
       }
     }
 
-    // 2. Query permissions through role_permissions join
-    const results = await (this.db as any)
-      .select({
-        slug: permissions.slug,
-      })
-      .from(rolePermissions)
-      .innerJoin(permissions, eq(rolePermissions.permission_id, permissions.id))
-      .where(eq(rolePermissions.role_id, roleId));
-
-    for (const row of results) {
-      if (row.slug) {
-        permSet.add(row.slug);
-      }
+    const slugs = await this.permissionRepository.findSlugsByRoleId(roleId);
+    for (const slug of slugs) {
+      permSet.add(slug);
     }
 
     this.cache.set(roleId, permSet);

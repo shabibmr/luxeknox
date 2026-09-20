@@ -8,6 +8,7 @@ import 'package:app/features/exercises/presentation/bloc/exercise_list_bloc.dart
 import 'package:app/features/exercises/presentation/cubit/exercise_detail_cubit.dart';
 import 'package:app/session/domain/entities/capabilities.dart';
 import 'package:app/session/domain/entities/principal.dart';
+import 'package:app/session/domain/entities/user_type.dart';
 import 'package:app/session/presentation/session_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
@@ -41,13 +42,13 @@ void main() {
 
   const trainerPrincipal = Principal(
     userId: '2',
-    userType: 'trainer',
+    userType: UserType.trainer,
     displayName: 'Trainer One',
     profileId: 'p2',
   );
   const memberPrincipal = Principal(
     userId: '1',
-    userType: 'member',
+    userType: UserType.member,
     displayName: 'Member One',
     profileId: 'p1',
   );

@@ -1,11 +1,10 @@
+import 'dotenv/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
 import { AppModule } from './app.module';
-import { ZodValidationPipe } from './platform/http/zod-validation.pipe';
-
-export { ZodValidationPipe };
 
 async function bootstrap() {
   const logger = pino({
@@ -22,7 +21,7 @@ async function bootstrap() {
         : undefined,
   });
 
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
   });
 
@@ -30,9 +29,11 @@ async function bootstrap() {
 
   app.enableCors();
 
-  app.setGlobalPrefix('v1');
+  if (process.env.TRUST_PROXY) {
+    app.set('trust proxy', process.env.TRUST_PROXY);
+  }
 
-  app.useGlobalPipes(new ZodValidationPipe());
+  app.setGlobalPrefix('v1');
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('LuxeKnox API')
@@ -53,8 +54,8 @@ async function bootstrap() {
   SwaggerModule.setup('v1/docs', app, document);
 
   const port = process.env.PORT || 3000;
-  await app.listen(port);
-  logger.info(`LuxeKnox API listening on port ${port} (prefix: /v1, docs: /v1/docs)`);
+  await app.listen(port, '0.0.0.0');
+  logger.info(`LuxeKnox API listening on 0.0.0.0:${port} (prefix: /v1, docs: /v1/docs)`);
 }
 
 if (process.env.NODE_ENV !== 'test') {

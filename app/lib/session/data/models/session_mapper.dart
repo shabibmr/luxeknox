@@ -1,15 +1,28 @@
 import 'package:api_client/api_client.dart' as api;
+
 import '../../domain/entities/capabilities.dart';
 import '../../domain/entities/principal.dart';
+import '../../domain/entities/user_type.dart';
 
 class SessionMapper {
+  static UserType _mapUserType(api.UserType type) {
+    // api.UserType is a built_value EnumClass — map by wire name.
+    return switch (type.name) {
+      'member' => UserType.member,
+      'trainer' => UserType.trainer,
+      'employee' => UserType.employee,
+      'admin' => UserType.admin,
+      _ => UserType.member,
+    };
+  }
+
   static (Principal, Capabilities) fromSessionResponse(
     api.SessionResponse response,
   ) {
     final p = response.principal;
     final principal = Principal(
       userId: p.userId.toString(),
-      userType: p.userType.name,
+      userType: _mapUserType(p.userType),
       displayName: p.role,
       profileId: p.profileId?.toString() ?? '',
     );
@@ -23,7 +36,7 @@ class SessionMapper {
     final displayName = u.email ?? u.phoneNumber ?? p.role;
     final principal = Principal(
       userId: p.userId.toString(),
-      userType: p.userType.name,
+      userType: _mapUserType(p.userType),
       displayName: displayName,
       profileId: p.profileId?.toString() ?? '',
     );

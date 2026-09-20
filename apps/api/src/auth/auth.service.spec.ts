@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AuthService } from './auth.service';
 import { SessionRepository } from './session.repository';
+import { UserRepository } from './user.repository';
 import { SessionCache } from './session.cache';
 import { LoginThrottle } from './login-throttle';
 import { hashPassword } from './password';
@@ -8,13 +9,18 @@ import { hashToken } from './token';
 import { RateLimitedError } from '../platform/errors/app-error';
 import type { User } from '../platform/db/schema/users';
 import type { Session } from '../platform/db/schema/sessions';
+import type { RoleRepository } from '../rbac/role.repository';
+import type { PermissionCache } from '../rbac/permission-cache';
+import type { Role } from '../platform/db/schema/roles';
 
 describe('AuthService', () => {
   let authService: AuthService;
-  let mockDb: any;
+  let userRepository: UserRepository;
   let sessionRepository: SessionRepository;
   let sessionCache: SessionCache;
   let loginThrottle: LoginThrottle;
+  let roleRepository: RoleRepository;
+  let permissionCache: PermissionCache;
 
   const validPassword = 'CorrectPassword123!';
   let validPasswordHash: string;
@@ -36,13 +42,15 @@ describe('AuthService', () => {
     validPasswordHash = await hashPassword(validPassword);
     mockUser.password_hash = validPasswordHash;
 
-    mockDb = {
-      select: vi.fn(),
-    };
+    userRepository = {
+      findByIdentifier: vi.fn().mockResolvedValue(null),
+      findById: vi.fn().mockResolvedValue(null),
+    } as unknown as UserRepository;
 
     sessionRepository = {
       findActiveByAccessTokenHash: vi.fn().mockResolvedValue(null),
       findActiveByRefreshTokenHash: vi.fn().mockResolvedValue(null),
+      findByRefreshTokenHash: vi.fn().mockResolvedValue(null),
       createSession: vi.fn().mockResolvedValue(101),
       revokeSession: vi.fn().mockResolvedValue(undefined),
       revokeFamily: vi.fn().mockResolvedValue(undefined),
@@ -51,27 +59,37 @@ describe('AuthService', () => {
     sessionCache = new SessionCache(60);
     loginThrottle = new LoginThrottle({ maxAttempts: 5, windowMs: 15 * 60 * 1000 });
 
+    const mockRole: Role = {
+      id: 1,
+      name: 'Member',
+      slug: 'member',
+      description: null,
+      is_system: true,
+      created_at: new Date(),
+      updated_at: null,
+    };
+
+    roleRepository = {
+      findById: vi.fn().mockResolvedValue(mockRole),
+    } as unknown as RoleRepository;
+
+    permissionCache = {
+      getResolvedSlugs: vi.fn().mockResolvedValue(['members.read']),
+    } as unknown as PermissionCache;
+
     authService = new AuthService(
-      mockDb,
+      userRepository,
       sessionRepository,
       sessionCache,
       loginThrottle,
+      roleRepository,
+      permissionCache,
     );
   });
 
-  function mockDbSelect(result: any[]) {
-    mockDb.select.mockReturnValueOnce({
-      from: vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue(result),
-        }),
-      }),
-    });
-  }
-
   describe('login', () => {
     it('successfully logs in with valid email credentials and returns token pair', async () => {
-      mockDbSelect([mockUser]);
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(mockUser);
 
       const result = await authService.login('test@example.com', validPassword, '127.0.0.1');
 
@@ -79,6 +97,16 @@ describe('AuthService', () => {
       expect(result.refreshToken).toMatch(/^gk_rt_/);
       expect(result.tokenType).toBe('Bearer');
       expect(result.expiresIn).toBe(1800);
+      expect(result.principal).toEqual({
+        user_id: mockUser.id,
+        user_type: 'member',
+        role: 'member',
+        role_id: 1,
+        profile_id: null,
+        permissions: ['members.read'],
+      });
+      expect(permissionCache.getResolvedSlugs).toHaveBeenCalledWith(1);
+      expect(result.principal?.permissions).not.toContain('*');
 
       expect(sessionRepository.createSession).toHaveBeenCalledTimes(1);
       const sessionArg = (sessionRepository.createSession as any).mock.calls[0][0];
@@ -88,7 +116,7 @@ describe('AuthService', () => {
     });
 
     it('successfully logs in with valid phone credentials', async () => {
-      mockDbSelect([mockUser]);
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(mockUser);
 
       const result = await authService.login('+1234567890', validPassword, '127.0.0.1');
 
@@ -97,7 +125,7 @@ describe('AuthService', () => {
     });
 
     it('fails with generic "Invalid credentials" error when user is not found', async () => {
-      mockDbSelect([]); // No user found
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(null);
 
       await expect(
         authService.login('unknown@example.com', validPassword, '127.0.0.1'),
@@ -105,36 +133,47 @@ describe('AuthService', () => {
     });
 
     it('fails with uniform "Invalid credentials" error when password is wrong', async () => {
-      mockDbSelect([mockUser]);
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(mockUser);
 
       await expect(
         authService.login('test@example.com', 'WrongPassword!', '127.0.0.1'),
       ).rejects.toThrow('Invalid credentials');
     });
 
-    it('fails when user status is inactive', async () => {
+    it('fails when user status is inactive with uniform Invalid credentials and records failure', async () => {
       const inactiveUser: User = { ...mockUser, status: 'inactive' };
-      mockDbSelect([inactiveUser]);
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(inactiveUser);
+      const recordFailure = vi.spyOn(loginThrottle, 'recordFailure');
 
       await expect(
         authService.login('test@example.com', validPassword, '127.0.0.1'),
-      ).rejects.toThrow('Account is not active');
+      ).rejects.toThrow('Invalid credentials');
+      expect(recordFailure).toHaveBeenCalledWith('test@example.com', '127.0.0.1');
     });
 
-    it('fails when user status is suspended', async () => {
+    it('fails when user status is suspended with uniform Invalid credentials', async () => {
       const suspendedUser: User = { ...mockUser, status: 'suspended' };
-      mockDbSelect([suspendedUser]);
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(suspendedUser);
 
       await expect(
         authService.login('test@example.com', validPassword, '127.0.0.1'),
-      ).rejects.toThrow('Account is not active');
+      ).rejects.toThrow('Invalid credentials');
+    });
+
+    it('returns 401 Invalid credentials for a corrupt password_hash instead of throwing', async () => {
+      const corruptUser: User = { ...mockUser, password_hash: 'not-a-hash' };
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(corruptUser);
+
+      await expect(
+        authService.login('test@example.com', validPassword, '127.0.0.1'),
+      ).rejects.toThrow('Invalid credentials');
     });
 
     it('throttles after 5 failed login attempts and throws RateLimitedError', async () => {
       const wrongPass = 'BadPass';
 
       for (let i = 0; i < 5; i++) {
-        mockDbSelect([mockUser]);
+        vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(mockUser);
         await expect(
           authService.login('test@example.com', wrongPass, '192.168.1.1'),
         ).rejects.toThrow('Invalid credentials');
@@ -146,26 +185,48 @@ describe('AuthService', () => {
       ).rejects.toThrow(RateLimitedError);
     });
 
-    it('resets throttle counters on successful login', async () => {
-      // 4 failed attempts
+    it('resets identifier throttle on successful login', async () => {
       for (let i = 0; i < 4; i++) {
-        mockDbSelect([mockUser]);
+        vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(mockUser);
         await expect(
           authService.login('test@example.com', 'wrong', '10.0.0.1'),
         ).rejects.toThrow('Invalid credentials');
       }
 
-      // Successful login
-      mockDbSelect([mockUser]);
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(mockUser);
       await authService.login('test@example.com', validPassword, '10.0.0.1');
 
-      // Subsequent 4 failed attempts should now still be allowed
+      // Identifier was cleared; use a fresh IP so the IP bucket does not block
       for (let i = 0; i < 4; i++) {
-        mockDbSelect([mockUser]);
+        vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(mockUser);
         await expect(
-          authService.login('test@example.com', 'wrong', '10.0.0.1'),
+          authService.login('test@example.com', 'wrong', '10.0.0.2'),
         ).rejects.toThrow('Invalid credentials');
       }
+    });
+
+    it('keeps IP throttle after a different identifier succeeds on the same IP', async () => {
+      const sharedIp = '10.0.0.99';
+      const otherUser: User = { ...mockUser, id: 99, email: 'other@example.com' };
+
+      for (let i = 0; i < 4; i++) {
+        vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(mockUser);
+        await expect(
+          authService.login('test@example.com', 'wrong', sharedIp),
+        ).rejects.toThrow('Invalid credentials');
+      }
+
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(otherUser);
+      await authService.login('other@example.com', validPassword, sharedIp);
+
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(mockUser);
+      await expect(
+        authService.login('test@example.com', 'wrong', sharedIp),
+      ).rejects.toThrow('Invalid credentials');
+
+      await expect(
+        authService.login('test@example.com', validPassword, sharedIp),
+      ).rejects.toThrow(RateLimitedError);
     });
   });
 
@@ -189,7 +250,7 @@ describe('AuthService', () => {
 
     it('rotates refresh token, preserving family_id and revoking old session', async () => {
       (sessionRepository.findActiveByRefreshTokenHash as any).mockResolvedValueOnce(activeMockSession);
-      mockDbSelect([mockUser]); // findUserById
+      vi.mocked(userRepository.findById).mockResolvedValueOnce(mockUser);
 
       const result = await authService.refresh(rawRefreshToken);
 
@@ -208,7 +269,7 @@ describe('AuthService', () => {
     });
 
     it('stores real session id in cache upon login and revokes it on cached refresh', async () => {
-      mockDbSelect([mockUser]);
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValueOnce(mockUser);
       const loginResult = await authService.login(mockUser.email!, validPassword, '127.0.0.1');
 
       // The cached session must have id: 101, not 0
@@ -217,7 +278,7 @@ describe('AuthService', () => {
       expect(cachedSession!.id).toBe(101);
 
       // Now refresh using the cached token
-      mockDbSelect([mockUser]);
+      vi.mocked(userRepository.findById).mockResolvedValueOnce(mockUser);
       await authService.refresh(loginResult.refreshToken);
 
       // Verify revokeSession was called with 101, not 0
@@ -228,12 +289,12 @@ describe('AuthService', () => {
       // Active lookup returns null (either not in cache or already revoked)
       (sessionRepository.findActiveByRefreshTokenHash as any).mockResolvedValueOnce(null);
 
-      // findSessionByRefreshTokenHash returns a revoked session
+      // findByRefreshTokenHash returns a revoked session
       const revokedSession: Session = {
         ...activeMockSession,
         revoked_at: new Date(),
       };
-      mockDbSelect([revokedSession]);
+      (sessionRepository.findByRefreshTokenHash as any).mockResolvedValueOnce(revokedSession);
 
       await expect(authService.refresh(rawRefreshToken)).rejects.toThrow(
         'Invalid or reused refresh token',
@@ -248,7 +309,7 @@ describe('AuthService', () => {
 
     it('rejects if refresh token does not exist anywhere', async () => {
       (sessionRepository.findActiveByRefreshTokenHash as any).mockResolvedValueOnce(null);
-      mockDbSelect([]); // No session found at all
+      (sessionRepository.findByRefreshTokenHash as any).mockResolvedValueOnce(null);
 
       await expect(authService.refresh(rawRefreshToken)).rejects.toThrow(
         'Invalid or expired refresh token',

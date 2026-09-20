@@ -1,6 +1,3 @@
-export const IDEMPOTENCY_KEY_HEADER = 'idempotency-key' as const;
-export type IdempotencyKey = string;
-
 /**
  * Rounds a money amount string or number to 2 decimal places using half-up rounding.
  * E.g., 1.225 -> "1.23", 1.224 -> "1.22", -1.225 -> "-1.23".
@@ -43,25 +40,4 @@ export function roundMoney(amount: number | string): string {
 
   const formatted = `${whole}.${frac}`;
   return isNegative && cents > 0n ? `-${formatted}` : formatted;
-}
-
-/**
- * Formats a money amount with currency symbol or code.
- * E.g., formatMoney('100.5', 'INR') -> "INR 100.50" or "₹100.50".
- * Uses Intl.NumberFormat when supported or standard currency prefix.
- */
-export function formatMoney(amount: number | string, currency = 'INR'): string {
-  const rounded = roundMoney(amount);
-  const num = parseFloat(rounded);
-
-  try {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(num);
-  } catch {
-    return `${currency} ${rounded}`;
-  }
 }

@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { gymSettings, type GymSetting, type NewGymSetting } from '../platform/db/schema/gym-settings';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
@@ -12,13 +11,6 @@ export class SettingsRepository extends BaseRepository<typeof gymSettings, GymSe
     db: DrizzleDb<any>,
   ) {
     super(db, gymSettings);
-  }
-
-  /**
-   * Finds a gym setting by its key.
-   */
-  async findByKey(key: string): Promise<GymSetting | null> {
-    return this.findOne(eq(gymSettings.setting_key, key));
   }
 
   /**

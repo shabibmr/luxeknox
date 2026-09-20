@@ -1,4 +1,4 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { SettingsService } from '../../sys/settings.service';
 import { BadRequestError } from '../errors/app-error';
 import {
@@ -9,7 +9,6 @@ import {
   ParsedPaginationQuery,
 } from './pagination.dto';
 
-export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
 
 /**
@@ -105,10 +104,7 @@ export function createPaginatedResponse<T>(params: {
  */
 @Injectable()
 export class PaginationHelper {
-  constructor(
-    @Optional()
-    private readonly settingsService?: SettingsService,
-  ) {}
+  constructor(private readonly settingsService: SettingsService) {}
 
   /**
    * Resolves the effective limit for a query, defaulting to SettingsService.getDefaultPageSize()
@@ -121,13 +117,8 @@ export class PaginationHelper {
       }
       return Math.min(requestedLimit, MAX_PAGE_SIZE);
     }
-
-    if (this.settingsService) {
-      const defaultLimit = await this.settingsService.getDefaultPageSize();
-      return Math.min(defaultLimit, MAX_PAGE_SIZE);
-    }
-
-    return DEFAULT_PAGE_SIZE;
+    const defaultLimit = await this.settingsService.getDefaultPageSize();
+    return Math.min(defaultLimit, MAX_PAGE_SIZE);
   }
 
   /**
@@ -177,24 +168,5 @@ export class PaginationHelper {
       page: 1,
       offset: 0,
     };
-  }
-
-  encodeCursor(payload: CursorPayload): string {
-    return encodeCursor(payload);
-  }
-
-  decodeCursor(cursor: string): CursorPayload {
-    return decodeCursor(cursor);
-  }
-
-  createResponse<T>(params: {
-    items: T[];
-    limit: number;
-    offset?: number | null;
-    requestCursor?: string | null;
-    total?: number;
-    cursorExtractor?: (item: T) => CursorPayload;
-  }): PaginatedResponse<T> {
-    return createPaginatedResponse(params);
   }
 }

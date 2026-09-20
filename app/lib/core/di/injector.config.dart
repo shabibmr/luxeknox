@@ -48,6 +48,7 @@ import '../../session/domain/usecases/refresh_session_usecase.dart' as _i898;
 import '../../session/domain/usecases/restore_session_usecase.dart' as _i123;
 import '../../session/presentation/session_cubit.dart' as _i893;
 import '../config/app_config.dart' as _i650;
+import '../monitoring/crash_reporter.dart' as _i668;
 import '../storage/token_storage.dart' as _i973;
 import 'register_module.dart' as _i291;
 
@@ -62,6 +63,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i650.AppConfig>(() => registerModule.appConfig);
     gh.singleton<_i558.FlutterSecureStorage>(
       () => registerModule.secureStorage,
+    );
+    gh.lazySingleton<_i668.CrashReporter>(
+      () => const _i668.NoOpCrashReporter(),
     );
     gh.singleton<_i973.TokenStorage>(
       () => registerModule.tokenStorage(gh<_i558.FlutterSecureStorage>()),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../exercise_strings.dart';
 
 /// Shows the exercise's gif preview and/or a link to its video.
 ///
@@ -40,7 +41,7 @@ class ExerciseMedia extends StatelessWidget {
 
     if (!launched && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open the video link.')),
+        const SnackBar(content: Text(ExerciseStrings.videoOpenFailed)),
       );
     }
   }
@@ -48,7 +49,7 @@ class ExerciseMedia extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (videoUrl == null && gifUrl == null) {
-      return const _MediaPlaceholder(message: 'No media available.');
+      return const _MediaPlaceholder(message: ExerciseStrings.noMedia);
     }
 
     return Column(
@@ -69,7 +70,9 @@ class ExerciseMedia extends StatelessWidget {
                 );
               },
               errorBuilder: (context, error, stackTrace) =>
-                  const _MediaPlaceholder(message: 'Preview unavailable.'),
+                  const _MediaPlaceholder(
+                    message: ExerciseStrings.previewUnavailable,
+                  ),
             ),
           ),
         if (videoUrl != null) ...[
@@ -77,7 +80,7 @@ class ExerciseMedia extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: () => _openVideo(context),
             icon: const Icon(Icons.play_circle_outline),
-            label: const Text('Watch video'),
+            label: const Text(ExerciseStrings.watchVideo),
           ),
         ],
       ],

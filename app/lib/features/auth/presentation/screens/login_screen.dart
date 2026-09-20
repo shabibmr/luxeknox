@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../auth_strings.dart';
 import '../cubit/login_cubit.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -47,7 +48,7 @@ class _LoginFormState extends State<_LoginForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign in')),
+      appBar: AppBar(title: const Text(AuthStrings.signInTitle)),
       body: BlocBuilder<LoginCubit, LoginState>(
         builder: (context, state) {
           final isSubmitting = state.status == LoginStatus.submitting;
@@ -77,13 +78,13 @@ class _LoginFormState extends State<_LoginForm> {
                         controller: _identifierController,
                         enabled: !isSubmitting,
                         decoration: const InputDecoration(
-                          labelText: 'Email or phone',
+                          labelText: AuthStrings.emailOrPhone,
                         ),
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.username],
                         validator: (value) =>
                             (value == null || value.trim().isEmpty)
-                            ? 'Enter your email or phone.'
+                            ? AuthStrings.enterEmailOrPhone
                             : null,
                       ),
                       const SizedBox(height: 16),
@@ -92,7 +93,7 @@ class _LoginFormState extends State<_LoginForm> {
                         enabled: !isSubmitting,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
-                          labelText: 'Password',
+                          labelText: AuthStrings.password,
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
@@ -106,7 +107,7 @@ class _LoginFormState extends State<_LoginForm> {
                         ),
                         autofillHints: const [AutofillHints.password],
                         validator: (value) => (value == null || value.isEmpty)
-                            ? 'Enter your password.'
+                            ? AuthStrings.enterPassword
                             : null,
                         onFieldSubmitted: (_) => _submit(),
                       ),
@@ -121,7 +122,7 @@ class _LoginFormState extends State<_LoginForm> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text('Sign in'),
+                            : const Text(AuthStrings.signIn),
                       ),
                     ],
                   ),

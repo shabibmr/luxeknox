@@ -47,28 +47,22 @@ export class SettingsService {
   }
 
   /**
-   * Retrieves a single setting value by key.
-   * Checks the in-memory cache first; falls back to repository query if cache not initialized.
+   * Retrieves a single setting value by key from the warmed cache.
    */
   async getSetting(key: string): Promise<string | null> {
-    if (this.cache) {
-      return this.cache.get(key) ?? null;
+    if (!this.cache) {
+      await this.refreshCache();
     }
-
-    const row = await this.settingsRepository.findByKey(key);
-    return row?.setting_value ?? null;
+    return this.cache!.get(key) ?? null;
   }
 
   /**
-   * Retrieves all gym settings as a key-value record.
-   * Loads from and populates the in-memory cache.
+   * Retrieves all gym settings as a key-value record from the warmed cache.
    */
   async getAllSettings(): Promise<Record<string, string>> {
-    if (this.cache) {
-      return Object.fromEntries(this.cache.entries());
+    if (!this.cache) {
+      await this.refreshCache();
     }
-
-    await this.refreshCache();
     return Object.fromEntries(this.cache!.entries());
   }
 

@@ -6,6 +6,7 @@ import { PermissionCache } from './permission-cache';
 import { AuthGuard, type AuthenticatedUser } from '../auth/auth.guard';
 import { SessionCache } from '../auth/session.cache';
 import { SessionRepository } from '../auth/session.repository';
+import { UserRepository } from '../auth/user.repository';
 import { ForbiddenError, UnauthorizedError } from '../platform/errors/app-error';
 import { hashToken } from '../auth/token';
 import type { Session } from '../platform/db/schema/sessions';
@@ -13,12 +14,12 @@ import type { User } from '../platform/db/schema/users';
 
 describe('AuthGuard & PermissionGuard', () => {
   let reflector: Reflector;
-  let mockDb: any;
 
   // AuthGuard dependencies
   let authGuard: AuthGuard;
   let sessionCache: SessionCache;
   let sessionRepository: SessionRepository;
+  let userRepository: UserRepository;
 
   // PermissionGuard dependencies
   let permissionGuard: PermissionGuard;
@@ -95,29 +96,21 @@ describe('AuthGuard & PermissionGuard', () => {
 
   beforeEach(() => {
     reflector = new Reflector();
-    mockDb = {
-      select: vi.fn(),
-    };
 
     sessionCache = new SessionCache(60);
     sessionRepository = {
       findActiveByAccessTokenHash: vi.fn().mockResolvedValue(null),
     } as unknown as SessionRepository;
+    userRepository = {
+      findById: vi.fn().mockResolvedValue(null),
+    } as unknown as UserRepository;
 
-    authGuard = new AuthGuard(reflector, sessionCache, sessionRepository, mockDb);
-    permissionCache = new PermissionCache(mockDb);
+    authGuard = new AuthGuard(reflector, sessionCache, sessionRepository, userRepository);
+    permissionCache = {
+      getPermissionsForRole: vi.fn(),
+    } as unknown as PermissionCache;
     permissionGuard = new PermissionGuard(reflector, permissionCache);
   });
-
-  function mockDbSelect(result: any[]) {
-    mockDb.select.mockReturnValueOnce({
-      from: vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue(result),
-        }),
-      }),
-    });
-  }
 
   describe('Public Allowlist', () => {
     it.each([
@@ -126,7 +119,6 @@ describe('AuthGuard & PermissionGuard', () => {
       '/v1/auth/login',
       '/v1/auth/refresh',
       '/v1/settings/public',
-      '/v1/docs',
     ])('allows public path %s without token in AuthGuard', async (path) => {
       const ctx = createMockExecutionContext({ path });
       const canActivate = await authGuard.canActivate(ctx);
@@ -202,7 +194,7 @@ describe('AuthGuard & PermissionGuard', () => {
         ...mockActiveUser,
         status: 'suspended',
       };
-      mockDbSelect([suspendedUser]);
+      vi.mocked(userRepository.findById).mockResolvedValueOnce(suspendedUser);
 
       const err = await authGuard.canActivate(ctx).catch((e) => e);
       expect(err).toBeInstanceOf(UnauthorizedError);
@@ -215,7 +207,7 @@ describe('AuthGuard & PermissionGuard', () => {
         authHeader: `Bearer ${validAccessToken}`,
       });
       sessionCache.set(validTokenHash, mockSession);
-      mockDbSelect([mockActiveUser]);
+      vi.mocked(userRepository.findById).mockResolvedValueOnce(mockActiveUser);
 
       const canActivate = await authGuard.canActivate(ctx);
       expect(canActivate).toBe(true);
@@ -224,6 +216,7 @@ describe('AuthGuard & PermissionGuard', () => {
       expect(req.user).toEqual({
         id: mockActiveUser.id,
         email: mockActiveUser.email,
+        phoneNumber: mockActiveUser.phone_number,
         userType: mockActiveUser.user_type,
         roleId: mockActiveUser.role_id,
         profileId: mockSession.profile_id,
@@ -262,6 +255,7 @@ describe('AuthGuard & PermissionGuard', () => {
         user: {
           id: 100,
           email: 'member@example.com',
+          phoneNumber: '+1000000000',
           userType: 'member',
           roleId: 5,
           profileId: 50,
@@ -289,6 +283,7 @@ describe('AuthGuard & PermissionGuard', () => {
         user: {
           id: 2,
           email: 'admin@example.com',
+          phoneNumber: null,
           userType: 'admin',
           roleId: 2,
           profileId: null,
@@ -315,6 +310,7 @@ describe('AuthGuard & PermissionGuard', () => {
         user: {
           id: 1,
           email: 'superadmin@example.com',
+          phoneNumber: null,
           userType: 'admin',
           roleId: 1,
           profileId: null,

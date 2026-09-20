@@ -50,6 +50,11 @@ export class SessionRepository extends BaseRepository<typeof sessions, Session, 
     );
   }
 
+  /** Finds a session by refresh token hash regardless of revoked/expired state (reuse detection). */
+  async findByRefreshTokenHash(refreshTokenHash: string): Promise<Session | null> {
+    return this.findOne(eq(sessions.refresh_token_hash, refreshTokenHash));
+  }
+
   /**
    * Creates a new session record.
    *

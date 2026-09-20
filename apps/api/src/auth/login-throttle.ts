@@ -56,18 +56,11 @@ export class LoginThrottle {
   }
 
   /**
-   * Resets recorded attempts on successful login for the identifier (and optionally IP).
-   *
-   * @param identifier Email or phone number
-   * @param ipAddress Client IP address
+   * Resets recorded attempts on successful login for the identifier only.
+   * IP buckets are intentionally left intact so a shared egress cannot wipe an attacker's counter.
    */
-  recordSuccess(identifier: string, ipAddress?: string): void {
-    const idKey = `id:${identifier.toLowerCase().trim()}`;
-    this.attempts.delete(idKey);
-    if (ipAddress) {
-      const ipKey = `ip:${ipAddress.trim()}`;
-      this.attempts.delete(ipKey);
-    }
+  recordSuccess(identifier: string): void {
+    this.attempts.delete(`id:${identifier.toLowerCase().trim()}`);
   }
 
   /**

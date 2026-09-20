@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/exercise.dart';
+import '../exercise_strings.dart';
 
 /// Displays a single [Exercise] summary. Pure presentation — the caller
 /// supplies the data and reacts to taps; this widget never fetches.
@@ -13,7 +14,7 @@ class ExerciseListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final equipmentLabel = exercise.equipmentNeeded.isEmpty
-        ? 'No equipment'
+        ? ExerciseStrings.noEquipmentShort
         : exercise.equipmentNeeded.join(', ');
 
     return ListTile(

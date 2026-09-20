@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../session/presentation/session_cubit.dart';
+import '../auth_strings.dart';
 
 enum LoginStatus { idle, submitting, failure }
 
@@ -33,7 +34,7 @@ class LoginCubit extends Cubit<LoginState> {
       emit(
         const LoginState(
           status: LoginStatus.failure,
-          errorMessage: 'Enter your email or phone and your password.',
+          errorMessage: AuthStrings.enterCredentials,
         ),
       );
       return;
@@ -57,11 +58,9 @@ class LoginCubit extends Cubit<LoginState> {
   /// to [AuthFailure] server-side and must show the identical message
   /// (FR-AUTH-002 — never reveal whether the account exists or its status).
   String _messageFor(Failure failure) => switch (failure) {
-    AuthFailure() => 'Incorrect email/phone or password.',
-    RateLimitFailure() =>
-      'Too many attempts. Please wait a moment and try again.',
-    NetworkFailure() =>
-      'Network error. Please check your connection and try again.',
-    _ => 'Something went wrong. Please try again.',
+    AuthFailure() => AuthStrings.incorrectCredentials,
+    RateLimitFailure() => AuthStrings.rateLimited,
+    NetworkFailure() => AuthStrings.networkError,
+    _ => AuthStrings.genericError,
   };
 }

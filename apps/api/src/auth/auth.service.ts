@@ -1,17 +1,17 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { eq, or } from 'drizzle-orm';
-import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
-import type { DrizzleDb } from '../platform/db/client';
-import { users, type User } from '../platform/db/schema/users';
-import { sessions, type Session, type NewSession } from '../platform/db/schema/sessions';
+import { type Session, type NewSession } from '../platform/db/schema/sessions';
+import type { User } from '../platform/db/schema/users';
 import { SessionRepository } from './session.repository';
 import { SessionCache } from './session.cache';
 import { LoginThrottle } from './login-throttle';
+import { UserRepository } from './user.repository';
 import { issueAccessToken, issueRefreshToken, hashToken } from './token';
 import { verifyPassword } from './password';
 import { UnauthorizedError } from '../platform/errors/app-error';
 import type { AuthResponse } from './auth.dto';
+import { PermissionCache } from '../rbac/permission-cache';
+import { RoleRepository } from '../rbac/role.repository';
 
 /** Access token lifespan in seconds (30 minutes) per ADR-0003 */
 export const ACCESS_TOKEN_EXPIRY_SECONDS = 1800;
@@ -22,11 +22,12 @@ export const REFRESH_TOKEN_EXPIRY_DAYS = 30;
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(DRIZZLE_DB_TOKEN)
-    private readonly db: DrizzleDb<any>,
+    private readonly userRepository: UserRepository,
     private readonly sessionRepository: SessionRepository,
     private readonly sessionCache: SessionCache,
     private readonly loginThrottle: LoginThrottle,
+    private readonly roleRepository: RoleRepository,
+    private readonly permissionCache: PermissionCache,
   ) {}
 
   /**
@@ -42,7 +43,7 @@ export class AuthService {
 
     // 2. Uniform lookup by email or phone
     const normalizedId = identifier.trim();
-    const userResult = await this.findUserByIdentifier(normalizedId);
+    const userResult = await this.userRepository.findByIdentifier(normalizedId);
 
     // 3. Uniform rejection: same generic message for unknown user or invalid password
     if (!userResult) {
@@ -56,13 +57,14 @@ export class AuthService {
       throw new UnauthorizedError('Invalid credentials');
     }
 
-    // 4. Reject non-active accounts
+    // 4. Reject non-active accounts with the same message as bad credentials
     if (userResult.status !== 'active') {
-      throw new UnauthorizedError('Account is not active');
+      this.loginThrottle.recordFailure(identifier, ipAddress);
+      throw new UnauthorizedError('Invalid credentials');
     }
 
-    // 5. Successful authentication: reset throttle counters
-    this.loginThrottle.recordSuccess(identifier, ipAddress);
+    // 5. Successful authentication: reset identifier throttle only
+    this.loginThrottle.recordSuccess(identifier);
 
     // 6. Issue tokens and persist new session
     const familyId = randomUUID();
@@ -92,7 +94,7 @@ export class AuthService {
       this.sessionCache.dropSession(activeSession.access_token_hash);
 
       // Fetch user to ensure user is still active
-      const user = await this.findUserById(activeSession.user_id);
+      const user = await this.userRepository.findById(activeSession.user_id);
       if (!user || user.status !== 'active') {
         throw new UnauthorizedError('Account is not active');
       }
@@ -102,7 +104,7 @@ export class AuthService {
     }
 
     // 2. Not active -> Check if session existed with this refresh token hash (Reuse Detection)
-    const existingSession = await this.findSessionByRefreshTokenHash(refreshTokenHash);
+    const existingSession = await this.sessionRepository.findByRefreshTokenHash(refreshTokenHash);
 
     if (existingSession && existingSession.revoked_at !== null) {
       // Reuse of revoked refresh token detected! Revoke entire token family
@@ -187,52 +189,28 @@ export class AuthService {
     this.sessionCache.set(accessTokenHash, sessionRecord);
     this.sessionCache.set(refreshTokenHash, sessionRecord);
 
+    const role = await this.roleRepository.findById(user.role_id);
+    const permissions = await this.permissionCache.getResolvedSlugs(user.role_id);
+
+    const principal = {
+      user_id: user.id,
+      user_type: user.user_type,
+      role: role ? role.slug : user.user_type,
+      role_id: user.role_id,
+      profile_id: profileId ?? null,
+      permissions,
+    };
+
     return {
       accessToken,
+      access_token: accessToken,
       refreshToken,
+      refresh_token: refreshToken,
       tokenType: 'Bearer',
+      token_type: 'Bearer',
       expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS,
+      expires_in: ACCESS_TOKEN_EXPIRY_SECONDS,
+      principal,
     };
-  }
-
-  /**
-   * Look up user by email or phone.
-   */
-  private async findUserByIdentifier(identifier: string): Promise<User | null> {
-    const trimmed = identifier.trim();
-    const normalizedEmail = trimmed.toLowerCase();
-    const rows = await (this.db as any)
-      .select()
-      .from(users)
-      .where(or(eq(users.email, normalizedEmail), eq(users.phone_number, trimmed)))
-      .limit(1);
-
-    return (rows[0] as User) ?? null;
-  }
-
-  /**
-   * Look up user by primary key ID.
-   */
-  private async findUserById(id: number): Promise<User | null> {
-    const rows = await (this.db as any)
-      .select()
-      .from(users)
-      .where(eq(users.id, id))
-      .limit(1);
-
-    return (rows[0] as User) ?? null;
-  }
-
-  /**
-   * Look up any session by refresh token hash (even if revoked/expired) for reuse detection.
-   */
-  private async findSessionByRefreshTokenHash(refreshTokenHash: string): Promise<Session | null> {
-    const rows = await (this.db as any)
-      .select()
-      .from(sessions)
-      .where(eq(sessions.refresh_token_hash, refreshTokenHash))
-      .limit(1);
-
-    return (rows[0] as Session) ?? null;
   }
 }

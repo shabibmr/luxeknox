@@ -22,12 +22,24 @@ class AdaptiveShell extends StatelessWidget {
     super.key,
     required this.navigationShell,
     required this.destinations,
+    this.onDestinationSelected,
+    this.body,
   });
 
   final StatefulNavigationShell navigationShell;
   final List<AdaptiveNavigationDestination> destinations;
 
+  /// Optional override for tab selection (e.g. Admin More hub).
+  final ValueChanged<int>? onDestinationSelected;
+
+  /// Optional body override (e.g. More hub chrome). Defaults to [navigationShell].
+  final Widget? body;
+
   void _onDestinationSelected(int index) {
+    if (onDestinationSelected != null) {
+      onDestinationSelected!(index);
+      return;
+    }
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
@@ -36,14 +48,15 @@ class AdaptiveShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final content = body ?? navigationShell;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
 
         if (width < 600) {
-          // Bottom Navigation Bar
           return Scaffold(
-            body: navigationShell,
+            body: content,
             bottomNavigationBar: NavigationBar(
               selectedIndex: navigationShell.currentIndex,
               onDestinationSelected: _onDestinationSelected,
@@ -80,7 +93,7 @@ class AdaptiveShell extends StatelessWidget {
                     .toList(),
               ),
               const VerticalDivider(thickness: 1, width: 1),
-              Expanded(child: navigationShell),
+              Expanded(child: content),
             ],
           ),
         );

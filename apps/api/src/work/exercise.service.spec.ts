@@ -11,6 +11,7 @@ import type { AuthenticatedUser } from '../auth/auth.guard';
 const MEMBER_USER: AuthenticatedUser = {
   id: 10,
   email: 'member@luxeknox.test',
+  phoneNumber: null,
   userType: 'member',
   roleId: 5,
   profileId: null,
@@ -20,6 +21,7 @@ const MEMBER_USER: AuthenticatedUser = {
 const ADMIN_USER: AuthenticatedUser = {
   id: 1,
   email: 'admin@luxeknox.test',
+  phoneNumber: null,
   userType: 'admin',
   roleId: 2,
   profileId: null,
@@ -58,7 +60,9 @@ describe('ExerciseService', () => {
       insertExercise: vi.fn(),
       updateExercise: vi.fn(),
     };
-    paginationHelper = new PaginationHelper();
+    paginationHelper = new PaginationHelper({
+      getDefaultPageSize: vi.fn().mockResolvedValue(20),
+    } as any);
     auditService = { recordAudit: vi.fn().mockResolvedValue(undefined) };
     permissionCache = { hasPermission: vi.fn().mockResolvedValue(false) };
 

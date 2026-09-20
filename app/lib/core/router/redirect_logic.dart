@@ -1,3 +1,4 @@
+import '../../session/domain/entities/user_type.dart';
 import '../../session/presentation/session_cubit.dart';
 import 'routes.dart';
 
@@ -21,11 +22,11 @@ String? appRedirectLogic({
   }
 
   if (sessionState is SessionAuthenticated) {
-    final role = sessionState.principal.userType.toLowerCase();
+    final role = sessionState.principal.userType;
     final roleHome = switch (role) {
-      'admin' => Routes.adminDashboard,
-      'trainer' => Routes.trainerHome,
-      _ => Routes.memberHome,
+      UserType.admin => Routes.adminDashboard,
+      UserType.trainer => Routes.trainerHome,
+      UserType.employee || UserType.member => Routes.memberHome,
     };
 
     // If currently on login or splash, redirect to role home
@@ -34,12 +35,12 @@ String? appRedirectLogic({
     }
 
     // Role boundary checks: prevent users from cross-navigating other role paths
-    if (currentPath.startsWith('/admin') && role != 'admin') {
+    if (Routes.isAdminPath(currentPath) && role != UserType.admin) {
       return roleHome;
     }
-    if (currentPath.startsWith('/trainer') &&
-        role != 'trainer' &&
-        role != 'admin') {
+    if (Routes.isTrainerPath(currentPath) &&
+        role != UserType.trainer &&
+        role != UserType.admin) {
       return roleHome;
     }
 

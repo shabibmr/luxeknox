@@ -1,12 +1,14 @@
 import 'package:equatable/equatable.dart';
 
+import 'user_type.dart';
+
 /// Represents the authenticated user's principal identity.
 class Principal extends Equatable {
   /// Unique identifier for the user.
   final String userId;
 
-  /// The user's type (e.g. 'member', 'trainer', 'admin').
-  final String userType;
+  /// The user's type / role.
+  final UserType userType;
 
   /// The user's display name.
   final String displayName;

@@ -1,6 +1,7 @@
 import 'package:app/features/auth/presentation/widgets/sign_out_tile.dart';
 import 'package:app/session/domain/entities/capabilities.dart';
 import 'package:app/session/domain/entities/principal.dart';
+import 'package:app/session/domain/entities/user_type.dart';
 import 'package:app/session/presentation/session_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,7 @@ void main() {
       initialState: const SessionAuthenticated(
         principal: Principal(
           userId: '1',
-          userType: 'member',
+          userType: UserType.member,
           displayName: 'Member One',
           profileId: 'p1',
         ),

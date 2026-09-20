@@ -1,6 +1,7 @@
 import 'package:app/core/usecase/usecase.dart';
 import 'package:app/session/domain/entities/capabilities.dart';
 import 'package:app/session/domain/entities/principal.dart';
+import 'package:app/session/domain/entities/user_type.dart';
 import 'package:app/session/domain/repositories/session_repository.dart';
 import 'package:app/session/domain/usecases/get_me_usecase.dart';
 import 'package:app/session/domain/usecases/login_usecase.dart';
@@ -17,7 +18,7 @@ void main() {
   late MockSessionRepository mockRepository;
   const tPrincipal = Principal(
     userId: 'user-1',
-    userType: 'admin',
+    userType: UserType.admin,
     displayName: 'Admin User',
     profileId: 'prof-1',
   );

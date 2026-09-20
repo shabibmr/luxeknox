@@ -64,6 +64,9 @@ jobs:
       - name: Typecheck
         run: pnpm --filter api typecheck
 
+      - name: Schema check
+        run: pnpm --filter api db:check
+
       - name: Run migrations & seed
         run: |
           pnpm --filter api db:migrate
@@ -77,3 +80,6 @@ jobs:
 
       - name: Dump OpenAPI
         run: pnpm --filter api openapi:dump
+
+      - name: OpenAPI parity
+        run: pnpm --filter api openapi:check

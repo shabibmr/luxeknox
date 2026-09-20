@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/exercise_filter.dart';
+import '../exercise_strings.dart';
 
 /// Bottom sheet for muscle group, equipment, and difficulty filters.
 /// Fields are free text: the API defines no fixed enum for these values
@@ -83,32 +84,41 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Filter exercises',
+                  ExerciseStrings.filterTitle,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 TextButton(
                   onPressed: _clearAll,
-                  child: const Text('Clear all'),
+                  child: const Text(ExerciseStrings.clearAll),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _muscleController,
-              decoration: const InputDecoration(labelText: 'Muscle group'),
+              decoration: const InputDecoration(
+                labelText: ExerciseStrings.muscleGroup,
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _equipmentController,
-              decoration: const InputDecoration(labelText: 'Equipment'),
+              decoration: const InputDecoration(
+                labelText: ExerciseStrings.equipment,
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _difficultyController,
-              decoration: const InputDecoration(labelText: 'Difficulty'),
+              decoration: const InputDecoration(
+                labelText: ExerciseStrings.difficulty,
+              ),
             ),
             const SizedBox(height: 24),
-            FilledButton(onPressed: _apply, child: const Text('Apply filters')),
+            FilledButton(
+              onPressed: _apply,
+              child: const Text(ExerciseStrings.applyFilters),
+            ),
           ],
         ),
       ),

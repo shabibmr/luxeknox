@@ -7,6 +7,7 @@ import '../../domain/entities/exercise.dart';
 import '../../domain/usecases/create_exercise_usecase.dart';
 import '../../domain/usecases/deactivate_exercise_usecase.dart';
 import '../../domain/usecases/update_exercise_usecase.dart';
+import '../exercise_strings.dart';
 
 /// Create/edit form, reached only from an admin-gated entry point (K5's add
 /// button, K8's edit button). Also guards itself in case it's ever reached
@@ -118,19 +119,16 @@ class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Deactivate exercise'),
-        content: Text(
-          'Deactivate "${exercise.name}"? It will no longer appear in the '
-          'active library.',
-        ),
+        title: const Text(ExerciseStrings.deactivateTitle),
+        content: Text(ExerciseStrings.deactivateConfirm(exercise.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
+            child: const Text(ExerciseStrings.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Deactivate'),
+            child: const Text(ExerciseStrings.deactivate),
           ),
         ],
       ),
@@ -161,21 +159,23 @@ class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
 
     if (!context.can(requiredSlug)) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Exercise')),
-        body: const Center(
-          child: Text('You do not have permission to view this page.'),
-        ),
+        appBar: AppBar(title: const Text(ExerciseStrings.formTitle)),
+        body: const Center(child: Text(ExerciseStrings.noPermission)),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isEditing ? 'Edit Exercise' : 'Add Exercise'),
+        title: Text(
+          widget.isEditing
+              ? ExerciseStrings.editTitle
+              : ExerciseStrings.addTitle,
+        ),
         actions: [
           if (widget.isEditing)
             IconButton(
               icon: const Icon(Icons.block),
-              tooltip: 'Deactivate',
+              tooltip: ExerciseStrings.deactivateTooltip,
               onPressed: _isSubmitting ? null : _confirmDeactivate,
             ),
         ],
@@ -196,19 +196,22 @@ class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
             TextFormField(
               controller: _nameController,
               enabled: !_isSubmitting,
-              decoration: const InputDecoration(labelText: 'Name'),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Enter a name.' : null,
+              decoration: const InputDecoration(
+                labelText: ExerciseStrings.nameLabel,
+              ),
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? ExerciseStrings.nameRequired
+                  : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _primaryMuscleController,
               enabled: !_isSubmitting,
               decoration: const InputDecoration(
-                labelText: 'Primary muscle group',
+                labelText: ExerciseStrings.primaryMuscleLabel,
               ),
               validator: (v) => (v == null || v.trim().isEmpty)
-                  ? 'Enter a primary muscle group.'
+                  ? ExerciseStrings.primaryMuscleRequired
                   : null,
             ),
             const SizedBox(height: 16),
@@ -216,8 +219,8 @@ class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
               controller: _secondaryMusclesController,
               enabled: !_isSubmitting,
               decoration: const InputDecoration(
-                labelText: 'Secondary muscles',
-                helperText: 'Comma-separated',
+                labelText: ExerciseStrings.secondaryMusclesLabel,
+                helperText: ExerciseStrings.commaSeparatedHelper,
               ),
             ),
             const SizedBox(height: 16),
@@ -225,17 +228,19 @@ class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
               controller: _equipmentController,
               enabled: !_isSubmitting,
               decoration: const InputDecoration(
-                labelText: 'Equipment needed',
-                helperText: 'Comma-separated',
+                labelText: ExerciseStrings.equipmentNeededLabel,
+                helperText: ExerciseStrings.commaSeparatedHelper,
               ),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _difficultyController,
               enabled: !_isSubmitting,
-              decoration: const InputDecoration(labelText: 'Difficulty level'),
+              decoration: const InputDecoration(
+                labelText: ExerciseStrings.difficultyLabel,
+              ),
               validator: (v) => (v == null || v.trim().isEmpty)
-                  ? 'Enter a difficulty level.'
+                  ? ExerciseStrings.difficultyRequired
                   : null,
             ),
             const SizedBox(height: 16),
@@ -244,9 +249,11 @@ class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
               enabled: !_isSubmitting,
               minLines: 3,
               maxLines: 8,
-              decoration: const InputDecoration(labelText: 'Instructions'),
+              decoration: const InputDecoration(
+                labelText: ExerciseStrings.instructionsLabel,
+              ),
               validator: (v) => (v == null || v.trim().isEmpty)
-                  ? 'Enter instructions.'
+                  ? ExerciseStrings.instructionsRequired
                   : null,
             ),
             const SizedBox(height: 16),
@@ -254,7 +261,7 @@ class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
               controller: _videoUrlController,
               enabled: !_isSubmitting,
               decoration: const InputDecoration(
-                labelText: 'Video URL (optional)',
+                labelText: ExerciseStrings.videoUrlLabel,
               ),
               keyboardType: TextInputType.url,
             ),
@@ -263,16 +270,14 @@ class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
               controller: _gifUrlController,
               enabled: !_isSubmitting,
               decoration: const InputDecoration(
-                labelText: 'Gif URL (optional)',
+                labelText: ExerciseStrings.gifUrlLabel,
               ),
               keyboardType: TextInputType.url,
             ),
             const SizedBox(height: 8),
             SwitchListTile(
-              title: const Text('Active'),
-              subtitle: const Text(
-                'Inactive exercises are hidden from Member/Trainer browsing',
-              ),
+              title: const Text(ExerciseStrings.active),
+              subtitle: const Text(ExerciseStrings.activeSubtitle),
               value: _isActive,
               onChanged: _isSubmitting
                   ? null
@@ -287,7 +292,11 @@ class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Text(widget.isEditing ? 'Save changes' : 'Create exercise'),
+                  : Text(
+                      widget.isEditing
+                          ? ExerciseStrings.saveChanges
+                          : ExerciseStrings.createExercise,
+                    ),
             ),
           ],
         ),

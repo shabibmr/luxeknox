@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/screens/profile_tab_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_detail_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_library_screen.dart';
+import '../l10n/shell_strings.dart';
 import '../widgets/adaptive_shell.dart';
 import '../widgets/placeholder_screen.dart';
 import 'routes.dart';
@@ -16,69 +18,65 @@ StatefulShellRoute createTrainerBranchRoute() {
           AdaptiveNavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
-            label: 'Home',
+            label: ShellStrings.home,
           ),
           AdaptiveNavigationDestination(
             icon: Icon(Icons.people_outline),
             selectedIcon: Icon(Icons.people),
-            label: 'Members',
+            label: ShellStrings.members,
           ),
           AdaptiveNavigationDestination(
             icon: Icon(Icons.calendar_month_outlined),
             selectedIcon: Icon(Icons.calendar_month),
-            label: 'Schedule',
+            label: ShellStrings.schedule,
           ),
           AdaptiveNavigationDestination(
             icon: Icon(Icons.fitness_center_outlined),
             selectedIcon: Icon(Icons.fitness_center),
-            label: 'Plans',
+            label: ShellStrings.plans,
           ),
           AdaptiveNavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
-            label: 'Profile',
+            label: ShellStrings.profile,
           ),
         ],
       );
     },
     branches: [
-      // Home Branch
       StatefulShellBranch(
         routes: [
           GoRoute(
             path: Routes.trainerHome,
             builder: (context, state) =>
-                const PlaceholderScreen(title: 'Trainer Home'),
+                const PlaceholderScreen(title: ShellStrings.trainerHome),
           ),
         ],
       ),
-      // Members Branch
       StatefulShellBranch(
         routes: [
           GoRoute(
             path: Routes.trainerMembers,
             builder: (context, state) =>
-                const PlaceholderScreen(title: 'Trainer Members'),
+                const PlaceholderScreen(title: ShellStrings.trainerMembers),
           ),
         ],
       ),
-      // Schedule Branch
       StatefulShellBranch(
         routes: [
           GoRoute(
             path: Routes.trainerSchedule,
             builder: (context, state) =>
-                const PlaceholderScreen(title: 'Trainer Schedule'),
+                const PlaceholderScreen(title: ShellStrings.trainerSchedule),
           ),
         ],
       ),
-      // Plans Branch
       StatefulShellBranch(
         routes: [
           GoRoute(
             path: Routes.trainerPlans,
             builder: (context, state) =>
-                const PlaceholderScreen(title: 'Trainer Plans'),
+                const PlaceholderScreen(title: ShellStrings.trainerPlans),
             routes: [
               GoRoute(
                 path: 'exercises',
@@ -96,13 +94,12 @@ StatefulShellRoute createTrainerBranchRoute() {
           ),
         ],
       ),
-      // Profile Branch
       StatefulShellBranch(
         routes: [
           GoRoute(
             path: Routes.trainerProfile,
             builder: (context, state) =>
-                const PlaceholderScreen(title: 'Trainer Profile'),
+                const ProfileTabScreen(title: ShellStrings.trainerProfile),
           ),
         ],
       ),

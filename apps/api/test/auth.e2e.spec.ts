@@ -52,7 +52,8 @@ describe('Auth E2E', () => {
     const meData = (await meRes.json()) as any;
     expect(meData.user.email).toBe(ADMIN_CREDENTIALS.email);
     expect(meData.role.slug).toBe('super_admin');
-    expect(meData.slugs).toContain('*');
+    expect(meData.slugs).toContain('settings.read');
+    expect(meData.slugs).not.toContain('*');
     expect(meData.profile).toBeNull();
 
     // 3. Refresh token rotation
@@ -134,6 +135,8 @@ describe('Auth E2E', () => {
     });
 
     expect(res.status).toBe(401);
+    const body = (await res.json()) as any;
+    expect(body.message).toBe('Invalid credentials');
   });
 
   it('verifies UTC timestamp round-trip on created session in database', async () => {
@@ -168,10 +171,7 @@ describe('Auth E2E', () => {
     const res = await fetch(`${testApp.baseUrl}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        identifier: '',
-        password: '',
-      }),
+      body: JSON.stringify({}),
     });
 
     expect(res.status).toBe(400);
@@ -179,6 +179,21 @@ describe('Auth E2E', () => {
     expect(body.code).toBe('validation_error');
     expect(body.message).toBe('Validation failed');
     expect(Array.isArray(body.details)).toBe(true);
+    expect(body.details.length).toBeGreaterThan(0);
+  });
+
+  it('rejects refresh with malformed token as 400 validation_error not 401', async () => {
+    const res = await fetch(`${testApp.baseUrl}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: 'nope' }),
+    });
+
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as any;
+    expect(body.code).toBe('validation_error');
+    expect(Array.isArray(body.details)).toBe(true);
+    expect(body.details.length).toBeGreaterThan(0);
   });
 
   it('rejects access token when 30-minute access TTL has expired', async () => {

@@ -8,6 +8,7 @@ import '../../domain/entities/exercise.dart';
 import '../cubit/exercise_detail_cubit.dart';
 import '../widgets/exercise_media.dart';
 import 'exercise_form_screen.dart';
+import '../exercise_strings.dart';
 
 /// Exercise Details screen (screen 30). Pushed on phone; shown as the
 /// detail pane on desktop/tablet (K11) via [embedded], which suppresses
@@ -44,7 +45,7 @@ class _ExerciseDetailView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: !embedded,
-        title: const Text('Exercise Details'),
+        title: const Text(ExerciseStrings.detailsTitle),
         actions: [
           if (canEdit)
             BlocBuilder<ExerciseDetailCubit, ExerciseDetailState>(
@@ -55,7 +56,7 @@ class _ExerciseDetailView extends StatelessWidget {
                 if (exercise == null) return const SizedBox.shrink();
                 return IconButton(
                   icon: const Icon(Icons.edit),
-                  tooltip: 'Edit exercise',
+                  tooltip: ExerciseStrings.editTooltip,
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => ExerciseFormScreen(exercise: exercise),
@@ -110,12 +111,12 @@ class _ExerciseDetailBody extends StatelessWidget {
         const SizedBox(height: 16),
         ExerciseMedia(videoUrl: exercise.videoUrl, gifUrl: exercise.gifUrl),
         const SizedBox(height: 16),
-        Text('Instructions', style: textTheme.titleMedium),
+        Text(ExerciseStrings.instructions, style: textTheme.titleMedium),
         const SizedBox(height: 8),
         Text(exercise.instructions),
         if (exercise.secondaryMuscles.isNotEmpty) ...[
           const SizedBox(height: 16),
-          Text('Secondary muscles', style: textTheme.titleMedium),
+          Text(ExerciseStrings.secondaryMuscles, style: textTheme.titleMedium),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -125,10 +126,10 @@ class _ExerciseDetailBody extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 16),
-        Text('Equipment', style: textTheme.titleMedium),
+        Text(ExerciseStrings.equipment, style: textTheme.titleMedium),
         const SizedBox(height: 8),
         exercise.equipmentNeeded.isEmpty
-            ? const Text('No equipment needed')
+            ? const Text(ExerciseStrings.noEquipment)
             : Wrap(
                 spacing: 8,
                 children: exercise.equipmentNeeded
@@ -156,7 +157,10 @@ class _ErrorView extends StatelessWidget {
           children: [
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            FilledButton(onPressed: onRetry, child: const Text('Retry')),
+            FilledButton(
+              onPressed: onRetry,
+              child: const Text(ExerciseStrings.retry),
+            ),
           ],
         ),
       ),

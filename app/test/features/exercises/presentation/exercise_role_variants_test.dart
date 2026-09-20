@@ -9,6 +9,7 @@ import 'package:app/features/exercises/presentation/screens/exercise_detail_scre
 import 'package:app/features/exercises/presentation/screens/exercise_library_screen.dart';
 import 'package:app/session/domain/entities/capabilities.dart';
 import 'package:app/session/domain/entities/principal.dart';
+import 'package:app/session/domain/entities/user_type.dart';
 import 'package:app/session/presentation/session_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
@@ -42,19 +43,19 @@ void main() {
 
   const memberPrincipal = Principal(
     userId: '1',
-    userType: 'member',
+    userType: UserType.member,
     displayName: 'Member One',
     profileId: 'p1',
   );
   const trainerPrincipal = Principal(
     userId: '2',
-    userType: 'trainer',
+    userType: UserType.trainer,
     displayName: 'Trainer One',
     profileId: 'p2',
   );
   const adminPrincipal = Principal(
     userId: '3',
-    userType: 'admin',
+    userType: UserType.admin,
     displayName: 'Admin One',
     profileId: 'p3',
   );

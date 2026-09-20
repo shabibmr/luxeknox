@@ -3,7 +3,7 @@ import type { AuthenticatedUser } from '../auth/auth.guard';
 import { AuditService } from '../platform/audit/audit.service';
 import type { Exercise, NewExercise } from '../platform/db/schema/exercises';
 import { NotFoundError } from '../platform/errors/app-error';
-import { PaginationHelper } from '../platform/http/pagination';
+import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { PermissionCache } from '../rbac/permission-cache';
 import { exerciseFilterQuerySchema, type ExerciseUpdateDto, type ExerciseWriteDto } from './exercise.dto';
@@ -48,7 +48,7 @@ export class ExerciseService {
       offset,
     });
 
-    return this.paginationHelper.createResponse({
+    return createPaginatedResponse({
       items: rows,
       limit: pagination.limit,
       offset,

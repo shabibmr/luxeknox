@@ -89,17 +89,17 @@ class SessionRepositoryImpl implements SessionRepository {
 
       // If we have token credentials, try getMe()
       final meResult = await getMe();
-      return meResult.fold((failure) async {
+      return await meResult.fold((failure) async {
         // If access token failed (e.g. AuthFailure), attempt refresh once
         if (refreshToken != null) {
           final refreshResult = await refresh();
-          return refreshResult.fold(
-            (refreshFailure) => Left(refreshFailure),
+          return await refreshResult.fold(
+            (refreshFailure) async => Left(refreshFailure),
             (_) => getMe(),
           );
         }
         return Left(failure);
-      }, (data) => Right(data));
+      }, (data) async => Right(data));
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

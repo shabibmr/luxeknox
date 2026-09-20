@@ -4,7 +4,6 @@ import {
   encodeCursor,
   createPaginatedResponse,
   PaginationHelper,
-  DEFAULT_PAGE_SIZE,
   MAX_PAGE_SIZE,
 } from './pagination';
 import { PaginationQueryDto } from './pagination.dto';
@@ -182,48 +181,34 @@ describe('Pagination', () => {
   });
 
   describe('PaginationHelper', () => {
-    it('uses DEFAULT_PAGE_SIZE (20) when no settings service or limit is provided', async () => {
-      const helper = new PaginationHelper();
-      const limit = await helper.resolveLimit();
-      expect(limit).toBe(DEFAULT_PAGE_SIZE);
+    const settingsService = {
+      getDefaultPageSize: vi.fn().mockResolvedValue(37),
+    } as unknown as SettingsService;
+    const helper = () => new PaginationHelper(settingsService);
+
+    it('takes the default limit from SettingsService', async () => {
+      vi.mocked(settingsService.getDefaultPageSize).mockResolvedValueOnce(37);
+      await expect(helper().resolveLimit(undefined)).resolves.toBe(37);
+      expect(settingsService.getDefaultPageSize).toHaveBeenCalled();
     });
 
-    it('fetches default limit from SettingsService when available', async () => {
-      const mockSettingsService = {
-        getDefaultPageSize: vi.fn().mockResolvedValue(50),
-      } as unknown as SettingsService;
-
-      const helper = new PaginationHelper(mockSettingsService);
-      const limit = await helper.resolveLimit();
-
-      expect(mockSettingsService.getDefaultPageSize).toHaveBeenCalledTimes(1);
-      expect(limit).toBe(50);
+    it('caps the settings-provided default at MAX_PAGE_SIZE', async () => {
+      vi.mocked(settingsService.getDefaultPageSize).mockResolvedValueOnce(5000);
+      await expect(helper().resolveLimit(undefined)).resolves.toBe(MAX_PAGE_SIZE);
     });
 
     it('caps requested limit at MAX_PAGE_SIZE (100)', async () => {
-      const helper = new PaginationHelper();
-      const limit = await helper.resolveLimit(150);
-      expect(limit).toBe(MAX_PAGE_SIZE);
-    });
-
-    it('caps SettingsService default at MAX_PAGE_SIZE (100) if setting exceeds max', async () => {
-      const mockSettingsService = {
-        getDefaultPageSize: vi.fn().mockResolvedValue(200),
-      } as unknown as SettingsService;
-
-      const helper = new PaginationHelper(mockSettingsService);
-      const limit = await helper.resolveLimit();
+      const limit = await helper().resolveLimit(150);
       expect(limit).toBe(MAX_PAGE_SIZE);
     });
 
     it('normalizes cursor-based pagination query', async () => {
-      const helper = new PaginationHelper();
       const cursor = encodeCursor({
         id: 42,
         createdAt: '2026-09-16T12:00:00.000Z',
       });
 
-      const normalized = await helper.normalizeParams({
+      const normalized = await helper().normalizeParams({
         cursor,
         limit: 15,
       });
@@ -237,8 +222,7 @@ describe('Pagination', () => {
     });
 
     it('normalizes page-based pagination query into offset', async () => {
-      const helper = new PaginationHelper();
-      const normalized = await helper.normalizeParams({
+      const normalized = await helper().normalizeParams({
         page: 3,
         limit: 10,
       });
@@ -250,8 +234,7 @@ describe('Pagination', () => {
     });
 
     it('normalizes offset-based pagination query', async () => {
-      const helper = new PaginationHelper();
-      const normalized = await helper.normalizeParams({
+      const normalized = await helper().normalizeParams({
         offset: 35,
         limit: 10,
       });

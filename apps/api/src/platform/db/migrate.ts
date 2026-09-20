@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { Connection } from 'mysql2/promise';
@@ -110,6 +111,15 @@ export async function runMigrations(options?: { migrationsFolder?: string }): Pr
     console.log('[Migrate] Connecting to MySQL and ensuring migration table...');
     await ensureMigrationsTable(connection);
 
+    const [collations] = await connection.query<any[]>(
+      "SELECT 1 FROM information_schema.COLLATIONS WHERE COLLATION_NAME = 'utf8mb4_0900_ai_ci' LIMIT 1;",
+    );
+    if (collations.length === 0) {
+      throw new Error(
+        'Server does not support utf8mb4_0900_ai_ci. MySQL 8.0+ is required (see ADR-0002 and todo/README.md locked decisions).',
+      );
+    }
+
     const executed = await getExecutedMigrations(connection);
     const files = fs
       .readdirSync(migrationsFolder)
@@ -129,18 +139,12 @@ export async function runMigrations(options?: { migrationsFolder?: string }): Pr
       const sqlContent = fs.readFileSync(filePath, 'utf-8');
       const statements = splitSqlStatements(sqlContent);
 
-      for (let statement of statements) {
+      for (const statement of statements) {
         try {
           await connection.query(statement);
         } catch (err: any) {
-          if (err.errno === 1273 && statement.includes('utf8mb4_0900_ai_ci')) {
-            console.warn(`[Migrate] Collation utf8mb4_0900_ai_ci unsupported on this server, falling back to utf8mb4_unicode_ci`);
-            statement = statement.replace(/utf8mb4_0900_ai_ci/g, 'utf8mb4_unicode_ci');
-            await connection.query(statement);
-          } else {
-            console.error(`[Migrate] Error executing statement in ${file}:\n${statement}\nError: ${err.message}`);
-            throw err;
-          }
+          console.error(`[Migrate] Error executing statement in ${file}:\n${statement}\nError: ${err.message}`);
+          throw err;
         }
       }
 

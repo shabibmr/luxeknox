@@ -2,6 +2,7 @@ import 'package:app/core/error/failures.dart';
 import 'package:app/core/usecase/usecase.dart';
 import 'package:app/session/domain/entities/capabilities.dart';
 import 'package:app/session/domain/entities/principal.dart';
+import 'package:app/session/domain/entities/user_type.dart';
 import 'package:app/session/domain/usecases/login_usecase.dart';
 import 'package:app/session/domain/usecases/logout_usecase.dart';
 import 'package:app/session/domain/usecases/restore_session_usecase.dart';
@@ -24,7 +25,7 @@ void main() {
 
   const tPrincipal = Principal(
     userId: 'user-1',
-    userType: 'member',
+    userType: UserType.member,
     displayName: 'Member One',
     profileId: 'prof-1',
   );
@@ -69,6 +70,22 @@ void main() {
 
     blocTest<SessionCubit, SessionState>(
       'restore-failure emits [SessionUnauthenticated]',
+      build: () {
+        when(
+          () => mockRestoreUseCase(const NoParams()),
+        ).thenAnswer((_) async => const Left(AuthFailure()));
+        return SessionCubit(
+          restoreSessionUseCase: mockRestoreUseCase,
+          loginUseCase: mockLoginUseCase,
+          logoutUseCase: mockLogoutUseCase,
+        );
+      },
+      act: (cubit) => cubit.restore(),
+      expect: () => [const SessionUnauthenticated()],
+    );
+
+    blocTest<SessionCubit, SessionState>(
+      'suspended/revoked session (AuthFailure on restore) → unauthenticated (L4)',
       build: () {
         when(
           () => mockRestoreUseCase(const NoParams()),

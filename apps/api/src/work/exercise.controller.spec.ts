@@ -8,6 +8,7 @@ import type { Exercise } from '../platform/db/schema/exercises';
 const ADMIN_USER: AuthenticatedUser = {
   id: 1,
   email: 'admin@luxeknox.test',
+  phoneNumber: null,
   userType: 'admin',
   roleId: 2,
   profileId: null,

@@ -1,8 +1,8 @@
+import 'dotenv/config';
 import { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { eq, sql } from 'drizzle-orm';
 import { AppModule } from '../../src/app.module';
-import { ZodValidationPipe } from '../../src/main';
 import { DRIZZLE_DB_TOKEN } from '../../src/platform/db/drizzle.module';
 import type { DrizzleDb } from '../../src/platform/db/client';
 import { users, type User } from '../../src/platform/db/schema/users';
@@ -36,13 +36,21 @@ export const INACTIVE_USER_CREDENTIALS = {
 };
 
 /**
- * Boots up the Nest application in test mode with global prefix 'v1'
- * and ZodValidationPipe matching production configuration.
+ * Clears per-test rows. Does not touch seeded roles, permissions or settings.
+ * audit_logs is intentionally omitted — the app user has no DELETE on it after F-03.
+ */
+export async function resetTestData(db: DrizzleDb<any>): Promise<void> {
+  await db.execute(sql`DELETE FROM sessions`);
+  await db.execute(sql`DELETE FROM users WHERE email LIKE 'e2e_%@luxeknox.test'`);
+}
+
+/**
+ * Boots up the Nest application in test mode with global prefix 'v1'.
+ * Validation is per-route via ZodValidationPipe (no global pipe).
  */
 export async function createTestApp(): Promise<TestAppInstance> {
   const app = await NestFactory.create(AppModule, { logger: false });
   app.setGlobalPrefix('v1');
-  app.useGlobalPipes(new ZodValidationPipe());
 
   await app.init();
   await app.listen(0);
@@ -52,6 +60,7 @@ export async function createTestApp(): Promise<TestAppInstance> {
   const baseUrl = `http://127.0.0.1:${port}/v1`;
 
   const db = app.get<DrizzleDb<any>>(DRIZZLE_DB_TOKEN);
+  await resetTestData(db);
 
   return { app, baseUrl, db };
 }

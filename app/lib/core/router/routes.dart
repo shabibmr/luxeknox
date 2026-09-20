@@ -4,6 +4,16 @@
 class Routes {
   Routes._();
 
+  /// Role path prefixes used by redirect boundary checks (not standalone screens).
+  static const String adminPathPrefix = '/admin';
+  static const String trainerPathPrefix = '/trainer';
+
+  static bool isAdminPath(String path) =>
+      path == adminPathPrefix || path.startsWith('$adminPathPrefix/');
+
+  static bool isTrainerPath(String path) =>
+      path == trainerPathPrefix || path.startsWith('$trainerPathPrefix/');
+
   // ========== Auth Routes ==========
   static const String login = '/login';
   static const String splash = '/splash';
@@ -124,4 +134,10 @@ class Routes {
       '/admin/notifications/broadcast';
   static const String adminReports = '/admin/reports/:category';
   static const String adminSettings = '/admin/settings/:category';
+
+  static String adminReportsCategory(String category) =>
+      '/admin/reports/$category';
+
+  static String adminSettingsCategory(String category) =>
+      '/admin/settings/$category';
 }

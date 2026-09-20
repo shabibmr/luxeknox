@@ -12,6 +12,7 @@ import '../widgets/exercise_filter_sheet.dart';
 import '../widgets/exercise_list_item.dart';
 import 'exercise_detail_screen.dart';
 import 'exercise_form_screen.dart';
+import '../exercise_strings.dart';
 
 /// Exercise Library screen (screen 29). Member and trainer get browse-only;
 /// admin also sees the add button (K5). At 840dp and above, selecting an
@@ -91,12 +92,12 @@ class _ExerciseLibraryViewState extends State<_ExerciseLibraryView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Exercise Library'),
+        title: const Text(ExerciseStrings.libraryTitle),
         actions: [
           if (canCreate)
             IconButton(
               icon: const Icon(Icons.add),
-              tooltip: 'Add exercise',
+              tooltip: ExerciseStrings.addTooltip,
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => const ExerciseFormScreen(),
@@ -127,9 +128,7 @@ class _ExerciseLibraryViewState extends State<_ExerciseLibraryView> {
               const VerticalDivider(width: 1),
               Expanded(
                 child: _selectedExerciseId == null
-                    ? const Center(
-                        child: Text('Select an exercise to view details'),
-                      )
+                    ? const Center(child: Text(ExerciseStrings.selectExercise))
                     : ExerciseDetailScreen(
                         key: ValueKey(_selectedExerciseId),
                         exerciseId: _selectedExerciseId!,
@@ -171,7 +170,7 @@ class _ExerciseListPane extends StatelessWidget {
                 child: TextField(
                   controller: searchController,
                   decoration: const InputDecoration(
-                    hintText: 'Search exercises',
+                    hintText: ExerciseStrings.searchHint,
                     prefixIcon: Icon(Icons.search),
                     isDense: true,
                     border: OutlineInputBorder(),
@@ -191,7 +190,7 @@ class _ExerciseListPane extends StatelessWidget {
                         ? null
                         : Theme.of(context).colorScheme.primary,
                   ),
-                  tooltip: 'Filter',
+                  tooltip: ExerciseStrings.filterTooltip,
                   onPressed: () => onOpenFilters(filter),
                 ),
               ),
@@ -264,7 +263,7 @@ class _ExerciseListPane extends StatelessWidget {
                           onPressed: () => context.read<ExerciseListBloc>().add(
                             const ExerciseListRefreshed(),
                           ),
-                          child: const Text('Retry'),
+                          child: const Text(ExerciseStrings.retry),
                         ),
                       ],
                     ),
@@ -274,7 +273,7 @@ class _ExerciseListPane extends StatelessWidget {
 
               if (state.status == ExerciseListStatus.success &&
                   state.items.isEmpty) {
-                return const Center(child: Text('No exercises found.'));
+                return const Center(child: Text(ExerciseStrings.noneFound));
               }
 
               return RefreshIndicator(

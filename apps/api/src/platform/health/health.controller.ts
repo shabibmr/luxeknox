@@ -1,11 +1,9 @@
-import { Controller, Get, Res, HttpStatus, Inject, Optional } from '@nestjs/common';
+import { Controller, Get, Res, HttpStatus, Inject } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags, ApiProperty } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { sql } from 'drizzle-orm';
-import { createConnectionPool, createDrizzleClient, type DrizzleDb } from '../db/client';
+import type { DrizzleDb } from '../db/client';
 import { DRIZZLE_DB_TOKEN } from '../db/drizzle.module';
-
-export { DRIZZLE_DB_TOKEN };
 
 export class HealthResponseDto {
   @ApiProperty({ type: String, example: 'ok', description: 'Application process status' })
@@ -29,16 +27,7 @@ export class ReadyResponseDto {
 @ApiTags('Health')
 @Controller()
 export class HealthController {
-  private readonly db: DrizzleDb;
-
-  constructor(@Optional() @Inject(DRIZZLE_DB_TOKEN) db?: DrizzleDb) {
-    if (db) {
-      this.db = db;
-    } else {
-      const pool = createConnectionPool();
-      this.db = createDrizzleClient(pool);
-    }
-  }
+  constructor(@Inject(DRIZZLE_DB_TOKEN) private readonly db: DrizzleDb) {}
 
   @Get('health')
   @ApiOperation({

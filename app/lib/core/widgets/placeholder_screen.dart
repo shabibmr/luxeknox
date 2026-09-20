@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/shell_strings.dart';
+
 /// Placeholder screen widget used for tab roots and unfinished features.
 class PlaceholderScreen extends StatelessWidget {
   const PlaceholderScreen({super.key, required this.title});
@@ -23,7 +25,7 @@ class PlaceholderScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Coming Soon',
+              ShellStrings.comingSoon,
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: Colors.grey),

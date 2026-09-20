@@ -1,18 +1,19 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { eq } from 'drizzle-orm';
 import { CurrentUser } from './current-user.decorator';
 import type { AuthenticatedUser } from './auth.guard';
 import { PermissionCache } from '../rbac/permission-cache';
-import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
-import type { DrizzleDb } from '../platform/db/client';
-import { roles, type Role } from '../platform/db/schema/roles';
+import { RoleRepository } from '../rbac/role.repository';
 
 export interface MeUserDto {
   id: number;
   email: string | null;
   userType: string;
   roleId: number;
+  user_type?: string;
+  role_id?: number;
+  status?: string;
+  phone_number?: string | null;
 }
 
 export interface MeRoleDto {
@@ -21,8 +22,18 @@ export interface MeRoleDto {
   slug: string;
 }
 
+export interface MePrincipalDto {
+  user_id: number;
+  user_type: string;
+  role: string;
+  role_id: number;
+  profile_id: number | null;
+  permissions: string[];
+}
+
 export interface MeResponseDto {
   user: MeUserDto;
+  principal?: MePrincipalDto;
   role: MeRoleDto | null;
   slugs: string[];
   profile: null;
@@ -33,8 +44,7 @@ export interface MeResponseDto {
 @Controller('me')
 export class MeController {
   constructor(
-    @Inject(DRIZZLE_DB_TOKEN)
-    private readonly db: DrizzleDb<any>,
+    private readonly roleRepository: RoleRepository,
     private readonly permissionCache: PermissionCache,
   ) {}
 
@@ -53,18 +63,9 @@ export class MeController {
     description: 'Unauthenticated or invalid session',
   })
   async getMe(@CurrentUser() currentUser: AuthenticatedUser): Promise<MeResponseDto> {
-    // 1. Fetch role row from DB
-    const roleRows = await (this.db as any)
-      .select()
-      .from(roles)
-      .where(eq(roles.id, currentUser.roleId))
-      .limit(1);
+    const role = await this.roleRepository.findById(currentUser.roleId);
 
-    const role: Role | undefined = roleRows[0];
-
-    // 2. Resolve permission slugs from PermissionCache
-    const permissions = await this.permissionCache.getPermissionsForRole(currentUser.roleId);
-    const slugs = Array.from(permissions);
+    const slugs = await this.permissionCache.getResolvedSlugs(currentUser.roleId);
 
     return {
       user: {
@@ -72,6 +73,18 @@ export class MeController {
         email: currentUser.email,
         userType: currentUser.userType,
         roleId: currentUser.roleId,
+        user_type: currentUser.userType,
+        role_id: currentUser.roleId,
+        status: 'active',
+        phone_number: currentUser.phoneNumber,
+      },
+      principal: {
+        user_id: currentUser.id,
+        user_type: currentUser.userType,
+        role: role ? role.slug : currentUser.userType,
+        role_id: currentUser.roleId,
+        profile_id: currentUser.profileId ?? null,
+        permissions: slugs,
       },
       role: role
         ? {
