@@ -1,7 +1,7 @@
 ## Reports
-- [ ] report navigation
-- [ ] filters
-- [ ] date ranges
+- [x] report navigation
+- [x] filters
+- [x] date ranges
 - [ ] member report
 - [ ] membership report
 - [ ] attendance report

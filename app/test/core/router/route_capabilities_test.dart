@@ -24,6 +24,10 @@ void main() {
         'notifications.send',
       );
       expect(
+        RouteCapabilities.requiredSlug(Routes.trainerNotificationsBroadcast),
+        'notifications.send',
+      );
+      expect(
         RouteCapabilities.requiredSlug(Routes.adminAttendanceScan),
         'attendance.checkin',
       );
@@ -59,6 +63,22 @@ void main() {
       );
       expect(
         RouteCapabilities.requiredSlug(Routes.trainerPlansWorkoutsHistory),
+        isNull,
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.trainerPlansDietsCreate),
+        'diets.write',
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.trainerPlansDietEditById('9')),
+        'diets.write',
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.trainerPlansDietById('9')),
+        isNull,
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.trainerPlansDietsHistory),
         isNull,
       );
     });

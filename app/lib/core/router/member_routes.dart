@@ -19,10 +19,21 @@ import '../../features/people/presentation/screens/health_info_screen.dart';
 import '../../features/scheduling/presentation/screens/book_schedule_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_detail_screen.dart';
+import '../../features/diet/presentation/diet_history_role.dart';
+import '../../features/diet/presentation/screens/diet_daily_log_screen.dart';
+import '../../features/diet/presentation/screens/diet_history_screen.dart';
+import '../../features/goals/presentation/screens/goal_detail_screen.dart';
+import '../../features/goals/presentation/screens/measurements_screen.dart';
+import '../../features/goals/presentation/screens/progress_hub_screen.dart';
+import '../../features/goals/presentation/screens/progress_notes_screen.dart';
+import '../../features/goals/presentation/screens/progress_photos_screen.dart';
+import '../../features/notifications/presentation/screens/notification_detail_screen.dart';
+import '../../features/notifications/presentation/screens/notifications_inbox_screen.dart';
 import '../../features/workout/presentation/screens/active_workout_screen.dart';
 import '../../features/workout/presentation/screens/workout_history_screen.dart';
 import '../../features/workout/presentation/workout_history_role.dart';
 import '../l10n/shell_strings.dart';
+
 import '../widgets/adaptive_shell.dart';
 import '../widgets/placeholder_screen.dart';
 import 'routes.dart';
@@ -102,14 +113,44 @@ StatefulShellRoute createMemberBranchRoute() {
                   title: ShellStrings.memberHomeMealDetail,
                 ),
               ),
+              // Member: E (Self) — Daily Diet Log (Food & Water)
+              GoRoute(
+                path: 'diet/log',
+                builder: (context, state) {
+                  final profileId = sessionProfileId(context);
+                  return DietDailyLogScreen(
+                    memberId: profileId?.toString(),
+                  );
+                },
+              ),
+              // Member: R (Self) — Diet History & Compliance
+              GoRoute(
+                path: 'diet/history',
+                builder: (context, state) {
+                  final profileId = sessionProfileId(context);
+                  return DietHistoryScreen(
+                    role: DietHistoryRole.member,
+                    memberId: profileId?.toString(),
+                  );
+                },
+              ),
             ],
           ),
+
           // Member: R (Self) — Notifications Inbox & Details
           GoRoute(
             path: Routes.memberNotifications,
-            builder: (context, state) => const PlaceholderScreen(
-              title: ShellStrings.memberNotifications,
+            builder: (context, state) => const NotificationsInboxScreen(
+              detailPathBuilder: Routes.memberNotificationById,
             ),
+            routes: [
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => NotificationDetailScreen(
+                  notificationId: state.pathParameters['id'] ?? '',
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -181,36 +222,25 @@ StatefulShellRoute createMemberBranchRoute() {
         routes: [
           GoRoute(
             path: Routes.memberProgress,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.progress),
+            builder: (context, state) => const ProgressHubScreen(),
             routes: [
-              // Member: R (Self) — Goal Details (Trainer/Admin edit, not Member)
               GoRoute(
                 path: 'goal/:id',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.memberProgressGoalDetail,
+                builder: (context, state) => GoalDetailScreen(
+                  goalId: state.pathParameters['id']!,
                 ),
               ),
-              // Member: E (Self) — Measurements & History
               GoRoute(
                 path: 'measurements',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.memberProgressMeasurements,
-                ),
+                builder: (context, state) => const MeasurementsScreen(),
               ),
-              // Member: E (Upload) — Progress Photos Gallery
               GoRoute(
                 path: 'photos',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.memberProgressPhotos,
-                ),
+                builder: (context, state) => const ProgressPhotosScreen(),
               ),
-              // Member: E (Self) — Progress Notes Screen
               GoRoute(
                 path: 'notes',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.memberProgressNotes,
-                ),
+                builder: (context, state) => const ProgressNotesScreen(),
               ),
             ],
           ),

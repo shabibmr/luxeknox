@@ -41,6 +41,7 @@ class MediaUploader {
     required String contentType,
     required MediaPurpose purpose,
     void Function(int sent, int total)? onProgress,
+    CancelToken? cancelToken,
   }) async {
     if (!purpose.allowedMimeTypes.contains(contentType)) {
       return left(
@@ -50,21 +51,19 @@ class MediaUploader {
     if (bytes.lengthInBytes > purpose.maxSizeBytes) {
       return left(
         ValidationFailure([
-          'File exceeds the ${purpose.maxSizeBytes ~/ (1024 * 1024)}MB limit',
+          'File exceeds the ${purpose.maxSizeBytesFormatted} limit',
         ]),
       );
     }
 
-    final token = CancelToken();
+    final token = cancelToken ?? CancelToken();
     _activeToken = token;
 
     try {
       final slot = await _mediaApi.createMediaUpload(
         mediaUploadRequest: api.MediaUploadRequest(
           (b) => b
-            ..purpose = api.MediaUploadRequestPurposeEnum.valueOf(
-              purpose.wireValue,
-            )
+            ..purpose = _mapPurposeToApi(purpose)
             ..contentType = contentType
             ..sizeBytes = bytes.lengthInBytes,
         ),
@@ -99,4 +98,16 @@ class MediaUploader {
       }
     }
   }
+}
+
+api.MediaUploadRequestPurposeEnum _mapPurposeToApi(MediaPurpose purpose) {
+  return switch (purpose) {
+    MediaPurpose.exerciseMedia => api.MediaUploadRequestPurposeEnum.exerciseMedia,
+    MediaPurpose.avatar => api.MediaUploadRequestPurposeEnum.avatar,
+    MediaPurpose.progressPhoto => api.MediaUploadRequestPurposeEnum.progressPhoto,
+    MediaPurpose.idProof => api.MediaUploadRequestPurposeEnum.idProof,
+    MediaPurpose.waiver => api.MediaUploadRequestPurposeEnum.waiver,
+    MediaPurpose.medicalCert => api.MediaUploadRequestPurposeEnum.medicalCert,
+    MediaPurpose.receiptPdf => api.MediaUploadRequestPurposeEnum.receiptPdf,
+  };
 }

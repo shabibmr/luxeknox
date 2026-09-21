@@ -4,7 +4,7 @@
 - [ ] crash reporting
 - [ ] network policy
 - [ ] app resume
-- [ ] push config
+- [ ] push config (Flutter FCM scaffold done; finish per-env `flutterfire configure` + APNs — see fcm-setup.md)
 - [ ] camera/photo permissions
 - [ ] deep links
 - [ ] platform builds

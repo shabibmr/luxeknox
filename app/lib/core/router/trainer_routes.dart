@@ -7,9 +7,22 @@ import '../../features/auth/presentation/screens/profile_tab_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_detail_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_library_screen.dart';
+import '../../features/diet/presentation/diet_history_role.dart';
+import '../../features/diet/presentation/screens/diet_history_screen.dart';
+import '../../features/diet/presentation/screens/diet_plan_builder_screen.dart';
+import '../../features/diet/presentation/screens/diet_plan_detail_screen.dart';
+import '../../features/diet/presentation/screens/diet_plan_list_screen.dart';
+import '../../features/diet/presentation/screens/diet_plan_versions_screen.dart';
+
 import '../../features/foods/presentation/screens/food_detail_screen.dart';
 import '../../features/foods/presentation/screens/food_library_screen.dart';
+import '../../features/goals/presentation/screens/measurements_screen.dart';
+import '../../features/goals/presentation/screens/progress_hub_screen.dart';
 import '../../features/membership/presentation/screens/trainer_membership_summary_screen.dart';
+import '../../features/notifications/presentation/screens/broadcast_screen.dart';
+import '../../features/notifications/presentation/screens/notification_detail_screen.dart';
+import '../../features/notifications/presentation/screens/notifications_inbox_screen.dart';
+import '../../features/reports/presentation/screens/report_viewer_screen.dart';
 import '../../features/payments/presentation/payment_ledger_role.dart';
 import '../../features/payments/presentation/screens/payments_ledger_screen.dart';
 import '../../features/people/presentation/screens/health_info_screen.dart';
@@ -79,9 +92,24 @@ StatefulShellRoute createTrainerBranchRoute() {
           ),
           GoRoute(
             path: Routes.trainerNotifications,
-            builder: (context, state) => const PlaceholderScreen(
-              title: ShellStrings.trainerNotifications,
+            builder: (context, state) => const NotificationsInboxScreen(
+              detailPathBuilder: Routes.trainerNotificationById,
+              showBroadcastAction: true,
+              broadcastPath: Routes.trainerNotificationsBroadcast,
             ),
+            routes: [
+              GoRoute(
+                path: 'broadcast',
+                builder: (context, state) =>
+                    const BroadcastScreen(trainerOnlyAssigned: true),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => NotificationDetailScreen(
+                  notificationId: state.pathParameters['id'] ?? '',
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -120,15 +148,20 @@ StatefulShellRoute createTrainerBranchRoute() {
                   ),
                   GoRoute(
                     path: 'goals',
-                    builder: (context, state) => const PlaceholderScreen(
-                      title: ShellStrings.memberGoals,
-                    ),
+                    builder: (context, state) {
+                      final id = state.pathParameters['id'] ?? '';
+                      return ProgressHubScreen(
+                        memberId: id,
+                        canCreateGoals: true,
+                      );
+                    },
                     routes: [
                       GoRoute(
                         path: 'add-measurement',
-                        builder: (context, state) => const PlaceholderScreen(
-                          title: ShellStrings.memberAddMeasurement,
-                        ),
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'] ?? '';
+                          return MeasurementsScreen(memberId: id);
+                        },
                       ),
                     ],
                   ),
@@ -182,10 +215,15 @@ StatefulShellRoute createTrainerBranchRoute() {
                   ),
                   GoRoute(
                     path: 'diet-history',
-                    builder: (context, state) => const PlaceholderScreen(
-                      title: ShellStrings.memberDietHistory,
-                    ),
+                    builder: (context, state) {
+                      final memberId = state.pathParameters['id']!;
+                      return DietHistoryScreen(
+                        role: DietHistoryRole.trainer,
+                        memberId: memberId,
+                      );
+                    },
                   ),
+
                 ],
               ),
             ],
@@ -314,20 +352,33 @@ StatefulShellRoute createTrainerBranchRoute() {
               ),
               GoRoute(
                 path: 'diets/create',
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: ShellStrings.createDietPlan),
+                builder: (context, state) => const DietPlanBuilderScreen(),
               ),
               GoRoute(
                 path: 'diets/history',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.dietPlanHistory,
-                ),
+                builder: (context, state) => const DietPlanListScreen(),
               ),
               GoRoute(
                 path: 'diets/:id',
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: ShellStrings.dietPlanDetail),
+                builder: (context, state) => DietPlanDetailScreen(
+                  planId: state.pathParameters['id']!,
+                ),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (context, state) => DietPlanBuilderScreen(
+                      planId: state.pathParameters['id'],
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'versions',
+                    builder: (context, state) => DietPlanVersionsScreen(
+                      planId: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
               ),
+
             ],
           ),
         ],
@@ -336,8 +387,16 @@ StatefulShellRoute createTrainerBranchRoute() {
         routes: [
           GoRoute(
             path: Routes.trainerProfile,
-            builder: (context, state) =>
-                const ProfileTabScreen(title: ShellStrings.trainerProfile),
+            builder: (context, state) => const ProfileTabScreen(
+              title: ShellStrings.trainerProfile,
+              links: [
+                ProfileTabLink(
+                  title: ShellStrings.trainerOwnReport,
+                  path: Routes.trainerReportsOwn,
+                  icon: Icons.insights_outlined,
+                ),
+              ],
+            ),
             routes: [
               GoRoute(
                 path: 'edit',
@@ -345,6 +404,13 @@ StatefulShellRoute createTrainerBranchRoute() {
                     const PlaceholderScreen(title: ShellStrings.editProfile),
               ),
             ],
+          ),
+          GoRoute(
+            path: Routes.trainerReportsOwn,
+            builder: (context, state) => const ReportViewerScreen(
+              category: 'trainer_own',
+              trainerOwnLocked: true,
+            ),
           ),
         ],
       ),

@@ -7,14 +7,17 @@ abstract final class RouteCapabilities {
     ('/admin/memberships/create', 'memberships.create'),
     ('/admin/members/add', 'members.create'),
     ('/admin/notifications/broadcast', 'notifications.send'),
+    ('/trainer/notifications/broadcast', 'notifications.send'),
     ('/admin/attendance/manual', 'attendance.override'),
     ('/admin/attendance/scan', 'attendance.checkin'),
     ('/admin/payments/record', 'payments.create'),
     ('/admin/payments/methods', 'payments.read'),
     ('/admin/payments/outstanding', 'payments.read'),
     ('/admin/reports', 'reports.read'),
+    ('/admin/goal-metrics', 'goals.create'),
     ('/admin/settings', 'settings.read'),
     ('/trainer/plans/workouts/create', 'workouts.write'),
+    ('/trainer/plans/diets/create', 'diets.write'),
   ];
 
   /// Returns the required capability slug for [path], or null if unrestricted
@@ -23,6 +26,9 @@ abstract final class RouteCapabilities {
     // Edit is nested under :id — match suffix so list/detail stay ungated.
     if (path.startsWith('/trainer/plans/workouts/') && path.endsWith('/edit')) {
       return 'workouts.write';
+    }
+    if (path.startsWith('/trainer/plans/diets/') && path.endsWith('/edit')) {
+      return 'diets.write';
     }
     for (final (prefix, slug) in requirements) {
       if (path == prefix || path.startsWith('$prefix/')) {

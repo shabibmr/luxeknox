@@ -20,6 +20,7 @@ abstract final class ShellStrings {
   static const trainerSchedule = 'Trainer Schedule';
   static const trainerPlans = 'Trainer Plans';
   static const trainerProfile = 'Trainer Profile';
+  static const trainerOwnReport = 'My performance report';
   static const adminDashboard = 'Admin Dashboard';
   static const adminMembers = 'Admin Members';
   static const adminMemberships = 'Admin Memberships';

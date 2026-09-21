@@ -21,8 +21,11 @@ void main() {
         Routes.memberHomeWorkoutHistory,
         Routes.memberHomeWorkoutExerciseDetail,
         Routes.memberHomeDietMeal,
+        Routes.memberHomeDietLog,
+        Routes.memberHomeDietHistory,
         Routes.memberNotifications,
         Routes.memberMembership,
+
         Routes.memberMembershipPackages,
         Routes.memberMembershipHistory,
         Routes.memberMembershipFreezeHistory,
@@ -66,6 +69,8 @@ void main() {
         Routes.trainerPlansWorkoutsVersions,
         Routes.trainerPlansDietsCreate,
         Routes.trainerPlansDietsDetail,
+        Routes.trainerPlansDietsEdit,
+        Routes.trainerPlansDietsVersions,
         Routes.trainerPlansExercises,
         Routes.trainerPlansExercisesDetail,
         Routes.trainerProfile,
@@ -79,6 +84,7 @@ void main() {
         Routes.adminMembersEdit,
         Routes.adminMembersAssignMembership,
         Routes.adminMembersWorkoutHistory,
+        Routes.adminMembersDietHistory,
         Routes.adminMemberships,
         Routes.adminMembershipsDetail,
         Routes.adminMembershipsRenew,
@@ -98,7 +104,9 @@ void main() {
         Routes.adminDietLibrary,
         Routes.adminGoalMetrics,
         Routes.adminNotificationsBroadcast,
+        Routes.adminReportsHub,
         Routes.adminReports,
+        Routes.trainerReportsOwn,
         Routes.adminSettings,
       };
 
@@ -107,7 +115,7 @@ void main() {
       // set's length equals the number of entries listed.
       expect(
         allRoutes.length,
-        84,
+        91,
         reason: 'All route constants should be unique; duplicate values found',
       );
     });
@@ -124,8 +132,20 @@ void main() {
         '/trainer/members/3/workout-history',
       );
       expect(
+        Routes.trainerMembersDietHistoryById('3'),
+        '/trainer/members/3/diet-history',
+      );
+      expect(
         Routes.adminMembersWorkoutHistoryById('9'),
         '/admin/members/9/workout-history',
+      );
+      expect(
+        Routes.adminMembersDietHistoryById('9'),
+        '/admin/members/9/diet-history',
+      );
+      expect(
+        Routes.trainerPlansDietVersionsById('5'),
+        '/trainer/plans/diets/5/versions',
       );
       expect(
         Routes.loginWithRedirect('/admin/members/9'),
@@ -134,3 +154,4 @@ void main() {
     });
   });
 }
+

@@ -1,10 +1,10 @@
 ## Media
-- [ ] signed upload
-- [ ] upload progress
-- [ ] retry/cancel
-- [ ] signed download
-- [ ] parent access checks
-- [ ] MIME/size handling
-- [ ] image compression/thumbnails
-- [ ] document preview
-- [ ] expired URL recovery
+- [x] signed upload
+- [x] upload progress
+- [x] retry/cancel
+- [x] signed download
+- [x] parent access checks
+- [x] MIME/size handling
+- [x] image compression/thumbnails
+- [x] document preview
+- [x] expired URL recovery

@@ -6,6 +6,8 @@ import '../../features/auth/presentation/widgets/sign_out_tile.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_library_screen.dart';
 import '../../features/foods/presentation/screens/food_library_screen.dart';
+import '../../features/goals/presentation/screens/goal_metrics_admin_screen.dart';
+import '../../features/notifications/presentation/screens/broadcast_screen.dart';
 import '../../features/membership/presentation/screens/create_membership_screen.dart';
 import '../../features/membership/presentation/screens/membership_detail_screen.dart';
 import '../../features/membership/presentation/screens/membership_packages_catalog_screen.dart';
@@ -16,14 +18,19 @@ import '../../features/payments/presentation/screens/payment_detail_screen.dart'
 import '../../features/payments/presentation/screens/payment_methods_screen.dart';
 import '../../features/payments/presentation/screens/payments_ledger_screen.dart';
 import '../../features/people/presentation/screens/employees_directory_screen.dart';
+import '../../features/reports/presentation/screens/report_viewer_screen.dart';
+import '../../features/reports/presentation/screens/reports_hub_screen.dart';
 import '../../features/people/presentation/screens/member_dossier_screen.dart';
 import '../../features/people/presentation/screens/members_directory_screen.dart';
 import '../../features/people/presentation/screens/trainers_directory_screen.dart';
 import '../../features/scheduling/presentation/screens/facilities_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_detail_screen.dart';
+import '../../features/diet/presentation/diet_history_role.dart';
+import '../../features/diet/presentation/screens/diet_history_screen.dart';
 import '../../features/workout/presentation/screens/workout_history_screen.dart';
 import '../../features/workout/presentation/workout_history_role.dart';
+
 import '../l10n/shell_strings.dart';
 import '../widgets/adaptive_shell.dart';
 import '../widgets/more_hub_screen.dart';
@@ -81,8 +88,19 @@ StatefulShellRoute createAdminBranchRoute() {
                       );
                     },
                   ),
+                  GoRoute(
+                    path: 'diet-history',
+                    builder: (context, state) {
+                      final memberId = state.pathParameters['id']!;
+                      return DietHistoryScreen(
+                        role: DietHistoryRole.admin,
+                        memberId: memberId,
+                      );
+                    },
+                  ),
                 ],
               ),
+
             ],
           ),
         ],
@@ -207,21 +225,23 @@ StatefulShellRoute createAdminBranchRoute() {
           ),
           GoRoute(
             path: Routes.adminGoalMetrics,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.goalMetrics),
+            builder: (context, state) => const GoalMetricsAdminScreen(),
           ),
           GoRoute(
             path: Routes.adminNotificationsBroadcast,
-            builder: (context, state) => const PlaceholderScreen(
-              title: ShellStrings.notificationsBroadcast,
-            ),
+            builder: (context, state) => const BroadcastScreen(),
           ),
           GoRoute(
-            path: Routes.adminReports,
-            builder: (context, state) => PlaceholderScreen(
-              title:
-                  '${ShellStrings.reports}: ${state.pathParameters['category']}',
-            ),
+            path: Routes.adminReportsHub,
+            builder: (context, state) => const ReportsHubScreen(),
+            routes: [
+              GoRoute(
+                path: ':category',
+                builder: (context, state) => ReportViewerScreen(
+                  category: state.pathParameters['category']!,
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: Routes.adminSettings,

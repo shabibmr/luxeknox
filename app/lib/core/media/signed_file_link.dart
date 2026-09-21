@@ -36,14 +36,17 @@ class _SignedFileLinkState extends State<SignedFileLink> {
   bool _busy = false;
   String? _error;
 
-  Future<void> _open() async {
+  Future<void> _open({bool forceRefresh = false}) async {
     final resolver = widget.resolver ?? GetIt.instance<SignedMediaResolver>();
     setState(() {
       _busy = true;
       _error = null;
     });
 
-    final result = await resolver.resolve(widget.objectKey);
+    final result = await resolver.resolve(
+      widget.objectKey,
+      forceRefresh: forceRefresh,
+    );
     if (!mounted) return;
 
     await result.fold(
@@ -69,11 +72,18 @@ class _SignedFileLinkState extends State<SignedFileLink> {
   @override
   Widget build(BuildContext context) {
     if (_error != null) {
-      return Text(_error!, style: Theme.of(context).textTheme.bodySmall);
+      return TextButton.icon(
+        onPressed: () => _open(forceRefresh: true),
+        icon: const Icon(Icons.refresh, size: 16),
+        label: Text(
+          '$_error — Tap to retry',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      );
     }
 
     return OutlinedButton.icon(
-      onPressed: _busy ? null : _open,
+      onPressed: _busy ? null : () => _open(),
       icon: _busy
           ? const SizedBox(
               width: 16,

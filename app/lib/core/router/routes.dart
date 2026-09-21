@@ -29,7 +29,10 @@ class Routes {
   static const String memberHomeWorkoutExerciseDetail =
       '/home/workout/exercises/:id';
   static const String memberHomeDietMeal = '/home/diet/meal/:id';
+  static const String memberHomeDietLog = '/home/diet/log';
+  static const String memberHomeDietHistory = '/home/diet/history';
   static const String memberNotifications = '/notifications';
+  static const String memberNotificationDetail = '/notifications/:id';
 
   // Membership Stack
   static const String memberMembership = '/membership';
@@ -73,6 +76,9 @@ class Routes {
   static const String trainerHome = '/trainer/home';
   static const String trainerSessionsToday = '/trainer/sessions/today';
   static const String trainerNotifications = '/trainer/notifications';
+  static const String trainerNotificationDetail = '/trainer/notifications/:id';
+  static const String trainerNotificationsBroadcast =
+      '/trainer/notifications/broadcast';
 
   // Members Stack
   static const String trainerMembers = '/trainer/members';
@@ -111,6 +117,9 @@ class Routes {
       '/trainer/plans/workouts/:id/versions';
   static const String trainerPlansDietsCreate = '/trainer/plans/diets/create';
   static const String trainerPlansDietsDetail = '/trainer/plans/diets/:id';
+  static const String trainerPlansDietsEdit = '/trainer/plans/diets/:id/edit';
+  static const String trainerPlansDietsVersions =
+      '/trainer/plans/diets/:id/versions';
   static const String trainerPlansExercises = '/trainer/plans/exercises';
   static const String trainerPlansExercisesDetail =
       '/trainer/plans/exercises/:id';
@@ -138,6 +147,9 @@ class Routes {
       '/admin/members/:id/assign-membership';
   static const String adminMembersWorkoutHistory =
       '/admin/members/:id/workout-history';
+  static const String adminMembersDietHistory =
+      '/admin/members/:id/diet-history';
+
 
   // Memberships Stack
   static const String adminMemberships = '/admin/memberships';
@@ -169,8 +181,12 @@ class Routes {
   static const String adminGoalMetrics = '/admin/goal-metrics';
   static const String adminNotificationsBroadcast =
       '/admin/notifications/broadcast';
+  static const String adminReportsHub = '/admin/reports';
   static const String adminReports = '/admin/reports/:category';
   static const String adminSettings = '/admin/settings/:category';
+
+  /// Trainer own-performance slice (FR-RPT-009).
+  static const String trainerReportsOwn = '/trainer/reports/own';
 
   static String adminReportsCategory(String category) =>
       '/admin/reports/$category';
@@ -189,6 +205,11 @@ class Routes {
 
   static String memberHomeDietMealById(String id) => '/home/diet/meal/$id';
 
+  static String memberNotificationById(String id) => '/notifications/$id';
+
+  static String trainerNotificationById(String id) =>
+      '/trainer/notifications/$id';
+
   static String memberScheduleById(String id) => '/schedule/$id';
 
   static String memberProgressGoalById(String id) => '/progress/goal/$id';
@@ -197,6 +218,12 @@ class Routes {
 
   static String trainerMemberHealthById(String id) =>
       '/trainer/members/$id/health';
+
+  static String trainerMemberGoalsById(String id) =>
+      '/trainer/members/$id/goals';
+
+  static String trainerMemberGoalsAddMeasurementById(String id) =>
+      '/trainer/members/$id/goals/add-measurement';
 
   static String trainerScheduleById(String id) => '/trainer/schedule/$id';
 
@@ -211,6 +238,12 @@ class Routes {
 
   static String trainerPlansDietById(String id) => '/trainer/plans/diets/$id';
 
+  static String trainerPlansDietEditById(String id) =>
+      '/trainer/plans/diets/$id/edit';
+
+  static String trainerPlansDietVersionsById(String id) =>
+      '/trainer/plans/diets/$id/versions';
+
   static String trainerPlansExerciseById(String id) =>
       '/trainer/plans/exercises/$id';
 
@@ -219,8 +252,15 @@ class Routes {
   static String adminMembersWorkoutHistoryById(String id) =>
       '/admin/members/$id/workout-history';
 
+  static String adminMembersDietHistoryById(String id) =>
+      '/admin/members/$id/diet-history';
+
   static String trainerMembersWorkoutHistoryById(String id) =>
       '/trainer/members/$id/workout-history';
+
+  static String trainerMembersDietHistoryById(String id) =>
+      '/trainer/members/$id/diet-history';
+
 
   static String adminMembershipById(String id) => '/admin/memberships/$id';
 

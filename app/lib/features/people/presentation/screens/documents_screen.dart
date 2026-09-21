@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/media/document_access.dart';
+import '../../../../core/media/document_preview_dialog.dart';
 import '../../../../core/media/media_picker.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -96,10 +97,27 @@ class _DocumentsBody extends StatelessWidget {
                             itemBuilder: (context, index) {
                               final doc = documents[index];
                               return ListTile(
+                                leading: Icon(
+                                  doc.documentType == DocumentPurpose.progressPhoto
+                                      ? Icons.image_outlined
+                                      : Icons.description_outlined,
+                                ),
                                 title: Text(
                                   doc.title ?? doc.documentType.name,
                                 ),
-                                subtitle: Text(doc.documentType.name),
+                                subtitle: Text(
+                                  '${doc.documentType.name}${doc.fileSize != null ? ' · ${(doc.fileSize! / 1024).toStringAsFixed(0)} KB' : ''}',
+                                ),
+                                onTap: doc.objectKey != null
+                                    ? () => DocumentPreviewDialog.show(
+                                          context,
+                                          objectKey: doc.objectKey!,
+                                          title: doc.title ?? doc.documentType.name,
+                                          purpose: doc.documentType,
+                                          viewerRole: role,
+                                          fileSize: doc.fileSize,
+                                        )
+                                    : null,
                                 trailing: IconButton(
                                   icon: const Icon(Icons.delete_outline),
                                   onPressed: () => context

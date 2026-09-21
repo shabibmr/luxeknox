@@ -145,49 +145,51 @@ This file is the single executable register. Each vertical below is also maintai
 <!-- ==================== FILE: 09-diet.md ==================== -->
 # FILE: 09-diet.md
 ## Diet
-- [ ] plan list/detail
-- [ ] builder
-- [ ] meal builder
-- [ ] food picker
-- [ ] macro display
-- [ ] versions/templates
-- [ ] assignment
-- [ ] daily log
-- [ ] adherence
-- [ ] water
-- [ ] trainer review
-- [ ] verified-food visibility
+- [x] plan list/detail
+- [x] builder
+- [x] meal builder
+- [x] food picker
+- [x] macro display
+- [x] versions/templates
+- [x] assignment
+- [x] daily log
+- [x] adherence
+- [x] water
+- [x] trainer review
+- [x] verified-food visibility
 
 <!-- ==================== FILE: 10-goals-progress.md ==================== -->
 # FILE: 10-goals-progress.md
 ## Goals & Progress
-- [ ] metrics
-- [ ] goals
-- [ ] check-ins
-- [ ] measurements
-- [ ] charts
-- [ ] mandatory metrics
-- [ ] progress photos
-- [ ] comparison
-- [ ] privacy
-- [ ] notes
-- [ ] trainer assessments
-- [ ] server-derived achievement
+- [x] metrics
+- [x] goals
+- [x] check-ins
+- [x] measurements
+- [x] charts
+- [x] mandatory metrics
+- [x] progress photos
+- [x] comparison
+- [x] privacy
+- [x] notes
+- [x] trainer assessments
+- [x] server-derived achievement
 
 <!-- ==================== FILE: 11-notifications.md ==================== -->
 # FILE: 11-notifications.md
 ## Notifications
-- [ ] inbox
-- [ ] detail/deep links
-- [ ] unread
-- [ ] read actions
-- [ ] device registration
-- [ ] token rotation
-- [ ] logout unregister
-- [ ] push handling
-- [ ] admin broadcast
-- [ ] trainer broadcast
-- [ ] history
+- [x] inbox
+- [x] detail/deep links
+- [x] unread
+- [x] read actions
+- [x] device registration
+- [x] token rotation
+- [x] logout unregister
+- [x] push handling
+- [x] admin broadcast
+- [x] trainer broadcast
+- [x] history
+
+FCM client scaffolded (`firebase_messaging`); enable with `flutterfire configure` — see `docs/flutter/fcm-setup.md`.
 
 <!-- ==================== FILE: 12-dashboard.md ==================== -->
 # FILE: 12-dashboard.md
@@ -211,9 +213,9 @@ This file is the single executable register. Each vertical below is also maintai
 <!-- ==================== FILE: 13-reports.md ==================== -->
 # FILE: 13-reports.md
 ## Reports
-- [ ] report navigation
-- [ ] filters
-- [ ] date ranges
+- [x] report navigation
+- [x] filters
+- [x] date ranges
 - [ ] member report
 - [ ] membership report
 - [ ] attendance report
@@ -241,15 +243,15 @@ This file is the single executable register. Each vertical below is also maintai
 <!-- ==================== FILE: 15-media.md ==================== -->
 # FILE: 15-media.md
 ## Media
-- [ ] signed upload
-- [ ] upload progress
-- [ ] retry/cancel
-- [ ] signed download
-- [ ] parent access checks
-- [ ] MIME/size handling
-- [ ] image compression/thumbnails
-- [ ] document preview
-- [ ] expired URL recovery
+- [x] signed upload
+- [x] upload progress
+- [x] retry/cancel
+- [x] signed download
+- [x] parent access checks
+- [x] MIME/size handling
+- [x] image compression/thumbnails
+- [x] document preview
+- [x] expired URL recovery
 
 <!-- ==================== FILE: 16-api-client-contract.md ==================== -->
 # FILE: 16-api-client-contract.md
@@ -289,7 +291,7 @@ This file is the single executable register. Each vertical below is also maintai
 - [ ] crash reporting
 - [ ] network policy
 - [ ] app resume
-- [ ] push config
+- [ ] push config (Flutter FCM scaffold done; finish per-env flutterfire configure — see fcm-setup.md)
 - [ ] camera/photo permissions
 - [ ] deep links
 - [ ] platform builds
@@ -309,13 +311,13 @@ This file is the single executable register. Each vertical below is also maintai
 - [x] Scheduling (core; see phase3-status-report)
 - [ ] Attendance
 - [x] Workout (plans + sessions + history/volume/PR + role variants — see phase6-status-report)
-- [ ] Diet
+- [x] Diet (plans + versions/templates + assignment + daily log + adherence/water + trainer review + verified foods — see phase7-status-report)
 - [ ] Goals/Progress
-- [ ] Notifications
+- [x] Notifications
 - [ ] Dashboard
-- [ ] Reports
+- [ ] Reports (navigation + filters + date ranges — see phase8-status-report; remaining types/export later)
 - [ ] Settings/RBAC
-- [ ] Media
+- [x] Media
 - [ ] API contract
 - [ ] role-variant tests
 - [ ] integration tests

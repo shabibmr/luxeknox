@@ -70,5 +70,14 @@ abstract class RegisterModule {
   PAYApi payApi(Dio dio) => PAYApi(dio, standardSerializers);
 
   @singleton
+  RPTApi rptApi(Dio dio) => RPTApi(dio, standardSerializers);
+
+  @singleton
+  GOALApi goalApi(Dio dio) => GOALApi(dio, standardSerializers);
+
+  @singleton
+  NOTIFApi notifApi(Dio dio) => NOTIFApi(dio, standardSerializers);
+
+  @singleton
   GoRouter router(SessionCubit session) => createRouter(session);
 }

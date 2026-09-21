@@ -8,11 +8,11 @@
 - [x] Attendance (see phase4-status-report)
 - [x] Payments (ledger/dues/detail/methods; POS+refunds remain — see phase5-status-report)
 - [x] Workout (plans + sessions + history/volume/PR + role variants — see phase6-status-report)
-- [ ] Diet
-- [ ] Goals/Progress
-- [ ] Notifications
+- [x] Diet (plans + versions/templates + assignment + daily log + adherence/water + trainer review + verified foods — see phase7-status-report)
+- [x] Goals/Progress
+- [x] Notifications
 - [ ] Dashboard
-- [ ] Reports
+- [ ] Reports (navigation + filters + date ranges — see phase8-status-report; remaining types/export later)
 - [ ] Settings/RBAC
 - [ ] Media
 - [ ] API contract
