@@ -1,0 +1,1 @@
+# LuxeKnox Flutter — Testing & Quality\n\n- [ ] entity tests\n- [ ] use cases\n- [ ] repositories\n- [ ] Blocs/Cubits\n- [ ] role variants\n- [ ] widget tests\n- [ ] goldens\n- [ ] router tests\n- [ ] integration journeys\n- [ ] accessibility\n- [ ] localization\n- [ ] architecture CI\n- [ ] flaky-test elimination\n
