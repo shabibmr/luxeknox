@@ -1,0 +1,1 @@
+# LuxeKnox Flutter — Navigation & Shell\n\n- [ ] StatefulShellRoute five branches\n- [ ] member shell\n- [ ] trainer shell\n- [ ] admin shell\n- [ ] responsive navigation\n- [ ] deep links\n- [ ] capability redirects\n- [ ] nested-stack preservation\n- [ ] unknown routes\n- [ ] unsaved-form guards\n
