@@ -1,0 +1,1 @@
+# LuxeKnox Flutter — Workout\n\n- [ ] plan list/detail\n- [ ] plan builder\n- [ ] exercise picker\n- [ ] ordering\n- [ ] publish/archive\n- [ ] template copy\n- [ ] versions\n- [ ] live session\n- [ ] set logging\n- [ ] rest timer\n- [ ] completion\n- [ ] history\n- [ ] volume/PR\n- [ ] role variants\n
