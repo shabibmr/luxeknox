@@ -1,0 +1,1 @@
+# LuxeKnox Flutter — Reports\n\n- [ ] report navigation\n- [ ] filters\n- [ ] date ranges\n- [ ] member report\n- [ ] membership report\n- [ ] attendance report\n- [ ] payments report\n- [ ] trainer report\n- [ ] workout report\n- [ ] diet report\n- [ ] progress report\n- [ ] trainer own slice\n- [ ] export handling\n- [ ] large-result pagination\n
