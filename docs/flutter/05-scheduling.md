@@ -1,0 +1,1 @@
+# LuxeKnox Flutter — Scheduling\n\n- [ ] calendar queries\n- [ ] schedule detail/roster\n- [ ] schedule types\n- [ ] facilities\n- [ ] trainer availability\n- [ ] open slots\n- [ ] PT booking\n- [ ] class booking\n- [ ] recurring series\n- [ ] cancel/reschedule\n- [ ] waitlist\n- [ ] trainer start/complete\n- [ ] double-submit protection\n
