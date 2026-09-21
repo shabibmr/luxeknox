@@ -1,0 +1,1 @@
+# LuxeKnox Flutter — Attendance\n\n- [ ] digital pass\n- [ ] QR presentation\n- [ ] check-in/out\n- [ ] history\n- [ ] summary/streak/heatmap\n- [ ] session attendance\n- [ ] admin live feed\n- [ ] manual override\n- [ ] idempotency keys\n- [ ] camera/permission errors\n
