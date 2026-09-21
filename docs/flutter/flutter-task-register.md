@@ -111,22 +111,6 @@ This file is the single executable register. Each vertical below is also maintai
 - [ ] idempotency keys
 - [ ] camera/permission errors
 
-<!-- ==================== FILE: 07-payments.md ==================== -->
-# FILE: 07-payments.md
-## Payments & POS
-- [ ] member ledger
-- [ ] admin ledger
-- [ ] outstanding dues
-- [ ] payment detail
-- [ ] payment methods
-- [ ] POS
-- [ ] discounts
-- [ ] split tender
-- [ ] idempotent submission
-- [ ] refund/adjustment
-- [ ] receipt
-- [ ] financial integration tests
-
 <!-- ==================== FILE: 08-workout.md ==================== -->
 # FILE: 08-workout.md
 ## Workout
@@ -195,16 +179,21 @@ This file is the single executable register. Each vertical below is also maintai
 <!-- ==================== FILE: 12-dashboard.md ==================== -->
 # FILE: 12-dashboard.md
 ## Dashboard
-- [ ] adaptive shell
-- [ ] member widgets
-- [ ] trainer widgets
-- [ ] admin widgets
-- [ ] section loading
-- [ ] permission omission
-- [ ] skeletons
-- [ ] refresh
-- [ ] cache-last-successful where useful
-- [ ] rebuild optimization
+> `lib/features/dashboard/` calls the backend's `GET /dashboard` (already implemented — see
+> `apps/api/todo/backend-task-register.md` Vertical 14). Session/attendance/schedule/revenue
+> sub-widgets from the FRD are out of scope here because the backend itself doesn't return
+> them yet (no attendance/scheduling/payment tables); the client renders whatever the server
+> sends and omits the rest, which is exactly the DSH-005 contract.
+- [x] adaptive shell — `DashboardScreen` slots into the existing `AdaptiveShell`-based member/trainer/admin `StatefulShellRoute`s (`lib/core/router/{member,trainer,admin}_routes.dart`, home route).
+- [x] member widgets — `DashboardMemberSection` (membership status/days-remaining, assigned trainer).
+- [x] trainer widgets — `DashboardTrainerSection` (assigned-member count + preview list).
+- [x] admin widgets — `DashboardAdminSection` (member/trainer/employee totals, membership-status breakdown, expiring-soon).
+- [x] section loading — `DashboardStatus.loading` (first fetch, empty) vs `refreshing` (reload with prior data already shown) in `dashboard_cubit.dart`.
+- [x] permission omission — `DashboardSnapshot.member/trainer/admin` are nullable; `dashboard_model.dart` maps a missing/malformed section to `null` instead of throwing, and the screen renders only present sections (`dashboard_model_test.dart`, `dashboard_cubit_test.dart`).
+- [x] skeletons — `DashboardSkeleton` shown only on the initial empty-state load.
+- [x] refresh — `RefreshIndicator` + retry button call `DashboardCubit.refresh()`.
+- [x] cache-last-successful where useful — `DashboardState.snapshot` is retained across a failed refresh so the UI keeps showing the last good data behind a stale-data banner (`dashboard_cubit_test.dart` "cache-last-successful").
+- [x] rebuild optimization — `Equatable` state + one `BlocSelector` per section widget in `dashboard_screen.dart`, so a change to one section never rebuilds the others.
 
 <!-- ==================== FILE: 13-reports.md ==================== -->
 # FILE: 13-reports.md
@@ -306,7 +295,6 @@ This file is the single executable register. Each vertical below is also maintai
 - [ ] Membership
 - [ ] Scheduling
 - [ ] Attendance
-- [ ] Payments
 - [ ] Workout
 - [ ] Diet
 - [ ] Goals/Progress

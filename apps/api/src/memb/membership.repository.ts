@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, gte, lte, ne, sql, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, gte, lte, ne, sql, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import {
   membershipExtensions,
@@ -137,6 +137,32 @@ export class MembershipRepository extends BaseRepository<
       )
       .limit(1);
     return rows[0] ?? null;
+  }
+
+  /** DSH-004: membership counts grouped by status, for the admin dashboard summary. */
+  async countByStatus(): Promise<Record<string, number>> {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select({ status: memberships.status, value: count() })
+      .from(memberships)
+      .groupBy(memberships.status);
+    const result: Record<string, number> = {};
+    for (const row of rows as Array<{ status: string; value: number }>) {
+      result[row.status] = Number(row.value);
+    }
+    return result;
+  }
+
+  /** DSH-004: active memberships whose `end_date` falls within the next `days` days (inclusive). */
+  async countExpiringSoon(days: number): Promise<number> {
+    const db = this.getDb() as any;
+    const today = new Date().toISOString().slice(0, 10);
+    const until = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const rows = await db
+      .select({ value: count() })
+      .from(memberships)
+      .where(and(eq(memberships.status, 'active'), gte(memberships.end_date, today), lte(memberships.end_date, until)));
+    return Number(rows[0]?.value ?? 0);
   }
 
   /** BR-MEMB-004: locker uniqueness among active/frozen memberships (excludes `excludeId` on renew/upgrade). */

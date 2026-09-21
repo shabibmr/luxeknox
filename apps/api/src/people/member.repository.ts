@@ -115,6 +115,12 @@ export class MemberRepository extends BaseRepository<typeof members, Member, New
     await this.update(eq(members.id, id), values);
   }
 
+  async countAll(): Promise<number> {
+    const db = this.getDb() as any;
+    const rows = await db.select({ value: count() }).from(members);
+    return Number(rows[0]?.value ?? 0);
+  }
+
   async countAssignedToTrainer(trainerId: number): Promise<number> {
     const db = this.getDb() as any;
     const rows = await db

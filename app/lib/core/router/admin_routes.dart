@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/widgets/sign_out_tile.dart';
+import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_library_screen.dart';
 import '../../features/foods/presentation/screens/food_library_screen.dart';
 import '../../features/membership/presentation/screens/membership_detail_screen.dart';
@@ -25,8 +26,7 @@ StatefulShellRoute createAdminBranchRoute() {
         routes: [
           GoRoute(
             path: Routes.adminDashboard,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.adminDashboard),
+            builder: (context, state) => const DashboardScreen(),
           ),
         ],
       ),

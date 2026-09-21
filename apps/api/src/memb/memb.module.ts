@@ -19,6 +19,6 @@ import { MembershipService } from './membership.service';
     MembershipRepository,
     MembershipService,
   ],
-  exports: [],
+  exports: [MembershipRepository],
 })
 export class MembModule {}

@@ -1,6 +1,10 @@
 import 'package:app/core/di/injector.dart';
+import 'package:app/core/error/failures.dart';
 import 'package:app/core/pagination/cursor_page.dart';
 import 'package:app/core/router/app_router.dart';
+import 'package:app/core/usecase/usecase.dart';
+import 'package:app/features/dashboard/domain/usecases/get_dashboard_usecase.dart';
+import 'package:app/features/dashboard/presentation/cubit/dashboard_cubit.dart';
 import 'package:app/features/exercises/domain/entities/exercise.dart';
 import 'package:app/features/exercises/domain/usecases/get_exercise_usecase.dart';
 import 'package:app/features/exercises/domain/usecases/get_exercises_usecase.dart';
@@ -21,6 +25,8 @@ import 'package:mocktail/mocktail.dart';
 class MockGetExercisesUseCase extends Mock implements GetExercisesUseCase {}
 
 class MockGetExerciseUseCase extends Mock implements GetExerciseUseCase {}
+
+class MockGetDashboardUseCase extends Mock implements GetDashboardUseCase {}
 
 class MockSessionCubit extends MockCubit<SessionState>
     implements SessionCubit {}
@@ -76,6 +82,16 @@ void main() {
     );
     getIt.registerFactory<ExerciseDetailCubit>(
       () => ExerciseDetailCubit(mockGetExerciseUseCase),
+    );
+
+    // DashboardScreen is the member/trainer home route, which the shells
+    // here keep mounted alongside the exercise routes under test.
+    final mockGetDashboardUseCase = MockGetDashboardUseCase();
+    when(
+      () => mockGetDashboardUseCase(const NoParams()),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
+    getIt.registerFactory<DashboardCubit>(
+      () => DashboardCubit(mockGetDashboardUseCase),
     );
   });
 

@@ -129,4 +129,19 @@ export class EmployeeRepository extends BaseRepository<
       updated_at: new Date(),
     });
   }
+
+  async countTotal(): Promise<number> {
+    const db = this.getDb() as any;
+    const rows = await db.select({ value: count() }).from(employees);
+    return Number(rows[0]?.value ?? 0);
+  }
+
+  async countActive(): Promise<number> {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select({ value: count() })
+      .from(employees)
+      .where(eq(employees.status, 'active'));
+    return Number(rows[0]?.value ?? 0);
+  }
 }

@@ -10,6 +10,7 @@ import { DietModule } from './diet/diet.module';
 import { PeopleModule } from './people/people.module';
 import { MediaModule } from './media/media.module';
 import { MembModule } from './memb/memb.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { MembModule } from './memb/memb.module';
     PeopleModule,
     MediaModule,
     MembModule,
+    DashboardModule,
   ],
   controllers: [],
   providers: [],

@@ -62,6 +62,21 @@ export class TrainerRepository extends BaseRepository<typeof trainers, Trainer, 
     await this.update(eq(trainers.id, id), values);
   }
 
+  async countTotal(): Promise<number> {
+    const db = this.getDb() as any;
+    const rows = await db.select({ value: count() }).from(trainers);
+    return Number(rows[0]?.value ?? 0);
+  }
+
+  async countActive(): Promise<number> {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select({ value: count() })
+      .from(trainers)
+      .where(eq(trainers.is_active, true));
+    return Number(rows[0]?.value ?? 0);
+  }
+
   async countAssignedMembers(trainerId: number): Promise<number> {
     const db = this.getDb() as any;
     const rows = await db

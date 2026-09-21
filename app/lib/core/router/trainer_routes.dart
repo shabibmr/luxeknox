@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/profile_tab_screen.dart';
+import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_detail_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_library_screen.dart';
 import '../../features/foods/presentation/screens/food_detail_screen.dart';
@@ -51,8 +52,7 @@ StatefulShellRoute createTrainerBranchRoute() {
         routes: [
           GoRoute(
             path: Routes.trainerHome,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.trainerHome),
+            builder: (context, state) => const DashboardScreen(),
           ),
           GoRoute(
             path: Routes.trainerSessionsToday,

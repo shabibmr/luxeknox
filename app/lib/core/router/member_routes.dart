@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/profile_tab_screen.dart';
+import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_detail_screen.dart';
 import '../../features/membership/presentation/screens/membership_card_screen.dart';
 import '../../features/membership/presentation/screens/membership_freeze_history_screen.dart';
@@ -52,8 +53,7 @@ StatefulShellRoute createMemberBranchRoute() {
         routes: [
           GoRoute(
             path: Routes.memberHome,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.memberHome),
+            builder: (context, state) => const DashboardScreen(),
             routes: [
               GoRoute(
                 path: 'workout/exercises/:id',

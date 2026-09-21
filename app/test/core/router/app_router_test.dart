@@ -1,7 +1,11 @@
 import 'package:app/core/di/injector.dart';
+import 'package:app/core/error/failures.dart';
 import 'package:app/core/router/app_router.dart';
 import 'package:app/core/router/routes.dart';
+import 'package:app/core/usecase/usecase.dart';
 import 'package:app/features/auth/presentation/cubit/login_cubit.dart';
+import 'package:app/features/dashboard/domain/usecases/get_dashboard_usecase.dart';
+import 'package:app/features/dashboard/presentation/cubit/dashboard_cubit.dart';
 import 'package:app/session/domain/entities/capabilities.dart';
 import 'package:app/session/domain/entities/principal.dart';
 import 'package:app/session/domain/entities/user_type.dart';
@@ -10,11 +14,14 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockSessionCubit extends MockCubit<SessionState>
     implements SessionCubit {}
+
+class MockGetDashboardUseCase extends Mock implements GetDashboardUseCase {}
 
 void main() {
   const memberPrincipal = Principal(
@@ -135,6 +142,16 @@ void main() {
   group('GoRouter redirect + loop guard (L5)', () {
     setUp(() {
       getIt.registerFactory<LoginCubit>(() => LoginCubit(MockSessionCubit()));
+      // DashboardScreen (now the member/trainer/admin home route) resolves
+      // DashboardCubit from getIt — router-reachability tests below don't
+      // care about its data, just that the route builds without crashing.
+      final mockGetDashboard = MockGetDashboardUseCase();
+      when(
+        () => mockGetDashboard(const NoParams()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      getIt.registerFactory<DashboardCubit>(
+        () => DashboardCubit(mockGetDashboard),
+      );
     });
 
     tearDown(() => getIt.reset());

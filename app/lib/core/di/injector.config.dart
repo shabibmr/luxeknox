@@ -18,6 +18,16 @@ import 'package:go_router/go_router.dart' as _i583;
 import 'package:injectable/injectable.dart' as _i526;
 
 import '../../features/auth/presentation/cubit/login_cubit.dart' as _i69;
+import '../../features/dashboard/data/datasources/dashboard_remote_datasource.dart'
+    as _i817;
+import '../../features/dashboard/data/repositories/dashboard_repository_impl.dart'
+    as _i509;
+import '../../features/dashboard/domain/repositories/dashboard_repository.dart'
+    as _i665;
+import '../../features/dashboard/domain/usecases/get_dashboard_usecase.dart'
+    as _i805;
+import '../../features/dashboard/presentation/cubit/dashboard_cubit.dart'
+    as _i24;
 import '../../features/exercises/data/datasources/exercise_remote_datasource.dart'
     as _i100;
 import '../../features/exercises/data/repositories/exercise_repository_impl.dart'
@@ -227,6 +237,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => registerModule.mediaApi(gh<_i361.Dio>()),
     );
     gh.singleton<_i633.MEMBApi>(() => registerModule.membApi(gh<_i361.Dio>()));
+    gh.singleton<_i633.DASHApi>(() => registerModule.dashApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i963.SessionRemoteDataSource>(
       () => _i963.SessionRemoteDataSourceImpl(gh<_i633.AUTHApi>()),
     );
@@ -244,11 +255,18 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i133.MembershipRemoteDataSource>(),
       ),
     );
+    gh.lazySingleton<_i817.DashboardRemoteDataSource>(
+      () => _i817.DashboardRemoteDataSourceImpl(gh<_i633.DASHApi>()),
+    );
     gh.lazySingleton<_i822.FoodRemoteDataSource>(
       () => _i822.FoodRemoteDataSourceImpl(gh<_i633.DIETApi>()),
     );
     gh.lazySingleton<_i100.ExerciseRemoteDataSource>(
       () => _i100.ExerciseRemoteDataSourceImpl(gh<_i633.WORKApi>()),
+    );
+    gh.lazySingleton<_i665.DashboardRepository>(
+      () =>
+          _i509.DashboardRepositoryImpl(gh<_i817.DashboardRemoteDataSource>()),
     );
     gh.lazySingleton<_i46.ApproveFreezeUseCase>(
       () => _i46.ApproveFreezeUseCase(gh<_i325.MembershipRepository>()),
@@ -362,6 +380,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i756.ExerciseDetailCubit>(
       () => _i756.ExerciseDetailCubit(gh<_i1031.GetExerciseUseCase>()),
     );
+    gh.lazySingleton<_i805.GetDashboardUseCase>(
+      () => _i805.GetDashboardUseCase(gh<_i665.DashboardRepository>()),
+    );
     gh.factory<_i757.ExerciseListBloc>(
       () => _i757.ExerciseListBloc(
         getExercisesUseCase: gh<_i870.GetExercisesUseCase>(),
@@ -387,6 +408,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i710.FoodListBloc>(
       () => _i710.FoodListBloc(getFoodsUseCase: gh<_i687.GetFoodsUseCase>()),
+    );
+    gh.factory<_i24.DashboardCubit>(
+      () => _i24.DashboardCubit(gh<_i805.GetDashboardUseCase>()),
     );
     return this;
   }
