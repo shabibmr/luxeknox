@@ -1,0 +1,1 @@
+# LuxeKnox Flutter — Membership\n\n- [ ] membership card/detail/history\n- [ ] package catalogue\n- [ ] package CRUD\n- [ ] membership directory\n- [ ] freeze request/history\n- [ ] approve/reject\n- [ ] extension\n- [ ] renew\n- [ ] upgrade\n- [ ] cancel\n- [ ] row-version conflicts\n- [ ] role pricing visibility\n
