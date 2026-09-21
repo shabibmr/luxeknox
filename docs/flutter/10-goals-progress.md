@@ -1,0 +1,1 @@
+# LuxeKnox Flutter — Goals & Progress\n\n- [ ] metrics\n- [ ] goals\n- [ ] check-ins\n- [ ] measurements\n- [ ] charts\n- [ ] mandatory metrics\n- [ ] progress photos\n- [ ] comparison\n- [ ] privacy\n- [ ] notes\n- [ ] trainer assessments\n- [ ] server-derived achievement\n
