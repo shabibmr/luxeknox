@@ -1,0 +1,1 @@
+# LuxeKnox Flutter — Auth & Session\n\n- [ ] login email/phone\n- [ ] session restore\n- [ ] refresh/logout\n- [ ] password change/reset\n- [ ] GET /me principal\n- [ ] capabilities hydration\n- [ ] suspended-user handling\n- [ ] auth redirects\n- [ ] concurrent refresh tests\n
