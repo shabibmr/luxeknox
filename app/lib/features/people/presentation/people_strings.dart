@@ -32,6 +32,13 @@ abstract final class PeopleStrings {
   static const healthSaved = 'Health info saved.';
   static const avatarSet = 'Avatar updated.';
   static const trainerIdHint = 'Trainer ID';
+  static const firstName = 'First name';
+  static const lastName = 'Last name';
+  static const phoneNumber = 'Phone number';
+  static const bio = 'Biography';
+  static const specializations = 'Specializations';
+  static const specializationsHint = 'Comma-separated, e.g. Strength, HIIT';
+  static const hourlyRate = 'Hourly rate';
   static const loadMore = 'Load more';
   static const emptyHealth = 'No health information yet.';
   static const emptyMedical = 'No medical records.';
@@ -59,4 +66,43 @@ abstract final class PeopleStrings {
   static const uploadRetry = 'Retry upload';
   static const uploadCancel = 'Cancel upload';
   static const documentTitle = 'Document title';
+  static const email = 'Email';
+  static const phone = 'Phone';
+  static const gender = 'Gender';
+  static const dateOfBirth = 'Date of birth';
+  static const address = 'Address';
+  static const changeAvatar = 'Change avatar';
+  static const myTrainerTitle = 'My Trainer';
+  static const noAssignedTrainer = 'No trainer assigned yet.';
+  static const rating = 'Rating';
+  static const activeClients = 'Active clients';
+  static const capacity = 'Capacity';
+  static const bookSession = 'Book Session';
+
+  // Add Member wizard
+  static const addMemberTitle = 'Add Member';
+  static const stepBasicInfo = 'Basic info';
+  static const stepContactAccount = 'Contact & account';
+  static const stepReview = 'Review';
+  static const password = 'Temporary password';
+  static const next = 'Next';
+  static const back = 'Back';
+  static const createMember = 'Create member';
+  static const memberCreated = 'Member created.';
+  static const reviewHint = 'Review the details below, then create the member.';
+
+  // Edit Member screen
+  static const editMemberTitle = 'Edit Member';
+  static const memberSaved = 'Member updated.';
+
+  // Employee roles screen
+  static const employeeRolesTitle = 'Roles & Permissions';
+  static const currentRole = 'Current role';
+  static const noRoleAssigned = 'No role assigned';
+  static const availableRoles = 'Available roles';
+  static const assign = 'Assign';
+  static const roleAssigned = 'Role assigned.';
+  static const permissionsLabel = 'Permissions';
+  static const systemRole = 'System role';
+  static const emptyRoles = 'No roles configured yet.';
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -61,62 +63,67 @@ class _EmployeesDirectoryBodyState extends State<_EmployeesDirectoryBody> {
             ),
           ),
           Expanded(
-            child: BlocBuilder<EmployeesDirectoryCubit, EmployeesDirectoryState>(
-              builder: (context, state) {
-                return switch (state) {
-                  EmployeesDirectoryLoading() => const AppLoading(),
-                  EmployeesDirectoryFailure(:final message) => AppErrorView(
-                    message: message,
-                    onRetry: () =>
-                        context.read<EmployeesDirectoryCubit>().load(
-                          query: _searchController.text,
-                        ),
-                  ),
-                  EmployeesDirectoryLoaded(
-                    :final items,
-                    :final hasMore,
-                    :final loadingMore,
-                  ) =>
-                    items.isEmpty
-                        ? const AppEmptyView(
-                            message: PeopleStrings.emptyEmployees,
-                          )
-                        : ListView.builder(
-                            itemCount: items.length + (hasMore ? 1 : 0),
-                            itemBuilder: (context, index) {
-                              if (index >= items.length) {
-                                return TextButton(
-                                  onPressed: loadingMore
-                                      ? null
-                                      : () => context
-                                            .read<EmployeesDirectoryCubit>()
-                                            .loadMore(),
-                                  child: Text(
-                                    loadingMore
-                                        ? '…'
-                                        : PeopleStrings.loadMore,
-                                  ),
-                                );
-                              }
-                              final employee = items[index];
-                              return ListTile(
-                                title: Text(employee.fullName),
-                                subtitle: Text(
-                                  [
-                                    employee.jobTitle,
-                                    if (employee.department != null)
-                                      employee.department!,
-                                  ].join(' · '),
-                                ),
-                                trailing: employee.status == null
-                                    ? null
-                                    : Text(employee.status!),
-                              );
-                            },
-                          ),
-                };
-              },
-            ),
+            child:
+                BlocBuilder<EmployeesDirectoryCubit, EmployeesDirectoryState>(
+                  builder: (context, state) {
+                    return switch (state) {
+                      EmployeesDirectoryLoading() => const AppLoading(),
+                      EmployeesDirectoryFailure(:final message) => AppErrorView(
+                        message: message,
+                        onRetry: () => context
+                            .read<EmployeesDirectoryCubit>()
+                            .load(query: _searchController.text),
+                      ),
+                      EmployeesDirectoryLoaded(
+                        :final items,
+                        :final hasMore,
+                        :final loadingMore,
+                      ) =>
+                        items.isEmpty
+                            ? const AppEmptyView(
+                                message: PeopleStrings.emptyEmployees,
+                              )
+                            : ListView.builder(
+                                itemCount: items.length + (hasMore ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (index >= items.length) {
+                                    return TextButton(
+                                      onPressed: loadingMore
+                                          ? null
+                                          : () => context
+                                                .read<EmployeesDirectoryCubit>()
+                                                .loadMore(),
+                                      child: Text(
+                                        loadingMore
+                                            ? '…'
+                                            : PeopleStrings.loadMore,
+                                      ),
+                                    );
+                                  }
+                                  final employee = items[index];
+                                  return ListTile(
+                                    title: Text(employee.fullName),
+                                    subtitle: Text(
+                                      [
+                                        employee.jobTitle,
+                                        if (employee.department != null)
+                                          employee.department!,
+                                      ].join(' · '),
+                                    ),
+                                    trailing: employee.status == null
+                                        ? null
+                                        : Text(employee.status!),
+                                    onTap: () => context.push(
+                                      Routes.adminEmployeeRolesById(
+                                        '${employee.id}',
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                    };
+                  },
+                ),
           ),
         ],
       ),

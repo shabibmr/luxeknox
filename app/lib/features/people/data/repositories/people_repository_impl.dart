@@ -7,8 +7,11 @@ import '../../../../core/error/map_thrown.dart';
 import '../../../../core/pagination/cursor_page.dart';
 import '../../domain/entities/employee_summary.dart';
 import '../../domain/entities/member_filter.dart';
+import '../../domain/entities/new_member_input.dart';
 import '../../domain/entities/person.dart';
 import '../../domain/entities/profile_summary.dart';
+import '../../domain/entities/role.dart';
+import '../../domain/entities/trainer_profile.dart';
 import '../../domain/entities/trainer_summary.dart';
 import '../../domain/repositories/people_repository.dart';
 import '../datasources/people_remote_datasource.dart';
@@ -54,6 +57,16 @@ class PeopleRepositoryImpl implements PeopleRepository {
   }
 
   @override
+  Future<Either<Failure, Person>> createMember(NewMemberInput input) async {
+    try {
+      final created = await _remote.createMember(memberCreateFromInput(input));
+      return Right(personFromMember(created));
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
   Future<Either<Failure, Person>> updateMember(Person person) async {
     try {
       final updated = await _remote.updateMember(
@@ -84,6 +97,35 @@ class PeopleRepositoryImpl implements PeopleRepository {
         ),
       );
       return Right(personFromMember(updated));
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, TrainerProfile>> getTrainer(int id) async {
+    try {
+      final trainer = await _remote.getTrainer(id);
+      return Right(trainerProfileFromApi(trainer));
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, TrainerProfile>> updateTrainer(
+    TrainerProfile trainer,
+  ) async {
+    try {
+      final updated = await _remote.updateTrainer(
+        trainer.id,
+        trainerUpdateFromProfile(trainer),
+      );
+      return Right(
+        trainerProfileFromApi(
+          updated,
+        ).copyWith(phoneNumber: trainer.phoneNumber),
+      );
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }
@@ -126,6 +168,42 @@ class PeopleRepositoryImpl implements PeopleRepository {
           hasMore: page.meta.hasMore,
         ),
       );
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EmployeeSummary>> getEmployee(int id) async {
+    try {
+      final employee = await _remote.getEmployee(id);
+      return Right(employeeSummaryFromApi(employee));
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Role>>> listRoles() async {
+    try {
+      final page = await _remote.listRoles(limit: 100);
+      return Right(page.data.map(roleFromApi).toList());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EmployeeSummary>> assignEmployeeRole({
+    required int employeeId,
+    required int roleId,
+  }) async {
+    try {
+      final updated = await _remote.assignEmployeeRole(
+        id: employeeId,
+        request: api.AssignRoleRequest((b) => b..roleId = roleId),
+      );
+      return Right(employeeSummaryFromApi(updated));
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

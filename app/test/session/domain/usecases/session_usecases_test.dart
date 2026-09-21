@@ -7,6 +7,7 @@ import 'package:app/session/domain/usecases/change_password_usecase.dart';
 import 'package:app/session/domain/usecases/forgot_password_usecase.dart';
 import 'package:app/session/domain/usecases/get_me_usecase.dart';
 import 'package:app/session/domain/usecases/login_usecase.dart';
+import 'package:app/features/notifications/domain/usecases/unregister_device_on_logout.dart';
 import 'package:app/session/domain/usecases/logout_usecase.dart';
 import 'package:app/session/domain/usecases/refresh_session_usecase.dart';
 import 'package:app/session/domain/usecases/reset_password_usecase.dart';
@@ -16,6 +17,9 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockSessionRepository extends Mock implements SessionRepository {}
+
+class MockUnregisterDeviceOnLogoutUseCase extends Mock
+    implements UnregisterDeviceOnLogoutUseCase {}
 
 void main() {
   late MockSessionRepository mockRepository;
@@ -54,11 +58,15 @@ void main() {
     });
 
     test('LogoutUseCase calls repository.logout', () async {
+      final mockUnregisterDevice = MockUnregisterDeviceOnLogoutUseCase();
       when(
         () => mockRepository.logout(),
       ).thenAnswer((_) async => const Right(null));
+      when(
+        () => mockUnregisterDevice(const NoParams()),
+      ).thenAnswer((_) async => const Right(null));
 
-      final useCase = LogoutUseCase(mockRepository);
+      final useCase = LogoutUseCase(mockRepository, mockUnregisterDevice);
       final result = await useCase(const NoParams());
 
       expect(result, const Right(null));

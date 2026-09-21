@@ -16,29 +16,42 @@ import '../scheduling_strings.dart';
 export '../schedule_role.dart';
 
 class ScheduleCalendarScreen extends StatelessWidget {
-  const ScheduleCalendarScreen({super.key, required this.role});
+  const ScheduleCalendarScreen({
+    super.key,
+    required this.role,
+    this.memberId,
+    this.trainerId,
+  });
 
   final ScheduleCalendarRole role;
+
+  /// When set (e.g. trainer viewing a client's schedule), filters by this
+  /// member and skips auto-resolving the viewer's own profile id.
+  final String? memberId;
+  final String? trainerId;
 
   @override
   Widget build(BuildContext context) {
     final session = context.read<SessionCubit>().state;
-    String? trainerId;
-    String? memberId;
+    var resolvedTrainerId = trainerId;
+    var resolvedMemberId = memberId;
     if (session is SessionAuthenticated) {
-      if (role == ScheduleCalendarRole.trainer &&
+      if (resolvedMemberId == null &&
+          resolvedTrainerId == null &&
+          role == ScheduleCalendarRole.trainer &&
           session.principal.userType == UserType.trainer) {
-        trainerId = session.principal.profileId;
+        resolvedTrainerId = session.principal.profileId;
       }
-      if (role == ScheduleCalendarRole.member &&
+      if (resolvedMemberId == null &&
+          role == ScheduleCalendarRole.member &&
           session.principal.userType == UserType.member) {
-        memberId = session.principal.profileId;
+        resolvedMemberId = session.principal.profileId;
       }
     }
 
     return BlocProvider(
       create: (_) => getIt<ScheduleCalendarCubit>()
-        ..load(trainerId: trainerId, memberId: memberId),
+        ..load(trainerId: resolvedTrainerId, memberId: resolvedMemberId),
       child: _ScheduleCalendarBody(role: role),
     );
   }

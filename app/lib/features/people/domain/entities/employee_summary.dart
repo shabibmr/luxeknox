@@ -9,6 +9,7 @@ class EmployeeSummary extends Equatable {
     required this.jobTitle,
     this.department,
     this.status,
+    this.roleId,
   });
 
   final int id;
@@ -17,6 +18,7 @@ class EmployeeSummary extends Equatable {
   final String jobTitle;
   final String? department;
   final String? status;
+  final int? roleId;
 
   @override
   List<Object?> get props => [
@@ -26,5 +28,6 @@ class EmployeeSummary extends Equatable {
     jobTitle,
     department,
     status,
+    roleId,
   ];
 }

@@ -36,7 +36,16 @@ class _MemberDossierBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(PeopleStrings.dossierTitle)),
+      appBar: AppBar(
+        title: const Text(PeopleStrings.dossierTitle),
+        actions: [
+          IconButton(
+            tooltip: PeopleStrings.editMemberTitle,
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => context.push('/admin/members/$memberId/edit'),
+          ),
+        ],
+      ),
       body: BlocConsumer<MemberDossierCubit, MemberDossierState>(
         listener: (context, state) {
           if (state is MemberDossierLoaded && state.message != null) {
@@ -53,8 +62,7 @@ class _MemberDossierBody extends StatelessWidget {
             MemberDossierLoading() => const AppLoading(),
             MemberDossierFailure(:final message) => AppErrorView(
               message: message,
-              onRetry: () =>
-                  context.read<MemberDossierCubit>().load(memberId),
+              onRetry: () => context.read<MemberDossierCubit>().load(memberId),
             ),
             MemberDossierLoaded(:final person) => _DossierContent(
               person: person,
@@ -114,10 +122,7 @@ class _DossierContentState extends State<_DossierContent> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text(
-          person.fullName,
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
+        Text(person.fullName, style: Theme.of(context).textTheme.headlineSmall),
         Text(person.membershipNumber),
         if (person.membershipStatus != null)
           ListTile(
@@ -202,9 +207,8 @@ class _DossierContentState extends State<_DossierContent> {
           child: const Text(PeopleStrings.assignTrainer),
         ),
         TextButton(
-          onPressed: () => context.go(
-            '/admin/members/${person.id}/assign-membership',
-          ),
+          onPressed: () =>
+              context.go('/admin/members/${person.id}/assign-membership'),
           child: const Text(PeopleStrings.assignMembership),
         ),
         const Divider(),

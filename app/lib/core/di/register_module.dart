@@ -79,5 +79,11 @@ abstract class RegisterModule {
   NOTIFApi notifApi(Dio dio) => NOTIFApi(dio, standardSerializers);
 
   @singleton
+  SYSApi sysApi(Dio dio) => SYSApi(dio, standardSerializers);
+
+  @singleton
+  RBACApi rbacApi(Dio dio) => RBACApi(dio, standardSerializers);
+
+  @singleton
   GoRouter router(SessionCubit session) => createRouter(session);
 }

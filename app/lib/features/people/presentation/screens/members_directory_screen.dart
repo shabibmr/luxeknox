@@ -11,10 +11,7 @@ import '../cubit/members_directory_cubit.dart';
 import '../people_strings.dart';
 
 class MembersDirectoryScreen extends StatelessWidget {
-  const MembersDirectoryScreen({
-    super.key,
-    this.memberDetailPathBuilder,
-  });
+  const MembersDirectoryScreen({super.key, this.memberDetailPathBuilder});
 
   /// Builds the detail path for a member id.
   /// Defaults to the admin members dossier path.
@@ -53,6 +50,11 @@ class _MembersDirectoryBodyState extends State<_MembersDirectoryBody> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(PeopleStrings.membersTitle)),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push(Routes.adminMembersAdd),
+        tooltip: PeopleStrings.addMemberTitle,
+        child: const Icon(Icons.person_add_alt_1),
+      ),
       body: Column(
         children: [
           Padding(
@@ -103,9 +105,7 @@ class _MembersDirectoryBodyState extends State<_MembersDirectoryBody> {
                                             .read<MembersDirectoryCubit>()
                                             .loadMore(),
                                   child: Text(
-                                    loadingMore
-                                        ? '…'
-                                        : PeopleStrings.loadMore,
+                                    loadingMore ? '…' : PeopleStrings.loadMore,
                                   ),
                                 );
                               }

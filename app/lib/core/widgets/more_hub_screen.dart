@@ -33,11 +33,8 @@ class MoreHubScreen extends StatelessWidget {
       path: Routes.adminNotificationsBroadcast,
     ),
     (title: ShellStrings.reports, path: Routes.adminReportsHub),
-    (
-      title: ShellStrings.settings,
-      // Nav §4: Gym, hardware, biometric, policy — default category is gym.
-      path: Routes.adminSettingsCategory('gym'),
-    ),
+    (title: ShellStrings.settings, path: Routes.adminSettingsHub),
+    (title: ShellStrings.systemAlerts, path: Routes.adminAlerts),
   ];
 
   @override

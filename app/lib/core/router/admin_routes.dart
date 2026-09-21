@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/alerts/presentation/screens/system_alerts_screen.dart';
 import '../../features/attendance/presentation/screens/admin_attendance_screen.dart';
 import '../../features/auth/presentation/widgets/sign_out_tile.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -17,6 +18,9 @@ import '../../features/payments/presentation/screens/outstanding_dues_screen.dar
 import '../../features/payments/presentation/screens/payment_detail_screen.dart';
 import '../../features/payments/presentation/screens/payment_methods_screen.dart';
 import '../../features/payments/presentation/screens/payments_ledger_screen.dart';
+import '../../features/people/presentation/screens/add_member_wizard_screen.dart';
+import '../../features/people/presentation/screens/edit_member_screen.dart';
+import '../../features/people/presentation/screens/employee_roles_screen.dart';
 import '../../features/people/presentation/screens/employees_directory_screen.dart';
 import '../../features/reports/presentation/screens/report_viewer_screen.dart';
 import '../../features/reports/presentation/screens/reports_hub_screen.dart';
@@ -26,6 +30,8 @@ import '../../features/people/presentation/screens/trainers_directory_screen.dar
 import '../../features/scheduling/presentation/screens/facilities_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_detail_screen.dart';
+import '../../features/settings/presentation/screens/settings_category_screen.dart';
+import '../../features/settings/presentation/screens/settings_hub_screen.dart';
 import '../../features/diet/presentation/diet_history_role.dart';
 import '../../features/diet/presentation/screens/diet_history_screen.dart';
 import '../../features/workout/presentation/screens/workout_history_screen.dart';
@@ -60,6 +66,10 @@ StatefulShellRoute createAdminBranchRoute() {
             builder: (context, state) => const MembersDirectoryScreen(),
             routes: [
               GoRoute(
+                path: 'add',
+                builder: (context, state) => const AddMemberWizardScreen(),
+              ),
+              GoRoute(
                 path: ':id',
                 builder: (context, state) {
                   final id = int.tryParse(state.pathParameters['id'] ?? '');
@@ -71,6 +81,18 @@ StatefulShellRoute createAdminBranchRoute() {
                   return MemberDossierScreen(memberId: id);
                 },
                 routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (context, state) {
+                      final id = int.tryParse(state.pathParameters['id'] ?? '');
+                      if (id == null) {
+                        return const PlaceholderScreen(
+                          title: ShellStrings.adminMembers,
+                        );
+                      }
+                      return EditMemberScreen(memberId: id);
+                    },
+                  ),
                   GoRoute(
                     path: 'assign-membership',
                     builder: (context, state) {
@@ -100,7 +122,6 @@ StatefulShellRoute createAdminBranchRoute() {
                   ),
                 ],
               ),
-
             ],
           ),
         ],
@@ -134,9 +155,8 @@ StatefulShellRoute createAdminBranchRoute() {
         routes: [
           GoRoute(
             path: Routes.adminPayments,
-            builder: (context, state) => const PaymentsLedgerScreen(
-              role: PaymentsLedgerRole.admin,
-            ),
+            builder: (context, state) =>
+                const PaymentsLedgerScreen(role: PaymentsLedgerRole.admin),
             routes: [
               GoRoute(
                 path: 'outstanding',
@@ -148,15 +168,13 @@ StatefulShellRoute createAdminBranchRoute() {
               ),
               GoRoute(
                 path: 'record',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.adminPayments,
-                ),
+                builder: (context, state) =>
+                    const PlaceholderScreen(title: ShellStrings.adminPayments),
               ),
               GoRoute(
                 path: ':id',
-                builder: (context, state) => PaymentDetailScreen(
-                  paymentId: state.pathParameters['id']!,
-                ),
+                builder: (context, state) =>
+                    PaymentDetailScreen(paymentId: state.pathParameters['id']!),
               ),
             ],
           ),
@@ -181,6 +199,24 @@ StatefulShellRoute createAdminBranchRoute() {
           GoRoute(
             path: Routes.adminEmployees,
             builder: (context, state) => const EmployeesDirectoryScreen(),
+            routes: [
+              GoRoute(
+                path: ':id/roles',
+                builder: (context, state) {
+                  final id = int.tryParse(state.pathParameters['id'] ?? '');
+                  if (id == null) {
+                    return const PlaceholderScreen(
+                      title: ShellStrings.employees,
+                    );
+                  }
+                  return EmployeeRolesScreen(employeeId: id);
+                },
+              ),
+            ],
+          ),
+          GoRoute(
+            path: Routes.adminAlerts,
+            builder: (context, state) => const SystemAlertsScreen(),
           ),
           GoRoute(
             path: Routes.adminPackages,
@@ -244,11 +280,16 @@ StatefulShellRoute createAdminBranchRoute() {
             ],
           ),
           GoRoute(
-            path: Routes.adminSettings,
-            builder: (context, state) => PlaceholderScreen(
-              title:
-                  '${ShellStrings.settings}: ${state.pathParameters['category']}',
-            ),
+            path: Routes.adminSettingsHub,
+            builder: (context, state) => const SettingsHubScreen(),
+            routes: [
+              GoRoute(
+                path: ':category',
+                builder: (context, state) => SettingsCategoryScreen(
+                  category: state.pathParameters['category'] ?? '',
+                ),
+              ),
+            ],
           ),
         ],
       ),

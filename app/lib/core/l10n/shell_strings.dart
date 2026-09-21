@@ -85,6 +85,7 @@ abstract final class ShellStrings {
   static const notificationsBroadcast = 'Broadcast Notifications';
   static const reports = 'Reports';
   static const settings = 'Settings';
+  static const systemAlerts = 'System Alerts';
 
   static const notFoundTitle = 'Page not found';
   static const notFoundMessage = 'This link does not match any screen.';

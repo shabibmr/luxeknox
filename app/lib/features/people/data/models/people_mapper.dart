@@ -1,4 +1,5 @@
 import 'package:api_client/api_client.dart' as api;
+import 'package:built_collection/built_collection.dart';
 
 import '../../../../core/media/document_access.dart';
 import '../../domain/entities/emergency_contact.dart';
@@ -7,8 +8,11 @@ import '../../domain/entities/health_info.dart';
 import '../../domain/entities/medical_record.dart';
 import '../../domain/entities/member_document.dart';
 import '../../domain/entities/member_photo.dart';
+import '../../domain/entities/new_member_input.dart';
 import '../../domain/entities/person.dart';
 import '../../domain/entities/profile_summary.dart';
+import '../../domain/entities/role.dart';
+import '../../domain/entities/trainer_profile.dart';
 import '../../domain/entities/trainer_summary.dart';
 
 DateTime? _apiDateToDateTime(api.Date? date) {
@@ -34,8 +38,7 @@ api.MemberDocumentWriteDocumentTypeEnum _documentPurposeToWrite(
   DocumentPurpose purpose,
 ) {
   return switch (purpose) {
-    DocumentPurpose.idProof =>
-      api.MemberDocumentWriteDocumentTypeEnum.idProof,
+    DocumentPurpose.idProof => api.MemberDocumentWriteDocumentTypeEnum.idProof,
     DocumentPurpose.waiver => api.MemberDocumentWriteDocumentTypeEnum.waiver,
     DocumentPurpose.medicalCert =>
       api.MemberDocumentWriteDocumentTypeEnum.medicalCert,
@@ -122,6 +125,36 @@ TrainerSummary trainerSummaryFromApi(api.Trainer trainer) {
   );
 }
 
+TrainerProfile trainerProfileFromApi(api.Trainer trainer) {
+  return TrainerProfile(
+    id: trainer.id,
+    userId: trainer.userId,
+    firstName: trainer.firstName,
+    lastName: trainer.lastName,
+    bio: trainer.bio,
+    specializations: trainer.specializations?.toList() ?? const [],
+    hourlyRate: trainer.hourlyRate,
+    rating: trainer.rating?.toDouble(),
+    maxClientsCapacity: trainer.maxClientsCapacity,
+    assignedActiveCount: trainer.assignedActiveCount,
+    isActive: trainer.isActive,
+  );
+}
+
+api.TrainerUpdate trainerUpdateFromProfile(TrainerProfile trainer) {
+  return api.TrainerUpdate(
+    (b) => b
+      ..phoneNumber = trainer.phoneNumber
+      ..firstName = trainer.firstName
+      ..lastName = trainer.lastName
+      ..bio = trainer.bio
+      ..specializations = ListBuilder<String>(trainer.specializations)
+      ..hourlyRate = trainer.hourlyRate
+      ..maxClientsCapacity = trainer.maxClientsCapacity
+      ..isActive = trainer.isActive,
+  );
+}
+
 EmployeeSummary employeeSummaryFromApi(api.Employee employee) {
   final user = employee.user;
   final candidates = [
@@ -137,6 +170,33 @@ EmployeeSummary employeeSummaryFromApi(api.Employee employee) {
     jobTitle: employee.jobTitle,
     department: employee.department,
     status: employee.status.name,
+    roleId: employee.roleId,
+  );
+}
+
+api.MemberCreate memberCreateFromInput(NewMemberInput input) {
+  return api.MemberCreate(
+    (b) => b
+      ..email = input.email
+      ..phoneNumber = input.phoneNumber
+      ..password = input.password
+      ..firstName = input.firstName
+      ..lastName = input.lastName
+      ..gender = input.gender
+      ..dateOfBirth = _dateTimeToApiDate(input.dateOfBirth)
+      ..address = input.address
+      ..assignedTrainerId = input.assignedTrainerId
+      ..notes = input.notes,
+  );
+}
+
+Role roleFromApi(api.Role role) {
+  return Role(
+    id: role.id,
+    name: role.name,
+    description: role.description,
+    isSystemRole: role.isSystemRole,
+    permissionSlugs: role.permissions?.map((p) => p.slug).toList() ?? const [],
   );
 }
 

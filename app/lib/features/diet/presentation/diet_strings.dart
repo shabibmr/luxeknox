@@ -3,8 +3,11 @@ import '../domain/entities/diet_plan_status.dart';
 abstract final class DietStrings {
   static const listTitle = 'Diet plans';
   static const detailTitle = 'Diet plan';
+  static const mealDetailTitle = 'Meal details';
   static const createTitle = 'Create diet plan';
   static const editTitle = 'Edit diet plan';
+  static const foodsSection = 'Foods';
+  static const emptyFoods = 'No foods added to this meal yet.';
 
   static const noneFound = 'No diet plans yet.';
   static const retry = 'Retry';

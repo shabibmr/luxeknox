@@ -14,14 +14,18 @@ import '../../features/payments/presentation/payment_ledger_role.dart';
 import '../../features/payments/presentation/screens/payment_detail_screen.dart';
 import '../../features/payments/presentation/screens/payments_ledger_screen.dart';
 import '../../features/people/presentation/screens/documents_screen.dart';
+import '../../features/people/presentation/screens/edit_profile_screen.dart';
 import '../../features/people/presentation/screens/emergency_contacts_screen.dart';
 import '../../features/people/presentation/screens/health_info_screen.dart';
+import '../../features/people/presentation/screens/my_trainer_profile_screen.dart';
 import '../../features/scheduling/presentation/screens/book_schedule_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_detail_screen.dart';
+import '../../features/scheduling/presentation/screens/schedule_history_screen.dart';
 import '../../features/diet/presentation/diet_history_role.dart';
 import '../../features/diet/presentation/screens/diet_daily_log_screen.dart';
 import '../../features/diet/presentation/screens/diet_history_screen.dart';
+import '../../features/diet/presentation/screens/diet_meal_detail_screen.dart';
 import '../../features/goals/presentation/screens/goal_detail_screen.dart';
 import '../../features/goals/presentation/screens/measurements_screen.dart';
 import '../../features/goals/presentation/screens/progress_hub_screen.dart';
@@ -109,8 +113,9 @@ StatefulShellRoute createMemberBranchRoute() {
               // Member: R — Meal Details
               GoRoute(
                 path: 'diet/meal/:id',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.memberHomeMealDetail,
+                builder: (context, state) => DietMealDetailScreen(
+                  mealId: state.pathParameters['id']!,
+                  planId: state.uri.queryParameters['planId'],
                 ),
               ),
               // Member: E (Self) — Daily Diet Log (Food & Water)
@@ -202,9 +207,13 @@ StatefulShellRoute createMemberBranchRoute() {
               ),
               GoRoute(
                 path: 'history',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.memberScheduleHistory,
-                ),
+                builder: (context, state) {
+                  final profileId = sessionProfileId(context);
+                  return ScheduleHistoryScreen(
+                    role: ScheduleCalendarRole.member,
+                    memberId: profileId?.toString(),
+                  );
+                },
               ),
               GoRoute(
                 path: ':id',
@@ -295,8 +304,15 @@ StatefulShellRoute createMemberBranchRoute() {
               // Member: E (Self) — Edit Profile Screen
               GoRoute(
                 path: 'edit',
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: ShellStrings.editProfile),
+                builder: (context, state) {
+                  final id = sessionProfileId(context);
+                  if (id == null) {
+                    return const PlaceholderScreen(
+                      title: ShellStrings.editProfile,
+                    );
+                  }
+                  return EditProfileScreen(memberId: id);
+                },
               ),
               // Member: E (Self) — Health Information Screen
               GoRoute(
@@ -359,9 +375,15 @@ StatefulShellRoute createMemberBranchRoute() {
               // Member: R — My Trainer
               GoRoute(
                 path: 'trainer',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.memberProfileTrainer,
-                ),
+                builder: (context, state) {
+                  final id = sessionProfileId(context);
+                  if (id == null) {
+                    return const PlaceholderScreen(
+                      title: ShellStrings.memberProfileTrainer,
+                    );
+                  }
+                  return MyTrainerProfileScreen(memberId: id);
+                },
               ),
               // Member: C (Pass) — Attendance Pass & Check-In / History
               GoRoute(

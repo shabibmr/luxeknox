@@ -12,6 +12,8 @@ import 'package:app/core/widgets/placeholder_screen.dart';
 import 'package:app/features/auth/presentation/cubit/login_cubit.dart';
 import 'package:app/features/dashboard/domain/usecases/get_dashboard_usecase.dart';
 import 'package:app/features/dashboard/presentation/cubit/dashboard_cubit.dart';
+import 'package:app/features/scheduling/domain/usecases/schedule_usecases.dart';
+import 'package:app/features/scheduling/presentation/cubit/todays_sessions_cubit.dart';
 import 'package:app/session/domain/entities/capabilities.dart';
 import 'package:app/session/domain/entities/principal.dart';
 import 'package:app/session/domain/entities/user_type.dart';
@@ -28,6 +30,8 @@ class MockSessionCubit extends MockCubit<SessionState>
     implements SessionCubit {}
 
 class MockGetDashboardUseCase extends Mock implements GetDashboardUseCase {}
+
+class MockListSchedulesUseCase extends Mock implements ListSchedulesUseCase {}
 
 void main() {
   const memberPrincipal = Principal(
@@ -149,6 +153,10 @@ void main() {
   });
 
   group('GoRouter redirect + loop guard (L5)', () {
+    setUpAll(() {
+      registerFallbackValue(const ListSchedulesParams());
+    });
+
     setUp(() {
       getIt.registerFactory<LoginCubit>(() => LoginCubit(MockSessionCubit()));
       // DashboardScreen (now the member/trainer/admin home route) resolves
@@ -160,6 +168,16 @@ void main() {
       ).thenAnswer((_) async => const Left(NetworkFailure()));
       getIt.registerFactory<DashboardCubit>(
         () => DashboardCubit(mockGetDashboard),
+      );
+      // TodaysSessionsScreen (trainer) resolves TodaysSessionsCubit from
+      // getIt — router-reachability tests below don't care about its data,
+      // just that the route builds without crashing.
+      final mockListSchedules = MockListSchedulesUseCase();
+      when(
+        () => mockListSchedules(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      getIt.registerFactory<TodaysSessionsCubit>(
+        () => TodaysSessionsCubit(mockListSchedules),
       );
     });
 

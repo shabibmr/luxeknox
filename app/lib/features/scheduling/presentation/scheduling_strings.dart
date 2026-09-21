@@ -9,6 +9,10 @@ class SchedulingStrings {
   static const String bookClassTitle = 'Book class';
   static const String retry = 'Retry';
   static const String noneFound = 'No sessions in this range.';
+  static const String historyTitle = 'Schedule history';
+  static const String historyEmpty = 'No past sessions yet.';
+  static const String todaysSessionsTitle = "Today's sessions";
+  static const String todaysSessionsEmpty = 'No sessions scheduled for today.';
   static const String book = 'Book';
   static const String cancelSession = 'Cancel session';
   static const String startSession = 'Start';

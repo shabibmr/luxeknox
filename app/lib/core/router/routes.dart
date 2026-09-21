@@ -150,7 +150,6 @@ class Routes {
   static const String adminMembersDietHistory =
       '/admin/members/:id/diet-history';
 
-
   // Memberships Stack
   static const String adminMemberships = '/admin/memberships';
   static const String adminMembershipsCreate = '/admin/memberships/create';
@@ -171,6 +170,7 @@ class Routes {
   static const String adminMore = '/admin/more';
   static const String adminTrainers = '/admin/trainers';
   static const String adminEmployees = '/admin/employees';
+  static const String adminEmployeesRoles = '/admin/employees/:id/roles';
   static const String adminPackages = '/admin/packages';
   static const String adminAttendance = '/admin/attendance';
   static const String adminAttendanceScan = '/admin/attendance/scan';
@@ -183,6 +183,7 @@ class Routes {
       '/admin/notifications/broadcast';
   static const String adminReportsHub = '/admin/reports';
   static const String adminReports = '/admin/reports/:category';
+  static const String adminSettingsHub = '/admin/settings';
   static const String adminSettings = '/admin/settings/:category';
 
   /// Trainer own-performance slice (FR-RPT-009).
@@ -247,6 +248,9 @@ class Routes {
   static String trainerPlansExerciseById(String id) =>
       '/trainer/plans/exercises/$id';
 
+  static String adminEmployeeRolesById(String id) =>
+      '/admin/employees/$id/roles';
+
   static String adminMemberById(String id) => '/admin/members/$id';
 
   static String adminMembersWorkoutHistoryById(String id) =>
@@ -260,7 +264,6 @@ class Routes {
 
   static String trainerMembersDietHistoryById(String id) =>
       '/trainer/members/$id/diet-history';
-
 
   static String adminMembershipById(String id) => '/admin/memberships/$id';
 

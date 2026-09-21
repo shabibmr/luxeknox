@@ -25,11 +25,14 @@ import '../../features/notifications/presentation/screens/notifications_inbox_sc
 import '../../features/reports/presentation/screens/report_viewer_screen.dart';
 import '../../features/payments/presentation/payment_ledger_role.dart';
 import '../../features/payments/presentation/screens/payments_ledger_screen.dart';
+import '../../features/people/presentation/screens/edit_trainer_profile_screen.dart';
 import '../../features/people/presentation/screens/health_info_screen.dart';
 import '../../features/people/presentation/screens/member_dossier_screen.dart';
 import '../../features/people/presentation/screens/members_directory_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_detail_screen.dart';
+import '../../features/scheduling/presentation/screens/schedule_history_screen.dart';
+import '../../features/scheduling/presentation/screens/todays_sessions_screen.dart';
 import '../../features/scheduling/presentation/screens/trainer_availability_screen.dart';
 import '../../features/workout/presentation/screens/workout_history_screen.dart';
 import '../../features/workout/presentation/screens/workout_plan_builder_screen.dart';
@@ -42,6 +45,7 @@ import '../widgets/adaptive_shell.dart';
 import '../widgets/destination_hub_screen.dart';
 import '../widgets/placeholder_screen.dart';
 import 'routes.dart';
+import 'session_route_ids.dart';
 
 StatefulShellRoute createTrainerBranchRoute() {
   return StatefulShellRoute.indexedStack(
@@ -86,9 +90,10 @@ StatefulShellRoute createTrainerBranchRoute() {
           ),
           GoRoute(
             path: Routes.trainerSessionsToday,
-            builder: (context, state) => const PlaceholderScreen(
-              title: ShellStrings.trainerSessionsToday,
-            ),
+            builder: (context, state) {
+              final trainerId = sessionProfileId(context)?.toString();
+              return TodaysSessionsScreen(trainerId: trainerId);
+            },
           ),
           GoRoute(
             path: Routes.trainerNotifications,
@@ -189,9 +194,18 @@ StatefulShellRoute createTrainerBranchRoute() {
                   ),
                   GoRoute(
                     path: 'schedule',
-                    builder: (context, state) => const PlaceholderScreen(
-                      title: ShellStrings.memberSchedule,
-                    ),
+                    builder: (context, state) {
+                      final id = state.pathParameters['id'];
+                      if (id == null || id.isEmpty) {
+                        return const PlaceholderScreen(
+                          title: ShellStrings.memberSchedule,
+                        );
+                      }
+                      return ScheduleCalendarScreen(
+                        role: ScheduleCalendarRole.trainer,
+                        memberId: id,
+                      );
+                    },
                   ),
                   GoRoute(
                     path: 'payments',
@@ -244,9 +258,13 @@ StatefulShellRoute createTrainerBranchRoute() {
               ),
               GoRoute(
                 path: 'history',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.scheduleHistory,
-                ),
+                builder: (context, state) {
+                  final trainerId = sessionProfileId(context)?.toString();
+                  return ScheduleHistoryScreen(
+                    role: ScheduleCalendarRole.trainer,
+                    trainerId: trainerId,
+                  );
+                },
               ),
               GoRoute(
                 path: ':id',
@@ -391,6 +409,11 @@ StatefulShellRoute createTrainerBranchRoute() {
               title: ShellStrings.trainerProfile,
               links: [
                 ProfileTabLink(
+                  title: ShellStrings.editProfile,
+                  path: Routes.trainerProfileEdit,
+                  icon: Icons.edit_outlined,
+                ),
+                ProfileTabLink(
                   title: ShellStrings.trainerOwnReport,
                   path: Routes.trainerReportsOwn,
                   icon: Icons.insights_outlined,
@@ -400,8 +423,15 @@ StatefulShellRoute createTrainerBranchRoute() {
             routes: [
               GoRoute(
                 path: 'edit',
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: ShellStrings.editProfile),
+                builder: (context, state) {
+                  final trainerId = sessionProfileId(context);
+                  if (trainerId == null) {
+                    return const PlaceholderScreen(
+                      title: ShellStrings.editProfile,
+                    );
+                  }
+                  return EditTrainerProfileScreen(trainerId: trainerId);
+                },
               ),
             ],
           ),

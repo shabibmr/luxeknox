@@ -17,6 +17,16 @@ import 'package:get_it/get_it.dart' as _i174;
 import 'package:go_router/go_router.dart' as _i583;
 import 'package:injectable/injectable.dart' as _i526;
 
+import '../../features/alerts/data/datasources/alerts_remote_datasource.dart'
+    as _i1019;
+import '../../features/alerts/data/repositories/alerts_repository_impl.dart'
+    as _i56;
+import '../../features/alerts/domain/repositories/alerts_repository.dart'
+    as _i7;
+import '../../features/alerts/domain/usecases/list_system_alerts_usecase.dart'
+    as _i1065;
+import '../../features/alerts/presentation/cubit/system_alerts_cubit.dart'
+    as _i449;
 import '../../features/attendance/data/datasources/attendance_remote_datasource.dart'
     as _i425;
 import '../../features/attendance/data/repositories/attendance_repository_impl.dart'
@@ -64,6 +74,8 @@ import '../../features/diet/domain/usecases/assign_diet_plan_usecase.dart'
     as _i529;
 import '../../features/diet/domain/usecases/create_diet_plan_usecase.dart'
     as _i86;
+import '../../features/diet/domain/usecases/get_diet_meal_usecase.dart'
+    as _i129;
 import '../../features/diet/domain/usecases/get_diet_plan_usecase.dart'
     as _i911;
 import '../../features/diet/domain/usecases/list_diet_logs_usecase.dart'
@@ -84,6 +96,8 @@ import '../../features/diet/presentation/cubit/diet_daily_log_cubit.dart'
     as _i982;
 import '../../features/diet/presentation/cubit/diet_history_cubit.dart'
     as _i778;
+import '../../features/diet/presentation/cubit/diet_meal_detail_cubit.dart'
+    as _i745;
 import '../../features/diet/presentation/cubit/diet_plan_builder_cubit.dart'
     as _i262;
 import '../../features/diet/presentation/cubit/diet_plan_detail_cubit.dart'
@@ -103,9 +117,9 @@ import '../../features/exercises/domain/usecases/create_exercise_usecase.dart'
 import '../../features/exercises/domain/usecases/deactivate_exercise_usecase.dart'
     as _i708;
 import '../../features/exercises/domain/usecases/get_exercise_usecase.dart'
-    as _i1032;
+    as _i1034;
 import '../../features/exercises/domain/usecases/get_exercises_usecase.dart'
-    as _i870;
+    as _i871;
 import '../../features/exercises/domain/usecases/update_exercise_usecase.dart'
     as _i791;
 import '../../features/exercises/presentation/bloc/exercise_list_bloc.dart'
@@ -167,7 +181,7 @@ import '../../features/goals/presentation/cubit/measurements_cubit.dart'
 import '../../features/goals/presentation/cubit/progress_notes_cubit.dart'
     as _i188;
 import '../../features/goals/presentation/cubit/progress_photos_cubit.dart'
-    as _i634;
+    as _i635;
 import '../../features/membership/data/datasources/membership_remote_datasource.dart'
     as _i133;
 import '../../features/membership/data/repositories/membership_repository_impl.dart'
@@ -280,21 +294,31 @@ import '../../features/people/domain/repositories/people_repository.dart'
     as _i646;
 import '../../features/people/domain/repositories/profile_repository.dart'
     as _i121;
+import '../../features/people/domain/usecases/assign_employee_role_usecase.dart'
+    as _i725;
 import '../../features/people/domain/usecases/assign_trainer_usecase.dart'
     as _i829;
 import '../../features/people/domain/usecases/create_emergency_contact_usecase.dart'
     as _i580;
 import '../../features/people/domain/usecases/create_medical_record_usecase.dart'
     as _i527;
+import '../../features/people/domain/usecases/create_member_usecase.dart'
+    as _i226;
 import '../../features/people/domain/usecases/delete_document_usecase.dart'
     as _i770;
 import '../../features/people/domain/usecases/delete_emergency_contact_usecase.dart'
     as _i776;
 import '../../features/people/domain/usecases/delete_medical_record_usecase.dart'
     as _i149;
+import '../../features/people/domain/usecases/get_assigned_trainer_usecase.dart'
+    as _i502;
+import '../../features/people/domain/usecases/get_employee_usecase.dart'
+    as _i780;
 import '../../features/people/domain/usecases/get_health_info_usecase.dart'
     as _i311;
 import '../../features/people/domain/usecases/get_member_usecase.dart' as _i562;
+import '../../features/people/domain/usecases/get_trainer_usecase.dart'
+    as _i1033;
 import '../../features/people/domain/usecases/list_documents_usecase.dart'
     as _i1023;
 import '../../features/people/domain/usecases/list_emergency_contacts_usecase.dart'
@@ -307,6 +331,7 @@ import '../../features/people/domain/usecases/list_members_usecase.dart'
     as _i436;
 import '../../features/people/domain/usecases/list_photos_usecase.dart'
     as _i917;
+import '../../features/people/domain/usecases/list_roles_usecase.dart' as _i884;
 import '../../features/people/domain/usecases/list_trainers_usecase.dart'
     as _i382;
 import '../../features/people/domain/usecases/set_avatar_usecase.dart'
@@ -319,16 +344,30 @@ import '../../features/people/domain/usecases/update_medical_record_usecase.dart
     as _i196;
 import '../../features/people/domain/usecases/update_member_usecase.dart'
     as _i862;
+import '../../features/people/domain/usecases/update_trainer_usecase.dart'
+    as _i166;
 import '../../features/people/domain/usecases/upload_document_usecase.dart'
     as _i438;
 import '../../features/people/domain/usecases/upload_photo_usecase.dart'
     as _i78;
+import '../../features/people/presentation/cubit/add_member_wizard_cubit.dart'
+    as _i117;
+import '../../features/people/presentation/cubit/edit_member_cubit.dart'
+    as _i847;
+import '../../features/people/presentation/cubit/edit_profile_cubit.dart'
+    as _i985;
+import '../../features/people/presentation/cubit/edit_trainer_profile_cubit.dart'
+    as _i551;
+import '../../features/people/presentation/cubit/employee_roles_cubit.dart'
+    as _i118;
 import '../../features/people/presentation/cubit/employees_directory_cubit.dart'
     as _i369;
 import '../../features/people/presentation/cubit/member_dossier_cubit.dart'
     as _i148;
 import '../../features/people/presentation/cubit/members_directory_cubit.dart'
     as _i228;
+import '../../features/people/presentation/cubit/my_trainer_profile_cubit.dart'
+    as _i634;
 import '../../features/people/presentation/cubit/trainers_directory_cubit.dart'
     as _i971;
 import '../../features/reports/data/datasources/report_remote_datasource.dart'
@@ -348,7 +387,7 @@ import '../../features/scheduling/data/repositories/scheduling_repository_impl.d
 import '../../features/scheduling/domain/repositories/scheduling_repository.dart'
     as _i250;
 import '../../features/scheduling/domain/usecases/catalog_usecases.dart'
-    as _i871;
+    as _i872;
 import '../../features/scheduling/domain/usecases/schedule_usecases.dart'
     as _i777;
 import '../../features/scheduling/presentation/cubit/facilities_cubit.dart'
@@ -357,8 +396,24 @@ import '../../features/scheduling/presentation/cubit/schedule_calendar_cubit.dar
     as _i1056;
 import '../../features/scheduling/presentation/cubit/schedule_detail_cubit.dart'
     as _i948;
+import '../../features/scheduling/presentation/cubit/schedule_history_cubit.dart'
+    as _i706;
+import '../../features/scheduling/presentation/cubit/todays_sessions_cubit.dart'
+    as _i978;
 import '../../features/scheduling/presentation/cubit/trainer_availability_cubit.dart'
     as _i1026;
+import '../../features/settings/data/datasources/settings_remote_datasource.dart'
+    as _i140;
+import '../../features/settings/data/repositories/settings_repository_impl.dart'
+    as _i955;
+import '../../features/settings/domain/repositories/settings_repository.dart'
+    as _i674;
+import '../../features/settings/domain/usecases/get_settings_usecase.dart'
+    as _i1032;
+import '../../features/settings/domain/usecases/update_settings_usecase.dart'
+    as _i474;
+import '../../features/settings/presentation/cubit/settings_category_cubit.dart'
+    as _i870;
 import '../../features/workout/data/datasources/workout_plan_remote_datasource.dart'
     as _i773;
 import '../../features/workout/data/datasources/workout_session_remote_datasource.dart'
@@ -482,6 +537,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i633.NOTIFApi>(
       () => registerModule.notifApi(gh<_i361.Dio>()),
     );
+    gh.singleton<_i633.SYSApi>(() => registerModule.sysApi(gh<_i361.Dio>()));
+    gh.singleton<_i633.RBACApi>(() => registerModule.rbacApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i70.WorkoutSessionRemoteDataSource>(
       () => _i70.WorkoutSessionRemoteDataSourceImpl(
         gh<_i633.WORKApi>(),
@@ -504,7 +561,10 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i133.MembershipRemoteDataSourceImpl(gh<_i633.MEMBApi>()),
     );
     gh.lazySingleton<_i1029.PeopleRemoteDataSource>(
-      () => _i1029.PeopleRemoteDataSourceImpl(gh<_i633.PEOPLEApi>()),
+      () => _i1029.PeopleRemoteDataSourceImpl(
+        gh<_i633.PEOPLEApi>(),
+        gh<_i633.RBACApi>(),
+      ),
     );
     gh.lazySingleton<_i325.MembershipRepository>(
       () => _i920.MembershipRepositoryImpl(
@@ -567,6 +627,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i977.GoalMetricsRepository>(
       () => _i45.GoalMetricsRepositoryImpl(gh<_i812.GoalsRemoteDataSource>()),
     );
+    gh.lazySingleton<_i140.SettingsRemoteDataSource>(
+      () => _i140.SettingsRemoteDataSourceImpl(gh<_i633.SYSApi>()),
+    );
     gh.lazySingleton<_i100.ExerciseRemoteDataSource>(
       () => _i100.ExerciseRemoteDataSourceImpl(gh<_i633.WORKApi>()),
     );
@@ -615,11 +678,23 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i864.MarkNotificationReadUseCase>(),
       ),
     );
+    gh.lazySingleton<_i725.AssignEmployeeRoleUseCase>(
+      () => _i725.AssignEmployeeRoleUseCase(gh<_i646.PeopleRepository>()),
+    );
     gh.lazySingleton<_i829.AssignTrainerUseCase>(
       () => _i829.AssignTrainerUseCase(gh<_i646.PeopleRepository>()),
     );
+    gh.lazySingleton<_i226.CreateMemberUseCase>(
+      () => _i226.CreateMemberUseCase(gh<_i646.PeopleRepository>()),
+    );
+    gh.lazySingleton<_i780.GetEmployeeUseCase>(
+      () => _i780.GetEmployeeUseCase(gh<_i646.PeopleRepository>()),
+    );
     gh.lazySingleton<_i562.GetMemberUseCase>(
       () => _i562.GetMemberUseCase(gh<_i646.PeopleRepository>()),
+    );
+    gh.lazySingleton<_i1033.GetTrainerUseCase>(
+      () => _i1033.GetTrainerUseCase(gh<_i646.PeopleRepository>()),
     );
     gh.lazySingleton<_i1004.ListEmployeesUseCase>(
       () => _i1004.ListEmployeesUseCase(gh<_i646.PeopleRepository>()),
@@ -627,11 +702,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i436.ListMembersUseCase>(
       () => _i436.ListMembersUseCase(gh<_i646.PeopleRepository>()),
     );
+    gh.lazySingleton<_i884.ListRolesUseCase>(
+      () => _i884.ListRolesUseCase(gh<_i646.PeopleRepository>()),
+    );
     gh.lazySingleton<_i382.ListTrainersUseCase>(
       () => _i382.ListTrainersUseCase(gh<_i646.PeopleRepository>()),
     );
     gh.lazySingleton<_i862.UpdateMemberUseCase>(
       () => _i862.UpdateMemberUseCase(gh<_i646.PeopleRepository>()),
+    );
+    gh.lazySingleton<_i166.UpdateTrainerUseCase>(
+      () => _i166.UpdateTrainerUseCase(gh<_i646.PeopleRepository>()),
     );
     gh.lazySingleton<_i995.MediaDownloader>(
       () => _i995.MediaDownloader(gh<_i700.SignedMediaResolver>()),
@@ -714,9 +795,18 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i361.Dio>(),
       ),
     );
+    gh.lazySingleton<_i1019.AlertsRemoteDataSource>(
+      () => _i1019.AlertsRemoteDataSourceImpl(gh<_i633.SYSApi>()),
+    );
     gh.lazySingleton<_i996.ReportRemoteDataSource>(
       () =>
           _i996.ReportRemoteDataSourceImpl(gh<_i633.RPTApi>(), gh<_i361.Dio>()),
+    );
+    gh.factory<_i551.EditTrainerProfileCubit>(
+      () => _i551.EditTrainerProfileCubit(
+        gh<_i1033.GetTrainerUseCase>(),
+        gh<_i166.UpdateTrainerUseCase>(),
+      ),
     );
     gh.lazySingleton<_i158.SessionRepository>(
       () => _i803.SessionRepositoryImpl(
@@ -726,6 +816,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i247.MeasurementsRepository>(
       () => _i981.MeasurementsRepositoryImpl(gh<_i812.GoalsRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i7.AlertsRepository>(
+      () => _i56.AlertsRepositoryImpl(gh<_i1019.AlertsRemoteDataSource>()),
     );
     gh.lazySingleton<_i68.WorkoutPlanRepository>(
       () => _i1031.WorkoutPlanRepositoryImpl(
@@ -754,6 +847,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i971.TrainersDirectoryCubit>(
       () => _i971.TrainersDirectoryCubit(gh<_i382.ListTrainersUseCase>()),
+    );
+    gh.lazySingleton<_i674.SettingsRepository>(
+      () => _i955.SettingsRepositoryImpl(gh<_i140.SettingsRemoteDataSource>()),
     );
     gh.factory<_i251.WorkoutHistoryCubit>(
       () => _i251.WorkoutHistoryCubit(gh<_i736.ListWorkoutSessionsUseCase>()),
@@ -788,6 +884,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i407.MembershipsDirectoryCubit>(
       () => _i407.MembershipsDirectoryCubit(gh<_i370.GetMembershipsUseCase>()),
     );
+    gh.factory<_i117.AddMemberWizardCubit>(
+      () => _i117.AddMemberWizardCubit(gh<_i226.CreateMemberUseCase>()),
+    );
+    gh.lazySingleton<_i502.GetAssignedTrainerUseCase>(
+      () => _i502.GetAssignedTrainerUseCase(gh<_i646.PeopleRepository>()),
+    );
     gh.lazySingleton<_i1025.ListDietLogsUseCase>(
       () => _i1025.ListDietLogsUseCase(gh<_i771.DietLogRepository>()),
     );
@@ -804,6 +906,15 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i829.AssignTrainerUseCase>(),
       ),
     );
+    gh.lazySingleton<_i1032.GetSettingsUseCase>(
+      () => _i1032.GetSettingsUseCase(gh<_i674.SettingsRepository>()),
+    );
+    gh.lazySingleton<_i474.UpdateSettingsUseCase>(
+      () => _i474.UpdateSettingsUseCase(gh<_i674.SettingsRepository>()),
+    );
+    gh.lazySingleton<_i1065.ListSystemAlertsUseCase>(
+      () => _i1065.ListSystemAlertsUseCase(gh<_i7.AlertsRepository>()),
+    );
     gh.lazySingleton<_i275.ExerciseRepository>(
       () => _i340.ExerciseRepositoryImpl(gh<_i100.ExerciseRemoteDataSource>()),
     );
@@ -812,6 +923,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i327.ProfileRemoteDataSource>(),
         gh<_i510.MediaUploader>(),
       ),
+    );
+    gh.factory<_i634.MyTrainerProfileCubit>(
+      () => _i634.MyTrainerProfileCubit(gh<_i502.GetAssignedTrainerUseCase>()),
     );
     gh.lazySingleton<_i66.CreatePaymentMethodUseCase>(
       () => _i66.CreatePaymentMethodUseCase(gh<_i663.PaymentsRepository>()),
@@ -865,6 +979,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i144.PaymentDetailCubit>(
       () => _i144.PaymentDetailCubit(gh<_i835.GetPaymentUseCase>()),
     );
+    gh.factory<_i870.SettingsCategoryCubit>(
+      () => _i870.SettingsCategoryCubit(
+        gh<_i1032.GetSettingsUseCase>(),
+        gh<_i474.UpdateSettingsUseCase>(),
+      ),
+    );
     gh.factory<_i511.BroadcastCubit>(
       () => _i511.BroadcastCubit(
         gh<_i864.BroadcastNotificationUseCase>(),
@@ -892,6 +1012,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i179.ReplaceWorkoutPlanExercisesUseCase>(),
         gh<_i553.PublishWorkoutPlanUseCase>(),
       ),
+    );
+    gh.factory<_i449.SystemAlertsCubit>(
+      () => _i449.SystemAlertsCubit(gh<_i1065.ListSystemAlertsUseCase>()),
     );
     gh.lazySingleton<_i250.SchedulingRepository>(
       () => _i651.SchedulingRepositoryImpl(
@@ -931,11 +1054,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i708.DeactivateExerciseUseCase>(
       () => _i708.DeactivateExerciseUseCase(gh<_i275.ExerciseRepository>()),
     );
-    gh.lazySingleton<_i1032.GetExerciseUseCase>(
-      () => _i1032.GetExerciseUseCase(gh<_i275.ExerciseRepository>()),
+    gh.lazySingleton<_i1034.GetExerciseUseCase>(
+      () => _i1034.GetExerciseUseCase(gh<_i275.ExerciseRepository>()),
     );
-    gh.lazySingleton<_i870.GetExercisesUseCase>(
-      () => _i870.GetExercisesUseCase(gh<_i275.ExerciseRepository>()),
+    gh.lazySingleton<_i871.GetExercisesUseCase>(
+      () => _i871.GetExercisesUseCase(gh<_i275.ExerciseRepository>()),
     );
     gh.lazySingleton<_i791.UpdateExerciseUseCase>(
       () => _i791.UpdateExerciseUseCase(gh<_i275.ExerciseRepository>()),
@@ -951,22 +1074,28 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i785.DietPlanRepository>(
       () => _i198.DietPlanRepositoryImpl(gh<_i290.DietPlanRemoteDataSource>()),
     );
-    gh.lazySingleton<_i871.ListFacilitiesUseCase>(
-      () => _i871.ListFacilitiesUseCase(gh<_i250.SchedulingRepository>()),
+    gh.factory<_i847.EditMemberCubit>(
+      () => _i847.EditMemberCubit(
+        gh<_i562.GetMemberUseCase>(),
+        gh<_i862.UpdateMemberUseCase>(),
+      ),
     );
-    gh.lazySingleton<_i871.CreateFacilityUseCase>(
-      () => _i871.CreateFacilityUseCase(gh<_i250.SchedulingRepository>()),
+    gh.lazySingleton<_i872.ListFacilitiesUseCase>(
+      () => _i872.ListFacilitiesUseCase(gh<_i250.SchedulingRepository>()),
     );
-    gh.lazySingleton<_i871.ListScheduleTypesUseCase>(
-      () => _i871.ListScheduleTypesUseCase(gh<_i250.SchedulingRepository>()),
+    gh.lazySingleton<_i872.CreateFacilityUseCase>(
+      () => _i872.CreateFacilityUseCase(gh<_i250.SchedulingRepository>()),
     );
-    gh.lazySingleton<_i871.GetTrainerAvailabilityUseCase>(
+    gh.lazySingleton<_i872.ListScheduleTypesUseCase>(
+      () => _i872.ListScheduleTypesUseCase(gh<_i250.SchedulingRepository>()),
+    );
+    gh.lazySingleton<_i872.GetTrainerAvailabilityUseCase>(
       () =>
-          _i871.GetTrainerAvailabilityUseCase(gh<_i250.SchedulingRepository>()),
+          _i872.GetTrainerAvailabilityUseCase(gh<_i250.SchedulingRepository>()),
     );
-    gh.lazySingleton<_i871.PutTrainerAvailabilityUseCase>(
+    gh.lazySingleton<_i872.PutTrainerAvailabilityUseCase>(
       () =>
-          _i871.PutTrainerAvailabilityUseCase(gh<_i250.SchedulingRepository>()),
+          _i872.PutTrainerAvailabilityUseCase(gh<_i250.SchedulingRepository>()),
     );
     gh.lazySingleton<_i777.ListSchedulesUseCase>(
       () => _i777.ListSchedulesUseCase(gh<_i250.SchedulingRepository>()),
@@ -1044,6 +1173,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i86.CreateDietPlanUseCase>(
       () => _i86.CreateDietPlanUseCase(gh<_i785.DietPlanRepository>()),
     );
+    gh.lazySingleton<_i129.GetDietMealUseCase>(
+      () => _i129.GetDietMealUseCase(gh<_i785.DietPlanRepository>()),
+    );
     gh.lazySingleton<_i911.GetDietPlanUseCase>(
       () => _i911.GetDietPlanUseCase(gh<_i785.DietPlanRepository>()),
     );
@@ -1068,13 +1200,20 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i630.UnregisterDeviceOnLogoutUseCase>(),
       ),
     );
+    gh.factory<_i118.EmployeeRolesCubit>(
+      () => _i118.EmployeeRolesCubit(
+        gh<_i780.GetEmployeeUseCase>(),
+        gh<_i884.ListRolesUseCase>(),
+        gh<_i725.AssignEmployeeRoleUseCase>(),
+      ),
+    );
     gh.factory<_i1063.WorkoutPlanVersionsCubit>(
       () => _i1063.WorkoutPlanVersionsCubit(
         gh<_i516.ListWorkoutPlanVersionsUseCase>(),
       ),
     );
     gh.factory<_i756.ExerciseDetailCubit>(
-      () => _i756.ExerciseDetailCubit(gh<_i1032.GetExerciseUseCase>()),
+      () => _i756.ExerciseDetailCubit(gh<_i1034.GetExerciseUseCase>()),
     );
     gh.lazySingleton<_i806.GetDashboardUseCase>(
       () => _i806.GetDashboardUseCase(gh<_i665.DashboardRepository>()),
@@ -1118,7 +1257,7 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i757.ExerciseListBloc>(
       () => _i757.ExerciseListBloc(
-        getExercisesUseCase: gh<_i870.GetExercisesUseCase>(),
+        getExercisesUseCase: gh<_i871.GetExercisesUseCase>(),
       ),
     );
     gh.factory<_i857.DietPlanVersionsCubit>(
@@ -1157,8 +1296,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i78.UploadPhotoUseCase>(
       () => _i78.UploadPhotoUseCase(gh<_i211.DocumentRepository>()),
     );
-    gh.factory<_i634.ProgressPhotosCubit>(
-      () => _i634.ProgressPhotosCubit(
+    gh.factory<_i635.ProgressPhotosCubit>(
+      () => _i635.ProgressPhotosCubit(
         gh<_i748.ListProgressPhotosUseCase>(),
         gh<_i748.CreateProgressPhotoUseCase>(),
         gh<_i748.DeleteProgressPhotoUseCase>(),
@@ -1241,6 +1380,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1056.ScheduleCalendarCubit>(
       () => _i1056.ScheduleCalendarCubit(gh<_i777.ListSchedulesUseCase>()),
     );
+    gh.factory<_i706.ScheduleHistoryCubit>(
+      () => _i706.ScheduleHistoryCubit(gh<_i777.ListSchedulesUseCase>()),
+    );
+    gh.factory<_i978.TodaysSessionsCubit>(
+      () => _i978.TodaysSessionsCubit(gh<_i777.ListSchedulesUseCase>()),
+    );
     gh.factory<_i710.FoodListBloc>(
       () => _i710.FoodListBloc(getFoodsUseCase: gh<_i687.GetFoodsUseCase>()),
     );
@@ -1282,8 +1427,8 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i1026.TrainerAvailabilityCubit>(
       () => _i1026.TrainerAvailabilityCubit(
-        gh<_i871.GetTrainerAvailabilityUseCase>(),
-        gh<_i871.PutTrainerAvailabilityUseCase>(),
+        gh<_i872.GetTrainerAvailabilityUseCase>(),
+        gh<_i872.PutTrainerAvailabilityUseCase>(),
       ),
     );
     gh.lazySingleton<_i997.ExportReportCsvUseCase>(
@@ -1294,14 +1439,22 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i115.FacilitiesCubit>(
       () => _i115.FacilitiesCubit(
-        gh<_i871.ListFacilitiesUseCase>(),
-        gh<_i871.CreateFacilityUseCase>(),
+        gh<_i872.ListFacilitiesUseCase>(),
+        gh<_i872.CreateFacilityUseCase>(),
       ),
     );
     gh.factory<_i114.GoalDetailCubit>(
       () => _i114.GoalDetailCubit(
         gh<_i62.GetGoalUseCase>(),
         gh<_i62.CheckInGoalUseCase>(),
+      ),
+    );
+    gh.factory<_i985.EditProfileCubit>(
+      () => _i985.EditProfileCubit(
+        gh<_i562.GetMemberUseCase>(),
+        gh<_i862.UpdateMemberUseCase>(),
+        gh<_i1012.SetAvatarUseCase>(),
+        gh<_i78.UploadPhotoUseCase>(),
       ),
     );
     gh.factory<_i410.AttendancePassCubit>(
@@ -1313,6 +1466,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i85.AttendanceHistoryCubit>(
       () => _i85.AttendanceHistoryCubit(gh<_i841.ListAttendancesUseCase>()),
+    );
+    gh.factory<_i745.DietMealDetailCubit>(
+      () => _i745.DietMealDetailCubit(gh<_i129.GetDietMealUseCase>()),
     );
     gh.factory<_i948.ScheduleDetailCubit>(
       () => _i948.ScheduleDetailCubit(
