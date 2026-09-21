@@ -9,6 +9,7 @@ import { WorkModule } from './work/work.module';
 import { DietModule } from './diet/diet.module';
 import { PeopleModule } from './people/people.module';
 import { MediaModule } from './media/media.module';
+import { MembModule } from './memb/memb.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { MediaModule } from './media/media.module';
     DietModule,
     PeopleModule,
     MediaModule,
+    MembModule,
   ],
   controllers: [],
   providers: [],

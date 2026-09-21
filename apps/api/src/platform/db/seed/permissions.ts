@@ -57,9 +57,12 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'HEALTH', action: 'approve', slug: 'health.approve', description: 'Verify member health documents' },
   { module: 'HEALTH', action: 'pii_read', slug: 'health.pii_read', description: 'View sensitive medical documents and PII' },
 
-  // MEMB
+  // MEMB — *.create|update|approve are OpenAPI; *.write/freeze/extend kept legacy
   { module: 'MEMB', action: 'read', slug: 'memberships.read', description: 'View memberships and packages' },
   { module: 'MEMB', action: 'write', slug: 'memberships.write', description: 'Create and modify memberships' },
+  { module: 'MEMB', action: 'create', slug: 'memberships.create', description: 'Create membership products and assign memberships' },
+  { module: 'MEMB', action: 'update', slug: 'memberships.update', description: 'Update membership products and submit freeze requests' },
+  { module: 'MEMB', action: 'approve', slug: 'memberships.approve', description: 'Approve renew/upgrade/cancel/freeze/extend actions' },
   { module: 'MEMB', action: 'freeze', slug: 'memberships.freeze', description: 'Freeze or unfreeze memberships' },
   { module: 'MEMB', action: 'extend', slug: 'memberships.extend', description: 'Extend membership duration' },
 

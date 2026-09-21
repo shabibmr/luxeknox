@@ -13,3 +13,4 @@ export * from './members';
 export * from './member-health';
 export * from './member-documents';
 export * from './member-photos';
+export * from './memberships';

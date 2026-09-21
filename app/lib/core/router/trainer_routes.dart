@@ -6,6 +6,7 @@ import '../../features/exercises/presentation/screens/exercise_detail_screen.dar
 import '../../features/exercises/presentation/screens/exercise_library_screen.dart';
 import '../../features/foods/presentation/screens/food_detail_screen.dart';
 import '../../features/foods/presentation/screens/food_library_screen.dart';
+import '../../features/membership/presentation/screens/trainer_membership_summary_screen.dart';
 import '../l10n/shell_strings.dart';
 import '../widgets/adaptive_shell.dart';
 import '../widgets/placeholder_screen.dart';
@@ -103,8 +104,8 @@ StatefulShellRoute createTrainerBranchRoute() {
                   ),
                   GoRoute(
                     path: 'membership',
-                    builder: (context, state) => const PlaceholderScreen(
-                      title: ShellStrings.memberMembership,
+                    builder: (context, state) => TrainerMembershipSummaryScreen(
+                      memberId: state.pathParameters['id']!,
                     ),
                   ),
                   GoRoute(

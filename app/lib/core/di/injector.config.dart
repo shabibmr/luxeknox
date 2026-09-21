@@ -41,7 +41,7 @@ import '../../features/exercises/presentation/cubit/exercise_detail_cubit.dart'
 import '../../features/foods/data/datasources/food_remote_datasource.dart'
     as _i822;
 import '../../features/foods/data/repositories/food_repository_impl.dart'
-    as _i64;
+    as _i65;
 import '../../features/foods/domain/repositories/food_repository.dart' as _i728;
 import '../../features/foods/domain/usecases/create_food_usecase.dart' as _i420;
 import '../../features/foods/domain/usecases/deactivate_food_usecase.dart'
@@ -52,6 +52,44 @@ import '../../features/foods/domain/usecases/update_food_usecase.dart' as _i897;
 import '../../features/foods/presentation/bloc/food_list_bloc.dart' as _i710;
 import '../../features/foods/presentation/cubit/food_detail_cubit.dart'
     as _i168;
+import '../../features/membership/data/datasources/membership_remote_datasource.dart'
+    as _i133;
+import '../../features/membership/data/repositories/membership_repository_impl.dart'
+    as _i920;
+import '../../features/membership/domain/repositories/membership_repository.dart'
+    as _i325;
+import '../../features/membership/domain/usecases/approve_freeze_usecase.dart'
+    as _i46;
+import '../../features/membership/domain/usecases/cancel_membership_usecase.dart'
+    as _i238;
+import '../../features/membership/domain/usecases/create_membership_product_usecase.dart'
+    as _i499;
+import '../../features/membership/domain/usecases/create_membership_usecase.dart'
+    as _i64;
+import '../../features/membership/domain/usecases/extend_membership_usecase.dart'
+    as _i227;
+import '../../features/membership/domain/usecases/get_membership_freezes_usecase.dart'
+    as _i590;
+import '../../features/membership/domain/usecases/get_membership_history_usecase.dart'
+    as _i106;
+import '../../features/membership/domain/usecases/get_membership_product_usecase.dart'
+    as _i363;
+import '../../features/membership/domain/usecases/get_membership_products_usecase.dart'
+    as _i359;
+import '../../features/membership/domain/usecases/get_membership_usecase.dart'
+    as _i70;
+import '../../features/membership/domain/usecases/get_memberships_usecase.dart'
+    as _i370;
+import '../../features/membership/domain/usecases/reject_freeze_usecase.dart'
+    as _i223;
+import '../../features/membership/domain/usecases/renew_membership_usecase.dart'
+    as _i804;
+import '../../features/membership/domain/usecases/request_membership_freeze_usecase.dart'
+    as _i377;
+import '../../features/membership/domain/usecases/update_membership_product_usecase.dart'
+    as _i30;
+import '../../features/membership/domain/usecases/upgrade_membership_usecase.dart'
+    as _i617;
 import '../../features/people/domain/repositories/document_repository.dart'
     as _i210;
 import '../../features/people/domain/repositories/people_repository.dart'
@@ -188,6 +226,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i633.MEDIAApi>(
       () => registerModule.mediaApi(gh<_i361.Dio>()),
     );
+    gh.singleton<_i633.MEMBApi>(() => registerModule.membApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i963.SessionRemoteDataSource>(
       () => _i963.SessionRemoteDataSourceImpl(gh<_i633.AUTHApi>()),
     );
@@ -197,11 +236,73 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i700.SignedMediaResolver>(
       () => _i700.SignedMediaResolver(gh<_i633.MEDIAApi>()),
     );
+    gh.lazySingleton<_i133.MembershipRemoteDataSource>(
+      () => _i133.MembershipRemoteDataSourceImpl(gh<_i633.MEMBApi>()),
+    );
+    gh.lazySingleton<_i325.MembershipRepository>(
+      () => _i920.MembershipRepositoryImpl(
+        gh<_i133.MembershipRemoteDataSource>(),
+      ),
+    );
     gh.lazySingleton<_i822.FoodRemoteDataSource>(
       () => _i822.FoodRemoteDataSourceImpl(gh<_i633.DIETApi>()),
     );
     gh.lazySingleton<_i100.ExerciseRemoteDataSource>(
       () => _i100.ExerciseRemoteDataSourceImpl(gh<_i633.WORKApi>()),
+    );
+    gh.lazySingleton<_i46.ApproveFreezeUseCase>(
+      () => _i46.ApproveFreezeUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i238.CancelMembershipUseCase>(
+      () => _i238.CancelMembershipUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i499.CreateMembershipProductUseCase>(
+      () => _i499.CreateMembershipProductUseCase(
+        gh<_i325.MembershipRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i64.CreateMembershipUseCase>(
+      () => _i64.CreateMembershipUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i227.ExtendMembershipUseCase>(
+      () => _i227.ExtendMembershipUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i590.GetMembershipFreezesUseCase>(
+      () => _i590.GetMembershipFreezesUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i106.GetMembershipHistoryUseCase>(
+      () => _i106.GetMembershipHistoryUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i363.GetMembershipProductUseCase>(
+      () => _i363.GetMembershipProductUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i359.GetMembershipProductsUseCase>(
+      () =>
+          _i359.GetMembershipProductsUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i70.GetMembershipUseCase>(
+      () => _i70.GetMembershipUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i370.GetMembershipsUseCase>(
+      () => _i370.GetMembershipsUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i223.RejectFreezeUseCase>(
+      () => _i223.RejectFreezeUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i804.RenewMembershipUseCase>(
+      () => _i804.RenewMembershipUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i377.RequestMembershipFreezeUseCase>(
+      () => _i377.RequestMembershipFreezeUseCase(
+        gh<_i325.MembershipRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i30.UpdateMembershipProductUseCase>(
+      () =>
+          _i30.UpdateMembershipProductUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i617.UpgradeMembershipUseCase>(
+      () => _i617.UpgradeMembershipUseCase(gh<_i325.MembershipRepository>()),
     );
     gh.lazySingleton<_i158.SessionRepository>(
       () => _i803.SessionRepositoryImpl(
@@ -225,7 +326,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i123.RestoreSessionUseCase(gh<_i158.SessionRepository>()),
     );
     gh.lazySingleton<_i728.FoodRepository>(
-      () => _i64.FoodRepositoryImpl(gh<_i822.FoodRemoteDataSource>()),
+      () => _i65.FoodRepositoryImpl(gh<_i822.FoodRemoteDataSource>()),
     );
     gh.singleton<_i893.SessionCubit>(
       () => _i893.SessionCubit(

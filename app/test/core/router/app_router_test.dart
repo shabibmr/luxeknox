@@ -242,7 +242,10 @@ void main() {
         '/trainer/members/123/health',
         '/trainer/members/123/goals',
         '/trainer/members/123/goals/add-measurement',
-        '/trainer/members/123/membership',
+        // '/trainer/members/123/membership' is now a real feature screen
+        // (TrainerMembershipSummaryScreen) requiring live DI/network,
+        // excluded from this skeleton sweep — same precedent as the
+        // exercises/foods feature routes below.
         '/trainer/members/123/attendance',
         '/trainer/members/123/schedule',
         '/trainer/members/123/payments',

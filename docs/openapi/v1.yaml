@@ -1774,6 +1774,7 @@ paths:
       summary: Package catalog
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.read
       security:
         - bearerAuth: []
@@ -1807,6 +1808,7 @@ paths:
       summary: Create a package
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.create
       security:
         - bearerAuth: []
@@ -1843,6 +1845,7 @@ paths:
       summary: Package detail
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.read
       security:
         - bearerAuth: []
@@ -1874,6 +1877,7 @@ paths:
       summary: Update a package
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.update
       security:
         - bearerAuth: []
@@ -1912,6 +1916,7 @@ paths:
       summary: Membership contracts
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.read
       security:
         - bearerAuth: []
@@ -1946,6 +1951,7 @@ paths:
       summary: Assign a membership
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.create
       security:
         - bearerAuth: []
@@ -1982,6 +1988,7 @@ paths:
       summary: Membership detail
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.read
       security:
         - bearerAuth: []
@@ -2014,6 +2021,7 @@ paths:
       summary: Append-only membership history
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.read
       security:
         - bearerAuth: []
@@ -2048,6 +2056,7 @@ paths:
       summary: Renew a membership
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.approve
       security:
         - bearerAuth: []
@@ -2086,6 +2095,7 @@ paths:
       summary: Upgrade a membership
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.approve
       security:
         - bearerAuth: []
@@ -2124,6 +2134,7 @@ paths:
       summary: Cancel a membership
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.approve
       security:
         - bearerAuth: []
@@ -2162,6 +2173,7 @@ paths:
       summary: Freeze requests
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.read
       security:
         - bearerAuth: []
@@ -2193,6 +2205,7 @@ paths:
       summary: Request or create a freeze
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.update
       security:
         - bearerAuth: []
@@ -2232,6 +2245,7 @@ paths:
       summary: Approve a freeze
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.approve
       security:
         - bearerAuth: []
@@ -2264,6 +2278,7 @@ paths:
       summary: Reject a freeze
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.approve
       security:
         - bearerAuth: []
@@ -2302,6 +2317,7 @@ paths:
       summary: Grant a compensatory extension
       tags: [MEMB]
       x-status: mvp
+      x-parity: required
       x-permission: memberships.approve
       security:
         - bearerAuth: []

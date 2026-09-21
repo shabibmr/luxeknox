@@ -3,6 +3,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/profile_tab_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_detail_screen.dart';
+import '../../features/membership/presentation/screens/membership_card_screen.dart';
+import '../../features/membership/presentation/screens/membership_freeze_history_screen.dart';
+import '../../features/membership/presentation/screens/membership_history_screen.dart';
+import '../../features/membership/presentation/screens/membership_packages_catalog_screen.dart';
 import '../l10n/shell_strings.dart';
 import '../widgets/adaptive_shell.dart';
 import '../widgets/placeholder_screen.dart';
@@ -87,29 +91,24 @@ StatefulShellRoute createMemberBranchRoute() {
         routes: [
           GoRoute(
             path: Routes.memberMembership,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.membership),
+            builder: (context, state) => const MembershipCardScreen(),
             routes: [
               // Member: R (Browse) — Membership Packages Catalog
               GoRoute(
                 path: 'packages',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.memberMembershipPackages,
-                ),
+                builder: (context, state) =>
+                    const MembershipPackagesCatalogScreen(readOnly: true),
               ),
               // Member: R (Self) — Membership History
               GoRoute(
                 path: 'history',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.memberMembershipHistory,
-                ),
+                builder: (context, state) => const MembershipHistoryScreen(),
               ),
-              // Member: C (Request) — Freeze & Extension Manager
+              // Member: R (Self) — Freeze request history
               GoRoute(
                 path: 'freeze-history',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.memberMembershipFreezeHistory,
-                ),
+                builder: (context, state) =>
+                    const MembershipFreezeHistoryScreen(),
               ),
             ],
           ),

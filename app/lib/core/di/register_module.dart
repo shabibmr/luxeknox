@@ -55,5 +55,8 @@ abstract class RegisterModule {
   MEDIAApi mediaApi(Dio dio) => MEDIAApi(dio, standardSerializers);
 
   @singleton
+  MEMBApi membApi(Dio dio) => MEMBApi(dio, standardSerializers);
+
+  @singleton
   GoRouter router(SessionCubit session) => createRouter(session);
 }
