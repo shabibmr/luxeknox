@@ -19,6 +19,9 @@ import '../../features/people/presentation/screens/health_info_screen.dart';
 import '../../features/scheduling/presentation/screens/book_schedule_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_detail_screen.dart';
+import '../../features/workout/presentation/screens/active_workout_screen.dart';
+import '../../features/workout/presentation/screens/workout_history_screen.dart';
+import '../../features/workout/presentation/workout_history_role.dart';
 import '../l10n/shell_strings.dart';
 import '../widgets/adaptive_shell.dart';
 import '../widgets/placeholder_screen.dart';
@@ -76,9 +79,21 @@ StatefulShellRoute createMemberBranchRoute() {
               // Member: E (Self) — Live Workout Session Tracker
               GoRoute(
                 path: 'workout/active',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: ShellStrings.memberHomeActiveWorkout,
+                builder: (context, state) => ActiveWorkoutScreen(
+                  workoutPlanId:
+                      state.uri.queryParameters['workoutPlanId'],
                 ),
+              ),
+              // Member: R (Self) — Workout Session History
+              GoRoute(
+                path: 'workout/history',
+                builder: (context, state) {
+                  final profileId = sessionProfileId(context);
+                  return WorkoutHistoryScreen(
+                    role: WorkoutHistoryRole.member,
+                    memberId: profileId?.toString(),
+                  );
+                },
               ),
               // Member: R — Meal Details
               GoRoute(

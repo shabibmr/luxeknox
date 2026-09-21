@@ -4,6 +4,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/pagination/cursor_page.dart';
 import '../entities/workout_plan.dart';
 import '../entities/workout_plan_exercise_input.dart';
+import '../entities/workout_plan_version.dart';
 
 abstract class WorkoutPlanRepository {
   Future<Either<Failure, CursorPage<WorkoutPlan>>> listPlans({
@@ -49,4 +50,8 @@ abstract class WorkoutPlanRepository {
   Future<Either<Failure, WorkoutPlan>> publish(String id);
 
   Future<Either<Failure, WorkoutPlan>> archive(String id);
+
+  Future<Either<Failure, WorkoutPlan>> assign(String planId, String memberId);
+
+  Future<Either<Failure, List<WorkoutPlanVersion>>> listVersions(String planId);
 }

@@ -132,15 +132,15 @@ This file is the single executable register. Each vertical below is also maintai
 - [x] exercise picker
 - [x] ordering
 - [x] publish/archive
-- [ ] template copy
-- [ ] versions
-- [ ] live session
-- [ ] set logging
-- [ ] rest timer
-- [ ] completion
-- [ ] history
-- [ ] volume/PR
-- [ ] role variants
+- [x] template copy
+- [x] versions
+- [x] live session
+- [x] set logging
+- [x] rest timer
+- [x] completion
+- [x] history
+- [x] volume/PR
+- [x] role variants
 
 <!-- ==================== FILE: 09-diet.md ==================== -->
 # FILE: 09-diet.md
@@ -308,7 +308,7 @@ This file is the single executable register. Each vertical below is also maintai
 - [x] Membership
 - [x] Scheduling (core; see phase3-status-report)
 - [ ] Attendance
-- [x] Workout (plan builder core; sessions remain — see phase6-status-report)
+- [x] Workout (plans + sessions + history/volume/PR + role variants — see phase6-status-report)
 - [ ] Diet
 - [ ] Goals/Progress
 - [ ] Notifications

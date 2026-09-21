@@ -22,6 +22,8 @@ import '../../features/people/presentation/screens/trainers_directory_screen.dar
 import '../../features/scheduling/presentation/screens/facilities_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_detail_screen.dart';
+import '../../features/workout/presentation/screens/workout_history_screen.dart';
+import '../../features/workout/presentation/workout_history_role.dart';
 import '../l10n/shell_strings.dart';
 import '../widgets/adaptive_shell.dart';
 import '../widgets/more_hub_screen.dart';
@@ -67,6 +69,16 @@ StatefulShellRoute createAdminBranchRoute() {
                     builder: (context, state) {
                       final id = state.pathParameters['id']!;
                       return CreateMembershipScreen(memberId: id);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'workout-history',
+                    builder: (context, state) {
+                      final memberId = state.pathParameters['id']!;
+                      return WorkoutHistoryScreen(
+                        role: WorkoutHistoryRole.admin,
+                        memberId: memberId,
+                      );
                     },
                   ),
                 ],

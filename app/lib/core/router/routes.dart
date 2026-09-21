@@ -25,6 +25,7 @@ class Routes {
   // Home Stack
   static const String memberHome = '/home';
   static const String memberHomeWorkoutActive = '/home/workout/active';
+  static const String memberHomeWorkoutHistory = '/home/workout/history';
   static const String memberHomeWorkoutExerciseDetail =
       '/home/workout/exercises/:id';
   static const String memberHomeDietMeal = '/home/diet/meal/:id';
@@ -106,6 +107,8 @@ class Routes {
       '/trainer/plans/workouts/:id';
   static const String trainerPlansWorkoutsEdit =
       '/trainer/plans/workouts/:id/edit';
+  static const String trainerPlansWorkoutsVersions =
+      '/trainer/plans/workouts/:id/versions';
   static const String trainerPlansDietsCreate = '/trainer/plans/diets/create';
   static const String trainerPlansDietsDetail = '/trainer/plans/diets/:id';
   static const String trainerPlansExercises = '/trainer/plans/exercises';
@@ -133,6 +136,8 @@ class Routes {
   static const String adminMembersEdit = '/admin/members/:id/edit';
   static const String adminMembersAssignMembership =
       '/admin/members/:id/assign-membership';
+  static const String adminMembersWorkoutHistory =
+      '/admin/members/:id/workout-history';
 
   // Memberships Stack
   static const String adminMemberships = '/admin/memberships';
@@ -201,12 +206,21 @@ class Routes {
   static String trainerPlansWorkoutEditById(String id) =>
       '/trainer/plans/workouts/$id/edit';
 
+  static String trainerPlansWorkoutVersionsById(String id) =>
+      '/trainer/plans/workouts/$id/versions';
+
   static String trainerPlansDietById(String id) => '/trainer/plans/diets/$id';
 
   static String trainerPlansExerciseById(String id) =>
       '/trainer/plans/exercises/$id';
 
   static String adminMemberById(String id) => '/admin/members/$id';
+
+  static String adminMembersWorkoutHistoryById(String id) =>
+      '/admin/members/$id/workout-history';
+
+  static String trainerMembersWorkoutHistoryById(String id) =>
+      '/trainer/members/$id/workout-history';
 
   static String adminMembershipById(String id) => '/admin/memberships/$id';
 

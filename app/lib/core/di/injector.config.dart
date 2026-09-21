@@ -105,7 +105,7 @@ import '../../features/membership/domain/usecases/get_membership_product_usecase
 import '../../features/membership/domain/usecases/get_membership_products_usecase.dart'
     as _i359;
 import '../../features/membership/domain/usecases/get_membership_usecase.dart'
-    as _i70;
+    as _i71;
 import '../../features/membership/domain/usecases/get_memberships_usecase.dart'
     as _i370;
 import '../../features/membership/domain/usecases/reject_freeze_usecase.dart'
@@ -233,30 +233,52 @@ import '../../features/scheduling/presentation/cubit/trainer_availability_cubit.
     as _i1026;
 import '../../features/workout/data/datasources/workout_plan_remote_datasource.dart'
     as _i773;
+import '../../features/workout/data/datasources/workout_session_remote_datasource.dart'
+    as _i70;
 import '../../features/workout/data/repositories/workout_plan_repository_impl.dart'
     as _i1031;
+import '../../features/workout/data/repositories/workout_session_repository_impl.dart'
+    as _i55;
 import '../../features/workout/domain/repositories/workout_plan_repository.dart'
     as _i68;
+import '../../features/workout/domain/repositories/workout_session_repository.dart'
+    as _i14;
 import '../../features/workout/domain/usecases/archive_workout_plan_usecase.dart'
     as _i664;
+import '../../features/workout/domain/usecases/assign_workout_plan_usecase.dart'
+    as _i60;
+import '../../features/workout/domain/usecases/complete_workout_session_usecase.dart'
+    as _i57;
 import '../../features/workout/domain/usecases/create_workout_plan_usecase.dart'
     as _i701;
 import '../../features/workout/domain/usecases/get_workout_plan_usecase.dart'
     as _i391;
+import '../../features/workout/domain/usecases/list_workout_plan_versions_usecase.dart'
+    as _i516;
 import '../../features/workout/domain/usecases/list_workout_plans_usecase.dart'
     as _i110;
+import '../../features/workout/domain/usecases/list_workout_sessions_usecase.dart'
+    as _i736;
+import '../../features/workout/domain/usecases/log_workout_set_usecase.dart'
+    as _i88;
 import '../../features/workout/domain/usecases/publish_workout_plan_usecase.dart'
     as _i553;
 import '../../features/workout/domain/usecases/replace_workout_plan_exercises_usecase.dart'
     as _i179;
+import '../../features/workout/domain/usecases/start_workout_session_usecase.dart'
+    as _i556;
 import '../../features/workout/domain/usecases/update_workout_plan_usecase.dart'
     as _i134;
+import '../../features/workout/presentation/cubit/workout_history_cubit.dart'
+    as _i251;
 import '../../features/workout/presentation/cubit/workout_plan_builder_cubit.dart'
     as _i598;
 import '../../features/workout/presentation/cubit/workout_plan_detail_cubit.dart'
     as _i261;
 import '../../features/workout/presentation/cubit/workout_plan_list_cubit.dart'
     as _i731;
+import '../../features/workout/presentation/cubit/workout_plan_versions_cubit.dart'
+    as _i1063;
 import '../../session/data/datasources/session_remote_datasource.dart' as _i963;
 import '../../session/data/repositories/session_repository_impl.dart' as _i803;
 import '../../session/domain/repositories/session_repository.dart' as _i158;
@@ -318,6 +340,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.singleton<_i633.ATTNApi>(() => registerModule.attnApi(gh<_i361.Dio>()));
     gh.singleton<_i633.PAYApi>(() => registerModule.payApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i70.WorkoutSessionRemoteDataSource>(
+      () => _i70.WorkoutSessionRemoteDataSourceImpl(
+        gh<_i633.WORKApi>(),
+        gh<_i361.Dio>(),
+      ),
+    );
     gh.lazySingleton<_i963.SessionRemoteDataSource>(
       () => _i963.SessionRemoteDataSourceImpl(gh<_i633.AUTHApi>()),
     );
@@ -341,11 +369,32 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i646.PeopleRepository>(
       () => _i1030.PeopleRepositoryImpl(gh<_i1029.PeopleRemoteDataSource>()),
     );
+    gh.lazySingleton<_i14.WorkoutSessionRepository>(
+      () => _i55.WorkoutSessionRepositoryImpl(
+        gh<_i70.WorkoutSessionRemoteDataSource>(),
+      ),
+    );
     gh.lazySingleton<_i969.SchedulingRemoteDataSource>(
       () => _i969.SchedulingRemoteDataSourceImpl(gh<_i633.SCHEDApi>()),
     );
     gh.lazySingleton<_i817.DashboardRemoteDataSource>(
       () => _i817.DashboardRemoteDataSourceImpl(gh<_i633.DASHApi>()),
+    );
+    gh.lazySingleton<_i57.CompleteWorkoutSessionUseCase>(
+      () => _i57.CompleteWorkoutSessionUseCase(
+        gh<_i14.WorkoutSessionRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i736.ListWorkoutSessionsUseCase>(
+      () =>
+          _i736.ListWorkoutSessionsUseCase(gh<_i14.WorkoutSessionRepository>()),
+    );
+    gh.lazySingleton<_i88.LogWorkoutSetUseCase>(
+      () => _i88.LogWorkoutSetUseCase(gh<_i14.WorkoutSessionRepository>()),
+    );
+    gh.lazySingleton<_i556.StartWorkoutSessionUseCase>(
+      () =>
+          _i556.StartWorkoutSessionUseCase(gh<_i14.WorkoutSessionRepository>()),
     );
     gh.lazySingleton<_i327.ProfileRemoteDataSource>(
       () => _i327.ProfileRemoteDataSourceImpl(gh<_i633.HEALTHApi>()),
@@ -417,8 +466,8 @@ extension GetItInjectableX on _i174.GetIt {
       () =>
           _i359.GetMembershipProductsUseCase(gh<_i325.MembershipRepository>()),
     );
-    gh.lazySingleton<_i70.GetMembershipUseCase>(
-      () => _i70.GetMembershipUseCase(gh<_i325.MembershipRepository>()),
+    gh.lazySingleton<_i71.GetMembershipUseCase>(
+      () => _i71.GetMembershipUseCase(gh<_i325.MembershipRepository>()),
     );
     gh.lazySingleton<_i370.GetMembershipsUseCase>(
       () => _i370.GetMembershipsUseCase(gh<_i325.MembershipRepository>()),
@@ -470,6 +519,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i971.TrainersDirectoryCubit>(
       () => _i971.TrainersDirectoryCubit(gh<_i382.ListTrainersUseCase>()),
+    );
+    gh.factory<_i251.WorkoutHistoryCubit>(
+      () => _i251.WorkoutHistoryCubit(gh<_i736.ListWorkoutSessionsUseCase>()),
     );
     gh.lazySingleton<_i455.ChangePasswordUseCase>(
       () => _i455.ChangePasswordUseCase(gh<_i158.SessionRepository>()),
@@ -551,11 +603,19 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i664.ArchiveWorkoutPlanUseCase>(
       () => _i664.ArchiveWorkoutPlanUseCase(gh<_i68.WorkoutPlanRepository>()),
     );
+    gh.lazySingleton<_i60.AssignWorkoutPlanUseCase>(
+      () => _i60.AssignWorkoutPlanUseCase(gh<_i68.WorkoutPlanRepository>()),
+    );
     gh.lazySingleton<_i701.CreateWorkoutPlanUseCase>(
       () => _i701.CreateWorkoutPlanUseCase(gh<_i68.WorkoutPlanRepository>()),
     );
     gh.lazySingleton<_i391.GetWorkoutPlanUseCase>(
       () => _i391.GetWorkoutPlanUseCase(gh<_i68.WorkoutPlanRepository>()),
+    );
+    gh.lazySingleton<_i516.ListWorkoutPlanVersionsUseCase>(
+      () => _i516.ListWorkoutPlanVersionsUseCase(
+        gh<_i68.WorkoutPlanRepository>(),
+      ),
     );
     gh.lazySingleton<_i110.ListWorkoutPlansUseCase>(
       () => _i110.ListWorkoutPlansUseCase(gh<_i68.WorkoutPlanRepository>()),
@@ -617,6 +677,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i791.UpdateExerciseUseCase>(
       () => _i791.UpdateExerciseUseCase(gh<_i275.ExerciseRepository>()),
     );
+    gh.factory<_i261.WorkoutPlanDetailCubit>(
+      () => _i261.WorkoutPlanDetailCubit(
+        gh<_i391.GetWorkoutPlanUseCase>(),
+        gh<_i553.PublishWorkoutPlanUseCase>(),
+        gh<_i664.ArchiveWorkoutPlanUseCase>(),
+        gh<_i60.AssignWorkoutPlanUseCase>(),
+      ),
+    );
     gh.lazySingleton<_i871.ListFacilitiesUseCase>(
       () => _i871.ListFacilitiesUseCase(gh<_i250.SchedulingRepository>()),
     );
@@ -668,6 +736,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i69.LoginCubit>(
       () => _i69.LoginCubit(gh<_i893.SessionCubit>()),
+    );
+    gh.factory<_i1063.WorkoutPlanVersionsCubit>(
+      () => _i1063.WorkoutPlanVersionsCubit(
+        gh<_i516.ListWorkoutPlanVersionsUseCase>(),
+      ),
     );
     gh.factory<_i756.ExerciseDetailCubit>(
       () => _i756.ExerciseDetailCubit(gh<_i1032.GetExerciseUseCase>()),
@@ -730,13 +803,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i78.UploadPhotoUseCase>(
       () => _i78.UploadPhotoUseCase(gh<_i210.DocumentRepository>()),
-    );
-    gh.factory<_i261.WorkoutPlanDetailCubit>(
-      () => _i261.WorkoutPlanDetailCubit(
-        gh<_i391.GetWorkoutPlanUseCase>(),
-        gh<_i553.PublishWorkoutPlanUseCase>(),
-        gh<_i664.ArchiveWorkoutPlanUseCase>(),
-      ),
     );
     gh.lazySingleton<_i420.CreateFoodUseCase>(
       () => _i420.CreateFoodUseCase(gh<_i728.FoodRepository>()),

@@ -5,6 +5,9 @@ import '../../domain/entities/workout_plan.dart';
 import '../../domain/entities/workout_plan_exercise.dart';
 import '../../domain/entities/workout_plan_exercise_input.dart';
 import '../../domain/entities/workout_plan_status.dart';
+import '../../domain/entities/workout_plan_version.dart';
+import '../../domain/entities/workout_session.dart';
+import '../../domain/entities/workout_session_set.dart';
 
 WorkoutPlanStatus workoutPlanStatusToDomain(api.WorkoutPlanStatusEnum status) {
   return switch (status.name) {
@@ -102,5 +105,93 @@ api.WorkoutPlanExercisesWrite toWorkoutPlanExercisesWrite({
           ),
         ),
       ),
+  );
+}
+
+extension WorkoutPlanVersionModelMapper on api.WorkoutPlanVersion {
+  WorkoutPlanVersion toDomain() {
+    return WorkoutPlanVersion(
+      id: id.toString(),
+      planId: workoutPlanId.toString(),
+      versionNumber: versionNumber,
+      changelog: changelog,
+      createdAt: createdAt,
+      exercises: (exercises ?? BuiltList()).map((e) => e.toDomain()).toList(),
+    );
+  }
+}
+
+extension WorkoutSessionModelMapper on api.WorkoutSession {
+  WorkoutSession toDomain() {
+    return WorkoutSession(
+      id: id.toString(),
+      memberId: memberId.toString(),
+      workoutPlanId: workoutPlanId?.toString(),
+      workoutPlanVersionId: workoutPlanVersionId?.toString(),
+      trainerId: trainerId?.toString(),
+      startedAt: startedAt,
+      completedAt: completedAt,
+      totalVolumeKg: totalVolumeKg,
+      durationMinutes: durationMinutes,
+      clientFeedbackRating: clientFeedbackRating,
+      notes: notes,
+      sets: (sets ?? BuiltList()).map((e) => e.toDomain()).toList(),
+    );
+  }
+}
+
+extension WorkoutSessionExerciseModelMapper on api.WorkoutSessionExercise {
+  WorkoutSessionSet toDomain() {
+    return WorkoutSessionSet(
+      id: id.toString(),
+      workoutSessionId: workoutSessionId.toString(),
+      exerciseId: exerciseId.toString(),
+      setNumber: setNumber,
+      repsCompleted: repsCompleted,
+      weightLiftedKg: weightLiftedKg,
+      rpeScore: rpeScore,
+      isCompleted: isCompleted,
+    );
+  }
+}
+
+api.AssignPlanRequest toAssignPlanRequest(String memberId) {
+  return api.AssignPlanRequest(
+    (b) => b..memberId = int.parse(memberId),
+  );
+}
+
+api.WorkoutSessionCreate toWorkoutSessionCreate({
+  required String memberId,
+  String? workoutPlanId,
+  String? workoutPlanVersionId,
+}) {
+  return api.WorkoutSessionCreate(
+    (b) => b
+      ..memberId = int.parse(memberId)
+      ..workoutPlanId =
+          workoutPlanId == null ? null : int.tryParse(workoutPlanId)
+      ..workoutPlanVersionId = workoutPlanVersionId == null
+          ? null
+          : int.tryParse(workoutPlanVersionId),
+  );
+}
+
+api.WorkoutSetWrite toWorkoutSetWrite({
+  required String exerciseId,
+  required int setNumber,
+  int? repsCompleted,
+  num? weightLiftedKg,
+  num? rpeScore,
+  bool? isCompleted,
+}) {
+  return api.WorkoutSetWrite(
+    (b) => b
+      ..exerciseId = int.parse(exerciseId)
+      ..setNumber = setNumber
+      ..repsCompleted = repsCompleted
+      ..weightLiftedKg = weightLiftedKg
+      ..rpeScore = rpeScore
+      ..isCompleted = isCompleted,
   );
 }

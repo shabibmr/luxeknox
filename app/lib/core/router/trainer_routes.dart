@@ -18,9 +18,12 @@ import '../../features/people/presentation/screens/members_directory_screen.dart
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_detail_screen.dart';
 import '../../features/scheduling/presentation/screens/trainer_availability_screen.dart';
+import '../../features/workout/presentation/screens/workout_history_screen.dart';
 import '../../features/workout/presentation/screens/workout_plan_builder_screen.dart';
 import '../../features/workout/presentation/screens/workout_plan_detail_screen.dart';
 import '../../features/workout/presentation/screens/workout_plan_list_screen.dart';
+import '../../features/workout/presentation/screens/workout_plan_versions_screen.dart';
+import '../../features/workout/presentation/workout_history_role.dart';
 import '../l10n/shell_strings.dart';
 import '../widgets/adaptive_shell.dart';
 import '../widgets/destination_hub_screen.dart';
@@ -169,9 +172,13 @@ StatefulShellRoute createTrainerBranchRoute() {
                   ),
                   GoRoute(
                     path: 'workout-history',
-                    builder: (context, state) => const PlaceholderScreen(
-                      title: ShellStrings.memberWorkoutHistory,
-                    ),
+                    builder: (context, state) {
+                      final memberId = state.pathParameters['id']!;
+                      return WorkoutHistoryScreen(
+                        role: WorkoutHistoryRole.trainer,
+                        memberId: memberId,
+                      );
+                    },
                   ),
                   GoRoute(
                     path: 'diet-history',
@@ -284,6 +291,12 @@ StatefulShellRoute createTrainerBranchRoute() {
                     path: 'edit',
                     builder: (context, state) => WorkoutPlanBuilderScreen(
                       planId: state.pathParameters['id'],
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'versions',
+                    builder: (context, state) => WorkoutPlanVersionsScreen(
+                      planId: state.pathParameters['id']!,
                     ),
                   ),
                 ],

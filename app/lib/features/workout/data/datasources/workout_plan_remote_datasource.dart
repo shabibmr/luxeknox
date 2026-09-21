@@ -25,6 +25,10 @@ abstract class WorkoutPlanRemoteDataSource {
   Future<api.WorkoutPlan> publish(int id);
 
   Future<api.WorkoutPlan> archive(int id);
+
+  Future<api.WorkoutPlan> assign(int id, api.AssignPlanRequest request);
+
+  Future<api.WorkoutPlanVersionPage> listVersions(int id);
 }
 
 @LazySingleton(as: WorkoutPlanRemoteDataSource)
@@ -127,5 +131,17 @@ class WorkoutPlanRemoteDataSourceImpl implements WorkoutPlanRemoteDataSource {
         stackTrace: stackTrace,
       );
     }
+  }
+
+  @override
+  Future<api.WorkoutPlan> assign(int id, api.AssignPlanRequest request) async {
+    return _unwrap(
+      await _workApi.assignWorkoutPlan(id: id, assignPlanRequest: request),
+    );
+  }
+
+  @override
+  Future<api.WorkoutPlanVersionPage> listVersions(int id) async {
+    return _unwrap(await _workApi.listWorkoutPlanVersions(id: id));
   }
 }

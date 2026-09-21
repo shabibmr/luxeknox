@@ -6,6 +6,7 @@ import '../../../../core/error/map_thrown.dart';
 import '../../../../core/pagination/cursor_page.dart';
 import '../../domain/entities/workout_plan.dart';
 import '../../domain/entities/workout_plan_exercise_input.dart';
+import '../../domain/entities/workout_plan_version.dart';
 import '../../domain/repositories/workout_plan_repository.dart';
 import '../datasources/workout_plan_remote_datasource.dart';
 import '../models/workout_plan_mappers.dart';
@@ -165,6 +166,41 @@ class WorkoutPlanRepositoryImpl implements WorkoutPlanRepository {
     try {
       final updated = await _remoteDataSource.archive(intId);
       return Right(updated.toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, WorkoutPlan>> assign(
+    String planId,
+    String memberId,
+  ) async {
+    final intId = _parseId(planId);
+    final memberInt = int.tryParse(memberId);
+    if (intId == null || memberInt == null) {
+      return const Left(ValidationFailure(['Invalid plan or member id']));
+    }
+    try {
+      final assigned = await _remoteDataSource.assign(
+        intId,
+        toAssignPlanRequest(memberId),
+      );
+      return Right(assigned.toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<WorkoutPlanVersion>>> listVersions(
+    String planId,
+  ) async {
+    final intId = _parseId(planId);
+    if (intId == null) return const Left(NotFoundFailure());
+    try {
+      final page = await _remoteDataSource.listVersions(intId);
+      return Right(page.data.map((v) => v.toDomain()).toList());
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

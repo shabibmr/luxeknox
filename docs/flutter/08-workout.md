@@ -4,12 +4,12 @@
 - [x] exercise picker
 - [x] ordering
 - [x] publish/archive
-- [ ] template copy
-- [ ] versions
-- [ ] live session
-- [ ] set logging
-- [ ] rest timer
-- [ ] completion
-- [ ] history
-- [ ] volume/PR
-- [ ] role variants
+- [x] template copy
+- [x] versions
+- [x] live session
+- [x] set logging
+- [x] rest timer
+- [x] completion
+- [x] history
+- [x] volume/PR
+- [x] role variants

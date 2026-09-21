@@ -32,6 +32,56 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
 
   final String planId;
 
+  Future<void> _assign(BuildContext context) async {
+    final controller = TextEditingController();
+    final memberId = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text(WorkoutStrings.assignDialogTitle),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              labelText: WorkoutStrings.assignDialogHint,
+              border: OutlineInputBorder(),
+            ),
+            keyboardType: TextInputType.number,
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text(WorkoutStrings.assignCancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                final raw = controller.text.trim();
+                if (raw.isEmpty) return;
+                Navigator.of(dialogContext).pop(raw);
+              },
+              child: const Text(WorkoutStrings.assignConfirm),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+    if (memberId == null || !context.mounted) return;
+
+    final cubit = context.read<WorkoutPlanDetailCubit>();
+    await cubit.assignToMember(memberId);
+    if (!context.mounted) return;
+    final next = cubit.state;
+    if (next is WorkoutPlanDetailLoaded && next.assignedPlan != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(WorkoutStrings.assigned)),
+      );
+      final assignedId = next.assignedPlan!.id;
+      cubit.clearAssignedPlan();
+      context.push(Routes.trainerPlansWorkoutById(assignedId));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<WorkoutPlanDetailCubit, WorkoutPlanDetailState>(
@@ -49,6 +99,15 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
             actions: [
               if (plan != null) ...[
                 IconButton(
+                  tooltip: WorkoutStrings.viewVersions,
+                  icon: const Icon(Icons.history),
+                  onPressed: inFlight
+                      ? null
+                      : () => context.push(
+                          Routes.trainerPlansWorkoutVersionsById(plan.id),
+                        ),
+                ),
+                IconButton(
                   tooltip: WorkoutStrings.edit,
                   icon: const Icon(Icons.edit_outlined),
                   onPressed: inFlight
@@ -57,6 +116,12 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
                           Routes.trainerPlansWorkoutEditById(plan.id),
                         ),
                 ),
+                if (plan.isTemplate)
+                  IconButton(
+                    tooltip: WorkoutStrings.assignToMember,
+                    icon: const Icon(Icons.person_add_alt_1_outlined),
+                    onPressed: inFlight ? null : () => _assign(context),
+                  ),
                 if (plan.status == WorkoutPlanStatus.draft)
                   IconButton(
                     tooltip: WorkoutStrings.publish,
@@ -155,6 +220,13 @@ class _DetailContent extends StatelessWidget {
             PlanStatusChip(status: plan.status),
           ],
         ),
+        if (plan.isTemplate) ...[
+          const SizedBox(height: 8),
+          Text(
+            WorkoutStrings.isTemplateLabel,
+            style: theme.textTheme.labelLarge,
+          ),
+        ],
         if (plan.description != null && plan.description!.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(plan.description!),

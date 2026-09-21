@@ -18,6 +18,7 @@ void main() {
         // Member routes
         Routes.memberHome,
         Routes.memberHomeWorkoutActive,
+        Routes.memberHomeWorkoutHistory,
         Routes.memberHomeWorkoutExerciseDetail,
         Routes.memberHomeDietMeal,
         Routes.memberNotifications,
@@ -53,6 +54,7 @@ void main() {
         Routes.trainerMembersHealth,
         Routes.trainerMembersGoals,
         Routes.trainerMembersGoalsAddMeasurement,
+        Routes.trainerMembersWorkoutHistory,
         Routes.trainerSchedule,
         Routes.trainerScheduleDetail,
         Routes.trainerScheduleAvailability,
@@ -61,6 +63,7 @@ void main() {
         Routes.trainerPlansWorkoutsCreate,
         Routes.trainerPlansWorkoutsDetail,
         Routes.trainerPlansWorkoutsEdit,
+        Routes.trainerPlansWorkoutsVersions,
         Routes.trainerPlansDietsCreate,
         Routes.trainerPlansDietsDetail,
         Routes.trainerPlansExercises,
@@ -75,6 +78,7 @@ void main() {
         Routes.adminMembersDetail,
         Routes.adminMembersEdit,
         Routes.adminMembersAssignMembership,
+        Routes.adminMembersWorkoutHistory,
         Routes.adminMemberships,
         Routes.adminMembershipsDetail,
         Routes.adminMembershipsRenew,
@@ -103,7 +107,7 @@ void main() {
       // set's length equals the number of entries listed.
       expect(
         allRoutes.length,
-        80,
+        84,
         reason: 'All route constants should be unique; duplicate values found',
       );
     });
@@ -115,6 +119,14 @@ void main() {
       expect(Routes.adminPaymentById('15'), '/admin/payments/15');
       expect(Routes.memberProfilePaymentById('15'), '/profile/payments/15');
       expect(Routes.trainerMemberById('3'), '/trainer/members/3');
+      expect(
+        Routes.trainerMembersWorkoutHistoryById('3'),
+        '/trainer/members/3/workout-history',
+      );
+      expect(
+        Routes.adminMembersWorkoutHistoryById('9'),
+        '/admin/members/9/workout-history',
+      );
       expect(
         Routes.loginWithRedirect('/admin/members/9'),
         '/login?redirect=%2Fadmin%2Fmembers%2F9',

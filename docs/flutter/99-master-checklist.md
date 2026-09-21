@@ -7,7 +7,7 @@
 - [x] Scheduling (core; see phase3-status-report)
 - [x] Attendance (see phase4-status-report)
 - [x] Payments (ledger/dues/detail/methods; POS+refunds remain — see phase5-status-report)
-- [x] Workout (plan builder core; sessions remain — see phase6-status-report)
+- [x] Workout (plans + sessions + history/volume/PR + role variants — see phase6-status-report)
 - [ ] Diet
 - [ ] Goals/Progress
 - [ ] Notifications
