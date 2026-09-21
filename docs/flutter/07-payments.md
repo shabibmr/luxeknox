@@ -1,0 +1,1 @@
+# LuxeKnox Flutter — Payments & POS\n\n- [ ] member ledger\n- [ ] admin ledger\n- [ ] outstanding dues\n- [ ] payment detail\n- [ ] payment methods\n- [ ] POS\n- [ ] discounts\n- [ ] split tender\n- [ ] idempotent submission\n- [ ] refund/adjustment\n- [ ] receipt\n- [ ] financial integration tests\n
