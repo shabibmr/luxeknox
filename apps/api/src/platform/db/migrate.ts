@@ -1,10 +1,10 @@
 import 'dotenv/config';
 import * as fs from 'fs';
 import * as path from 'path';
-import type { Connection } from 'mysql2/promise';
+import type { PoolClient } from 'pg';
 import { createAdminConnectionPool } from './client';
 
-function requireSafeIdentifier(value: string | undefined, name: string): string {
+export function requireSafeIdentifier(value: string | undefined, name: string): string {
   if (!value || !/^[A-Za-z0-9_]+$/.test(value)) {
     throw new Error(`${name} must be set and match /^[A-Za-z0-9_]+$/ (got: ${value ?? 'undefined'})`);
   }
@@ -12,84 +12,26 @@ function requireSafeIdentifier(value: string | undefined, name: string): string 
 }
 
 /**
- * Splits a SQL migration script by statements, taking into account
- * custom DELIMITER declarations often used for stored procedures or triggers.
- */
-export function splitSqlStatements(sqlContent: string): string[] {
-  const lines = sqlContent.split(/\r?\n/);
-  const statements: string[] = [];
-  let currentDelimiter = ';';
-  let currentBuffer: string[] = [];
-
-  for (const rawLine of lines) {
-    const trimmed = rawLine.trim();
-    if (trimmed.startsWith('--') || trimmed.startsWith('/*')) {
-      continue;
-    }
-
-    // Check for DELIMITER change
-    if (trimmed.toUpperCase().startsWith('DELIMITER ')) {
-      // Flush previous statement if any non-empty buffer exists
-      const stmt = currentBuffer.join('\n').trim();
-      if (stmt.length > 0) {
-        statements.push(stmt);
-        currentBuffer = [];
-      }
-      const newDelim = trimmed.substring('DELIMITER '.length).trim();
-      if (newDelim.length > 0) {
-        currentDelimiter = newDelim;
-      }
-      continue;
-    }
-
-    currentBuffer.push(rawLine);
-
-    // Check if the current buffer ends with currentDelimiter
-    const joinedBuffer = currentBuffer.join('\n');
-    const trimmedBuffer = joinedBuffer.trim();
-
-    if (trimmedBuffer.endsWith(currentDelimiter)) {
-      const stmtWithoutDelimiter = trimmedBuffer.substring(
-        0,
-        trimmedBuffer.length - currentDelimiter.length,
-      ).trim();
-
-      if (stmtWithoutDelimiter.length > 0) {
-        statements.push(stmtWithoutDelimiter);
-      }
-      currentBuffer = [];
-    }
-  }
-
-  const remaining = currentBuffer.join('\n').trim();
-  if (remaining.length > 0) {
-    statements.push(remaining);
-  }
-
-  return statements.filter((s) => s.length > 0 && !s.startsWith('--'));
-}
-
-/**
  * Ensures the `__drizzle_migrations` schema tracking table exists.
  */
-async function ensureMigrationsTable(connection: Connection): Promise<void> {
-  await connection.query(`
-    CREATE TABLE IF NOT EXISTS \`__drizzle_migrations\` (
-      \`id\` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-      \`name\` VARCHAR(255) NOT NULL UNIQUE,
-      \`executed_at\` DATETIME(3) NOT NULL
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+async function ensureMigrationsTable(client: PoolClient): Promise<void> {
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS __drizzle_migrations (
+      id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+      name VARCHAR(255) NOT NULL UNIQUE,
+      executed_at TIMESTAMPTZ(3) NOT NULL
+    );
   `);
 }
 
 /**
  * Retrieves list of migration file names that have already been executed.
  */
-async function getExecutedMigrations(connection: Connection): Promise<Set<string>> {
-  const [rows] = await connection.query<any[]>(
-    'SELECT `name` FROM `__drizzle_migrations` ORDER BY `id` ASC;',
+async function getExecutedMigrations(client: PoolClient): Promise<Set<string>> {
+  const result = await client.query<{ name: string }>(
+    'SELECT name FROM __drizzle_migrations ORDER BY id ASC;',
   );
-  return new Set(rows.map((r) => r.name));
+  return new Set(result.rows.map((r) => r.name));
 }
 
 /**
@@ -105,22 +47,32 @@ export async function runMigrations(options?: { migrationsFolder?: string }): Pr
   }
 
   const pool = createAdminConnectionPool();
-  const connection = await pool.getConnection();
+  const client = await pool.connect();
 
   try {
-    console.log('[Migrate] Connecting to MySQL and ensuring migration table...');
-    await ensureMigrationsTable(connection);
+    console.log('[Migrate] Connecting to PostgreSQL and ensuring migration table...');
+    await ensureMigrationsTable(client);
 
-    const [collations] = await connection.query<any[]>(
-      "SELECT 1 FROM information_schema.COLLATIONS WHERE COLLATION_NAME = 'utf8mb4_0900_ai_ci' LIMIT 1;",
+    // Fail fast on a wrong engine/encoding (fix F-04, ported from the utf8mb4_0900_ai_ci
+    // guard): PostgreSQL 15+ is required for default-privilege-safe grants (ADR-0009), and
+    // UTF8 encoding must be set at initdb — it cannot be changed after the fact.
+    const versionCheck = await client.query<{ server_version_num: string; server_encoding: string }>(
+      "SELECT current_setting('server_version_num') AS server_version_num, current_setting('server_encoding') AS server_encoding;",
     );
-    if (collations.length === 0) {
+    const serverVersionNum = Number(versionCheck.rows[0]?.server_version_num ?? 0);
+    const serverEncoding = versionCheck.rows[0]?.server_encoding;
+    if (serverVersionNum < 150000) {
       throw new Error(
-        'Server does not support utf8mb4_0900_ai_ci. MySQL 8.0+ is required (see ADR-0002 and todo/README.md locked decisions).',
+        `PostgreSQL 15+ is required (see ADR-0009). Detected server_version_num=${serverVersionNum}.`,
+      );
+    }
+    if (serverEncoding !== 'UTF8') {
+      throw new Error(
+        `Server encoding must be UTF8 (see ADR-0009). Detected server_encoding=${serverEncoding}.`,
       );
     }
 
-    const executed = await getExecutedMigrations(connection);
+    const executed = await getExecutedMigrations(client);
     const files = fs
       .readdirSync(migrationsFolder)
       .filter((file) => file.endsWith('.sql'))
@@ -137,22 +89,26 @@ export async function runMigrations(options?: { migrationsFolder?: string }): Pr
       console.log(`[Migrate] Applying ${file}...`);
       const filePath = path.join(migrationsFolder, file);
       const sqlContent = fs.readFileSync(filePath, 'utf-8');
-      const statements = splitSqlStatements(sqlContent);
 
-      for (const statement of statements) {
-        try {
-          await connection.query(statement);
-        } catch (err: any) {
-          console.error(`[Migrate] Error executing statement in ${file}:\n${statement}\nError: ${err.message}`);
-          throw err;
-        }
+      // PostgreSQL has transactional DDL, so the whole file runs as one multi-statement
+      // query inside an explicit transaction: a failed migration rolls back completely,
+      // which MySQL could not offer. This replaces the old DELIMITER-aware
+      // `splitSqlStatements` — MySQL client syntax with no PostgreSQL meaning, and it would
+      // have mis-split PostgreSQL's dollar-quoted ($$ … $$) bodies if reused.
+      await client.query('BEGIN');
+      try {
+        await client.query(sqlContent);
+        const nowUtc = new Date();
+        await client.query('INSERT INTO __drizzle_migrations (name, executed_at) VALUES ($1, $2);', [
+          file,
+          nowUtc,
+        ]);
+        await client.query('COMMIT');
+      } catch (err: any) {
+        await client.query('ROLLBACK');
+        console.error(`[Migrate] Error executing ${file}:\n${err.message}`);
+        throw err;
       }
-
-      const nowUtc = new Date().toISOString().replace('T', ' ').replace('Z', '');
-      await connection.query(
-        'INSERT INTO `__drizzle_migrations` (`name`, `executed_at`) VALUES (?, ?);',
-        [file, nowUtc],
-      );
 
       console.log(`[Migrate] Successfully applied ${file}`);
     }
@@ -169,15 +125,20 @@ export async function runMigrations(options?: { migrationsFolder?: string }): Pr
           .replace(/\$\{DB_USER\}/g, appUser)
           .replace(/\$\{DB_NAME\}/g, dbName);
 
-        for (const statement of splitSqlStatements(sql)) {
-          await connection.query(statement);
+        await client.query('BEGIN');
+        try {
+          await client.query(sql);
+          await client.query('COMMIT');
+        } catch (err) {
+          await client.query('ROLLBACK');
+          throw err;
         }
       }
     }
 
     console.log('[Migrate] All migrations completed successfully.');
   } finally {
-    connection.release();
+    client.release();
     await pool.end();
   }
 }

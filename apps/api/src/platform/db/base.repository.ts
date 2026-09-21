@@ -1,20 +1,20 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq, and, type SQL } from 'drizzle-orm';
-import type { MySqlTable, TableConfig } from 'drizzle-orm/mysql-core';
+import type { PgTable, TableConfig } from 'drizzle-orm/pg-core';
 import { DRIZZLE_DB_TOKEN } from './drizzle.module';
 import { getAmbientTransaction, type AnyTransaction } from './transaction-context';
 import type { DrizzleDb } from './client';
 
 /**
  * Abstract BaseRepository providing standard CRUD operations and ambient transaction
- * awareness for Drizzle MySQL tables.
+ * awareness for Drizzle PostgreSQL tables.
  *
  * Repositories extending BaseRepository automatically participate in any ambient
  * transaction managed by `runInTransaction()` without manual transaction passing.
  */
 @Injectable()
 export abstract class BaseRepository<
-  TTable extends MySqlTable<TableConfig>,
+  TTable extends PgTable<TableConfig>,
   TSelect = TTable['$inferSelect'],
   TInsert = TTable['$inferInsert'],
 > {
@@ -45,10 +45,10 @@ export abstract class BaseRepository<
   protected getActiveCondition(): SQL | undefined {
     const tableColumns = this.table as Record<string, any>;
     if (tableColumns.is_active) {
-      return eq(tableColumns.is_active, 1);
+      return eq(tableColumns.is_active, true);
     }
     if (tableColumns.isActive) {
-      return eq(tableColumns.isActive, 1);
+      return eq(tableColumns.isActive, true);
     }
     if (tableColumns.status) {
       return eq(tableColumns.status, 'active');
@@ -114,12 +114,17 @@ export abstract class BaseRepository<
   }
 
   /**
-   * Inserts a new record into the table.
+   * Inserts a new record into the table, returning the generated id via RETURNING
+   * (node-postgres has no `insertId` — that was mysql2-specific).
    *
    * @param values Record data to insert
    */
-  async create(values: TInsert): Promise<any> {
-    return (this.getDb() as any).insert(this.table).values(values);
+  async create(values: TInsert): Promise<{ id: number }[]> {
+    const tableColumns = this.table as Record<string, any>;
+    return (this.getDb() as any)
+      .insert(this.table)
+      .values(values)
+      .returning({ id: tableColumns.id });
   }
 
   /**
@@ -135,7 +140,7 @@ export abstract class BaseRepository<
   /**
    * Deletes records matching the specified condition.
    *
-   * Note: For soft deletion, use `update` with `status: 'inactive'` or `is_active: 0`.
+   * Note: For soft deletion, use `update` with `status: 'inactive'` or `is_active: false`.
    *
    * @param condition SQL condition expression
    */

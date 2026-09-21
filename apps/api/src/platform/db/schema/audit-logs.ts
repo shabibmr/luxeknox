@@ -1,14 +1,14 @@
-import { bigint, json, mysqlTable, varchar } from 'drizzle-orm/mysql-core';
+import { bigint, jsonb, pgTable, varchar } from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
 
-export const auditLogs = mysqlTable('audit_logs', {
-  id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-  actor_user_id: bigint('actor_user_id', { mode: 'number', unsigned: true }),
+export const auditLogs = pgTable('audit_logs', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  actor_user_id: bigint('actor_user_id', { mode: 'number' }),
   action: varchar('action', { length: 100 }).notNull(),
   entity_name: varchar('entity_name', { length: 100 }).notNull(),
-  entity_id: bigint('entity_id', { mode: 'number', unsigned: true }),
-  before_state: json('before_state'),
-  after_state: json('after_state'),
+  entity_id: bigint('entity_id', { mode: 'number' }),
+  before_state: jsonb('before_state'),
+  after_state: jsonb('after_state'),
   ip_address: varchar('ip_address', { length: 45 }),
   created_at: utcDatetime('created_at').notNull(),
 });

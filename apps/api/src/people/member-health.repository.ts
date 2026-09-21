@@ -33,6 +33,6 @@ export class MemberHealthRepository extends BaseRepository<
       return existing.id;
     }
     const result = await this.create({ ...values, member_id: memberId });
-    return Number(result?.[0]?.insertId ?? 0);
+    return result[0]?.id ?? 0;
   }
 }

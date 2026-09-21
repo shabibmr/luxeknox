@@ -53,10 +53,11 @@ export async function seedSettings(db: DrizzleDb<any>): Promise<void> {
         created_at: now,
         updated_at: now,
       })
-      .onDuplicateKeyUpdate({
+      .onConflictDoUpdate({
+        target: gymSettings.setting_key,
         set: {
-          setting_value: sql`VALUES(\`setting_value\`)`,
-          description: sql`VALUES(\`description\`)`,
+          setting_value: sql`excluded.setting_value`,
+          description: sql`excluded.description`,
           updated_at: now,
         },
       });

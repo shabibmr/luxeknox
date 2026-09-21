@@ -88,7 +88,13 @@ export async function seedUsers(db: DrizzleDb<any>): Promise<void> {
         created_at: now,
         updated_at: now,
       })
-      .onDuplicateKeyUpdate({
+      // PostgreSQL requires an explicit conflict target (MySQL's ON DUPLICATE KEY UPDATE
+      // matched any unique index). `users` has two — email and phone_number — so this only
+      // dedupes on email; every seeded user has one. A phone_number collision now raises a
+      // unique-violation instead of silently updating (ADR-0009 §6) — not a concern for
+      // these seed rows, which set no phone_number.
+      .onConflictDoUpdate({
+        target: users.email,
         set: {
           // password_hash is omitted unless SEED_RESET_PASSWORDS=1 so re-seeding
           // does not clobber a rotated credential.
@@ -147,7 +153,7 @@ async function seedDemoProfiles(db: DrizzleDb<any>, now: Date): Promise<void> {
       await db
         .insert(membershipNumberCounters)
         .values({ id: 1, next_value: 1 })
-        .onDuplicateKeyUpdate({ set: { id: 1 } });
+        .onConflictDoNothing({ target: membershipNumberCounters.id });
 
       const counterRows = await db
         .select()

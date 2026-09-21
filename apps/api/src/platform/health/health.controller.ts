@@ -17,7 +17,7 @@ export class ReadyResponseDto {
   @ApiProperty({ type: String, example: 'ok', enum: ['ok', 'error'], description: 'Readiness probe status' })
   status!: 'ok' | 'error';
 
-  @ApiProperty({ type: String, example: 'connected', enum: ['connected', 'disconnected'], description: 'MySQL database connectivity status' })
+  @ApiProperty({ type: String, example: 'connected', enum: ['connected', 'disconnected'], description: 'PostgreSQL database connectivity status' })
   database!: 'connected' | 'disconnected';
 
   @ApiProperty({ type: String, example: '2026-09-16T12:00:00.000Z', description: 'Current UTC ISO-8601 timestamp' })
@@ -49,7 +49,7 @@ export class HealthController {
   @Get('ready')
   @ApiOperation({
     summary: 'Readiness check with database ping',
-    description: 'Pings MySQL using Drizzle / connection pool (SELECT 1). Returns 200 if connected, or 503 if disconnected.',
+    description: 'Pings PostgreSQL using Drizzle / connection pool (SELECT 1). Returns 200 if connected, or 503 if disconnected.',
   })
   @ApiResponse({
     status: 200,

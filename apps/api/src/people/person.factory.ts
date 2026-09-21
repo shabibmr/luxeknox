@@ -4,6 +4,7 @@ import { hashPassword } from '../auth/password';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
 import { runInTransaction, type AnyTransaction } from '../platform/db/transaction-context';
+import { isUniqueViolation } from '../platform/db/pg-errors';
 import { BadRequestError, ConflictError, NotFoundError } from '../platform/errors/app-error';
 import {
   employees,
@@ -101,15 +102,6 @@ function formatMembershipNumber(seq: number): string {
 function toPublicUser(user: User): PublicUser {
   const { password_hash: _passwordHash, ...rest } = user;
   return rest;
-}
-
-/** Extract mysql2/drizzle insertId from an insert result. */
-export function insertIdFromResult(result: unknown): number {
-  const r = result as { insertId?: number | string } | Array<{ insertId?: number | string }> | null;
-  if (Array.isArray(r)) {
-    return Number(r[0]?.insertId ?? 0);
-  }
-  return Number(r?.insertId ?? 0);
 }
 
 /**
@@ -307,8 +299,7 @@ export class PersonFactory {
     try {
       await db.update(users).set(values).where(eq(users.id, userId));
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (/Duplicate|ER_DUP_ENTRY/i.test(message)) {
+      if (isUniqueViolation(err)) {
         throw new ConflictError('Email or phone_number already in use');
       }
       throw err;
@@ -320,15 +311,14 @@ export class PersonFactory {
     values: typeof users.$inferInsert,
   ): Promise<number> {
     try {
-      const result = await (tx as any).insert(users).values(values);
-      const insertId = insertIdFromResult(result);
+      const rows = await (tx as any).insert(users).values(values).returning({ id: users.id });
+      const insertId = rows[0]?.id ?? 0;
       if (!insertId) {
         throw new BadRequestError('Failed to create user');
       }
       return insertId;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (/Duplicate|ER_DUP_ENTRY/i.test(message)) {
+      if (isUniqueViolation(err)) {
         throw new ConflictError('Email or phone_number already in use');
       }
       throw err;
@@ -336,11 +326,13 @@ export class PersonFactory {
   }
 
   private async allocateMembershipNumber(tx: AnyTransaction): Promise<string> {
-    // Lock + read in one statement so the driver shape is unambiguous.
+    // Lock + read in one statement. node-postgres/drizzle's `.execute()` returns
+    // `{ rows, rowCount, ... }` — unlike mysql2's `[rows, fields]` tuple, so this is read
+    // directly as `.rows`, not unwrapped/destructured as an array.
     const locked = await (tx as any).execute(
-      sql`SELECT \`next_value\` AS next_value FROM \`membership_number_counters\` WHERE \`id\` = 1 FOR UPDATE`,
+      sql`SELECT next_value FROM membership_number_counters WHERE id = 1 FOR UPDATE`,
     );
-    const rows = Array.isArray(locked) ? (Array.isArray(locked[0]) ? locked[0] : locked) : [];
+    const rows = locked?.rows ?? [];
     const nextValue = Number((rows[0] as { next_value?: unknown } | undefined)?.next_value);
     if (!Number.isFinite(nextValue) || nextValue < 1) {
       throw new BadRequestError('membership_number_counters is not initialized');
@@ -354,7 +346,8 @@ export class PersonFactory {
   }
 
   private async insertMember(tx: AnyTransaction, values: NewMember): Promise<number> {
-    const insertId = insertIdFromResult(await (tx as any).insert(members).values(values));
+    const rows = await (tx as any).insert(members).values(values).returning({ id: members.id });
+    const insertId = rows[0]?.id ?? 0;
     if (!insertId) {
       throw new BadRequestError('Failed to create member profile');
     }
@@ -362,7 +355,8 @@ export class PersonFactory {
   }
 
   private async insertTrainer(tx: AnyTransaction, values: NewTrainer): Promise<number> {
-    const insertId = insertIdFromResult(await (tx as any).insert(trainers).values(values));
+    const rows = await (tx as any).insert(trainers).values(values).returning({ id: trainers.id });
+    const insertId = rows[0]?.id ?? 0;
     if (!insertId) {
       throw new BadRequestError('Failed to create trainer profile');
     }
@@ -370,7 +364,8 @@ export class PersonFactory {
   }
 
   private async insertEmployee(tx: AnyTransaction, values: NewEmployee): Promise<number> {
-    const insertId = insertIdFromResult(await (tx as any).insert(employees).values(values));
+    const rows = await (tx as any).insert(employees).values(values).returning({ id: employees.id });
+    const insertId = rows[0]?.id ?? 0;
     if (!insertId) {
       throw new BadRequestError('Failed to create employee profile');
     }

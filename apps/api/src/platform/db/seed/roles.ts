@@ -201,10 +201,11 @@ export async function seedRoles(db: DrizzleDb<any>): Promise<void> {
         created_at: now,
         updated_at: now,
       })
-      .onDuplicateKeyUpdate({
+      .onConflictDoUpdate({
+        target: roles.slug,
         set: {
-          name: sql`VALUES(\`name\`)`,
-          description: sql`VALUES(\`description\`)`,
+          name: sql`excluded.name`,
+          description: sql`excluded.description`,
           is_system: true,
           updated_at: now,
         },
@@ -237,9 +238,10 @@ export async function seedRoles(db: DrizzleDb<any>): Promise<void> {
           permission_id: perm.id,
           created_at: now,
         })
-        .onDuplicateKeyUpdate({
+        .onConflictDoUpdate({
+          target: [rolePermissions.role_id, rolePermissions.permission_id],
           set: {
-            role_id: sql`VALUES(\`role_id\`)`,
+            role_id: sql`excluded.role_id`,
           },
         });
     }

@@ -1,25 +1,25 @@
 import {
   bigint,
   boolean,
-  double,
+  doublePrecision,
   index,
-  mysqlTable,
+  pgTable,
   varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
 
-export const foods = mysqlTable(
+export const foods = pgTable(
   'foods',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     name: varchar('name', { length: 150 }).notNull(),
     serving_unit: varchar('serving_unit', { length: 50 }).notNull(),
-    serving_size: double('serving_size'),
-    calories: double('calories'),
-    protein_grams: double('protein_grams'),
-    carbs_grams: double('carbs_grams'),
-    fat_grams: double('fat_grams'),
-    fiber_grams: double('fiber_grams'),
+    serving_size: doublePrecision('serving_size'),
+    calories: doublePrecision('calories'),
+    protein_grams: doublePrecision('protein_grams'),
+    carbs_grams: doublePrecision('carbs_grams'),
+    fat_grams: doublePrecision('fat_grams'),
+    fiber_grams: doublePrecision('fiber_grams'),
     is_verified: boolean('is_verified').notNull().default(false),
     is_active: boolean('is_active').notNull().default(true),
     created_at: utcDatetime('created_at').notNull(),

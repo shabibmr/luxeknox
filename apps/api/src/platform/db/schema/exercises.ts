@@ -1,13 +1,13 @@
-import { bigint, boolean, index, json, mysqlTable, text, varchar } from 'drizzle-orm/mysql-core';
+import { bigint, boolean, index, jsonb, pgTable, text, varchar } from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
 
-export const exercises = mysqlTable(
+export const exercises = pgTable(
   'exercises',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     name: varchar('name', { length: 150 }).notNull(),
     primary_muscle_group: varchar('primary_muscle_group', { length: 100 }),
-    secondary_muscles: json('secondary_muscles').$type<string[]>(),
+    secondary_muscles: jsonb('secondary_muscles').$type<string[]>(),
     equipment_needed: varchar('equipment_needed', { length: 150 }),
     instructions: text('instructions'),
     video_url: varchar('video_url', { length: 500 }),

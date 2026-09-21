@@ -1,10 +1,10 @@
-import { bigint, mysqlTable, text, uniqueIndex, varchar } from 'drizzle-orm/mysql-core';
+import { bigint, pgTable, text, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
 
-export const gymSettings = mysqlTable(
+export const gymSettings = pgTable(
   'gym_settings',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     setting_key: varchar('setting_key', { length: 100 }).notNull(),
     setting_value: text('setting_value').notNull(),
     description: varchar('description', { length: 255 }),

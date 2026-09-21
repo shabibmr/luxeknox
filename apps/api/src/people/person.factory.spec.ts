@@ -128,15 +128,17 @@ describe('PersonFactory', () => {
       insert: vi.fn((table: any) => {
         const name = tableName(table);
         return {
-          values: vi.fn(async (values: any) => {
-            if (name !== 'users' && failProfileInsert) {
-              throw new Error('simulated profile insert failure');
-            }
-            const id = nextIds[name]++;
-            const row = { id, ...values };
-            stores[name].push(row);
-            return [{ insertId: id }];
-          }),
+          values: vi.fn((values: any) => ({
+            returning: vi.fn(async () => {
+              if (name !== 'users' && failProfileInsert) {
+                throw new Error('simulated profile insert failure');
+              }
+              const id = nextIds[name]++;
+              const row = { id, ...values };
+              stores[name].push(row);
+              return [{ id }];
+            }),
+          })),
         };
       }),
       update: vi.fn((table: any) => {
@@ -154,7 +156,9 @@ describe('PersonFactory', () => {
           })),
         };
       }),
-      execute: vi.fn(async () => [[{ next_value: stores.membership_number_counters[0].next_value }]]),
+      execute: vi.fn(async () => ({
+        rows: [{ next_value: stores.membership_number_counters[0].next_value }],
+      })),
     };
 
     // Patch eq-style filtering: our factory uses eq(col, value). We intercept

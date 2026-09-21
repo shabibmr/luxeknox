@@ -3,11 +3,11 @@ import {
   boolean,
   date,
   index,
-  mysqlTable,
+  pgTable,
   text,
   uniqueIndex,
   varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
 import { users } from './users';
 import { trainers } from './trainers';
@@ -17,17 +17,21 @@ import { trainers } from './trainers';
  * Allocate inside the person-create TX with `SELECT … FOR UPDATE`, then
  * format as `M` + 8 zero-padded digits (M00000001, …). Immutable after insert
  * on `members.membership_number` (API must not update the column).
+ *
+ * Stays a non-identity BIGINT PK seeded to 1 — deliberately not a SEQUENCE
+ * (a SEQUENCE is not gap-free or rollback-safe, and membership numbers are
+ * member-facing; ADR-0009).
  */
-export const membershipNumberCounters = mysqlTable('membership_number_counters', {
-  id: bigint('id', { mode: 'number', unsigned: true }).primaryKey(),
-  next_value: bigint('next_value', { mode: 'number', unsigned: true }).notNull(),
+export const membershipNumberCounters = pgTable('membership_number_counters', {
+  id: bigint('id', { mode: 'number' }).primaryKey(),
+  next_value: bigint('next_value', { mode: 'number' }).notNull(),
 });
 
-export const members = mysqlTable(
+export const members = pgTable(
   'members',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    user_id: bigint('user_id', { mode: 'number', unsigned: true })
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    user_id: bigint('user_id', { mode: 'number' })
       .notNull()
       .references(() => users.id),
     membership_number: varchar('membership_number', { length: 16 }).notNull(),
@@ -36,7 +40,7 @@ export const members = mysqlTable(
     gender: varchar('gender', { length: 32 }),
     date_of_birth: date('date_of_birth', { mode: 'string' }),
     address: text('address'),
-    assigned_trainer_id: bigint('assigned_trainer_id', { mode: 'number', unsigned: true }).references(
+    assigned_trainer_id: bigint('assigned_trainer_id', { mode: 'number' }).references(
       () => trainers.id,
     ),
     joined_date: date('joined_date', { mode: 'string' }).notNull(),
@@ -54,11 +58,11 @@ export const members = mysqlTable(
 export type Member = typeof members.$inferSelect;
 export type NewMember = typeof members.$inferInsert;
 
-export const emergencyContacts = mysqlTable(
+export const emergencyContacts = pgTable(
   'emergency_contacts',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    user_id: bigint('user_id', { mode: 'number', unsigned: true })
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    user_id: bigint('user_id', { mode: 'number' })
       .notNull()
       .references(() => users.id),
     contact_name: varchar('contact_name', { length: 150 }).notNull(),
@@ -70,6 +74,8 @@ export const emergencyContacts = mysqlTable(
     updated_at: utcDatetime('updated_at'),
   },
   (table) => [index('emergency_contacts_user_id_idx').on(table.user_id)],
+  // Partial unique index `one_primary_contact_per_user` (FR-HEALTH-005) added in PG-17,
+  // after the base migration lands and existing rows are audited — see 0006_partial_unique_indexes.sql.
 );
 
 export type EmergencyContact = typeof emergencyContacts.$inferSelect;

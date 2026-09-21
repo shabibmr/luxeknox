@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, like, type SQL } from 'drizzle-orm';
+import { and, count, eq, ilike, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { foods, type Food, type NewFood } from '../platform/db/schema/foods';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
@@ -39,7 +39,7 @@ export class FoodRepository extends BaseRepository<typeof foods, Food, NewFood> 
       conditions.push(eq(foods.is_verified, params.isVerified));
     }
     if (params.q) {
-      conditions.push(like(foods.name, `%${params.q}%`));
+      conditions.push(ilike(foods.name, `%${params.q}%`));
     }
 
     if (conditions.length === 0) {
@@ -77,7 +77,7 @@ export class FoodRepository extends BaseRepository<typeof foods, Food, NewFood> 
 
   async insertFood(values: NewFood): Promise<number> {
     const result = await this.create(values);
-    return Number(result?.[0]?.insertId ?? 0);
+    return result[0]?.id ?? 0;
   }
 
   async updateFood(id: number, values: Partial<NewFood>): Promise<void> {

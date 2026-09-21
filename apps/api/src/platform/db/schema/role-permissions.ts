@@ -1,16 +1,16 @@
-import { bigint, mysqlTable, uniqueIndex } from 'drizzle-orm/mysql-core';
+import { bigint, pgTable, uniqueIndex } from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
 import { roles } from './roles';
 import { permissions } from './permissions';
 
-export const rolePermissions = mysqlTable(
+export const rolePermissions = pgTable(
   'role_permissions',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    role_id: bigint('role_id', { mode: 'number', unsigned: true })
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    role_id: bigint('role_id', { mode: 'number' })
       .notNull()
       .references(() => roles.id),
-    permission_id: bigint('permission_id', { mode: 'number', unsigned: true })
+    permission_id: bigint('permission_id', { mode: 'number' })
       .notNull()
       .references(() => permissions.id),
     created_at: utcDatetime('created_at').notNull(),

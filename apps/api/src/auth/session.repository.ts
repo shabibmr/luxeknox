@@ -62,7 +62,7 @@ export class SessionRepository extends BaseRepository<typeof sessions, Session, 
    */
   async createSession(session: NewSession): Promise<number> {
     const result = await this.create(session);
-    return Number(result?.[0]?.insertId ?? 0);
+    return result[0]?.id ?? 0;
   }
 
   /**

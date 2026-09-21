@@ -1,11 +1,11 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import type { MySqlTransaction } from 'drizzle-orm/mysql-core';
+import type { PgTransaction } from 'drizzle-orm/pg-core';
 import type { DrizzleDb } from './client';
 
 /**
- * Type alias for any active Drizzle MySQL transaction.
+ * Type alias for any active Drizzle PostgreSQL transaction.
  */
-export type AnyTransaction = MySqlTransaction<any, any, any, any>;
+export type AnyTransaction = PgTransaction<any, any, any>;
 
 /**
  * Node.js AsyncLocalStorage store holding the active ambient transaction if within a `runInTransaction` scope,
@@ -32,7 +32,8 @@ export function getAmbientTransaction(): AnyTransaction | null {
  * of `workFn`.
  *
  * Automatic commit occurs when `workFn` resolves successfully; automatic rollback occurs
- * if `workFn` throws an error or rejects.
+ * if `workFn` throws an error or rejects. PostgreSQL's default isolation is already Read
+ * Committed.
  *
  * @param db Root Drizzle database instance
  * @param workFn Asynchronous callback receiving the transaction

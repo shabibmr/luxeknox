@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq, like, or, type SQL } from 'drizzle-orm';
+import { count, eq, ilike, or, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
@@ -34,7 +34,7 @@ export class TrainerRepository extends BaseRepository<typeof trainers, Trainer, 
     if (q) {
       const pattern = `%${q}%`;
       conditions.push(
-        or(like(trainers.first_name, pattern), like(trainers.last_name, pattern))!,
+        or(ilike(trainers.first_name, pattern), ilike(trainers.last_name, pattern))!,
       );
     }
 

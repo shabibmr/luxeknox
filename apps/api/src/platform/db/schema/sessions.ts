@@ -1,16 +1,16 @@
-import { bigint, index, mysqlEnum, mysqlTable, varchar } from 'drizzle-orm/mysql-core';
+import { bigint, index, pgTable, varchar } from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
-import { USER_TYPES, users } from './users';
+import { userTypeEnum, users } from './users';
 
-export const sessions = mysqlTable(
+export const sessions = pgTable(
   'sessions',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    user_id: bigint('user_id', { mode: 'number', unsigned: true })
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    user_id: bigint('user_id', { mode: 'number' })
       .notNull()
       .references(() => users.id),
-    user_type: mysqlEnum('user_type', USER_TYPES).notNull(),
-    profile_id: bigint('profile_id', { mode: 'number', unsigned: true }),
+    user_type: userTypeEnum('user_type').notNull(),
+    profile_id: bigint('profile_id', { mode: 'number' }),
     family_id: varchar('family_id', { length: 64 }).notNull(),
     access_token_hash: varchar('access_token_hash', { length: 64 }).notNull(),
     refresh_token_hash: varchar('refresh_token_hash', { length: 64 }).notNull(),

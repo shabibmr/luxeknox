@@ -65,7 +65,7 @@ export class MemberDocumentRepository extends BaseRepository<
 
   async insertDocument(values: NewMemberDocument): Promise<number> {
     const result = await this.create(values);
-    return Number(result?.[0]?.insertId ?? 0);
+    return result[0]?.id ?? 0;
   }
 
   async markVerified(

@@ -1,5 +1,5 @@
 import { Global, Module, type DynamicModule, type Provider } from '@nestjs/common';
-import type { Pool } from 'mysql2/promise';
+import type { Pool } from 'pg';
 import { createConnectionPool, createDrizzleClient, type DatabaseConfig, type DrizzleDb } from './client';
 import * as schema from './schema';
 

@@ -49,7 +49,7 @@ export class EmergencyContactRepository extends BaseRepository<
 
   async insertContact(values: NewEmergencyContact): Promise<number> {
     const result = await this.create(values);
-    return Number(result?.[0]?.insertId ?? 0);
+    return result[0]?.id ?? 0;
   }
 
   async updateContact(id: number, values: Partial<NewEmergencyContact>): Promise<void> {

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, like, type SQL } from 'drizzle-orm';
+import { and, count, eq, ilike, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { exercises, type Exercise, type NewExercise } from '../platform/db/schema/exercises';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
@@ -38,7 +38,7 @@ export class ExerciseRepository extends BaseRepository<typeof exercises, Exercis
       conditions.push(eq(exercises.is_active, true));
     }
     if (params.q) {
-      conditions.push(like(exercises.name, `%${params.q}%`));
+      conditions.push(ilike(exercises.name, `%${params.q}%`));
     }
     if (params.primaryMuscleGroup) {
       conditions.push(eq(exercises.primary_muscle_group, params.primaryMuscleGroup));
@@ -88,7 +88,7 @@ export class ExerciseRepository extends BaseRepository<typeof exercises, Exercis
    */
   async insertExercise(values: NewExercise): Promise<number> {
     const result = await this.create(values);
-    return Number(result?.[0]?.insertId ?? 0);
+    return result[0]?.id ?? 0;
   }
 
   /**

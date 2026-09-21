@@ -1,50 +1,27 @@
 -- Repeatable migration: apply least-privilege grants to the application user.
 -- Runs as DB_ADMIN_USER on every migrate, after all numbered migrations.
--- audit_logs is append-only (NFR-003, ADR-0002): SELECT + INSERT, never UPDATE/DELETE.
+-- audit_logs is append-only (NFR-003, ADR-0002/0009): SELECT + INSERT, never UPDATE/DELETE.
+--
+-- Three traps this file exists to avoid (ADR-0009):
+-- 1. GRANT ... ON ALL SEQUENCES is mandatory — identity columns draw from sequences, and
+--    without USAGE every insert by the app user fails. MySQL has no analogue.
+-- 2. PostgreSQL 15+ no longer grants schema CREATE/USAGE to PUBLIC by default, so the app
+--    role needs an explicit GRANT USAGE ON SCHEMA public.
+-- 3. ALTER DEFAULT PRIVILEGES must be run by the role that will CREATE future tables
+--    (DB_ADMIN_USER) or new tables land ungranted after the next migration.
 
-DELIMITER $$
+GRANT USAGE ON SCHEMA public TO ${DB_USER};
 
-DROP PROCEDURE IF EXISTS `apply_app_grants`$$
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM ${DB_USER};
 
-CREATE PROCEDURE `apply_app_grants`(IN app_user VARCHAR(64), IN db_name VARCHAR(64))
-BEGIN
-  DECLARE done INT DEFAULT 0;
-  DECLARE tbl VARCHAR(64);
-  DECLARE cur CURSOR FOR
-    SELECT TABLE_NAME
-      FROM information_schema.TABLES
-     WHERE TABLE_SCHEMA = db_name
-       AND TABLE_TYPE = 'BASE TABLE';
-  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${DB_USER};
 
-  -- 1. Drop the database-level grant created by the MySQL entrypoint.
-  --    1141/1147 mean it is already gone; any other error is real and must propagate.
-  BEGIN
-    DECLARE CONTINUE HANDLER FOR 1141, 1147 BEGIN END;
-    SET @sql := CONCAT('REVOKE ALL PRIVILEGES ON `', db_name, '`.* FROM ''', app_user, '''@''%''');
-    PREPARE s FROM @sql; EXECUTE s; DEALLOCATE PREPARE s;
-  END;
+REVOKE UPDATE, DELETE ON audit_logs FROM ${DB_USER};
 
-  -- 2. Re-issue DML per table. audit_logs is the exception.
-  OPEN cur;
-  grant_loop: LOOP
-    FETCH cur INTO tbl;
-    IF done = 1 THEN LEAVE grant_loop; END IF;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO ${DB_USER};
 
-    IF tbl = 'audit_logs' THEN
-      SET @sql := CONCAT('GRANT SELECT, INSERT ON `', db_name, '`.`', tbl,
-                         '` TO ''', app_user, '''@''%''');
-    ELSE
-      SET @sql := CONCAT('GRANT SELECT, INSERT, UPDATE, DELETE ON `', db_name, '`.`', tbl,
-                         '` TO ''', app_user, '''@''%''');
-    END IF;
-    PREPARE s FROM @sql; EXECUTE s; DEALLOCATE PREPARE s;
-  END LOOP;
-  CLOSE cur;
-END$$
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${DB_USER};
 
-CALL `apply_app_grants`('${DB_USER}', '${DB_NAME}')$$
-
-DROP PROCEDURE IF EXISTS `apply_app_grants`$$
-
-DELIMITER ;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT USAGE, SELECT ON SEQUENCES TO ${DB_USER};

@@ -127,7 +127,7 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
 
 /**
  * Seeds permissions idempotently.
- * Uses ON DUPLICATE KEY UPDATE on the unique `slug` column.
+ * Uses ON CONFLICT (slug) DO UPDATE on the unique `slug` column.
  */
 export async function seedPermissions(db: DrizzleDb<any>): Promise<void> {
   const now = new Date();
@@ -142,11 +142,12 @@ export async function seedPermissions(db: DrizzleDb<any>): Promise<void> {
         description: perm.description,
         created_at: now,
       })
-      .onDuplicateKeyUpdate({
+      .onConflictDoUpdate({
+        target: permissions.slug,
         set: {
-          module: sql`VALUES(\`module\`)`,
-          action: sql`VALUES(\`action\`)`,
-          description: sql`VALUES(\`description\`)`,
+          module: sql`excluded.module`,
+          action: sql`excluded.action`,
+          description: sql`excluded.description`,
         },
       });
   }

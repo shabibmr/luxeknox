@@ -13,42 +13,42 @@ one reviewable unit.
 ## Checklist
 
 **Phase 0 — Decisions (blocking)**
-- [ ] PG-01 Settle production PostgreSQL hosting <!-- id: 1 -->
-- [ ] PG-02 Settle and record engineering decisions 1–5 <!-- id: 2 -->
+- [x] PG-01 Settle production PostgreSQL hosting <!-- id: 1 --> _(recommendation adopted: managed PostgreSQL; final vendor pick deferred to user before Phase 10 cutover — does not block Phases 1-9)_
+- [x] PG-02 Settle and record engineering decisions 1–5 <!-- id: 2 --> _(plan recommendations adopted verbatim — see ADR-0009)_
 
 **Phase 1 — Infrastructure**
-- [ ] PG-03 Docker Compose + `postgres.conf` <!-- id: 3 -->
-- [ ] PG-04 Environment variables <!-- id: 4 -->
-- [ ] PG-05 Dependencies + `drizzle.config.ts` <!-- id: 5 -->
+- [x] PG-03 Docker Compose + `postgres.conf` <!-- id: 3 -->
+- [x] PG-04 Environment variables <!-- id: 4 -->
+- [x] PG-05 Dependencies + `drizzle.config.ts` <!-- id: 5 -->
 
 **Phase 2 — Connection layer**
-- [ ] PG-06 `client.ts` — pg Pool, type parsers, UTC session <!-- id: 6 -->
-- [ ] PG-07 `drizzle.module.ts` + `transaction-context.ts` <!-- id: 7 -->
-- [ ] PG-08 `utcDatetime()` → `TIMESTAMPTZ(3)` <!-- id: 8 -->
+- [x] PG-06 `client.ts` — pg Pool, type parsers, UTC session <!-- id: 6 -->
+- [x] PG-07 `drizzle.module.ts` + `transaction-context.ts` <!-- id: 7 -->
+- [x] PG-08 `utcDatetime()` → `TIMESTAMPTZ(3)` <!-- id: 8 -->
 
 **Phase 3 — Drizzle schema**
-- [ ] PG-09 Platform tables (7 files) <!-- id: 9 -->
-- [ ] PG-10 Catalogue tables (2 files) <!-- id: 10 -->
-- [ ] PG-11 PEOPLE tables (6 files) <!-- id: 11 -->
+- [x] PG-09 Platform tables (7 files) <!-- id: 9 -->
+- [x] PG-10 Catalogue tables (2 files) <!-- id: 10 -->
+- [x] PG-11 PEOPLE tables (6 files) <!-- id: 11 -->
 
 **Phase 4 — SQL migrations**
-- [ ] PG-12 Rewrite `0001`–`0003` <!-- id: 12 -->
-- [ ] PG-13 Rewrite `0004`–`0005` <!-- id: 13 -->
-- [ ] PG-14 Rewrite `repeatable/grants.sql` <!-- id: 14 -->
-- [ ] PG-15 Rewrite `migrate.ts` runner <!-- id: 15 -->
-- [ ] PG-16 Regenerate journal + baseline snapshot <!-- id: 16 -->
+- [x] PG-12 Rewrite `0001`–`0003` <!-- id: 12 -->
+- [x] PG-13 Rewrite `0004`–`0005` <!-- id: 13 -->
+- [x] PG-14 Rewrite `repeatable/grants.sql` <!-- id: 14 -->
+- [x] PG-15 Rewrite `migrate.ts` runner <!-- id: 15 -->
+- [x] PG-16 Regenerate journal + baseline snapshot <!-- id: 16 -->
 - [ ] PG-17 `0006` partial unique indexes (opportunity) <!-- id: 17 -->
 
 **Phase 5 — Repository layer**
-- [ ] PG-18 `BaseRepository` — pg types, boolean, `RETURNING` <!-- id: 18 -->
-- [ ] PG-19 SQLSTATE error mapping <!-- id: 19 -->
-- [ ] PG-20 `insertId` → `RETURNING` in 7 repositories <!-- id: 20 -->
-- [ ] PG-21 `PersonFactory` — raw SQL, result shape, dup detection <!-- id: 21 -->
-- [ ] PG-22 `like()` → `ilike()` in 5 repositories <!-- id: 22 -->
-- [ ] PG-23 Health controller + JSON normalizer doc drift <!-- id: 23 -->
+- [x] PG-18 `BaseRepository` — pg types, boolean, `RETURNING` <!-- id: 18 -->
+- [x] PG-19 SQLSTATE error mapping <!-- id: 19 -->
+- [x] PG-20 `insertId` → `RETURNING` in 7 repositories <!-- id: 20 -->
+- [x] PG-21 `PersonFactory` — raw SQL, result shape, dup detection <!-- id: 21 -->
+- [x] PG-22 `like()` → `ilike()` in 5 repositories <!-- id: 22 -->
+- [x] PG-23 Health controller + JSON normalizer doc drift <!-- id: 23 -->
 
 **Phase 6 — Seeds**
-- [ ] PG-24 `onDuplicateKeyUpdate` → `onConflictDoUpdate` in 4 seed files <!-- id: 24 -->
+- [x] PG-24 `onDuplicateKeyUpdate` → `onConflictDoUpdate` in 4 seed files <!-- id: 24 -->
 
 **Phase 7 — Tests**
 - [ ] PG-25 Rename + rewrite E2E helper <!-- id: 25 -->

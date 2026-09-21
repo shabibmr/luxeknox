@@ -1,8 +1,8 @@
-import { bigint, boolean, mysqlTable, text, varchar } from 'drizzle-orm/mysql-core';
+import { bigint, boolean, pgTable, text, varchar } from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
 
-export const roles = mysqlTable('roles', {
-  id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+export const roles = pgTable('roles', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
   name: varchar('name', { length: 100 }).notNull(),
   slug: varchar('slug', { length: 100 }).notNull().unique(),
   description: text('description'),
