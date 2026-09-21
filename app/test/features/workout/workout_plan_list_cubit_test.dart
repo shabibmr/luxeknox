@@ -1,0 +1,84 @@
+import 'package:app/core/error/failures.dart';
+import 'package:app/core/pagination/cursor_page.dart';
+import 'package:app/features/workout/domain/entities/workout_plan.dart';
+import 'package:app/features/workout/domain/entities/workout_plan_status.dart';
+import 'package:app/features/workout/domain/usecases/list_workout_plans_usecase.dart';
+import 'package:app/features/workout/presentation/cubit/workout_plan_list_cubit.dart';
+import 'package:bloc_test/bloc_test.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:mocktail/mocktail.dart';
+
+class _MockListWorkoutPlans extends Mock implements ListWorkoutPlansUseCase {}
+
+void main() {
+  late _MockListWorkoutPlans listPlans;
+
+  WorkoutPlan plan({
+    required String id,
+    WorkoutPlanStatus status = WorkoutPlanStatus.draft,
+  }) {
+    return WorkoutPlan(
+      id: id,
+      title: 'Plan $id',
+      isTemplate: false,
+      status: status,
+      rowVersion: 1,
+    );
+  }
+
+  setUp(() {
+    listPlans = _MockListWorkoutPlans();
+    registerFallbackValue(const ListWorkoutPlansParams());
+  });
+
+  blocTest<WorkoutPlanListCubit, WorkoutPlanListState>(
+    'loads plans and applies client-side status filter',
+    build: () {
+      when(() => listPlans(any())).thenAnswer(
+        (_) async => Right(
+          CursorPage(
+            items: [
+              plan(id: '1', status: WorkoutPlanStatus.draft),
+              plan(id: '2', status: WorkoutPlanStatus.active),
+              plan(id: '3', status: WorkoutPlanStatus.archived),
+            ],
+            nextCursor: null,
+            hasMore: false,
+          ),
+        ),
+      );
+      return WorkoutPlanListCubit(listPlans);
+    },
+    act: (cubit) async {
+      await cubit.load();
+      await cubit.setFilter(WorkoutPlanListFilter.active);
+    },
+    expect: () => [
+      isA<WorkoutPlanListLoading>(),
+      isA<WorkoutPlanListLoaded>().having(
+        (s) => s.items.map((p) => p.id).toList(),
+        'ids',
+        ['1', '2', '3'],
+      ),
+      isA<WorkoutPlanListLoaded>()
+          .having((s) => s.filter, 'filter', WorkoutPlanListFilter.active)
+          .having((s) => s.items.map((p) => p.id).toList(), 'ids', ['2']),
+    ],
+  );
+
+  blocTest<WorkoutPlanListCubit, WorkoutPlanListState>(
+    'emits failure on repository error',
+    build: () {
+      when(() => listPlans(any())).thenAnswer(
+        (_) async => const Left(NetworkFailure()),
+      );
+      return WorkoutPlanListCubit(listPlans);
+    },
+    act: (cubit) => cubit.load(),
+    expect: () => [
+      isA<WorkoutPlanListLoading>(),
+      isA<WorkoutPlanListFailure>(),
+    ],
+  );
+}

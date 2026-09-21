@@ -1,1 +1,12 @@
-# LuxeKnox Flutter — Notifications\n\n- [ ] inbox\n- [ ] detail/deep links\n- [ ] unread\n- [ ] read actions\n- [ ] device registration\n- [ ] token rotation\n- [ ] logout unregister\n- [ ] push handling\n- [ ] admin broadcast\n- [ ] trainer broadcast\n- [ ] history\n
+## Notifications
+- [ ] inbox
+- [ ] detail/deep links
+- [ ] unread
+- [ ] read actions
+- [ ] device registration
+- [ ] token rotation
+- [ ] logout unregister
+- [ ] push handling
+- [ ] admin broadcast
+- [ ] trainer broadcast
+- [ ] history

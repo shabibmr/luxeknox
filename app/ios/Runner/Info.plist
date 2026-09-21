@@ -27,7 +27,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>LuxeKnox uses the camera to capture profile photos and documents.</string>
+	<string>LuxeKnox uses the camera for profile photos, documents, and scanning attendance QR passes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>LuxeKnox uses your photo library to attach profile photos and documents.</string>
 	<key>UIApplicationSceneManifest</key>

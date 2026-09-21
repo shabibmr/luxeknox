@@ -45,4 +45,22 @@ abstract class SessionRepository {
   /// If no stored tokens exist or they are invalid, returns an [AuthFailure].
   /// Returns the [Principal] and [Capabilities] if restoration succeeds.
   Future<Either<Failure, (Principal, Capabilities)>> restore();
+
+  /// Changes the authenticated user's password (current → new).
+  Future<Either<Failure, void>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
+
+  /// Requests a password-reset token for [identifier] (email or phone).
+  ///
+  /// Always succeeds from the client's perspective on 2xx — the API must not
+  /// reveal whether the account exists (same privacy rule as login).
+  Future<Either<Failure, void>> forgotPassword(String identifier);
+
+  /// Completes password reset with the emailed/SMS [token] and [newPassword].
+  Future<Either<Failure, void>> resetPassword({
+    required String token,
+    required String newPassword,
+  });
 }

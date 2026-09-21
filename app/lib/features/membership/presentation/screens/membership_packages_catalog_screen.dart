@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../session/domain/entities/user_type.dart';
+import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/entities/membership_product.dart';
 import '../../domain/usecases/get_membership_products_usecase.dart';
 import '../membership_strings.dart';
@@ -66,6 +69,9 @@ class _MembershipPackagesCatalogScreenState
   Widget build(BuildContext context) {
     final canCreate = !widget.readOnly && context.can('memberships.create');
     final canUpdate = !widget.readOnly && context.can('memberships.update');
+    final session = context.watch<SessionCubit>().state;
+    final hidePricing = session is SessionAuthenticated &&
+        session.principal.userType == UserType.trainer;
 
     return Scaffold(
       appBar: AppBar(
@@ -79,11 +85,11 @@ class _MembershipPackagesCatalogScreenState
             ),
         ],
       ),
-      body: _buildBody(canUpdate),
+      body: _buildBody(canUpdate, hidePricing: hidePricing),
     );
   }
 
-  Widget _buildBody(bool canUpdate) {
+  Widget _buildBody(bool canUpdate, {required bool hidePricing}) {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) {
       return Center(
@@ -112,11 +118,12 @@ class _MembershipPackagesCatalogScreenState
         itemCount: _items.length,
         itemBuilder: (context, index) {
           final product = _items[index];
+          final subtitle = hidePricing
+              ? '${product.code} · ${product.durationDays}d'
+              : '${product.code} · ${product.durationDays}d · ${product.basePrice}';
           return ListTile(
             title: Text(product.name),
-            subtitle: Text(
-              '${product.code} · ${product.durationDays}d · ${product.basePrice}',
-            ),
+            subtitle: Text(subtitle),
             trailing: product.isActive
                 ? null
                 : const Icon(Icons.visibility_off_outlined, size: 18),

@@ -1,1 +1,13 @@
-# LuxeKnox Flutter — Diet\n\n- [ ] plan list/detail\n- [ ] builder\n- [ ] meal builder\n- [ ] food picker\n- [ ] macro display\n- [ ] versions/templates\n- [ ] assignment\n- [ ] daily log\n- [ ] adherence\n- [ ] water\n- [ ] trainer review\n- [ ] verified-food visibility\n
+## Diet
+- [ ] plan list/detail
+- [ ] builder
+- [ ] meal builder
+- [ ] food picker
+- [ ] macro display
+- [ ] versions/templates
+- [ ] assignment
+- [ ] daily log
+- [ ] adherence
+- [ ] water
+- [ ] trainer review
+- [ ] verified-food visibility

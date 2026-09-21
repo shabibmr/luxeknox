@@ -1,0 +1,21 @@
+## Master Completion Checklist
+- [x] Foundation
+- [x] Auth
+- [x] Navigation
+- [x] People
+- [x] Membership
+- [x] Scheduling (core; see phase3-status-report)
+- [x] Attendance (see phase4-status-report)
+- [x] Payments (ledger/dues/detail/methods; POS+refunds remain — see phase5-status-report)
+- [x] Workout (plan builder core; sessions remain — see phase6-status-report)
+- [ ] Diet
+- [ ] Goals/Progress
+- [ ] Notifications
+- [ ] Dashboard
+- [ ] Reports
+- [ ] Settings/RBAC
+- [ ] Media
+- [ ] API contract
+- [ ] role-variant tests
+- [ ] integration tests
+- [ ] release builds

@@ -1,1 +1,10 @@
-# LuxeKnox Flutter — API Client Contract\n\n- [ ] OpenAPI regeneration\n- [ ] generator pinning\n- [ ] drift CI\n- [ ] repository adapters\n- [ ] DTO-to-domain mapping\n- [ ] date/decimal/enum serialization\n- [ ] pagination metadata\n- [ ] idempotency headers\n- [ ] error contract tests\n
+## API Client Contract
+- [ ] OpenAPI regeneration
+- [ ] generator pinning
+- [ ] drift CI
+- [ ] repository adapters
+- [ ] DTO-to-domain mapping
+- [ ] date/decimal/enum serialization
+- [ ] pagination metadata
+- [ ] idempotency headers
+- [ ] error contract tests

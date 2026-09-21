@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../session/domain/entities/user_type.dart';
+import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/entities/membership.dart';
 import '../../domain/usecases/cancel_membership_usecase.dart';
 import '../../domain/usecases/extend_membership_usecase.dart';
 import '../../domain/usecases/get_membership_usecase.dart';
 import '../../domain/usecases/renew_membership_usecase.dart';
+import '../../domain/usecases/upgrade_membership_usecase.dart';
 import '../membership_strings.dart';
 import '../widgets/membership_freeze_list.dart';
 import '../widgets/membership_history_list.dart';
@@ -33,6 +37,7 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
   final _renew = getIt<RenewMembershipUseCase>();
   final _cancel = getIt<CancelMembershipUseCase>();
   final _extend = getIt<ExtendMembershipUseCase>();
+  final _upgrade = getIt<UpgradeMembershipUseCase>();
 
   bool _loading = true;
   String? _error;
@@ -64,7 +69,14 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
     );
   }
 
-  void _showError(Failure failure) {
+  void _showError(Failure failure, {required String action}) {
+    if (failure is ConflictFailure) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(MembershipStrings.rowVersionConflict(action))),
+      );
+      _load();
+      return;
+    }
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(failureMessage(failure))));
@@ -82,7 +94,7 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
     );
     if (!mounted) return;
     setState(() => _actionInFlight = false);
-    result.fold(_showError, (_) => _load());
+    result.fold((f) => _showError(f, action: 'renew'), (_) => _load());
   }
 
   Future<void> _handleCancel() async {
@@ -133,7 +145,7 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
     );
     if (!mounted) return;
     setState(() => _actionInFlight = false);
-    result.fold(_showError, (_) => _load());
+    result.fold((f) => _showError(f, action: 'cancel'), (_) => _load());
   }
 
   Future<void> _handleExtend() async {
@@ -202,20 +214,84 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
     );
     if (!mounted) return;
     setState(() => _actionInFlight = false);
-    result.fold(_showError, (_) => _load());
+    result.fold((f) => _showError(f, action: 'extend'), (_) => _load());
+  }
+
+  Future<void> _handleUpgrade() async {
+    final membership = _membership;
+    if (membership == null) return;
+
+    final productController = TextEditingController();
+    final reasonController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text(MembershipStrings.upgrade),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: productController,
+              decoration: const InputDecoration(
+                labelText: 'Product ID',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: MembershipStrings.reasonLabel,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text(MembershipStrings.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text(MembershipStrings.confirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final productId = productController.text.trim();
+    if (productId.isEmpty) return;
+
+    setState(() => _actionInFlight = true);
+    final result = await _upgrade(
+      MembershipActionParams(
+        membershipId: membership.id,
+        rowVersion: membership.rowVersion,
+        productId: productId,
+        reason: reasonController.text.trim().isEmpty
+            ? null
+            : reasonController.text.trim(),
+      ),
+    );
+    if (!mounted) return;
+    setState(() => _actionInFlight = false);
+    result.fold((f) => _showError(f, action: 'upgrade'), (_) => _load());
   }
 
   @override
   Widget build(BuildContext context) {
     final canApprove = context.can('memberships.approve');
+    final session = context.watch<SessionCubit>().state;
+    final hidePricing = session is SessionAuthenticated &&
+        session.principal.userType == UserType.trainer;
 
     return Scaffold(
       appBar: AppBar(title: const Text(MembershipStrings.detailTitle)),
-      body: _buildBody(canApprove),
+      body: _buildBody(canApprove, hidePricing: hidePricing),
     );
   }
 
-  Widget _buildBody(bool canApprove) {
+  Widget _buildBody(bool canApprove, {required bool hidePricing}) {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null || _membership == null) {
       return Center(
@@ -270,8 +346,11 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
             ),
           if (membership.lockerNumber != null)
             _infoRow(MembershipStrings.lockerNumberLabel, membership.lockerNumber!),
-          if (membership.product != null)
-            _infoRow('Base price', membership.product!.basePrice),
+          if (membership.product != null && !hidePricing)
+            _infoRow(
+              MembershipStrings.basePriceLabel,
+              membership.product!.basePrice,
+            ),
           if (canApprove) ...[
             const SizedBox(height: 16),
             Wrap(
@@ -281,6 +360,10 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
                 OutlinedButton(
                   onPressed: _actionInFlight ? null : _handleRenew,
                   child: const Text(MembershipStrings.renew),
+                ),
+                OutlinedButton(
+                  onPressed: _actionInFlight ? null : _handleUpgrade,
+                  child: const Text(MembershipStrings.upgrade),
                 ),
                 OutlinedButton(
                   onPressed: _actionInFlight ? null : _handleExtend,

@@ -1,1 +1,14 @@
-# LuxeKnox Flutter — Foundation\n\n- [ ] Architecture audit\n- [ ] DI/injectable stabilization\n- [ ] Dio/base URL/timeouts\n- [ ] 401 refresh concurrency\n- [ ] typed error mapping\n- [ ] pagination primitives\n- [ ] common loading/error/empty widgets\n- [ ] Material 3 theme\n- [ ] localization infrastructure\n- [ ] form validation\n- [ ] test fixtures\n- [ ] environment configuration\n- [ ] architecture CI checks\n
+## Foundation
+- [x] Architecture audit
+- [x] DI/injectable stabilization
+- [x] Dio/base URL/timeouts
+- [x] 401 refresh concurrency
+- [x] typed error mapping
+- [x] pagination primitives
+- [x] common loading/error/empty widgets
+- [x] Material 3 theme
+- [x] localization infrastructure
+- [x] form validation
+- [x] test fixtures
+- [x] environment configuration
+- [x] architecture CI checks

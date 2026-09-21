@@ -28,10 +28,19 @@ class MediaUploader {
   /// not carry the app's bearer token.
   final Dio _uploadDio;
 
+  CancelToken? _activeToken;
+
+  /// Cancels the in-flight signed PUT, if any.
+  void cancel() {
+    _activeToken?.cancel('upload cancelled');
+    _activeToken = null;
+  }
+
   Future<Either<Failure, String>> upload({
     required Uint8List bytes,
     required String contentType,
     required MediaPurpose purpose,
+    void Function(int sent, int total)? onProgress,
   }) async {
     if (!purpose.allowedMimeTypes.contains(contentType)) {
       return left(
@@ -45,6 +54,9 @@ class MediaUploader {
         ]),
       );
     }
+
+    final token = CancelToken();
+    _activeToken = token;
 
     try {
       final slot = await _mediaApi.createMediaUpload(
@@ -63,6 +75,8 @@ class MediaUploader {
       await _uploadDio.putUri(
         Uri.parse(upload.url),
         data: bytes,
+        cancelToken: token,
+        onSendProgress: onProgress,
         options: Options(
           headers: {
             Headers.contentTypeHeader: contentType,
@@ -72,8 +86,17 @@ class MediaUploader {
       );
 
       return right(upload.objectKey);
+    } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) {
+        return left(const NetworkFailure());
+      }
+      return left(mapThrownToFailure(e));
     } catch (e) {
       return left(mapThrownToFailure(e));
+    } finally {
+      if (identical(_activeToken, token)) {
+        _activeToken = null;
+      }
     }
   }
 }

@@ -1,1 +1,10 @@
-# LuxeKnox Flutter — Media\n\n- [ ] signed upload\n- [ ] upload progress\n- [ ] retry/cancel\n- [ ] signed download\n- [ ] parent access checks\n- [ ] MIME/size handling\n- [ ] image compression/thumbnails\n- [ ] document preview\n- [ ] expired URL recovery\n
+## Media
+- [ ] signed upload
+- [ ] upload progress
+- [ ] retry/cancel
+- [ ] signed download
+- [ ] parent access checks
+- [ ] MIME/size handling
+- [ ] image compression/thumbnails
+- [ ] document preview
+- [ ] expired URL recovery

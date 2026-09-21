@@ -1,1 +1,13 @@
-# LuxeKnox Flutter — Membership\n\n- [ ] membership card/detail/history\n- [ ] package catalogue\n- [ ] package CRUD\n- [ ] membership directory\n- [ ] freeze request/history\n- [ ] approve/reject\n- [ ] extension\n- [ ] renew\n- [ ] upgrade\n- [ ] cancel\n- [ ] row-version conflicts\n- [ ] role pricing visibility\n
+## Membership
+- [x] membership card / detail / history
+- [x] packages catalogue + product CRUD
+- [x] memberships directory
+- [x] freeze request / approve / reject / extension
+- [x] renew / upgrade / cancel
+- [x] row-version conflicts
+- [x] role pricing visibility
+- [x] create-membership sales UI
+- [x] shell / router wiring
+- [x] directory cubit refactor
+- [ ] remaining screen cubit refactors (detail/card/form)
+- [ ] broader widget/integration tests

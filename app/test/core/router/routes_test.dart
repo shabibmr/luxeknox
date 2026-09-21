@@ -41,6 +41,7 @@ void main() {
         Routes.memberProfileEmergencyContacts,
         Routes.memberProfileDocuments,
         Routes.memberProfilePayments,
+        Routes.memberProfilePaymentsDetail,
         Routes.memberProfileTrainer,
         Routes.memberProfileAttendance,
         // Trainer routes
@@ -59,6 +60,7 @@ void main() {
         Routes.trainerPlans,
         Routes.trainerPlansWorkoutsCreate,
         Routes.trainerPlansWorkoutsDetail,
+        Routes.trainerPlansWorkoutsEdit,
         Routes.trainerPlansDietsCreate,
         Routes.trainerPlansDietsDetail,
         Routes.trainerPlansExercises,
@@ -79,8 +81,10 @@ void main() {
         Routes.adminMembershipsFreeze,
         Routes.adminPayments,
         Routes.adminPaymentsRecord,
+        Routes.adminPaymentsMethods,
         Routes.adminPaymentsDetail,
         Routes.adminPaymentsOutstanding,
+        Routes.adminMore,
         Routes.adminTrainers,
         Routes.adminEmployees,
         Routes.adminPackages,
@@ -96,11 +100,24 @@ void main() {
 
       // Set literals de-duplicate identical values automatically, so if
       // every Routes.* reference above resolves to a distinct string this
-      // set's length equals the number of entries listed, i.e. 74.
+      // set's length equals the number of entries listed.
       expect(
         allRoutes.length,
-        76,
+        80,
         reason: 'All route constants should be unique; duplicate values found',
+      );
+    });
+
+    test('deep-link builders substitute path parameters', () {
+      expect(Routes.memberScheduleById('42'), '/schedule/42');
+      expect(Routes.memberProgressGoalById('7'), '/progress/goal/7');
+      expect(Routes.adminMemberById('9'), '/admin/members/9');
+      expect(Routes.adminPaymentById('15'), '/admin/payments/15');
+      expect(Routes.memberProfilePaymentById('15'), '/profile/payments/15');
+      expect(Routes.trainerMemberById('3'), '/trainer/members/3');
+      expect(
+        Routes.loginWithRedirect('/admin/members/9'),
+        '/login?redirect=%2Fadmin%2Fmembers%2F9',
       );
     });
   });

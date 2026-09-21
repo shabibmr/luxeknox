@@ -17,6 +17,9 @@ class Routes {
   // ========== Auth Routes ==========
   static const String login = '/login';
   static const String splash = '/splash';
+  static const String forgotPassword = '/forgot-password';
+  static const String resetPassword = '/reset-password';
+  static const String changePassword = '/change-password';
 
   // ========== Member App Routes ==========
   // Home Stack
@@ -56,8 +59,13 @@ class Routes {
       '/profile/emergency-contacts';
   static const String memberProfileDocuments = '/profile/documents';
   static const String memberProfilePayments = '/profile/payments';
+  static const String memberProfilePaymentsDetail = '/profile/payments/:id';
   static const String memberProfileTrainer = '/profile/trainer';
   static const String memberProfileAttendance = '/profile/attendance';
+  static const String memberProfileAttendanceHistory =
+      '/profile/attendance/history';
+  static const String memberProfileAttendanceSummary =
+      '/profile/attendance/summary';
 
   // ========== Trainer App Routes ==========
   // Home Stack
@@ -96,6 +104,8 @@ class Routes {
       '/trainer/plans/workouts/create';
   static const String trainerPlansWorkoutsDetail =
       '/trainer/plans/workouts/:id';
+  static const String trainerPlansWorkoutsEdit =
+      '/trainer/plans/workouts/:id/edit';
   static const String trainerPlansDietsCreate = '/trainer/plans/diets/create';
   static const String trainerPlansDietsDetail = '/trainer/plans/diets/:id';
   static const String trainerPlansExercises = '/trainer/plans/exercises';
@@ -126,6 +136,8 @@ class Routes {
 
   // Memberships Stack
   static const String adminMemberships = '/admin/memberships';
+  static const String adminMembershipsCreate = '/admin/memberships/create';
+  static const String adminMembershipsPackages = '/admin/memberships/packages';
   static const String adminMembershipsDetail = '/admin/memberships/:id';
   static const String adminMembershipsRenew = '/admin/memberships/:id/renew';
   static const String adminMembershipsFreeze = '/admin/memberships/:id/freeze';
@@ -133,14 +145,19 @@ class Routes {
   // Payments Stack
   static const String adminPayments = '/admin/payments';
   static const String adminPaymentsRecord = '/admin/payments/record';
+  static const String adminPaymentsMethods = '/admin/payments/methods';
   static const String adminPaymentsDetail = '/admin/payments/:id';
   static const String adminPaymentsOutstanding = '/admin/payments/outstanding';
 
   // More (Menu / Side Navigation)
+  /// Lightweight More-branch root; hub chrome overlays this location.
+  static const String adminMore = '/admin/more';
   static const String adminTrainers = '/admin/trainers';
   static const String adminEmployees = '/admin/employees';
   static const String adminPackages = '/admin/packages';
   static const String adminAttendance = '/admin/attendance';
+  static const String adminAttendanceScan = '/admin/attendance/scan';
+  static const String adminAttendanceManual = '/admin/attendance/manual';
   static const String adminSchedules = '/admin/schedules';
   static const String adminWorkoutLibrary = '/admin/workout-library';
   static const String adminDietLibrary = '/admin/diet-library';
@@ -155,4 +172,50 @@ class Routes {
 
   static String adminSettingsCategory(String category) =>
       '/admin/settings/$category';
+
+  /// Query key used when redirecting unauthenticated users to login so the
+  /// intended deep link can be restored after sign-in.
+  static const String redirectQueryParam = 'redirect';
+
+  // ========== Deep-link path builders (replace `:id` / `:category`) ==========
+
+  static String memberHomeWorkoutExerciseById(String id) =>
+      '/home/workout/exercises/$id';
+
+  static String memberHomeDietMealById(String id) => '/home/diet/meal/$id';
+
+  static String memberScheduleById(String id) => '/schedule/$id';
+
+  static String memberProgressGoalById(String id) => '/progress/goal/$id';
+
+  static String trainerMemberById(String id) => '/trainer/members/$id';
+
+  static String trainerMemberHealthById(String id) =>
+      '/trainer/members/$id/health';
+
+  static String trainerScheduleById(String id) => '/trainer/schedule/$id';
+
+  static String trainerPlansWorkoutById(String id) =>
+      '/trainer/plans/workouts/$id';
+
+  static String trainerPlansWorkoutEditById(String id) =>
+      '/trainer/plans/workouts/$id/edit';
+
+  static String trainerPlansDietById(String id) => '/trainer/plans/diets/$id';
+
+  static String trainerPlansExerciseById(String id) =>
+      '/trainer/plans/exercises/$id';
+
+  static String adminMemberById(String id) => '/admin/members/$id';
+
+  static String adminMembershipById(String id) => '/admin/memberships/$id';
+
+  static String adminPaymentById(String id) => '/admin/payments/$id';
+
+  static String memberProfilePaymentById(String id) => '/profile/payments/$id';
+
+  static String loginWithRedirect(String intendedPath) => Uri(
+    path: login,
+    queryParameters: {redirectQueryParam: intendedPath},
+  ).toString();
 }

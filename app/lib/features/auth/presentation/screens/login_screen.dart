@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/router/routes.dart';
 import '../auth_strings.dart';
 import '../cubit/login_cubit.dart';
 
@@ -123,6 +125,12 @@ class _LoginFormState extends State<_LoginForm> {
                                 ),
                               )
                             : const Text(AuthStrings.signIn),
+                      ),
+                      TextButton(
+                        onPressed: isSubmitting
+                            ? null
+                            : () => context.go(Routes.forgotPassword),
+                        child: const Text(AuthStrings.forgotPassword),
                       ),
                     ],
                   ),

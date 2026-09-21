@@ -61,5 +61,14 @@ abstract class RegisterModule {
   DASHApi dashApi(Dio dio) => DASHApi(dio, standardSerializers);
 
   @singleton
+  SCHEDApi schedApi(Dio dio) => SCHEDApi(dio, standardSerializers);
+
+  @singleton
+  ATTNApi attnApi(Dio dio) => ATTNApi(dio, standardSerializers);
+
+  @singleton
+  PAYApi payApi(Dio dio) => PAYApi(dio, standardSerializers);
+
+  @singleton
   GoRouter router(SessionCubit session) => createRouter(session);
 }

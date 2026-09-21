@@ -8,6 +8,17 @@ class MembershipStrings {
   static const String historyTitle = 'Membership History';
   static const String freezesTitle = 'Freeze Requests';
   static const String trainerSummaryTitle = 'Membership';
+  static const String createTitle = 'Sell membership';
+  static const String createSubtitle =
+      'Create a new membership contract for a member.';
+  static const String createFab = 'Sell';
+  static const String createSubmit = 'Create membership';
+  static const String packagesTooltip = 'Packages catalog';
+  static const String memberLabel = 'Member';
+  static const String packageLabel = 'Package';
+  static const String selectMemberHint = 'Select member';
+  static const String selectPackageHint = 'Select package';
+  static const String autoRenewLabel = 'Auto-renew';
 
   static const String addTooltip = 'Add package';
   static const String editTitle = 'Edit Package';

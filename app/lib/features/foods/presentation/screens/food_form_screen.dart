@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/widgets/unsaved_changes_scope.dart';
 import '../../domain/entities/food.dart';
 import '../../domain/usecases/create_food_usecase.dart';
 import '../../domain/usecases/deactivate_food_usecase.dart';
@@ -54,12 +55,47 @@ class _FoodFormScreenState extends State<FoodFormScreen> {
     text: widget.food?.fiberGrams?.toString(),
   );
   late bool _isVerified = widget.food?.isVerified ?? true;
+  late final bool _initialIsVerified = _isVerified;
 
   bool _isSubmitting = false;
+  bool _isDirty = false;
   String? _errorMessage;
 
   @override
+  void initState() {
+    super.initState();
+    for (final c in [
+      _nameController,
+      _servingUnitController,
+      _servingSizeController,
+      _caloriesController,
+      _proteinController,
+      _carbsController,
+      _fatController,
+      _fiberController,
+    ]) {
+      c.addListener(_markDirty);
+    }
+  }
+
+  void _markDirty() {
+    if (!_isDirty) setState(() => _isDirty = true);
+  }
+
+  @override
   void dispose() {
+    for (final c in [
+      _nameController,
+      _servingUnitController,
+      _servingSizeController,
+      _caloriesController,
+      _proteinController,
+      _carbsController,
+      _fatController,
+      _fiberController,
+    ]) {
+      c.removeListener(_markDirty);
+    }
     _nameController.dispose();
     _servingUnitController.dispose();
     _servingSizeController.dispose();
@@ -112,7 +148,10 @@ class _FoodFormScreenState extends State<FoodFormScreen> {
         _isSubmitting = false;
         _errorMessage = failureMessage(failure);
       }),
-      (_) => Navigator.of(context).pop(true),
+      (_) {
+        setState(() => _isDirty = false);
+        Navigator.of(context).pop(true);
+      },
     );
   }
 
@@ -151,7 +190,10 @@ class _FoodFormScreenState extends State<FoodFormScreen> {
         _isSubmitting = false;
         _errorMessage = failureMessage(failure);
       }),
-      (_) => Navigator.of(context).pop(true),
+      (_) {
+        setState(() => _isDirty = false);
+        Navigator.of(context).pop(true);
+      },
     );
   }
 
@@ -166,151 +208,156 @@ class _FoodFormScreenState extends State<FoodFormScreen> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.isEditing ? FoodStrings.editTitle : FoodStrings.addTitle,
+    final dirty = _isDirty || _isVerified != _initialIsVerified;
+
+    return UnsavedChangesScope(
+      hasUnsavedChanges: dirty && !_isSubmitting,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.isEditing ? FoodStrings.editTitle : FoodStrings.addTitle,
+          ),
+          actions: [
+            if (widget.isEditing)
+              IconButton(
+                icon: const Icon(Icons.block),
+                tooltip: FoodStrings.deactivateTooltip,
+                onPressed: _isSubmitting ? null : _confirmDeactivate,
+              ),
+          ],
         ),
-        actions: [
-          if (widget.isEditing)
-            IconButton(
-              icon: const Icon(Icons.block),
-              tooltip: FoodStrings.deactivateTooltip,
-              onPressed: _isSubmitting ? null : _confirmDeactivate,
-            ),
-        ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            if (_errorMessage != null) ...[
-              MaterialBanner(
-                content: Text(_errorMessage!),
-                backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                actions: const [SizedBox.shrink()],
+        body: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              if (_errorMessage != null) ...[
+                MaterialBanner(
+                  content: Text(_errorMessage!),
+                  backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                  actions: const [SizedBox.shrink()],
+                ),
+                const SizedBox(height: 16),
+              ],
+              TextFormField(
+                controller: _nameController,
+                enabled: !_isSubmitting,
+                decoration: const InputDecoration(
+                  labelText: FoodStrings.nameLabel,
+                ),
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? FoodStrings.nameRequired
+                    : null,
               ),
               const SizedBox(height: 16),
+              TextFormField(
+                controller: _servingUnitController,
+                enabled: !_isSubmitting,
+                decoration: const InputDecoration(
+                  labelText: FoodStrings.servingUnitLabel,
+                ),
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? FoodStrings.servingUnitRequired
+                    : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _servingSizeController,
+                enabled: !_isSubmitting,
+                decoration: const InputDecoration(
+                  labelText: FoodStrings.servingSizeLabel,
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                validator: _numericValidator,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _caloriesController,
+                enabled: !_isSubmitting,
+                decoration: const InputDecoration(
+                  labelText: FoodStrings.caloriesLabel,
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                validator: _numericValidator,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _proteinController,
+                enabled: !_isSubmitting,
+                decoration: const InputDecoration(
+                  labelText: FoodStrings.proteinLabel,
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                validator: _numericValidator,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _carbsController,
+                enabled: !_isSubmitting,
+                decoration: const InputDecoration(
+                  labelText: FoodStrings.carbsLabel,
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                validator: _numericValidator,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _fatController,
+                enabled: !_isSubmitting,
+                decoration: const InputDecoration(
+                  labelText: FoodStrings.fatLabel,
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                validator: _numericValidator,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _fiberController,
+                enabled: !_isSubmitting,
+                decoration: const InputDecoration(
+                  labelText: FoodStrings.fiberLabel,
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                validator: _numericValidator,
+              ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                title: const Text(FoodStrings.verified),
+                subtitle: const Text(FoodStrings.verifiedSubtitle),
+                value: _isVerified,
+                onChanged: _isSubmitting
+                    ? null
+                    : (v) => setState(() => _isVerified = v),
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: _isSubmitting ? null : _submit,
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(
+                        widget.isEditing
+                            ? FoodStrings.saveChanges
+                            : FoodStrings.createFood,
+                      ),
+              ),
             ],
-            TextFormField(
-              controller: _nameController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.nameLabel,
-              ),
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? FoodStrings.nameRequired
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _servingUnitController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.servingUnitLabel,
-              ),
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? FoodStrings.servingUnitRequired
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _servingSizeController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.servingSizeLabel,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              validator: _numericValidator,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _caloriesController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.caloriesLabel,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              validator: _numericValidator,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _proteinController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.proteinLabel,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              validator: _numericValidator,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _carbsController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.carbsLabel,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              validator: _numericValidator,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _fatController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.fatLabel,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              validator: _numericValidator,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _fiberController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.fiberLabel,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              validator: _numericValidator,
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile(
-              title: const Text(FoodStrings.verified),
-              subtitle: const Text(FoodStrings.verifiedSubtitle),
-              value: _isVerified,
-              onChanged: _isSubmitting
-                  ? null
-                  : (v) => setState(() => _isVerified = v),
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _isSubmitting ? null : _submit,
-              child: _isSubmitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(
-                      widget.isEditing
-                          ? FoodStrings.saveChanges
-                          : FoodStrings.createFood,
-                    ),
-            ),
-          ],
+          ),
         ),
       ),
     );

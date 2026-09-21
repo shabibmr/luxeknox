@@ -1,8 +1,14 @@
 import 'package:app/core/di/injector.dart';
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/l10n/shell_strings.dart';
 import 'package:app/core/router/app_router.dart';
 import 'package:app/core/router/routes.dart';
 import 'package:app/core/usecase/usecase.dart';
+import 'package:app/core/widgets/adaptive_shell.dart';
+import 'package:app/core/widgets/destination_hub_screen.dart';
+import 'package:app/core/widgets/more_hub_screen.dart';
+import 'package:app/core/widgets/not_found_screen.dart';
+import 'package:app/core/widgets/placeholder_screen.dart';
 import 'package:app/features/auth/presentation/cubit/login_cubit.dart';
 import 'package:app/features/dashboard/domain/usecases/get_dashboard_usecase.dart';
 import 'package:app/features/dashboard/presentation/cubit/dashboard_cubit.dart';
@@ -45,13 +51,16 @@ void main() {
   const emptyCaps = Capabilities(slugs: []);
 
   group('Router Redirect Logic (G3)', () {
-    test('signed-out user on protected route redirects to /login', () {
-      final redirect = appRedirectLogic(
-        sessionState: const SessionUnauthenticated(),
-        currentPath: Routes.memberHome,
-      );
-      expect(redirect, Routes.login);
-    });
+    test(
+      'signed-out user on protected route redirects to /login with redirect',
+      () {
+        final redirect = appRedirectLogic(
+          sessionState: const SessionUnauthenticated(),
+          currentPath: Routes.memberHome,
+        );
+        expect(redirect, Routes.loginWithRedirect(Routes.memberHome));
+      },
+    );
 
     test('signed-out user already on /login does not redirect (no loop)', () {
       final redirect = appRedirectLogic(
@@ -254,28 +263,9 @@ void main() {
         Routes.trainerHome,
         Routes.trainerSessionsToday,
         Routes.trainerNotifications,
-        Routes.trainerMembers,
-        '/trainer/members/123',
-        '/trainer/members/123/health',
-        '/trainer/members/123/goals',
-        '/trainer/members/123/goals/add-measurement',
-        // '/trainer/members/123/membership' is now a real feature screen
-        // (TrainerMembershipSummaryScreen) requiring live DI/network,
-        // excluded from this skeleton sweep — same precedent as the
-        // exercises/foods feature routes below.
-        '/trainer/members/123/attendance',
-        '/trainer/members/123/schedule',
-        '/trainer/members/123/payments',
-        '/trainer/members/123/workout-history',
-        '/trainer/members/123/diet-history',
-        Routes.trainerSchedule,
-        '/trainer/schedule/45',
-        Routes.trainerScheduleAvailability,
-        Routes.trainerScheduleHistory,
+        // Members directory/dossier, schedule stack, and workout plan screens
+        // need live DI — excluded (GetIt/cubit failures cascade).
         Routes.trainerPlans,
-        Routes.trainerPlansWorkoutsCreate,
-        Routes.trainerPlansWorkoutsHistory,
-        '/trainer/plans/workouts/9',
         Routes.trainerPlansDietsCreate,
         Routes.trainerPlansDietsHistory,
         '/trainer/plans/diets/9',
@@ -289,6 +279,321 @@ void main() {
           expect(router.routeInformationProvider.value.uri.path, path);
         });
       }
+    });
+
+    group('role shells — five destinations', () {
+      Future<void> pumpAtWidth(
+        WidgetTester tester,
+        SessionState session,
+        String path, {
+        double width = 390,
+      }) async {
+        final sessionCubit = MockSessionCubit();
+        when(() => sessionCubit.restore()).thenAnswer((_) async {});
+        whenListen(
+          sessionCubit,
+          const Stream<SessionState>.empty(),
+          initialState: session,
+        );
+        final router = createRouter(sessionCubit);
+        await tester.pumpWidget(
+          MaterialApp.router(
+            routerConfig: router,
+            builder: (context, child) => BlocProvider<SessionCubit>.value(
+              value: sessionCubit,
+              child: Center(
+                child: SizedBox(width: width, height: 800, child: child),
+              ),
+            ),
+          ),
+        );
+        router.go(path);
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('member shell has five NavigationBar destinations', (
+        tester,
+      ) async {
+        await pumpAtWidth(
+          tester,
+          const SessionAuthenticated(
+            principal: memberPrincipal,
+            capabilities: emptyCaps,
+          ),
+          Routes.memberHome,
+        );
+
+        expect(find.byType(AdaptiveShell), findsOneWidget);
+        expect(find.byType(NavigationBar), findsOneWidget);
+        for (final label in [
+          ShellStrings.home,
+          ShellStrings.membership,
+          ShellStrings.schedule,
+          ShellStrings.progress,
+          ShellStrings.profile,
+        ]) {
+          expect(find.text(label), findsWidgets);
+        }
+      });
+
+      testWidgets('trainer shell has five NavigationBar destinations', (
+        tester,
+      ) async {
+        await pumpAtWidth(
+          tester,
+          const SessionAuthenticated(
+            principal: trainerPrincipal,
+            capabilities: emptyCaps,
+          ),
+          Routes.trainerHome,
+        );
+
+        expect(find.byType(AdaptiveShell), findsOneWidget);
+        expect(find.byType(NavigationBar), findsOneWidget);
+        for (final label in [
+          ShellStrings.home,
+          ShellStrings.members,
+          ShellStrings.schedule,
+          ShellStrings.plans,
+          ShellStrings.profile,
+        ]) {
+          expect(find.text(label), findsWidgets);
+        }
+      });
+
+      testWidgets('admin shell has five NavigationBar destinations', (
+        tester,
+      ) async {
+        await pumpAtWidth(
+          tester,
+          const SessionAuthenticated(
+            principal: adminPrincipal,
+            capabilities: emptyCaps,
+          ),
+          Routes.adminDashboard,
+        );
+
+        expect(find.byType(AdaptiveShell), findsOneWidget);
+        expect(find.byType(NavigationBar), findsOneWidget);
+        for (final label in [
+          ShellStrings.dashboard,
+          ShellStrings.members,
+          ShellStrings.memberships,
+          ShellStrings.payments,
+          ShellStrings.more,
+        ]) {
+          expect(find.text(label), findsWidgets);
+        }
+      });
+
+      testWidgets('admin More root overlays MoreHubScreen', (tester) async {
+        await pumpAtWidth(
+          tester,
+          const SessionAuthenticated(
+            principal: adminPrincipal,
+            capabilities: emptyCaps,
+          ),
+          Routes.adminMore,
+        );
+
+        expect(find.byType(MoreHubScreen), findsOneWidget);
+        expect(find.text(ShellStrings.workoutLibrary), findsOneWidget);
+      });
+
+      testWidgets('trainer Plans tab shows DestinationHubScreen', (
+        tester,
+      ) async {
+        await pumpAtWidth(
+          tester,
+          const SessionAuthenticated(
+            principal: trainerPrincipal,
+            capabilities: emptyCaps,
+          ),
+          Routes.trainerPlans,
+        );
+
+        expect(find.byType(DestinationHubScreen), findsOneWidget);
+        expect(find.text(ShellStrings.workoutLibrary), findsOneWidget);
+        expect(find.text(ShellStrings.dietLibrary), findsOneWidget);
+      });
+
+      testWidgets('member shell uses NavigationRail at tablet width', (
+        tester,
+      ) async {
+        await pumpAtWidth(
+          tester,
+          const SessionAuthenticated(
+            principal: memberPrincipal,
+            capabilities: emptyCaps,
+          ),
+          Routes.memberHome,
+          width: AdaptiveShellBreakpoints.compact + 40,
+        );
+
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.byType(NavigationBar), findsNothing);
+      });
+    });
+
+    group('deep links', () {
+      testWidgets('parameterized member path builds and stays', (tester) async {
+        final router = await pumpRouter(
+          tester,
+          const SessionAuthenticated(
+            principal: memberPrincipal,
+            capabilities: emptyCaps,
+          ),
+        );
+        final path = Routes.memberProgressGoalById('99');
+        router.go(path);
+        await tester.pumpAndSettle();
+        expect(router.routeInformationProvider.value.uri.path, path);
+        expect(find.text(ShellStrings.memberProgressGoalDetail), findsWidgets);
+      });
+
+      testWidgets('unauthenticated deep link preserves redirect query', (
+        tester,
+      ) async {
+        final router = await pumpRouter(tester, const SessionUnauthenticated());
+        final intended = Routes.memberProgressGoalById('5');
+        router.go(intended);
+        await tester.pumpAndSettle();
+        final uri = router.routeInformationProvider.value.uri;
+        expect(uri.path, Routes.login);
+        expect(uri.queryParameters[Routes.redirectQueryParam], intended);
+      });
+
+      testWidgets('authenticated on login?redirect= restores intended path', (
+        tester,
+      ) async {
+        final router = await pumpRouter(
+          tester,
+          const SessionAuthenticated(
+            principal: memberPrincipal,
+            capabilities: emptyCaps,
+          ),
+        );
+        final intended = Routes.memberProgressGoalById('12');
+        router.go(Routes.loginWithRedirect(intended));
+        await tester.pumpAndSettle();
+        expect(router.routeInformationProvider.value.uri.path, intended);
+      });
+    });
+
+    group('capability redirects', () {
+      testWidgets('admin without memberships.create leaves create route', (
+        tester,
+      ) async {
+        final router = await pumpRouter(
+          tester,
+          const SessionAuthenticated(
+            principal: adminPrincipal,
+            capabilities: emptyCaps,
+          ),
+        );
+        router.go(Routes.adminMembershipsCreate);
+        await tester.pumpAndSettle();
+        expect(
+          router.routeInformationProvider.value.uri.path,
+          Routes.adminDashboard,
+        );
+      });
+
+      testWidgets('admin with reports.read stays on reports deep link', (
+        tester,
+      ) async {
+        final router = await pumpRouter(
+          tester,
+          const SessionAuthenticated(
+            principal: adminPrincipal,
+            capabilities: Capabilities(slugs: ['reports.read']),
+          ),
+        );
+        final path = Routes.adminReportsCategory('revenue');
+        router.go(path);
+        await tester.pumpAndSettle();
+        expect(router.routeInformationProvider.value.uri.path, path);
+        expect(find.textContaining('revenue'), findsWidgets);
+      });
+
+      testWidgets('admin without reports.read leaves reports route', (
+        tester,
+      ) async {
+        final router = await pumpRouter(
+          tester,
+          const SessionAuthenticated(
+            principal: adminPrincipal,
+            capabilities: emptyCaps,
+          ),
+        );
+        router.go(Routes.adminReportsCategory('revenue'));
+        await tester.pumpAndSettle();
+        expect(
+          router.routeInformationProvider.value.uri.path,
+          Routes.adminDashboard,
+        );
+      });
+    });
+
+    group('nested-stack preservation', () {
+      testWidgets('switching tabs keeps Progress nested route', (tester) async {
+        final sessionCubit = MockSessionCubit();
+        when(() => sessionCubit.restore()).thenAnswer((_) async {});
+        whenListen(
+          sessionCubit,
+          const Stream<SessionState>.empty(),
+          initialState: const SessionAuthenticated(
+            principal: memberPrincipal,
+            capabilities: emptyCaps,
+          ),
+        );
+        final router = createRouter(sessionCubit);
+        await tester.pumpWidget(
+          MaterialApp.router(
+            routerConfig: router,
+            builder: (context, child) => BlocProvider<SessionCubit>.value(
+              value: sessionCubit,
+              child: Center(
+                child: SizedBox(width: 390, height: 800, child: child),
+              ),
+            ),
+          ),
+        );
+
+        final nested = Routes.memberProgressGoalById('3');
+        router.go(nested);
+        await tester.pumpAndSettle();
+        expect(find.text(ShellStrings.memberProgressGoalDetail), findsWidgets);
+
+        await tester.tap(find.text(ShellStrings.home).last);
+        await tester.pumpAndSettle();
+        expect(
+          router.routeInformationProvider.value.uri.path,
+          Routes.memberHome,
+        );
+
+        await tester.tap(find.text(ShellStrings.progress).last);
+        await tester.pumpAndSettle();
+        expect(router.routeInformationProvider.value.uri.path, nested);
+        expect(find.byType(PlaceholderScreen), findsWidgets);
+        expect(find.text(ShellStrings.memberProgressGoalDetail), findsWidgets);
+      });
+    });
+
+    group('unknown routes', () {
+      testWidgets('unmatched path shows NotFoundScreen', (tester) async {
+        final router = await pumpRouter(
+          tester,
+          const SessionAuthenticated(
+            principal: memberPrincipal,
+            capabilities: emptyCaps,
+          ),
+        );
+        router.go('/this/path/does/not/exist');
+        await tester.pumpAndSettle();
+        expect(find.byType(NotFoundScreen), findsOneWidget);
+        expect(find.text(ShellStrings.notFoundTitle), findsOneWidget);
+      });
     });
   });
 }

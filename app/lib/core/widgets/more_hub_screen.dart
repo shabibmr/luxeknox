@@ -22,6 +22,7 @@ class MoreHubScreen extends StatelessWidget {
     (title: ShellStrings.trainers, path: Routes.adminTrainers),
     (title: ShellStrings.employees, path: Routes.adminEmployees),
     (title: ShellStrings.packages, path: Routes.adminPackages),
+    (title: ShellStrings.paymentMethods, path: Routes.adminPaymentsMethods),
     (title: ShellStrings.attendance, path: Routes.adminAttendance),
     (title: ShellStrings.schedules, path: Routes.adminSchedules),
     (title: ShellStrings.workoutLibrary, path: Routes.adminWorkoutLibrary),

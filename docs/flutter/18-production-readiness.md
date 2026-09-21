@@ -1,0 +1,14 @@
+## Production Readiness
+- [ ] dev/staging/prod config
+- [ ] secure storage
+- [ ] crash reporting
+- [ ] network policy
+- [ ] app resume
+- [ ] push config
+- [ ] camera/photo permissions
+- [ ] deep links
+- [ ] platform builds
+- [ ] performance profiling
+- [ ] accessibility
+- [ ] security review
+- [ ] release and rollback

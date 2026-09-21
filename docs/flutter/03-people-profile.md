@@ -1,1 +1,15 @@
-# LuxeKnox Flutter — People & Profile\n\n- [ ] member directory\n- [ ] member dossier\n- [ ] trainer directory\n- [ ] employee directory\n- [ ] profile edit\n- [ ] trainer assignment\n- [ ] health\n- [ ] medical history\n- [ ] emergency contacts\n- [ ] documents\n- [ ] photos/avatar\n- [ ] role-specific visibility\n- [ ] upload retry/cancel\n- [ ] role-variant tests\n
+## People & Profile
+- [x] member directory
+- [x] member dossier
+- [x] trainer directory
+- [x] employee directory
+- [x] profile edit
+- [x] trainer assignment
+- [x] health
+- [x] medical history
+- [x] emergency contacts
+- [x] documents
+- [x] photos/avatar
+- [x] role-specific visibility
+- [x] upload retry/cancel
+- [x] role-variant tests

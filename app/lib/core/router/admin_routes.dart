@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/attendance/presentation/screens/admin_attendance_screen.dart';
 import '../../features/auth/presentation/widgets/sign_out_tile.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_library_screen.dart';
 import '../../features/foods/presentation/screens/food_library_screen.dart';
+import '../../features/membership/presentation/screens/create_membership_screen.dart';
 import '../../features/membership/presentation/screens/membership_detail_screen.dart';
 import '../../features/membership/presentation/screens/membership_packages_catalog_screen.dart';
 import '../../features/membership/presentation/screens/memberships_directory_screen.dart';
+import '../../features/payments/presentation/payment_ledger_role.dart';
+import '../../features/payments/presentation/screens/outstanding_dues_screen.dart';
+import '../../features/payments/presentation/screens/payment_detail_screen.dart';
+import '../../features/payments/presentation/screens/payment_methods_screen.dart';
+import '../../features/payments/presentation/screens/payments_ledger_screen.dart';
+import '../../features/people/presentation/screens/employees_directory_screen.dart';
+import '../../features/people/presentation/screens/member_dossier_screen.dart';
+import '../../features/people/presentation/screens/members_directory_screen.dart';
+import '../../features/people/presentation/screens/trainers_directory_screen.dart';
+import '../../features/scheduling/presentation/screens/facilities_screen.dart';
+import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
+import '../../features/scheduling/presentation/screens/schedule_detail_screen.dart';
 import '../l10n/shell_strings.dart';
 import '../widgets/adaptive_shell.dart';
 import '../widgets/more_hub_screen.dart';
@@ -34,8 +48,30 @@ StatefulShellRoute createAdminBranchRoute() {
         routes: [
           GoRoute(
             path: Routes.adminMembers,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.adminMembers),
+            builder: (context, state) => const MembersDirectoryScreen(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                builder: (context, state) {
+                  final id = int.tryParse(state.pathParameters['id'] ?? '');
+                  if (id == null) {
+                    return const PlaceholderScreen(
+                      title: ShellStrings.adminMembers,
+                    );
+                  }
+                  return MemberDossierScreen(memberId: id);
+                },
+                routes: [
+                  GoRoute(
+                    path: 'assign-membership',
+                    builder: (context, state) {
+                      final id = state.pathParameters['id']!;
+                      return CreateMembershipScreen(memberId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
@@ -45,6 +81,10 @@ StatefulShellRoute createAdminBranchRoute() {
             path: Routes.adminMemberships,
             builder: (context, state) => const MembershipsDirectoryScreen(),
             routes: [
+              GoRoute(
+                path: 'create',
+                builder: (context, state) => const CreateMembershipScreen(),
+              ),
               GoRoute(
                 path: 'packages',
                 builder: (context, state) =>
@@ -64,43 +104,90 @@ StatefulShellRoute createAdminBranchRoute() {
         routes: [
           GoRoute(
             path: Routes.adminPayments,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.adminPayments),
+            builder: (context, state) => const PaymentsLedgerScreen(
+              role: PaymentsLedgerRole.admin,
+            ),
+            routes: [
+              GoRoute(
+                path: 'outstanding',
+                builder: (context, state) => const OutstandingDuesScreen(),
+              ),
+              GoRoute(
+                path: 'methods',
+                builder: (context, state) => const PaymentMethodsScreen(),
+              ),
+              GoRoute(
+                path: 'record',
+                builder: (context, state) => const PlaceholderScreen(
+                  title: ShellStrings.adminPayments,
+                ),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => PaymentDetailScreen(
+                  paymentId: state.pathParameters['id']!,
+                ),
+              ),
+            ],
           ),
         ],
       ),
       // More branch: sibling routes for every nav-§4 More path.
-      // Default location stays workout-library; hub is tab chrome.
+      // Default location is /admin/more (empty); hub overlays as tab chrome.
       StatefulShellBranch(
         routes: [
+          GoRoute(
+            path: Routes.adminMore,
+            builder: (context, state) => const SizedBox.shrink(),
+          ),
           GoRoute(
             path: Routes.adminWorkoutLibrary,
             builder: (context, state) => const ExerciseLibraryScreen(),
           ),
           GoRoute(
             path: Routes.adminTrainers,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.trainers),
+            builder: (context, state) => const TrainersDirectoryScreen(),
           ),
           GoRoute(
             path: Routes.adminEmployees,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.employees),
+            builder: (context, state) => const EmployeesDirectoryScreen(),
           ),
           GoRoute(
             path: Routes.adminPackages,
             builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.packages),
+                const MembershipPackagesCatalogScreen(),
           ),
           GoRoute(
             path: Routes.adminAttendance,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.attendance),
+            builder: (context, state) => const AdminAttendanceScreen(),
+            routes: [
+              GoRoute(
+                path: 'scan',
+                builder: (context, state) => const QrScanCheckInScreen(),
+              ),
+              GoRoute(
+                path: 'manual',
+                builder: (context, state) => const ManualCheckInScreen(),
+              ),
+            ],
           ),
           GoRoute(
             path: Routes.adminSchedules,
             builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.schedules),
+                const ScheduleCalendarScreen(role: ScheduleCalendarRole.admin),
+            routes: [
+              GoRoute(
+                path: 'facilities',
+                builder: (context, state) => const FacilitiesScreen(),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => ScheduleDetailScreen(
+                  scheduleId: state.pathParameters['id']!,
+                  role: ScheduleCalendarRole.admin,
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: Routes.adminDietLibrary,
@@ -170,9 +257,12 @@ class _AdminAdaptiveShellState extends State<_AdminAdaptiveShell> {
   @override
   Widget build(BuildContext context) {
     // Deep-link into a More sibling: show that page, not the hub.
+    // /admin/more (branch root) always shows the hub.
     final onMoreBranch =
         widget.navigationShell.currentIndex == _adminMoreBranchIndex;
-    final showHub = _showMoreHub && onMoreBranch;
+    final onMoreRoot =
+        GoRouterState.of(context).matchedLocation == Routes.adminMore;
+    final showHub = onMoreBranch && (_showMoreHub || onMoreRoot);
 
     // Keep [navigationShell] mounted under the hub so other tab stacks
     // are not disposed while More chrome is visible.

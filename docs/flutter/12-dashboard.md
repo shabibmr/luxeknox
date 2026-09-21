@@ -1,1 +1,11 @@
-# LuxeKnox Flutter — Dashboard\n\n- [ ] adaptive shell\n- [ ] member widgets\n- [ ] trainer widgets\n- [ ] admin widgets\n- [ ] section loading\n- [ ] permission omission\n- [ ] skeletons\n- [ ] refresh\n- [ ] cache-last-successful where useful\n- [ ] rebuild optimization\n
+## Dashboard
+- [ ] adaptive shell
+- [ ] member widgets
+- [ ] trainer widgets
+- [ ] admin widgets
+- [ ] section loading
+- [ ] permission omission
+- [ ] skeletons
+- [ ] refresh
+- [ ] cache-last-successful where useful
+- [ ] rebuild optimization

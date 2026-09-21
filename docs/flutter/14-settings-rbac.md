@@ -1,1 +1,9 @@
-# LuxeKnox Flutter — Settings & RBAC\n\n- [ ] settings categories\n- [ ] public settings\n- [ ] roles\n- [ ] permission matrix\n- [ ] employee role/status\n- [ ] audit log\n- [ ] capability-aware actions\n- [ ] concurrent admin edit conflicts\n
+## Settings & RBAC
+- [ ] settings categories
+- [ ] public settings
+- [ ] roles
+- [ ] permission matrix
+- [ ] employee role/status
+- [ ] audit log
+- [ ] capability-aware actions
+- [ ] concurrent admin edit conflicts

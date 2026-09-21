@@ -5,120 +5,133 @@ This file is the single executable register. Each vertical below is also maintai
 <!-- ==================== FILE: 00-foundation.md ==================== -->
 # FILE: 00-foundation.md
 ## Foundation
-- [ ] Architecture audit
-- [ ] DI/injectable stabilization
-- [ ] Dio/base URL/timeouts
-- [ ] 401 refresh concurrency
-- [ ] typed error mapping
-- [ ] pagination primitives
-- [ ] common loading/error/empty widgets
-- [ ] Material 3 theme
-- [ ] localization infrastructure
-- [ ] form validation
-- [ ] test fixtures
-- [ ] environment configuration
-- [ ] architecture CI checks
+- [x] Architecture audit
+- [x] DI/injectable stabilization
+- [x] Dio/base URL/timeouts
+- [x] 401 refresh concurrency
+- [x] typed error mapping
+- [x] pagination primitives
+- [x] common loading/error/empty widgets
+- [x] Material 3 theme
+- [x] localization infrastructure
+- [x] form validation
+- [x] test fixtures
+- [x] environment configuration
+- [x] architecture CI checks
 
 <!-- ==================== FILE: 01-auth-session.md ==================== -->
 # FILE: 01-auth-session.md
 ## Auth & Session
-- [ ] login email/phone
-- [ ] session restore
-- [ ] refresh/logout
-- [ ] password change/reset
-- [ ] GET /me principal
-- [ ] capabilities hydration
-- [ ] suspended-user handling
-- [ ] auth redirects
-- [ ] concurrent refresh tests
+- [x] login email/phone
+- [x] session restore
+- [x] refresh/logout
+- [x] password change/reset
+- [x] GET /me principal
+- [x] capabilities hydration
+- [x] suspended-user handling
+- [x] auth redirects
+- [x] concurrent refresh tests
 
 <!-- ==================== FILE: 02-navigation-shell.md ==================== -->
 # FILE: 02-navigation-shell.md
 ## Navigation & Shell
-- [ ] StatefulShellRoute five branches
-- [ ] member shell
-- [ ] trainer shell
-- [ ] admin shell
-- [ ] responsive navigation
-- [ ] deep links
-- [ ] capability redirects
-- [ ] nested-stack preservation
-- [ ] unknown routes
-- [ ] unsaved-form guards
+- [x] StatefulShellRoute five branches
+- [x] member shell
+- [x] trainer shell
+- [x] admin shell
+- [x] responsive navigation
+- [x] deep links
+- [x] capability redirects
+- [x] nested-stack preservation
+- [x] unknown routes
+- [x] unsaved-form guards
 
 <!-- ==================== FILE: 03-people-profile.md ==================== -->
 # FILE: 03-people-profile.md
 ## People & Profile
-- [ ] member directory
-- [ ] member dossier
-- [ ] trainer directory
-- [ ] employee directory
-- [ ] profile edit
-- [ ] trainer assignment
-- [ ] health
-- [ ] medical history
-- [ ] emergency contacts
-- [ ] documents
-- [ ] photos/avatar
-- [ ] role-specific visibility
-- [ ] upload retry/cancel
-- [ ] role-variant tests
+- [x] member directory
+- [x] member dossier
+- [x] trainer directory
+- [x] employee directory
+- [x] profile edit
+- [x] trainer assignment
+- [x] health
+- [x] medical history
+- [x] emergency contacts
+- [x] documents
+- [x] photos/avatar
+- [x] role-specific visibility
+- [x] upload retry/cancel
+- [x] role-variant tests
 
 <!-- ==================== FILE: 04-membership.md ==================== -->
 # FILE: 04-membership.md
 ## Membership
-- [ ] membership card/detail/history
-- [ ] package catalogue
-- [ ] package CRUD
-- [ ] membership directory
-- [ ] freeze request/history
-- [ ] approve/reject
-- [ ] extension
-- [ ] renew
-- [ ] upgrade
-- [ ] cancel
-- [ ] row-version conflicts
-- [ ] role pricing visibility
-
+- [x] membership card / detail / history
+- [x] packages catalogue + product CRUD
+- [x] memberships directory
+- [x] freeze request / approve / reject / extension
+- [x] renew / upgrade / cancel
+- [x] row-version conflicts
+- [x] role pricing visibility
+- [x] create-membership sales UI
+- [x] shell / router wiring
+- [x] directory cubit refactor
+- [ ] remaining screen cubit refactors (detail/card/form)
+- [ ] broader widget/integration tests
 <!-- ==================== FILE: 05-scheduling.md ==================== -->
 # FILE: 05-scheduling.md
 ## Scheduling
-- [ ] calendar queries
-- [ ] schedule detail/roster
-- [ ] schedule types
-- [ ] facilities
-- [ ] trainer availability
+- [x] calendar queries
+- [x] schedule detail/roster
+- [x] schedule types
+- [x] facilities
+- [x] trainer availability
 - [ ] open slots
-- [ ] PT booking
-- [ ] class booking
+- [x] PT booking
+- [x] class booking
 - [ ] recurring series
-- [ ] cancel/reschedule
-- [ ] waitlist
-- [ ] trainer start/complete
-- [ ] double-submit protection
-
+- [x] cancel/reschedule (cancel done; reschedule UI open)
+- [x] waitlist
+- [x] trainer start/complete
+- [x] double-submit protection
 <!-- ==================== FILE: 06-attendance.md ==================== -->
 # FILE: 06-attendance.md
 ## Attendance
-- [ ] digital pass
-- [ ] QR presentation
-- [ ] check-in/out
-- [ ] history
-- [ ] summary/streak/heatmap
-- [ ] session attendance
-- [ ] admin live feed
-- [ ] manual override
-- [ ] idempotency keys
-- [ ] camera/permission errors
+- [x] digital pass
+- [x] QR presentation
+- [x] check-in/out
+- [x] history
+- [x] summary/streak/heatmap
+- [x] session attendance
+- [x] admin live feed
+- [x] manual override
+- [x] idempotency keys
+- [x] camera/permission errors
+
+<!-- ==================== FILE: 07-payments.md ==================== -->
+# FILE: 07-payments.md
+## Payments & POS
+- [x] member ledger
+- [x] admin ledger
+- [x] outstanding dues
+- [x] payment detail
+- [x] payment methods
+- [ ] POS
+- [ ] discounts
+- [ ] split tender
+- [ ] refund/adjustment
+- [ ] receipt
+- [ ] financial integration tests
 
 <!-- ==================== FILE: 08-workout.md ==================== -->
 # FILE: 08-workout.md
 ## Workout
-- [ ] plan list/detail
-- [ ] plan builder
-- [ ] exercise picker
-- [ ] ordering
-- [ ] publish/archive
+- [x] plan list/detail
+- [x] plan builder
+- [x] exercise picker
+- [x] ordering
+- [x] publish/archive
 - [ ] template copy
 - [ ] versions
 - [ ] live session
@@ -288,14 +301,14 @@ This file is the single executable register. Each vertical below is also maintai
 <!-- ==================== FILE: 99-master-checklist.md ==================== -->
 # FILE: 99-master-checklist.md
 ## Master Completion Checklist
-- [ ] Foundation
-- [ ] Auth
+- [x] Foundation
+- [x] Auth
 - [ ] Navigation
-- [ ] People
-- [ ] Membership
-- [ ] Scheduling
+- [x] People
+- [x] Membership
+- [x] Scheduling (core; see phase3-status-report)
 - [ ] Attendance
-- [ ] Workout
+- [x] Workout (plan builder core; sessions remain — see phase6-status-report)
 - [ ] Diet
 - [ ] Goals/Progress
 - [ ] Notifications

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/widgets/unsaved_changes_scope.dart';
 import '../../domain/entities/membership_product.dart';
 import '../../domain/usecases/create_membership_product_usecase.dart';
 import '../../domain/usecases/update_membership_product_usecase.dart';
@@ -29,8 +30,12 @@ class _MembershipProductFormScreenState
   late final _createUseCase = getIt<CreateMembershipProductUseCase>();
   late final _updateUseCase = getIt<UpdateMembershipProductUseCase>();
 
-  late final _nameController = TextEditingController(text: widget.product?.name);
-  late final _codeController = TextEditingController(text: widget.product?.code);
+  late final _nameController = TextEditingController(
+    text: widget.product?.name,
+  );
+  late final _codeController = TextEditingController(
+    text: widget.product?.code,
+  );
   late final _descriptionController = TextEditingController(
     text: widget.product?.description,
   );
@@ -53,12 +58,49 @@ class _MembershipProductFormScreenState
     text: widget.product?.accessFacilities.join(', '),
   );
   late bool _isActive = widget.product?.isActive ?? true;
+  late final bool _initialIsActive = _isActive;
 
   bool _isSubmitting = false;
+  bool _isDirty = false;
   String? _errorMessage;
 
   @override
+  void initState() {
+    super.initState();
+    for (final c in [
+      _nameController,
+      _codeController,
+      _descriptionController,
+      _durationController,
+      _priceController,
+      _taxController,
+      _maxFreezeController,
+      _ptSessionsController,
+      _facilitiesController,
+    ]) {
+      c.addListener(_markDirty);
+    }
+  }
+
+  void _markDirty() {
+    if (!_isDirty) setState(() => _isDirty = true);
+  }
+
+  @override
   void dispose() {
+    for (final c in [
+      _nameController,
+      _codeController,
+      _descriptionController,
+      _durationController,
+      _priceController,
+      _taxController,
+      _maxFreezeController,
+      _ptSessionsController,
+      _facilitiesController,
+    ]) {
+      c.removeListener(_markDirty);
+    }
     _nameController.dispose();
     _codeController.dispose();
     _descriptionController.dispose();
@@ -110,7 +152,10 @@ class _MembershipProductFormScreenState
         _isSubmitting = false;
         _errorMessage = failureMessage(failure);
       }),
-      (_) => Navigator.of(context).pop(true),
+      (_) {
+        setState(() => _isDirty = false);
+        Navigator.of(context).pop(true);
+      },
     );
   }
 
@@ -133,140 +178,149 @@ class _MembershipProductFormScreenState
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.isEditing
-              ? MembershipStrings.editTitle
-              : MembershipStrings.addTitle,
+    final dirty = _isDirty || _isActive != _initialIsActive;
+
+    return UnsavedChangesScope(
+      hasUnsavedChanges: dirty && !_isSubmitting,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.isEditing
+                ? MembershipStrings.editTitle
+                : MembershipStrings.addTitle,
+          ),
         ),
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            if (_errorMessage != null) ...[
-              MaterialBanner(
-                content: Text(_errorMessage!),
-                backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                actions: const [SizedBox.shrink()],
+        body: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              if (_errorMessage != null) ...[
+                MaterialBanner(
+                  content: Text(_errorMessage!),
+                  backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                  actions: const [SizedBox.shrink()],
+                ),
+                const SizedBox(height: 16),
+              ],
+              TextFormField(
+                controller: _nameController,
+                enabled: !_isSubmitting,
+                decoration: const InputDecoration(
+                  labelText: MembershipStrings.nameLabel,
+                ),
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? MembershipStrings.nameRequired
+                    : null,
               ),
               const SizedBox(height: 16),
+              TextFormField(
+                controller: _codeController,
+                enabled: !_isSubmitting,
+                decoration: const InputDecoration(
+                  labelText: MembershipStrings.codeLabel,
+                ),
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? MembershipStrings.codeRequired
+                    : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _descriptionController,
+                enabled: !_isSubmitting,
+                minLines: 2,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  labelText: MembershipStrings.descriptionLabel,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _durationController,
+                enabled: !_isSubmitting,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: MembershipStrings.durationDaysLabel,
+                ),
+                validator: (v) => (int.tryParse(v?.trim() ?? '') == null)
+                    ? MembershipStrings.durationDaysRequired
+                    : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _priceController,
+                enabled: !_isSubmitting,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: MembershipStrings.basePriceLabel,
+                  helperText: 'Two-decimal amount, e.g. 49.99',
+                ),
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? MembershipStrings.basePriceRequired
+                    : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _taxController,
+                enabled: !_isSubmitting,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: MembershipStrings.taxPercentageLabel,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _maxFreezeController,
+                enabled: !_isSubmitting,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: MembershipStrings.maxFreezeDaysLabel,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _ptSessionsController,
+                enabled: !_isSubmitting,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: MembershipStrings.ptSessionsIncludedLabel,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _facilitiesController,
+                enabled: !_isSubmitting,
+                decoration: const InputDecoration(
+                  labelText: MembershipStrings.accessFacilitiesLabel,
+                  helperText: MembershipStrings.commaSeparatedHelper,
+                ),
+              ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                title: const Text(MembershipStrings.active),
+                subtitle: const Text(MembershipStrings.activeSubtitle),
+                value: _isActive,
+                onChanged: _isSubmitting
+                    ? null
+                    : (v) => setState(() => _isActive = v),
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: _isSubmitting ? null : _submit,
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text(MembershipStrings.save),
+              ),
             ],
-            TextFormField(
-              controller: _nameController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: MembershipStrings.nameLabel,
-              ),
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? MembershipStrings.nameRequired
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _codeController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: MembershipStrings.codeLabel,
-              ),
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? MembershipStrings.codeRequired
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _descriptionController,
-              enabled: !_isSubmitting,
-              minLines: 2,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: MembershipStrings.descriptionLabel,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _durationController,
-              enabled: !_isSubmitting,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: MembershipStrings.durationDaysLabel,
-              ),
-              validator: (v) => (int.tryParse(v?.trim() ?? '') == null)
-                  ? MembershipStrings.durationDaysRequired
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _priceController,
-              enabled: !_isSubmitting,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: MembershipStrings.basePriceLabel,
-                helperText: 'Two-decimal amount, e.g. 49.99',
-              ),
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? MembershipStrings.basePriceRequired
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _taxController,
-              enabled: !_isSubmitting,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: MembershipStrings.taxPercentageLabel,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _maxFreezeController,
-              enabled: !_isSubmitting,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: MembershipStrings.maxFreezeDaysLabel,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _ptSessionsController,
-              enabled: !_isSubmitting,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: MembershipStrings.ptSessionsIncludedLabel,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _facilitiesController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: MembershipStrings.accessFacilitiesLabel,
-                helperText: MembershipStrings.commaSeparatedHelper,
-              ),
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile(
-              title: const Text(MembershipStrings.active),
-              subtitle: const Text(MembershipStrings.activeSubtitle),
-              value: _isActive,
-              onChanged: _isSubmitting
-                  ? null
-                  : (v) => setState(() => _isActive = v),
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _isSubmitting ? null : _submit,
-              child: _isSubmitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text(MembershipStrings.save),
-            ),
-          ],
+          ),
         ),
       ),
     );
