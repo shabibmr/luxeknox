@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -34,95 +36,97 @@ class _EmployeeRolesBody extends StatelessWidget {
       appBar: AppBar(title: const Text(PeopleStrings.employeeRolesTitle)),
       body: BlocConsumer<EmployeeRolesCubit, EmployeeRolesState>(
         listener: (context, state) {
-          if (state is EmployeeRolesLoaded && state.assigned) {
+          if (state.assigned) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(PeopleStrings.roleAssigned)),
+            );
+          } else if (state.status == LoadStatus.failure &&
+              state.employee != null &&
+              state.failure != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
             );
           }
         },
         builder: (context, state) {
-          return switch (state) {
-            EmployeeRolesLoading() => const AppLoading(),
-            EmployeeRolesFailure(:final message) => AppErrorView(
-              message: message,
+          if (state.employee == null && state.status == LoadStatus.failure) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () =>
                   context.read<EmployeeRolesCubit>().load(employeeId),
-            ),
-            EmployeeRolesLoaded(
-              :final employee,
-              :final roles,
-              :final assigning,
-            ) =>
-              ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  Text(
-                    employee.fullName,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  Text(employee.jobTitle),
-                  const SizedBox(height: 16),
-                  ListTile(
-                    title: const Text(PeopleStrings.currentRole),
-                    subtitle: Text(
-                      roles
-                              .where((r) => r.id == employee.roleId)
-                              .map((r) => r.name)
-                              .firstOrNull ??
-                          PeopleStrings.noRoleAssigned,
-                    ),
-                  ),
-                  const Divider(),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text(
-                      PeopleStrings.availableRoles,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  if (roles.isEmpty)
-                    const AppEmptyView(message: PeopleStrings.emptyRoles)
-                  else
-                    ...roles.map(
-                      (role) => Card(
-                        child: ListTile(
-                          title: Text(role.name),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (role.description != null)
-                                Text(role.description!),
-                              if (role.isSystemRole)
-                                const Text(
-                                  PeopleStrings.systemRole,
-                                  style: TextStyle(fontStyle: FontStyle.italic),
-                                ),
-                              if (role.permissionSlugs.isNotEmpty)
-                                Text(
-                                  '${PeopleStrings.permissionsLabel}: '
-                                  '${role.permissionSlugs.join(', ')}',
-                                ),
-                            ],
-                          ),
-                          trailing: role.id == employee.roleId
-                              ? const Icon(
-                                  Icons.check_circle,
-                                  color: Colors.green,
-                                )
-                              : TextButton(
-                                  onPressed: assigning
-                                      ? null
-                                      : () => context
-                                            .read<EmployeeRolesCubit>()
-                                            .assignRole(role.id),
-                                  child: const Text(PeopleStrings.assign),
-                                ),
-                        ),
-                      ),
-                    ),
-                ],
+            );
+          }
+          final employee = state.employee;
+          if (employee == null) {
+            return const AppLoading();
+          }
+          final roles = state.roles;
+          final assigning = state.assigning;
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Text(
+                employee.fullName,
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
-          };
+              Text(employee.jobTitle),
+              const SizedBox(height: 16),
+              ListTile(
+                title: const Text(PeopleStrings.currentRole),
+                subtitle: Text(
+                  roles
+                          .where((r) => r.id == employee.roleId)
+                          .map((r) => r.name)
+                          .firstOrNull ??
+                      PeopleStrings.noRoleAssigned,
+                ),
+              ),
+              const Divider(),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  PeopleStrings.availableRoles,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              if (roles.isEmpty)
+                const AppEmptyView(message: PeopleStrings.emptyRoles)
+              else
+                ...roles.map(
+                  (role) => Card(
+                    child: ListTile(
+                      title: Text(role.name),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (role.description != null) Text(role.description!),
+                          if (role.isSystemRole)
+                            const Text(
+                              PeopleStrings.systemRole,
+                              style: TextStyle(fontStyle: FontStyle.italic),
+                            ),
+                          if (role.permissionSlugs.isNotEmpty)
+                            Text(
+                              '${PeopleStrings.permissionsLabel}: '
+                              '${role.permissionSlugs.join(', ')}',
+                            ),
+                        ],
+                      ),
+                      trailing: role.id == employee.roleId
+                          ? const Icon(Icons.check_circle, color: Colors.green)
+                          : TextButton(
+                              onPressed: assigning
+                                  ? null
+                                  : () => context
+                                        .read<EmployeeRolesCubit>()
+                                        .assignRole(role.id),
+                              child: const Text(PeopleStrings.assign),
+                            ),
+                    ),
+                  ),
+                ),
+            ],
+          );
         },
       ),
     );

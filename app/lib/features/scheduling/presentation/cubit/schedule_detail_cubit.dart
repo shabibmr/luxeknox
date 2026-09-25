@@ -1,61 +1,28 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
 import '../../../../core/idempotency/idempotency_key.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../attendance/domain/usecases/attendance_usecases.dart';
 import '../../domain/entities/schedule_enums.dart';
 import '../../domain/entities/schedule_session.dart';
 import '../../domain/usecases/schedule_usecases.dart';
 import '../scheduling_strings.dart';
 
-sealed class ScheduleDetailState extends Equatable {
-  const ScheduleDetailState();
+part 'schedule_detail_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class ScheduleDetailLoading extends ScheduleDetailState {
-  const ScheduleDetailLoading();
-}
-
-final class ScheduleDetailLoaded extends ScheduleDetailState {
-  const ScheduleDetailLoaded({
-    required this.session,
-    this.actionInFlight = false,
-    this.message,
-  });
-
-  final ScheduleSession session;
-  final bool actionInFlight;
-  final String? message;
-
-  ScheduleDetailLoaded copyWith({
+@freezed
+abstract class ScheduleDetailState with _$ScheduleDetailState {
+  const factory ScheduleDetailState({
+    @Default(LoadStatus.initial) LoadStatus status,
     ScheduleSession? session,
-    bool? actionInFlight,
+    @Default(false) bool actionInFlight,
+    /// Success copy and the double-submit guard. API errors use [failure].
     String? message,
-    bool clearMessage = false,
-  }) {
-    return ScheduleDetailLoaded(
-      session: session ?? this.session,
-      actionInFlight: actionInFlight ?? this.actionInFlight,
-      message: clearMessage ? null : (message ?? this.message),
-    );
-  }
-
-  @override
-  List<Object?> get props => [session, actionInFlight, message];
-}
-
-final class ScheduleDetailFailure extends ScheduleDetailState {
-  const ScheduleDetailFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+    Failure? failure,
+  }) = _ScheduleDetailState;
 }
 
 @injectable
@@ -68,7 +35,7 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
     this._start,
     this._complete,
     this._markAttendance,
-  ) : super(const ScheduleDetailLoading());
+  ) : super(const ScheduleDetailState());
 
   final GetScheduleUseCase _getSchedule;
   final BookScheduleUseCase _book;
@@ -81,30 +48,60 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
   String? _scheduleId;
   String? _activeIdempotencyKey;
 
+  bool get _canAct =>
+      state.session != null &&
+      !state.actionInFlight &&
+      state.status != LoadStatus.loading;
+
   Future<void> load(String scheduleId) async {
     _scheduleId = scheduleId;
-    emit(const ScheduleDetailLoading());
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        message: null,
+        actionInFlight: false,
+      ),
+    );
     final result = await _getSchedule(scheduleId);
     result.fold(
-      (failure) => emit(ScheduleDetailFailure(failureMessage(failure))),
-      (session) => emit(ScheduleDetailLoaded(session: session)),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          actionInFlight: false,
+        ),
+      ),
+      (session) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          message: null,
+          actionInFlight: false,
+          session: session,
+        ),
+      ),
     );
   }
 
   Future<void> book({required String memberId}) async {
-    final current = state;
-    if (current is! ScheduleDetailLoaded) return;
-    if (current.actionInFlight) {
-      emit(
-        current.copyWith(message: SchedulingStrings.doubleSubmitBlocked),
-      );
+    if (state.session == null || state.status == LoadStatus.loading) return;
+    if (state.actionInFlight) {
+      emit(state.copyWith(message: SchedulingStrings.doubleSubmitBlocked));
       return;
     }
-    final scheduleId = _scheduleId ?? current.session.id;
+    final scheduleId = _scheduleId ?? state.session!.id;
     _scheduleId = scheduleId;
 
     _activeIdempotencyKey ??= newIdempotencyKey();
-    emit(current.copyWith(actionInFlight: true, clearMessage: true));
+    emit(
+      state.copyWith(
+        actionInFlight: true,
+        message: null,
+        failure: null,
+        status: LoadStatus.success,
+      ),
+    );
     final result = await _book(
       BookScheduleParams(
         scheduleId: scheduleId,
@@ -115,9 +112,11 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
     await result.fold(
       (failure) async {
         emit(
-          current.copyWith(
+          state.copyWith(
             actionInFlight: false,
-            message: failureMessage(failure),
+            status: LoadStatus.failure,
+            failure: failure,
+            message: null,
           ),
         );
       },
@@ -127,32 +126,39 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
             ? SchedulingStrings.waitlistedSuccess
             : SchedulingStrings.bookSuccess;
         await load(scheduleId);
-        final loaded = state;
-        if (loaded is ScheduleDetailLoaded) {
-          emit(loaded.copyWith(message: msg));
+        if (state.status == LoadStatus.success && state.session != null) {
+          emit(state.copyWith(message: msg));
         }
       },
     );
   }
 
-  Future<void> unbook(String participantId) async {
-    final current = state;
-    if (current is! ScheduleDetailLoaded || current.actionInFlight) return;
+  Future<void> unbook(String memberId) async {
+    if (!_canAct) return;
     final scheduleId = _scheduleId;
     if (scheduleId == null) return;
-    emit(current.copyWith(actionInFlight: true, clearMessage: true));
+    emit(
+      state.copyWith(
+        actionInFlight: true,
+        message: null,
+        failure: null,
+        status: LoadStatus.success,
+      ),
+    );
     final result = await _unbook(
       UnbookScheduleParams(
         scheduleId: scheduleId,
-        participantId: participantId,
+        memberId: memberId,
       ),
     );
     await result.fold(
       (failure) async {
         emit(
-          current.copyWith(
+          state.copyWith(
             actionInFlight: false,
-            message: failureMessage(failure),
+            status: LoadStatus.failure,
+            failure: failure,
+            message: null,
           ),
         );
       },
@@ -161,62 +167,111 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
   }
 
   Future<void> cancel({String? reason}) async {
-    final current = state;
-    if (current is! ScheduleDetailLoaded || current.actionInFlight) return;
+    if (!_canAct) return;
     final scheduleId = _scheduleId;
-    if (scheduleId == null) return;
-    emit(current.copyWith(actionInFlight: true, clearMessage: true));
+    final session = state.session;
+    if (scheduleId == null || session == null) return;
+    emit(
+      state.copyWith(
+        actionInFlight: true,
+        message: null,
+        failure: null,
+        status: LoadStatus.success,
+      ),
+    );
     final result = await _cancel(
       CancelScheduleParams(
         scheduleId: scheduleId,
         reason: reason,
-        rowVersion: current.session.rowVersion,
+        rowVersion: session.rowVersion,
       ),
     );
     result.fold(
       (failure) => emit(
-        current.copyWith(
+        state.copyWith(
           actionInFlight: false,
-          message: failureMessage(failure),
+          status: LoadStatus.failure,
+          failure: failure,
+          message: null,
         ),
       ),
-      (session) => emit(ScheduleDetailLoaded(session: session)),
+      (updated) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          message: null,
+          actionInFlight: false,
+          session: updated,
+        ),
+      ),
     );
   }
 
   Future<void> start() async {
-    final current = state;
-    if (current is! ScheduleDetailLoaded || current.actionInFlight) return;
+    if (!_canAct) return;
     final scheduleId = _scheduleId;
     if (scheduleId == null) return;
-    emit(current.copyWith(actionInFlight: true, clearMessage: true));
+    emit(
+      state.copyWith(
+        actionInFlight: true,
+        message: null,
+        failure: null,
+        status: LoadStatus.success,
+      ),
+    );
     final result = await _start(scheduleId);
     result.fold(
       (failure) => emit(
-        current.copyWith(
+        state.copyWith(
           actionInFlight: false,
-          message: failureMessage(failure),
+          status: LoadStatus.failure,
+          failure: failure,
+          message: null,
         ),
       ),
-      (session) => emit(ScheduleDetailLoaded(session: session)),
+      (updated) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          message: null,
+          actionInFlight: false,
+          session: updated,
+        ),
+      ),
     );
   }
 
   Future<void> complete() async {
-    final current = state;
-    if (current is! ScheduleDetailLoaded || current.actionInFlight) return;
+    if (!_canAct) return;
     final scheduleId = _scheduleId;
     if (scheduleId == null) return;
-    emit(current.copyWith(actionInFlight: true, clearMessage: true));
+    emit(
+      state.copyWith(
+        actionInFlight: true,
+        message: null,
+        failure: null,
+        status: LoadStatus.success,
+      ),
+    );
     final result = await _complete(scheduleId);
     result.fold(
       (failure) => emit(
-        current.copyWith(
+        state.copyWith(
           actionInFlight: false,
-          message: failureMessage(failure),
+          status: LoadStatus.failure,
+          failure: failure,
+          message: null,
         ),
       ),
-      (session) => emit(ScheduleDetailLoaded(session: session)),
+      (updated) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          message: null,
+          actionInFlight: false,
+          session: updated,
+        ),
+      ),
     );
   }
 
@@ -224,10 +279,16 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
     required String participantId,
     required bool attended,
   }) async {
-    final current = state;
-    if (current is! ScheduleDetailLoaded || current.actionInFlight) return;
-    final scheduleId = _scheduleId ?? current.session.id;
-    emit(current.copyWith(actionInFlight: true, clearMessage: true));
+    if (!_canAct) return;
+    final scheduleId = _scheduleId ?? state.session!.id;
+    emit(
+      state.copyWith(
+        actionInFlight: true,
+        message: null,
+        failure: null,
+        status: LoadStatus.success,
+      ),
+    );
     final result = await _markAttendance(
       MarkSessionAttendanceParams(
         scheduleId: scheduleId,
@@ -238,9 +299,11 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
     await result.fold(
       (failure) async {
         emit(
-          current.copyWith(
+          state.copyWith(
             actionInFlight: false,
-            message: failureMessage(failure),
+            status: LoadStatus.failure,
+            failure: failure,
+            message: null,
           ),
         );
       },

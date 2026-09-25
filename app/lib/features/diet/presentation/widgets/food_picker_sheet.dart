@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../session/domain/entities/user_type.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../../foods/domain/entities/food.dart';
-import '../../../foods/domain/entities/food_filter.dart';
-import '../../../foods/domain/usecases/get_foods_usecase.dart';
+import '../cubit/food_picker_cubit.dart';
 import '../diet_strings.dart';
 
-/// Modal sheet: search foods via [GetFoodsUseCase], tap to select.
+/// Modal sheet: search foods via [FoodPickerCubit], tap to select.
 /// Hides unverified foods from Members (BR-DIET-002), and shows
 /// verified status badges for all foods.
 Future<Food?> showFoodPickerSheet(
@@ -24,22 +25,32 @@ Future<Food?> showFoodPickerSheet(
   );
 }
 
-class FoodPickerSheet extends StatefulWidget {
+class FoodPickerSheet extends StatelessWidget {
   const FoodPickerSheet({super.key, this.verifiedOnly});
 
   final bool? verifiedOnly;
 
   @override
-  State<FoodPickerSheet> createState() => _FoodPickerSheetState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => getIt<FoodPickerCubit>()..load(),
+      child: _FoodPickerView(verifiedOnly: verifiedOnly),
+    );
+  }
 }
 
-class _FoodPickerSheetState extends State<FoodPickerSheet> {
-  final _searchController = TextEditingController();
-  late final GetFoodsUseCase _getFoods = getIt<GetFoodsUseCase>();
+class _FoodPickerView extends StatefulWidget {
+  const _FoodPickerView({this.verifiedOnly});
 
-  List<Food> _items = const [];
-  bool _loading = true;
-  String? _error;
+  final bool? verifiedOnly;
+
+  @override
+  State<_FoodPickerView> createState() => _FoodPickerViewState();
+}
+
+class _FoodPickerViewState extends State<_FoodPickerView> {
+  final _searchController = TextEditingController();
+
   late bool _verifiedOnly;
   bool _isMember = false;
 
@@ -52,7 +63,6 @@ class _FoodPickerSheetState extends State<FoodPickerSheet> {
     }
     // Members must always see verified only (BR-DIET-002)
     _verifiedOnly = widget.verifiedOnly ?? _isMember;
-    _load();
   }
 
   @override
@@ -61,44 +71,21 @@ class _FoodPickerSheetState extends State<FoodPickerSheet> {
     super.dispose();
   }
 
-  Future<void> _load({String? search}) async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    final result = await _getFoods(
-      GetFoodsParams(
-        filter: FoodFilter(
-          query: (search == null || search.isEmpty) ? null : search,
-        ),
-      ),
-    );
-    if (!mounted) return;
-    result.fold(
-      (failure) => setState(() {
-        _loading = false;
-        _error = failureMessage(failure);
-        _items = const [];
-      }),
-      (page) => setState(() {
-        _loading = false;
-        _items = page.items;
-      }),
-    );
+  void _load() {
+    context.read<FoodPickerCubit>().load(search: _searchController.text);
   }
 
-  List<Food> get _visibleItems {
+  List<Food> _visibleItems(List<Food> items) {
     if (_verifiedOnly) {
-      return _items.where((f) => f.isVerified).toList();
+      return items.where((f) => f.isVerified).toList();
     }
-    return _items;
+    return items;
   }
 
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.sizeOf(context).height * 0.75;
     final theme = Theme.of(context);
-    final visible = _visibleItems;
 
     return SizedBox(
       height: height,
@@ -116,7 +103,7 @@ class _FoodPickerSheetState extends State<FoodPickerSheet> {
                     border: OutlineInputBorder(),
                   ),
                   textInputAction: TextInputAction.search,
-                  onSubmitted: (value) => _load(search: value.trim()),
+                  onSubmitted: (_) => _load(),
                 ),
                 if (!_isMember) ...[
                   const SizedBox(height: 8),
@@ -124,7 +111,9 @@ class _FoodPickerSheetState extends State<FoodPickerSheet> {
                     children: [
                       FilterChip(
                         avatar: Icon(
-                          _verifiedOnly ? Icons.verified : Icons.verified_outlined,
+                          _verifiedOnly
+                              ? Icons.verified
+                              : Icons.verified_outlined,
                           size: 16,
                           color: _verifiedOnly ? Colors.blue : null,
                         ),
@@ -143,73 +132,114 @@ class _FoodPickerSheetState extends State<FoodPickerSheet> {
             ),
           ),
           Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
+            child: BlocBuilder<FoodPickerCubit, FoodPickerState>(
+              builder: (context, state) {
+                final visible = _visibleItems(state.items);
+
+                if (state.status == LoadStatus.loading &&
+                    state.items.isEmpty) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (state.status == LoadStatus.failure &&
+                    state.items.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(failureMessage(state.failure!)),
+                        TextButton(
+                          onPressed: _load,
+                          child: const Text(DietStrings.retry),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                if (visible.isEmpty) {
+                  return const Center(child: Text(DietStrings.noFoods));
+                }
+
+                return Column(
+                  children: [
+                    if (state.status == LoadStatus.failure &&
+                        state.failure != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
                           children: [
-                            Text(_error!),
+                            Expanded(
+                              child: Text(failureMessage(state.failure!)),
+                            ),
                             TextButton(
-                              onPressed: () => _load(
-                                search: _searchController.text.trim(),
-                              ),
+                              onPressed: _load,
                               child: const Text(DietStrings.retry),
                             ),
                           ],
                         ),
-                      )
-                    : visible.isEmpty
-                        ? const Center(child: Text(DietStrings.noFoods))
-                        : ListView.builder(
-                            itemCount: visible.length,
-                            itemBuilder: (context, index) {
-                              final food = visible[index];
-                              final subtitle = [
-                                if (food.calories != null)
-                                  '${food.calories!.toStringAsFixed(0)} kcal',
-                                food.servingUnit,
-                              ].where((s) => s.isNotEmpty).join(' · ');
+                      ),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: visible.length,
+                        itemBuilder: (context, index) {
+                          final food = visible[index];
+                          final subtitle = [
+                            if (food.calories != null)
+                              '${food.calories!.toStringAsFixed(0)} kcal',
+                            food.servingUnit,
+                          ].where((s) => s.isNotEmpty).join(' · ');
 
-                              return ListTile(
-                                title: Row(
-                                  children: [
-                                    Expanded(child: Text(food.name)),
-                                    if (food.isVerified)
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 6),
-                                        child: Icon(
-                                          Icons.verified,
-                                          size: 16,
-                                          color: Colors.blue,
-                                        ),
-                                      )
-                                    else
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 6,
-                                          vertical: 2,
-                                        ),
-                                        margin: const EdgeInsets.only(left: 6),
-                                        decoration: BoxDecoration(
-                                          color: theme.colorScheme.surfaceContainerHighest,
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          DietStrings.unverifiedBadge,
-                                          style: theme.textTheme.labelSmall?.copyWith(
-                                            color: theme.colorScheme.onSurfaceVariant,
+                          return ListTile(
+                            title: Row(
+                              children: [
+                                Expanded(child: Text(food.name)),
+                                if (food.isVerified)
+                                  const Padding(
+                                    padding: EdgeInsets.only(left: 6),
+                                    child: Icon(
+                                      Icons.verified,
+                                      size: 16,
+                                      color: Colors.blue,
+                                    ),
+                                  )
+                                else
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    margin: const EdgeInsets.only(left: 6),
+                                    decoration: BoxDecoration(
+                                      color: theme
+                                          .colorScheme
+                                          .surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      DietStrings.unverifiedBadge,
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
                                           ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                subtitle: subtitle.isEmpty ? null : Text(subtitle),
-                                onTap: () => Navigator.of(context).pop(food),
-                              );
-                            },
-                          ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            subtitle: subtitle.isEmpty
+                                ? null
+                                : Text(subtitle),
+                            onTap: () => Navigator.of(context).pop(food),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),

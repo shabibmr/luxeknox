@@ -35,6 +35,8 @@ import '../../features/attendance/domain/repositories/attendance_repository.dart
     as _i477;
 import '../../features/attendance/domain/usecases/attendance_usecases.dart'
     as _i841;
+import '../../features/attendance/presentation/bloc/check_in_bloc.dart'
+    as _i406;
 import '../../features/attendance/presentation/cubit/attendance_history_cubit.dart'
     as _i85;
 import '../../features/attendance/presentation/cubit/attendance_pass_cubit.dart'
@@ -106,6 +108,7 @@ import '../../features/diet/presentation/cubit/diet_plan_list_cubit.dart'
     as _i613;
 import '../../features/diet/presentation/cubit/diet_plan_versions_cubit.dart'
     as _i857;
+import '../../features/diet/presentation/cubit/food_picker_cubit.dart' as _i979;
 import '../../features/exercises/data/datasources/exercise_remote_datasource.dart'
     as _i100;
 import '../../features/exercises/data/repositories/exercise_repository_impl.dart'
@@ -126,6 +129,8 @@ import '../../features/exercises/presentation/bloc/exercise_list_bloc.dart'
     as _i757;
 import '../../features/exercises/presentation/cubit/exercise_detail_cubit.dart'
     as _i756;
+import '../../features/exercises/presentation/cubit/exercise_form_cubit.dart'
+    as _i554;
 import '../../features/foods/data/datasources/food_remote_datasource.dart'
     as _i822;
 import '../../features/foods/data/repositories/food_repository_impl.dart'
@@ -140,6 +145,7 @@ import '../../features/foods/domain/usecases/update_food_usecase.dart' as _i897;
 import '../../features/foods/presentation/bloc/food_list_bloc.dart' as _i710;
 import '../../features/foods/presentation/cubit/food_detail_cubit.dart'
     as _i168;
+import '../../features/foods/presentation/cubit/food_form_cubit.dart' as _i826;
 import '../../features/goals/data/datasources/goals_remote_datasource.dart'
     as _i812;
 import '../../features/goals/data/repositories/goal_metrics_repository_impl.dart'
@@ -220,10 +226,24 @@ import '../../features/membership/domain/usecases/update_membership_product_usec
     as _i30;
 import '../../features/membership/domain/usecases/upgrade_membership_usecase.dart'
     as _i617;
-import '../../features/membership/presentation/cubit/create_membership_cubit.dart'
-    as _i138;
+import '../../features/membership/presentation/bloc/create_membership_bloc.dart'
+    as _i632;
+import '../../features/membership/presentation/cubit/membership_card_cubit.dart'
+    as _i309;
+import '../../features/membership/presentation/cubit/membership_detail_cubit.dart'
+    as _i854;
+import '../../features/membership/presentation/cubit/membership_freeze_cubit.dart'
+    as _i879;
+import '../../features/membership/presentation/cubit/membership_history_cubit.dart'
+    as _i452;
+import '../../features/membership/presentation/cubit/membership_packages_catalog_cubit.dart'
+    as _i1069;
+import '../../features/membership/presentation/cubit/membership_product_form_cubit.dart'
+    as _i153;
 import '../../features/membership/presentation/cubit/memberships_directory_cubit.dart'
     as _i407;
+import '../../features/membership/presentation/cubit/trainer_membership_summary_cubit.dart'
+    as _i751;
 import '../../features/notifications/data/datasources/device_token_local_store.dart'
     as _i808;
 import '../../features/notifications/data/datasources/notifications_remote_datasource.dart'
@@ -350,12 +370,12 @@ import '../../features/people/domain/usecases/upload_document_usecase.dart'
     as _i438;
 import '../../features/people/domain/usecases/upload_photo_usecase.dart'
     as _i78;
+import '../../features/people/presentation/bloc/members_directory_bloc.dart'
+    as _i415;
 import '../../features/people/presentation/cubit/add_member_wizard_cubit.dart'
     as _i117;
 import '../../features/people/presentation/cubit/edit_member_cubit.dart'
     as _i847;
-import '../../features/people/presentation/cubit/edit_profile_cubit.dart'
-    as _i985;
 import '../../features/people/presentation/cubit/edit_trainer_profile_cubit.dart'
     as _i551;
 import '../../features/people/presentation/cubit/employee_roles_cubit.dart'
@@ -364,8 +384,6 @@ import '../../features/people/presentation/cubit/employees_directory_cubit.dart'
     as _i369;
 import '../../features/people/presentation/cubit/member_dossier_cubit.dart'
     as _i148;
-import '../../features/people/presentation/cubit/members_directory_cubit.dart'
-    as _i228;
 import '../../features/people/presentation/cubit/my_trainer_profile_cubit.dart'
     as _i634;
 import '../../features/people/presentation/cubit/trainers_directory_cubit.dart'
@@ -390,6 +408,8 @@ import '../../features/scheduling/domain/usecases/catalog_usecases.dart'
     as _i872;
 import '../../features/scheduling/domain/usecases/schedule_usecases.dart'
     as _i777;
+import '../../features/scheduling/presentation/bloc/book_schedule_bloc.dart'
+    as _i300;
 import '../../features/scheduling/presentation/cubit/facilities_cubit.dart'
     as _i115;
 import '../../features/scheduling/presentation/cubit/schedule_calendar_cubit.dart'
@@ -452,6 +472,12 @@ import '../../features/workout/domain/usecases/start_workout_session_usecase.dar
     as _i556;
 import '../../features/workout/domain/usecases/update_workout_plan_usecase.dart'
     as _i134;
+import '../../features/workout/presentation/bloc/active_workout_bloc.dart'
+    as _i354;
+import '../../features/workout/presentation/cubit/exercise_picker_cubit.dart'
+    as _i467;
+import '../../features/workout/presentation/cubit/rest_timer_cubit.dart'
+    as _i255;
 import '../../features/workout/presentation/cubit/workout_history_cubit.dart'
     as _i251;
 import '../../features/workout/presentation/cubit/workout_plan_builder_cubit.dart'
@@ -492,6 +518,7 @@ extension GetItInjectableX on _i174.GetIt {
   }) {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final registerModule = _$RegisterModule();
+    gh.factory<_i255.RestTimerCubit>(() => _i255.RestTimerCubit());
     gh.singleton<_i650.AppConfig>(() => registerModule.appConfig);
     gh.singleton<_i558.FlutterSecureStorage>(
       () => registerModule.secureStorage,
@@ -782,6 +809,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i425.AttendanceRemoteDataSource>(
       () => _i425.AttendanceRemoteDataSourceImpl(gh<_i633.ATTNApi>()),
     );
+    gh.factory<_i153.MembershipProductFormCubit>(
+      () => _i153.MembershipProductFormCubit(
+        gh<_i499.CreateMembershipProductUseCase>(),
+        gh<_i30.UpdateMembershipProductUseCase>(),
+      ),
+    );
     gh.lazySingleton<_i721.ProgressPhotosRepository>(
       () =>
           _i591.ProgressPhotosRepositoryImpl(gh<_i812.GoalsRemoteDataSource>()),
@@ -835,18 +868,30 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i663.PaymentsRepository>(
       () => _i565.PaymentsRepositoryImpl(gh<_i935.PaymentsRemoteDataSource>()),
     );
-    gh.factory<_i138.CreateMembershipCubit>(
-      () => _i138.CreateMembershipCubit(
+    gh.factory<_i452.MembershipHistoryCubit>(
+      () => _i452.MembershipHistoryCubit(
+        gh<_i370.GetMembershipsUseCase>(),
+        gh<_i106.GetMembershipHistoryUseCase>(),
+      ),
+    );
+    gh.factory<_i632.CreateMembershipBloc>(
+      () => _i632.CreateMembershipBloc(
         gh<_i64.CreateMembershipUseCase>(),
         gh<_i359.GetMembershipProductsUseCase>(),
         gh<_i436.ListMembersUseCase>(),
       ),
     );
-    gh.factory<_i228.MembersDirectoryCubit>(
-      () => _i228.MembersDirectoryCubit(gh<_i436.ListMembersUseCase>()),
+    gh.factory<_i415.MembersDirectoryBloc>(
+      () => _i415.MembersDirectoryBloc(gh<_i436.ListMembersUseCase>()),
     );
     gh.factory<_i971.TrainersDirectoryCubit>(
       () => _i971.TrainersDirectoryCubit(gh<_i382.ListTrainersUseCase>()),
+    );
+    gh.factory<_i309.MembershipCardCubit>(
+      () => _i309.MembershipCardCubit(
+        gh<_i370.GetMembershipsUseCase>(),
+        gh<_i377.RequestMembershipFreezeUseCase>(),
+      ),
     );
     gh.lazySingleton<_i674.SettingsRepository>(
       () => _i955.SettingsRepositoryImpl(gh<_i140.SettingsRemoteDataSource>()),
@@ -883,6 +928,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i407.MembershipsDirectoryCubit>(
       () => _i407.MembershipsDirectoryCubit(gh<_i370.GetMembershipsUseCase>()),
+    );
+    gh.factory<_i751.TrainerMembershipSummaryCubit>(
+      () => _i751.TrainerMembershipSummaryCubit(
+        gh<_i370.GetMembershipsUseCase>(),
+      ),
     );
     gh.factory<_i117.AddMemberWizardCubit>(
       () => _i117.AddMemberWizardCubit(gh<_i226.CreateMemberUseCase>()),
@@ -1080,6 +1130,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i862.UpdateMemberUseCase>(),
       ),
     );
+    gh.factory<_i879.MembershipFreezeCubit>(
+      () => _i879.MembershipFreezeCubit(
+        gh<_i370.GetMembershipsUseCase>(),
+        gh<_i590.GetMembershipFreezesUseCase>(),
+        gh<_i46.ApproveFreezeUseCase>(),
+        gh<_i223.RejectFreezeUseCase>(),
+      ),
+    );
     gh.lazySingleton<_i872.ListFacilitiesUseCase>(
       () => _i872.ListFacilitiesUseCase(gh<_i250.SchedulingRepository>()),
     );
@@ -1194,6 +1252,20 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i186.UpdateDietPlanUseCase>(
       () => _i186.UpdateDietPlanUseCase(gh<_i785.DietPlanRepository>()),
     );
+    gh.factory<_i854.MembershipDetailCubit>(
+      () => _i854.MembershipDetailCubit(
+        gh<_i71.GetMembershipUseCase>(),
+        gh<_i804.RenewMembershipUseCase>(),
+        gh<_i238.CancelMembershipUseCase>(),
+        gh<_i227.ExtendMembershipUseCase>(),
+        gh<_i617.UpgradeMembershipUseCase>(),
+      ),
+    );
+    gh.factory<_i1069.MembershipPackagesCatalogCubit>(
+      () => _i1069.MembershipPackagesCatalogCubit(
+        gh<_i359.GetMembershipProductsUseCase>(),
+      ),
+    );
     gh.lazySingleton<_i3.LogoutUseCase>(
       () => _i3.LogoutUseCase(
         gh<_i158.SessionRepository>(),
@@ -1263,6 +1335,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i857.DietPlanVersionsCubit>(
       () =>
           _i857.DietPlanVersionsCubit(gh<_i555.ListDietPlanVersionsUseCase>()),
+    );
+    gh.factory<_i354.ActiveWorkoutBloc>(
+      () => _i354.ActiveWorkoutBloc(
+        gh<_i556.StartWorkoutSessionUseCase>(),
+        gh<_i88.LogWorkoutSetUseCase>(),
+        gh<_i57.CompleteWorkoutSessionUseCase>(),
+        gh<_i391.GetWorkoutPlanUseCase>(),
+        gh<_i255.RestTimerCubit>(),
+      ),
     );
     gh.factory<_i557.GoalsListCubit>(
       () => _i557.GoalsListCubit(gh<_i62.ListMemberGoalsUseCase>()),
@@ -1389,6 +1470,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i710.FoodListBloc>(
       () => _i710.FoodListBloc(getFoodsUseCase: gh<_i687.GetFoodsUseCase>()),
     );
+    gh.factory<_i300.BookScheduleBloc>(
+      () => _i300.BookScheduleBloc(gh<_i777.BookScheduleUseCase>()),
+    );
     gh.factory<_i982.DietDailyLogCubit>(
       () => _i982.DietDailyLogCubit(
         gh<_i638.RecordDietLogUseCase>(),
@@ -1396,11 +1480,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i639.ListDietPlansUseCase>(),
       ),
     );
-    gh.factory<_i410.CheckInCubit>(
-      () => _i410.CheckInCubit(gh<_i841.CheckInUseCase>()),
+    gh.factory<_i406.CheckInBloc>(
+      () => _i406.CheckInBloc(gh<_i841.CheckInUseCase>()),
     );
     gh.factory<_i613.DietPlanListCubit>(
       () => _i613.DietPlanListCubit(gh<_i639.ListDietPlansUseCase>()),
+    );
+    gh.factory<_i467.ExercisePickerCubit>(
+      () => _i467.ExercisePickerCubit(gh<_i871.GetExercisesUseCase>()),
     );
     gh.singleton<_i583.GoRouter>(
       () => registerModule.router(gh<_i893.SessionCubit>()),
@@ -1437,6 +1524,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i47.GetReportUseCase>(
       () => _i47.GetReportUseCase(gh<_i939.ReportRepository>()),
     );
+    gh.factory<_i554.ExerciseFormCubit>(
+      () => _i554.ExerciseFormCubit(
+        gh<_i1062.CreateExerciseUseCase>(),
+        gh<_i791.UpdateExerciseUseCase>(),
+        gh<_i708.DeactivateExerciseUseCase>(),
+      ),
+    );
     gh.factory<_i115.FacilitiesCubit>(
       () => _i115.FacilitiesCubit(
         gh<_i872.ListFacilitiesUseCase>(),
@@ -1447,14 +1541,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i114.GoalDetailCubit(
         gh<_i62.GetGoalUseCase>(),
         gh<_i62.CheckInGoalUseCase>(),
-      ),
-    );
-    gh.factory<_i985.EditProfileCubit>(
-      () => _i985.EditProfileCubit(
-        gh<_i562.GetMemberUseCase>(),
-        gh<_i862.UpdateMemberUseCase>(),
-        gh<_i1012.SetAvatarUseCase>(),
-        gh<_i78.UploadPhotoUseCase>(),
       ),
     );
     gh.factory<_i410.AttendancePassCubit>(
@@ -1494,6 +1580,16 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i69.LoginCubit>(
       () => _i69.LoginCubit(gh<_i893.SessionCubit>()),
+    );
+    gh.factory<_i826.FoodFormCubit>(
+      () => _i826.FoodFormCubit(
+        gh<_i420.CreateFoodUseCase>(),
+        gh<_i897.UpdateFoodUseCase>(),
+        gh<_i517.DeactivateFoodUseCase>(),
+      ),
+    );
+    gh.factory<_i979.FoodPickerCubit>(
+      () => _i979.FoodPickerCubit(gh<_i687.GetFoodsUseCase>()),
     );
     gh.factory<_i85.AttendanceLiveFeedCubit>(
       () => _i85.AttendanceLiveFeedCubit(

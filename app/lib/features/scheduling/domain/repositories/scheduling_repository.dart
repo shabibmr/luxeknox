@@ -87,7 +87,8 @@ abstract class SchedulingRepository {
 
   Future<Either<Failure, Unit>> removeParticipant({
     required String scheduleId,
-    required String participantId,
+    required String memberId,
+    String? reason,
   });
 
   Future<Either<Failure, ScheduleSession>> startSchedule(String id);

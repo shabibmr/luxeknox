@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/goal_status.dart';
@@ -49,7 +51,7 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
     super.dispose();
   }
 
-  void _seedFrom(GoalFormReady state) {
+  void _seedFrom(GoalFormState state) {
     if (_seeded || state.existing == null) return;
     final g = state.existing!;
     _metricId = g.metricId;
@@ -113,7 +115,7 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
       ),
       body: BlocConsumer<GoalFormCubit, GoalFormState>(
         listener: (context, state) {
-          if (state is GoalFormSaved) {
+          if (state.savedGoal != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(GoalsStrings.goalSaved)),
             );
@@ -121,21 +123,29 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
           }
         },
         builder: (context, state) {
-          return switch (state) {
-            GoalFormLoading() => const AppLoading(),
-            GoalFormFailure(:final message) => AppErrorView(
-              message: message,
+          final showForm =
+              state.status == LoadStatus.success ||
+              state.metrics.isNotEmpty ||
+              state.existing != null;
+          if (state.status == LoadStatus.loading && !showForm) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure &&
+              !showForm &&
+              state.savedGoal == null) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () => Navigator.of(context).maybePop(),
-            ),
-            GoalFormSaved() => const AppLoading(),
-            final GoalFormReady ready => _buildReadyForm(context, ready),
-          };
+            );
+          }
+          if (state.savedGoal != null) return const AppLoading();
+          return _buildReadyForm(context, state);
         },
       ),
     );
   }
 
-  Widget _buildReadyForm(BuildContext context, GoalFormReady ready) {
+  Widget _buildReadyForm(BuildContext context, GoalFormState ready) {
     if (!_seeded && ready.existing != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || _seeded) return;
@@ -144,7 +154,9 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
     }
     final metrics = ready.metrics;
     final submitting = ready.submitting;
-    final error = ready.error;
+    final error = ready.failure == null
+        ? null
+        : failureMessage(ready.failure!);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [

@@ -1,10 +1,10 @@
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/attendance/domain/entities/attendance_enums.dart';
 import 'package:app/features/attendance/domain/entities/attendance_record.dart';
 import 'package:app/features/attendance/domain/entities/check_in_input.dart';
 import 'package:app/features/attendance/domain/usecases/attendance_usecases.dart';
-import 'package:app/features/attendance/presentation/attendance_strings.dart';
-import 'package:app/features/attendance/presentation/cubit/attendance_pass_cubit.dart';
+import 'package:app/features/attendance/presentation/bloc/check_in_bloc.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -22,28 +22,31 @@ void main() {
     method: AttendanceCheckInMethod.manualOverride,
   );
 
+  const submit = CheckInSubmitted(
+    userId: '5',
+    method: AttendanceCheckInMethod.manualOverride,
+  );
+
   setUp(() {
     checkIn = _MockCheckIn();
-    registerFallbackValue(
-      const CheckInInput(idempotencyKey: 'k'),
-    );
+    registerFallbackValue(const CheckInInput(idempotencyKey: 'k'));
   });
 
-  blocTest<CheckInCubit, CheckInCubitState>(
+  blocTest<CheckInBloc, CheckInState>(
     'reuses idempotency key across retries of the same intent',
     build: () {
-      when(() => checkIn(any())).thenAnswer((_) async => const Left(NetworkFailure()));
-      return CheckInCubit(checkIn);
+      when(
+        () => checkIn(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      return CheckInBloc(checkIn);
     },
-    act: (cubit) async {
-      await cubit.submit(
-        userId: '5',
-        method: AttendanceCheckInMethod.manualOverride,
-      );
-      await cubit.submit(
-        userId: '5',
-        method: AttendanceCheckInMethod.manualOverride,
-      );
+    act: (bloc) async {
+      bloc.add(submit);
+      await bloc.stream.firstWhere((s) => s.status == LoadStatus.failure);
+      // Let the droppable handler finish before the retry.
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(submit);
+      await bloc.stream.firstWhere((s) => s.status == LoadStatus.failure);
     },
     verify: (_) {
       final captured = verify(() => checkIn(captureAny())).captured;
@@ -54,50 +57,63 @@ void main() {
     },
   );
 
-  blocTest<CheckInCubit, CheckInCubitState>(
-    'blocks double-submit while check-in is in flight',
+  blocTest<CheckInBloc, CheckInState>(
+    'drops a second submit while check-in is in flight',
     build: () {
       when(() => checkIn(any())).thenAnswer((_) async {
         await Future<void>.delayed(const Duration(milliseconds: 50));
         return Right(record);
       });
-      return CheckInCubit(checkIn);
+      return CheckInBloc(checkIn);
     },
-    act: (cubit) async {
-      final first = cubit.submit(
-        userId: '5',
-        method: AttendanceCheckInMethod.manualOverride,
-      );
-      await cubit.submit(
-        userId: '5',
-        method: AttendanceCheckInMethod.manualOverride,
-      );
-      await first;
+    act: (bloc) async {
+      bloc.add(submit);
+      bloc.add(submit);
+      await bloc.stream.firstWhere((s) => s.status == LoadStatus.success);
     },
     expect: () => [
-      isA<CheckInIdle>().having((s) => s.actionInFlight, 'busy', true),
-      isA<CheckInIdle>().having(
-        (s) => s.message,
-        'message',
-        AttendanceStrings.doubleSubmitBlocked,
+      isA<CheckInState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
       ),
-      isA<CheckInSuccess>(),
+      isA<CheckInState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.record?.id, 'id', '10')
+          .having((s) => s.message, 'message', isNull),
     ],
+    verify: (_) {
+      verify(() => checkIn(any())).called(1);
+    },
   );
 
-  blocTest<CheckInCubit, CheckInCubitState>(
+  blocTest<CheckInBloc, CheckInState>(
     'emits success only after server confirmation',
     build: () {
       when(() => checkIn(any())).thenAnswer((_) async => Right(record));
-      return CheckInCubit(checkIn);
+      return CheckInBloc(checkIn);
     },
-    act: (cubit) => cubit.submit(
-      userId: '5',
-      method: AttendanceCheckInMethod.manualOverride,
-    ),
+    act: (bloc) => bloc.add(submit),
     expect: () => [
-      isA<CheckInIdle>().having((s) => s.actionInFlight, 'busy', true),
-      isA<CheckInSuccess>().having((s) => s.record.id, 'id', '10'),
+      isA<CheckInState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<CheckInState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.record?.id, 'id', '10'),
     ],
+  );
+
+  blocTest<CheckInBloc, CheckInState>(
+    'reset returns to initial',
+    build: () => CheckInBloc(checkIn),
+    seed: () => const CheckInState(
+      status: LoadStatus.failure,
+      message: 'nope',
+    ),
+    act: (bloc) => bloc.reset(),
+    expect: () => const [CheckInState()],
   );
 }

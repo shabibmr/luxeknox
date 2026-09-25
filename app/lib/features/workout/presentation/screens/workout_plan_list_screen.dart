@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -43,25 +45,9 @@ class _WorkoutPlanListBody extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: BlocBuilder<WorkoutPlanListCubit, WorkoutPlanListState>(
-              buildWhen: (p, n) {
-                final pf = switch (p) {
-                  WorkoutPlanListLoading(:final filter) => filter,
-                  WorkoutPlanListLoaded(:final filter) => filter,
-                  WorkoutPlanListFailure(:final filter) => filter,
-                };
-                final nf = switch (n) {
-                  WorkoutPlanListLoading(:final filter) => filter,
-                  WorkoutPlanListLoaded(:final filter) => filter,
-                  WorkoutPlanListFailure(:final filter) => filter,
-                };
-                return pf != nf;
-              },
+              buildWhen: (p, n) => p.filter != n.filter,
               builder: (context, state) {
-                final filter = switch (state) {
-                  WorkoutPlanListLoading(:final filter) => filter,
-                  WorkoutPlanListLoaded(:final filter) => filter,
-                  WorkoutPlanListFailure(:final filter) => filter,
-                };
+                final filter = state.filter;
                 return Wrap(
                   spacing: 8,
                   children: [
@@ -81,36 +67,44 @@ class _WorkoutPlanListBody extends StatelessWidget {
           Expanded(
             child: BlocBuilder<WorkoutPlanListCubit, WorkoutPlanListState>(
               builder: (context, state) {
-                return switch (state) {
-                  WorkoutPlanListLoading() => const AppLoading(),
-                  WorkoutPlanListFailure(:final message) => AppErrorView(
-                    message: message,
+                final items = state.items;
+                if (state.status == LoadStatus.loading && !state.hasLoaded) {
+                  return const AppLoading();
+                }
+                if (state.status == LoadStatus.failure && !state.hasLoaded) {
+                  return AppErrorView(
+                    message: state.failure == null
+                        ? 'Something went wrong'
+                        : failureMessage(state.failure!),
                     onRetry: () =>
                         context.read<WorkoutPlanListCubit>().load(),
-                  ),
-                  WorkoutPlanListLoaded(:final items) => items.isEmpty
-                      ? const AppEmptyView(message: WorkoutStrings.noneFound)
-                      : RefreshIndicator(
-                          onRefresh: () =>
-                              context.read<WorkoutPlanListCubit>().load(),
-                          child: ListView.builder(
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              final plan = items[index];
-                              return ListTile(
-                                title: Text(plan.title),
-                                subtitle: plan.targetGoal == null
-                                    ? null
-                                    : Text(plan.targetGoal!),
-                                trailing: PlanStatusChip(status: plan.status),
-                                onTap: () => context.push(
-                                  Routes.trainerPlansWorkoutById(plan.id),
-                                ),
-                              );
-                            },
-                          ),
+                  );
+                }
+                if (items.isEmpty) {
+                  return const AppEmptyView(
+                    message: WorkoutStrings.noneFound,
+                  );
+                }
+                return RefreshIndicator(
+                  onRefresh: () =>
+                      context.read<WorkoutPlanListCubit>().load(),
+                  child: ListView.builder(
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final plan = items[index];
+                      return ListTile(
+                        title: Text(plan.title),
+                        subtitle: plan.targetGoal == null
+                            ? null
+                            : Text(plan.targetGoal!),
+                        trailing: PlanStatusChip(status: plan.status),
+                        onTap: () => context.push(
+                          Routes.trainerPlansWorkoutById(plan.id),
                         ),
-                };
+                      );
+                    },
+                  ),
+                );
               },
             ),
           ),

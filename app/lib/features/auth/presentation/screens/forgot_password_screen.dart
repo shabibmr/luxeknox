@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../auth_strings.dart';
 import '../cubit/forgot_password_cubit.dart';
@@ -47,7 +48,7 @@ class _ForgotPasswordFormState extends State<_ForgotPasswordForm> {
       appBar: AppBar(title: const Text(AuthStrings.forgotPasswordTitle)),
       body: BlocConsumer<ForgotPasswordCubit, ForgotPasswordState>(
         listener: (context, state) {
-          if (state.status == ForgotPasswordStatus.success) {
+          if (state.status == LoadStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(AuthStrings.resetLinkSent)),
             );
@@ -55,7 +56,7 @@ class _ForgotPasswordFormState extends State<_ForgotPasswordForm> {
           }
         },
         builder: (context, state) {
-          final submitting = state.status == ForgotPasswordStatus.submitting;
+          final submitting = state.status == LoadStatus.loading;
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
@@ -67,7 +68,7 @@ class _ForgotPasswordFormState extends State<_ForgotPasswordForm> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (state.status == ForgotPasswordStatus.failure &&
+                      if (state.status == LoadStatus.failure &&
                           state.errorMessage != null) ...[
                         Text(state.errorMessage!),
                         const SizedBox(height: 16),

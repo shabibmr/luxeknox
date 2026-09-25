@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -43,25 +45,9 @@ class _DietPlanListBody extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: BlocBuilder<DietPlanListCubit, DietPlanListState>(
-              buildWhen: (p, n) {
-                final pf = switch (p) {
-                  DietPlanListLoading(:final filter) => filter,
-                  DietPlanListLoaded(:final filter) => filter,
-                  DietPlanListFailure(:final filter) => filter,
-                };
-                final nf = switch (n) {
-                  DietPlanListLoading(:final filter) => filter,
-                  DietPlanListLoaded(:final filter) => filter,
-                  DietPlanListFailure(:final filter) => filter,
-                };
-                return pf != nf;
-              },
+              buildWhen: (previous, next) => previous.filter != next.filter,
               builder: (context, state) {
-                final filter = switch (state) {
-                  DietPlanListLoading(:final filter) => filter,
-                  DietPlanListLoaded(:final filter) => filter,
-                  DietPlanListFailure(:final filter) => filter,
-                };
+                final filter = state.filter;
                 return Wrap(
                   spacing: 8,
                   children: [
@@ -81,13 +67,19 @@ class _DietPlanListBody extends StatelessWidget {
           Expanded(
             child: BlocBuilder<DietPlanListCubit, DietPlanListState>(
               builder: (context, state) {
-                return switch (state) {
-                  DietPlanListLoading() => const AppLoading(),
-                  DietPlanListFailure(:final message) => AppErrorView(
-                    message: message,
+                final showData =
+                    state.status == LoadStatus.success || state.items.isNotEmpty;
+                if (state.status == LoadStatus.loading && !showData) {
+                  return const AppLoading();
+                }
+                if (state.status == LoadStatus.failure && !showData) {
+                  return AppErrorView(
+                    message: failureMessage(state.failure!),
                     onRetry: () => context.read<DietPlanListCubit>().load(),
-                  ),
-                  DietPlanListLoaded(:final items) => items.isEmpty
+                  );
+                }
+                final items = state.items;
+                return items.isEmpty
                       ? const AppEmptyView(message: DietStrings.noneFound)
                       : RefreshIndicator(
                           onRefresh: () =>
@@ -136,8 +128,7 @@ class _DietPlanListBody extends StatelessWidget {
                               );
                             },
                           ),
-                        ),
-                };
+                        );
               },
             ),
           ),

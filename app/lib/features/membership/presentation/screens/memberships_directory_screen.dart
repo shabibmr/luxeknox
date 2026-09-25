@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -50,80 +52,84 @@ class _MembershipsDirectoryBody extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: BlocBuilder<MembershipsDirectoryCubit, MembershipsDirectoryState>(
-              buildWhen: (p, n) => p.runtimeType != n.runtimeType ||
-                  (p is MembershipsDirectoryLoaded &&
-                      n is MembershipsDirectoryLoaded &&
-                      p.filter != n.filter) ||
-                  (p is MembershipsDirectoryLoading &&
-                      n is MembershipsDirectoryLoading &&
-                      p.filter != n.filter) ||
-                  (p is MembershipsDirectoryFailure &&
-                      n is MembershipsDirectoryFailure &&
-                      p.filter != n.filter),
-              builder: (context, state) {
-                final filter = switch (state) {
-                  MembershipsDirectoryLoading(:final filter) => filter,
-                  MembershipsDirectoryLoaded(:final filter) => filter,
-                  MembershipsDirectoryFailure(:final filter) => filter,
-                };
-                return Wrap(
-                  spacing: 8,
-                  children: [
-                    for (final entry in _filters)
-                      ChoiceChip(
-                        label: Text(entry.$2),
-                        selected: filter == entry.$1,
-                        onSelected: (_) => context
-                            .read<MembershipsDirectoryCubit>()
-                            .setFilter(entry.$1),
-                      ),
-                  ],
-                );
-              },
-            ),
+            child:
+                BlocBuilder<
+                  MembershipsDirectoryCubit,
+                  MembershipsDirectoryState
+                >(
+                  buildWhen: (previous, next) => previous.filter != next.filter,
+                  builder: (context, state) {
+                    return Wrap(
+                      spacing: 8,
+                      children: [
+                        for (final entry in _filters)
+                          ChoiceChip(
+                            label: Text(entry.$2),
+                            selected: state.filter == entry.$1,
+                            onSelected: (_) => context
+                                .read<MembershipsDirectoryCubit>()
+                                .setFilter(entry.$1),
+                          ),
+                      ],
+                    );
+                  },
+                ),
           ),
           Expanded(
-            child: BlocBuilder<MembershipsDirectoryCubit, MembershipsDirectoryState>(
-              builder: (context, state) {
-                return switch (state) {
-                  MembershipsDirectoryLoading() => const AppLoading(),
-                  MembershipsDirectoryFailure(:final message) => AppErrorView(
-                    message: message,
-                    onRetry: () =>
-                        context.read<MembershipsDirectoryCubit>().load(),
-                  ),
-                  MembershipsDirectoryLoaded(:final items) => items.isEmpty
-                      ? const AppEmptyView(message: MembershipStrings.noneFound)
-                      : RefreshIndicator(
-                          onRefresh: () =>
-                              context.read<MembershipsDirectoryCubit>().load(),
-                          child: ListView.builder(
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              final membership = items[index];
-                              return ListTile(
-                                title: Text(
-                                  membership.product?.name ??
-                                      'Member #${membership.memberId}',
-                                ),
-                                subtitle: Text(
-                                  '${membership.startDate.toString().split(' ').first} → '
-                                  '${membership.endDate.toString().split(' ').first}',
-                                ),
-                                trailing: MembershipStatusChip(
-                                  status: membership.status,
-                                ),
-                                onTap: () => context.go(
-                                  '${Routes.adminMemberships}/${membership.id}',
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                };
-              },
-            ),
+            child:
+                BlocBuilder<
+                  MembershipsDirectoryCubit,
+                  MembershipsDirectoryState
+                >(
+                  builder: (context, state) {
+                    final noItems = state.items.isEmpty;
+                    if (noItems &&
+                        (state.status == LoadStatus.initial ||
+                            state.status == LoadStatus.loading)) {
+                      return const AppLoading();
+                    }
+                    if (noItems && state.status == LoadStatus.failure) {
+                      return AppErrorView(
+                        message: state.failure == null
+                            ? MembershipStrings.noneFound
+                            : failureMessage(state.failure!),
+                        onRetry: () =>
+                            context.read<MembershipsDirectoryCubit>().load(),
+                      );
+                    }
+                    if (noItems) {
+                      return const AppEmptyView(
+                        message: MembershipStrings.noneFound,
+                      );
+                    }
+                    return RefreshIndicator(
+                      onRefresh: () =>
+                          context.read<MembershipsDirectoryCubit>().load(),
+                      child: ListView.builder(
+                        itemCount: state.items.length,
+                        itemBuilder: (context, index) {
+                          final membership = state.items[index];
+                          return ListTile(
+                            title: Text(
+                              membership.product?.name ??
+                                  'Member #${membership.memberId}',
+                            ),
+                            subtitle: Text(
+                              '${membership.startDate.toString().split(' ').first} → '
+                              '${membership.endDate.toString().split(' ').first}',
+                            ),
+                            trailing: MembershipStatusChip(
+                              status: membership.status,
+                            ),
+                            onTap: () => context.go(
+                              '${Routes.adminMemberships}/${membership.id}',
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
           ),
         ],
       ),

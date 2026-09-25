@@ -145,14 +145,16 @@ class BookScheduleUseCase
 class UnbookScheduleParams extends Equatable {
   const UnbookScheduleParams({
     required this.scheduleId,
-    required this.participantId,
+    required this.memberId,
+    this.reason,
   });
 
   final String scheduleId;
-  final String participantId;
+  final String memberId;
+  final String? reason;
 
   @override
-  List<Object?> get props => [scheduleId, participantId];
+  List<Object?> get props => [scheduleId, memberId, reason];
 }
 
 @lazySingleton
@@ -165,7 +167,8 @@ class UnbookScheduleUseCase implements UseCase<Unit, UnbookScheduleParams> {
   Future<Either<Failure, Unit>> call(UnbookScheduleParams params) {
     return _repository.removeParticipant(
       scheduleId: params.scheduleId,
-      participantId: params.participantId,
+      memberId: params.memberId,
+      reason: params.reason,
     );
   }
 }

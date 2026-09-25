@@ -3,79 +3,38 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../session/presentation/session_cubit.dart';
-import '../../domain/entities/membership.dart';
-import '../../domain/usecases/get_memberships_usecase.dart';
 import '../../domain/usecases/request_membership_freeze_usecase.dart';
+import '../cubit/membership_card_cubit.dart';
 import '../membership_strings.dart';
 import '../widgets/membership_status_chip.dart';
 
 /// Screen 5.2 (Member: R/Self) — the member's own current contract, plus
 /// a freeze request action (FR-MEMB-014).
-class MembershipCardScreen extends StatefulWidget {
+class MembershipCardScreen extends StatelessWidget {
   const MembershipCardScreen({super.key});
 
   @override
-  State<MembershipCardScreen> createState() => _MembershipCardScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) {
+        final session = context.read<SessionCubit>().state;
+        final memberId = session is SessionAuthenticated
+            ? session.principal.profileId
+            : null;
+        return getIt<MembershipCardCubit>()..load(memberId);
+      },
+      child: const _MembershipCardBody(),
+    );
+  }
 }
 
-class _MembershipCardScreenState extends State<MembershipCardScreen> {
-  final _getMemberships = getIt<GetMembershipsUseCase>();
-  final _requestFreeze = getIt<RequestMembershipFreezeUseCase>();
+class _MembershipCardBody extends StatelessWidget {
+  const _MembershipCardBody();
 
-  bool _loading = true;
-  String? _error;
-  Membership? _membership;
-  bool _requestingFreeze = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  String? get _memberId {
-    final state = context.read<SessionCubit>().state;
-    return state is SessionAuthenticated ? state.principal.profileId : null;
-  }
-
-  Future<void> _load() async {
-    final memberId = _memberId;
-    if (memberId == null) {
-      setState(() {
-        _loading = false;
-        _error = MembershipStrings.noActiveMembership;
-      });
-      return;
-    }
-
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    final result = await _getMemberships(
-      GetMembershipsParams(memberId: memberId),
-    );
-    if (!mounted) return;
-    result.fold(
-      (failure) => setState(() {
-        _loading = false;
-        _error = failureMessage(failure);
-      }),
-      (page) => setState(() {
-        _loading = false;
-        _membership = page.items.isEmpty
-            ? null
-            : page.items.firstWhere(
-                (m) => m.isActiveOrFrozen,
-                orElse: () => page.items.first,
-              );
-      }),
-    );
-  }
-
-  Future<void> _requestFreezeDialog() async {
-    final membership = _membership;
+  Future<void> _requestFreezeDialog(BuildContext context) async {
+    final membership = context.read<MembershipCardCubit>().state.membership;
     if (membership == null) return;
 
     DateTime? start;
@@ -139,21 +98,26 @@ class _MembershipCardScreenState extends State<MembershipCardScreen> {
         ),
       ),
     );
-    if (confirmed != true || start == null || end == null) return;
+    final reason = reasonController.text.trim();
+    final startDate = start;
+    final endDate = end;
+    reasonController.dispose();
+    if (confirmed != true ||
+        startDate == null ||
+        endDate == null ||
+        !context.mounted) {
+      return;
+    }
 
-    setState(() => _requestingFreeze = true);
-    final result = await _requestFreeze(
+    final result = await context.read<MembershipCardCubit>().requestFreeze(
       RequestMembershipFreezeParams(
         membershipId: membership.id,
-        startDate: start!,
-        endDate: end!,
-        reason: reasonController.text.trim().isEmpty
-            ? null
-            : reasonController.text.trim(),
+        startDate: startDate,
+        endDate: endDate,
+        reason: reason.isEmpty ? null : reason,
       ),
     );
-    if (!mounted) return;
-    setState(() => _requestingFreeze = false);
+    if (!context.mounted || result == null) return;
     result.fold(
       (failure) => ScaffoldMessenger.of(
         context,
@@ -168,15 +132,21 @@ class _MembershipCardScreenState extends State<MembershipCardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(MembershipStrings.cardTitle)),
-      body: _buildBody(),
+      body: BlocBuilder<MembershipCardCubit, MembershipCardState>(
+        builder: (context, state) => _buildBody(context, state),
+      ),
     );
   }
 
-  Widget _buildBody() {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+  Widget _buildBody(BuildContext context, MembershipCardState state) {
+    final membership = state.membership;
+    if (membership == null &&
+        (state.status == LoadStatus.initial ||
+            state.status == LoadStatus.loading)) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-    final membership = _membership;
-    if (_error != null || membership == null) {
+    if (membership == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -184,12 +154,20 @@ class _MembershipCardScreenState extends State<MembershipCardScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                _error ?? MembershipStrings.noActiveMembership,
+                state.failure == null
+                    ? MembershipStrings.noActiveMembership
+                    : failureMessage(state.failure!),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               FilledButton(
-                onPressed: _load,
+                onPressed: () {
+                  final session = context.read<SessionCubit>().state;
+                  final memberId = session is SessionAuthenticated
+                      ? session.principal.profileId
+                      : null;
+                  context.read<MembershipCardCubit>().load(memberId);
+                },
                 child: const Text(MembershipStrings.retry),
               ),
             ],
@@ -199,7 +177,13 @@ class _MembershipCardScreenState extends State<MembershipCardScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: () {
+        final session = context.read<SessionCubit>().state;
+        final memberId = session is SessionAuthenticated
+            ? session.principal.profileId
+            : null;
+        return context.read<MembershipCardCubit>().load(memberId);
+      },
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -241,8 +225,11 @@ class _MembershipCardScreenState extends State<MembershipCardScreen> {
             ),
           const SizedBox(height: 24),
           FilledButton.tonal(
-            onPressed: _requestingFreeze ? null : _requestFreezeDialog,
-            child: _requestingFreeze
+            onPressed:
+                state.requestingFreeze || state.status == LoadStatus.loading
+                ? null
+                : () => _requestFreezeDialog(context),
+            child: state.requestingFreeze
                 ? const SizedBox(
                     width: 20,
                     height: 20,
@@ -260,7 +247,10 @@ class _MembershipCardScreenState extends State<MembershipCardScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [Text(label), Flexible(child: Text(value, textAlign: TextAlign.end))],
+        children: [
+          Text(label),
+          Flexible(child: Text(value, textAlign: TextAlign.end)),
+        ],
       ),
     );
   }

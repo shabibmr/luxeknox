@@ -1,24 +1,20 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../session/domain/usecases/forgot_password_usecase.dart';
 import '../auth_strings.dart';
 
-enum ForgotPasswordStatus { idle, submitting, success, failure }
+part 'forgot_password_cubit.freezed.dart';
 
-class ForgotPasswordState extends Equatable {
-  const ForgotPasswordState({
-    this.status = ForgotPasswordStatus.idle,
-    this.errorMessage,
-  });
-
-  final ForgotPasswordStatus status;
-  final String? errorMessage;
-
-  @override
-  List<Object?> get props => [status, errorMessage];
+@freezed
+abstract class ForgotPasswordState with _$ForgotPasswordState {
+  const factory ForgotPasswordState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    String? errorMessage,
+  }) = _ForgotPasswordState;
 }
 
 @injectable
@@ -32,27 +28,25 @@ class ForgotPasswordCubit extends Cubit<ForgotPasswordState> {
     if (trimmed.isEmpty) {
       emit(
         const ForgotPasswordState(
-          status: ForgotPasswordStatus.failure,
+          status: LoadStatus.failure,
           errorMessage: AuthStrings.enterEmailOrPhone,
         ),
       );
       return;
     }
 
-    emit(const ForgotPasswordState(status: ForgotPasswordStatus.submitting));
+    emit(const ForgotPasswordState(status: LoadStatus.loading));
     final result = await _forgotPassword(
       ForgotPasswordParams(identifier: trimmed),
     );
     result.fold(
       (failure) => emit(
         ForgotPasswordState(
-          status: ForgotPasswordStatus.failure,
+          status: LoadStatus.failure,
           errorMessage: _messageFor(failure),
         ),
       ),
-      (_) => emit(
-        const ForgotPasswordState(status: ForgotPasswordStatus.success),
-      ),
+      (_) => emit(const ForgotPasswordState(status: LoadStatus.success)),
     );
   }
 

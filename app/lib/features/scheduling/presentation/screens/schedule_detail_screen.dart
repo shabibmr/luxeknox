@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../session/presentation/session_cubit.dart';
@@ -39,26 +41,43 @@ class _ScheduleDetailBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ScheduleDetailCubit, ScheduleDetailState>(
-      listenWhen: (p, n) => n is ScheduleDetailLoaded && n.message != null,
+      listenWhen: (previous, current) {
+        final messageShown =
+            current.message != null && current.message != previous.message;
+        final actionFailed =
+            current.session != null &&
+            current.status == LoadStatus.failure &&
+            current.failure != previous.failure;
+        return messageShown || actionFailed;
+      },
       listener: (context, state) {
-        if (state is ScheduleDetailLoaded && state.message != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message!)));
-        }
+        final text =
+            state.message ??
+            (state.failure == null ? null : failureMessage(state.failure!));
+        if (text == null) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(text)));
       },
       builder: (context, state) {
+        final session = state.session;
+        final actionInFlight = state.actionInFlight;
         return Scaffold(
           appBar: AppBar(title: const Text(SchedulingStrings.detailTitle)),
-          body: switch (state) {
-            ScheduleDetailLoading() => const AppLoading(),
-            ScheduleDetailFailure(:final message) => AppErrorView(
-              message: message,
-              onRetry: () =>
-                  context.read<ScheduleDetailCubit>().load(scheduleId),
-            ),
-            ScheduleDetailLoaded(:final session, :final actionInFlight) =>
-              ListView(
+          body: session == null
+              ? state.status == LoadStatus.failure
+                    ? AppErrorView(
+                        message: state.failure == null
+                            ? 'Something went wrong'
+                            : failureMessage(state.failure!),
+                        onRetry: () => context
+                            .read<ScheduleDetailCubit>()
+                            .load(scheduleId),
+                      )
+                    : state.status == LoadStatus.loading
+                    ? const AppLoading()
+                    : const SizedBox.shrink()
+              : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
                   Text(
@@ -127,7 +146,7 @@ class _ScheduleDetailBody extends StatelessWidget {
                                             ? null
                                             : () => context
                                                 .read<ScheduleDetailCubit>()
-                                                .unbook(p.id),
+                                                .unbook(p.memberId),
                                         child: const Text(
                                           SchedulingStrings.unbook,
                                         ),
@@ -140,7 +159,7 @@ class _ScheduleDetailBody extends StatelessWidget {
                                       ? null
                                       : () => context
                                           .read<ScheduleDetailCubit>()
-                                          .unbook(p.id),
+                                          .unbook(p.memberId),
                                   child: const Text(SchedulingStrings.unbook),
                                 )
                               : null,
@@ -165,7 +184,7 @@ class _ScheduleDetailBody extends StatelessWidget {
                                       ? null
                                       : () => context
                                           .read<ScheduleDetailCubit>()
-                                          .unbook(p.id),
+                                          .unbook(p.memberId),
                                   child: const Text(
                                     SchedulingStrings.leaveWaitlist,
                                   ),
@@ -222,7 +241,6 @@ class _ScheduleDetailBody extends StatelessWidget {
                   ],
                 ],
               ),
-          },
         );
       },
     );

@@ -1,4 +1,5 @@
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/core/pagination/cursor_page.dart';
 import 'package:app/features/goals/domain/entities/goal_status.dart';
 import 'package:app/features/goals/domain/entities/member_goal.dart';
@@ -47,12 +48,18 @@ void main() {
     },
     act: (cubit) => cubit.load('10'),
     expect: () => [
-      isA<GoalsListLoading>(),
-      isA<GoalsListLoaded>().having(
-        (s) => s.items.map((g) => g.id).toList(),
-        'ids',
-        ['1', '2'],
+      isA<GoalsListState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
       ),
+      isA<GoalsListState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having(
+            (s) => s.items.map((g) => g.id).toList(),
+            'ids',
+            ['1', '2'],
+          ),
     ],
   );
 
@@ -66,8 +73,15 @@ void main() {
     },
     act: (cubit) => cubit.load('10'),
     expect: () => [
-      isA<GoalsListLoading>(),
-      isA<GoalsListFailure>(),
+      isA<GoalsListState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<GoalsListState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>())
+          .having((s) => s.items, 'items', isEmpty),
     ],
   );
 }

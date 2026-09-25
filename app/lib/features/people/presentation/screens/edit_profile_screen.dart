@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
 import '../../../../core/media/media_picker.dart';
 import '../../../../core/media/signed_media_image.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/person.dart';
@@ -44,34 +46,37 @@ class _EditProfileBody extends StatelessWidget {
       appBar: AppBar(title: const Text(PeopleStrings.editProfile)),
       body: BlocConsumer<EditProfileCubit, EditProfileState>(
         listener: (context, state) {
-          if (state is EditProfileLoaded && state.message != null) {
+          if (state.message != null) {
             final text = state.message == 'avatar'
                 ? PeopleStrings.avatarSet
                 : PeopleStrings.profileSaved;
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text(text)));
+          } else if (state.status == LoadStatus.failure &&
+              state.person != null &&
+              state.failure != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
+            );
           }
         },
         builder: (context, state) {
-          return switch (state) {
-            EditProfileLoading() => const AppLoading(),
-            EditProfileFailure(:final message) => AppErrorView(
-              message: message,
-              onRetry: () =>
-                  context.read<EditProfileCubit>().load(memberId),
-            ),
-            EditProfileLoaded(
-              :final person,
-              :final isSaving,
-              :final isUploadingAvatar,
-            ) =>
-              _EditProfileForm(
-                person: person,
-                isSaving: isSaving,
-                isUploadingAvatar: isUploadingAvatar,
-              ),
-          };
+          if (state.person == null && state.status == LoadStatus.failure) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
+              onRetry: () => context.read<EditProfileCubit>().load(memberId),
+            );
+          }
+          final person = state.person;
+          if (person == null) {
+            return const AppLoading();
+          }
+          return _EditProfileForm(
+            person: person,
+            isSaving: state.isSaving,
+            isUploadingAvatar: state.isUploadingAvatar,
+          );
         },
       ),
     );
@@ -208,8 +213,7 @@ class _EditProfileFormState extends State<_EditProfileForm> {
             children: [
               CircleAvatar(
                 radius: 48,
-                backgroundColor:
-                    Theme.of(context).colorScheme.primaryContainer,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                 child: person.avatarUrl != null && person.avatarUrl!.isNotEmpty
                     ? ClipOval(
                         child: SizedBox(

@@ -1,5 +1,6 @@
 import 'package:app/core/di/injector.dart';
 import 'package:app/core/pagination/cursor_page.dart';
+import 'package:app/features/diet/presentation/cubit/food_picker_cubit.dart';
 import 'package:app/features/diet/presentation/widgets/food_picker_sheet.dart';
 import 'package:app/features/foods/domain/entities/food.dart';
 import 'package:app/features/foods/domain/usecases/get_foods_usecase.dart';
@@ -43,15 +44,17 @@ void main() {
     mockGetFoods = _MockGetFoodsUseCase();
     mockSessionCubit = _MockSessionCubit();
 
-    if (getIt.isRegistered<GetFoodsUseCase>()) {
-      getIt.unregister<GetFoodsUseCase>();
-    }
     if (getIt.isRegistered<SessionCubit>()) {
       getIt.unregister<SessionCubit>();
     }
+    if (getIt.isRegistered<FoodPickerCubit>()) {
+      getIt.unregister<FoodPickerCubit>();
+    }
 
-    getIt.registerSingleton<GetFoodsUseCase>(mockGetFoods);
     getIt.registerSingleton<SessionCubit>(mockSessionCubit);
+    getIt.registerFactory<FoodPickerCubit>(
+      () => FoodPickerCubit(mockGetFoods),
+    );
 
     when(() => mockSessionCubit.state).thenReturn(
       const SessionAuthenticated(

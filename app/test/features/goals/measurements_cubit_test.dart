@@ -1,4 +1,5 @@
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/core/pagination/cursor_page.dart';
 import 'package:app/core/usecase/usecase.dart';
 import 'package:app/features/goals/domain/entities/goal_metric.dart';
@@ -83,8 +84,13 @@ void main() {
     },
     act: (cubit) => cubit.load('10'),
     expect: () => [
-      isA<MeasurementsLoading>(),
-      isA<MeasurementsLoaded>()
+      isA<MeasurementsState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<MeasurementsState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.sessions.length, 'sessions', 1)
           .having((s) => s.metrics.length, 'metrics', 1),
     ],
@@ -113,8 +119,15 @@ void main() {
     },
     act: (cubit) => cubit.load('10'),
     expect: () => [
-      isA<MeasurementsLoading>(),
-      isA<MeasurementsFailure>(),
+      isA<MeasurementsState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<MeasurementsState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>())
+          .having((s) => s.sessions, 'sessions', isEmpty),
     ],
   );
 }

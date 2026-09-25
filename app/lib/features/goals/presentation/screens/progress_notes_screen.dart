@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -152,21 +154,28 @@ class _ProgressNotesBody extends StatelessWidget {
       ),
       body: BlocConsumer<ProgressNotesCubit, ProgressNotesState>(
         listener: (context, state) {
-          if (state is ProgressNotesLoaded && state.error != null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.error!)));
+          final showData =
+              state.status == LoadStatus.success || state.notes.isNotEmpty;
+          if (state.failure != null && showData) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
+            );
           }
         },
         builder: (context, state) {
-          return switch (state) {
-            ProgressNotesLoading() => const AppLoading(),
-            ProgressNotesFailure(:final message) => AppErrorView(
-              message: message,
-              onRetry: () =>
-                  context.read<ProgressNotesCubit>().load(memberId),
-            ),
-            ProgressNotesLoaded(:final notes) => notes.isEmpty
+          final showData =
+              state.status == LoadStatus.success || state.notes.isNotEmpty;
+          if (state.status == LoadStatus.loading && !showData) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && !showData) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
+              onRetry: () => context.read<ProgressNotesCubit>().load(memberId),
+            );
+          }
+          final notes = state.notes;
+          return notes.isEmpty
                 ? const AppEmptyView(message: GoalsStrings.notesEmpty)
                 : ListView.separated(
                     padding: const EdgeInsets.all(16),
@@ -184,8 +193,7 @@ class _ProgressNotesBody extends StatelessWidget {
                         ),
                       );
                     },
-                  ),
-          };
+                  );
         },
       ),
     );

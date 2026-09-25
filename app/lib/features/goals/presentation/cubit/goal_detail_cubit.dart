@@ -1,58 +1,28 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/member_goal.dart';
 import '../../domain/usecases/goals_usecases.dart';
 
-sealed class GoalDetailState extends Equatable {
-  const GoalDetailState();
+part 'goal_detail_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class GoalDetailLoading extends GoalDetailState {
-  const GoalDetailLoading();
-}
-
-final class GoalDetailLoaded extends GoalDetailState {
-  const GoalDetailLoaded(this.goal, {this.submitting = false, this.toast});
-
-  final MemberGoal goal;
-  final bool submitting;
-  final String? toast;
-
-  GoalDetailLoaded copyWith({
+@freezed
+abstract class GoalDetailState with _$GoalDetailState {
+  const factory GoalDetailState({
+    @Default(LoadStatus.initial) LoadStatus status,
     MemberGoal? goal,
-    bool? submitting,
-    String? toast,
-  }) {
-    return GoalDetailLoaded(
-      goal ?? this.goal,
-      submitting: submitting ?? this.submitting,
-      toast: toast,
-    );
-  }
-
-  @override
-  List<Object?> get props => [goal, submitting, toast];
-}
-
-final class GoalDetailFailure extends GoalDetailState {
-  const GoalDetailFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+    @Default(false) bool submitting,
+    Failure? failure,
+  }) = _GoalDetailState;
 }
 
 @injectable
 class GoalDetailCubit extends Cubit<GoalDetailState> {
   GoalDetailCubit(this._getGoal, this._checkIn)
-    : super(const GoalDetailLoading());
+    : super(const GoalDetailState());
 
   final GetGoalUseCase _getGoal;
   final CheckInGoalUseCase _checkIn;
@@ -60,11 +30,30 @@ class GoalDetailCubit extends Cubit<GoalDetailState> {
 
   Future<void> load(String goalId) async {
     _goalId = goalId;
-    emit(const GoalDetailLoading());
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        submitting: false,
+      ),
+    );
     final result = await _getGoal(goalId);
     result.fold(
-      (failure) => emit(GoalDetailFailure(failureMessage(failure))),
-      (goal) => emit(GoalDetailLoaded(goal)),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          submitting: false,
+        ),
+      ),
+      (goal) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          submitting: false,
+          goal: goal,
+        ),
+      ),
     );
   }
 
@@ -75,8 +64,13 @@ class GoalDetailCubit extends Cubit<GoalDetailState> {
   }) async {
     final id = _goalId;
     final current = state;
-    if (id == null || current is! GoalDetailLoaded) return false;
-    emit(current.copyWith(submitting: true));
+    if (id == null ||
+        current.goal == null ||
+        current.status == LoadStatus.loading ||
+        current.submitting) {
+      return false;
+    }
+    emit(current.copyWith(submitting: true, failure: null));
     final result = await _checkIn(
       CheckInGoalParams(
         id: id,
@@ -90,7 +84,8 @@ class GoalDetailCubit extends Cubit<GoalDetailState> {
         emit(
           current.copyWith(
             submitting: false,
-            toast: failureMessage(failure),
+            status: LoadStatus.failure,
+            failure: failure,
           ),
         );
         return false;

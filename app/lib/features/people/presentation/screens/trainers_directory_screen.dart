@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -60,57 +62,60 @@ class _TrainersDirectoryBodyState extends State<_TrainersDirectoryBody> {
             ),
           ),
           Expanded(
-            child: BlocBuilder<TrainersDirectoryCubit, TrainersDirectoryState>(
+            child: BlocConsumer<TrainersDirectoryCubit, TrainersDirectoryState>(
+              listener: (context, state) {
+                if (state.status == LoadStatus.failure &&
+                    state.items.isNotEmpty &&
+                    state.failure != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(failureMessage(state.failure!))),
+                  );
+                }
+              },
               builder: (context, state) {
-                return switch (state) {
-                  TrainersDirectoryLoading() => const AppLoading(),
-                  TrainersDirectoryFailure(:final message) => AppErrorView(
-                    message: message,
+                if (state.items.isEmpty && state.status == LoadStatus.failure) {
+                  return AppErrorView(
+                    message: failureMessage(state.failure!),
                     onRetry: () => context.read<TrainersDirectoryCubit>().load(
                       query: _searchController.text,
                     ),
-                  ),
-                  TrainersDirectoryLoaded(
-                    :final items,
-                    :final hasMore,
-                    :final loadingMore,
-                  ) =>
-                    items.isEmpty
-                        ? const AppEmptyView(
-                            message: PeopleStrings.emptyTrainers,
-                          )
-                        : ListView.builder(
-                            itemCount: items.length + (hasMore ? 1 : 0),
-                            itemBuilder: (context, index) {
-                              if (index >= items.length) {
-                                return TextButton(
-                                  onPressed: loadingMore
-                                      ? null
-                                      : () => context
-                                            .read<TrainersDirectoryCubit>()
-                                            .loadMore(),
-                                  child: Text(
-                                    loadingMore
-                                        ? '…'
-                                        : PeopleStrings.loadMore,
-                                  ),
-                                );
-                              }
-                              final trainer = items[index];
-                              return ListTile(
-                                title: Text(trainer.fullName),
-                                subtitle: Text(
-                                  trainer.specializations.isEmpty
-                                      ? 'ID ${trainer.id}'
-                                      : trainer.specializations.join(', '),
-                                ),
-                                trailing: Text(
-                                  trainer.isActive ? 'Active' : 'Inactive',
-                                ),
-                              );
-                            },
-                          ),
-                };
+                  );
+                }
+                if (state.items.isEmpty && state.status != LoadStatus.success) {
+                  return const AppLoading();
+                }
+                if (state.items.isEmpty) {
+                  return const AppEmptyView(
+                    message: PeopleStrings.emptyTrainers,
+                  );
+                }
+                return ListView.builder(
+                  itemCount: state.items.length + (state.hasMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index >= state.items.length) {
+                      final loadingMore = state.loadingMore;
+                      return TextButton(
+                        onPressed:
+                            loadingMore || state.status == LoadStatus.loading
+                            ? null
+                            : () => context
+                                  .read<TrainersDirectoryCubit>()
+                                  .loadMore(),
+                        child: Text(loadingMore ? '…' : PeopleStrings.loadMore),
+                      );
+                    }
+                    final trainer = state.items[index];
+                    return ListTile(
+                      title: Text(trainer.fullName),
+                      subtitle: Text(
+                        trainer.specializations.isEmpty
+                            ? 'ID ${trainer.id}'
+                            : trainer.specializations.join(', '),
+                      ),
+                      trailing: Text(trainer.isActive ? 'Active' : 'Inactive'),
+                    );
+                  },
+                );
               },
             ),
           ),

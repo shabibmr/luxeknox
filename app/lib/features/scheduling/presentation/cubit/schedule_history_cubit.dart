@@ -1,68 +1,34 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/schedule_enums.dart';
 import '../../domain/entities/schedule_session.dart';
 import '../../domain/usecases/schedule_usecases.dart';
 
-sealed class ScheduleHistoryState extends Equatable {
-  const ScheduleHistoryState();
+part 'schedule_history_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class ScheduleHistoryLoading extends ScheduleHistoryState {
-  const ScheduleHistoryLoading();
-}
-
-final class ScheduleHistoryLoaded extends ScheduleHistoryState {
-  const ScheduleHistoryLoaded({
-    required this.items,
-    this.nextCursor,
-    this.hasMore = false,
-    this.loadingMore = false,
-  });
-
-  final List<ScheduleSession> items;
-  final String? nextCursor;
-  final bool hasMore;
-  final bool loadingMore;
-
-  ScheduleHistoryLoaded copyWith({
-    List<ScheduleSession>? items,
+@freezed
+abstract class ScheduleHistoryState with _$ScheduleHistoryState {
+  const factory ScheduleHistoryState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default(<ScheduleSession>[]) List<ScheduleSession> items,
+    /// True after a successful fetch, so an empty archive is still data.
+    @Default(false) bool hasLoaded,
     String? nextCursor,
-    bool? hasMore,
-    bool? loadingMore,
-  }) {
-    return ScheduleHistoryLoaded(
-      items: items ?? this.items,
-      nextCursor: nextCursor ?? this.nextCursor,
-      hasMore: hasMore ?? this.hasMore,
-      loadingMore: loadingMore ?? this.loadingMore,
-    );
-  }
-
-  @override
-  List<Object?> get props => [items, nextCursor, hasMore, loadingMore];
-}
-
-final class ScheduleHistoryFailure extends ScheduleHistoryState {
-  const ScheduleHistoryFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+    @Default(false) bool hasMore,
+    @Default(false) bool loadingMore,
+    Failure? failure,
+  }) = _ScheduleHistoryState;
 }
 
 /// Past (completed / cancelled) sessions for a member or trainer —
 /// backs the Schedule History screens for both roles.
 @injectable
 class ScheduleHistoryCubit extends Cubit<ScheduleHistoryState> {
-  ScheduleHistoryCubit(this._listSchedules) : super(const ScheduleHistoryLoading());
+  ScheduleHistoryCubit(this._listSchedules) : super(const ScheduleHistoryState());
 
   final ListSchedulesUseCase _listSchedules;
 
@@ -78,7 +44,13 @@ class ScheduleHistoryCubit extends Cubit<ScheduleHistoryState> {
   Future<void> load({String? memberId, String? trainerId}) async {
     _memberId = memberId;
     _trainerId = trainerId;
-    emit(const ScheduleHistoryLoading());
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        loadingMore: false,
+      ),
+    );
     final result = await _listSchedules(
       ListSchedulesParams(
         memberId: memberId,
@@ -87,15 +59,21 @@ class ScheduleHistoryCubit extends Cubit<ScheduleHistoryState> {
       ),
     );
     result.fold(
-      (failure) => emit(ScheduleHistoryFailure(failureMessage(failure))),
+      (failure) => emit(
+        state.copyWith(status: LoadStatus.failure, failure: failure),
+      ),
       (page) {
         final items = page.items.where(_isPast).toList()
           ..sort((a, b) => b.startTime.compareTo(a.startTime));
         emit(
-          ScheduleHistoryLoaded(
+          state.copyWith(
+            status: LoadStatus.success,
+            failure: null,
             items: items,
+            hasLoaded: true,
             nextCursor: page.nextCursor,
             hasMore: page.hasMore,
+            loadingMore: false,
           ),
         );
       },
@@ -103,31 +81,38 @@ class ScheduleHistoryCubit extends Cubit<ScheduleHistoryState> {
   }
 
   Future<void> loadMore() async {
-    final current = state;
-    if (current is! ScheduleHistoryLoaded ||
-        !current.hasMore ||
-        current.loadingMore) {
-      return;
-    }
-    emit(current.copyWith(loadingMore: true));
+    if (!state.hasLoaded || !state.hasMore || state.loadingMore) return;
+    if (state.status == LoadStatus.loading) return;
+    final existing = state.items;
+    final cursor = state.nextCursor;
+    emit(state.copyWith(loadingMore: true, failure: null));
     final result = await _listSchedules(
       ListSchedulesParams(
         memberId: _memberId,
         trainerId: _trainerId,
-        cursor: current.nextCursor,
+        cursor: cursor,
         limit: _pageSize,
       ),
     );
     result.fold(
-      (failure) => emit(current.copyWith(loadingMore: false)),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          loadingMore: false,
+        ),
+      ),
       (page) {
-        final merged = [...current.items, ...page.items.where(_isPast)]
+        final merged = [...existing, ...page.items.where(_isPast)]
           ..sort((a, b) => b.startTime.compareTo(a.startTime));
         emit(
-          ScheduleHistoryLoaded(
+          state.copyWith(
+            status: LoadStatus.success,
+            failure: null,
             items: merged,
             nextCursor: page.nextCursor,
             hasMore: page.hasMore,
+            loadingMore: false,
           ),
         );
       },

@@ -1,4 +1,5 @@
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/core/pagination/cursor_page.dart';
 import 'package:app/features/payments/domain/entities/payment.dart';
 import 'package:app/features/payments/domain/entities/payment_status.dart';
@@ -53,12 +54,11 @@ void main() {
     },
     act: (cubit) => cubit.load(filter: PaymentsLedgerFilter.paid),
     expect: () => [
-      isA<PaymentsLedgerLoading>().having(
-        (s) => s.filter,
-        'filter',
-        PaymentsLedgerFilter.paid,
-      ),
-      isA<PaymentsLedgerLoaded>()
+      isA<PaymentsLedgerState>()
+          .having((s) => s.status, 'status', LoadStatus.loading)
+          .having((s) => s.filter, 'filter', PaymentsLedgerFilter.paid),
+      isA<PaymentsLedgerState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.filter, 'filter', PaymentsLedgerFilter.paid)
           .having((s) => s.items.map((p) => p.id).toList(), 'ids', ['1']),
     ],
@@ -108,8 +108,14 @@ void main() {
     },
     act: (cubit) => cubit.load(),
     expect: () => [
-      isA<PaymentsLedgerLoading>(),
-      isA<PaymentsLedgerFailure>(),
+      isA<PaymentsLedgerState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<PaymentsLedgerState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>()),
     ],
   );
 }

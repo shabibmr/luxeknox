@@ -1,82 +1,35 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/workout_personal_record.dart';
 import '../../domain/entities/workout_session.dart';
 import '../../domain/usecases/list_workout_sessions_usecase.dart';
 
-sealed class WorkoutHistoryState extends Equatable {
-  const WorkoutHistoryState();
+part 'workout_history_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class WorkoutHistoryLoading extends WorkoutHistoryState {
-  const WorkoutHistoryLoading();
-}
-
-final class WorkoutHistoryLoaded extends WorkoutHistoryState {
-  const WorkoutHistoryLoaded({
-    required this.items,
-    required this.personalRecords,
-    required this.totalVolumeKg,
-    this.nextCursor,
-    this.hasMore = false,
-    this.loadingMore = false,
-  });
-
-  final List<WorkoutSession> items;
-  final List<WorkoutPersonalRecord> personalRecords;
-  final num totalVolumeKg;
-  final String? nextCursor;
-  final bool hasMore;
-  final bool loadingMore;
-
-  WorkoutHistoryLoaded copyWith({
-    List<WorkoutSession>? items,
-    List<WorkoutPersonalRecord>? personalRecords,
-    num? totalVolumeKg,
+@freezed
+abstract class WorkoutHistoryState with _$WorkoutHistoryState {
+  const factory WorkoutHistoryState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default(<WorkoutSession>[]) List<WorkoutSession> items,
+    @Default(<WorkoutPersonalRecord>[])
+    List<WorkoutPersonalRecord> personalRecords,
+    /// True after a successful fetch, so an empty history is still data.
+    @Default(false) bool hasLoaded,
+    @Default(0) num totalVolumeKg,
     String? nextCursor,
-    bool? hasMore,
-    bool? loadingMore,
-  }) {
-    return WorkoutHistoryLoaded(
-      items: items ?? this.items,
-      personalRecords: personalRecords ?? this.personalRecords,
-      totalVolumeKg: totalVolumeKg ?? this.totalVolumeKg,
-      nextCursor: nextCursor ?? this.nextCursor,
-      hasMore: hasMore ?? this.hasMore,
-      loadingMore: loadingMore ?? this.loadingMore,
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-    items,
-    personalRecords,
-    totalVolumeKg,
-    nextCursor,
-    hasMore,
-    loadingMore,
-  ];
-}
-
-final class WorkoutHistoryFailure extends WorkoutHistoryState {
-  const WorkoutHistoryFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+    @Default(false) bool hasMore,
+    @Default(false) bool loadingMore,
+    Failure? failure,
+  }) = _WorkoutHistoryState;
 }
 
 @injectable
 class WorkoutHistoryCubit extends Cubit<WorkoutHistoryState> {
-  WorkoutHistoryCubit(this._listSessions)
-    : super(const WorkoutHistoryLoading());
+  WorkoutHistoryCubit(this._listSessions) : super(const WorkoutHistoryState());
 
   final ListWorkoutSessionsUseCase _listSessions;
   String? _memberId;
@@ -85,7 +38,13 @@ class WorkoutHistoryCubit extends Cubit<WorkoutHistoryState> {
 
   Future<void> load({String? memberId}) async {
     _memberId = memberId;
-    emit(const WorkoutHistoryLoading());
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        loadingMore: false,
+      ),
+    );
     final result = await _listSessions(
       ListWorkoutSessionsParams(
         memberId: memberId,
@@ -93,16 +52,22 @@ class WorkoutHistoryCubit extends Cubit<WorkoutHistoryState> {
       ),
     );
     result.fold(
-      (failure) => emit(WorkoutHistoryFailure(failureMessage(failure))),
+      (failure) => emit(
+        state.copyWith(status: LoadStatus.failure, failure: failure),
+      ),
       (page) {
         final items = page.items;
         emit(
-          WorkoutHistoryLoaded(
+          state.copyWith(
+            status: LoadStatus.success,
+            failure: null,
             items: items,
+            hasLoaded: true,
             personalRecords: computePersonalRecords(items),
             totalVolumeKg: _sumCompletedVolume(items),
             nextCursor: page.nextCursor,
             hasMore: page.hasMore,
+            loadingMore: false,
           ),
         );
       },
@@ -110,31 +75,38 @@ class WorkoutHistoryCubit extends Cubit<WorkoutHistoryState> {
   }
 
   Future<void> loadMore() async {
-    final current = state;
-    if (current is! WorkoutHistoryLoaded ||
-        !current.hasMore ||
-        current.loadingMore) {
-      return;
-    }
-    emit(current.copyWith(loadingMore: true));
+    if (!state.hasLoaded || !state.hasMore || state.loadingMore) return;
+    if (state.status == LoadStatus.loading) return;
+    final cursor = state.nextCursor;
+    final existing = state.items;
+    emit(state.copyWith(loadingMore: true, failure: null));
     final result = await _listSessions(
       ListWorkoutSessionsParams(
         memberId: _memberId,
-        cursor: current.nextCursor,
+        cursor: cursor,
         limit: _pageSize,
       ),
     );
     result.fold(
-      (failure) => emit(current.copyWith(loadingMore: false)),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          loadingMore: false,
+        ),
+      ),
       (page) {
-        final items = [...current.items, ...page.items];
+        final items = [...existing, ...page.items];
         emit(
-          WorkoutHistoryLoaded(
+          state.copyWith(
+            status: LoadStatus.success,
+            failure: null,
             items: items,
             personalRecords: computePersonalRecords(items),
             totalVolumeKg: _sumCompletedVolume(items),
             nextCursor: page.nextCursor,
             hasMore: page.hasMore,
+            loadingMore: false,
           ),
         );
       },

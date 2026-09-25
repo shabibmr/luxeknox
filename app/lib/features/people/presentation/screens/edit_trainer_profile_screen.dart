@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/trainer_profile.dart';
@@ -33,23 +35,31 @@ class _EditTrainerProfileBody extends StatelessWidget {
       appBar: AppBar(title: const Text(PeopleStrings.editProfile)),
       body: BlocConsumer<EditTrainerProfileCubit, EditTrainerProfileState>(
         listener: (context, state) {
-          if (state is EditTrainerProfileLoaded && state.message != null) {
+          if (state.message != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(PeopleStrings.profileSaved)),
+            );
+          } else if (state.status == LoadStatus.failure &&
+              state.profile != null &&
+              state.failure != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
             );
           }
         },
         builder: (context, state) {
-          return switch (state) {
-            EditTrainerProfileLoading() => const AppLoading(),
-            EditTrainerProfileFailure(:final message) => AppErrorView(
-              message: message,
+          if (state.profile == null && state.status == LoadStatus.failure) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () =>
                   context.read<EditTrainerProfileCubit>().load(trainerId),
-            ),
-            EditTrainerProfileLoaded(:final profile) =>
-              _TrainerProfileForm(profile: profile),
-          };
+            );
+          }
+          final profile = state.profile;
+          if (profile == null) {
+            return const AppLoading();
+          }
+          return _TrainerProfileForm(profile: profile);
         },
       ),
     );
@@ -97,15 +107,11 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
       children: [
         TextField(
           controller: _firstName,
-          decoration: const InputDecoration(
-            labelText: PeopleStrings.firstName,
-          ),
+          decoration: const InputDecoration(labelText: PeopleStrings.firstName),
         ),
         TextField(
           controller: _lastName,
-          decoration: const InputDecoration(
-            labelText: PeopleStrings.lastName,
-          ),
+          decoration: const InputDecoration(labelText: PeopleStrings.lastName),
         ),
         TextField(
           controller: _phone,

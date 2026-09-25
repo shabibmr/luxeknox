@@ -1,75 +1,37 @@
 import 'dart:typed_data';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:injectable/injectable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/person.dart';
 import '../../domain/usecases/get_member_usecase.dart';
 import '../../domain/usecases/set_avatar_usecase.dart';
 import '../../domain/usecases/update_member_usecase.dart';
 import '../../domain/usecases/upload_photo_usecase.dart';
 
-sealed class EditProfileState extends Equatable {
-  const EditProfileState();
+part 'edit_profile_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class EditProfileLoading extends EditProfileState {
-  const EditProfileLoading();
-}
-
-final class EditProfileLoaded extends EditProfileState {
-  const EditProfileLoaded(
-    this.person, {
-    this.message,
-    this.isSaving = false,
-    this.isUploadingAvatar = false,
-  });
-
-  final Person person;
-  final String? message;
-  final bool isSaving;
-  final bool isUploadingAvatar;
-
-  EditProfileLoaded copyWith({
+@freezed
+abstract class EditProfileState with _$EditProfileState {
+  const factory EditProfileState({
+    @Default(LoadStatus.initial) LoadStatus status,
     Person? person,
     String? message,
-    bool? isSaving,
-    bool? isUploadingAvatar,
-  }) {
-    return EditProfileLoaded(
-      person ?? this.person,
-      message: message,
-      isSaving: isSaving ?? this.isSaving,
-      isUploadingAvatar: isUploadingAvatar ?? this.isUploadingAvatar,
-    );
-  }
-
-  @override
-  List<Object?> get props => [person, message, isSaving, isUploadingAvatar];
+    @Default(false) bool isSaving,
+    @Default(false) bool isUploadingAvatar,
+    Failure? failure,
+  }) = _EditProfileState;
 }
 
-final class EditProfileFailure extends EditProfileState {
-  const EditProfileFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-@injectable
 class EditProfileCubit extends Cubit<EditProfileState> {
   EditProfileCubit(
     this._getMember,
     this._updateMember,
     this._setAvatar,
     this._uploadPhoto,
-  ) : super(const EditProfileLoading());
+  ) : super(const EditProfileState());
 
   final GetMemberUseCase _getMember;
   final UpdateMemberUseCase _updateMember;
@@ -80,43 +42,102 @@ class EditProfileCubit extends Cubit<EditProfileState> {
 
   Future<void> load(int memberId) async {
     _memberId = memberId;
-    emit(const EditProfileLoading());
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        message: null,
+        isSaving: false,
+        isUploadingAvatar: false,
+      ),
+    );
     final result = await _getMember(memberId);
     result.fold(
-      (failure) => emit(EditProfileFailure(failureMessage(failure))),
-      (person) => emit(EditProfileLoaded(person)),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
+      (person) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          person: person,
+          failure: null,
+          message: null,
+          isSaving: false,
+          isUploadingAvatar: false,
+        ),
+      ),
     );
   }
 
   Future<void> save(Person person) async {
-    final current = state;
-    if (current is EditProfileLoaded) {
-      emit(current.copyWith(isSaving: true, message: null));
+    if (state.person != null) {
+      emit(state.copyWith(isSaving: true, message: null, failure: null));
     }
     final result = await _updateMember(person);
     result.fold(
-      (failure) => emit(EditProfileFailure(failureMessage(failure))),
-      (updated) => emit(EditProfileLoaded(updated, message: 'saved')),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          isSaving: false,
+          message: null,
+        ),
+      ),
+      (updated) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          person: updated,
+          message: 'saved',
+          failure: null,
+          isSaving: false,
+          isUploadingAvatar: false,
+        ),
+      ),
     );
   }
 
   Future<void> setAvatar(int photoId) async {
     final memberId = _memberId;
     if (memberId == null) return;
-    final current = state;
-    if (current is EditProfileLoaded) {
-      emit(current.copyWith(isUploadingAvatar: true, message: null));
+    if (state.person != null) {
+      emit(
+        state.copyWith(isUploadingAvatar: true, message: null, failure: null),
+      );
     }
     final result = await _setAvatar(
       SetAvatarParams(memberId: memberId, photoId: photoId),
     );
     await result.fold(
-      (failure) async => emit(EditProfileFailure(failureMessage(failure))),
+      (failure) async => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          isUploadingAvatar: false,
+          isSaving: false,
+          message: null,
+        ),
+      ),
       (_) async {
         final reload = await _getMember(memberId);
         reload.fold(
-          (failure) => emit(EditProfileFailure(failureMessage(failure))),
-          (person) => emit(EditProfileLoaded(person, message: 'avatar')),
+          (failure) => emit(
+            state.copyWith(
+              status: LoadStatus.failure,
+              failure: failure,
+              isUploadingAvatar: false,
+              isSaving: false,
+              message: null,
+            ),
+          ),
+          (person) => emit(
+            state.copyWith(
+              status: LoadStatus.success,
+              person: person,
+              message: 'avatar',
+              failure: null,
+              isUploadingAvatar: false,
+              isSaving: false,
+            ),
+          ),
         );
       },
     );
@@ -128,9 +149,10 @@ class EditProfileCubit extends Cubit<EditProfileState> {
   }) async {
     final memberId = _memberId;
     if (memberId == null) return;
-    final current = state;
-    if (current is EditProfileLoaded) {
-      emit(current.copyWith(isUploadingAvatar: true, message: null));
+    if (state.person != null) {
+      emit(
+        state.copyWith(isUploadingAvatar: true, message: null, failure: null),
+      );
     }
     final uploadResult = await _uploadPhoto(
       UploadPhotoParams(
@@ -140,18 +162,51 @@ class EditProfileCubit extends Cubit<EditProfileState> {
       ),
     );
     await uploadResult.fold(
-      (failure) async => emit(EditProfileFailure(failureMessage(failure))),
+      (failure) async => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          isUploadingAvatar: false,
+          isSaving: false,
+          message: null,
+        ),
+      ),
       (photo) async {
         final setAvatarResult = await _setAvatar(
           SetAvatarParams(memberId: memberId, photoId: photo.id),
         );
         await setAvatarResult.fold(
-          (failure) async => emit(EditProfileFailure(failureMessage(failure))),
+          (failure) async => emit(
+            state.copyWith(
+              status: LoadStatus.failure,
+              failure: failure,
+              isUploadingAvatar: false,
+              isSaving: false,
+              message: null,
+            ),
+          ),
           (_) async {
             final reload = await _getMember(memberId);
             reload.fold(
-              (failure) => emit(EditProfileFailure(failureMessage(failure))),
-              (person) => emit(EditProfileLoaded(person, message: 'avatar')),
+              (failure) => emit(
+                state.copyWith(
+                  status: LoadStatus.failure,
+                  failure: failure,
+                  isUploadingAvatar: false,
+                  isSaving: false,
+                  message: null,
+                ),
+              ),
+              (person) => emit(
+                state.copyWith(
+                  status: LoadStatus.success,
+                  person: person,
+                  message: 'avatar',
+                  failure: null,
+                  isUploadingAvatar: false,
+                  isSaving: false,
+                ),
+              ),
             );
           },
         );

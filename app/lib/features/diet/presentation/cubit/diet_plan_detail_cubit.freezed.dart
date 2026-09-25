@@ -1,0 +1,283 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
+// ignore_for_file: type=lint
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'diet_plan_detail_cubit.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+// dart format off
+T _$identity<T>(T value) => value;
+/// @nodoc
+mixin _$DietPlanDetailState {
+
+ LoadStatus get status; DietPlan? get plan; DietPlan? get assignedPlan; bool get actionInFlight; Failure? get failure;
+/// Create a copy of DietPlanDetailState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$DietPlanDetailStateCopyWith<DietPlanDetailState> get copyWith => _$DietPlanDetailStateCopyWithImpl<DietPlanDetailState>(this as DietPlanDetailState, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DietPlanDetailState&&(identical(other.status, status) || other.status == status)&&(identical(other.plan, plan) || other.plan == plan)&&(identical(other.assignedPlan, assignedPlan) || other.assignedPlan == assignedPlan)&&(identical(other.actionInFlight, actionInFlight) || other.actionInFlight == actionInFlight)&&(identical(other.failure, failure) || other.failure == failure));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,status,plan,assignedPlan,actionInFlight,failure);
+
+@override
+String toString() {
+  return 'DietPlanDetailState(status: $status, plan: $plan, assignedPlan: $assignedPlan, actionInFlight: $actionInFlight, failure: $failure)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $DietPlanDetailStateCopyWith<$Res>  {
+  factory $DietPlanDetailStateCopyWith(DietPlanDetailState value, $Res Function(DietPlanDetailState) _then) = _$DietPlanDetailStateCopyWithImpl;
+@useResult
+$Res call({
+ LoadStatus status, DietPlan? plan, DietPlan? assignedPlan, bool actionInFlight, Failure? failure
+});
+
+
+
+
+}
+/// @nodoc
+class _$DietPlanDetailStateCopyWithImpl<$Res>
+    implements $DietPlanDetailStateCopyWith<$Res> {
+  _$DietPlanDetailStateCopyWithImpl(this._self, this._then);
+
+  final DietPlanDetailState _self;
+  final $Res Function(DietPlanDetailState) _then;
+
+/// Create a copy of DietPlanDetailState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? plan = freezed,Object? assignedPlan = freezed,Object? actionInFlight = null,Object? failure = freezed,}) {
+  return _then(_self.copyWith(
+status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as LoadStatus,plan: freezed == plan ? _self.plan : plan // ignore: cast_nullable_to_non_nullable
+as DietPlan?,assignedPlan: freezed == assignedPlan ? _self.assignedPlan : assignedPlan // ignore: cast_nullable_to_non_nullable
+as DietPlan?,actionInFlight: null == actionInFlight ? _self.actionInFlight : actionInFlight // ignore: cast_nullable_to_non_nullable
+as bool,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
+as Failure?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [DietPlanDetailState].
+extension DietPlanDetailStatePatterns on DietPlanDetailState {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _DietPlanDetailState value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _DietPlanDetailState() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _DietPlanDetailState value)  $default,){
+final _that = this;
+switch (_that) {
+case _DietPlanDetailState():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _DietPlanDetailState value)?  $default,){
+final _that = this;
+switch (_that) {
+case _DietPlanDetailState() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  DietPlan? plan,  DietPlan? assignedPlan,  bool actionInFlight,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _DietPlanDetailState() when $default != null:
+return $default(_that.status,_that.plan,_that.assignedPlan,_that.actionInFlight,_that.failure);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  DietPlan? plan,  DietPlan? assignedPlan,  bool actionInFlight,  Failure? failure)  $default,) {final _that = this;
+switch (_that) {
+case _DietPlanDetailState():
+return $default(_that.status,_that.plan,_that.assignedPlan,_that.actionInFlight,_that.failure);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  DietPlan? plan,  DietPlan? assignedPlan,  bool actionInFlight,  Failure? failure)?  $default,) {final _that = this;
+switch (_that) {
+case _DietPlanDetailState() when $default != null:
+return $default(_that.status,_that.plan,_that.assignedPlan,_that.actionInFlight,_that.failure);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _DietPlanDetailState implements DietPlanDetailState {
+  const _DietPlanDetailState({this.status = LoadStatus.initial, this.plan, this.assignedPlan, this.actionInFlight = false, this.failure});
+  
+
+@override@JsonKey() final  LoadStatus status;
+@override final  DietPlan? plan;
+@override final  DietPlan? assignedPlan;
+@override@JsonKey() final  bool actionInFlight;
+@override final  Failure? failure;
+
+/// Create a copy of DietPlanDetailState
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$DietPlanDetailStateCopyWith<_DietPlanDetailState> get copyWith => __$DietPlanDetailStateCopyWithImpl<_DietPlanDetailState>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DietPlanDetailState&&(identical(other.status, status) || other.status == status)&&(identical(other.plan, plan) || other.plan == plan)&&(identical(other.assignedPlan, assignedPlan) || other.assignedPlan == assignedPlan)&&(identical(other.actionInFlight, actionInFlight) || other.actionInFlight == actionInFlight)&&(identical(other.failure, failure) || other.failure == failure));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,status,plan,assignedPlan,actionInFlight,failure);
+
+@override
+String toString() {
+  return 'DietPlanDetailState(status: $status, plan: $plan, assignedPlan: $assignedPlan, actionInFlight: $actionInFlight, failure: $failure)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$DietPlanDetailStateCopyWith<$Res> implements $DietPlanDetailStateCopyWith<$Res> {
+  factory _$DietPlanDetailStateCopyWith(_DietPlanDetailState value, $Res Function(_DietPlanDetailState) _then) = __$DietPlanDetailStateCopyWithImpl;
+@override @useResult
+$Res call({
+ LoadStatus status, DietPlan? plan, DietPlan? assignedPlan, bool actionInFlight, Failure? failure
+});
+
+
+
+
+}
+/// @nodoc
+class __$DietPlanDetailStateCopyWithImpl<$Res>
+    implements _$DietPlanDetailStateCopyWith<$Res> {
+  __$DietPlanDetailStateCopyWithImpl(this._self, this._then);
+
+  final _DietPlanDetailState _self;
+  final $Res Function(_DietPlanDetailState) _then;
+
+/// Create a copy of DietPlanDetailState
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? plan = freezed,Object? assignedPlan = freezed,Object? actionInFlight = null,Object? failure = freezed,}) {
+  return _then(_DietPlanDetailState(
+status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as LoadStatus,plan: freezed == plan ? _self.plan : plan // ignore: cast_nullable_to_non_nullable
+as DietPlan?,assignedPlan: freezed == assignedPlan ? _self.assignedPlan : assignedPlan // ignore: cast_nullable_to_non_nullable
+as DietPlan?,actionInFlight: null == actionInFlight ? _self.actionInFlight : actionInFlight // ignore: cast_nullable_to_non_nullable
+as bool,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
+as Failure?,
+  ));
+}
+
+
+}
+
+// dart format on

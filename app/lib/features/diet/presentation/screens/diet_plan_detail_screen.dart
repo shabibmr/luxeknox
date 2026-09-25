@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -73,7 +75,7 @@ class _DietPlanDetailBody extends StatelessWidget {
     await cubit.assignToMember(memberId);
     if (!context.mounted) return;
     final next = cubit.state;
-    if (next is DietPlanDetailLoaded && next.assignedPlan != null) {
+    if (next.status == LoadStatus.success && next.assignedPlan != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(DietStrings.assigned)),
       );
@@ -87,12 +89,8 @@ class _DietPlanDetailBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<DietPlanDetailCubit, DietPlanDetailState>(
       builder: (context, state) {
-        final plan = switch (state) {
-          DietPlanDetailLoaded(:final plan) => plan,
-          DietPlanDetailActionInFlight(:final plan) => plan,
-          _ => null,
-        };
-        final inFlight = state is DietPlanDetailActionInFlight;
+        final plan = state.plan;
+        final inFlight = state.actionInFlight;
 
         return Scaffold(
           appBar: AppBar(
@@ -134,7 +132,8 @@ class _DietPlanDetailBody extends StatelessWidget {
                             await cubit.publish();
                             if (!context.mounted) return;
                             final next = cubit.state;
-                            if (next is DietPlanDetailLoaded) {
+                            if (next.status == LoadStatus.success &&
+                                next.failure == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(DietStrings.published),
@@ -154,7 +153,8 @@ class _DietPlanDetailBody extends StatelessWidget {
                             await cubit.archive();
                             if (!context.mounted) return;
                             final next = cubit.state;
-                            if (next is DietPlanDetailLoaded) {
+                            if (next.status == LoadStatus.success &&
+                                next.failure == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(DietStrings.archived),
@@ -166,27 +166,48 @@ class _DietPlanDetailBody extends StatelessWidget {
               ],
             ],
           ),
-          body: switch (state) {
-            DietPlanDetailLoading() => const AppLoading(),
-            DietPlanDetailFailure(:final message) => AppErrorView(
-              message: message,
-              onRetry: () =>
-                  context.read<DietPlanDetailCubit>().load(planId),
-            ),
-            DietPlanDetailLoaded(:final plan) ||
-            DietPlanDetailActionInFlight(:final plan) => Stack(
-              children: [
-                _DetailContent(plan: plan),
-                if (inFlight)
-                  Container(
-                    color: Colors.black26,
-                    child: const Center(child: CircularProgressIndicator()),
-                  ),
-              ],
-            ),
-          },
+          body: _detailBody(context, state, plan, inFlight),
         );
       },
+    );
+  }
+
+  Widget _detailBody(
+    BuildContext context,
+    DietPlanDetailState state,
+    DietPlan? plan,
+    bool inFlight,
+  ) {
+    if (state.status == LoadStatus.loading && plan == null) {
+      return const AppLoading();
+    }
+    if (state.status == LoadStatus.failure && plan == null) {
+      return AppErrorView(
+        message: failureMessage(state.failure!),
+        onRetry: () => context.read<DietPlanDetailCubit>().load(planId),
+      );
+    }
+    if (plan == null) return const SizedBox.shrink();
+    return Stack(
+      children: [
+        _DetailContent(plan: plan),
+        if (state.failure != null)
+          Align(
+            alignment: Alignment.topCenter,
+            child: Material(
+              color: Theme.of(context).colorScheme.errorContainer,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(failureMessage(state.failure!)),
+              ),
+            ),
+          ),
+        if (inFlight)
+          Container(
+            color: Colors.black26,
+            child: const Center(child: CircularProgressIndicator()),
+          ),
+      ],
     );
   }
 }

@@ -10,6 +10,7 @@ All URIs are relative to *http://localhost:3000/v1*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**checkInGoal**](GOALApi.md#checkingoal) | **POST** /goals/{id}/check-ins | Record a goal check-in
+[**compareProgressPhotos**](GOALApi.md#compareprogressphotos) | **GET** /members/{id}/progress-photos/comparison | Compare progress photos across two dates and poses
 [**createGoalMetric**](GOALApi.md#creategoalmetric) | **POST** /goal-metrics | Create a metric
 [**createMeasurement**](GOALApi.md#createmeasurement) | **POST** /members/{id}/measurements | Record a measurement session
 [**createMemberGoal**](GOALApi.md#createmembergoal) | **POST** /members/{id}/goals | Create a goal
@@ -18,6 +19,7 @@ Method | HTTP request | Description
 [**deleteProgressPhoto**](GOALApi.md#deleteprogressphoto) | **DELETE** /progress-photos/{id} | Delete a progress photo (deferred)
 [**getGoal**](GOALApi.md#getgoal) | **GET** /goals/{id} | Goal detail
 [**getMeasurement**](GOALApi.md#getmeasurement) | **GET** /measurements/{id} | Measurement session with values
+[**getMeasurementChart**](GOALApi.md#getmeasurementchart) | **GET** /members/{id}/measurements/chart | Longitudinal metric chart series
 [**listGoalMetrics**](GOALApi.md#listgoalmetrics) | **GET** /goal-metrics | Measurement type catalog
 [**listMeasurements**](GOALApi.md#listmeasurements) | **GET** /members/{id}/measurements | Measurement sessions
 [**listMemberGoals**](GOALApi.md#listmembergoals) | **GET** /members/{id}/goals | Member goals
@@ -66,6 +68,51 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **compareProgressPhotos**
+> ProgressPhotoComparison compareProgressPhotos(id, date1, date2)
+
+Compare progress photos across two dates and poses
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getGOALApi();
+final int id = 789; // int | 
+final Date date1 = 2013-10-20; // Date | 
+final Date date2 = 2013-10-20; // Date | 
+
+try {
+    final response = api.compareProgressPhotos(id, date1, date2);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling GOALApi->compareProgressPhotos: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **date1** | **Date**|  | 
+ **date2** | **Date**|  | 
+
+### Return type
+
+[**ProgressPhotoComparison**](ProgressPhotoComparison.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -393,6 +440,53 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**Measurement**](Measurement.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getMeasurementChart**
+> BuiltList<LongitudinalDataPoint> getMeasurementChart(id, metricId, from, to)
+
+Longitudinal metric chart series
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getGOALApi();
+final int id = 789; // int | 
+final int metricId = 789; // int | 
+final DateTime from = 2013-10-20T19:20:30+01:00; // DateTime | 
+final DateTime to = 2013-10-20T19:20:30+01:00; // DateTime | 
+
+try {
+    final response = api.getMeasurementChart(id, metricId, from, to);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling GOALApi->getMeasurementChart: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **metricId** | **int**|  | 
+ **from** | **DateTime**|  | [optional] 
+ **to** | **DateTime**|  | [optional] 
+
+### Return type
+
+[**BuiltList&lt;LongitudinalDataPoint&gt;**](LongitudinalDataPoint.md)
 
 ### Authorization
 

@@ -9,12 +9,15 @@ All URIs are relative to *http://localhost:3000/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**archiveWorkoutPlan**](WORKApi.md#archiveworkoutplan) | **POST** /workout-plans/{id}/archive | Archive a workout plan
 [**assignWorkoutPlan**](WORKApi.md#assignworkoutplan) | **POST** /workout-plans/{id}/assign | Copy a template onto a member (new plan + version 1)
 [**completeWorkoutSession**](WORKApi.md#completeworkoutsession) | **POST** /workout-sessions/{id}/complete | Complete a session
 [**createExercise**](WORKApi.md#createexercise) | **POST** /exercises | Create an exercise
 [**createWorkoutPlan**](WORKApi.md#createworkoutplan) | **POST** /workout-plans | Create a plan (also creates version 1)
 [**getExercise**](WORKApi.md#getexercise) | **GET** /exercises/{id} | Exercise detail
+[**getPersonalRecords**](WORKApi.md#getpersonalrecords) | **GET** /workout-sessions/personal-records | Member personal records across completed sessions
 [**getWorkoutPlan**](WORKApi.md#getworkoutplan) | **GET** /workout-plans/{id} | Plan with current version line items
+[**getWorkoutSession**](WORKApi.md#getworkoutsession) | **GET** /workout-sessions/{id} | Get workout session details
 [**listExercises**](WORKApi.md#listexercises) | **GET** /exercises | Exercise library
 [**listWorkoutPlanVersions**](WORKApi.md#listworkoutplanversions) | **GET** /workout-plans/{id}/versions | Plan version snapshots
 [**listWorkoutPlans**](WORKApi.md#listworkoutplans) | **GET** /workout-plans | Workout plans and templates
@@ -26,6 +29,47 @@ Method | HTTP request | Description
 [**updateExercise**](WORKApi.md#updateexercise) | **PATCH** /exercises/{id} | Update or deactivate an exercise
 [**updateWorkoutPlan**](WORKApi.md#updateworkoutplan) | **PATCH** /workout-plans/{id} | Update plan metadata (requires row_version)
 
+
+# **archiveWorkoutPlan**
+> WorkoutPlan archiveWorkoutPlan(id)
+
+Archive a workout plan
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getWORKApi();
+final int id = 789; // int | 
+
+try {
+    final response = api.archiveWorkoutPlan(id);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling WORKApi->archiveWorkoutPlan: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+
+### Return type
+
+[**WorkoutPlan**](WorkoutPlan.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **assignWorkoutPlan**
 > WorkoutPlan assignWorkoutPlan(id, assignPlanRequest)
@@ -234,6 +278,49 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getPersonalRecords**
+> BuiltList<PersonalRecord> getPersonalRecords(memberId, exerciseId)
+
+Member personal records across completed sessions
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getWORKApi();
+final int memberId = 789; // int | 
+final int exerciseId = 789; // int | 
+
+try {
+    final response = api.getPersonalRecords(memberId, exerciseId);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling WORKApi->getPersonalRecords: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **memberId** | **int**|  | [optional] 
+ **exerciseId** | **int**|  | [optional] 
+
+### Return type
+
+[**BuiltList&lt;PersonalRecord&gt;**](PersonalRecord.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getWorkoutPlan**
 > WorkoutPlan getWorkoutPlan(id)
 
@@ -263,6 +350,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**WorkoutPlan**](WorkoutPlan.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getWorkoutSession**
+> WorkoutSession getWorkoutSession(id)
+
+Get workout session details
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getWORKApi();
+final int id = 789; // int | 
+
+try {
+    final response = api.getWorkoutSession(id);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling WORKApi->getWorkoutSession: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+
+### Return type
+
+[**WorkoutSession**](WorkoutSession.md)
 
 ### Authorization
 

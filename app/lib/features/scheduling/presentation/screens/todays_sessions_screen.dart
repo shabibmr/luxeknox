@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -35,17 +37,24 @@ class _TodaysSessionsBody extends StatelessWidget {
       appBar: AppBar(title: const Text(SchedulingStrings.todaysSessionsTitle)),
       body: BlocBuilder<TodaysSessionsCubit, TodaysSessionsState>(
         builder: (context, state) {
-          return switch (state) {
-            TodaysSessionsLoading() => const AppLoading(),
-            TodaysSessionsFailure(:final message) => AppErrorView(
-              message: message,
+          final items = state.items;
+          if (state.status == LoadStatus.loading && !state.hasLoaded) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && !state.hasLoaded) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? 'Something went wrong'
+                  : failureMessage(state.failure!),
               onRetry: () => context.read<TodaysSessionsCubit>().load(),
-            ),
-            TodaysSessionsLoaded(:final items) => items.isEmpty
-                ? const AppEmptyView(
-                    message: SchedulingStrings.todaysSessionsEmpty,
-                  )
-                : RefreshIndicator(
+            );
+          }
+          if (items.isEmpty) {
+            return const AppEmptyView(
+              message: SchedulingStrings.todaysSessionsEmpty,
+            );
+          }
+          return RefreshIndicator(
                     onRefresh: () =>
                         context.read<TodaysSessionsCubit>().load(),
                     child: ListView.builder(
@@ -65,8 +74,7 @@ class _TodaysSessionsBody extends StatelessWidget {
                         );
                       },
                     ),
-                  ),
-          };
+          );
         },
       ),
     );

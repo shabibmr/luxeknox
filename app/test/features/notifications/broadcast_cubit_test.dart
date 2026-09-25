@@ -34,7 +34,7 @@ void main() {
 
   test('validate requires title and message', () {
     final cubit = buildCubit();
-    final form = cubit.state as BroadcastFormState;
+    final form = cubit.state;
     expect(cubit.validate(form), NotificationStrings.titleRequired);
     expect(
       cubit.validate(form.copyWith(title: 'Hi')),
@@ -61,7 +61,7 @@ void main() {
     build: buildCubit,
     act: (cubit) => cubit.configure(trainerOnlyAssigned: true),
     expect: () => [
-      isA<BroadcastFormState>()
+      isA<BroadcastState>()
           .having(
             (s) => s.effectiveAudience,
             'audience',
@@ -96,11 +96,11 @@ void main() {
       );
       return buildCubit();
     },
-    seed: () => const BroadcastFormState(title: 'Hi', message: 'Body'),
+    seed: () => const BroadcastState(title: 'Hi', message: 'Body'),
     act: (cubit) => cubit.submit(),
     expect: () => [
-      isA<BroadcastFormState>().having((s) => s.submitting, 'submitting', true),
-      isA<BroadcastFormState>()
+      isA<BroadcastState>().having((s) => s.submitting, 'submitting', true),
+      isA<BroadcastState>()
           .having((s) => s.submitting, 'submitting', false)
           .having((s) => s.submitted?.id, 'id', '10')
           .having((s) => s.title, 'title', '')

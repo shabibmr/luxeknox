@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -72,7 +74,7 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
     await cubit.assignToMember(memberId);
     if (!context.mounted) return;
     final next = cubit.state;
-    if (next is WorkoutPlanDetailLoaded && next.assignedPlan != null) {
+    if (next.status == LoadStatus.success && next.assignedPlan != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(WorkoutStrings.assigned)),
       );
@@ -84,14 +86,21 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<WorkoutPlanDetailCubit, WorkoutPlanDetailState>(
+    return BlocConsumer<WorkoutPlanDetailCubit, WorkoutPlanDetailState>(
+      listenWhen: (previous, current) =>
+          current.plan != null &&
+          current.status == LoadStatus.failure &&
+          current.failure != previous.failure,
+      listener: (context, state) {
+        final failure = state.failure;
+        if (failure == null) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(failureMessage(failure))),
+        );
+      },
       builder: (context, state) {
-        final plan = switch (state) {
-          WorkoutPlanDetailLoaded(:final plan) => plan,
-          WorkoutPlanDetailActionInFlight(:final plan) => plan,
-          _ => null,
-        };
-        final inFlight = state is WorkoutPlanDetailActionInFlight;
+        final plan = state.plan;
+        final inFlight = state.actionInFlight;
 
         return Scaffold(
           appBar: AppBar(
@@ -134,7 +143,7 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
                             await cubit.publish();
                             if (!context.mounted) return;
                             final next = cubit.state;
-                            if (next is WorkoutPlanDetailLoaded) {
+                            if (next.status == LoadStatus.success) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(WorkoutStrings.published),
@@ -155,7 +164,7 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
                             await cubit.archive();
                             if (!context.mounted) return;
                             final next = cubit.state;
-                            if (next is WorkoutPlanDetailLoaded) {
+                            if (next.status == LoadStatus.success) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(WorkoutStrings.archived),
@@ -167,25 +176,29 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
               ],
             ],
           ),
-          body: switch (state) {
-            WorkoutPlanDetailLoading() => const AppLoading(),
-            WorkoutPlanDetailFailure(:final message) => AppErrorView(
-              message: message,
-              onRetry: () =>
-                  context.read<WorkoutPlanDetailCubit>().load(planId),
-            ),
-            WorkoutPlanDetailLoaded(:final plan) ||
-            WorkoutPlanDetailActionInFlight(:final plan) => Stack(
-              children: [
-                _DetailContent(plan: plan),
-                if (inFlight)
-                  const ColoredBox(
-                    color: Color(0x33000000),
-                    child: AppLoading(),
-                  ),
-              ],
-            ),
-          },
+          body: plan == null
+              ? state.status == LoadStatus.failure
+                    ? AppErrorView(
+                        message: state.failure == null
+                            ? 'Something went wrong'
+                            : failureMessage(state.failure!),
+                        onRetry: () => context
+                            .read<WorkoutPlanDetailCubit>()
+                            .load(planId),
+                      )
+                    : state.status == LoadStatus.loading
+                    ? const AppLoading()
+                    : const SizedBox.shrink()
+              : Stack(
+                  children: [
+                    _DetailContent(plan: plan),
+                    if (inFlight)
+                      const ColoredBox(
+                        color: Color(0x33000000),
+                        child: AppLoading(),
+                      ),
+                  ],
+                ),
         );
       },
     );

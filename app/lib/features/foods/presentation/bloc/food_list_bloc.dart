@@ -4,93 +4,15 @@
 // stored on a field at all.
 // ignore_for_file: prefer_initializing_formals
 
-import 'dart:async';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/bloc/event_transformers.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/food_filter.dart';
 import '../../domain/usecases/get_foods_usecase.dart';
 import 'food_list_event.dart';
 import 'food_list_state.dart';
-
-EventTransformer<T> debounce<T>(Duration duration) {
-  return (events, mapper) => events
-      .transform(_DebounceStreamTransformer<T>(duration))
-      .switchMap(mapper);
-}
-
-class _DebounceStreamTransformer<T> extends StreamTransformerBase<T, T> {
-  const _DebounceStreamTransformer(this.duration);
-
-  final Duration duration;
-
-  @override
-  Stream<T> bind(Stream<T> stream) {
-    Timer? timer;
-    StreamController<T>? controller;
-
-    controller = StreamController<T>(
-      onListen: () {
-        final subscription = stream.listen(
-          (data) {
-            timer?.cancel();
-            timer = Timer(duration, () {
-              if (!controller!.isClosed) {
-                controller.add(data);
-              }
-            });
-          },
-          onError: (Object error, StackTrace stackTrace) {
-            controller?.addError(error, stackTrace);
-          },
-          onDone: () {
-            timer?.cancel();
-            controller?.close();
-          },
-        );
-
-        controller?.onCancel = () {
-          timer?.cancel();
-          return subscription.cancel();
-        };
-      },
-    );
-
-    return controller.stream;
-  }
-}
-
-extension _StreamSwitchMap<T> on Stream<T> {
-  Stream<R> switchMap<R>(Stream<R> Function(T event) mapper) {
-    StreamSubscription<R>? innerSubscription;
-    StreamSubscription<T>? outerSubscription;
-    StreamController<R>? controller;
-
-    controller = StreamController<R>(
-      onListen: () {
-        outerSubscription = listen(
-          (data) {
-            innerSubscription?.cancel();
-            innerSubscription = mapper(data).listen(
-              (r) => controller?.add(r),
-              onError: (Object e, StackTrace s) => controller?.addError(e, s),
-            );
-          },
-          onError: (Object e, StackTrace s) => controller?.addError(e, s),
-          onDone: () => controller?.close(),
-        );
-
-        controller?.onCancel = () async {
-          await innerSubscription?.cancel();
-          await outerSubscription?.cancel();
-        };
-      },
-    );
-
-    return controller.stream;
-  }
-}
 
 @injectable
 class FoodListBloc extends Bloc<FoodListEvent, FoodListState> {
@@ -117,7 +39,7 @@ class FoodListBloc extends Bloc<FoodListEvent, FoodListState> {
     String? cursor,
     bool isNextPage = false,
   }) async {
-    emit(state.copyWith(status: FoodListStatus.loading, failure: null));
+    emit(state.copyWith(status: LoadStatus.loading, failure: null));
 
     final result = await _getFoodsUseCase(
       GetFoodsParams(filter: filter, cursor: cursor),
@@ -125,7 +47,7 @@ class FoodListBloc extends Bloc<FoodListEvent, FoodListState> {
 
     result.fold(
       (failure) {
-        emit(state.copyWith(status: FoodListStatus.failure, failure: failure));
+        emit(state.copyWith(status: LoadStatus.failure, failure: failure));
       },
       (page) {
         final newItems = isNextPage
@@ -133,12 +55,12 @@ class FoodListBloc extends Bloc<FoodListEvent, FoodListState> {
             : page.items;
         emit(
           state.copyWith(
-            status: FoodListStatus.success,
+            status: LoadStatus.success,
             items: newItems,
             filter: filter,
             cursor: page.nextCursor,
-            clearCursor: page.nextCursor == null,
             hasMore: page.hasMore,
+            failure: null,
           ),
         );
       },
@@ -173,7 +95,7 @@ class FoodListBloc extends Bloc<FoodListEvent, FoodListState> {
     FoodListNextPageRequested event,
     Emitter<FoodListState> emit,
   ) async {
-    if (!state.hasMore || state.status == FoodListStatus.loading) {
+    if (!state.hasMore || state.status == LoadStatus.loading) {
       return;
     }
     await _fetchPage(

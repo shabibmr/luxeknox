@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -116,70 +118,76 @@ class _PaymentMethodsBody extends StatelessWidget {
             )
           : null,
       body: BlocConsumer<PaymentMethodsCubit, PaymentMethodsState>(
-        listenWhen: (p, n) =>
-            n is PaymentMethodsLoaded && n.message != null,
+        listenWhen: (previous, next) =>
+            next.failure != previous.failure &&
+            next.failure != null &&
+            next.items.isNotEmpty &&
+            next.status != LoadStatus.failure,
         listener: (context, state) {
-          if (state is PaymentMethodsLoaded && state.message != null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message!)));
-          }
+          final failure = state.failure;
+          if (failure == null) return;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(failureMessage(failure))));
         },
         builder: (context, state) {
-          return switch (state) {
-            PaymentMethodsLoading() => const AppLoading(),
-            PaymentMethodsFailure(:final message) => AppErrorView(
-              message: message,
+          if (state.status == LoadStatus.loading && state.items.isEmpty) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && state.items.isEmpty) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? ''
+                  : failureMessage(state.failure!),
               onRetry: () => context.read<PaymentMethodsCubit>().load(),
-            ),
-            PaymentMethodsLoaded(:final items, :final creating) => items
-                    .isEmpty
-                ? Stack(
-                    children: [
-                      const AppEmptyView(message: PaymentStrings.noneFound),
-                      if (creating)
-                        const Align(
-                          alignment: Alignment.topCenter,
-                          child: LinearProgressIndicator(),
-                        ),
-                    ],
-                  )
-                : Stack(
-                    children: [
-                      RefreshIndicator(
-                        onRefresh: () =>
-                            context.read<PaymentMethodsCubit>().load(),
-                        child: ListView.builder(
-                          itemCount: items.length,
-                          itemBuilder: (context, index) {
-                            final method = items[index];
-                            return ListTile(
-                              title: Text(method.methodName),
-                              subtitle: Text(
-                                [
-                                  if (method.isDigital)
-                                    PaymentStrings.digitalBadge,
-                                  if (!method.isActive)
-                                    PaymentStrings.inactiveBadge,
-                                ].join(' · '),
-                              ),
-                              trailing: Icon(
-                                method.isActive
-                                    ? Icons.check_circle_outline
-                                    : Icons.block_outlined,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      if (creating)
-                        const Align(
-                          alignment: Alignment.topCenter,
-                          child: LinearProgressIndicator(),
-                        ),
-                    ],
+            );
+          }
+          final items = state.items;
+          final creating = state.creating;
+          if (items.isEmpty) {
+            return Stack(
+              children: [
+                const AppEmptyView(message: PaymentStrings.noneFound),
+                if (creating)
+                  const Align(
+                    alignment: Alignment.topCenter,
+                    child: LinearProgressIndicator(),
                   ),
-          };
+              ],
+            );
+          }
+          return Stack(
+            children: [
+              RefreshIndicator(
+                onRefresh: () => context.read<PaymentMethodsCubit>().load(),
+                child: ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final method = items[index];
+                    return ListTile(
+                      title: Text(method.methodName),
+                      subtitle: Text(
+                        [
+                          if (method.isDigital) PaymentStrings.digitalBadge,
+                          if (!method.isActive) PaymentStrings.inactiveBadge,
+                        ].join(' · '),
+                      ),
+                      trailing: Icon(
+                        method.isActive
+                            ? Icons.check_circle_outline
+                            : Icons.block_outlined,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              if (creating)
+                const Align(
+                  alignment: Alignment.topCenter,
+                  child: LinearProgressIndicator(),
+                ),
+            ],
+          );
         },
       ),
     );

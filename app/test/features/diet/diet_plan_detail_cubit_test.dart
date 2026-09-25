@@ -1,4 +1,5 @@
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/diet/domain/entities/diet_plan.dart';
 import 'package:app/features/diet/domain/entities/diet_plan_status.dart';
 import 'package:app/features/diet/domain/usecases/archive_diet_plan_usecase.dart';
@@ -65,8 +66,14 @@ void main() {
     },
     act: (cubit) => cubit.load('1'),
     expect: () => [
-      isA<DietPlanDetailLoading>(),
-      isA<DietPlanDetailLoaded>().having((s) => s.plan.title, 'title', 'Plan 1'),
+      isA<DietPlanDetailState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<DietPlanDetailState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.plan?.title, 'title', 'Plan 1'),
     ],
   );
 
@@ -80,8 +87,15 @@ void main() {
     },
     act: (cubit) => cubit.load('1'),
     expect: () => [
-      isA<DietPlanDetailLoading>(),
-      isA<DietPlanDetailFailure>(),
+      isA<DietPlanDetailState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<DietPlanDetailState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NotFoundFailure>())
+          .having((s) => s.plan, 'plan', isNull),
     ],
   );
 
@@ -101,10 +115,21 @@ void main() {
       await cubit.publish();
     },
     expect: () => [
-      isA<DietPlanDetailLoading>(),
-      isA<DietPlanDetailLoaded>().having((s) => s.plan.status, 'status', DietPlanStatus.draft),
-      isA<DietPlanDetailActionInFlight>(),
-      isA<DietPlanDetailLoaded>().having((s) => s.plan.status, 'status', DietPlanStatus.active),
+      isA<DietPlanDetailState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<DietPlanDetailState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.plan?.status, 'status', DietPlanStatus.draft),
+      isA<DietPlanDetailState>()
+          .having((s) => s.actionInFlight, 'actionInFlight', true)
+          .having((s) => s.plan?.status, 'plan.status', DietPlanStatus.draft),
+      isA<DietPlanDetailState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.actionInFlight, 'actionInFlight', false)
+          .having((s) => s.plan?.status, 'status', DietPlanStatus.active),
     ],
   );
 
@@ -124,10 +149,21 @@ void main() {
       await cubit.archive();
     },
     expect: () => [
-      isA<DietPlanDetailLoading>(),
-      isA<DietPlanDetailLoaded>().having((s) => s.plan.status, 'status', DietPlanStatus.active),
-      isA<DietPlanDetailActionInFlight>(),
-      isA<DietPlanDetailLoaded>().having((s) => s.plan.status, 'status', DietPlanStatus.archived),
+      isA<DietPlanDetailState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<DietPlanDetailState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.plan?.status, 'status', DietPlanStatus.active),
+      isA<DietPlanDetailState>()
+          .having((s) => s.actionInFlight, 'actionInFlight', true)
+          .having((s) => s.plan?.status, 'plan.status', DietPlanStatus.active),
+      isA<DietPlanDetailState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.actionInFlight, 'actionInFlight', false)
+          .having((s) => s.plan?.status, 'status', DietPlanStatus.archived),
     ],
   );
 
@@ -147,14 +183,26 @@ void main() {
       await cubit.assignToMember('42');
     },
     expect: () => [
-      isA<DietPlanDetailLoading>(),
-      isA<DietPlanDetailLoaded>().having((s) => s.plan.id, 'id', '5'),
-      isA<DietPlanDetailActionInFlight>(),
-      isA<DietPlanDetailLoaded>().having(
-        (s) => s.assignedPlan?.id,
-        'assignedPlan.id',
-        '99',
+      isA<DietPlanDetailState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
       ),
+      isA<DietPlanDetailState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.plan?.id, 'id', '5'),
+      isA<DietPlanDetailState>()
+          .having((s) => s.actionInFlight, 'actionInFlight', true)
+          .having((s) => s.plan?.id, 'plan.id', '5'),
+      isA<DietPlanDetailState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.actionInFlight, 'actionInFlight', false)
+          .having((s) => s.plan?.id, 'plan.id', '5')
+          .having(
+            (s) => s.assignedPlan?.id,
+            'assignedPlan.id',
+            '99',
+          ),
     ],
   );
 }

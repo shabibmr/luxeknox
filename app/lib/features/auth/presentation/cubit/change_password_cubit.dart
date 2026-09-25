@@ -1,24 +1,20 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../session/domain/usecases/change_password_usecase.dart';
 import '../auth_strings.dart';
 
-enum ChangePasswordStatus { idle, submitting, success, failure }
+part 'change_password_cubit.freezed.dart';
 
-class ChangePasswordState extends Equatable {
-  const ChangePasswordState({
-    this.status = ChangePasswordStatus.idle,
-    this.errorMessage,
-  });
-
-  final ChangePasswordStatus status;
-  final String? errorMessage;
-
-  @override
-  List<Object?> get props => [status, errorMessage];
+@freezed
+abstract class ChangePasswordState with _$ChangePasswordState {
+  const factory ChangePasswordState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    String? errorMessage,
+  }) = _ChangePasswordState;
 }
 
 @injectable
@@ -36,7 +32,7 @@ class ChangePasswordCubit extends Cubit<ChangePasswordState> {
     if (currentPassword.isEmpty || newPassword.isEmpty) {
       emit(
         const ChangePasswordState(
-          status: ChangePasswordStatus.failure,
+          status: LoadStatus.failure,
           errorMessage: AuthStrings.enterPassword,
         ),
       );
@@ -45,7 +41,7 @@ class ChangePasswordCubit extends Cubit<ChangePasswordState> {
     if (newPassword.length < 8) {
       emit(
         const ChangePasswordState(
-          status: ChangePasswordStatus.failure,
+          status: LoadStatus.failure,
           errorMessage: AuthStrings.passwordTooShort,
         ),
       );
@@ -54,14 +50,14 @@ class ChangePasswordCubit extends Cubit<ChangePasswordState> {
     if (newPassword != confirmPassword) {
       emit(
         const ChangePasswordState(
-          status: ChangePasswordStatus.failure,
+          status: LoadStatus.failure,
           errorMessage: AuthStrings.passwordsDoNotMatch,
         ),
       );
       return;
     }
 
-    emit(const ChangePasswordState(status: ChangePasswordStatus.submitting));
+    emit(const ChangePasswordState(status: LoadStatus.loading));
     final result = await _changePassword(
       ChangePasswordParams(
         currentPassword: currentPassword,
@@ -71,13 +67,11 @@ class ChangePasswordCubit extends Cubit<ChangePasswordState> {
     result.fold(
       (failure) => emit(
         ChangePasswordState(
-          status: ChangePasswordStatus.failure,
+          status: LoadStatus.failure,
           errorMessage: _messageFor(failure),
         ),
       ),
-      (_) => emit(
-        const ChangePasswordState(status: ChangePasswordStatus.success),
-      ),
+      (_) => emit(const ChangePasswordState(status: LoadStatus.success)),
     );
   }
 

@@ -3,10 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
-import '../cubit/create_membership_cubit.dart';
+import '../bloc/create_membership_bloc.dart';
 import '../membership_strings.dart';
 
 /// Admin sales flow — create a membership contract for a member (FR-MEMB sales).
@@ -19,8 +21,8 @@ class CreateMembershipScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          getIt<CreateMembershipCubit>()..bootstrap(memberId: memberId),
+      create: (_) => getIt<CreateMembershipBloc>()
+        ..add(CreateMembershipStarted(memberId: memberId)),
       child: _CreateMembershipBody(memberId: memberId),
     );
   }
@@ -33,28 +35,33 @@ class _CreateMembershipBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<CreateMembershipCubit, CreateMembershipState>(
+    return BlocConsumer<CreateMembershipBloc, CreateMembershipState>(
       listenWhen: (prev, next) =>
-          next is CreateMembershipFormState && next.created != null,
+          prev.created == null && next.created != null,
       listener: (context, state) {
-        if (state is CreateMembershipFormState && state.created != null) {
-          final id = state.created!.id;
+        final id = state.created?.id;
+        if (id != null) {
           context.go('${Routes.adminMemberships}/$id');
         }
       },
       builder: (context, state) {
+        final noProducts = state.products.isEmpty;
         return Scaffold(
           appBar: AppBar(title: const Text(MembershipStrings.createTitle)),
-          body: switch (state) {
-            CreateMembershipLoadingCatalog() => const AppLoading(),
-            CreateMembershipBootstrapFailure(:final message) => AppErrorView(
-              message: message,
-              onRetry: () => context.read<CreateMembershipCubit>().bootstrap(
-                memberId: memberId,
-              ),
-            ),
-            CreateMembershipFormState() => _CreateMembershipForm(state: state),
-          },
+          body: noProducts &&
+                  (state.status == LoadStatus.initial ||
+                      state.status == LoadStatus.loading)
+              ? const AppLoading()
+              : noProducts && state.status == LoadStatus.failure
+              ? AppErrorView(
+                  message: state.failure == null
+                      ? MembershipStrings.noneFound
+                      : failureMessage(state.failure!),
+                  onRetry: () => context.read<CreateMembershipBloc>().add(
+                    CreateMembershipStarted(memberId: memberId),
+                  ),
+                )
+              : _CreateMembershipForm(state: state),
         );
       },
     );
@@ -64,12 +71,13 @@ class _CreateMembershipBody extends StatelessWidget {
 class _CreateMembershipForm extends StatelessWidget {
   const _CreateMembershipForm({required this.state});
 
-  final CreateMembershipFormState state;
+  final CreateMembershipState state;
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<CreateMembershipCubit>();
-    final memberLocked = state.members.isEmpty && state.selectedMemberId != null;
+    final bloc = context.read<CreateMembershipBloc>();
+    final memberLocked =
+        state.members.isEmpty && state.selectedMemberId != null;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -102,7 +110,9 @@ class _CreateMembershipForm extends StatelessWidget {
             onChanged: state.submitting
                 ? null
                 : (value) {
-                    if (value != null) cubit.selectMember(value);
+                    if (value != null) {
+                      bloc.add(CreateMembershipMemberSelected(value));
+                    }
                   },
           ),
           const SizedBox(height: 16),
@@ -136,7 +146,9 @@ class _CreateMembershipForm extends StatelessWidget {
           onChanged: state.submitting
               ? null
               : (value) {
-                  if (value != null) cubit.selectProduct(value);
+                  if (value != null) {
+                    bloc.add(CreateMembershipProductSelected(value));
+                  }
                 },
         ),
         const SizedBox(height: 16),
@@ -159,7 +171,9 @@ class _CreateMembershipForm extends StatelessWidget {
                       ),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
-                    if (picked != null) cubit.setStartDate(picked);
+                    if (picked != null) {
+                      bloc.add(CreateMembershipStartDateChanged(picked));
+                    }
                   },
           ),
         ),
@@ -170,14 +184,23 @@ class _CreateMembershipForm extends StatelessWidget {
             border: OutlineInputBorder(),
           ),
           enabled: !state.submitting,
-          onChanged: cubit.setLockerNumber,
+          onChanged: (value) => bloc.add(CreateMembershipLockerChanged(value)),
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text(MembershipStrings.autoRenewLabel),
           value: state.autoRenew,
-          onChanged: state.submitting ? null : cubit.setAutoRenew,
+          onChanged: state.submitting
+              ? null
+              : (value) => bloc.add(CreateMembershipAutoRenewChanged(value)),
         ),
+        if (state.failure != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            failureMessage(state.failure!),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        ],
         if (state.fieldError != null) ...[
           const SizedBox(height: 8),
           Text(
@@ -194,7 +217,9 @@ class _CreateMembershipForm extends StatelessWidget {
         ],
         const SizedBox(height: 24),
         FilledButton(
-          onPressed: state.submitting ? null : cubit.submit,
+          onPressed: state.submitting
+              ? null
+              : () => bloc.add(const CreateMembershipSubmitted()),
           child: state.submitting
               ? const SizedBox(
                   width: 20,

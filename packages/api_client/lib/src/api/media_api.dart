@@ -22,7 +22,7 @@ class MEDIAApi {
 
   const MEDIAApi(this._dio, this._serializers);
 
-  /// Signed PUT slot (deferred — ADR-0005)
+  /// Signed PUT slot (ADR-0008)
   /// 
   ///
   /// Parameters:
@@ -123,7 +123,7 @@ class MEDIAApi {
     );
   }
 
-  /// Short-lived signed GET (deferred — ADR-0005)
+  /// Short-lived signed GET (ADR-0008)
   /// 
   ///
   /// Parameters:

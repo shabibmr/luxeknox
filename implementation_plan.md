@@ -1,105 +1,112 @@
-# Implementation Plan: Complete Module 0 Spine & Finalize M0-24
+# Flutter standards 1–4 (ADR-0006 §4, §5, §8, §11)
 
-Finish Module 0 implementation in `todo/` by addressing the security and architectural findings in `todo/review/M0-01-to-M0-22-implementation.md`, completing `M0-24-e2e-openapi-ci.md`, verifying all test suites and OpenAPI dumps, and transitioning Module 0 to completed status.
+Fix the first four Standards findings from the main-branch Flutter review. Work on the working tree. Do not revert uncommitted scheduling edits.
 
-## User Review Required
+## Out of scope
 
-> [!IMPORTANT]
-> This plan addresses the critical security findings from the code review (access token 30-minute TTL enforcement, Zod body validation on auth endpoints, IP throttle preservation, and `SettingsService` connection to `PaginationHelper`) and completes task `M0-24` (Integration, OpenAPI, CI).
+- SessionState stays a sealed identity union (`SessionUnknown` / `SessionAuthenticated` / `SessionUnauthenticated`). §5 is about keeping list data on screen during refresh, and the router switches on this union.
+- Standards findings 5–9 (api_client leakage, data→presentation imports, `context.select`, missing `@injectable` on people cubits, bundled use-case files).
+- Spec findings (POS, dashboard cards, reschedule, settings matrix).
+- Single-class Equatable states that are not sealed and were not named in finding 1: `DashboardState`, `RestTimerState`, `DietDailyLogState`, `AddMemberWizardState`, `ExerciseDetailState`, `FoodDetailState`.
 
-- **Breaking Changes:** None. All changes harden existing endpoints and align with ADR-0003.
-- **Rollback Strategy:** Git revert if needed; zero schema changes required for this phase.
+## Shared shape
 
----
+[NEW] `app/lib/core/presentation/load_status.dart` — `enum LoadStatus { initial, loading, success, failure }`.
 
-## Proposed Changes
+[NEW] `app/lib/core/bloc/event_transformers.dart` — debounce (moved out of the private copies), plus `droppable` and `sequential` behavior. Add `bloc_concurrency` to `app/pubspec.yaml` and call its `droppable()` / `sequential()` rather than a third hand-rolled transformer. Point exercise and food list blocs at the shared debounce.
 
-### 1. Access Token TTL Enforcement (ADR-0003 & Review Finding 2)
+Each converted state is one `@freezed` class:
 
-#### [MODIFY] [auth.guard.ts](file:///E:/work/gym/apps/api/src/auth/auth.guard.ts)
-- Enforce the 30-minute access token lifespan:
-  - Check `session.created_at + 1800s <= now` in addition to `session.expires_at <= now` (which is the 30-day session/refresh expiry).
-  - If expired, drop from `sessionCache` and throw `UnauthorizedError('Session has expired or been revoked')`.
+```dart
+@Default(LoadStatus.initial) LoadStatus status,
+// previous items / entity stay populated
+Failure? failure,
+```
 
-#### [MODIFY] [session.repository.ts](file:///E:/work/gym/apps/api/src/auth/session.repository.ts)
-- In `findActiveByAccessTokenHash`, add condition `gt(sessions.created_at, minCreatedAt)` where `minCreatedAt = now - 1800s`.
+Refresh emits `status: loading` and does not clear items. First load is `loading` with empty data. Failure keeps the last success payload and sets `failure`.
 
----
+`@injectable` factory cubits/blocs. `build_runner` once at the end (`--delete-conflicting-outputs`) for freezed + injectable.
 
-### 2. Request Body Validation via Zod Pipes (Review Finding 4)
+## 1. Sealed Loading/Loaded/Failure → status field
 
-#### [MODIFY] [auth.controller.ts](file:///E:/work/gym/apps/api/src/auth/auth.controller.ts)
-- Apply `new ZodValidationPipe(loginSchema)` to `dto: LoginDto` in `@Post('login')`.
-- Apply `new ZodValidationPipe(refreshTokenSchema)` to `dto: RefreshTokenDto` in `@Post('refresh')`.
-- Import `ZodValidationPipe` from `../main` (or dedicated pipe module).
+[MODIFY] every sealed state below, and the screen/widget that switches on its subtypes (`is XLoading` → `state.status`).
 
----
+- people: `members_directory_cubit`, `trainers_directory_cubit`, `employees_directory_cubit`, `member_dossier_cubit`, `edit_member_cubit`, `edit_profile_cubit`, `edit_trainer_profile_cubit`, `my_trainer_profile_cubit`, `employee_roles_cubit`, `documents_cubit`, `photos_cubit`, `emergency_contacts_cubit`, `health_info_cubit`, `medical_history_cubit`
+- membership: `memberships_directory_cubit`, `create_membership_cubit`
+- scheduling: `schedule_detail_cubit`, `schedule_calendar_cubit`, `schedule_history_cubit`, `todays_sessions_cubit`, `trainer_availability_cubit`, `facilities_cubit`
+- attendance: `AttendancePassState`, `CheckInCubitState`, `AttendanceHistoryState`, `AttendanceSummaryState`, `LiveFeedState` in `attendance_pass_cubit.dart` and `attendance_history_cubit.dart`
+- workout: `workout_plan_list_cubit`, `workout_plan_detail_cubit`, `workout_plan_builder_cubit`, `workout_plan_versions_cubit`, `workout_history_cubit`, `active_workout_cubit`
+- diet: `diet_plan_list_cubit`, `diet_plan_detail_cubit`, `diet_plan_builder_cubit`, `diet_plan_versions_cubit`, `diet_history_cubit`, `diet_meal_detail_cubit`
+- goals: `goals_list_cubit`, `goal_detail_cubit`, `goal_form_cubit`, `goal_metrics_admin_cubit`, `measurements_cubit`, `progress_notes_cubit`, `progress_photos_cubit`
+- payments: `payments_ledger_cubit`, `payment_detail_cubit`, `payment_methods_cubit`, `outstanding_dues_cubit`
+- notifications: `notifications_inbox_cubit`, `notification_detail_cubit`, `broadcast_cubit`
+- reports: `report_cubit`
+- settings: `settings_category_cubit`
+- alerts: `system_alerts_cubit`
 
-### 3. Password Verification & Throttle Hardening (Review Findings)
+Also rewrite the hand-written status states the review named, onto the same `@freezed` + `LoadStatus` shape:
 
-#### [MODIFY] [password.ts](file:///E:/work/gym/apps/api/src/auth/password.ts)
-- Wrap `argon2.verify(hash, password)` in a try/catch block returning `false` on malformed hash to prevent unexpected 500 crashes.
+- [MODIFY] `exercise_list_state.dart`, `food_list_state.dart`
+- [MODIFY] `login_cubit.dart`, `forgot_password_cubit.dart`, `reset_password_cubit.dart`, `change_password_cubit.dart` (keep submit flags; map their local status enum onto `LoadStatus`)
 
-#### [MODIFY] [login-throttle.ts](file:///E:/work/gym/apps/api/src/auth/login-throttle.ts)
-- In `recordSuccess(identifier, _ipAddress)`, only clear `idKey` to prevent a valid login from wiping out an IP-level rate-limit lockout.
+## 2. EventTransformer where §4 names one
 
-#### [MODIFY] [auth.service.ts](file:///E:/work/gym/apps/api/src/auth/auth.service.ts)
-- Normalize `identifier` by trimming and lowercasing for email lookup.
+Cubit method + in-flight flag is not the transformer.
 
----
+| Case | Becomes | Transformer |
+| :--- | :--- | :--- |
+| Members directory search (`MembersDirectoryCubit.load`) | [MODIFY] `members_directory_bloc.dart` | debounce 300ms, same duration as exercise/food search |
+| Check-in submit (`CheckInCubit.submit`) | [MODIFY] check-in bloc in `attendance_pass_cubit.dart` (split file if the pass cubit stays a cubit) | `droppable()` |
+| Live set logging (`ActiveWorkoutCubit.logSet`) | [MODIFY] `active_workout_bloc.dart` | `sequential()` |
+| Create membership submit | [MODIFY] `create_membership_bloc.dart` | `droppable()` |
+| Book schedule (`_BookAction._book` in `book_schedule_screen.dart`) | [NEW] `book_schedule_bloc.dart` | `droppable()` |
 
-### 4. Dependency Injection & Service Wiring (Review Findings 5 & Health)
+Pass load, attendance history, and schedule detail stay cubits (no ordering requirement). Delete the `actionInFlight` early-returns those blocs replace.
 
-#### [MODIFY] [platform.module.ts](file:///E:/work/gym/apps/api/src/platform/platform.module.ts)
-- Import `SysModule` so `SettingsService` is provided to `PaginationHelper` for default page size resolution.
+Update route `BlocProvider` call sites that today do `getIt<MembersDirectoryCubit>()..load()` / `getIt<CheckInCubit>()` / `ActiveWorkout` construction / create-membership / book screen.
 
-#### [MODIFY] [health.controller.ts](file:///E:/work/gym/apps/api/src/platform/health/health.controller.ts)
-- Import `DRIZZLE_DB_TOKEN` directly from `../db/drizzle.module` instead of declaring a duplicate constant.
+## 3. Server state leaves the widget
 
----
+These call use cases through `getIt` and `setState`. Each gets an `@injectable` cubit (or the bloc from §2) provided at the route. Widgets only `context.read` / `BlocBuilder`.
 
-### 5. Test Suite & OpenAPI Alignment
+[NEW] cubits + [MODIFY] callers:
 
-#### [MODIFY] [auth.service.spec.ts](file:///E:/work/gym/apps/api/src/auth/auth.service.spec.ts)
-- Update mock `createSession` to resolve with a numeric ID (`101`) instead of `undefined`.
-- Add test coverage verifying access token expiration behavior.
+- `membership_detail_cubit.dart` ← `membership_detail_screen.dart` (load, approve, reject, freeze, cancel)
+- `membership_history_cubit.dart` ← `membership_history_screen.dart`, `membership_history_list.dart`
+- `membership_freeze_cubit.dart` ← `membership_freeze_history_screen.dart`, `membership_freeze_list.dart`
+- `membership_card_cubit.dart` ← `membership_card_screen.dart`
+- `trainer_membership_summary_cubit.dart` ← `trainer_membership_summary_screen.dart`
+- `membership_packages_catalog_cubit.dart` ← `membership_packages_catalog_screen.dart`
+- `membership_product_form_cubit.dart` ← `membership_product_form_screen.dart`
+- `exercise_form_cubit.dart` ← `exercise_form_screen.dart`
+- `food_form_cubit.dart` ← `food_form_screen.dart`
+- `exercise_picker_cubit.dart` ← `exercise_picker_sheet.dart`
+- `food_picker_cubit.dart` ← `food_picker_sheet.dart`
 
-#### [MODIFY] [scripts/dump-openapi.ts](file:///E:/work/gym/apps/api/scripts/dump-openapi.ts)
-- Align OpenAPI spec generation with server URL `/v1` matching `docs/openapi/v1.yaml`.
+Form dirty flags and sheet-local selection may stay in the widget. Anything that hits a repository or use case moves.
 
----
+## 4. Role-variant widget tests
 
-### 6. Todo Tracking Updates
+Copy the pump + seeded `SessionCubit` pattern in `app/test/features/exercises/presentation/exercise_role_variants_test.dart`. One test per applicable role. Assert the capability-gated control, not the whole screen.
 
-#### [MODIFY] [todo/M0-24-e2e-openapi-ci.md](file:///E:/work/gym/todo/M0-24-e2e-openapi-ci.md)
-- Update status to `completed`.
+[NEW]
 
-#### [MODIFY] [todo/README.md](file:///E:/work/gym/todo/README.md)
-- Mark task M0-24 as checked: `- [x] [M0-24](./M0-24-e2e-openapi-ci.md) Integration, OpenAPI, CI`.
-- Update Module 0 overall status from `pending` to `completed`.
+- `app/test/features/membership/presentation/membership_detail_role_variants_test.dart` — `memberships.approve` actions visible for admin, hidden for member and trainer
+- `app/test/features/membership/presentation/membership_packages_catalog_role_variants_test.dart` — create/update only with `memberships.create` / `memberships.update`
+- `app/test/features/membership/presentation/membership_product_form_role_variants_test.dart` — form gated by the same slugs
+- `app/test/features/notifications/presentation/notifications_inbox_role_variants_test.dart` — broadcast entry only with `notifications.send` or `notifications.broadcast`
+- `app/test/features/payments/presentation/payment_methods_role_variants_test.dart` — create only with `payments.create`
+- `app/test/features/reports/presentation/report_viewer_role_variants_test.dart` — export only with `reports.export`
+- `app/test/features/scheduling/presentation/schedule_calendar_role_variants_test.dart` — member vs trainer vs admin controls that already branch on role
+- `app/test/features/goals/presentation/progress_photos_role_variants_test.dart` — member vs trainer vs admin visibility already on that screen
 
----
+Mock the new cubits/use cases. Do not call the network.
 
-## Verification Plan
+## Verify
 
-### Automated Tests
-1. **Unit tests:**
-   ```bash
-   pnpm --filter api test
-   ```
-2. **Typecheck:**
-   ```bash
-   pnpm --filter api typecheck
-   ```
-3. **E2E tests:**
-   ```bash
-   pnpm --filter api test:e2e
-   ```
-4. **OpenAPI dump:**
-   ```bash
-   pnpm --filter api openapi:dump
-   ```
+From `app/`: `dart run build_runner build --delete-conflicting-outputs`, then `dart analyze`, then `flutter test` on the new role-variant tests plus any existing test that imported a converted state type.
 
-### Manual Verification
-- Verify that sending an invalid login body (e.g. `{ identifier: "" }`) triggers a `400 VALIDATION_FAILED`.
-- Verify that a session with `created_at` older than 30 minutes is rejected by `AuthGuard`.
+## Closed slices
+
+- Payments MVP: `PAY-001`–`PAY-011` (PDF/gateway `PAY-012`–`016` deferred).
+- DSH-007 unblocked: `PaymentRepository.getRevenueToday` sums today's `payment_received` histories; dashboard admin widget already wired.

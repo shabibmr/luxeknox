@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../domain/entities/exercise_filter.dart';
@@ -248,12 +249,12 @@ class _ExerciseListPane extends StatelessWidget {
         Expanded(
           child: BlocBuilder<ExerciseListBloc, ExerciseListState>(
             builder: (context, state) {
-              if (state.status == ExerciseListStatus.loading &&
+              if (state.status == LoadStatus.loading &&
                   state.items.isEmpty) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              if (state.status == ExerciseListStatus.failure &&
+              if (state.status == LoadStatus.failure &&
                   state.items.isEmpty) {
                 return Center(
                   child: Padding(
@@ -278,7 +279,7 @@ class _ExerciseListPane extends StatelessWidget {
                 );
               }
 
-              if (state.status == ExerciseListStatus.success &&
+              if (state.status == LoadStatus.success &&
                   state.items.isEmpty) {
                 return const Center(child: Text(ExerciseStrings.noneFound));
               }
@@ -288,7 +289,7 @@ class _ExerciseListPane extends StatelessWidget {
                   final bloc = context.read<ExerciseListBloc>();
                   bloc.add(const ExerciseListRefreshed());
                   await bloc.stream.firstWhere(
-                    (s) => s.status != ExerciseListStatus.loading,
+                    (s) => s.status != LoadStatus.loading,
                   );
                 },
                 child: ListView.builder(

@@ -1,132 +1,126 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/app_setting.dart';
 import '../../domain/entities/setting_category.dart';
 import '../../domain/usecases/get_settings_usecase.dart';
 import '../../domain/usecases/update_settings_usecase.dart';
 
-sealed class SettingsCategoryState extends Equatable {
-  const SettingsCategoryState();
+part 'settings_category_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class SettingsCategoryLoading extends SettingsCategoryState {
-  const SettingsCategoryLoading();
-}
-
-final class SettingsCategoryLoaded extends SettingsCategoryState {
-  const SettingsCategoryLoaded({
-    required this.items,
-    this.saving = false,
-    this.saved = false,
-  });
-
-  final List<AppSetting> items;
-  final bool saving;
-  final bool saved;
-
-  SettingsCategoryLoaded copyWith({
-    List<AppSetting>? items,
-    bool? saving,
-    bool? saved,
-  }) {
-    return SettingsCategoryLoaded(
-      items: items ?? this.items,
-      saving: saving ?? this.saving,
-      saved: saved ?? false,
-    );
-  }
-
-  @override
-  List<Object?> get props => [items, saving, saved];
-}
-
-final class SettingsCategoryFailure extends SettingsCategoryState {
-  const SettingsCategoryFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+@freezed
+abstract class SettingsCategoryState with _$SettingsCategoryState {
+  const factory SettingsCategoryState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default(<AppSetting>[]) List<AppSetting> items,
+    @Default(false) bool saving,
+    @Default(false) bool saved,
+    Failure? failure,
+  }) = _SettingsCategoryState;
 }
 
 @injectable
 class SettingsCategoryCubit extends Cubit<SettingsCategoryState> {
   SettingsCategoryCubit(this._getSettings, this._updateSettings)
-    : super(const SettingsCategoryLoading());
+    : super(const SettingsCategoryState());
 
   final GetSettingsUseCase _getSettings;
   final UpdateSettingsUseCase _updateSettings;
 
   SettingCategory? _category;
 
+  bool get _editable => state.status == LoadStatus.success;
+
   Future<void> load(SettingCategory category) async {
     _category = category;
-    emit(const SettingsCategoryLoading());
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        saving: false,
+        saved: false,
+      ),
+    );
     final result = await _getSettings(GetSettingsParams(category: category));
     result.fold(
-      (failure) => emit(SettingsCategoryFailure(_message(failure))),
-      (items) => emit(SettingsCategoryLoaded(items: items)),
+      (failure) => emit(
+        state.copyWith(status: LoadStatus.failure, failure: failure),
+      ),
+      (items) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          items: items,
+          failure: null,
+          saving: false,
+          saved: false,
+        ),
+      ),
     );
   }
 
   void editValue(String key, String value) {
-    final current = state;
-    if (current is! SettingsCategoryLoaded) return;
+    if (!_editable) return;
     emit(
-      current.copyWith(
+      state.copyWith(
         items: [
-          for (final item in current.items)
+          for (final item in state.items)
             if (item.key == key) item.copyWith(value: value) else item,
         ],
+        saved: false,
+        failure: null,
       ),
     );
   }
 
   void addSetting(String key, String value) {
-    final current = state;
     final category = _category;
-    if (current is! SettingsCategoryLoaded || category == null) return;
+    if (!_editable || category == null) return;
     if (key.trim().isEmpty) return;
-    if (current.items.any((item) => item.key == key)) return;
+    if (state.items.any((item) => item.key == key)) return;
     emit(
-      current.copyWith(
+      state.copyWith(
         items: [
-          ...current.items,
+          ...state.items,
           AppSetting(key: key.trim(), value: value, category: category),
         ],
+        saved: false,
+        failure: null,
       ),
     );
   }
 
   void removeSetting(String key) {
-    final current = state;
-    if (current is! SettingsCategoryLoaded) return;
+    if (!_editable) return;
     emit(
-      current.copyWith(
-        items: current.items.where((item) => item.key != key).toList(),
+      state.copyWith(
+        items: state.items.where((item) => item.key != key).toList(),
+        saved: false,
+        failure: null,
       ),
     );
   }
 
   Future<void> save() async {
+    if (!_editable || state.saving) return;
     final current = state;
-    if (current is! SettingsCategoryLoaded) return;
-    emit(current.copyWith(saving: true));
+    emit(current.copyWith(saving: true, saved: false, failure: null));
     final result = await _updateSettings(current.items);
     result.fold(
-      (failure) => emit(SettingsCategoryFailure(_message(failure))),
+      (failure) => emit(
+        current.copyWith(saving: false, saved: false, failure: failure),
+      ),
       (items) => emit(
-        SettingsCategoryLoaded(items: items, saving: false, saved: true),
+        current.copyWith(
+          status: LoadStatus.success,
+          items: items,
+          saving: false,
+          saved: true,
+          failure: null,
+        ),
       ),
     );
   }
-
-  String _message(Failure failure) => failureMessage(failure);
 }

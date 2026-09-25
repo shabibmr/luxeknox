@@ -1,5 +1,6 @@
 import 'package:app/core/error/failures.dart';
 import 'package:app/core/idempotency/idempotency_key.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/attendance/domain/usecases/attendance_usecases.dart';
 import 'package:app/features/scheduling/domain/entities/schedule_enums.dart';
 import 'package:app/features/scheduling/domain/entities/schedule_session.dart';
@@ -103,7 +104,10 @@ void main() {
       });
       return buildCubit();
     },
-    seed: () => ScheduleDetailLoaded(session: session),
+    seed: () => ScheduleDetailState(
+      status: LoadStatus.success,
+      session: session,
+    ),
     act: (cubit) async {
       final first = cubit.book(memberId: '9');
       await cubit.book(memberId: '9');
@@ -111,8 +115,8 @@ void main() {
     },
     verify: (cubit) {
       verify(() => book(any())).called(1);
-      final state = cubit.state;
-      expect(state, isA<ScheduleDetailLoaded>());
+      expect(cubit.state.status, LoadStatus.success);
+      expect(cubit.state.session?.id, '1');
     },
   );
 
@@ -134,7 +138,10 @@ void main() {
       });
       return buildCubit();
     },
-    seed: () => ScheduleDetailLoaded(session: session),
+    seed: () => ScheduleDetailState(
+      status: LoadStatus.success,
+      session: session,
+    ),
     act: (cubit) async {
       // Prime schedule id via load path used by book().
       await cubit.load('1');

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/diet_plan_version.dart';
@@ -33,30 +35,35 @@ class _VersionsBody extends StatelessWidget {
       appBar: AppBar(title: const Text(DietStrings.versionsTitle)),
       body: BlocBuilder<DietPlanVersionsCubit, DietPlanVersionsState>(
         builder: (context, state) {
-          return switch (state) {
-            DietPlanVersionsLoading() => const AppLoading(),
-            DietPlanVersionsFailure(:final message) => AppErrorView(
-              message: message,
+          final showData =
+              state.status == LoadStatus.success || state.versions.isNotEmpty;
+          if (state.status == LoadStatus.loading && !showData) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && !showData) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () =>
                   context.read<DietPlanVersionsCubit>().load(planId),
-            ),
-            DietPlanVersionsLoaded(:final versions, :final expandedId) =>
-              versions.isEmpty
-                  ? const Center(child: Text(DietStrings.noVersions))
-                  : ListView.builder(
-                      itemCount: versions.length,
-                      itemBuilder: (context, index) {
-                        final v = versions[index];
-                        return _DietVersionTile(
-                          version: v,
-                          expanded: expandedId == v.id,
-                          onTap: () => context
-                              .read<DietPlanVersionsCubit>()
-                              .toggleExpanded(v.id),
-                        );
-                      },
-                    ),
-          };
+            );
+          }
+          final versions = state.versions;
+          final expandedId = state.expandedId;
+          return versions.isEmpty
+              ? const Center(child: Text(DietStrings.noVersions))
+              : ListView.builder(
+                  itemCount: versions.length,
+                  itemBuilder: (context, index) {
+                    final v = versions[index];
+                    return _DietVersionTile(
+                      version: v,
+                      expanded: expandedId == v.id,
+                      onTap: () => context
+                          .read<DietPlanVersionsCubit>()
+                          .toggleExpanded(v.id),
+                    );
+                  },
+                );
         },
       ),
     );

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/health_info.dart';
@@ -38,21 +40,30 @@ class _HealthInfoBody extends StatelessWidget {
       appBar: AppBar(title: const Text(PeopleStrings.health)),
       body: BlocConsumer<HealthInfoCubit, HealthInfoState>(
         listener: (context, state) {
-          if (state is HealthInfoLoaded && state.message != null) {
+          if (state.message != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(PeopleStrings.healthSaved)),
+            );
+          } else if (state.status == LoadStatus.failure &&
+              state.info != null &&
+              state.failure != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
             );
           }
         },
         builder: (context, state) {
-          return switch (state) {
-            HealthInfoLoading() => const AppLoading(),
-            HealthInfoFailure(:final message) => AppErrorView(
-              message: message,
+          if (state.info == null && state.status == LoadStatus.failure) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () => context.read<HealthInfoCubit>().load(memberId),
-            ),
-            HealthInfoLoaded(:final info) => _HealthForm(info: info),
-          };
+            );
+          }
+          final info = state.info;
+          if (info == null) {
+            return const AppLoading();
+          }
+          return _HealthForm(info: info);
         },
       ),
     );
@@ -122,9 +133,7 @@ class _HealthFormState extends State<_HealthForm> {
         ),
         TextField(
           controller: _allergies,
-          decoration: const InputDecoration(
-            labelText: PeopleStrings.allergies,
-          ),
+          decoration: const InputDecoration(labelText: PeopleStrings.allergies),
           maxLines: 2,
         ),
         TextField(

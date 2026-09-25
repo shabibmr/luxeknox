@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -31,29 +33,41 @@ class _AttendancePassBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AttendancePassCubit, AttendancePassState>(
-      listenWhen: (p, n) => n is AttendancePassLoaded && n.message != null,
-      listener: (context, state) {
-        if (state is AttendancePassLoaded && state.message != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message!)));
+      listenWhen: (previous, next) {
+        if (next.message != null && next.message != previous.message) {
+          return true;
         }
+        return next.pass != null &&
+            next.failure != null &&
+            next.failure != previous.failure;
+      },
+      listener: (context, state) {
+        final text =
+            state.message ??
+            (state.failure == null ? null : failureMessage(state.failure!));
+        if (text == null) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(text)));
       },
       builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(title: const Text(AttendanceStrings.passTitle)),
-          body: switch (state) {
-            AttendancePassLoading() => const AppLoading(),
-            AttendancePassFailure(:final message) => AppErrorView(
-              message: message,
-              onRetry: () => context.read<AttendancePassCubit>().load(),
-            ),
-            AttendancePassLoaded(
-              :final pass,
-              :final openAttendance,
-              :final actionInFlight,
-            ) =>
-              ListView(
+        final pass = state.pass;
+        final openAttendance = state.openAttendance;
+        final actionInFlight = state.actionInFlight;
+        final Widget body;
+        if (state.status == LoadStatus.loading && pass == null) {
+          body = const AppLoading();
+        } else if (state.status == LoadStatus.failure && pass == null) {
+          body = AppErrorView(
+            message: state.failure == null
+                ? ''
+                : failureMessage(state.failure!),
+            onRetry: () => context.read<AttendancePassCubit>().load(),
+          );
+        } else if (pass == null) {
+          body = const AppLoading();
+        } else {
+          body = ListView(
                 padding: const EdgeInsets.all(24),
                 children: [
                   if (pass.isExpired)
@@ -129,8 +143,11 @@ class _AttendancePassBody extends StatelessWidget {
                         context.push(Routes.memberProfileAttendanceSummary),
                   ),
                 ],
-              ),
-          },
+              );
+        }
+        return Scaffold(
+          appBar: AppBar(title: const Text(AttendanceStrings.passTitle)),
+          body: body,
         );
       },
     );
@@ -162,44 +179,45 @@ class _AttendanceHistoryBody extends StatelessWidget {
       appBar: AppBar(title: const Text(AttendanceStrings.historyTitle)),
       body: BlocBuilder<AttendanceHistoryCubit, AttendanceHistoryState>(
         builder: (context, state) {
-          return switch (state) {
-            AttendanceHistoryLoading() => const AppLoading(),
-            AttendanceHistoryFailure(:final message) => AppErrorView(
-              message: message,
+          if (state.status == LoadStatus.loading && state.items.isEmpty) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && state.items.isEmpty) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? ''
+                  : failureMessage(state.failure!),
               onRetry: () =>
                   context.read<AttendanceHistoryCubit>().load(userId: userId),
-            ),
-            AttendanceHistoryLoaded(:final items, :final hasMore, :final loadingMore) =>
-              items.isEmpty
-                  ? const AppEmptyView(message: AttendanceStrings.emptyHistory)
-                  : ListView.builder(
-                      itemCount: items.length + (hasMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index >= items.length) {
-                          if (!loadingMore) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              context.read<AttendanceHistoryCubit>().loadMore();
-                            });
-                          }
-                          return const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: AppLoading(),
-                          );
-                        }
-                        final r = items[index];
-                        return ListTile(
-                          title: Text(
-                            '${r.checkInTime} · ${r.method.label}',
-                          ),
-                          subtitle: Text(
-                            r.checkOutTime == null
-                                ? 'Open'
-                                : 'Out ${r.checkOutTime}',
-                          ),
-                        );
-                      },
-                    ),
-          };
+            );
+          }
+          if (state.items.isEmpty) {
+            return const AppEmptyView(message: AttendanceStrings.emptyHistory);
+          }
+          final items = state.items;
+          return ListView.builder(
+            itemCount: items.length + (state.hasMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index >= items.length) {
+                if (!state.loadingMore) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    context.read<AttendanceHistoryCubit>().loadMore();
+                  });
+                }
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: AppLoading(),
+                );
+              }
+              final r = items[index];
+              return ListTile(
+                title: Text('${r.checkInTime} · ${r.method.label}'),
+                subtitle: Text(
+                  r.checkOutTime == null ? 'Open' : 'Out ${r.checkOutTime}',
+                ),
+              );
+            },
+          );
         },
       ),
     );

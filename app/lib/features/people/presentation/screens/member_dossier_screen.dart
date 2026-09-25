@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/person.dart';
@@ -48,26 +50,33 @@ class _MemberDossierBody extends StatelessWidget {
       ),
       body: BlocConsumer<MemberDossierCubit, MemberDossierState>(
         listener: (context, state) {
-          if (state is MemberDossierLoaded && state.message != null) {
+          if (state.message != null) {
             final text = state.message == 'assigned'
                 ? PeopleStrings.trainerAssigned
                 : PeopleStrings.profileSaved;
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text(text)));
+          } else if (state.status == LoadStatus.failure &&
+              state.person != null &&
+              state.failure != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
+            );
           }
         },
         builder: (context, state) {
-          return switch (state) {
-            MemberDossierLoading() => const AppLoading(),
-            MemberDossierFailure(:final message) => AppErrorView(
-              message: message,
+          if (state.person == null && state.status == LoadStatus.failure) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () => context.read<MemberDossierCubit>().load(memberId),
-            ),
-            MemberDossierLoaded(:final person) => _DossierContent(
-              person: person,
-            ),
-          };
+            );
+          }
+          final person = state.person;
+          if (person == null) {
+            return const AppLoading();
+          }
+          return _DossierContent(person: person);
         },
       ),
     );

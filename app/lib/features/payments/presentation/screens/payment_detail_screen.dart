@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -35,17 +37,21 @@ class _PaymentDetailBody extends StatelessWidget {
       appBar: AppBar(title: const Text(PaymentStrings.detailTitle)),
       body: BlocBuilder<PaymentDetailCubit, PaymentDetailState>(
         builder: (context, state) {
-          return switch (state) {
-            PaymentDetailLoading() => const AppLoading(),
-            PaymentDetailFailure(:final message) => AppErrorView(
-              message: message,
+          final payment = state.payment;
+          if (state.status == LoadStatus.loading && payment == null) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && payment == null) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? ''
+                  : failureMessage(state.failure!),
               onRetry: () =>
                   context.read<PaymentDetailCubit>().load(paymentId),
-            ),
-            PaymentDetailLoaded(:final payment) => _PaymentDetailContent(
-              payment: payment,
-            ),
-          };
+            );
+          }
+          if (payment == null) return const AppLoading();
+          return _PaymentDetailContent(payment: payment);
         },
       ),
     );

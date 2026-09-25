@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
 import '../../../../core/media/document_access.dart';
 import '../../../../core/media/document_preview_dialog.dart';
 import '../../../../core/media/media_picker.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -60,77 +62,85 @@ class _DocumentsBody extends StatelessWidget {
           ),
         ],
       ),
-      body: BlocBuilder<DocumentsCubit, DocumentsState>(
+      body: BlocConsumer<DocumentsCubit, DocumentsState>(
+        listener: (context, state) {
+          if (state.status == LoadStatus.failure &&
+              state.documents.isNotEmpty &&
+              state.failure != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
+            );
+          }
+        },
         builder: (context, state) {
-          return switch (state) {
-            DocumentsLoading() => const AppLoading(),
-            DocumentsFailure(:final message) => AppErrorView(
-              message: message,
+          final documents = state.documents;
+          final showFullScreen =
+              documents.isEmpty &&
+              !state.uploading &&
+              state.uploadError == null;
+          if (showFullScreen && state.status == LoadStatus.failure) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () => context.read<DocumentsCubit>().load(memberId),
-            ),
-            DocumentsLoaded(
-              :final documents,
-              :final uploading,
-              :final uploadProgress,
-              :final uploadError,
-            ) =>
-              Column(
-                children: [
-                  if (uploading || uploadError != null || state.canRetry)
-                    _UploadBanner(
-                      uploading: uploading,
-                      progress: uploadProgress,
-                      error: uploadError,
-                      canRetry: state.canRetry,
-                    ),
-                  Expanded(
-                    child: documents.isEmpty
-                        ? AppEmptyView(
-                            message: PeopleStrings.emptyDocuments,
-                            action: () => _pickAndUpload(context),
-                            actionLabel: PeopleStrings.uploadDocument,
-                          )
-                        : ListView.separated(
-                            itemCount: documents.length,
-                            separatorBuilder: (_, _) =>
-                                const Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              final doc = documents[index];
-                              return ListTile(
-                                leading: Icon(
-                                  doc.documentType == DocumentPurpose.progressPhoto
-                                      ? Icons.image_outlined
-                                      : Icons.description_outlined,
-                                ),
-                                title: Text(
-                                  doc.title ?? doc.documentType.name,
-                                ),
-                                subtitle: Text(
-                                  '${doc.documentType.name}${doc.fileSize != null ? ' · ${(doc.fileSize! / 1024).toStringAsFixed(0)} KB' : ''}',
-                                ),
-                                onTap: doc.objectKey != null
-                                    ? () => DocumentPreviewDialog.show(
-                                          context,
-                                          objectKey: doc.objectKey!,
-                                          title: doc.title ?? doc.documentType.name,
-                                          purpose: doc.documentType,
-                                          viewerRole: role,
-                                          fileSize: doc.fileSize,
-                                        )
-                                    : null,
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.delete_outline),
-                                  onPressed: () => context
-                                      .read<DocumentsCubit>()
-                                      .remove(doc.id),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ],
+            );
+          }
+          if (showFullScreen && state.status != LoadStatus.success) {
+            return const AppLoading();
+          }
+          return Column(
+            children: [
+              if (state.uploading ||
+                  state.uploadError != null ||
+                  state.canRetry)
+                _UploadBanner(
+                  uploading: state.uploading,
+                  progress: state.uploadProgress,
+                  error: state.uploadError,
+                  canRetry: state.canRetry,
+                ),
+              Expanded(
+                child: documents.isEmpty
+                    ? AppEmptyView(
+                        message: PeopleStrings.emptyDocuments,
+                        action: () => _pickAndUpload(context),
+                        actionLabel: PeopleStrings.uploadDocument,
+                      )
+                    : ListView.separated(
+                        itemCount: documents.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final doc = documents[index];
+                          return ListTile(
+                            leading: Icon(
+                              doc.documentType == DocumentPurpose.progressPhoto
+                                  ? Icons.image_outlined
+                                  : Icons.description_outlined,
+                            ),
+                            title: Text(doc.title ?? doc.documentType.name),
+                            subtitle: Text(
+                              '${doc.documentType.name}${doc.fileSize != null ? ' · ${(doc.fileSize! / 1024).toStringAsFixed(0)} KB' : ''}',
+                            ),
+                            onTap: doc.objectKey != null
+                                ? () => DocumentPreviewDialog.show(
+                                    context,
+                                    objectKey: doc.objectKey!,
+                                    title: doc.title ?? doc.documentType.name,
+                                    purpose: doc.documentType,
+                                    viewerRole: role,
+                                    fileSize: doc.fileSize,
+                                  )
+                                : null,
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () =>
+                                  context.read<DocumentsCubit>().remove(doc.id),
+                            ),
+                          );
+                        },
+                      ),
               ),
-          };
+            ],
+          );
         },
       ),
     );
@@ -143,9 +153,7 @@ class _DocumentsBody extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: DocumentPurpose.values
-              .where(
-                (p) => canAccessDocument(role: role, purpose: p),
-              )
+              .where((p) => canAccessDocument(role: role, purpose: p))
               .map(
                 (p) => ListTile(
                   title: Text(p.name),

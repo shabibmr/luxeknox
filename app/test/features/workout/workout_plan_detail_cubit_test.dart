@@ -1,4 +1,5 @@
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/workout/domain/entities/workout_plan.dart';
 import 'package:app/features/workout/domain/entities/workout_plan_status.dart';
 import 'package:app/features/workout/domain/usecases/archive_workout_plan_usecase.dart';
@@ -76,18 +77,21 @@ void main() {
       await cubit.publish();
     },
     expect: () => [
-      isA<WorkoutPlanDetailLoading>(),
-      isA<WorkoutPlanDetailLoaded>().having(
-        (s) => s.plan.status,
+      isA<WorkoutPlanDetailState>().having(
+        (s) => s.status,
         'status',
-        WorkoutPlanStatus.draft,
+        LoadStatus.loading,
       ),
-      isA<WorkoutPlanDetailActionInFlight>(),
-      isA<WorkoutPlanDetailLoaded>().having(
-        (s) => s.plan.status,
-        'status',
-        WorkoutPlanStatus.active,
-      ),
+      isA<WorkoutPlanDetailState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.plan?.status, 'plan', WorkoutPlanStatus.draft),
+      isA<WorkoutPlanDetailState>()
+          .having((s) => s.actionInFlight, 'actionInFlight', true)
+          .having((s) => s.plan?.id, 'plan', '1'),
+      isA<WorkoutPlanDetailState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.actionInFlight, 'actionInFlight', false)
+          .having((s) => s.plan?.status, 'plan', WorkoutPlanStatus.active),
     ],
   );
 
@@ -109,14 +113,24 @@ void main() {
       await cubit.archive();
     },
     expect: () => [
-      isA<WorkoutPlanDetailLoading>(),
-      isA<WorkoutPlanDetailLoaded>(),
-      isA<WorkoutPlanDetailActionInFlight>(),
-      isA<WorkoutPlanDetailLoaded>().having(
-        (s) => s.plan.status,
+      isA<WorkoutPlanDetailState>().having(
+        (s) => s.status,
         'status',
-        WorkoutPlanStatus.archived,
+        LoadStatus.loading,
       ),
+      isA<WorkoutPlanDetailState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.success,
+      ),
+      isA<WorkoutPlanDetailState>().having(
+        (s) => s.actionInFlight,
+        'actionInFlight',
+        true,
+      ),
+      isA<WorkoutPlanDetailState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.plan?.status, 'plan', WorkoutPlanStatus.archived),
     ],
   );
 
@@ -136,10 +150,26 @@ void main() {
       await cubit.publish();
     },
     expect: () => [
-      isA<WorkoutPlanDetailLoading>(),
-      isA<WorkoutPlanDetailLoaded>(),
-      isA<WorkoutPlanDetailActionInFlight>(),
-      isA<WorkoutPlanDetailFailure>(),
+      isA<WorkoutPlanDetailState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<WorkoutPlanDetailState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.success,
+      ),
+      isA<WorkoutPlanDetailState>().having(
+        (s) => s.actionInFlight,
+        'actionInFlight',
+        true,
+      ),
+      isA<WorkoutPlanDetailState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>())
+          .having((s) => s.plan?.id, 'plan', '1')
+          .having((s) => s.actionInFlight, 'actionInFlight', false),
     ],
   );
 
@@ -161,12 +191,25 @@ void main() {
       await cubit.assignToMember('5');
     },
     expect: () => [
-      isA<WorkoutPlanDetailLoading>(),
-      isA<WorkoutPlanDetailLoaded>(),
-      isA<WorkoutPlanDetailActionInFlight>(),
-      isA<WorkoutPlanDetailLoaded>()
+      isA<WorkoutPlanDetailState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<WorkoutPlanDetailState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.success,
+      ),
+      isA<WorkoutPlanDetailState>().having(
+        (s) => s.actionInFlight,
+        'actionInFlight',
+        true,
+      ),
+      isA<WorkoutPlanDetailState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.assignedPlan?.id, 'assignedPlan.id', '99')
-          .having((s) => s.plan.id, 'plan.id', '10'),
+          .having((s) => s.plan?.id, 'plan.id', '10'),
     ],
   );
 }

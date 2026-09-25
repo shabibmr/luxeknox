@@ -1,4 +1,5 @@
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/core/usecase/usecase.dart';
 import 'package:app/features/payments/domain/entities/payment_method.dart';
 import 'package:app/features/payments/domain/usecases/create_payment_method_usecase.dart';
@@ -49,12 +50,18 @@ void main() {
     },
     act: (cubit) => cubit.load(),
     expect: () => [
-      isA<PaymentMethodsLoading>(),
-      isA<PaymentMethodsLoaded>().having(
-        (s) => s.items.map((m) => m.id).toList(),
-        'ids',
-        ['1'],
+      isA<PaymentMethodsState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
       ),
+      isA<PaymentMethodsState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having(
+            (s) => s.items.map((m) => m.id).toList(),
+            'ids',
+            ['1'],
+          ),
     ],
   );
 
@@ -75,15 +82,25 @@ void main() {
       await cubit.createMethod('Card', isDigital: true, isActive: true);
     },
     expect: () => [
-      isA<PaymentMethodsLoading>(),
-      isA<PaymentMethodsLoaded>().having((s) => s.items.length, 'len', 1),
-      isA<PaymentMethodsLoaded>().having((s) => s.creating, 'creating', true),
-      isA<PaymentMethodsLoading>(),
-      isA<PaymentMethodsLoaded>().having(
-        (s) => s.items.map((m) => m.methodName).toList(),
-        'names',
-        ['Cash', 'Card'],
+      isA<PaymentMethodsState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
       ),
+      isA<PaymentMethodsState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.items.length, 'len', 1),
+      isA<PaymentMethodsState>().having((s) => s.creating, 'creating', true),
+      isA<PaymentMethodsState>()
+          .having((s) => s.status, 'status', LoadStatus.loading)
+          .having((s) => s.items.length, 'len', 1),
+      isA<PaymentMethodsState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having(
+            (s) => s.items.map((m) => m.methodName).toList(),
+            'names',
+            ['Cash', 'Card'],
+          ),
     ],
     verify: (_) {
       final captured = verify(() => createMethod(captureAny())).captured;
@@ -111,12 +128,19 @@ void main() {
       await cubit.createMethod('Bad');
     },
     expect: () => [
-      isA<PaymentMethodsLoading>(),
-      isA<PaymentMethodsLoaded>().having((s) => s.message, 'msg', isNull),
-      isA<PaymentMethodsLoaded>().having((s) => s.creating, 'creating', true),
-      isA<PaymentMethodsLoaded>()
+      isA<PaymentMethodsState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<PaymentMethodsState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.failure, 'failure', isNull),
+      isA<PaymentMethodsState>().having((s) => s.creating, 'creating', true),
+      isA<PaymentMethodsState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.items.length, 'len', 1)
-          .having((s) => s.message, 'msg', isNotNull)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>())
           .having((s) => s.creating, 'creating', false),
     ],
   );

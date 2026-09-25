@@ -9,6 +9,7 @@ import 'package:built_value/serializer.dart';
 import 'package:dio/dio.dart';
 
 import 'package:api_client/src/api_util.dart';
+import 'package:api_client/src/model/date.dart';
 import 'package:api_client/src/model/error_body.dart';
 import 'package:api_client/src/model/goal.dart';
 import 'package:api_client/src/model/goal_check_in_write.dart';
@@ -18,6 +19,7 @@ import 'package:api_client/src/model/goal_metric_page.dart';
 import 'package:api_client/src/model/goal_metric_write.dart';
 import 'package:api_client/src/model/goal_page.dart';
 import 'package:api_client/src/model/goal_write.dart';
+import 'package:api_client/src/model/longitudinal_data_point.dart';
 import 'package:api_client/src/model/measurement.dart';
 import 'package:api_client/src/model/measurement_page.dart';
 import 'package:api_client/src/model/measurement_write.dart';
@@ -25,8 +27,10 @@ import 'package:api_client/src/model/progress_note.dart';
 import 'package:api_client/src/model/progress_note_page.dart';
 import 'package:api_client/src/model/progress_note_write.dart';
 import 'package:api_client/src/model/progress_photo.dart';
+import 'package:api_client/src/model/progress_photo_comparison.dart';
 import 'package:api_client/src/model/progress_photo_page.dart';
 import 'package:api_client/src/model/progress_photo_write.dart';
+import 'package:built_collection/built_collection.dart';
 
 class GOALApi {
 
@@ -128,6 +132,97 @@ class GOALApi {
     }
 
     return Response<GoalHistory>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Compare progress photos across two dates and poses
+  /// 
+  ///
+  /// Parameters:
+  /// * [id] 
+  /// * [date1] 
+  /// * [date2] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [ProgressPhotoComparison] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<ProgressPhotoComparison>> compareProgressPhotos({ 
+    required int id,
+    required Date date1,
+    required Date date2,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/members/{id}/progress-photos/comparison'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      r'date1': encodeQueryParameter(_serializers, date1, const FullType(Date)),
+      r'date2': encodeQueryParameter(_serializers, date2, const FullType(Date)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    ProgressPhotoComparison? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(ProgressPhotoComparison),
+      ) as ProgressPhotoComparison;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<ProgressPhotoComparison>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -856,6 +951,100 @@ class GOALApi {
     }
 
     return Response<Measurement>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Longitudinal metric chart series
+  /// 
+  ///
+  /// Parameters:
+  /// * [id] 
+  /// * [metricId] 
+  /// * [from] 
+  /// * [to] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [BuiltList<LongitudinalDataPoint>] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<BuiltList<LongitudinalDataPoint>>> getMeasurementChart({ 
+    required int id,
+    required int metricId,
+    DateTime? from,
+    DateTime? to,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/members/{id}/measurements/chart'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      r'metric_id': encodeQueryParameter(_serializers, metricId, const FullType(int)),
+      if (from != null) r'from': encodeQueryParameter(_serializers, from, const FullType(DateTime)),
+      if (to != null) r'to': encodeQueryParameter(_serializers, to, const FullType(DateTime)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    BuiltList<LongitudinalDataPoint>? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(BuiltList, [FullType(LongitudinalDataPoint)]),
+      ) as BuiltList<LongitudinalDataPoint>;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<BuiltList<LongitudinalDataPoint>>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

@@ -1,61 +1,56 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/diet_plan_version.dart';
 import '../../domain/usecases/list_diet_plan_versions_usecase.dart';
 
-sealed class DietPlanVersionsState extends Equatable {
-  const DietPlanVersionsState();
+part 'diet_plan_versions_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class DietPlanVersionsLoading extends DietPlanVersionsState {
-  const DietPlanVersionsLoading();
-}
-
-final class DietPlanVersionsLoaded extends DietPlanVersionsState {
-  const DietPlanVersionsLoaded(this.versions, {this.expandedId});
-
-  final List<DietPlanVersion> versions;
-  final String? expandedId;
-
-  @override
-  List<Object?> get props => [versions, expandedId];
-}
-
-final class DietPlanVersionsFailure extends DietPlanVersionsState {
-  const DietPlanVersionsFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+@freezed
+abstract class DietPlanVersionsState with _$DietPlanVersionsState {
+  const factory DietPlanVersionsState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default(<DietPlanVersion>[]) List<DietPlanVersion> versions,
+    String? expandedId,
+    Failure? failure,
+  }) = _DietPlanVersionsState;
 }
 
 @injectable
 class DietPlanVersionsCubit extends Cubit<DietPlanVersionsState> {
-  DietPlanVersionsCubit(this._listVersions)
-      : super(const DietPlanVersionsLoading());
+  DietPlanVersionsCubit(this._listVersions) : super(const DietPlanVersionsState());
 
   final ListDietPlanVersionsUseCase _listVersions;
 
   Future<void> load(String planId) async {
-    emit(const DietPlanVersionsLoading());
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+      ),
+    );
     final result = await _listVersions(planId);
     result.fold(
-      (failure) => emit(DietPlanVersionsFailure(failureMessage(failure))),
-      (versions) => emit(DietPlanVersionsLoaded(versions)),
+      (failure) => emit(
+        state.copyWith(status: LoadStatus.failure, failure: failure),
+      ),
+      (versions) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          versions: versions,
+          expandedId: null,
+        ),
+      ),
     );
   }
 
   void toggleExpanded(String versionId) {
-    final current = state;
-    if (current is! DietPlanVersionsLoaded) return;
-    final next = current.expandedId == versionId ? null : versionId;
-    emit(DietPlanVersionsLoaded(current.versions, expandedId: next));
+    if (state.status != LoadStatus.success && state.versions.isEmpty) return;
+    final next = state.expandedId == versionId ? null : versionId;
+    emit(state.copyWith(expandedId: next));
   }
 }

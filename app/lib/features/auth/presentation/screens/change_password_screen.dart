@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../auth_strings.dart';
 import '../cubit/change_password_cubit.dart';
 
@@ -54,7 +55,7 @@ class _ChangePasswordFormState extends State<_ChangePasswordForm> {
       appBar: AppBar(title: const Text(AuthStrings.changePasswordTitle)),
       body: BlocConsumer<ChangePasswordCubit, ChangePasswordState>(
         listener: (context, state) {
-          if (state.status == ChangePasswordStatus.success) {
+          if (state.status == LoadStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(AuthStrings.passwordChanged)),
             );
@@ -62,7 +63,7 @@ class _ChangePasswordFormState extends State<_ChangePasswordForm> {
           }
         },
         builder: (context, state) {
-          final submitting = state.status == ChangePasswordStatus.submitting;
+          final submitting = state.status == LoadStatus.loading;
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
@@ -74,7 +75,7 @@ class _ChangePasswordFormState extends State<_ChangePasswordForm> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (state.status == ChangePasswordStatus.failure &&
+                      if (state.status == LoadStatus.failure &&
                           state.errorMessage != null) ...[
                         Text(state.errorMessage!),
                         const SizedBox(height: 16),

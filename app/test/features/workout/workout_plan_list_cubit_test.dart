@@ -1,5 +1,6 @@
 import 'package:app/core/error/failures.dart';
 import 'package:app/core/pagination/cursor_page.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/workout/domain/entities/workout_plan.dart';
 import 'package:app/features/workout/domain/entities/workout_plan_status.dart';
 import 'package:app/features/workout/domain/usecases/list_workout_plans_usecase.dart';
@@ -55,13 +56,20 @@ void main() {
       await cubit.setFilter(WorkoutPlanListFilter.active);
     },
     expect: () => [
-      isA<WorkoutPlanListLoading>(),
-      isA<WorkoutPlanListLoaded>().having(
-        (s) => s.items.map((p) => p.id).toList(),
-        'ids',
-        ['1', '2', '3'],
+      isA<WorkoutPlanListState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
       ),
-      isA<WorkoutPlanListLoaded>()
+      isA<WorkoutPlanListState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having(
+            (s) => s.items.map((p) => p.id).toList(),
+            'ids',
+            ['1', '2', '3'],
+          ),
+      isA<WorkoutPlanListState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.filter, 'filter', WorkoutPlanListFilter.active)
           .having((s) => s.items.map((p) => p.id).toList(), 'ids', ['2']),
     ],
@@ -77,8 +85,14 @@ void main() {
     },
     act: (cubit) => cubit.load(),
     expect: () => [
-      isA<WorkoutPlanListLoading>(),
-      isA<WorkoutPlanListFailure>(),
+      isA<WorkoutPlanListState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<WorkoutPlanListState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>()),
     ],
   );
 }

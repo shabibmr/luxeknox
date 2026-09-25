@@ -1,5 +1,6 @@
 import 'package:app/core/error/failures.dart';
 import 'package:app/core/pagination/cursor_page.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/diet/domain/entities/diet_log.dart';
 import 'package:app/features/diet/domain/usecases/list_diet_logs_usecase.dart';
 import 'package:app/features/diet/presentation/cubit/diet_history_cubit.dart';
@@ -26,8 +27,8 @@ void main() {
   DietHistoryCubit buildCubit() => DietHistoryCubit(listDietLogs);
 
   group('DietHistoryCubit', () {
-    test('initial state is loading', () {
-      expect(buildCubit().state, isA<DietHistoryLoading>());
+    test('initial state is initial', () {
+      expect(buildCubit().state.status, LoadStatus.initial);
     });
 
     blocTest<DietHistoryCubit, DietHistoryState>(
@@ -63,8 +64,13 @@ void main() {
       },
       act: (cubit) => cubit.load(memberId: '10'),
       expect: () => [
-        isA<DietHistoryLoading>(),
-        isA<DietHistoryLoaded>()
+        isA<DietHistoryState>().having(
+          (s) => s.status,
+          'status',
+          LoadStatus.loading,
+        ),
+        isA<DietHistoryState>()
+            .having((s) => s.status, 'status', LoadStatus.success)
             .having((s) => s.logs.length, 'count', 2)
             .having((s) => s.averageAdherenceScore, 'avgAdherence', 85.0)
             .having((s) => s.averageCaloriesConsumed, 'avgCalories', 2100.0)
@@ -78,7 +84,15 @@ void main() {
       build: () => buildCubit(),
       act: (cubit) => cubit.load(memberId: null),
       expect: () => [
-        isA<DietHistoryFailure>(),
+        isA<DietHistoryState>()
+            .having((s) => s.status, 'status', LoadStatus.failure)
+            .having(
+              (s) => s.failure,
+              'failure',
+              const BusinessRuleFailure(
+                'Member ID is required to view diet history.',
+              ),
+            ),
       ],
     );
 
@@ -92,8 +106,18 @@ void main() {
       },
       act: (cubit) => cubit.load(memberId: '10'),
       expect: () => [
-        isA<DietHistoryLoading>(),
-        isA<DietHistoryFailure>().having((s) => s.message, 'message', 'Error fetching logs'),
+        isA<DietHistoryState>().having(
+          (s) => s.status,
+          'status',
+          LoadStatus.loading,
+        ),
+        isA<DietHistoryState>()
+            .having((s) => s.status, 'status', LoadStatus.failure)
+            .having(
+              (s) => s.failure,
+              'failure',
+              const BusinessRuleFailure('Error fetching logs'),
+            ),
       ],
     );
   });

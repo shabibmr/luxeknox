@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../attendance_strings.dart';
@@ -33,16 +35,23 @@ class _AttendanceSummaryBody extends StatelessWidget {
       appBar: AppBar(title: const Text(AttendanceStrings.summaryTitle)),
       body: BlocBuilder<AttendanceSummaryCubit, AttendanceSummaryState>(
         builder: (context, state) {
-          return switch (state) {
-            AttendanceSummaryLoading() => const AppLoading(),
-            AttendanceSummaryFailure(:final message) => AppErrorView(
-              message: message,
-              onRetry: () => context
-                  .read<AttendanceSummaryCubit>()
-                  .load(memberId: memberId),
-            ),
-            AttendanceSummaryLoaded(:final summary, :final heatmapDays) =>
-              ListView(
+          final summary = state.summary;
+          if (state.status == LoadStatus.loading && summary == null) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && summary == null) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? ''
+                  : failureMessage(state.failure!),
+              onRetry: () => context.read<AttendanceSummaryCubit>().load(
+                memberId: memberId,
+              ),
+            );
+          }
+          if (summary == null) return const AppLoading();
+          final heatmapDays = state.heatmapDays;
+          return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
                   _StatTile(
@@ -65,8 +74,7 @@ class _AttendanceSummaryBody extends StatelessWidget {
                   const SizedBox(height: 12),
                   _HeatmapGrid(days: heatmapDays),
                 ],
-              ),
-          };
+              );
         },
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/exercises/domain/entities/exercise.dart';
 import 'package:app/features/workout/domain/entities/workout_plan.dart';
 import 'package:app/features/workout/domain/entities/workout_plan_status.dart';
@@ -108,25 +109,31 @@ void main() {
       cubit.reorderWithinDay(dayNumber: 1, oldIndex: 0, newIndex: 1);
     },
     expect: () => [
-      isA<WorkoutPlanBuilderReady>().having((s) => s.dirty, 'dirty', false),
-      isA<WorkoutPlanBuilderReady>()
+      isA<WorkoutPlanBuilderState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.dirty, 'dirty', false),
+      isA<WorkoutPlanBuilderState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.dirty, 'dirty', true)
           .having((s) => s.exercises.length, 'count', 1),
-      isA<WorkoutPlanBuilderReady>().having(
-        (s) => s.exercises.map((e) => e.exerciseId).toList(),
-        'ids',
-        ['10', '11'],
-      ),
-      isA<WorkoutPlanBuilderReady>().having(
-        (s) => s.exercises.map((e) => e.exerciseId).toList(),
-        'reordered',
-        ['11', '10'],
-      ),
+      isA<WorkoutPlanBuilderState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having(
+            (s) => s.exercises.map((e) => e.exerciseId).toList(),
+            'ids',
+            ['10', '11'],
+          ),
+      isA<WorkoutPlanBuilderState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having(
+            (s) => s.exercises.map((e) => e.exerciseId).toList(),
+            'reordered',
+            ['11', '10'],
+          ),
     ],
     verify: (cubit) {
-      final ready = cubit.state as WorkoutPlanBuilderReady;
-      expect(ready.exercises.map((e) => e.orderIndex).toList(), [0, 1]);
-      expect(ready.dirty, isTrue);
+      expect(cubit.state.exercises.map((e) => e.orderIndex).toList(), [0, 1]);
+      expect(cubit.state.dirty, isTrue);
     },
   );
 
@@ -155,10 +162,10 @@ void main() {
       expect(params.id, '99');
       expect(params.rowVersion, 1);
       expect(params.exercises, hasLength(1));
-      final ready = cubit.state as WorkoutPlanBuilderReady;
-      expect(ready.planId, '99');
-      expect(ready.dirty, isFalse);
-      expect(ready.savedPlan, isNotNull);
+      expect(cubit.state.planId, '99');
+      expect(cubit.state.dirty, isFalse);
+      expect(cubit.state.savedPlan, isNotNull);
+      expect(cubit.state.status, LoadStatus.success);
     },
   );
 
@@ -209,10 +216,10 @@ void main() {
       await cubit.save();
     },
     verify: (cubit) {
-      final ready = cubit.state as WorkoutPlanBuilderReady;
-      expect(ready.dirty, isTrue);
-      expect(ready.errorMessage, isNotNull);
-      expect(ready.saving, isFalse);
+      expect(cubit.state.dirty, isTrue);
+      expect(cubit.state.failure, isA<NetworkFailure>());
+      expect(cubit.state.status, LoadStatus.failure);
+      expect(cubit.state.saving, isFalse);
     },
   );
 }

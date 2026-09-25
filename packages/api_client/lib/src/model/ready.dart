@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:built_collection/built_collection.dart';
+import 'package:api_client/src/model/ready_jobs.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -14,15 +15,24 @@ part 'ready.g.dart';
 /// Properties:
 /// * [status] 
 /// * [database] 
+/// * [timestamp] - UTC ISO-8601
+/// * [jobs] 
 @BuiltValue()
 abstract class Ready implements Built<Ready, ReadyBuilder> {
   @BuiltValueField(wireName: r'status')
   ReadyStatusEnum get status;
-  // enum statusEnum {  ok,  degraded,  };
+  // enum statusEnum {  ok,  error,  };
 
   @BuiltValueField(wireName: r'database')
   ReadyDatabaseEnum get database;
-  // enum databaseEnum {  up,  down,  };
+  // enum databaseEnum {  connected,  disconnected,  };
+
+  /// UTC ISO-8601
+  @BuiltValueField(wireName: r'timestamp')
+  DateTime get timestamp;
+
+  @BuiltValueField(wireName: r'jobs')
+  ReadyJobs? get jobs;
 
   Ready._();
 
@@ -57,6 +67,18 @@ class _$ReadySerializer implements PrimitiveSerializer<Ready> {
       object.database,
       specifiedType: const FullType(ReadyDatabaseEnum),
     );
+    yield r'timestamp';
+    yield serializers.serialize(
+      object.timestamp,
+      specifiedType: const FullType(DateTime),
+    );
+    if (object.jobs != null) {
+      yield r'jobs';
+      yield serializers.serialize(
+        object.jobs,
+        specifiedType: const FullType(ReadyJobs),
+      );
+    }
   }
 
   @override
@@ -94,6 +116,21 @@ class _$ReadySerializer implements PrimitiveSerializer<Ready> {
           ) as ReadyDatabaseEnum;
           result.database = valueDes;
           break;
+        case r'timestamp':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(DateTime),
+          ) as DateTime;
+          result.timestamp = valueDes;
+          break;
+        case r'jobs':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(ReadyJobs),
+          ) as ReadyJobs?;
+          if (valueDes == null) continue;
+          result.jobs.replace(valueDes);
+          break;
         default:
           unhandled.add(key);
           unhandled.add(value);
@@ -128,8 +165,8 @@ class ReadyStatusEnum extends EnumClass {
 
   @BuiltValueEnumConst(wireName: r'ok')
   static const ReadyStatusEnum ok = _$readyStatusEnum_ok;
-  @BuiltValueEnumConst(wireName: r'degraded')
-  static const ReadyStatusEnum degraded = _$readyStatusEnum_degraded;
+  @BuiltValueEnumConst(wireName: r'error')
+  static const ReadyStatusEnum error = _$readyStatusEnum_error;
 
   static Serializer<ReadyStatusEnum> get serializer => _$readyStatusEnumSerializer;
 
@@ -141,10 +178,10 @@ class ReadyStatusEnum extends EnumClass {
 
 class ReadyDatabaseEnum extends EnumClass {
 
-  @BuiltValueEnumConst(wireName: r'up')
-  static const ReadyDatabaseEnum up = _$readyDatabaseEnum_up;
-  @BuiltValueEnumConst(wireName: r'down')
-  static const ReadyDatabaseEnum down = _$readyDatabaseEnum_down;
+  @BuiltValueEnumConst(wireName: r'connected')
+  static const ReadyDatabaseEnum connected = _$readyDatabaseEnum_connected;
+  @BuiltValueEnumConst(wireName: r'disconnected')
+  static const ReadyDatabaseEnum disconnected = _$readyDatabaseEnum_disconnected;
 
   static Serializer<ReadyDatabaseEnum> get serializer => _$readyDatabaseEnumSerializer;
 

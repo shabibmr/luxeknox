@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/workout_plan_version.dart';
@@ -33,30 +35,35 @@ class _VersionsBody extends StatelessWidget {
       appBar: AppBar(title: const Text(WorkoutStrings.versionsTitle)),
       body: BlocBuilder<WorkoutPlanVersionsCubit, WorkoutPlanVersionsState>(
         builder: (context, state) {
-          return switch (state) {
-            WorkoutPlanVersionsLoading() => const AppLoading(),
-            WorkoutPlanVersionsFailure(:final message) => AppErrorView(
-              message: message,
+          final versions = state.versions;
+          if (state.status == LoadStatus.loading && !state.hasLoaded) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && !state.hasLoaded) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? 'Something went wrong'
+                  : failureMessage(state.failure!),
               onRetry: () =>
                   context.read<WorkoutPlanVersionsCubit>().load(planId),
-            ),
-            WorkoutPlanVersionsLoaded(:final versions, :final expandedId) =>
-              versions.isEmpty
-                  ? const Center(child: Text(WorkoutStrings.noVersions))
-                  : ListView.builder(
-                      itemCount: versions.length,
-                      itemBuilder: (context, index) {
-                        final v = versions[index];
-                        return _VersionTile(
-                          version: v,
-                          expanded: expandedId == v.id,
-                          onTap: () => context
-                              .read<WorkoutPlanVersionsCubit>()
-                              .toggleExpanded(v.id),
-                        );
-                      },
-                    ),
-          };
+            );
+          }
+          if (versions.isEmpty) {
+            return const Center(child: Text(WorkoutStrings.noVersions));
+          }
+          return ListView.builder(
+            itemCount: versions.length,
+            itemBuilder: (context, index) {
+              final v = versions[index];
+              return _VersionTile(
+                version: v,
+                expanded: state.expandedId == v.id,
+                onTap: () => context
+                    .read<WorkoutPlanVersionsCubit>()
+                    .toggleExpanded(v.id),
+              );
+            },
+          );
         },
       ),
     );

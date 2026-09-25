@@ -1,34 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/unsaved_changes_scope.dart';
 import '../../domain/entities/membership_product.dart';
-import '../../domain/usecases/create_membership_product_usecase.dart';
-import '../../domain/usecases/update_membership_product_usecase.dart';
+import '../cubit/membership_product_form_cubit.dart';
 import '../membership_strings.dart';
 
 /// Create/edit form for `membership_products` (FR-MEMB-001), gated by
 /// `memberships.create`/`memberships.update`.
-class MembershipProductFormScreen extends StatefulWidget {
+class MembershipProductFormScreen extends StatelessWidget {
   const MembershipProductFormScreen({super.key, this.product});
+
+  final MembershipProduct? product;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => getIt<MembershipProductFormCubit>(),
+      child: _MembershipProductFormBody(product: product),
+    );
+  }
+}
+
+class _MembershipProductFormBody extends StatefulWidget {
+  const _MembershipProductFormBody({this.product});
 
   final MembershipProduct? product;
 
   bool get isEditing => product != null;
 
   @override
-  State<MembershipProductFormScreen> createState() =>
-      _MembershipProductFormScreenState();
+  State<_MembershipProductFormBody> createState() =>
+      _MembershipProductFormBodyState();
 }
 
-class _MembershipProductFormScreenState
-    extends State<MembershipProductFormScreen> {
+class _MembershipProductFormBodyState extends State<_MembershipProductFormBody> {
   final _formKey = GlobalKey<FormState>();
-
-  late final _createUseCase = getIt<CreateMembershipProductUseCase>();
-  late final _updateUseCase = getIt<UpdateMembershipProductUseCase>();
 
   late final _nameController = TextEditingController(
     text: widget.product?.name,
@@ -60,9 +71,7 @@ class _MembershipProductFormScreenState
   late bool _isActive = widget.product?.isActive ?? true;
   late final bool _initialIsActive = _isActive;
 
-  bool _isSubmitting = false;
   bool _isDirty = false;
-  String? _errorMessage;
 
   @override
   void initState() {
@@ -113,18 +122,14 @@ class _MembershipProductFormScreenState
     super.dispose();
   }
 
-  List<String> _splitList(String raw) =>
-      raw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+  List<String> _splitList(String raw) => raw
+      .split(',')
+      .map((s) => s.trim())
+      .where((s) => s.isNotEmpty)
+      .toList();
 
-  Future<void> _submit() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-
-    setState(() {
-      _isSubmitting = true;
-      _errorMessage = null;
-    });
-
-    final product = MembershipProduct(
+  MembershipProduct _productFromFields() {
+    return MembershipProduct(
       id: widget.product?.id ?? '',
       name: _nameController.text.trim(),
       code: _codeController.text.trim(),
@@ -141,188 +146,202 @@ class _MembershipProductFormScreenState
       accessFacilities: _splitList(_facilitiesController.text),
       isActive: _isActive,
     );
+  }
 
-    final result = widget.isEditing
-        ? await _updateUseCase(product)
-        : await _createUseCase(product);
-
-    if (!mounted) return;
-    result.fold(
-      (failure) => setState(() {
-        _isSubmitting = false;
-        _errorMessage = failureMessage(failure);
-      }),
-      (_) {
-        setState(() => _isDirty = false);
-        Navigator.of(context).pop(true);
-      },
-    );
+  Future<void> _submit(BuildContext context) async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final cubit = context.read<MembershipProductFormCubit>();
+    final product = _productFromFields();
+    if (!widget.isEditing) {
+      await cubit.create(product);
+    } else if (!product.isActive) {
+      await cubit.deactivate(product);
+    } else {
+      await cubit.update(product);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final requiredSlug = widget.isEditing
-        ? 'memberships.update'
-        : 'memberships.create';
+    return BlocConsumer<MembershipProductFormCubit, MembershipProductFormState>(
+        listenWhen: (previous, next) =>
+            previous.status != LoadStatus.success &&
+            next.status == LoadStatus.success,
+        listener: (context, state) {
+          setState(() => _isDirty = false);
+          Navigator.of(context).pop(true);
+        },
+        builder: (context, state) {
+          final requiredSlug = widget.isEditing
+              ? 'memberships.update'
+              : 'memberships.create';
 
-    if (!context.can(requiredSlug)) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.isEditing
-                ? MembershipStrings.editTitle
-                : MembershipStrings.addTitle,
-          ),
-        ),
-        body: const Center(child: Text(MembershipStrings.noPermission)),
-      );
-    }
+          if (!context.can(requiredSlug)) {
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  widget.isEditing
+                      ? MembershipStrings.editTitle
+                      : MembershipStrings.addTitle,
+                ),
+              ),
+              body: const Center(child: Text(MembershipStrings.noPermission)),
+            );
+          }
 
-    final dirty = _isDirty || _isActive != _initialIsActive;
+          final submitting = state.status == LoadStatus.loading;
+          final dirty = _isDirty || _isActive != _initialIsActive;
+          final errorMessage = state.failure == null
+              ? null
+              : failureMessage(state.failure!);
 
-    return UnsavedChangesScope(
-      hasUnsavedChanges: dirty && !_isSubmitting,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.isEditing
-                ? MembershipStrings.editTitle
-                : MembershipStrings.addTitle,
-          ),
-        ),
-        body: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              if (_errorMessage != null) ...[
-                MaterialBanner(
-                  content: Text(_errorMessage!),
-                  backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                  actions: const [SizedBox.shrink()],
-                ),
-                const SizedBox(height: 16),
-              ],
-              TextFormField(
-                controller: _nameController,
-                enabled: !_isSubmitting,
-                decoration: const InputDecoration(
-                  labelText: MembershipStrings.nameLabel,
-                ),
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? MembershipStrings.nameRequired
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _codeController,
-                enabled: !_isSubmitting,
-                decoration: const InputDecoration(
-                  labelText: MembershipStrings.codeLabel,
-                ),
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? MembershipStrings.codeRequired
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                enabled: !_isSubmitting,
-                minLines: 2,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: MembershipStrings.descriptionLabel,
+          return UnsavedChangesScope(
+            hasUnsavedChanges: dirty && !submitting,
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  widget.isEditing
+                      ? MembershipStrings.editTitle
+                      : MembershipStrings.addTitle,
                 ),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _durationController,
-                enabled: !_isSubmitting,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: MembershipStrings.durationDaysLabel,
+              body: Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.all(24),
+                  children: [
+                    if (errorMessage != null) ...[
+                      MaterialBanner(
+                        content: Text(errorMessage),
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.errorContainer,
+                        actions: const [SizedBox.shrink()],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    TextFormField(
+                      controller: _nameController,
+                      enabled: !submitting,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.nameLabel,
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? MembershipStrings.nameRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _codeController,
+                      enabled: !submitting,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.codeLabel,
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? MembershipStrings.codeRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _descriptionController,
+                      enabled: !submitting,
+                      minLines: 2,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.descriptionLabel,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _durationController,
+                      enabled: !submitting,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.durationDaysLabel,
+                      ),
+                      validator: (v) => (int.tryParse(v?.trim() ?? '') == null)
+                          ? MembershipStrings.durationDaysRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _priceController,
+                      enabled: !submitting,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.basePriceLabel,
+                        helperText: 'Two-decimal amount, e.g. 49.99',
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? MembershipStrings.basePriceRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _taxController,
+                      enabled: !submitting,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.taxPercentageLabel,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _maxFreezeController,
+                      enabled: !submitting,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.maxFreezeDaysLabel,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _ptSessionsController,
+                      enabled: !submitting,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.ptSessionsIncludedLabel,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _facilitiesController,
+                      enabled: !submitting,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.accessFacilitiesLabel,
+                        helperText: MembershipStrings.commaSeparatedHelper,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      title: const Text(MembershipStrings.active),
+                      subtitle: const Text(MembershipStrings.activeSubtitle),
+                      value: _isActive,
+                      onChanged: submitting
+                          ? null
+                          : (v) => setState(() => _isActive = v),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: submitting ? null : () => _submit(context),
+                      child: submitting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text(MembershipStrings.save),
+                    ),
+                  ],
                 ),
-                validator: (v) => (int.tryParse(v?.trim() ?? '') == null)
-                    ? MembershipStrings.durationDaysRequired
-                    : null,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _priceController,
-                enabled: !_isSubmitting,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: const InputDecoration(
-                  labelText: MembershipStrings.basePriceLabel,
-                  helperText: 'Two-decimal amount, e.g. 49.99',
-                ),
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? MembershipStrings.basePriceRequired
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _taxController,
-                enabled: !_isSubmitting,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: const InputDecoration(
-                  labelText: MembershipStrings.taxPercentageLabel,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _maxFreezeController,
-                enabled: !_isSubmitting,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: MembershipStrings.maxFreezeDaysLabel,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _ptSessionsController,
-                enabled: !_isSubmitting,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: MembershipStrings.ptSessionsIncludedLabel,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _facilitiesController,
-                enabled: !_isSubmitting,
-                decoration: const InputDecoration(
-                  labelText: MembershipStrings.accessFacilitiesLabel,
-                  helperText: MembershipStrings.commaSeparatedHelper,
-                ),
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                title: const Text(MembershipStrings.active),
-                subtitle: const Text(MembershipStrings.activeSubtitle),
-                value: _isActive,
-                onChanged: _isSubmitting
-                    ? null
-                    : (v) => setState(() => _isActive = v),
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text(MembershipStrings.save),
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          );
+        },
     );
   }
 }

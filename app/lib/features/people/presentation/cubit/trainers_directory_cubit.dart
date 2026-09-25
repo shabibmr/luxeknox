@@ -1,107 +1,107 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/trainer_summary.dart';
 import '../../domain/usecases/list_trainers_usecase.dart';
 
-sealed class TrainersDirectoryState extends Equatable {
-  const TrainersDirectoryState();
+part 'trainers_directory_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class TrainersDirectoryLoading extends TrainersDirectoryState {
-  const TrainersDirectoryLoading();
-}
-
-final class TrainersDirectoryLoaded extends TrainersDirectoryState {
-  const TrainersDirectoryLoaded({
-    required this.items,
-    required this.hasMore,
-    this.nextCursor,
-    this.query,
-    this.loadingMore = false,
-  });
-
-  final List<TrainerSummary> items;
-  final bool hasMore;
-  final String? nextCursor;
-  final String? query;
-  final bool loadingMore;
-
-  @override
-  List<Object?> get props => [items, hasMore, nextCursor, query, loadingMore];
-}
-
-final class TrainersDirectoryFailure extends TrainersDirectoryState {
-  const TrainersDirectoryFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+@freezed
+abstract class TrainersDirectoryState with _$TrainersDirectoryState {
+  const factory TrainersDirectoryState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default(<TrainerSummary>[]) List<TrainerSummary> items,
+    @Default(false) bool hasMore,
+    String? nextCursor,
+    String? query,
+    @Default(false) bool loadingMore,
+    Failure? failure,
+  }) = _TrainersDirectoryState;
 }
 
 @injectable
 class TrainersDirectoryCubit extends Cubit<TrainersDirectoryState> {
   TrainersDirectoryCubit(this._listTrainers)
-    : super(const TrainersDirectoryLoading());
+    : super(const TrainersDirectoryState());
 
   final ListTrainersUseCase _listTrainers;
-  String? _query;
 
   Future<void> load({String? query}) async {
-    _query = query?.trim().isEmpty == true ? null : query?.trim();
-    emit(const TrainersDirectoryLoading());
-    final result = await _listTrainers(ListTrainersParams(query: _query));
+    final normalized = _normalizeQuery(query);
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        query: normalized,
+        loadingMore: false,
+      ),
+    );
+    final result = await _listTrainers(ListTrainersParams(query: normalized));
     result.fold(
-      (failure) => emit(TrainersDirectoryFailure(_message(failure))),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
-        TrainersDirectoryLoaded(
+        state.copyWith(
+          status: LoadStatus.success,
           items: page.items,
           hasMore: page.hasMore,
           nextCursor: page.nextCursor,
-          query: _query,
+          query: normalized,
+          loadingMore: false,
+          failure: null,
         ),
       ),
     );
   }
 
   Future<void> loadMore() async {
-    final current = state;
-    if (current is! TrainersDirectoryLoaded ||
-        !current.hasMore ||
-        current.loadingMore) {
+    if (!state.hasMore ||
+        state.loadingMore ||
+        state.status == LoadStatus.loading) {
       return;
     }
+    final query = state.query;
+    final cursor = state.nextCursor;
     emit(
-      TrainersDirectoryLoaded(
-        items: current.items,
-        hasMore: current.hasMore,
-        nextCursor: current.nextCursor,
-        query: current.query,
+      state.copyWith(
+        status: LoadStatus.success,
         loadingMore: true,
+        failure: null,
       ),
     );
     final result = await _listTrainers(
-      ListTrainersParams(query: current.query, cursor: current.nextCursor),
+      ListTrainersParams(query: query, cursor: cursor),
     );
     result.fold(
-      (failure) => emit(TrainersDirectoryFailure(_message(failure))),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          loadingMore: false,
+        ),
+      ),
       (page) => emit(
-        TrainersDirectoryLoaded(
-          items: [...current.items, ...page.items],
+        state.copyWith(
+          status: LoadStatus.success,
+          items: [...state.items, ...page.items],
           hasMore: page.hasMore,
           nextCursor: page.nextCursor,
-          query: current.query,
+          query: query,
+          loadingMore: false,
+          failure: null,
         ),
       ),
     );
   }
 
-  String _message(Failure failure) => failureMessage(failure);
+  String? _normalizeQuery(String? query) {
+    final trimmed = query?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return trimmed;
+  }
 }

@@ -28,23 +28,25 @@ part 'member_dossier.g.dart';
 /// * [joinedDate] 
 /// * [notes] 
 /// * [user] 
-/// * [membership] 
-/// * [outstandingBalance] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
-/// * [lastCheckIn] - UTC ISO-8601
-/// * [nextSchedule] 
+/// * [membership] - Null until MEMB vertical populates membership contracts.
+/// * [outstandingBalance] - Null until PAY vertical.
+/// * [lastCheckIn] - Null until ATTN vertical.
+/// * [nextSchedule] - Null until SCHED vertical.
 @BuiltValue()
 abstract class MemberDossier implements Member, Built<MemberDossier, MemberDossierBuilder> {
+  /// Null until SCHED vertical.
   @BuiltValueField(wireName: r'next_schedule')
   Schedule? get nextSchedule;
 
+  /// Null until MEMB vertical populates membership contracts.
   @BuiltValueField(wireName: r'membership')
   Membership? get membership;
 
-  /// UTC ISO-8601
+  /// Null until ATTN vertical.
   @BuiltValueField(wireName: r'last_check_in')
   DateTime? get lastCheckIn;
 
-  /// DECIMAL(12,2) as a two-decimal string. Never a JSON number.
+  /// Null until PAY vertical.
   @BuiltValueField(wireName: r'outstanding_balance')
   String? get outstandingBalance;
 

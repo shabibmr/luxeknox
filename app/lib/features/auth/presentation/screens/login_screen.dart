@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../auth_strings.dart';
 import '../cubit/login_cubit.dart';
@@ -53,7 +54,7 @@ class _LoginFormState extends State<_LoginForm> {
       appBar: AppBar(title: const Text(AuthStrings.signInTitle)),
       body: BlocBuilder<LoginCubit, LoginState>(
         builder: (context, state) {
-          final isSubmitting = state.status == LoginStatus.submitting;
+          final isSubmitting = state.status == LoadStatus.loading;
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
@@ -65,7 +66,7 @@ class _LoginFormState extends State<_LoginForm> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (state.status == LoginStatus.failure &&
+                      if (state.status == LoadStatus.failure &&
                           state.errorMessage != null) ...[
                         MaterialBanner(
                           content: Text(state.errorMessage!),

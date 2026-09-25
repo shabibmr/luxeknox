@@ -1,4 +1,5 @@
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/core/pagination/cursor_page.dart';
 import 'package:app/core/usecase/usecase.dart';
 import 'package:app/features/notifications/domain/entities/app_notification.dart';
@@ -69,8 +70,13 @@ void main() {
     },
     act: (cubit) => cubit.load(),
     expect: () => [
-      isA<NotificationsInboxLoading>(),
-      isA<NotificationsInboxLoaded>()
+      isA<NotificationsInboxState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<NotificationsInboxState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.items.length, 'len', 2)
           .having((s) => s.unread, 'unread', 1),
     ],
@@ -96,9 +102,17 @@ void main() {
       await cubit.markAllRead();
     },
     expect: () => [
-      isA<NotificationsInboxLoading>(),
-      isA<NotificationsInboxLoaded>().having((s) => s.unread, 'unread', 2),
-      isA<NotificationsInboxLoaded>().having((s) => s.unread, 'unread', 0),
+      isA<NotificationsInboxState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<NotificationsInboxState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.unread, 'unread', 2),
+      isA<NotificationsInboxState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.unread, 'unread', 0),
     ],
   );
 
@@ -112,8 +126,14 @@ void main() {
     },
     act: (cubit) => cubit.load(),
     expect: () => [
-      isA<NotificationsInboxLoading>(),
-      isA<NotificationsInboxFailure>(),
+      isA<NotificationsInboxState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<NotificationsInboxState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>()),
     ],
   );
 }

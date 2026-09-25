@@ -123,6 +123,21 @@ export class MembershipRepository extends BaseRepository<
     return { ...row.membership, product: row.product ?? null };
   }
 
+  /**
+   * Adjusts remaining PT sessions by `delta` (can be negative). Floors at 0.
+   * Returns the updated membership, or null if none active/frozen.
+   */
+  async adjustRemainingPtSessions(memberId: number, delta: number): Promise<Membership | null> {
+    const membership = await this.findActiveOrFrozenForMember(memberId);
+    if (!membership) return null;
+    const next = Math.max(0, membership.remaining_pt_sessions + delta);
+    await this.update(eq(memberships.id, membership.id), {
+      remaining_pt_sessions: next,
+      updated_at: new Date(),
+    });
+    return { ...membership, remaining_pt_sessions: next };
+  }
+
   /** FR-MEMB-006: at most one active/frozen membership per member. */
   async findActiveOrFrozenForMember(memberId: number): Promise<Membership | null> {
     const db = this.getDb() as any;

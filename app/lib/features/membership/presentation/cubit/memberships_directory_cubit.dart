@@ -1,10 +1,13 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/membership.dart';
 import '../../domain/usecases/get_memberships_usecase.dart';
+
+part 'memberships_directory_cubit.freezed.dart';
 
 enum MembershipDirectoryFilter {
   all,
@@ -15,72 +18,34 @@ enum MembershipDirectoryFilter {
   cancelled,
 }
 
-sealed class MembershipsDirectoryState extends Equatable {
-  const MembershipsDirectoryState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-final class MembershipsDirectoryLoading extends MembershipsDirectoryState {
-  const MembershipsDirectoryLoading({
-    this.filter = MembershipDirectoryFilter.all,
-  });
-
-  final MembershipDirectoryFilter filter;
-
-  @override
-  List<Object?> get props => [filter];
-}
-
-final class MembershipsDirectoryLoaded extends MembershipsDirectoryState {
-  const MembershipsDirectoryLoaded({
-    required this.items,
-    required this.filter,
-  });
-
-  final List<Membership> items;
-  final MembershipDirectoryFilter filter;
-
-  @override
-  List<Object?> get props => [items, filter];
-}
-
-final class MembershipsDirectoryFailure extends MembershipsDirectoryState {
-  const MembershipsDirectoryFailure(this.message, {required this.filter});
-
-  final String message;
-  final MembershipDirectoryFilter filter;
-
-  @override
-  List<Object?> get props => [message, filter];
+@freezed
+abstract class MembershipsDirectoryState with _$MembershipsDirectoryState {
+  const factory MembershipsDirectoryState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default(<Membership>[]) List<Membership> items,
+    @Default(MembershipDirectoryFilter.all) MembershipDirectoryFilter filter,
+    Failure? failure,
+  }) = _MembershipsDirectoryState;
 }
 
 @injectable
 class MembershipsDirectoryCubit extends Cubit<MembershipsDirectoryState> {
   MembershipsDirectoryCubit(this._getMemberships)
-    : super(
-        const MembershipsDirectoryLoading(
-          filter: MembershipDirectoryFilter.all,
-        ),
-      );
+    : super(const MembershipsDirectoryState());
 
   final GetMembershipsUseCase _getMemberships;
 
   static const int expiringWithinDays = 30;
 
-  MembershipDirectoryFilter get _filter {
-    final s = state;
-    return switch (s) {
-      MembershipsDirectoryLoading(:final filter) => filter,
-      MembershipsDirectoryLoaded(:final filter) => filter,
-      MembershipsDirectoryFailure(:final filter) => filter,
-    };
-  }
-
   Future<void> load({MembershipDirectoryFilter? filter}) async {
-    final next = filter ?? _filter;
-    emit(MembershipsDirectoryLoading(filter: next));
+    final next = filter ?? state.filter;
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        filter: next,
+      ),
+    );
     final apiStatus = switch (next) {
       MembershipDirectoryFilter.all => null,
       MembershipDirectoryFilter.active => 'active',
@@ -92,12 +57,10 @@ class MembershipsDirectoryCubit extends Cubit<MembershipsDirectoryState> {
     final result = await _getMemberships(
       GetMembershipsParams(status: apiStatus),
     );
+    if (isClosed) return;
     result.fold(
       (failure) => emit(
-        MembershipsDirectoryFailure(
-          failureMessage(failure),
-          filter: next,
-        ),
+        state.copyWith(status: LoadStatus.failure, failure: failure),
       ),
       (page) {
         final items = next == MembershipDirectoryFilter.expiringSoon
@@ -105,7 +68,14 @@ class MembershipsDirectoryCubit extends Cubit<MembershipsDirectoryState> {
                   .where((m) => m.daysUntilExpiry <= expiringWithinDays)
                   .toList()
             : page.items;
-        emit(MembershipsDirectoryLoaded(items: items, filter: next));
+        emit(
+          state.copyWith(
+            status: LoadStatus.success,
+            failure: null,
+            items: items,
+            filter: next,
+          ),
+        );
       },
     );
   }

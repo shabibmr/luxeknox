@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -41,16 +43,21 @@ class _BroadcastBody extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: BlocConsumer<BroadcastCubit, BroadcastState>(
-        listenWhen: (prev, next) {
-          if (next is! BroadcastFormState) return false;
-          return next.submitted != null ||
-              next.submitError != null ||
-              next.validationError != null;
+        listenWhen: (previous, next) {
+          if (next.submitted != null && next.submitted != previous.submitted) {
+            return true;
+          }
+          if (next.failure != null && next.failure != previous.failure) {
+            return true;
+          }
+          return next.validationError != null &&
+              next.validationError != previous.validationError;
         },
         listener: (context, state) {
-          if (state is! BroadcastFormState) return;
-          final msg = state.validationError ??
-              state.submitError ??
+          final failure = state.failure;
+          final msg =
+              state.validationError ??
+              (failure == null ? null : failureMessage(failure)) ??
               (state.submitted != null
                   ? NotificationStrings.broadcastSent
                   : null);
@@ -61,9 +68,7 @@ class _BroadcastBody extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          final form = state is BroadcastFormState
-              ? state
-              : const BroadcastFormState();
+          final form = state;
 
           return Scaffold(
             appBar: AppBar(
@@ -91,7 +96,7 @@ class _BroadcastBody extends StatelessWidget {
 class _ComposeTab extends StatefulWidget {
   const _ComposeTab({required this.form});
 
-  final BroadcastFormState form;
+  final BroadcastState form;
 
   @override
   State<_ComposeTab> createState() => _ComposeTabState();
@@ -230,18 +235,20 @@ class _ComposeTabState extends State<_ComposeTab> {
 class _HistoryTab extends StatelessWidget {
   const _HistoryTab({required this.form});
 
-  final BroadcastFormState form;
+  final BroadcastState form;
 
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<BroadcastCubit>();
 
-    if (form.historyLoading && form.history.isEmpty) {
+    if (form.status == LoadStatus.loading && form.history.isEmpty) {
       return const AppLoading();
     }
-    if (form.historyError != null && form.history.isEmpty) {
+    if (form.status == LoadStatus.failure && form.history.isEmpty) {
       return AppErrorView(
-        message: form.historyError!,
+        message: form.historyFailure == null
+            ? ''
+            : failureMessage(form.historyFailure!),
         onRetry: () => cubit.loadHistory(),
       );
     }
@@ -268,7 +275,7 @@ class _HistoryTab extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.all(16),
               child: Center(
-                child: form.historyLoading
+                child: form.status == LoadStatus.loading
                     ? const CircularProgressIndicator()
                     : TextButton(
                         onPressed: () => cubit.loadHistory(refresh: false),

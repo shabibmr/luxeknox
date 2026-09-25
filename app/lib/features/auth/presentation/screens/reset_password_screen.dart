@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../auth_strings.dart';
 import '../cubit/reset_password_cubit.dart';
@@ -65,7 +66,7 @@ class _ResetPasswordFormState extends State<_ResetPasswordForm> {
       appBar: AppBar(title: const Text(AuthStrings.resetPasswordTitle)),
       body: BlocConsumer<ResetPasswordCubit, ResetPasswordState>(
         listener: (context, state) {
-          if (state.status == ResetPasswordStatus.success) {
+          if (state.status == LoadStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(AuthStrings.passwordChanged)),
             );
@@ -73,7 +74,7 @@ class _ResetPasswordFormState extends State<_ResetPasswordForm> {
           }
         },
         builder: (context, state) {
-          final submitting = state.status == ResetPasswordStatus.submitting;
+          final submitting = state.status == LoadStatus.loading;
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
@@ -85,7 +86,7 @@ class _ResetPasswordFormState extends State<_ResetPasswordForm> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (state.status == ResetPasswordStatus.failure &&
+                      if (state.status == LoadStatus.failure &&
                           state.errorMessage != null) ...[
                         Text(state.errorMessage!),
                         const SizedBox(height: 16),

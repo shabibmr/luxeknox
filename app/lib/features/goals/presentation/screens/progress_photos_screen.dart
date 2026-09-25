@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -211,30 +213,38 @@ class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
       ),
       body: BlocConsumer<ProgressPhotosCubit, ProgressPhotosState>(
         listener: (context, state) {
-          if (state is ProgressPhotosLoaded && state.error != null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.error!)));
+          final showData =
+              state.status == LoadStatus.success || state.photos.isNotEmpty;
+          if (state.failure != null && showData) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
+            );
           }
         },
         builder: (context, state) {
-          return switch (state) {
-            ProgressPhotosLoading() => const AppLoading(),
-            ProgressPhotosFailure(:final message) => AppErrorView(
-              message: message,
+          final showData =
+              state.status == LoadStatus.success || state.photos.isNotEmpty;
+          if (state.status == LoadStatus.loading && !showData) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && !showData) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () => context.read<ProgressPhotosCubit>().load(
                 widget.memberId,
                 isOwner: widget.isOwner,
                 isAssignedTrainer: widget.isAssignedTrainer,
                 canModerate: widget.canModerate,
               ),
-            ),
-            ProgressPhotosLoaded(:final photos) => photos.isEmpty
-                ? const AppEmptyView(message: GoalsStrings.photosEmpty)
-                : _compareMode
-                ? _buildCompare(context, photos)
-                : _buildGallery(context, photos),
-          };
+            );
+          }
+          final photos = state.photos;
+          if (photos.isEmpty) {
+            return const AppEmptyView(message: GoalsStrings.photosEmpty);
+          }
+          return _compareMode
+              ? _buildCompare(context, photos)
+              : _buildGallery(context, photos);
         },
       ),
     );

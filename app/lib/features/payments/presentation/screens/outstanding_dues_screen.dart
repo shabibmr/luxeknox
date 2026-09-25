@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -30,17 +32,35 @@ class _OutstandingDuesBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(PaymentStrings.outstandingTitle)),
-      body: BlocBuilder<OutstandingDuesCubit, OutstandingDuesState>(
+      body: BlocConsumer<OutstandingDuesCubit, OutstandingDuesState>(
+        listenWhen: (previous, next) =>
+            next.status == LoadStatus.failure &&
+            next.failure != previous.failure &&
+            next.items.isNotEmpty,
+        listener: (context, state) {
+          final failure = state.failure;
+          if (failure == null) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(failureMessage(failure))),
+          );
+        },
         builder: (context, state) {
-          return switch (state) {
-            OutstandingDuesLoading() => const AppLoading(),
-            OutstandingDuesFailure(:final message) => AppErrorView(
-              message: message,
+          if (state.status == LoadStatus.loading && state.items.isEmpty) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && state.items.isEmpty) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? ''
+                  : failureMessage(state.failure!),
               onRetry: () => context.read<OutstandingDuesCubit>().load(),
-            ),
-            OutstandingDuesLoaded(:final items) => items.isEmpty
-                ? const AppEmptyView(message: PaymentStrings.noneFound)
-                : RefreshIndicator(
+            );
+          }
+          final items = state.items;
+          if (items.isEmpty) {
+            return const AppEmptyView(message: PaymentStrings.noneFound);
+          }
+          return RefreshIndicator(
                     onRefresh: () =>
                         context.read<OutstandingDuesCubit>().load(),
                     child: ListView.builder(
@@ -64,8 +84,7 @@ class _OutstandingDuesBody extends StatelessWidget {
                         );
                       },
                     ),
-                  ),
-          };
+                  );
         },
       ),
     );

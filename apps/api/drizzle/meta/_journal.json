@@ -8,6 +8,83 @@
       "when": 1789857751843,
       "tag": "0000_schema_baseline",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1789974028367,
+      "tag": "0007_job_runs",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1789975314217,
+      "tag": "0008_scheduling",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1789976533995,
+      "tag": "0009_schedule_calendar_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1789977234674,
+      "tag": "0010_attendance",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1789978500000,
+      "tag": "0011_workout",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1789980000000,
+      "tag": "0012_idempotency",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1789982000000,
+      "tag": "0013_goals",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1789984000000,
+      "tag": "0014_notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1789986000000,
+      "tag": "0015_payments",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1789987000000,
+      "tag": "0016_receipt_counters",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1789988000000,
+      "tag": "0017_password_reset_tokens",
+      "breakpoints": true
     }
   ]
 }

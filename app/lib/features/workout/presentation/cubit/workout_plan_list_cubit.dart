@@ -1,90 +1,69 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/workout_plan.dart';
 import '../../domain/entities/workout_plan_status.dart';
 import '../../domain/usecases/list_workout_plans_usecase.dart';
 
+part 'workout_plan_list_cubit.freezed.dart';
+
 enum WorkoutPlanListFilter { all, draft, active, archived }
 
-sealed class WorkoutPlanListState extends Equatable {
-  const WorkoutPlanListState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-final class WorkoutPlanListLoading extends WorkoutPlanListState {
-  const WorkoutPlanListLoading({this.filter = WorkoutPlanListFilter.all});
-
-  final WorkoutPlanListFilter filter;
-
-  @override
-  List<Object?> get props => [filter];
-}
-
-final class WorkoutPlanListLoaded extends WorkoutPlanListState {
-  const WorkoutPlanListLoaded({
-    required this.items,
-    required this.filter,
-  });
-
-  final List<WorkoutPlan> items;
-  final WorkoutPlanListFilter filter;
-
-  @override
-  List<Object?> get props => [items, filter];
-}
-
-final class WorkoutPlanListFailure extends WorkoutPlanListState {
-  const WorkoutPlanListFailure(this.message, {required this.filter});
-
-  final String message;
-  final WorkoutPlanListFilter filter;
-
-  @override
-  List<Object?> get props => [message, filter];
+@freezed
+abstract class WorkoutPlanListState with _$WorkoutPlanListState {
+  const factory WorkoutPlanListState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default(<WorkoutPlan>[]) List<WorkoutPlan> items,
+    /// True after a successful fetch, so an empty filter result is still data.
+    @Default(false) bool hasLoaded,
+    @Default(WorkoutPlanListFilter.all) WorkoutPlanListFilter filter,
+    Failure? failure,
+  }) = _WorkoutPlanListState;
 }
 
 @injectable
 class WorkoutPlanListCubit extends Cubit<WorkoutPlanListState> {
-  WorkoutPlanListCubit(this._listPlans)
-    : super(const WorkoutPlanListLoading());
+  WorkoutPlanListCubit(this._listPlans) : super(const WorkoutPlanListState());
 
   final ListWorkoutPlansUseCase _listPlans;
   bool? _isTemplate;
   List<WorkoutPlan> _allItems = const [];
-
-  WorkoutPlanListFilter get _filter {
-    final s = state;
-    return switch (s) {
-      WorkoutPlanListLoading(:final filter) => filter,
-      WorkoutPlanListLoaded(:final filter) => filter,
-      WorkoutPlanListFailure(:final filter) => filter,
-    };
-  }
 
   Future<void> load({
     bool? isTemplate,
     WorkoutPlanListFilter? filter,
   }) async {
     if (isTemplate != null) _isTemplate = isTemplate;
-    final next = filter ?? _filter;
-    emit(WorkoutPlanListLoading(filter: next));
+    final next = filter ?? state.filter;
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        filter: next,
+      ),
+    );
     final result = await _listPlans(
       ListWorkoutPlansParams(isTemplate: _isTemplate),
     );
     result.fold(
       (failure) => emit(
-        WorkoutPlanListFailure(failureMessage(failure), filter: next),
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          filter: next,
+        ),
       ),
       (page) {
         _allItems = page.items;
         emit(
-          WorkoutPlanListLoaded(
+          state.copyWith(
+            status: LoadStatus.success,
+            failure: null,
             items: _applyFilter(_allItems, next),
+            hasLoaded: true,
             filter: next,
           ),
         );
@@ -93,9 +72,12 @@ class WorkoutPlanListCubit extends Cubit<WorkoutPlanListState> {
   }
 
   Future<void> setFilter(WorkoutPlanListFilter filter) async {
-    if (state is WorkoutPlanListLoaded || state is WorkoutPlanListFailure) {
+    if (state.status == LoadStatus.success ||
+        state.status == LoadStatus.failure) {
       emit(
-        WorkoutPlanListLoaded(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
           items: _applyFilter(_allItems, filter),
           filter: filter,
         ),

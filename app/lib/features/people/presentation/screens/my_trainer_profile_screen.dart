@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -20,9 +22,9 @@ class MyTrainerProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => MyTrainerProfileCubit(
-        getIt<GetAssignedTrainerUseCase>(),
-      )..load(memberId),
+      create: (_) =>
+          MyTrainerProfileCubit(getIt<GetAssignedTrainerUseCase>())
+            ..load(memberId),
       child: _MyTrainerProfileBody(memberId: memberId),
     );
   }
@@ -37,21 +39,32 @@ class _MyTrainerProfileBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(PeopleStrings.myTrainerTitle)),
-      body: BlocBuilder<MyTrainerProfileCubit, MyTrainerProfileState>(
+      body: BlocConsumer<MyTrainerProfileCubit, MyTrainerProfileState>(
+        listener: (context, state) {
+          if (state.status == LoadStatus.failure &&
+              state.trainer != null &&
+              state.failure != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
+            );
+          }
+        },
         builder: (context, state) {
-          return switch (state) {
-            MyTrainerProfileLoading() => const AppLoading(),
-            MyTrainerProfileFailure(:final message) => AppErrorView(
-              message: message,
+          if (state.status == LoadStatus.failure && state.trainer == null) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () =>
                   context.read<MyTrainerProfileCubit>().load(memberId),
-            ),
-            MyTrainerProfileLoaded(:final trainer) => trainer == null
-                ? const AppEmptyView(
-                    message: PeopleStrings.noAssignedTrainer,
-                  )
-                : _TrainerProfileContent(trainer: trainer),
-          };
+            );
+          }
+          if (state.status == LoadStatus.success && state.trainer == null) {
+            return const AppEmptyView(message: PeopleStrings.noAssignedTrainer);
+          }
+          final trainer = state.trainer;
+          if (trainer == null) {
+            return const AppLoading();
+          }
+          return _TrainerProfileContent(trainer: trainer);
         },
       ),
     );
@@ -86,10 +99,7 @@ class _TrainerProfileContent extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
-                trainer.fullName,
-                style: theme.textTheme.headlineSmall,
-              ),
+              Text(trainer.fullName, style: theme.textTheme.headlineSmall),
               const SizedBox(height: 4),
               Chip(
                 visualDensity: VisualDensity.compact,

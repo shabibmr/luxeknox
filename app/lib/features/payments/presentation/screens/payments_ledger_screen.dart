@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -68,25 +70,9 @@ class _PaymentsLedgerBody extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: BlocBuilder<PaymentsLedgerCubit, PaymentsLedgerState>(
-              buildWhen: (p, n) {
-                final pf = switch (p) {
-                  PaymentsLedgerLoading(:final filter) => filter,
-                  PaymentsLedgerLoaded(:final filter) => filter,
-                  PaymentsLedgerFailure(:final filter) => filter,
-                };
-                final nf = switch (n) {
-                  PaymentsLedgerLoading(:final filter) => filter,
-                  PaymentsLedgerLoaded(:final filter) => filter,
-                  PaymentsLedgerFailure(:final filter) => filter,
-                };
-                return pf != nf;
-              },
+              buildWhen: (previous, next) => previous.filter != next.filter,
               builder: (context, state) {
-                final filter = switch (state) {
-                  PaymentsLedgerLoading(:final filter) => filter,
-                  PaymentsLedgerLoaded(:final filter) => filter,
-                  PaymentsLedgerFailure(:final filter) => filter,
-                };
+                final filter = state.filter;
                 return Wrap(
                   spacing: 8,
                   children: [
@@ -104,18 +90,37 @@ class _PaymentsLedgerBody extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: BlocBuilder<PaymentsLedgerCubit, PaymentsLedgerState>(
+            child: BlocConsumer<PaymentsLedgerCubit, PaymentsLedgerState>(
+              listenWhen: (previous, next) =>
+                  next.status == LoadStatus.failure &&
+                  next.failure != previous.failure &&
+                  next.items.isNotEmpty,
+              listener: (context, state) {
+                final failure = state.failure;
+                if (failure == null) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(failureMessage(failure))),
+                );
+              },
               builder: (context, state) {
-                return switch (state) {
-                  PaymentsLedgerLoading() => const AppLoading(),
-                  PaymentsLedgerFailure(:final message) => AppErrorView(
-                    message: message,
-                    onRetry: () =>
-                        context.read<PaymentsLedgerCubit>().load(),
-                  ),
-                  PaymentsLedgerLoaded(:final items) => items.isEmpty
-                      ? const AppEmptyView(message: PaymentStrings.noneFound)
-                      : RefreshIndicator(
+                if (state.status == LoadStatus.loading &&
+                    state.items.isEmpty) {
+                  return const AppLoading();
+                }
+                if (state.status == LoadStatus.failure &&
+                    state.items.isEmpty) {
+                  return AppErrorView(
+                    message: state.failure == null
+                        ? ''
+                        : failureMessage(state.failure!),
+                    onRetry: () => context.read<PaymentsLedgerCubit>().load(),
+                  );
+                }
+                final items = state.items;
+                if (items.isEmpty) {
+                  return const AppEmptyView(message: PaymentStrings.noneFound);
+                }
+                return RefreshIndicator(
                           onRefresh: () =>
                               context.read<PaymentsLedgerCubit>().load(),
                           child: ListView.builder(
@@ -150,8 +155,7 @@ class _PaymentsLedgerBody extends StatelessWidget {
                               );
                             },
                           ),
-                        ),
-                };
+                        );
               },
             ),
           ),

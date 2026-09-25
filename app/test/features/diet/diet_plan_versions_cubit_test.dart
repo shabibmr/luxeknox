@@ -1,4 +1,5 @@
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/diet/domain/entities/diet_plan_version.dart';
 import 'package:app/features/diet/domain/usecases/list_diet_plan_versions_usecase.dart';
 import 'package:app/features/diet/presentation/cubit/diet_plan_versions_cubit.dart';
@@ -41,12 +42,14 @@ void main() {
     },
     act: (cubit) => cubit.load('1'),
     expect: () => [
-      isA<DietPlanVersionsLoading>(),
-      isA<DietPlanVersionsLoaded>().having(
-        (s) => s.versions.length,
-        'count',
-        2,
+      isA<DietPlanVersionsState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
       ),
+      isA<DietPlanVersionsState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.versions.length, 'count', 2),
     ],
   );
 
@@ -64,12 +67,17 @@ void main() {
       cubit.toggleExpanded('v1');
     },
     expect: () => [
-      isA<DietPlanVersionsLoading>(),
-      isA<DietPlanVersionsLoaded>()
+      isA<DietPlanVersionsState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<DietPlanVersionsState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.expandedId, 'expanded', isNull),
-      isA<DietPlanVersionsLoaded>()
+      isA<DietPlanVersionsState>()
           .having((s) => s.expandedId, 'expanded', 'v1'),
-      isA<DietPlanVersionsLoaded>()
+      isA<DietPlanVersionsState>()
           .having((s) => s.expandedId, 'expanded', isNull),
     ],
   );
@@ -84,8 +92,15 @@ void main() {
     },
     act: (cubit) => cubit.load('1'),
     expect: () => [
-      isA<DietPlanVersionsLoading>(),
-      isA<DietPlanVersionsFailure>(),
+      isA<DietPlanVersionsState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<DietPlanVersionsState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>())
+          .having((s) => s.versions, 'versions', isEmpty),
     ],
   );
 }

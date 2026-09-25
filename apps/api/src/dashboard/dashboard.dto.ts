@@ -29,6 +29,18 @@ export interface AdminDashboardWidget {
     days: number;
     count: number;
   };
+  occupancy?: {
+    checked_in_now: number;
+    as_of: string;
+    by_gate: Array<{
+      gate_identifier: string | null;
+      count: number;
+    }>;
+  };
+  revenue_today?: {
+    total_amount: string;
+    invoice_count: number;
+  };
 }
 
 export interface DashboardResponseDto {

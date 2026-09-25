@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -55,18 +57,24 @@ class _ScheduleHistoryBody extends StatelessWidget {
       appBar: AppBar(title: const Text(SchedulingStrings.historyTitle)),
       body: BlocBuilder<ScheduleHistoryCubit, ScheduleHistoryState>(
         builder: (context, state) {
-          return switch (state) {
-            ScheduleHistoryLoading() => const AppLoading(),
-            ScheduleHistoryFailure(:final message) => AppErrorView(
-              message: message,
+          final items = state.items;
+          final hasMore = state.hasMore;
+          final loadingMore = state.loadingMore;
+          if (state.status == LoadStatus.loading && !state.hasLoaded) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && !state.hasLoaded) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? 'Something went wrong'
+                  : failureMessage(state.failure!),
               onRetry: () => context.read<ScheduleHistoryCubit>().load(),
-            ),
-            ScheduleHistoryLoaded(:final items, :final hasMore, :final loadingMore) =>
-              items.isEmpty
-                  ? const AppEmptyView(
-                      message: SchedulingStrings.historyEmpty,
-                    )
-                  : RefreshIndicator(
+            );
+          }
+          if (items.isEmpty) {
+            return const AppEmptyView(message: SchedulingStrings.historyEmpty);
+          }
+          return RefreshIndicator(
                       onRefresh: () =>
                           context.read<ScheduleHistoryCubit>().load(),
                       child: NotificationListener<ScrollNotification>(
@@ -103,8 +111,7 @@ class _ScheduleHistoryBody extends StatelessWidget {
                           },
                         ),
                       ),
-                    ),
-          };
+          );
         },
       ),
     );

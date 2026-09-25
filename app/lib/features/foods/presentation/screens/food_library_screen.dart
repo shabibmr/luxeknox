@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../domain/entities/food_filter.dart';
@@ -222,12 +223,12 @@ class _FoodListPane extends StatelessWidget {
         Expanded(
           child: BlocBuilder<FoodListBloc, FoodListState>(
             builder: (context, state) {
-              if (state.status == FoodListStatus.loading &&
+              if (state.status == LoadStatus.loading &&
                   state.items.isEmpty) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              if (state.status == FoodListStatus.failure &&
+              if (state.status == LoadStatus.failure &&
                   state.items.isEmpty) {
                 return Center(
                   child: Padding(
@@ -252,7 +253,7 @@ class _FoodListPane extends StatelessWidget {
                 );
               }
 
-              if (state.status == FoodListStatus.success &&
+              if (state.status == LoadStatus.success &&
                   state.items.isEmpty) {
                 return const Center(child: Text(FoodStrings.noneFound));
               }
@@ -262,7 +263,7 @@ class _FoodListPane extends StatelessWidget {
                   final bloc = context.read<FoodListBloc>();
                   bloc.add(const FoodListRefreshed());
                   await bloc.stream.firstWhere(
-                    (s) => s.status != FoodListStatus.loading,
+                    (s) => s.status != LoadStatus.loading,
                   );
                 },
                 child: ListView.builder(

@@ -1,3 +1,4 @@
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/diet/domain/entities/diet_plan.dart';
 import 'package:app/features/diet/domain/entities/diet_plan_status.dart';
 import 'package:app/features/diet/domain/usecases/create_diet_plan_usecase.dart';
@@ -56,7 +57,8 @@ void main() {
     build: buildCubit,
     act: (cubit) => cubit.init(),
     expect: () => [
-      isA<DietPlanBuilderReady>()
+      isA<DietPlanBuilderState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.title, 'title', '')
           .having((s) => s.meals, 'meals', isEmpty),
     ],
@@ -94,7 +96,7 @@ void main() {
       await cubit.init();
       cubit.setTitle('Cut');
       cubit.addMeal(mealName: 'Breakfast');
-      final ready = cubit.state as DietPlanBuilderReady;
+      final ready = cubit.state;
       cubit.addFood(
         ready.meals.first.key,
         const Food(
@@ -111,16 +113,26 @@ void main() {
       await cubit.save();
     },
     expect: () => [
-      isA<DietPlanBuilderReady>(),
-      isA<DietPlanBuilderReady>().having((s) => s.title, 'title', 'Cut'),
-      isA<DietPlanBuilderReady>().having((s) => s.meals.length, 'meals', 1),
-      isA<DietPlanBuilderReady>().having(
+      isA<DietPlanBuilderState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.success,
+      ),
+      isA<DietPlanBuilderState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.title, 'title', 'Cut'),
+      isA<DietPlanBuilderState>()
+          .having((s) => s.meals.length, 'meals', 1),
+      isA<DietPlanBuilderState>().having(
         (s) => s.meals.first.foods.length,
         'foods',
         1,
       ),
-      isA<DietPlanBuilderReady>().having((s) => s.saving, 'saving', true),
-      isA<DietPlanBuilderReady>()
+      isA<DietPlanBuilderState>()
+          .having((s) => s.saving, 'saving', true)
+          .having((s) => s.title, 'title', 'Cut'),
+      isA<DietPlanBuilderState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.planId, 'planId', '9')
           .having((s) => s.dirty, 'dirty', false)
           .having((s) => s.saving, 'saving', false),

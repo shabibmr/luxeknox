@@ -1,121 +1,46 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/app_notification.dart';
 import '../../domain/entities/broadcast_audience.dart';
 import '../../domain/entities/broadcast_request_input.dart';
 import '../../domain/usecases/notification_usecases.dart';
 import '../notification_strings.dart';
 
-sealed class BroadcastState extends Equatable {
-  const BroadcastState();
+part 'broadcast_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
+@freezed
+abstract class BroadcastState with _$BroadcastState {
+  const BroadcastState._();
 
-final class BroadcastFormState extends BroadcastState {
-  const BroadcastFormState({
-    this.title = '',
-    this.message = '',
-    this.audience = BroadcastAudience.allMembers,
-    this.roleId = '',
-    this.submitting = false,
-    this.validationError,
-    this.submitError,
-    this.submitted,
-    this.history = const [],
-    this.historyHasMore = false,
-    this.historyOffset,
-    this.historyLoading = false,
-    this.historyError,
-    this.lockedAudience,
-  });
-
-  final String title;
-  final String message;
-  final BroadcastAudience audience;
-  final String roleId;
-  final bool submitting;
-  final String? validationError;
-  final String? submitError;
-  final AppNotification? submitted;
-  final List<AppNotification> history;
-  final bool historyHasMore;
-  final int? historyOffset;
-  final bool historyLoading;
-  final String? historyError;
-
-  /// When set (trainer), audience cannot change.
-  final BroadcastAudience? lockedAudience;
-
-  BroadcastAudience get effectiveAudience => lockedAudience ?? audience;
-
-  BroadcastFormState copyWith({
-    String? title,
-    String? message,
-    BroadcastAudience? audience,
-    String? roleId,
-    bool? submitting,
+  const factory BroadcastState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default('') String title,
+    @Default('') String message,
+    @Default(BroadcastAudience.allMembers) BroadcastAudience audience,
+    @Default('') String roleId,
+    @Default(false) bool submitting,
     String? validationError,
-    String? submitError,
+    Failure? failure,
     AppNotification? submitted,
-    List<AppNotification>? history,
-    bool? historyHasMore,
+    @Default(<AppNotification>[]) List<AppNotification> history,
+    @Default(false) bool historyHasMore,
     int? historyOffset,
-    bool? historyLoading,
-    String? historyError,
+    Failure? historyFailure,
     BroadcastAudience? lockedAudience,
-    bool clearValidation = false,
-    bool clearSubmitError = false,
-    bool clearSubmitted = false,
-    bool clearHistoryError = false,
-  }) {
-    return BroadcastFormState(
-      title: title ?? this.title,
-      message: message ?? this.message,
-      audience: audience ?? this.audience,
-      roleId: roleId ?? this.roleId,
-      submitting: submitting ?? this.submitting,
-      validationError:
-          clearValidation ? null : (validationError ?? this.validationError),
-      submitError: clearSubmitError ? null : (submitError ?? this.submitError),
-      submitted: clearSubmitted ? null : (submitted ?? this.submitted),
-      history: history ?? this.history,
-      historyHasMore: historyHasMore ?? this.historyHasMore,
-      historyOffset: historyOffset ?? this.historyOffset,
-      historyLoading: historyLoading ?? this.historyLoading,
-      historyError:
-          clearHistoryError ? null : (historyError ?? this.historyError),
-      lockedAudience: lockedAudience ?? this.lockedAudience,
-    );
-  }
+  }) = _BroadcastState;
 
-  @override
-  List<Object?> get props => [
-    title,
-    message,
-    audience,
-    roleId,
-    submitting,
-    validationError,
-    submitError,
-    submitted,
-    history,
-    historyHasMore,
-    historyOffset,
-    historyLoading,
-    historyError,
-    lockedAudience,
-  ];
+  /// When [lockedAudience] is set (trainer), audience cannot change.
+  BroadcastAudience get effectiveAudience => lockedAudience ?? audience;
 }
 
 @injectable
 class BroadcastCubit extends Cubit<BroadcastState> {
   BroadcastCubit(this._broadcast, this._listBroadcasts)
-    : super(const BroadcastFormState());
+    : super(const BroadcastState());
 
   final BroadcastNotificationUseCase _broadcast;
   final ListBroadcastsUseCase _listBroadcasts;
@@ -123,44 +48,33 @@ class BroadcastCubit extends Cubit<BroadcastState> {
   static const _pageSize = 20;
 
   void configure({required bool trainerOnlyAssigned}) {
-    final current = state;
-    if (current is! BroadcastFormState) return;
-    if (trainerOnlyAssigned) {
-      emit(
-        current.copyWith(
-          audience: BroadcastAudience.assignedClients,
-          lockedAudience: BroadcastAudience.assignedClients,
-        ),
-      );
-    }
+    if (!trainerOnlyAssigned) return;
+    emit(
+      state.copyWith(
+        audience: BroadcastAudience.assignedClients,
+        lockedAudience: BroadcastAudience.assignedClients,
+      ),
+    );
   }
 
   void setTitle(String value) {
-    final current = state;
-    if (current is! BroadcastFormState) return;
-    emit(current.copyWith(title: value, clearValidation: true));
+    emit(state.copyWith(title: value, validationError: null));
   }
 
   void setMessage(String value) {
-    final current = state;
-    if (current is! BroadcastFormState) return;
-    emit(current.copyWith(message: value, clearValidation: true));
+    emit(state.copyWith(message: value, validationError: null));
   }
 
   void setAudience(BroadcastAudience audience) {
-    final current = state;
-    if (current is! BroadcastFormState) return;
-    if (current.lockedAudience != null) return;
-    emit(current.copyWith(audience: audience, clearValidation: true));
+    if (state.lockedAudience != null) return;
+    emit(state.copyWith(audience: audience, validationError: null));
   }
 
   void setRoleId(String value) {
-    final current = state;
-    if (current is! BroadcastFormState) return;
-    emit(current.copyWith(roleId: value, clearValidation: true));
+    emit(state.copyWith(roleId: value, validationError: null));
   }
 
-  String? validate(BroadcastFormState form) {
+  String? validate(BroadcastState form) {
     if (form.title.trim().isEmpty) return NotificationStrings.titleRequired;
     if (form.message.trim().isEmpty) {
       return NotificationStrings.messageRequired;
@@ -174,7 +88,7 @@ class BroadcastCubit extends Cubit<BroadcastState> {
 
   Future<void> submit() async {
     final current = state;
-    if (current is! BroadcastFormState || current.submitting) return;
+    if (current.submitting) return;
 
     final error = validate(current);
     if (error != null) {
@@ -185,9 +99,9 @@ class BroadcastCubit extends Cubit<BroadcastState> {
     emit(
       current.copyWith(
         submitting: true,
-        clearValidation: true,
-        clearSubmitError: true,
-        clearSubmitted: true,
+        validationError: null,
+        failure: null,
+        submitted: null,
       ),
     );
 
@@ -205,7 +119,8 @@ class BroadcastCubit extends Cubit<BroadcastState> {
       (failure) => emit(
         current.copyWith(
           submitting: false,
-          submitError: failureMessage(failure),
+          failure: failure,
+          validationError: null,
         ),
       ),
       (created) {
@@ -215,7 +130,8 @@ class BroadcastCubit extends Cubit<BroadcastState> {
             submitted: created,
             title: '',
             message: '',
-            clearSubmitError: true,
+            failure: null,
+            validationError: null,
             history: [created, ...current.history],
           ),
         );
@@ -225,13 +141,11 @@ class BroadcastCubit extends Cubit<BroadcastState> {
 
   Future<void> loadHistory({bool refresh = true}) async {
     final current = state;
-    if (current is! BroadcastFormState) return;
-
     final offset = refresh ? 0 : (current.historyOffset ?? 0);
     emit(
       current.copyWith(
-        historyLoading: true,
-        clearHistoryError: true,
+        status: LoadStatus.loading,
+        historyFailure: null,
       ),
     );
 
@@ -241,8 +155,8 @@ class BroadcastCubit extends Cubit<BroadcastState> {
     result.fold(
       (failure) => emit(
         current.copyWith(
-          historyLoading: false,
-          historyError: failureMessage(failure),
+          status: LoadStatus.failure,
+          historyFailure: failure,
         ),
       ),
       (page) {
@@ -251,12 +165,11 @@ class BroadcastCubit extends Cubit<BroadcastState> {
             : null;
         emit(
           current.copyWith(
-            historyLoading: false,
-            history: refresh
-                ? page.items
-                : [...current.history, ...page.items],
+            status: LoadStatus.success,
+            historyFailure: null,
+            history: refresh ? page.items : [...current.history, ...page.items],
             historyHasMore: page.hasMore,
-            historyOffset: nextOffset,
+            historyOffset: nextOffset ?? current.historyOffset,
           ),
         );
       },

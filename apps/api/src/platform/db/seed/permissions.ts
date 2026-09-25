@@ -29,11 +29,14 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'AUTH', action: 'logout', slug: 'auth.logout', description: 'User logout and session invalidation' },
   { module: 'AUTH', action: 'session_read', slug: 'auth.session_read', description: 'View active sessions' },
   { module: 'AUTH', action: 'session_revoke', slug: 'auth.session_revoke', description: 'Revoke active sessions' },
+  { module: 'AUTH', action: 'password_change', slug: 'users.update', description: 'Change own account password (OpenAPI POST /auth/password/change)' },
 
   // RBAC — roles.update is OpenAPI (PUT /employees/{id}/role); rbac.roles_write kept legacy
   { module: 'RBAC', action: 'roles_read', slug: 'rbac.roles_read', description: 'View roles catalog' },
   { module: 'RBAC', action: 'roles_write', slug: 'rbac.roles_write', description: 'Create and update roles' },
-  { module: 'RBAC', action: 'roles_update', slug: 'roles.update', description: 'Assign or replace a role on an employee' },
+  { module: 'RBAC', action: 'roles_read', slug: 'roles.read', description: 'View roles and permission catalog (OpenAPI GET /roles, /roles/{id}, /permissions)' },
+  { module: 'RBAC', action: 'roles_create', slug: 'roles.create', description: 'Create a custom role (OpenAPI POST /roles)' },
+  { module: 'RBAC', action: 'roles_update', slug: 'roles.update', description: 'Update a role, assign an employee role, or replace a role\'s permission set' },
   { module: 'RBAC', action: 'permissions_read', slug: 'rbac.permissions_read', description: 'View system permissions catalog' },
 
   // PEOPLE — *.create|update are OpenAPI; *.write kept legacy
@@ -76,6 +79,11 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'ATTN', action: 'read', slug: 'attendance.read', description: 'View attendance records and logs' },
   { module: 'ATTN', action: 'checkin', slug: 'attendance.checkin', description: 'Check-in member or staff' },
   { module: 'ATTN', action: 'checkout', slug: 'attendance.checkout', description: 'Check-out member or staff' },
+  // OpenAPI granular slugs for POST /attendances/check-in and POST /attendances/{id}/check-out
+  // (x-permission: attendance.create / attendance.update). Dual-seeded beside the legacy
+  // attendance.checkin/checkout slugs, per the PEOPLE/MEDIA dual-seed convention above.
+  { module: 'ATTN', action: 'create', slug: 'attendance.create', description: 'Record a gate check-in event' },
+  { module: 'ATTN', action: 'update', slug: 'attendance.update', description: 'Record a gate check-out event' },
   { module: 'ATTN', action: 'override', slug: 'attendance.override', description: 'Manual attendance override' },
   { module: 'ATTN', action: 'ingest', slug: 'attendance.ingest', description: 'Hardware turnstile event ingest' },
 
@@ -83,6 +91,7 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'PAY', action: 'read', slug: 'payments.read', description: 'View invoices, transactions and dues' },
   { module: 'PAY', action: 'create', slug: 'payments.create', description: 'Record payment or generate invoice' },
   { module: 'PAY', action: 'refund', slug: 'payments.refund', description: 'Process payment refund' },
+  { module: 'PAY', action: 'approve', slug: 'payments.approve', description: 'Approve refunds and invoice adjustments' },
   { module: 'PAY', action: 'pos', slug: 'payments.pos', description: 'POS point-of-sale checkout capture' },
 
   // WORK
@@ -104,10 +113,14 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   // GOAL
   { module: 'GOAL', action: 'read', slug: 'goals.read', description: 'View fitness goals, measurements and progress photos' },
   { module: 'GOAL', action: 'write', slug: 'goals.write', description: 'Log measurements, progress photos and update goals' },
+  { module: 'GOAL', action: 'create', slug: 'goals.create', description: 'Create goals, metrics, measurements, progress notes or photos' },
+  { module: 'GOAL', action: 'update', slug: 'goals.update', description: 'Update goals, metrics, check-ins, or delete progress photos' },
 
   // NOTIF
   { module: 'NOTIF', action: 'read', slug: 'notifications.read', description: 'View notifications and alerts' },
   { module: 'NOTIF', action: 'send', slug: 'notifications.send', description: 'Send or broadcast notifications' },
+  { module: 'NOTIF', action: 'update', slug: 'notifications.update', description: 'Mark notifications read and manage push devices' },
+  { module: 'NOTIF', action: 'broadcast', slug: 'notifications.broadcast', description: 'Send and view notification broadcasts' },
 
   // DASH
   { module: 'DASH', action: 'member', slug: 'dashboard.member', description: 'Access member dashboard aggregates' },
@@ -117,6 +130,7 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   // RPT
   { module: 'RPT', action: 'read', slug: 'reports.read', description: 'View business and operational reports' },
   { module: 'RPT', action: 'export', slug: 'reports.export', description: 'Export report data and analytics' },
+  { module: 'RPT', action: 'read_own', slug: 'reports.read_own', description: 'View own trainer performance report' },
 
   // SYS
   { module: 'SYS', action: 'read', slug: 'settings.read', description: 'View gym settings' },

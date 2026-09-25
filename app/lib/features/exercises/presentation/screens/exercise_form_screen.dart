@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/unsaved_changes_scope.dart';
 import '../../domain/entities/exercise.dart';
-import '../../domain/usecases/create_exercise_usecase.dart';
-import '../../domain/usecases/deactivate_exercise_usecase.dart';
-import '../../domain/usecases/update_exercise_usecase.dart';
+import '../cubit/exercise_form_cubit.dart';
 import '../exercise_strings.dart';
 
 /// Create/edit form, reached only from an admin-gated entry point (K5's add
 /// button, K8's edit button). Also guards itself in case it's ever reached
 /// directly, since a route can be deep-linked around its caller's check.
-class ExerciseFormScreen extends StatefulWidget {
+class ExerciseFormScreen extends StatelessWidget {
   const ExerciseFormScreen({super.key, this.exercise});
 
   final Exercise? exercise;
@@ -21,15 +21,36 @@ class ExerciseFormScreen extends StatefulWidget {
   bool get isEditing => exercise != null;
 
   @override
-  State<ExerciseFormScreen> createState() => _ExerciseFormScreenState();
+  Widget build(BuildContext context) {
+    final requiredSlug = isEditing ? 'exercises.update' : 'exercises.create';
+
+    if (!context.can(requiredSlug)) {
+      return Scaffold(
+        appBar: AppBar(title: const Text(ExerciseStrings.formTitle)),
+        body: const Center(child: Text(ExerciseStrings.noPermission)),
+      );
+    }
+
+    return BlocProvider(
+      create: (_) => getIt<ExerciseFormCubit>(),
+      child: _ExerciseFormView(exercise: exercise),
+    );
+  }
 }
 
-class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
-  final _formKey = GlobalKey<FormState>();
+class _ExerciseFormView extends StatefulWidget {
+  const _ExerciseFormView({this.exercise});
 
-  late final _createUseCase = getIt<CreateExerciseUseCase>();
-  late final _updateUseCase = getIt<UpdateExerciseUseCase>();
-  late final _deactivateUseCase = getIt<DeactivateExerciseUseCase>();
+  final Exercise? exercise;
+
+  bool get isEditing => exercise != null;
+
+  @override
+  State<_ExerciseFormView> createState() => _ExerciseFormViewState();
+}
+
+class _ExerciseFormViewState extends State<_ExerciseFormView> {
+  final _formKey = GlobalKey<FormState>();
 
   late final _nameController = TextEditingController(
     text: widget.exercise?.name,
@@ -58,9 +79,7 @@ class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
   late bool _isActive = widget.exercise?.isActive ?? true;
   late final bool _initialIsActive = _isActive;
 
-  bool _isSubmitting = false;
   bool _isDirty = false;
-  String? _errorMessage;
 
   @override
   void initState() {
@@ -113,13 +132,8 @@ class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
 
   String? _urlOrNull(String raw) => raw.trim().isEmpty ? null : raw.trim();
 
-  Future<void> _submit() async {
+  void _submit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-
-    setState(() {
-      _isSubmitting = true;
-      _errorMessage = null;
-    });
 
     final exercise = Exercise(
       id: widget.exercise?.id ?? '',
@@ -134,21 +148,12 @@ class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
       isActive: _isActive,
     );
 
-    final result = widget.isEditing
-        ? await _updateUseCase(exercise)
-        : await _createUseCase(exercise);
-
-    if (!mounted) return;
-    result.fold(
-      (failure) => setState(() {
-        _isSubmitting = false;
-        _errorMessage = failureMessage(failure);
-      }),
-      (_) {
-        setState(() => _isDirty = false);
-        Navigator.of(context).pop(true);
-      },
-    );
+    final cubit = context.read<ExerciseFormCubit>();
+    if (widget.isEditing) {
+      cubit.update(exercise);
+    } else {
+      cubit.create(exercise);
+    }
   }
 
   Future<void> _confirmDeactivate() async {
@@ -172,182 +177,173 @@ class _ExerciseFormScreenState extends State<ExerciseFormScreen> {
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
-    setState(() {
-      _isSubmitting = true;
-      _errorMessage = null;
-    });
-
-    final result = await _deactivateUseCase(exercise.id);
-    if (!mounted) return;
-    result.fold(
-      (failure) => setState(() {
-        _isSubmitting = false;
-        _errorMessage = failureMessage(failure);
-      }),
-      (_) {
-        setState(() => _isDirty = false);
-        Navigator.of(context).pop(true);
-      },
-    );
+    await context.read<ExerciseFormCubit>().deactivate(exercise.id);
   }
 
   @override
   Widget build(BuildContext context) {
-    final requiredSlug = widget.isEditing
-        ? 'exercises.update'
-        : 'exercises.create';
-
-    if (!context.can(requiredSlug)) {
-      return Scaffold(
-        appBar: AppBar(title: const Text(ExerciseStrings.formTitle)),
-        body: const Center(child: Text(ExerciseStrings.noPermission)),
-      );
-    }
-
     final dirty = _isDirty || _isActive != _initialIsActive;
 
-    return UnsavedChangesScope(
-      hasUnsavedChanges: dirty && !_isSubmitting,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.isEditing
-                ? ExerciseStrings.editTitle
-                : ExerciseStrings.addTitle,
-          ),
-          actions: [
-            if (widget.isEditing)
-              IconButton(
-                icon: const Icon(Icons.block),
-                tooltip: ExerciseStrings.deactivateTooltip,
-                onPressed: _isSubmitting ? null : _confirmDeactivate,
+    return BlocConsumer<ExerciseFormCubit, ExerciseFormState>(
+      listenWhen: (previous, current) =>
+          previous.status != current.status &&
+          current.status == LoadStatus.success,
+      listener: (context, state) {
+        setState(() => _isDirty = false);
+        Navigator.of(context).pop(true);
+      },
+      builder: (context, state) {
+        final submitting =
+            state.status == LoadStatus.loading ||
+            state.status == LoadStatus.success;
+
+        return UnsavedChangesScope(
+          hasUnsavedChanges: dirty && !submitting,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(
+                widget.isEditing
+                    ? ExerciseStrings.editTitle
+                    : ExerciseStrings.addTitle,
               ),
-          ],
-        ),
-        body: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              if (_errorMessage != null) ...[
-                MaterialBanner(
-                  content: Text(_errorMessage!),
-                  backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                  actions: const [SizedBox.shrink()],
-                ),
-                const SizedBox(height: 16),
+              actions: [
+                if (widget.isEditing)
+                  IconButton(
+                    icon: const Icon(Icons.block),
+                    tooltip: ExerciseStrings.deactivateTooltip,
+                    onPressed: submitting ? null : _confirmDeactivate,
+                  ),
               ],
-              TextFormField(
-                controller: _nameController,
-                enabled: !_isSubmitting,
-                decoration: const InputDecoration(
-                  labelText: ExerciseStrings.nameLabel,
-                ),
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? ExerciseStrings.nameRequired
-                    : null,
+            ),
+            body: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  if (state.status == LoadStatus.failure &&
+                      state.failure != null) ...[
+                    MaterialBanner(
+                      content: Text(failureMessage(state.failure!)),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.errorContainer,
+                      actions: const [SizedBox.shrink()],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  TextFormField(
+                    controller: _nameController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: ExerciseStrings.nameLabel,
+                    ),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? ExerciseStrings.nameRequired
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _primaryMuscleController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: ExerciseStrings.primaryMuscleLabel,
+                    ),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? ExerciseStrings.primaryMuscleRequired
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _secondaryMusclesController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: ExerciseStrings.secondaryMusclesLabel,
+                      helperText: ExerciseStrings.commaSeparatedHelper,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _equipmentController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: ExerciseStrings.equipmentNeededLabel,
+                      helperText: ExerciseStrings.commaSeparatedHelper,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _difficultyController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: ExerciseStrings.difficultyLabel,
+                    ),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? ExerciseStrings.difficultyRequired
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _instructionsController,
+                    enabled: !submitting,
+                    minLines: 3,
+                    maxLines: 8,
+                    decoration: const InputDecoration(
+                      labelText: ExerciseStrings.instructionsLabel,
+                    ),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? ExerciseStrings.instructionsRequired
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _videoUrlController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: ExerciseStrings.videoUrlLabel,
+                    ),
+                    keyboardType: TextInputType.url,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _gifUrlController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: ExerciseStrings.gifUrlLabel,
+                    ),
+                    keyboardType: TextInputType.url,
+                  ),
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    title: const Text(ExerciseStrings.active),
+                    subtitle: const Text(ExerciseStrings.activeSubtitle),
+                    value: _isActive,
+                    onChanged: submitting
+                        ? null
+                        : (v) => setState(() => _isActive = v),
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    onPressed: submitting ? null : _submit,
+                    child: submitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            widget.isEditing
+                                ? ExerciseStrings.saveChanges
+                                : ExerciseStrings.createExercise,
+                          ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _primaryMuscleController,
-                enabled: !_isSubmitting,
-                decoration: const InputDecoration(
-                  labelText: ExerciseStrings.primaryMuscleLabel,
-                ),
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? ExerciseStrings.primaryMuscleRequired
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _secondaryMusclesController,
-                enabled: !_isSubmitting,
-                decoration: const InputDecoration(
-                  labelText: ExerciseStrings.secondaryMusclesLabel,
-                  helperText: ExerciseStrings.commaSeparatedHelper,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _equipmentController,
-                enabled: !_isSubmitting,
-                decoration: const InputDecoration(
-                  labelText: ExerciseStrings.equipmentNeededLabel,
-                  helperText: ExerciseStrings.commaSeparatedHelper,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _difficultyController,
-                enabled: !_isSubmitting,
-                decoration: const InputDecoration(
-                  labelText: ExerciseStrings.difficultyLabel,
-                ),
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? ExerciseStrings.difficultyRequired
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _instructionsController,
-                enabled: !_isSubmitting,
-                minLines: 3,
-                maxLines: 8,
-                decoration: const InputDecoration(
-                  labelText: ExerciseStrings.instructionsLabel,
-                ),
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? ExerciseStrings.instructionsRequired
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _videoUrlController,
-                enabled: !_isSubmitting,
-                decoration: const InputDecoration(
-                  labelText: ExerciseStrings.videoUrlLabel,
-                ),
-                keyboardType: TextInputType.url,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _gifUrlController,
-                enabled: !_isSubmitting,
-                decoration: const InputDecoration(
-                  labelText: ExerciseStrings.gifUrlLabel,
-                ),
-                keyboardType: TextInputType.url,
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                title: const Text(ExerciseStrings.active),
-                subtitle: const Text(ExerciseStrings.activeSubtitle),
-                value: _isActive,
-                onChanged: _isSubmitting
-                    ? null
-                    : (v) => setState(() => _isActive = v),
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(
-                        widget.isEditing
-                            ? ExerciseStrings.saveChanges
-                            : ExerciseStrings.createExercise,
-                      ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

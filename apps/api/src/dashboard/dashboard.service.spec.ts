@@ -33,6 +33,8 @@ describe('DashboardService', () => {
   let trainerRepository: Partial<TrainerRepository>;
   let employeeRepository: Partial<EmployeeRepository>;
   let membershipRepository: Partial<MembershipRepository>;
+  let attendanceService: { getOccupancy: ReturnType<typeof vi.fn> };
+  let paymentService: { getRevenueToday: ReturnType<typeof vi.fn> };
   let cache: DashboardCache;
   let service: DashboardService;
 
@@ -59,6 +61,19 @@ describe('DashboardService', () => {
       countByStatus: vi.fn().mockResolvedValue({}),
       countExpiringSoon: vi.fn().mockResolvedValue(0),
     };
+    attendanceService = {
+      getOccupancy: vi.fn().mockResolvedValue({
+        checked_in_now: 15,
+        as_of: '2026-09-21T10:00:00.000Z',
+        by_gate: [{ gate_identifier: 'turnstile-main', count: 15 }],
+      }),
+    };
+    paymentService = {
+      getRevenueToday: vi.fn().mockResolvedValue({
+        total_amount: '4500.00',
+        invoice_count: 3,
+      }),
+    };
     cache = new DashboardCache();
 
     service = new DashboardService(
@@ -69,6 +84,8 @@ describe('DashboardService', () => {
       employeeRepository as EmployeeRepository,
       membershipRepository as MembershipRepository,
       cache,
+      attendanceService as any,
+      paymentService as any,
     );
   });
 
@@ -155,6 +172,15 @@ describe('DashboardService', () => {
         employees_active: 5,
         memberships_by_status: { active: 90, frozen: 5 },
         memberships_expiring_soon: { days: 7, count: 7 },
+        occupancy: {
+          checked_in_now: 15,
+          as_of: '2026-09-21T10:00:00.000Z',
+          by_gate: [{ gate_identifier: 'turnstile-main', count: 15 }],
+        },
+        revenue_today: {
+          total_amount: '4500.00',
+          invoice_count: 3,
+        },
       });
     });
   });
@@ -184,6 +210,57 @@ describe('DashboardService', () => {
     });
   });
 
+  describe('DSH-007 occupancy and revenue-today widget aggregation', () => {
+    it('composes occupancy and revenue-today in the admin widget when available', async () => {
+      const user = makeUser({ userType: 'admin', roleId: 2 });
+      vi.mocked(permissionCache.hasPermission!).mockImplementation(
+        async (_roleId, slug) => slug === 'dashboard.admin',
+      );
+      vi.mocked(attendanceService.getOccupancy).mockResolvedValue({
+        checked_in_now: 25,
+        as_of: '2026-09-21T12:00:00.000Z',
+        by_gate: [{ gate_identifier: 'front-gate', count: 25 }],
+      });
+      vi.mocked(paymentService.getRevenueToday).mockResolvedValue({
+        total_amount: '12500.00',
+        invoice_count: 5,
+      });
+
+      const result = await service.getDashboard(user);
+
+      expect(result.admin?.occupancy).toEqual({
+        checked_in_now: 25,
+        as_of: '2026-09-21T12:00:00.000Z',
+        by_gate: [{ gate_identifier: 'front-gate', count: 25 }],
+      });
+      expect(result.admin?.revenue_today).toEqual({
+        total_amount: '12500.00',
+        invoice_count: 5,
+      });
+    });
+
+    it('gracefully omits occupancy or revenue-today if an error occurs without crashing widget', async () => {
+      const user = makeUser({ userType: 'admin', roleId: 2 });
+      vi.mocked(permissionCache.hasPermission!).mockImplementation(
+        async (_roleId, slug) => slug === 'dashboard.admin',
+      );
+      vi.mocked(attendanceService.getOccupancy).mockRejectedValue(new Error('Hardware connection timeout'));
+      vi.mocked(paymentService.getRevenueToday).mockResolvedValue({
+        total_amount: '3000.00',
+        invoice_count: 1,
+      });
+
+      const result = await service.getDashboard(user);
+
+      expect(result.admin).toBeDefined();
+      expect(result.admin?.occupancy).toBeUndefined();
+      expect(result.admin?.revenue_today).toEqual({
+        total_amount: '3000.00',
+        invoice_count: 1,
+      });
+    });
+  });
+
   describe('DSH-008 composition latency', () => {
     it('runs independent widget queries in parallel rather than serially', async () => {
       const user = makeUser({ userType: 'admin', roleId: 2 });
@@ -196,12 +273,18 @@ describe('DashboardService', () => {
       vi.mocked(employeeRepository.countActive!).mockImplementation(() => delay(0, QUERY_DELAY_MS));
       vi.mocked(membershipRepository.countByStatus!).mockImplementation(() => delay({}, QUERY_DELAY_MS));
       vi.mocked(membershipRepository.countExpiringSoon!).mockImplementation(() => delay(0, QUERY_DELAY_MS));
+      vi.mocked(attendanceService.getOccupancy).mockImplementation(() =>
+        delay({ checked_in_now: 0, as_of: '', by_gate: [] }, QUERY_DELAY_MS),
+      );
+      vi.mocked(paymentService.getRevenueToday).mockImplementation(() =>
+        delay({ total_amount: '0.00', invoice_count: 0 }, QUERY_DELAY_MS),
+      );
 
       const start = Date.now();
       await service.getDashboard(user);
       const elapsed = Date.now() - start;
 
-      // 7 independent queries serially would take >= 140ms; in parallel it stays near one delay.
+      // 9 independent queries serially would take >= 180ms; in parallel it stays near one delay.
       expect(elapsed).toBeLessThan(QUERY_DELAY_MS * 3);
     });
   });

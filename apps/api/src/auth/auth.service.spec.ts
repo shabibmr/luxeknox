@@ -13,6 +13,8 @@ import type { RoleRepository } from '../rbac/role.repository';
 import type { PermissionCache } from '../rbac/permission-cache';
 import type { Role } from '../platform/db/schema/roles';
 import type { PersonFactory } from '../people/person.factory';
+import type { PasswordResetTokenRepository } from './password-reset-token.repository';
+import type { AuditService } from '../platform/audit/audit.service';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -23,6 +25,8 @@ describe('AuthService', () => {
   let roleRepository: RoleRepository;
   let permissionCache: PermissionCache;
   let personFactory: PersonFactory;
+  let passwordResetTokenRepository: PasswordResetTokenRepository;
+  let auditService: AuditService;
 
   const validPassword = 'CorrectPassword123!';
   let validPasswordHash: string;
@@ -83,6 +87,16 @@ describe('AuthService', () => {
       resolveProfileId: vi.fn().mockResolvedValue(77),
     } as unknown as PersonFactory;
 
+    passwordResetTokenRepository = {
+      create: vi.fn().mockResolvedValue(undefined),
+      findActiveByTokenHash: vi.fn().mockResolvedValue(null),
+      markUsed: vi.fn().mockResolvedValue(undefined),
+    } as unknown as PasswordResetTokenRepository;
+
+    auditService = {
+      recordAudit: vi.fn().mockResolvedValue(undefined),
+    } as unknown as AuditService;
+
     authService = new AuthService(
       userRepository,
       sessionRepository,
@@ -91,6 +105,8 @@ describe('AuthService', () => {
       roleRepository,
       permissionCache,
       personFactory,
+      passwordResetTokenRepository,
+      auditService,
     );
   });
 

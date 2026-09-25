@@ -281,6 +281,71 @@ describe('People onboarding E2E (V3-14)', () => {
     expect(after.status).toBe(401);
   });
 
+  it('attaches member profile photo and retrieves it', async () => {
+    const memberRes = await fetch(`${testApp.baseUrl}/members`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        email: `e2e_photo_${RUN_ID}@luxeknox.test`,
+        password: onboardPassword,
+        first_name: 'Photo',
+        last_name: 'Member',
+      }),
+    });
+    expect(memberRes.status).toBe(201);
+    const member = (await memberRes.json()) as any;
+
+    const uploadRes = await fetch(`${testApp.baseUrl}/media/uploads`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        purpose: 'member_photo',
+        content_type: 'image/jpeg',
+        size_bytes: 4096,
+      }),
+    });
+    expect(uploadRes.status).toBe(201);
+    const slot = (await uploadRes.json()) as any;
+
+    const putUrl = retargetToApp(slot.url, testApp.baseUrl);
+    const putRes = await fetch(putUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'image/jpeg' },
+      body: Buffer.alloc(4096),
+    });
+    expect(putRes.status).toBe(204);
+
+    const photoRes = await fetch(`${testApp.baseUrl}/members/${member.id}/photos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        file_url: slot.object_key,
+        file_size: 4096,
+        is_avatar: true,
+      }),
+    });
+    expect(photoRes.status).toBe(201);
+    const photo = (await photoRes.json()) as any;
+    expect(photo.is_avatar).toBe(true);
+
+    const getPhotoRes = await fetch(`${testApp.baseUrl}/members/${member.id}/photos`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(getPhotoRes.status).toBe(200);
+    const photos = (await getPhotoRes.json()) as any;
+    expect(Array.isArray(photos.data)).toBe(true);
+    expect(photos.data.some((p: any) => p.is_avatar)).toBe(true);
+  });
+
   it('assign-trainer returns 422 at capacity and allows admin override', async () => {
     const capTrainerEmail = `e2e_cap_trainer_${RUN_ID}@luxeknox.test`;
     const trainerRes = await fetch(`${testApp.baseUrl}/trainers`, {

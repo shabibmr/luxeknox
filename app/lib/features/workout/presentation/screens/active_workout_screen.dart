@@ -3,19 +3,24 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/router/session_route_ids.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/workout_plan_exercise.dart';
 import '../../domain/entities/workout_session.dart';
-import '../../domain/usecases/complete_workout_session_usecase.dart';
-import '../../domain/usecases/get_workout_plan_usecase.dart';
-import '../../domain/usecases/log_workout_set_usecase.dart';
-import '../../domain/usecases/start_workout_session_usecase.dart';
-import '../cubit/active_workout_cubit.dart';
+import '../bloc/active_workout_bloc.dart';
 import '../cubit/rest_timer_cubit.dart';
 import '../widgets/rest_timer_widget.dart';
 import '../workout_strings.dart';
+
+String? _errorText(ActiveWorkoutState state) {
+  if (state.message != null && state.message!.isNotEmpty) return state.message;
+  final failure = state.failure;
+  if (failure == null) return null;
+  return failureMessage(failure);
+}
 
 class _CompleteFeedback {
   const _CompleteFeedback({this.notes, this.rating});
@@ -34,21 +39,13 @@ class ActiveWorkoutScreen extends StatefulWidget {
 }
 
 class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
-  late final RestTimerCubit _restTimer;
-  late final ActiveWorkoutCubit _cubit;
+  late final ActiveWorkoutBloc _bloc;
   var _configured = false;
 
   @override
   void initState() {
     super.initState();
-    _restTimer = RestTimerCubit();
-    _cubit = ActiveWorkoutCubit(
-      getIt<StartWorkoutSessionUseCase>(),
-      getIt<LogWorkoutSetUseCase>(),
-      getIt<CompleteWorkoutSessionUseCase>(),
-      getIt<GetWorkoutPlanUseCase>(),
-      _restTimer,
-    );
+    _bloc = getIt<ActiveWorkoutBloc>();
   }
 
   @override
@@ -58,17 +55,18 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     _configured = true;
     final memberId = sessionProfileId(context);
     if (memberId != null) {
-      _cubit.configure(
-        memberId: memberId.toString(),
-        workoutPlanId: widget.workoutPlanId,
+      _bloc.add(
+        ActiveWorkoutConfigured(
+          memberId: memberId.toString(),
+          workoutPlanId: widget.workoutPlanId,
+        ),
       );
     }
   }
 
   @override
   void dispose() {
-    _cubit.close();
-    _restTimer.close();
+    _bloc.close();
     super.dispose();
   }
 
@@ -76,8 +74,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<RestTimerCubit>.value(value: _restTimer),
-        BlocProvider<ActiveWorkoutCubit>.value(value: _cubit),
+        BlocProvider<ActiveWorkoutBloc>.value(value: _bloc),
+        BlocProvider<RestTimerCubit>.value(value: _bloc.restTimer),
       ],
       child: const _ActiveWorkoutBody(),
     );
@@ -91,30 +89,22 @@ class _ActiveWorkoutBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(WorkoutStrings.activeTitle)),
-      body: BlocBuilder<ActiveWorkoutCubit, ActiveWorkoutState>(
+      body: BlocBuilder<ActiveWorkoutBloc, ActiveWorkoutState>(
         builder: (context, state) {
-          return switch (state) {
-            ActiveWorkoutIdle() => _StartPanel(state: state),
-            ActiveWorkoutStarting() ||
-            ActiveWorkoutCompleting() =>
-              const AppLoading(),
-            ActiveWorkoutFailure(:final message, :final initialPlanId) =>
-              _StartPanel(
-                state: ActiveWorkoutIdle(
-                  initialPlanId: initialPlanId,
-                  message: message,
-                ),
-              ),
-            ActiveWorkoutInProgress() => _InProgressPanel(state: state),
-            ActiveWorkoutCompleted(
-              :final session,
-              :final loggedSetCount,
-            ) =>
-              _CompletedPanel(
-                session: session,
-                loggedSetCount: loggedSetCount,
-              ),
-          };
+          final session = state.session;
+          if (state.completed && session != null) {
+            return _CompletedPanel(
+              session: session,
+              loggedSetCount: state.loggedSetCount ?? state.loggedSets.length,
+            );
+          }
+          if (session != null) {
+            return _InProgressPanel(state: state);
+          }
+          if (state.status == LoadStatus.loading) {
+            return const AppLoading();
+          }
+          return _StartPanel(state: state);
         },
       ),
     );
@@ -124,7 +114,7 @@ class _ActiveWorkoutBody extends StatelessWidget {
 class _StartPanel extends StatefulWidget {
   const _StartPanel({required this.state});
 
-  final ActiveWorkoutIdle state;
+  final ActiveWorkoutState state;
 
   @override
   State<_StartPanel> createState() => _StartPanelState();
@@ -155,9 +145,9 @@ class _StartPanelState extends State<_StartPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (widget.state.message != null) ...[
+          if (_errorText(widget.state) != null) ...[
             Text(
-              widget.state.message!,
+              _errorText(widget.state)!,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
             const SizedBox(height: 12),
@@ -177,16 +167,19 @@ class _StartPanelState extends State<_StartPanel> {
             FilledButton(
               onPressed: () {
                 final raw = _planIdController.text.trim();
-                context.read<ActiveWorkoutCubit>().start(
-                  workoutPlanId: raw.isEmpty ? null : raw,
+                context.read<ActiveWorkoutBloc>().add(
+                  ActiveWorkoutStarted(
+                    workoutPlanId: raw.isEmpty ? null : raw,
+                  ),
                 );
               },
               child: const Text(WorkoutStrings.startSession),
             ),
             const SizedBox(height: 8),
             OutlinedButton(
-              onPressed: () =>
-                  context.read<ActiveWorkoutCubit>().start(workoutPlanId: null),
+              onPressed: () => context.read<ActiveWorkoutBloc>().add(
+                const ActiveWorkoutStarted(workoutPlanId: null),
+              ),
               child: const Text(WorkoutStrings.startEmptySession),
             ),
           ],
@@ -199,7 +192,7 @@ class _StartPanelState extends State<_StartPanel> {
 class _InProgressPanel extends StatefulWidget {
   const _InProgressPanel({required this.state});
 
-  final ActiveWorkoutInProgress state;
+  final ActiveWorkoutState state;
 
   @override
   State<_InProgressPanel> createState() => _InProgressPanelState();
@@ -227,17 +220,19 @@ class _InProgressPanelState extends State<_InProgressPanel> {
     return free.isEmpty ? null : free;
   }
 
-  Future<void> _submit() async {
+  void _submit() {
     final exerciseId = _selectedExerciseId;
     if (exerciseId == null) return;
     final reps = int.tryParse(_repsController.text.trim());
     final weight = num.tryParse(_weightController.text.trim());
     final rpe = num.tryParse(_rpeController.text.trim());
-    await context.read<ActiveWorkoutCubit>().logSet(
-      exerciseId: exerciseId,
-      repsCompleted: reps,
-      weightLiftedKg: weight,
-      rpeScore: rpe,
+    context.read<ActiveWorkoutBloc>().add(
+      ActiveWorkoutSetLogged(
+        exerciseId: exerciseId,
+        repsCompleted: reps,
+        weightLiftedKg: weight,
+        rpeScore: rpe,
+      ),
     );
   }
 
@@ -250,9 +245,9 @@ class _InProgressPanelState extends State<_InProgressPanel> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        if (state.actionError != null) ...[
+        if (_errorText(state) != null) ...[
           Text(
-            state.actionError!,
+            _errorText(state)!,
             style: TextStyle(color: theme.colorScheme.error),
           ),
           const SizedBox(height: 8),
@@ -304,7 +299,10 @@ class _InProgressPanelState extends State<_InProgressPanel> {
         ),
         const SizedBox(height: 12),
         FilledButton(
-          onPressed: state.logging || _selectedExerciseId == null
+          onPressed:
+              state.logging ||
+                  state.status == LoadStatus.loading ||
+                  _selectedExerciseId == null
               ? null
               : _submit,
           child: Text(
@@ -338,7 +336,9 @@ class _InProgressPanelState extends State<_InProgressPanel> {
             ),
         const SizedBox(height: 16),
         FilledButton.tonal(
-          onPressed: state.logging ? null : () => _confirmComplete(context),
+          onPressed: state.logging || state.status == LoadStatus.loading
+              ? null
+              : () => _confirmComplete(context),
           child: const Text(WorkoutStrings.completeSession),
         ),
       ],
@@ -414,9 +414,11 @@ class _InProgressPanelState extends State<_InProgressPanel> {
     );
     notesController.dispose();
     if (feedback == null || !context.mounted) return;
-    await context.read<ActiveWorkoutCubit>().complete(
-      notes: feedback.notes,
-      clientFeedbackRating: feedback.rating,
+    context.read<ActiveWorkoutBloc>().add(
+      ActiveWorkoutCompletionRequested(
+        notes: feedback.notes,
+        clientFeedbackRating: feedback.rating,
+      ),
     );
   }
 }
@@ -425,7 +427,7 @@ class _ExerciseChoice extends StatelessWidget {
   const _ExerciseChoice({required this.exercise, required this.state});
 
   final WorkoutPlanExercise exercise;
-  final ActiveWorkoutInProgress state;
+  final ActiveWorkoutState state;
 
   @override
   Widget build(BuildContext context) {
@@ -436,8 +438,9 @@ class _ExerciseChoice extends StatelessWidget {
     final target = exercise.targetSets;
     return ListTile(
       selected: selected,
-      onTap: () =>
-          context.read<ActiveWorkoutCubit>().selectExercise(exercise.exerciseId),
+      onTap: () => context.read<ActiveWorkoutBloc>().add(
+        ActiveWorkoutExerciseSelected(exercise.exerciseId),
+      ),
       title: Text(exercise.exerciseName ?? 'Exercise #${exercise.exerciseId}'),
       subtitle: Text(
         [
@@ -506,7 +509,9 @@ class _CompletedPanel extends StatelessWidget {
             ),
           const Spacer(),
           FilledButton(
-            onPressed: () => context.read<ActiveWorkoutCubit>().resetToIdle(),
+            onPressed: () => context.read<ActiveWorkoutBloc>().add(
+              const ActiveWorkoutReset(),
+            ),
             child: const Text(WorkoutStrings.startAnother),
           ),
           const SizedBox(height: 8),

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../exercises/domain/entities/exercise.dart';
-import '../../../exercises/domain/entities/exercise_filter.dart';
-import '../../../exercises/domain/usecases/get_exercises_usecase.dart';
+import '../cubit/exercise_picker_cubit.dart';
 import '../workout_strings.dart';
 
-/// Modal sheet: search exercises via [GetExercisesUseCase], tap to select.
+/// Modal sheet: search exercises via [ExercisePickerCubit], tap to select.
 Future<Exercise?> showExercisePickerSheet(BuildContext context) {
   return showModalBottomSheet<Exercise>(
     context: context,
@@ -17,26 +18,27 @@ Future<Exercise?> showExercisePickerSheet(BuildContext context) {
   );
 }
 
-class ExercisePickerSheet extends StatefulWidget {
+class ExercisePickerSheet extends StatelessWidget {
   const ExercisePickerSheet({super.key});
 
   @override
-  State<ExercisePickerSheet> createState() => _ExercisePickerSheetState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => getIt<ExercisePickerCubit>()..load(),
+      child: const _ExercisePickerView(),
+    );
+  }
 }
 
-class _ExercisePickerSheetState extends State<ExercisePickerSheet> {
-  final _searchController = TextEditingController();
-  late final GetExercisesUseCase _getExercises = getIt<GetExercisesUseCase>();
-
-  List<Exercise> _items = const [];
-  bool _loading = true;
-  String? _error;
+class _ExercisePickerView extends StatefulWidget {
+  const _ExercisePickerView();
 
   @override
-  void initState() {
-    super.initState();
-    _load();
-  }
+  State<_ExercisePickerView> createState() => _ExercisePickerViewState();
+}
+
+class _ExercisePickerViewState extends State<_ExercisePickerView> {
+  final _searchController = TextEditingController();
 
   @override
   void dispose() {
@@ -44,30 +46,8 @@ class _ExercisePickerSheetState extends State<ExercisePickerSheet> {
     super.dispose();
   }
 
-  Future<void> _load({String? search}) async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    final result = await _getExercises(
-      GetExercisesParams(
-        filter: ExerciseFilter(
-          searchText: (search == null || search.isEmpty) ? null : search,
-        ),
-      ),
-    );
-    if (!mounted) return;
-    result.fold(
-      (failure) => setState(() {
-        _loading = false;
-        _error = failureMessage(failure);
-        _items = const [];
-      }),
-      (page) => setState(() {
-        _loading = false;
-        _items = page.items;
-      }),
-    );
+  void _load() {
+    context.read<ExercisePickerCubit>().load(search: _searchController.text);
   }
 
   @override
@@ -87,40 +67,74 @@ class _ExercisePickerSheetState extends State<ExercisePickerSheet> {
                 border: OutlineInputBorder(),
               ),
               textInputAction: TextInputAction.search,
-              onSubmitted: (value) => _load(search: value.trim()),
+              onSubmitted: (_) => _load(),
             ),
           ),
           Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
-                ? Center(
+            child: BlocBuilder<ExercisePickerCubit, ExercisePickerState>(
+              builder: (context, state) {
+                if (state.status == LoadStatus.loading &&
+                    state.items.isEmpty) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (state.status == LoadStatus.failure &&
+                    state.items.isEmpty) {
+                  return Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(_error!),
+                        Text(failureMessage(state.failure!)),
                         TextButton(
-                          onPressed: () => _load(
-                            search: _searchController.text.trim(),
-                          ),
+                          onPressed: _load,
                           child: const Text(WorkoutStrings.retry),
                         ),
                       ],
                     ),
-                  )
-                : _items.isEmpty
-                ? const Center(child: Text(WorkoutStrings.noExercises))
-                : ListView.builder(
-                    itemCount: _items.length,
-                    itemBuilder: (context, index) {
-                      final exercise = _items[index];
-                      return ListTile(
-                        title: Text(exercise.name),
-                        subtitle: Text(exercise.primaryMuscleGroup),
-                        onTap: () => Navigator.of(context).pop(exercise),
-                      );
-                    },
-                  ),
+                  );
+                }
+
+                if (state.items.isEmpty) {
+                  return const Center(
+                    child: Text(WorkoutStrings.noExercises),
+                  );
+                }
+
+                return Column(
+                  children: [
+                    if (state.status == LoadStatus.failure &&
+                        state.failure != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(failureMessage(state.failure!)),
+                            ),
+                            TextButton(
+                              onPressed: _load,
+                              child: const Text(WorkoutStrings.retry),
+                            ),
+                          ],
+                        ),
+                      ),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: state.items.length,
+                        itemBuilder: (context, index) {
+                          final exercise = state.items[index];
+                          return ListTile(
+                            title: Text(exercise.name),
+                            subtitle: Text(exercise.primaryMuscleGroup),
+                            onTap: () => Navigator.of(context).pop(exercise),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),

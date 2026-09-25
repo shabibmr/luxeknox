@@ -1,0 +1,1 @@
+CREATE INDEX `schedules_calendar_range_idx` ON `schedules` (`end_time`,`start_time`);

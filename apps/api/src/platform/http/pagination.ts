@@ -9,6 +9,8 @@ import {
   ParsedPaginationQuery,
 } from './pagination.dto';
 
+export type { PaginatedResponse };
+
 export const MAX_PAGE_SIZE = 100;
 
 /**

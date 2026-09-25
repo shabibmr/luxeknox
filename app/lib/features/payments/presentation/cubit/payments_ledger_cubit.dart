@@ -1,74 +1,47 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/payment.dart';
 import '../../domain/entities/payment_status.dart';
 import '../../domain/usecases/get_payments_usecase.dart';
 
+part 'payments_ledger_cubit.freezed.dart';
+
 enum PaymentsLedgerFilter { all, pending, partial, paid, refunded }
 
-sealed class PaymentsLedgerState extends Equatable {
-  const PaymentsLedgerState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-final class PaymentsLedgerLoading extends PaymentsLedgerState {
-  const PaymentsLedgerLoading({this.filter = PaymentsLedgerFilter.all});
-
-  final PaymentsLedgerFilter filter;
-
-  @override
-  List<Object?> get props => [filter];
-}
-
-final class PaymentsLedgerLoaded extends PaymentsLedgerState {
-  const PaymentsLedgerLoaded({required this.items, required this.filter});
-
-  final List<Payment> items;
-  final PaymentsLedgerFilter filter;
-
-  @override
-  List<Object?> get props => [items, filter];
-}
-
-final class PaymentsLedgerFailure extends PaymentsLedgerState {
-  const PaymentsLedgerFailure(this.message, {required this.filter});
-
-  final String message;
-  final PaymentsLedgerFilter filter;
-
-  @override
-  List<Object?> get props => [message, filter];
+@freezed
+abstract class PaymentsLedgerState with _$PaymentsLedgerState {
+  const factory PaymentsLedgerState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default(PaymentsLedgerFilter.all) PaymentsLedgerFilter filter,
+    @Default(<Payment>[]) List<Payment> items,
+    Failure? failure,
+  }) = _PaymentsLedgerState;
 }
 
 @injectable
 class PaymentsLedgerCubit extends Cubit<PaymentsLedgerState> {
-  PaymentsLedgerCubit(this._getPayments)
-    : super(const PaymentsLedgerLoading());
+  PaymentsLedgerCubit(this._getPayments) : super(const PaymentsLedgerState());
 
   final GetPaymentsUseCase _getPayments;
   String? _memberId;
-
-  PaymentsLedgerFilter get _filter {
-    final s = state;
-    return switch (s) {
-      PaymentsLedgerLoading(:final filter) => filter,
-      PaymentsLedgerLoaded(:final filter) => filter,
-      PaymentsLedgerFailure(:final filter) => filter,
-    };
-  }
 
   Future<void> load({
     String? memberId,
     PaymentsLedgerFilter? filter,
   }) async {
     if (memberId != null) _memberId = memberId;
-    final next = filter ?? _filter;
-    emit(PaymentsLedgerLoading(filter: next));
+    final next = filter ?? state.filter;
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        filter: next,
+        failure: null,
+      ),
+    );
     final apiStatus = switch (next) {
       PaymentsLedgerFilter.all => null,
       PaymentsLedgerFilter.pending => PaymentStatus.pending.name,
@@ -81,14 +54,22 @@ class PaymentsLedgerCubit extends Cubit<PaymentsLedgerState> {
     );
     result.fold(
       (failure) => emit(
-        PaymentsLedgerFailure(failureMessage(failure), filter: next),
+        state.copyWith(
+          status: LoadStatus.failure,
+          filter: next,
+          failure: failure,
+        ),
       ),
       (page) => emit(
-        PaymentsLedgerLoaded(items: page.items, filter: next),
+        state.copyWith(
+          status: LoadStatus.success,
+          items: page.items,
+          filter: next,
+          failure: null,
+        ),
       ),
     );
   }
 
-  Future<void> setFilter(PaymentsLedgerFilter filter) =>
-      load(filter: filter);
+  Future<void> setFilter(PaymentsLedgerFilter filter) => load(filter: filter);
 }

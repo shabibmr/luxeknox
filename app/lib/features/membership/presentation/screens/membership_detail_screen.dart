@@ -5,14 +5,10 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../session/domain/entities/user_type.dart';
 import '../../../../session/presentation/session_cubit.dart';
-import '../../domain/entities/membership.dart';
-import '../../domain/usecases/cancel_membership_usecase.dart';
-import '../../domain/usecases/extend_membership_usecase.dart';
-import '../../domain/usecases/get_membership_usecase.dart';
-import '../../domain/usecases/renew_membership_usecase.dart';
-import '../../domain/usecases/upgrade_membership_usecase.dart';
+import '../cubit/membership_detail_cubit.dart';
 import '../membership_strings.dart';
 import '../widgets/membership_freeze_list.dart';
 import '../widgets/membership_history_list.dart';
@@ -22,85 +18,41 @@ import '../widgets/membership_status_chip.dart';
 /// (`memberships.approve`) get renew/upgrade/cancel and freeze
 /// approve/reject/extend actions; everyone with `memberships.read` gets the
 /// read-only contract, freeze history, and change history.
-class MembershipDetailScreen extends StatefulWidget {
+class MembershipDetailScreen extends StatelessWidget {
   const MembershipDetailScreen({super.key, required this.membershipId});
 
   final String membershipId;
 
   @override
-  State<MembershipDetailScreen> createState() =>
-      _MembershipDetailScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => getIt<MembershipDetailCubit>()..load(membershipId),
+      child: _MembershipDetailView(membershipId: membershipId),
+    );
+  }
 }
 
-class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
-  final _getMembership = getIt<GetMembershipUseCase>();
-  final _renew = getIt<RenewMembershipUseCase>();
-  final _cancel = getIt<CancelMembershipUseCase>();
-  final _extend = getIt<ExtendMembershipUseCase>();
-  final _upgrade = getIt<UpgradeMembershipUseCase>();
+class _MembershipDetailView extends StatelessWidget {
+  const _MembershipDetailView({required this.membershipId});
 
-  bool _loading = true;
-  String? _error;
-  Membership? _membership;
-  bool _actionInFlight = false;
+  final String membershipId;
 
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    final result = await _getMembership(widget.membershipId);
-    if (!mounted) return;
-    result.fold(
-      (failure) => setState(() {
-        _loading = false;
-        _error = failureMessage(failure);
-      }),
-      (membership) => setState(() {
-        _loading = false;
-        _membership = membership;
-      }),
-    );
-  }
-
-  void _showError(Failure failure, {required String action}) {
-    if (failure is ConflictFailure) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(MembershipStrings.rowVersionConflict(action))),
-      );
-      _load();
-      return;
-    }
+  void _showActionError(BuildContext context, Failure failure, String action) {
+    final message = failure is ConflictFailure
+        ? MembershipStrings.rowVersionConflict(action)
+        : failureMessage(failure);
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(failureMessage(failure))));
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _handleRenew() async {
-    final membership = _membership;
-    if (membership == null) return;
-    setState(() => _actionInFlight = true);
-    final result = await _renew(
-      MembershipActionParams(
-        membershipId: membership.id,
-        rowVersion: membership.rowVersion,
-      ),
-    );
-    if (!mounted) return;
-    setState(() => _actionInFlight = false);
-    result.fold((f) => _showError(f, action: 'renew'), (_) => _load());
+  Future<void> _handleRenew(BuildContext context) async {
+    final failure = await context.read<MembershipDetailCubit>().renew();
+    if (!context.mounted || failure == null) return;
+    _showActionError(context, failure, 'renew');
   }
 
-  Future<void> _handleCancel() async {
-    final membership = _membership;
-    if (membership == null) return;
-
+  Future<void> _handleCancel(BuildContext context) async {
     final reasonController = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
@@ -131,27 +83,18 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
         ],
       ),
     );
-    if (confirmed != true) return;
+    final reason = reasonController.text.trim();
+    reasonController.dispose();
+    if (confirmed != true || !context.mounted) return;
 
-    setState(() => _actionInFlight = true);
-    final result = await _cancel(
-      MembershipActionParams(
-        membershipId: membership.id,
-        rowVersion: membership.rowVersion,
-        reason: reasonController.text.trim().isEmpty
-            ? null
-            : reasonController.text.trim(),
-      ),
+    final failure = await context.read<MembershipDetailCubit>().cancel(
+      reason: reason.isEmpty ? null : reason,
     );
-    if (!mounted) return;
-    setState(() => _actionInFlight = false);
-    result.fold((f) => _showError(f, action: 'cancel'), (_) => _load());
+    if (!context.mounted || failure == null) return;
+    _showActionError(context, failure, 'cancel');
   }
 
-  Future<void> _handleExtend() async {
-    final membership = _membership;
-    if (membership == null) return;
-
+  Future<void> _handleExtend(BuildContext context) async {
     final daysController = TextEditingController();
     final reasonController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -200,27 +143,21 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
         ],
       ),
     );
-    if (confirmed != true) return;
+    final days = int.tryParse(daysController.text.trim());
+    final reason = reasonController.text.trim();
+    daysController.dispose();
+    reasonController.dispose();
+    if (confirmed != true || days == null || !context.mounted) return;
 
-    setState(() => _actionInFlight = true);
-    final result = await _extend(
-      ExtendMembershipParams(
-        membershipId: membership.id,
-        daysExtended: int.parse(daysController.text.trim()),
-        reason: reasonController.text.trim().isEmpty
-            ? null
-            : reasonController.text.trim(),
-      ),
+    final failure = await context.read<MembershipDetailCubit>().extend(
+      daysExtended: days,
+      reason: reason.isEmpty ? null : reason,
     );
-    if (!mounted) return;
-    setState(() => _actionInFlight = false);
-    result.fold((f) => _showError(f, action: 'extend'), (_) => _load());
+    if (!context.mounted || failure == null) return;
+    _showActionError(context, failure, 'extend');
   }
 
-  Future<void> _handleUpgrade() async {
-    final membership = _membership;
-    if (membership == null) return;
-
+  Future<void> _handleUpgrade(BuildContext context) async {
     final productController = TextEditingController();
     final reasonController = TextEditingController();
     final confirmed = await showDialog<bool>(
@@ -232,9 +169,7 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
           children: [
             TextField(
               controller: productController,
-              decoration: const InputDecoration(
-                labelText: 'Product ID',
-              ),
+              decoration: const InputDecoration(labelText: 'Product ID'),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -257,53 +192,72 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
         ],
       ),
     );
-    if (confirmed != true) return;
-
     final productId = productController.text.trim();
-    if (productId.isEmpty) return;
+    final reason = reasonController.text.trim();
+    productController.dispose();
+    reasonController.dispose();
+    if (confirmed != true || productId.isEmpty || !context.mounted) return;
 
-    setState(() => _actionInFlight = true);
-    final result = await _upgrade(
-      MembershipActionParams(
-        membershipId: membership.id,
-        rowVersion: membership.rowVersion,
-        productId: productId,
-        reason: reasonController.text.trim().isEmpty
-            ? null
-            : reasonController.text.trim(),
-      ),
+    final failure = await context.read<MembershipDetailCubit>().upgrade(
+      productId: productId,
+      reason: reason.isEmpty ? null : reason,
     );
-    if (!mounted) return;
-    setState(() => _actionInFlight = false);
-    result.fold((f) => _showError(f, action: 'upgrade'), (_) => _load());
+    if (!context.mounted || failure == null) return;
+    _showActionError(context, failure, 'upgrade');
   }
 
   @override
   Widget build(BuildContext context) {
     final canApprove = context.can('memberships.approve');
     final session = context.watch<SessionCubit>().state;
-    final hidePricing = session is SessionAuthenticated &&
+    final hidePricing =
+        session is SessionAuthenticated &&
         session.principal.userType == UserType.trainer;
 
     return Scaffold(
       appBar: AppBar(title: const Text(MembershipStrings.detailTitle)),
-      body: _buildBody(canApprove, hidePricing: hidePricing),
+      body: BlocBuilder<MembershipDetailCubit, MembershipDetailState>(
+        builder: (context, state) {
+          return _buildBody(
+            context,
+            state,
+            canApprove: canApprove,
+            hidePricing: hidePricing,
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildBody(bool canApprove, {required bool hidePricing}) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_error != null || _membership == null) {
+  Widget _buildBody(
+    BuildContext context,
+    MembershipDetailState state, {
+    required bool canApprove,
+    required bool hidePricing,
+  }) {
+    final membership = state.membership;
+    if (membership == null &&
+        (state.status == LoadStatus.initial ||
+            state.status == LoadStatus.loading)) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (membership == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_error ?? MembershipStrings.noneFound, textAlign: TextAlign.center),
+              Text(
+                state.failure == null
+                    ? MembershipStrings.noneFound
+                    : failureMessage(state.failure!),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 16),
               FilledButton(
-                onPressed: _load,
+                onPressed: () =>
+                    context.read<MembershipDetailCubit>().load(membershipId),
                 child: const Text(MembershipStrings.retry),
               ),
             ],
@@ -312,9 +266,11 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
       );
     }
 
-    final membership = _membership!;
+    final actionsLocked =
+        state.actionInFlight || state.status == LoadStatus.loading;
+
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: () => context.read<MembershipDetailCubit>().load(membership.id),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -345,7 +301,10 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
               membership.remainingPtSessions.toString(),
             ),
           if (membership.lockerNumber != null)
-            _infoRow(MembershipStrings.lockerNumberLabel, membership.lockerNumber!),
+            _infoRow(
+              MembershipStrings.lockerNumberLabel,
+              membership.lockerNumber!,
+            ),
           if (membership.product != null && !hidePricing)
             _infoRow(
               MembershipStrings.basePriceLabel,
@@ -358,19 +317,23 @@ class _MembershipDetailScreenState extends State<MembershipDetailScreen> {
               runSpacing: 8,
               children: [
                 OutlinedButton(
-                  onPressed: _actionInFlight ? null : _handleRenew,
+                  onPressed: actionsLocked ? null : () => _handleRenew(context),
                   child: const Text(MembershipStrings.renew),
                 ),
                 OutlinedButton(
-                  onPressed: _actionInFlight ? null : _handleUpgrade,
+                  onPressed: actionsLocked
+                      ? null
+                      : () => _handleUpgrade(context),
                   child: const Text(MembershipStrings.upgrade),
                 ),
                 OutlinedButton(
-                  onPressed: _actionInFlight ? null : _handleExtend,
+                  onPressed: actionsLocked
+                      ? null
+                      : () => _handleExtend(context),
                   child: const Text(MembershipStrings.grantExtension),
                 ),
                 OutlinedButton(
-                  onPressed: _actionInFlight ? null : _handleCancel,
+                  onPressed: actionsLocked ? null : () => _handleCancel(context),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Theme.of(context).colorScheme.error,
                   ),

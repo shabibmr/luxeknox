@@ -22,6 +22,8 @@ import {
 } from './member.dto';
 import { MemberRepository, type MemberListScope } from './member.repository';
 
+import { DomainEventBus } from '../platform/events/domain-events';
+
 export interface MemberDossier extends Member {
   membership: null;
   outstanding_balance: null;
@@ -38,6 +40,7 @@ export class MemberService {
     private readonly auditService: AuditService,
     @Inject(DRIZZLE_DB_TOKEN)
     private readonly db: DrizzleDb<any>,
+    private readonly domainEventBus?: DomainEventBus,
   ) {}
 
   private listScope(actor: AuthenticatedUser): MemberListScope {
@@ -274,6 +277,16 @@ export class MemberService {
         assigned_trainer_id: after.assigned_trainer_id,
         override_capacity: dto.override_capacity === true,
         reason: dto.reason ?? null,
+      },
+    });
+
+    await this.domainEventBus?.emit({
+      eventName: 'member.trainer_assigned',
+      occurredAt: now,
+      payload: {
+        memberId: after.id,
+        userId: after.user_id,
+        trainerId: dto.trainer_id,
       },
     });
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -32,24 +34,36 @@ class _FacilitiesBody extends StatelessWidget {
         child: const Icon(Icons.add),
       ),
       body: BlocConsumer<FacilitiesCubit, FacilitiesState>(
-        listenWhen: (p, n) => n is FacilitiesLoaded && n.message != null,
+        listenWhen: (previous, current) =>
+            current.hasLoaded &&
+            current.failure != null &&
+            current.failure != previous.failure,
         listener: (context, state) {
-          if (state is FacilitiesLoaded && state.message != null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message!)));
-          }
+          final failure = state.failure;
+          if (failure == null) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(failureMessage(failure))),
+          );
         },
         builder: (context, state) {
-          return switch (state) {
-            FacilitiesLoading() => const AppLoading(),
-            FacilitiesFailure(:final message) => AppErrorView(
-              message: message,
+          final items = state.items;
+          if (state.status == LoadStatus.loading && !state.hasLoaded) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && !state.hasLoaded) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? 'Something went wrong'
+                  : failureMessage(state.failure!),
               onRetry: () => context.read<FacilitiesCubit>().load(),
-            ),
-            FacilitiesLoaded(:final items) => items.isEmpty
-                ? const AppEmptyView(message: SchedulingStrings.facilitiesEmpty)
-                : ListView.builder(
+            );
+          }
+          if (items.isEmpty) {
+            return const AppEmptyView(
+              message: SchedulingStrings.facilitiesEmpty,
+            );
+          }
+          return ListView.builder(
                     itemCount: items.length,
                     itemBuilder: (context, index) {
                       final facility = items[index];
@@ -66,8 +80,7 @@ class _FacilitiesBody extends StatelessWidget {
                         ),
                       );
                     },
-                  ),
-          };
+          );
         },
       ),
     );

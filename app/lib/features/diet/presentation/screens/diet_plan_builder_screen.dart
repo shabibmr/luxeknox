@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -35,25 +37,32 @@ class _BuilderBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<DietPlanBuilderCubit, DietPlanBuilderState>(
       builder: (context, state) {
-        return switch (state) {
-          DietPlanBuilderLoading() => Scaffold(
+        final showForm =
+            state.status == LoadStatus.success ||
+            state.planId != null ||
+            state.title.isNotEmpty ||
+            state.meals.isNotEmpty ||
+            state.savedPlan != null;
+        if (state.status == LoadStatus.loading && !showForm) {
+          return Scaffold(
             appBar: AppBar(title: const Text(DietStrings.createTitle)),
             body: const AppLoading(),
-          ),
-          DietPlanBuilderFailure(:final message) => Scaffold(
+          );
+        }
+        if (state.status == LoadStatus.failure && !showForm) {
+          return Scaffold(
             appBar: AppBar(title: const Text(DietStrings.editTitle)),
             body: AppErrorView(
-              message: message,
-              onRetry: () => context
-                  .read<DietPlanBuilderCubit>()
-                  .init(planId: planId),
+              message: failureMessage(state.failure!),
+              onRetry: () =>
+                  context.read<DietPlanBuilderCubit>().init(planId: planId),
             ),
-          ),
-          DietPlanBuilderReady() => UnsavedChangesScope(
-            hasUnsavedChanges: state.dirty && !state.saving,
-            child: _BuilderForm(state: state),
-          ),
-        };
+          );
+        }
+        return UnsavedChangesScope(
+          hasUnsavedChanges: state.dirty && !state.saving,
+          child: _BuilderForm(state: state),
+        );
       },
     );
   }
@@ -62,7 +71,7 @@ class _BuilderBody extends StatelessWidget {
 class _BuilderForm extends StatefulWidget {
   const _BuilderForm({required this.state});
 
-  final DietPlanBuilderReady state;
+  final DietPlanBuilderState state;
 
   @override
   State<_BuilderForm> createState() => _BuilderFormState();
@@ -131,14 +140,14 @@ class _BuilderFormState extends State<_BuilderForm> {
     if (!mounted) return;
     if (!ok) {
       final err = cubit.state;
-      final message = err is DietPlanBuilderReady
-          ? (err.errorMessage ?? DietStrings.saveFailed)
-          : DietStrings.saveFailed;
+      final message = err.failure != null
+          ? failureMessage(err.failure!)
+          : (err.validationMessage ?? DietStrings.saveFailed);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       return;
     }
     final ready = cubit.state;
-    if (ready is DietPlanBuilderReady && ready.planId != null) {
+    if (ready.planId != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(DietStrings.saved)),
       );

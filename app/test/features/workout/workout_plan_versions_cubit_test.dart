@@ -1,4 +1,5 @@
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/workout/domain/entities/workout_plan_version.dart';
 import 'package:app/features/workout/domain/usecases/list_workout_plan_versions_usecase.dart';
 import 'package:app/features/workout/presentation/cubit/workout_plan_versions_cubit.dart';
@@ -42,12 +43,14 @@ void main() {
     },
     act: (cubit) => cubit.load('1'),
     expect: () => [
-      isA<WorkoutPlanVersionsLoading>(),
-      isA<WorkoutPlanVersionsLoaded>().having(
-        (s) => s.versions.length,
-        'count',
-        2,
+      isA<WorkoutPlanVersionsState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
       ),
+      isA<WorkoutPlanVersionsState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.versions.length, 'count', 2),
     ],
   );
 
@@ -65,12 +68,19 @@ void main() {
       cubit.toggleExpanded('v1');
     },
     expect: () => [
-      isA<WorkoutPlanVersionsLoading>(),
-      isA<WorkoutPlanVersionsLoaded>()
+      isA<WorkoutPlanVersionsState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<WorkoutPlanVersionsState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.expandedId, 'expanded', isNull),
-      isA<WorkoutPlanVersionsLoaded>()
+      isA<WorkoutPlanVersionsState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.expandedId, 'expanded', 'v1'),
-      isA<WorkoutPlanVersionsLoaded>()
+      isA<WorkoutPlanVersionsState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.expandedId, 'expanded', isNull),
     ],
   );
@@ -85,8 +95,14 @@ void main() {
     },
     act: (cubit) => cubit.load('1'),
     expect: () => [
-      isA<WorkoutPlanVersionsLoading>(),
-      isA<WorkoutPlanVersionsFailure>(),
+      isA<WorkoutPlanVersionsState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<WorkoutPlanVersionsState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>()),
     ],
   );
 }

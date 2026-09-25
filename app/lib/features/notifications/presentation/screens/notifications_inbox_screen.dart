@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -50,20 +52,29 @@ class _InboxBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<NotificationsInboxCubit, NotificationsInboxState>(
-      listenWhen: (prev, next) {
-        if (next is! NotificationsInboxLoaded) return false;
-        return next.actionError != null || next.actionMessage != null;
+      listenWhen: (previous, next) {
+        final messageChanged =
+            next.actionMessage != null &&
+            next.actionMessage != previous.actionMessage &&
+            next.failure == null;
+        final failureWithData =
+            next.failure != previous.failure &&
+            next.failure != null &&
+            next.items.isNotEmpty;
+        return messageChanged || failureWithData;
       },
       listener: (context, state) {
-        if (state is! NotificationsInboxLoaded) return;
-        final messenger = ScaffoldMessenger.of(context);
-        final msg = state.actionError ?? state.actionMessage;
-        if (msg != null) {
-          messenger.showSnackBar(SnackBar(content: Text(msg)));
-        }
+        final failure = state.failure;
+        final text = failure != null && state.items.isNotEmpty
+            ? failureMessage(failure)
+            : state.actionMessage;
+        if (text == null) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(text)));
       },
       builder: (context, state) {
-        final unread = state is NotificationsInboxLoaded ? state.unread : 0;
+        final unread = state.unread;
 
         return Scaffold(
           appBar: AppBar(
@@ -115,17 +126,19 @@ class _InboxBody extends StatelessWidget {
               ),
             ],
           ),
-          body: switch (state) {
-            NotificationsInboxLoading() => const AppLoading(),
-            NotificationsInboxFailure(:final message) => AppErrorView(
-              message: message,
-              onRetry: () => context.read<NotificationsInboxCubit>().load(),
-            ),
-            NotificationsInboxLoaded() => _LoadedInbox(
-              state: state,
-              detailPathBuilder: detailPathBuilder,
-            ),
-          },
+          body: state.status == LoadStatus.loading && state.items.isEmpty
+              ? const AppLoading()
+              : state.status == LoadStatus.failure && state.items.isEmpty
+              ? AppErrorView(
+                  message: state.failure == null
+                      ? ''
+                      : failureMessage(state.failure!),
+                  onRetry: () => context.read<NotificationsInboxCubit>().load(),
+                )
+              : _LoadedInbox(
+                  state: state,
+                  detailPathBuilder: detailPathBuilder,
+                ),
         );
       },
     );
@@ -140,7 +153,7 @@ class _LoadedInbox extends StatelessWidget {
     required this.detailPathBuilder,
   });
 
-  final NotificationsInboxLoaded state;
+  final NotificationsInboxState state;
   final String Function(String id) detailPathBuilder;
 
   @override

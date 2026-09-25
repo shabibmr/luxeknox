@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -64,64 +66,72 @@ class _EmployeesDirectoryBodyState extends State<_EmployeesDirectoryBody> {
           ),
           Expanded(
             child:
-                BlocBuilder<EmployeesDirectoryCubit, EmployeesDirectoryState>(
+                BlocConsumer<EmployeesDirectoryCubit, EmployeesDirectoryState>(
+                  listener: (context, state) {
+                    if (state.status == LoadStatus.failure &&
+                        state.items.isNotEmpty &&
+                        state.failure != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(failureMessage(state.failure!))),
+                      );
+                    }
+                  },
                   builder: (context, state) {
-                    return switch (state) {
-                      EmployeesDirectoryLoading() => const AppLoading(),
-                      EmployeesDirectoryFailure(:final message) => AppErrorView(
-                        message: message,
+                    if (state.items.isEmpty &&
+                        state.status == LoadStatus.failure) {
+                      return AppErrorView(
+                        message: failureMessage(state.failure!),
                         onRetry: () => context
                             .read<EmployeesDirectoryCubit>()
                             .load(query: _searchController.text),
-                      ),
-                      EmployeesDirectoryLoaded(
-                        :final items,
-                        :final hasMore,
-                        :final loadingMore,
-                      ) =>
-                        items.isEmpty
-                            ? const AppEmptyView(
-                                message: PeopleStrings.emptyEmployees,
-                              )
-                            : ListView.builder(
-                                itemCount: items.length + (hasMore ? 1 : 0),
-                                itemBuilder: (context, index) {
-                                  if (index >= items.length) {
-                                    return TextButton(
-                                      onPressed: loadingMore
-                                          ? null
-                                          : () => context
-                                                .read<EmployeesDirectoryCubit>()
-                                                .loadMore(),
-                                      child: Text(
-                                        loadingMore
-                                            ? '…'
-                                            : PeopleStrings.loadMore,
-                                      ),
-                                    );
-                                  }
-                                  final employee = items[index];
-                                  return ListTile(
-                                    title: Text(employee.fullName),
-                                    subtitle: Text(
-                                      [
-                                        employee.jobTitle,
-                                        if (employee.department != null)
-                                          employee.department!,
-                                      ].join(' · '),
-                                    ),
-                                    trailing: employee.status == null
-                                        ? null
-                                        : Text(employee.status!),
-                                    onTap: () => context.push(
-                                      Routes.adminEmployeeRolesById(
-                                        '${employee.id}',
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                    };
+                      );
+                    }
+                    if (state.items.isEmpty &&
+                        state.status != LoadStatus.success) {
+                      return const AppLoading();
+                    }
+                    if (state.items.isEmpty) {
+                      return const AppEmptyView(
+                        message: PeopleStrings.emptyEmployees,
+                      );
+                    }
+                    return ListView.builder(
+                      itemCount: state.items.length + (state.hasMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index >= state.items.length) {
+                          final loadingMore = state.loadingMore;
+                          return TextButton(
+                            onPressed:
+                                loadingMore ||
+                                    state.status == LoadStatus.loading
+                                ? null
+                                : () => context
+                                      .read<EmployeesDirectoryCubit>()
+                                      .loadMore(),
+                            child: Text(
+                              loadingMore ? '…' : PeopleStrings.loadMore,
+                            ),
+                          );
+                        }
+                        final employee = state.items[index];
+                        return ListTile(
+                          title: Text(employee.fullName),
+                          subtitle: Text(
+                            [
+                              employee.jobTitle,
+                              if (employee.department != null)
+                                employee.department!,
+                            ].join(' · '),
+                          ),
+                          trailing: employee.status == null
+                              ? null
+                              : Text(employee.status!),
+                          onTap: () => context.push(
+                            Routes.adminEmployeeRolesById('${employee.id}'),
+                          ),
+                        );
+                      },
+                    );
                   },
                 ),
           ),

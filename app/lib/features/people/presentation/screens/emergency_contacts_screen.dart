@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -14,10 +16,7 @@ import '../cubit/emergency_contacts_cubit.dart';
 import '../people_strings.dart';
 
 class EmergencyContactsScreen extends StatelessWidget {
-  const EmergencyContactsScreen({
-    super.key,
-    required this.userId,
-  });
+  const EmergencyContactsScreen({super.key, required this.userId});
 
   final int userId;
 
@@ -53,47 +52,58 @@ class _EmergencyContactsBody extends StatelessWidget {
           ),
         ],
       ),
-      body: BlocBuilder<EmergencyContactsCubit, EmergencyContactsState>(
+      body: BlocConsumer<EmergencyContactsCubit, EmergencyContactsState>(
+        listener: (context, state) {
+          if (state.status == LoadStatus.failure &&
+              state.contacts.isNotEmpty &&
+              state.failure != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
+            );
+          }
+        },
         builder: (context, state) {
-          return switch (state) {
-            EmergencyContactsLoading() => const AppLoading(),
-            EmergencyContactsFailure(:final message) => AppErrorView(
-              message: message,
+          final contacts = state.contacts;
+          if (contacts.isEmpty && state.status == LoadStatus.failure) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () =>
                   context.read<EmergencyContactsCubit>().load(userId),
-            ),
-            EmergencyContactsLoaded(:final contacts) => contacts.isEmpty
-                ? AppEmptyView(
-                    message: PeopleStrings.emptyEmergency,
-                    action: () => _showEditor(context),
-                    actionLabel: PeopleStrings.add,
-                  )
-                : ListView.separated(
-                    itemCount: contacts.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final contact = contacts[index];
-                      return ListTile(
-                        title: Text(contact.contactName),
-                        subtitle: Text(
-                          [
-                            contact.phonePrimary,
-                            if (contact.relationship != null)
-                              contact.relationship,
-                            if (contact.isPrimary) 'Primary',
-                          ].join(' · '),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline),
-                          onPressed: () => context
-                              .read<EmergencyContactsCubit>()
-                              .remove(contact.id),
-                        ),
-                        onTap: () => _showEditor(context, existing: contact),
-                      );
-                    },
-                  ),
-          };
+            );
+          }
+          if (contacts.isEmpty && state.status != LoadStatus.success) {
+            return const AppLoading();
+          }
+          if (contacts.isEmpty) {
+            return AppEmptyView(
+              message: PeopleStrings.emptyEmergency,
+              action: () => _showEditor(context),
+              actionLabel: PeopleStrings.add,
+            );
+          }
+          return ListView.separated(
+            itemCount: contacts.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final contact = contacts[index];
+              return ListTile(
+                title: Text(contact.contactName),
+                subtitle: Text(
+                  [
+                    contact.phonePrimary,
+                    if (contact.relationship != null) contact.relationship,
+                    if (contact.isPrimary) 'Primary',
+                  ].join(' · '),
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () =>
+                      context.read<EmergencyContactsCubit>().remove(contact.id),
+                ),
+                onTap: () => _showEditor(context, existing: contact),
+              );
+            },
+          );
         },
       ),
     );

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, gt, isNull } from 'drizzle-orm';
+import { and, eq, gt, isNull, ne } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { sessions, type Session, type NewSession } from '../platform/db/schema/sessions';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
@@ -104,6 +104,28 @@ export class SessionRepository extends BaseRepository<typeof sessions, Session, 
   async revokeAllForUser(userId: number, revokedAt: Date = new Date()): Promise<void> {
     await this.update(
       and(eq(sessions.user_id, userId), isNull(sessions.revoked_at))!,
+      {
+        revoked_at: revokedAt,
+        updated_at: revokedAt,
+      },
+    );
+  }
+
+  /**
+   * Revokes every active session for a user except one (used by password change,
+   * which keeps the caller's current session alive while logging out everywhere else).
+   */
+  async revokeAllForUserExcept(
+    userId: number,
+    exceptSessionId: number,
+    revokedAt: Date = new Date(),
+  ): Promise<void> {
+    await this.update(
+      and(
+        eq(sessions.user_id, userId),
+        isNull(sessions.revoked_at),
+        ne(sessions.id, exceptSessionId),
+      )!,
       {
         revoked_at: revokedAt,
         updated_at: revokedAt,

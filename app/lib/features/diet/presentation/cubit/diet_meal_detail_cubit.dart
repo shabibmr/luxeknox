@@ -1,44 +1,26 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/diet_plan_meal.dart';
 import '../../domain/usecases/get_diet_meal_usecase.dart';
 
-sealed class DietMealDetailState extends Equatable {
-  const DietMealDetailState();
+part 'diet_meal_detail_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class DietMealDetailLoading extends DietMealDetailState {
-  const DietMealDetailLoading();
-}
-
-final class DietMealDetailLoaded extends DietMealDetailState {
-  const DietMealDetailLoaded(this.meal);
-
-  final DietPlanMeal meal;
-
-  @override
-  List<Object?> get props => [meal];
-}
-
-final class DietMealDetailFailure extends DietMealDetailState {
-  const DietMealDetailFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+@freezed
+abstract class DietMealDetailState with _$DietMealDetailState {
+  const factory DietMealDetailState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    DietPlanMeal? meal,
+    Failure? failure,
+  }) = _DietMealDetailState;
 }
 
 @injectable
 class DietMealDetailCubit extends Cubit<DietMealDetailState> {
-  DietMealDetailCubit(this._getMeal)
-      : super(const DietMealDetailLoading());
+  DietMealDetailCubit(this._getMeal) : super(const DietMealDetailState());
 
   final GetDietMealUseCase _getMeal;
 
@@ -48,13 +30,21 @@ class DietMealDetailCubit extends Cubit<DietMealDetailState> {
   Future<void> load({required String mealId, String? planId}) async {
     _mealId = mealId;
     _planId = planId;
-    emit(const DietMealDetailLoading());
+    emit(state.copyWith(status: LoadStatus.loading, failure: null));
     final result = await _getMeal(
       GetDietMealParams(mealId: mealId, planId: planId),
     );
     result.fold(
-      (failure) => emit(DietMealDetailFailure(failureMessage(failure))),
-      (meal) => emit(DietMealDetailLoaded(meal)),
+      (failure) => emit(
+        state.copyWith(status: LoadStatus.failure, failure: failure),
+      ),
+      (meal) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          meal: meal,
+        ),
+      ),
     );
   }
 

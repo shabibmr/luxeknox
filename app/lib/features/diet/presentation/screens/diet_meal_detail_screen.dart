@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/diet_macros.dart';
@@ -42,22 +44,31 @@ class _DietMealDetailBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<DietMealDetailCubit, DietMealDetailState>(
       builder: (context, state) {
-        return switch (state) {
-          DietMealDetailLoading() => Scaffold(
-              appBar: AppBar(title: const Text(DietStrings.mealDetailTitle)),
-              body: const AppLoading(),
-            ),
-          DietMealDetailFailure(:final message) => Scaffold(
-              appBar: AppBar(title: const Text(DietStrings.mealDetailTitle)),
-              body: AppErrorView(
-                message: message,
-                onRetry: () => context
-                    .read<DietMealDetailCubit>()
-                    .load(mealId: mealId, planId: planId),
+        if (state.status == LoadStatus.loading && state.meal == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text(DietStrings.mealDetailTitle)),
+            body: const AppLoading(),
+          );
+        }
+        if (state.status == LoadStatus.failure && state.meal == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text(DietStrings.mealDetailTitle)),
+            body: AppErrorView(
+              message: failureMessage(state.failure!),
+              onRetry: () => context.read<DietMealDetailCubit>().load(
+                mealId: mealId,
+                planId: planId,
               ),
             ),
-          DietMealDetailLoaded(:final meal) => _MealDetailContent(meal: meal),
-        };
+          );
+        }
+        final meal = state.meal;
+        if (meal == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text(DietStrings.mealDetailTitle)),
+          );
+        }
+        return _MealDetailContent(meal: meal);
       },
     );
   }

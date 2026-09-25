@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -88,25 +90,45 @@ class _SettingsCategoryBody extends StatelessWidget {
         child: const Icon(Icons.add),
       ),
       body: BlocConsumer<SettingsCategoryCubit, SettingsCategoryState>(
+        listenWhen: (previous, next) {
+          if (next.saved && !previous.saved) return true;
+          return next.failure != previous.failure &&
+              next.failure != null &&
+              next.items.isNotEmpty &&
+              next.status != LoadStatus.failure;
+        },
         listener: (context, state) {
-          if (state is SettingsCategoryLoaded && state.saved) {
+          if (state.saved) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(SettingsStrings.saved)),
             );
+            return;
           }
+          final failure = state.failure;
+          if (failure == null) return;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(failureMessage(failure))));
         },
         builder: (context, state) {
-          return switch (state) {
-            SettingsCategoryLoading() => const AppLoading(),
-            SettingsCategoryFailure(:final message) => AppErrorView(
-              message: message,
+          if (state.status == LoadStatus.loading && state.items.isEmpty) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && state.items.isEmpty) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? ''
+                  : failureMessage(state.failure!),
               onRetry: () =>
                   context.read<SettingsCategoryCubit>().load(category),
-            ),
-            SettingsCategoryLoaded(:final items, :final saving) =>
-              items.isEmpty
-                  ? const AppEmptyView(message: SettingsStrings.emptyCategory)
-                  : Column(
+            );
+          }
+          final items = state.items;
+          final saving = state.saving;
+          if (items.isEmpty) {
+            return const AppEmptyView(message: SettingsStrings.emptyCategory);
+          }
+          return Column(
                       children: [
                         Expanded(
                           child: ListView.separated(
@@ -143,8 +165,7 @@ class _SettingsCategoryBody extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ),
-          };
+                    );
         },
       ),
     );

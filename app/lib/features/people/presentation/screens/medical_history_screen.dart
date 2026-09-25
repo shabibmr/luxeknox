@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -50,46 +52,56 @@ class _MedicalHistoryBody extends StatelessWidget {
           ),
         ],
       ),
-      body: BlocBuilder<MedicalHistoryCubit, MedicalHistoryState>(
+      body: BlocConsumer<MedicalHistoryCubit, MedicalHistoryState>(
+        listener: (context, state) {
+          if (state.status == LoadStatus.failure &&
+              state.records.isNotEmpty &&
+              state.failure != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
+            );
+          }
+        },
         builder: (context, state) {
-          return switch (state) {
-            MedicalHistoryLoading() => const AppLoading(),
-            MedicalHistoryFailure(:final message) => AppErrorView(
-              message: message,
-              onRetry: () =>
-                  context.read<MedicalHistoryCubit>().load(memberId),
-            ),
-            MedicalHistoryLoaded(:final records) => records.isEmpty
-                ? AppEmptyView(
-                    message: PeopleStrings.emptyMedical,
-                    action: () => _showEditor(context),
-                    actionLabel: PeopleStrings.add,
-                  )
-                : ListView.separated(
-                    itemCount: records.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final record = records[index];
-                      return ListTile(
-                        title: Text(record.title),
-                        subtitle: Text(
-                          [
-                            if (record.clearanceStatus != null)
-                              record.clearanceStatus,
-                            if (record.description != null) record.description,
-                          ].whereType<String>().join(' · '),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline),
-                          onPressed: () => context
-                              .read<MedicalHistoryCubit>()
-                              .remove(record.id),
-                        ),
-                        onTap: () => _showEditor(context, existing: record),
-                      );
-                    },
-                  ),
-          };
+          final records = state.records;
+          if (records.isEmpty && state.status == LoadStatus.failure) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
+              onRetry: () => context.read<MedicalHistoryCubit>().load(memberId),
+            );
+          }
+          if (records.isEmpty && state.status != LoadStatus.success) {
+            return const AppLoading();
+          }
+          if (records.isEmpty) {
+            return AppEmptyView(
+              message: PeopleStrings.emptyMedical,
+              action: () => _showEditor(context),
+              actionLabel: PeopleStrings.add,
+            );
+          }
+          return ListView.separated(
+            itemCount: records.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final record = records[index];
+              return ListTile(
+                title: Text(record.title),
+                subtitle: Text(
+                  [
+                    if (record.clearanceStatus != null) record.clearanceStatus,
+                    if (record.description != null) record.description,
+                  ].whereType<String>().join(' · '),
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () =>
+                      context.read<MedicalHistoryCubit>().remove(record.id),
+                ),
+                onTap: () => _showEditor(context, existing: record),
+              );
+            },
+          );
         },
       ),
     );
@@ -105,9 +117,7 @@ class _MedicalHistoryBody extends StatelessWidget {
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(
-          existing == null ? PeopleStrings.add : PeopleStrings.save,
-        ),
+        title: Text(existing == null ? PeopleStrings.add : PeopleStrings.save),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

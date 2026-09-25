@@ -1,76 +1,41 @@
 import 'dart:typed_data';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/member_photo.dart';
 import '../../domain/usecases/list_photos_usecase.dart';
 import '../../domain/usecases/set_avatar_usecase.dart';
 import '../../domain/usecases/upload_document_usecase.dart';
 import '../../domain/usecases/upload_photo_usecase.dart';
 
-sealed class PhotosState extends Equatable {
-  const PhotosState();
+part 'photos_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
+@freezed
+abstract class PhotosState with _$PhotosState {
+  const PhotosState._();
 
-final class PhotosLoading extends PhotosState {
-  const PhotosLoading();
-}
-
-final class PhotosLoaded extends PhotosState {
-  const PhotosLoaded({
-    required this.photos,
-    this.uploading = false,
-    this.uploadProgress,
-    this.uploadError,
-    this.pendingBytes,
-    this.pendingContentType,
-    this.message,
-  });
-
-  final List<MemberPhoto> photos;
-  final bool uploading;
-  final double? uploadProgress;
-  final String? uploadError;
-  final Uint8List? pendingBytes;
-  final String? pendingContentType;
-  final String? message;
+  const factory PhotosState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default(<MemberPhoto>[]) List<MemberPhoto> photos,
+    @Default(false) bool uploading,
+    double? uploadProgress,
+    String? uploadError,
+    Uint8List? pendingBytes,
+    String? pendingContentType,
+    String? message,
+    Failure? failure,
+  }) = _PhotosState;
 
   bool get canRetry => pendingBytes != null && pendingContentType != null;
-
-  @override
-  List<Object?> get props => [
-    photos,
-    uploading,
-    uploadProgress,
-    uploadError,
-    pendingBytes,
-    pendingContentType,
-    message,
-  ];
-}
-
-final class PhotosFailure extends PhotosState {
-  const PhotosFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
 }
 
 class PhotosCubit extends Cubit<PhotosState> {
-  PhotosCubit(
-    this._list,
-    this._upload,
-    this._cancelUpload,
-    this._setAvatar,
-  ) : super(const PhotosLoading());
+  PhotosCubit(this._list, this._upload, this._cancelUpload, this._setAvatar)
+    : super(const PhotosState());
 
   final ListPhotosUseCase _list;
   final UploadPhotoUseCase _upload;
@@ -81,11 +46,26 @@ class PhotosCubit extends Cubit<PhotosState> {
 
   Future<void> load(int memberId) async {
     _memberId = memberId;
-    emit(const PhotosLoading());
+    emit(
+      state.copyWith(status: LoadStatus.loading, failure: null, message: null),
+    );
     final result = await _list(memberId);
     result.fold(
-      (failure) => emit(PhotosFailure(_message(failure))),
-      (photos) => emit(PhotosLoaded(photos: photos)),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
+      (photos) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          photos: photos,
+          failure: null,
+          message: null,
+          uploading: false,
+          uploadProgress: null,
+          uploadError: null,
+          pendingBytes: null,
+          pendingContentType: null,
+        ),
+      ),
     );
   }
 
@@ -97,12 +77,13 @@ class PhotosCubit extends Cubit<PhotosState> {
     if (memberId == null) return;
 
     emit(
-      PhotosLoaded(
-        photos: _currentPhotos(),
+      state.copyWith(
         uploading: true,
         uploadProgress: 0,
+        uploadError: null,
         pendingBytes: bytes,
         pendingContentType: contentType,
+        message: null,
       ),
     );
 
@@ -113,12 +94,9 @@ class PhotosCubit extends Cubit<PhotosState> {
         contentType: contentType,
         onProgress: (sent, total) {
           if (total <= 0) return;
-          final current = state;
-          if (current is PhotosLoaded && current.uploading) {
+          if (state.uploading) {
             emit(
-              PhotosLoaded(
-                photos: current.photos,
-                uploading: true,
+              state.copyWith(
                 uploadProgress: sent / total,
                 pendingBytes: bytes,
                 pendingContentType: contentType,
@@ -129,36 +107,36 @@ class PhotosCubit extends Cubit<PhotosState> {
       ),
     );
 
-    await result.fold(
-      (failure) async {
-        emit(
-          PhotosLoaded(
-            photos: _currentPhotos(),
-            uploadError: _message(failure),
-            pendingBytes: bytes,
-            pendingContentType: contentType,
-          ),
-        );
-      },
-      (_) async => load(memberId),
-    );
+    await result.fold((failure) async {
+      emit(
+        state.copyWith(
+          uploading: false,
+          uploadProgress: null,
+          uploadError: failureMessage(failure),
+          pendingBytes: bytes,
+          pendingContentType: contentType,
+        ),
+      );
+    }, (_) async => load(memberId));
   }
 
   Future<void> retryUpload() async {
-    final current = state;
-    if (current is! PhotosLoaded || !current.canRetry) return;
+    if (!state.canRetry) return;
     await upload(
-      bytes: current.pendingBytes!,
-      contentType: current.pendingContentType!,
+      bytes: state.pendingBytes!,
+      contentType: state.pendingContentType!,
     );
   }
 
   void cancelUpload() {
     _cancelUpload();
     emit(
-      PhotosLoaded(
-        photos: _currentPhotos(),
+      state.copyWith(
+        uploading: false,
+        uploadProgress: null,
         uploadError: 'Upload cancelled.',
+        pendingBytes: null,
+        pendingContentType: null,
       ),
     );
   }
@@ -170,26 +148,19 @@ class PhotosCubit extends Cubit<PhotosState> {
       SetAvatarParams(memberId: memberId, photoId: photoId),
     );
     await result.fold(
-      (failure) async => emit(PhotosFailure(_message(failure))),
+      (failure) async => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          message: null,
+        ),
+      ),
       (_) async {
         await load(memberId);
-        final current = state;
-        if (current is PhotosLoaded) {
-          emit(
-            PhotosLoaded(
-              photos: current.photos,
-              message: 'avatar',
-            ),
-          );
+        if (state.status == LoadStatus.success) {
+          emit(state.copyWith(message: 'avatar'));
         }
       },
     );
   }
-
-  List<MemberPhoto> _currentPhotos() {
-    final current = state;
-    return current is PhotosLoaded ? current.photos : const [];
-  }
-
-  String _message(Failure failure) => failureMessage(failure);
 }

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -61,22 +63,25 @@ class _DietHistoryBody extends StatelessWidget {
       ),
       body: BlocBuilder<DietHistoryCubit, DietHistoryState>(
         builder: (context, state) {
-          return switch (state) {
-            DietHistoryLoading() => const AppLoading(),
-            DietHistoryFailure(:final message) => AppErrorView(
-              message: message,
+          final showData =
+              state.status == LoadStatus.success || state.logs.isNotEmpty;
+          if (state.status == LoadStatus.loading && !showData) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && !showData) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () =>
                   context.read<DietHistoryCubit>().load(memberId: memberId),
-            ),
-            DietHistoryLoaded(
-              :final logs,
-              :final selectedRange,
-              :final averageAdherenceScore,
-              :final averageCaloriesConsumed,
-              :final averageWaterIntakeMl,
-              :final totalLoggedDays,
-            ) =>
-              Column(
+            );
+          }
+          final logs = state.logs;
+          final selectedRange = state.selectedRange;
+          final averageAdherenceScore = state.averageAdherenceScore;
+          final averageCaloriesConsumed = state.averageCaloriesConsumed;
+          final averageWaterIntakeMl = state.averageWaterIntakeMl;
+          final totalLoggedDays = state.totalLoggedDays;
+          return Column(
                 children: [
                   // Range filters
                   Padding(
@@ -180,8 +185,7 @@ class _DietHistoryBody extends StatelessWidget {
                           ),
                   ),
                 ],
-              ),
-          };
+              );
         },
       ),
     );

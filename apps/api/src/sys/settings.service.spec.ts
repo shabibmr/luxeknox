@@ -104,6 +104,83 @@ describe('SettingsService', () => {
     });
   });
 
+  describe('getScheduleBookingLeadTimeMinutes', () => {
+    it('returns default 30 when setting is absent', async () => {
+      vi.mocked(mockRepository.findAll!).mockResolvedValueOnce([]);
+      expect(await service.getScheduleBookingLeadTimeMinutes()).toBe(30);
+    });
+
+    it('returns seeded value when present', async () => {
+      vi.mocked(mockRepository.findAll!).mockResolvedValueOnce([
+        {
+          id: 5,
+          setting_key: 'schedule_booking_lead_time_minutes',
+          setting_value: '45',
+          description: 'Lead time',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      ]);
+      expect(await service.getScheduleBookingLeadTimeMinutes()).toBe(45);
+    });
+  });
+
+  describe('getScheduleCancellationCutoffMinutes', () => {
+    it('returns default 120 when setting is absent', async () => {
+      vi.mocked(mockRepository.findAll!).mockResolvedValueOnce([]);
+      expect(await service.getScheduleCancellationCutoffMinutes()).toBe(120);
+    });
+  });
+
+  describe('getScheduleMemberBookingCap', () => {
+    it('returns default 5 when setting is absent', async () => {
+      vi.mocked(mockRepository.findAll!).mockResolvedValueOnce([]);
+      expect(await service.getScheduleMemberBookingCap()).toBe(5);
+    });
+
+    it('returns default 5 when setting value is invalid', async () => {
+      vi.mocked(mockRepository.findAll!).mockResolvedValueOnce([
+        {
+          id: 6,
+          setting_key: 'schedule_member_booking_cap',
+          setting_value: 'not_a_number',
+          description: 'Cap',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      ]);
+      expect(await service.getScheduleMemberBookingCap()).toBe(5);
+    });
+  });
+
+  describe('getAttendanceDebounceSeconds', () => {
+    it('returns default 60 when setting is absent', async () => {
+      vi.mocked(mockRepository.findAll!).mockResolvedValueOnce([]);
+      expect(await service.getAttendanceDebounceSeconds()).toBe(60);
+    });
+  });
+
+  describe('getAttendanceDailyCheckInCap', () => {
+    it('returns default 2 when setting is absent', async () => {
+      vi.mocked(mockRepository.findAll!).mockResolvedValueOnce([]);
+      expect(await service.getAttendanceDailyCheckInCap()).toBe(2);
+    });
+  });
+
+  describe('getAttendanceAutoCheckoutHours', () => {
+    it('returns default 12 when setting is absent', async () => {
+      vi.mocked(mockRepository.findAll!).mockResolvedValueOnce([]);
+      expect(await service.getAttendanceAutoCheckoutHours()).toBe(12);
+    });
+  });
+
+  describe('getTaxRatePercent', () => {
+    it('returns default 18.00 when setting is absent', async () => {
+      vi.mocked(mockRepository.findAll!).mockResolvedValueOnce([]);
+      expect(await service.getTaxRatePercent()).toBe('18.00');
+    });
+  });
+
   describe('getSetting', () => {
     it('returns specific setting value when key exists', async () => {
       const value = await service.getSetting('business_name');

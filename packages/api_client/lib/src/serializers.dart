@@ -26,7 +26,9 @@ import 'package:api_client/src/model/attendance_pass.dart';
 import 'package:api_client/src/model/attendance_summary.dart';
 import 'package:api_client/src/model/audit_log.dart';
 import 'package:api_client/src/model/audit_log_page.dart';
+import 'package:api_client/src/model/book_request.dart';
 import 'package:api_client/src/model/broadcast_request.dart';
+import 'package:api_client/src/model/cancel_booking_request.dart';
 import 'package:api_client/src/model/cancel_request.dart';
 import 'package:api_client/src/model/change_password_request.dart';
 import 'package:api_client/src/model/check_in_request.dart';
@@ -83,6 +85,8 @@ import 'package:api_client/src/model/health_condition_page.dart';
 import 'package:api_client/src/model/health_condition_write.dart';
 import 'package:api_client/src/model/login_request.dart';
 import 'package:api_client/src/model/logout_request.dart';
+import 'package:api_client/src/model/longitudinal_data_point.dart';
+import 'package:api_client/src/model/manual_override_request.dart';
 import 'package:api_client/src/model/mark_attendance_request.dart';
 import 'package:api_client/src/model/me_response.dart';
 import 'package:api_client/src/model/me_response_profile.dart';
@@ -126,6 +130,8 @@ import 'package:api_client/src/model/membership_product_write.dart';
 import 'package:api_client/src/model/membership_status.dart';
 import 'package:api_client/src/model/notification.dart';
 import 'package:api_client/src/model/notification_page.dart';
+import 'package:api_client/src/model/occupancy.dart';
+import 'package:api_client/src/model/occupancy_by_gate_inner.dart';
 import 'package:api_client/src/model/page_meta.dart';
 import 'package:api_client/src/model/payment.dart';
 import 'package:api_client/src/model/payment_adjust_request.dart';
@@ -140,15 +146,20 @@ import 'package:api_client/src/model/payment_status.dart';
 import 'package:api_client/src/model/permission.dart';
 import 'package:api_client/src/model/permission_action.dart';
 import 'package:api_client/src/model/permission_page.dart';
+import 'package:api_client/src/model/personal_record.dart';
 import 'package:api_client/src/model/principal.dart';
 import 'package:api_client/src/model/progress_note.dart';
 import 'package:api_client/src/model/progress_note_page.dart';
 import 'package:api_client/src/model/progress_note_write.dart';
 import 'package:api_client/src/model/progress_photo.dart';
+import 'package:api_client/src/model/progress_photo_comparison.dart';
+import 'package:api_client/src/model/progress_photo_comparison_comparison_by_pose.dart';
+import 'package:api_client/src/model/progress_photo_comparison_pose_pair.dart';
 import 'package:api_client/src/model/progress_photo_page.dart';
 import 'package:api_client/src/model/progress_photo_write.dart';
 import 'package:api_client/src/model/public_settings.dart';
 import 'package:api_client/src/model/ready.dart';
+import 'package:api_client/src/model/ready_jobs.dart';
 import 'package:api_client/src/model/refresh_request.dart';
 import 'package:api_client/src/model/reject_request.dart';
 import 'package:api_client/src/model/report.dart';
@@ -163,7 +174,6 @@ import 'package:api_client/src/model/schedule_history.dart';
 import 'package:api_client/src/model/schedule_history_page.dart';
 import 'package:api_client/src/model/schedule_page.dart';
 import 'package:api_client/src/model/schedule_participant.dart';
-import 'package:api_client/src/model/schedule_participant_write.dart';
 import 'package:api_client/src/model/schedule_status.dart';
 import 'package:api_client/src/model/schedule_type.dart';
 import 'package:api_client/src/model/schedule_type_page.dart';
@@ -215,7 +225,9 @@ part 'serializers.g.dart';
   AttendanceSummary,
   AuditLog,
   AuditLogPage,
+  BookRequest,
   BroadcastRequest,
+  CancelBookingRequest,
   CancelRequest,
   ChangePasswordRequest,
   CheckInRequest,
@@ -272,6 +284,8 @@ part 'serializers.g.dart';
   HealthConditionWrite,
   LoginRequest,
   LogoutRequest,
+  LongitudinalDataPoint,
+  ManualOverrideRequest,
   MarkAttendanceRequest,
   MeResponse,
   MeResponseProfile,
@@ -315,6 +329,8 @@ part 'serializers.g.dart';
   MembershipStatus,
   Notification,
   NotificationPage,
+  Occupancy,
+  OccupancyByGateInner,
   PageMeta,
   Payment,
   PaymentAdjustRequest,
@@ -329,15 +345,20 @@ part 'serializers.g.dart';
   Permission,
   PermissionAction,
   PermissionPage,
+  PersonalRecord,
   Principal,
   ProgressNote,
   ProgressNotePage,
   ProgressNoteWrite,
   ProgressPhoto,
+  ProgressPhotoComparison,
+  ProgressPhotoComparisonComparisonByPose,
+  ProgressPhotoComparisonPosePair,
   ProgressPhotoPage,
   ProgressPhotoWrite,
   PublicSettings,
   Ready,
+  ReadyJobs,
   RefreshRequest,
   RejectRequest,
   Report,
@@ -352,7 +373,6 @@ part 'serializers.g.dart';
   ScheduleHistoryPage,
   SchedulePage,
   ScheduleParticipant,
-  ScheduleParticipantWrite,
   ScheduleStatus,
   ScheduleType,
   ScheduleTypePage,
@@ -491,6 +511,10 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<DietLog>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(OccupancyByGateInner)]),
+        () => ListBuilder<OccupancyByGateInner>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(Device)]),
         () => ListBuilder<Device>(),
       )
@@ -503,6 +527,10 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<HealthCondition>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(LongitudinalDataPoint)]),
+        () => ListBuilder<LongitudinalDataPoint>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(PaymentHistory)]),
         () => ListBuilder<PaymentHistory>(),
       )
@@ -513,6 +541,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(MeasurementValue)]),
         () => ListBuilder<MeasurementValue>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(PersonalRecord)]),
+        () => ListBuilder<PersonalRecord>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(PaymentMethod)]),

@@ -1,9 +1,10 @@
+import 'package:app/core/error/failures.dart';
+import 'package:app/core/pagination/cursor_page.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/membership/domain/entities/membership.dart';
 import 'package:app/features/membership/domain/entities/membership_status.dart';
 import 'package:app/features/membership/domain/usecases/get_memberships_usecase.dart';
 import 'package:app/features/membership/presentation/cubit/memberships_directory_cubit.dart';
-import 'package:app/core/error/failures.dart';
-import 'package:app/core/pagination/cursor_page.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -44,8 +45,16 @@ void main() {
         (_) async => Right(
           CursorPage(
             items: [
-              membership(id: 'a', status: MembershipStatus.active, daysUntilExpiry: 5),
-              membership(id: 'b', status: MembershipStatus.active, daysUntilExpiry: 90),
+              membership(
+                id: 'a',
+                status: MembershipStatus.active,
+                daysUntilExpiry: 5,
+              ),
+              membership(
+                id: 'b',
+                status: MembershipStatus.active,
+                daysUntilExpiry: 90,
+              ),
             ],
             nextCursor: null,
             hasMore: false,
@@ -56,27 +65,58 @@ void main() {
     },
     act: (cubit) => cubit.load(filter: MembershipDirectoryFilter.expiringSoon),
     expect: () => [
-      isA<MembershipsDirectoryLoading>(),
-      isA<MembershipsDirectoryLoaded>().having(
-        (s) => s.items.map((m) => m.id).toList(),
-        'ids',
-        ['a'],
+      const MembershipsDirectoryState(
+        status: LoadStatus.loading,
+        filter: MembershipDirectoryFilter.expiringSoon,
       ),
+      isA<MembershipsDirectoryState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.filter, 'filter', MembershipDirectoryFilter.expiringSoon)
+          .having((s) => s.failure, 'failure', isNull)
+          .having((s) => s.items.map((m) => m.id).toList(), 'ids', ['a']),
     ],
   );
 
   blocTest<MembershipsDirectoryCubit, MembershipsDirectoryState>(
     'emits failure on repository error',
     build: () {
-      when(() => getMemberships(any())).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(
+        () => getMemberships(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return MembershipsDirectoryCubit(getMemberships);
     },
     act: (cubit) => cubit.load(),
     expect: () => [
-      isA<MembershipsDirectoryLoading>(),
-      isA<MembershipsDirectoryFailure>(),
+      const MembershipsDirectoryState(status: LoadStatus.loading),
+      isA<MembershipsDirectoryState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', const NetworkFailure())
+          .having((s) => s.items, 'items', isEmpty),
+    ],
+  );
+
+  blocTest<MembershipsDirectoryCubit, MembershipsDirectoryState>(
+    'keeps the list already shown when a reload fails',
+    seed: () => MembershipsDirectoryState(
+      status: LoadStatus.success,
+      items: [membership(id: 'a', status: MembershipStatus.active)],
+    ),
+    build: () {
+      when(
+        () => getMemberships(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      return MembershipsDirectoryCubit(getMemberships);
+    },
+    act: (cubit) => cubit.load(),
+    expect: () => [
+      isA<MembershipsDirectoryState>()
+          .having((s) => s.status, 'status', LoadStatus.loading)
+          .having((s) => s.failure, 'failure', isNull)
+          .having((s) => s.items.map((m) => m.id).toList(), 'ids', ['a']),
+      isA<MembershipsDirectoryState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', const NetworkFailure())
+          .having((s) => s.items.map((m) => m.id).toList(), 'ids', ['a']),
     ],
   );
 }

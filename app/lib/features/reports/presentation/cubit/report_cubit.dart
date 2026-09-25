@@ -1,110 +1,55 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/app_report_type.dart';
 import '../../domain/entities/report_query.dart';
 import '../../domain/entities/report_result.dart';
 import '../../domain/usecases/export_report_csv_usecase.dart';
 import '../../domain/usecases/get_report_usecase.dart';
 
+part 'report_cubit.freezed.dart';
+
 const kReportPageSize = 50;
 
-sealed class ReportState extends Equatable {
-  const ReportState();
+@freezed
+abstract class ReportState with _$ReportState {
+  const ReportState._();
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class ReportLoading extends ReportState {
-  const ReportLoading(this.query);
-
-  final ReportQuery query;
-
-  @override
-  List<Object?> get props => [query];
-}
-
-final class ReportLoaded extends ReportState {
-  const ReportLoaded({
-    required this.query,
-    required this.result,
-    this.pageIndex = 0,
-    this.exporting = false,
-    this.exportedCsv,
-    this.actionError,
-  });
-
-  final ReportQuery query;
-  final ReportResult result;
-  final int pageIndex;
-  final bool exporting;
-  final String? exportedCsv;
-  final String? actionError;
+  const factory ReportState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    required ReportQuery query,
+    ReportResult? result,
+    @Default(0) int pageIndex,
+    @Default(false) bool exporting,
+    String? exportedCsv,
+    Failure? failure,
+  }) = _ReportState;
 
   int get pageCount {
-    if (result.rows.isEmpty) return 1;
-    return ((result.rows.length - 1) ~/ kReportPageSize) + 1;
+    final rows = result?.rows ?? const <Map<String, dynamic>>[];
+    if (rows.isEmpty) return 1;
+    return ((rows.length - 1) ~/ kReportPageSize) + 1;
   }
 
   List<Map<String, dynamic>> get pageRows {
-    if (result.rows.isEmpty) return const [];
+    final rows = result?.rows ?? const <Map<String, dynamic>>[];
+    if (rows.isEmpty) return const [];
     final start = pageIndex * kReportPageSize;
-    if (start >= result.rows.length) return const [];
-    final end = (start + kReportPageSize).clamp(0, result.rows.length);
-    return result.rows.sublist(start, end);
+    if (start >= rows.length) return const [];
+    final end = (start + kReportPageSize).clamp(0, rows.length).toInt();
+    return rows.sublist(start, end);
   }
-
-  ReportLoaded copyWith({
-    ReportQuery? query,
-    ReportResult? result,
-    int? pageIndex,
-    bool? exporting,
-    String? exportedCsv,
-    String? actionError,
-    bool clearExport = false,
-    bool clearActionError = false,
-  }) {
-    return ReportLoaded(
-      query: query ?? this.query,
-      result: result ?? this.result,
-      pageIndex: pageIndex ?? this.pageIndex,
-      exporting: exporting ?? this.exporting,
-      exportedCsv: clearExport ? null : (exportedCsv ?? this.exportedCsv),
-      actionError:
-          clearActionError ? null : (actionError ?? this.actionError),
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-    query,
-    result,
-    pageIndex,
-    exporting,
-    exportedCsv,
-    actionError,
-  ];
-}
-
-final class ReportFailure extends ReportState {
-  const ReportFailure(this.message, this.query);
-
-  final String message;
-  final ReportQuery query;
-
-  @override
-  List<Object?> get props => [message, query];
 }
 
 @injectable
 class ReportCubit extends Cubit<ReportState> {
   ReportCubit(this._getReport, this._exportCsv)
     : super(
-        ReportLoading(
-          ReportQuery(
+        ReportState(
+          query: ReportQuery(
             type: AppReportType.members,
             from: DateTime.now().subtract(const Duration(days: 30)),
             to: DateTime.now(),
@@ -115,15 +60,6 @@ class ReportCubit extends Cubit<ReportState> {
   final GetReportUseCase _getReport;
   final ExportReportCsvUseCase _exportCsv;
 
-  ReportQuery get _query {
-    final s = state;
-    return switch (s) {
-      ReportLoading(:final query) => query,
-      ReportLoaded(:final query) => query,
-      ReportFailure(:final query) => query,
-    };
-  }
-
   Future<void> load(AppReportType type, {bool trainerOwnLocked = false}) async {
     final now = DateTime.now();
     final query = ReportQuery(
@@ -131,7 +67,16 @@ class ReportCubit extends Cubit<ReportState> {
       from: now.subtract(const Duration(days: 30)),
       to: now,
     );
-    emit(ReportLoading(query));
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        query: query,
+        failure: null,
+        pageIndex: 0,
+        exporting: false,
+        exportedCsv: null,
+      ),
+    );
     await _fetch(query);
   }
 
@@ -143,7 +88,7 @@ class ReportCubit extends Cubit<ReportState> {
     bool clearProductId = false,
     bool clearTrainerId = false,
   }) async {
-    final next = _query.copyWith(
+    final next = state.query.copyWith(
       from: from,
       to: to,
       productId: productId,
@@ -151,42 +96,61 @@ class ReportCubit extends Cubit<ReportState> {
       clearProductId: clearProductId,
       clearTrainerId: clearTrainerId,
     );
-    emit(ReportLoading(next));
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        query: next,
+        failure: null,
+      ),
+    );
     await _fetch(next);
   }
 
   Future<void> refresh() async {
-    emit(ReportLoading(_query));
-    await _fetch(_query);
+    final query = state.query;
+    emit(state.copyWith(status: LoadStatus.loading, failure: null));
+    await _fetch(query);
   }
 
   void setPage(int pageIndex) {
-    final current = state;
-    if (current is! ReportLoaded) return;
-    final clamped = pageIndex.clamp(0, current.pageCount - 1);
-    emit(current.copyWith(pageIndex: clamped, clearExport: true));
+    if (state.result == null) return;
+    final last = state.pageCount - 1;
+    final clamped = pageIndex < 0
+        ? 0
+        : pageIndex > last
+        ? last
+        : pageIndex;
+    emit(state.copyWith(pageIndex: clamped, exportedCsv: null));
   }
 
   Future<String?> exportCsv() async {
-    final current = state;
-    final query = _query;
-    if (current is ReportLoaded) {
-      emit(current.copyWith(exporting: true, clearActionError: true, clearExport: true));
+    final query = state.query;
+    if (state.result != null) {
+      emit(
+        state.copyWith(
+          exporting: true,
+          failure: null,
+          exportedCsv: null,
+        ),
+      );
     }
     final result = await _exportCsv(query);
     return result.fold(
       (failure) {
-        final message = failureMessage(failure);
-        final s = state;
-        if (s is ReportLoaded) {
-          emit(s.copyWith(exporting: false, actionError: message));
+        if (state.result != null) {
+          emit(state.copyWith(exporting: false, failure: failure));
         }
         return null;
       },
       (csv) {
-        final s = state;
-        if (s is ReportLoaded) {
-          emit(s.copyWith(exporting: false, exportedCsv: csv));
+        if (state.result != null) {
+          emit(
+            state.copyWith(
+              exporting: false,
+              exportedCsv: csv,
+              failure: null,
+            ),
+          );
         }
         return csv;
       },
@@ -196,9 +160,23 @@ class ReportCubit extends Cubit<ReportState> {
   Future<void> _fetch(ReportQuery query) async {
     final result = await _getReport(query);
     result.fold(
-      (failure) => emit(ReportFailure(failureMessage(failure), query)),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          query: query,
+          failure: failure,
+        ),
+      ),
       (report) => emit(
-        ReportLoaded(query: query, result: report, pageIndex: 0),
+        state.copyWith(
+          status: LoadStatus.success,
+          query: query,
+          result: report,
+          pageIndex: 0,
+          failure: null,
+          exporting: false,
+          exportedCsv: null,
+        ),
       ),
     );
   }

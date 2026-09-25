@@ -6,6 +6,8 @@ import { MemberRepository } from '../people/member.repository';
 import { TrainerRepository } from '../people/trainer.repository';
 import { EmployeeRepository } from '../people/employee.repository';
 import { MembershipRepository } from '../memb/membership.repository';
+import { AttendanceService } from '../attn/attendance.service';
+import { PaymentService } from '../pay/payment.service';
 import { DashboardCache } from './dashboard-cache';
 import type {
   AdminDashboardWidget,
@@ -31,6 +33,8 @@ export class DashboardService {
     private readonly employeeRepository: EmployeeRepository,
     private readonly membershipRepository: MembershipRepository,
     private readonly cache: DashboardCache,
+    private readonly attendanceService?: AttendanceService,
+    private readonly paymentService?: PaymentService,
   ) {}
 
   async getDashboard(currentUser: AuthenticatedUser): Promise<DashboardResponseDto> {
@@ -154,6 +158,8 @@ export class DashboardService {
       employeesActive,
       membershipsByStatus,
       membershipsExpiringSoon,
+      occupancy,
+      revenueToday,
     ] = await Promise.all([
       this.memberRepository.countAll(),
       this.trainerRepository.countTotal(),
@@ -162,6 +168,18 @@ export class DashboardService {
       this.employeeRepository.countActive(),
       this.membershipRepository.countByStatus(),
       this.membershipRepository.countExpiringSoon(EXPIRING_SOON_WINDOW_DAYS),
+      this.attendanceService
+        ? this.attendanceService.getOccupancy().catch((err) => {
+            this.logger.warn(`Failed to fetch occupancy for admin widget: ${(err as Error).message}`);
+            return undefined;
+          })
+        : Promise.resolve(undefined),
+      this.paymentService
+        ? this.paymentService.getRevenueToday().catch((err) => {
+            this.logger.warn(`Failed to fetch revenue-today for admin widget: ${(err as Error).message}`);
+            return undefined;
+          })
+        : Promise.resolve(undefined),
     ]);
 
     const widget: AdminDashboardWidget = {
@@ -175,6 +193,19 @@ export class DashboardService {
         days: EXPIRING_SOON_WINDOW_DAYS,
         count: membershipsExpiringSoon,
       },
+      occupancy: occupancy
+        ? {
+            checked_in_now: occupancy.checked_in_now,
+            as_of: occupancy.as_of,
+            by_gate: occupancy.by_gate,
+          }
+        : undefined,
+      revenue_today: revenueToday
+        ? {
+            total_amount: revenueToday.total_amount,
+            invoice_count: revenueToday.invoice_count,
+          }
+        : undefined,
     };
 
     this.cache.set(cacheKey, widget, ADMIN_SUMMARY_TTL_MS);

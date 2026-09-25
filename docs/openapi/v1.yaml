@@ -69,6 +69,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ready"
+        "503":
+          description: Database is disconnected or unreachable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ready"
   /auth/login:
     post:
       operationId: login
@@ -2415,6 +2421,44 @@ paths:
           $ref: "#/components/responses/Error422"
         "429":
           $ref: "#/components/responses/Error429"
+  /schedule-types/{id}:
+    patch:
+      operationId: updateScheduleType
+      summary: Update a schedule type
+      tags: [SCHED]
+      x-status: mvp
+      x-permission: schedules.update
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduleTypeWrite"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleType"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
   /facilities:
     get:
       operationId: listFacilities
@@ -2461,6 +2505,44 @@ paths:
               $ref: "#/components/schemas/FacilityWrite"
       responses:
         "201":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Facility"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /facilities/{id}:
+    patch:
+      operationId: updateFacility
+      summary: Update a facility
+      tags: [SCHED]
+      x-status: mvp
+      x-permission: schedules.update
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FacilityWrite"
+      responses:
+        "200":
           description: OK
           content:
             application/json:
@@ -2730,24 +2812,23 @@ paths:
           $ref: "#/components/responses/Error422"
         "429":
           $ref: "#/components/responses/Error429"
-  /schedules/{id}/participants:
+  /schedules/{id}/book:
     post:
-      operationId: addScheduleParticipant
-      summary: Book a member onto a schedule
+      operationId: bookSchedule
+      summary: Book or waitlist a member for a schedule
       tags: [SCHED]
       x-status: mvp
-      x-permission: schedules.update
+      x-permission: schedules.book
       security:
         - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/Id"
-        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ScheduleParticipantWrite"
+              $ref: "#/components/schemas/BookRequest"
       responses:
         "201":
           description: OK
@@ -2769,21 +2850,31 @@ paths:
           $ref: "#/components/responses/Error422"
         "429":
           $ref: "#/components/responses/Error429"
-  /schedules/{id}/participants/{participantId}:
-    delete:
-      operationId: removeScheduleParticipant
-      summary: Cancel a booking
+  /schedules/{id}/bookings/{memberId}/cancel:
+    post:
+      operationId: cancelBooking
+      summary: Cancel a member booking
       tags: [SCHED]
       x-status: mvp
-      x-permission: schedules.update
+      x-permission: schedules.cancel
       security:
         - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/Id"
-        - { name: participantId, in: path, required: true, schema: { type: integer, format: int64 } }
+        - { name: memberId, in: path, required: true, schema: { type: integer, format: int64 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelBookingRequest"
       responses:
-        "204":
-          description: No content
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleParticipant"
         "400":
           $ref: "#/components/responses/Error400"
         "401":
@@ -2982,6 +3073,72 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Attendance"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /attendances/override:
+    post:
+      operationId: manualOverrideCheckIn
+      summary: Manual gate check-in override (bypasses eligibility/caps)
+      tags: [ATTN]
+      x-status: mvp
+      x-permission: attendance.override
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ManualOverrideRequest"
+      responses:
+        "201":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Attendance"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /attendances/occupancy:
+    get:
+      operationId: getAttendanceOccupancy
+      summary: Live gate occupancy (open check-ins)
+      tags: [ATTN]
+      x-status: mvp
+      x-permission: attendance.read
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Occupancy"
         "400":
           $ref: "#/components/responses/Error400"
         "401":
@@ -3763,6 +3920,38 @@ paths:
           $ref: "#/components/responses/Error422"
         "429":
           $ref: "#/components/responses/Error429"
+  /workout-plans/{id}/archive:
+    post:
+      operationId: archiveWorkoutPlan
+      summary: Archive a workout plan
+      tags: [WORK]
+      x-status: mvp
+      x-permission: workouts.update
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutPlan"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
   /workout-plans/{id}/assign:
     post:
       operationId: assignWorkoutPlan
@@ -3921,6 +4110,73 @@ paths:
               $ref: "#/components/schemas/WorkoutSessionCreate"
       responses:
         "201":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutSession"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /workout-sessions/personal-records:
+    get:
+      operationId: getPersonalRecords
+      summary: Member personal records across completed sessions
+      tags: [WORK]
+      x-status: mvp
+      x-permission: workouts.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: member_id, in: query, schema: { type: integer, format: int64 } }
+        - { name: exercise_id, in: query, schema: { type: integer, format: int64 } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PersonalRecord"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /workout-sessions/{id}:
+    get:
+      operationId: getWorkoutSession
+      summary: Get workout session details
+      tags: [WORK]
+      x-status: mvp
+      x-permission: workouts.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
           description: OK
           content:
             application/json:
@@ -4785,6 +5041,50 @@ paths:
           $ref: "#/components/responses/Error422"
         "429":
           $ref: "#/components/responses/Error429"
+  /members/{id}/measurements/chart:
+    get:
+      operationId: getMeasurementChart
+      summary: Longitudinal metric chart series
+      tags: [GOAL]
+      x-status: mvp
+      x-permission: goals.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - name: metric_id
+          in: query
+          required: true
+          schema: { type: integer, format: int64 }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LongitudinalDataPoint"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
   /members/{id}/measurements:
     get:
       operationId: listMeasurements
@@ -4874,6 +5174,48 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Measurement"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /members/{id}/progress-photos/comparison:
+    get:
+      operationId: compareProgressPhotos
+      summary: Compare progress photos across two dates and poses
+      tags: [GOAL]
+      x-status: mvp
+      x-permission: goals.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - name: date1
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: date2
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/Date"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressPhotoComparison"
         "400":
           $ref: "#/components/responses/Error400"
         "401":
@@ -5474,7 +5816,7 @@ paths:
       operationId: putSettings
       summary: Upsert known setting keys
       tags: [SYS]
-      x-status: mvp
+      x-status: deferred
       x-permission: settings.update
       security:
         - bearerAuth: []
@@ -5801,21 +6143,36 @@ components:
       enum: [create, read, update, delete, approve, export, broadcast]
     Health:
       type: object
-      required: [status]
+      required: [status, timestamp]
       properties:
         status:
           type: string
           enum: [ok]
+        timestamp:
+          $ref: "#/components/schemas/DateTime"
     Ready:
       type: object
-      required: [status, database]
+      required: [status, database, timestamp]
       properties:
         status:
           type: string
-          enum: [ok, degraded]
+          enum: [ok, error]
         database:
           type: string
-          enum: [up, down]
+          enum: [connected, disconnected]
+        timestamp:
+          $ref: "#/components/schemas/DateTime"
+        jobs:
+          type: object
+          nullable: true
+          properties:
+            failure_count:
+              type: integer
+            retry_count:
+              type: integer
+            last_success_at:
+              $ref: "#/components/schemas/DateTime"
+              nullable: true
     LoginRequest:
       type: object
       required: [password]
@@ -7014,12 +7371,18 @@ components:
           type: string
           format: date-time
           nullable: true
-    ScheduleParticipantWrite:
+    BookRequest:
       type: object
-      required: [member_id]
       properties:
         member_id:
           $ref: "#/components/schemas/Id"
+          nullable: true
+          description: Required when the caller is staff; a member caller books themselves.
+    CancelBookingRequest:
+      type: object
+      properties:
+        reason:
+          type: string
     CancelRequest:
       type: object
       properties:
@@ -7113,6 +7476,38 @@ components:
             $ref: "#/components/schemas/Attendance"
         meta:
           $ref: "#/components/schemas/PageMeta"
+    ManualOverrideRequest:
+      type: object
+      required: [user_id, reason]
+      properties:
+        user_id:
+          $ref: "#/components/schemas/Id"
+        gate_identifier:
+          type: string
+          nullable: true
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+    Occupancy:
+      type: object
+      required: [checked_in_now, as_of, by_gate]
+      properties:
+        checked_in_now:
+          type: integer
+        as_of:
+          $ref: "#/components/schemas/DateTime"
+        by_gate:
+          type: array
+          items:
+            type: object
+            required: [gate_identifier, count]
+            properties:
+              gate_identifier:
+                type: string
+                nullable: true
+              count:
+                type: integer
     AttendanceSummary:
       type: object
       properties:
@@ -7664,6 +8059,22 @@ components:
             $ref: "#/components/schemas/WorkoutSession"
         meta:
           $ref: "#/components/schemas/PageMeta"
+    PersonalRecord:
+      type: object
+      required: [exercise_id, exercise_name, max_weight_kg, max_reps, best_set_volume_kg, achieved_at]
+      properties:
+        exercise_id:
+          $ref: "#/components/schemas/Id"
+        exercise_name:
+          type: string
+        max_weight_kg:
+          type: number
+        max_reps:
+          type: integer
+        best_set_volume_kg:
+          type: number
+        achieved_at:
+          $ref: "#/components/schemas/DateTime"
     Food:
       type: object
       required: [id, name, serving_unit, is_active]
@@ -8111,6 +8522,22 @@ components:
             $ref: "#/components/schemas/Measurement"
         meta:
           $ref: "#/components/schemas/PageMeta"
+    LongitudinalDataPoint:
+      type: object
+      required: [measurement_id, recorded_at, metric_id, metric_name, unit_of_measure, value]
+      properties:
+        measurement_id:
+          $ref: "#/components/schemas/Id"
+        recorded_at:
+          $ref: "#/components/schemas/DateTime"
+        metric_id:
+          $ref: "#/components/schemas/Id"
+        metric_name:
+          type: string
+        unit_of_measure:
+          type: string
+        value:
+          type: number
     ProgressPhoto:
       type: object
       required: [id, member_id, photo_url, pose]
@@ -8152,6 +8579,38 @@ components:
             $ref: "#/components/schemas/ProgressPhoto"
         meta:
           $ref: "#/components/schemas/PageMeta"
+    ProgressPhotoComparison:
+      type: object
+      required: [date1, date2, date1_photos, date2_photos, comparison_by_pose]
+      properties:
+        date1:
+          $ref: "#/components/schemas/Date"
+        date2:
+          $ref: "#/components/schemas/Date"
+        date1_photos:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProgressPhoto"
+        date2_photos:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProgressPhoto"
+        comparison_by_pose:
+          type: object
+          properties:
+            front:
+              $ref: "#/components/schemas/ProgressPhotoComparisonPosePair"
+            side:
+              $ref: "#/components/schemas/ProgressPhotoComparisonPosePair"
+            back:
+              $ref: "#/components/schemas/ProgressPhotoComparisonPosePair"
+    ProgressPhotoComparisonPosePair:
+      type: object
+      properties:
+        date1:
+          $ref: "#/components/schemas/ProgressPhoto"
+        date2:
+          $ref: "#/components/schemas/ProgressPhoto"
     ProgressNote:
       type: object
       required: [id, member_id, author_user_id, note_text, note_type, created_at]

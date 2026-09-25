@@ -20,7 +20,7 @@ class DASHApi {
   const DASHApi(this._dio, this._serializers);
 
   /// Role-specific home snapshot; unauthorized widgets omitted
-  /// 
+  /// No single route-level permission gate; any authenticated user may call this. Each section (member/trainer/admin) is included only when the caller holds the matching dashboard.member/dashboard.trainer/dashboard.admin permission and has a profile of that kind.
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation

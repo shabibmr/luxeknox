@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
 import '../../../../core/media/media_picker.dart';
 import '../../../../core/media/signed_media_image.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -53,93 +55,96 @@ class _PhotosBody extends StatelessWidget {
       ),
       body: BlocConsumer<PhotosCubit, PhotosState>(
         listener: (context, state) {
-          if (state is PhotosLoaded && state.message == 'avatar') {
+          if (state.message == 'avatar') {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(PeopleStrings.avatarSet)),
+            );
+          } else if (state.status == LoadStatus.failure &&
+              state.photos.isNotEmpty &&
+              state.failure != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
             );
           }
         },
         builder: (context, state) {
-          return switch (state) {
-            PhotosLoading() => const AppLoading(),
-            PhotosFailure(:final message) => AppErrorView(
-              message: message,
+          final photos = state.photos;
+          final showFullScreen =
+              photos.isEmpty && !state.uploading && state.uploadError == null;
+          if (showFullScreen && state.status == LoadStatus.failure) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () => context.read<PhotosCubit>().load(memberId),
-            ),
-            PhotosLoaded(
-              :final photos,
-              :final uploading,
-              :final uploadProgress,
-              :final uploadError,
-            ) =>
-              Column(
-                children: [
-                  if (uploading || uploadError != null || state.canRetry)
-                    _PhotoUploadBanner(
-                      uploading: uploading,
-                      progress: uploadProgress,
-                      error: uploadError,
-                      canRetry: state.canRetry,
-                    ),
-                  Expanded(
-                    child: photos.isEmpty
-                        ? AppEmptyView(
-                            message: PeopleStrings.emptyPhotos,
-                            action: () => _pickAndUpload(context),
-                            actionLabel: PeopleStrings.uploadPhoto,
-                          )
-                        : GridView.builder(
-                            padding: const EdgeInsets.all(12),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 8,
-                                  crossAxisSpacing: 8,
-                                ),
-                            itemCount: photos.length,
-                            itemBuilder: (context, index) {
-                              final photo = photos[index];
-                              return Card(
-                                clipBehavior: Clip.antiAlias,
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    SignedMediaImage(
-                                      objectKey: photo.objectKey,
-                                    ),
-                                    if (photo.isCurrentAvatar)
-                                      const Align(
-                                        alignment: Alignment.topLeft,
-                                        child: Padding(
-                                          padding: EdgeInsets.all(8),
-                                          child: Chip(
-                                            label: Text('Avatar'),
-                                            visualDensity: VisualDensity.compact,
-                                          ),
-                                        ),
-                                      ),
-                                    Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: TextButton(
-                                        onPressed: photo.isCurrentAvatar
-                                            ? null
-                                            : () => context
-                                                  .read<PhotosCubit>()
-                                                  .setAsAvatar(photo.id),
-                                        child: const Text(
-                                          PeopleStrings.setAvatar,
-                                        ),
+            );
+          }
+          if (showFullScreen && state.status != LoadStatus.success) {
+            return const AppLoading();
+          }
+          return Column(
+            children: [
+              if (state.uploading ||
+                  state.uploadError != null ||
+                  state.canRetry)
+                _PhotoUploadBanner(
+                  uploading: state.uploading,
+                  progress: state.uploadProgress,
+                  error: state.uploadError,
+                  canRetry: state.canRetry,
+                ),
+              Expanded(
+                child: photos.isEmpty
+                    ? AppEmptyView(
+                        message: PeopleStrings.emptyPhotos,
+                        action: () => _pickAndUpload(context),
+                        actionLabel: PeopleStrings.uploadPhoto,
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(12),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 8,
+                              crossAxisSpacing: 8,
+                            ),
+                        itemCount: photos.length,
+                        itemBuilder: (context, index) {
+                          final photo = photos[index];
+                          return Card(
+                            clipBehavior: Clip.antiAlias,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                SignedMediaImage(objectKey: photo.objectKey),
+                                if (photo.isCurrentAvatar)
+                                  const Align(
+                                    alignment: Alignment.topLeft,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: Chip(
+                                        label: Text('Avatar'),
+                                        visualDensity: VisualDensity.compact,
                                       ),
                                     ),
-                                  ],
+                                  ),
+                                Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: TextButton(
+                                    onPressed: photo.isCurrentAvatar
+                                        ? null
+                                        : () => context
+                                              .read<PhotosCubit>()
+                                              .setAsAvatar(photo.id),
+                                    child: const Text(PeopleStrings.setAvatar),
+                                  ),
                                 ),
-                              );
-                            },
-                          ),
-                  ),
-                ],
+                              ],
+                            ),
+                          );
+                        },
+                      ),
               ),
-          };
+            ],
+          );
         },
       ),
     );

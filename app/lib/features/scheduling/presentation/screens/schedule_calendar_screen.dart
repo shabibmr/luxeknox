@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -106,60 +108,66 @@ class _ScheduleCalendarBody extends StatelessWidget {
       ),
       body: BlocBuilder<ScheduleCalendarCubit, ScheduleCalendarState>(
         builder: (context, state) {
-          return switch (state) {
-            ScheduleCalendarLoading() => const AppLoading(),
-            ScheduleCalendarFailure(:final message) => AppErrorView(
-              message: message,
+          if (state.status == LoadStatus.loading && !state.hasLoaded) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && !state.hasLoaded) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? 'Something went wrong'
+                  : failureMessage(state.failure!),
               onRetry: () => context.read<ScheduleCalendarCubit>().load(),
-            ),
-            ScheduleCalendarLoaded(:final items, :final from, :final to) =>
-              Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(
-                      '${from.toIso8601String().split('T').first} → '
-                      '${to.toIso8601String().split('T').first}',
-                    ),
-                  ),
-                  Expanded(
-                    child: items.isEmpty
-                        ? const AppEmptyView(
-                            message: SchedulingStrings.noneFound,
-                          )
-                        : RefreshIndicator(
-                            onRefresh: () =>
-                                context.read<ScheduleCalendarCubit>().load(),
-                            child: ListView.builder(
-                              itemCount: items.length,
-                              itemBuilder: (context, index) {
-                                final session = items[index];
-                                return ListTile(
-                                  title: Text(session.title),
-                                  subtitle: Text(
-                                    '${session.startTime.toLocal()} · '
-                                    '${session.status.name}'
-                                    '${session.isFull ? ' · full' : ''}',
-                                  ),
-                                  onTap: () {
-                                    final path = switch (role) {
-                                      ScheduleCalendarRole.member =>
-                                        '/schedule/${session.id}',
-                                      ScheduleCalendarRole.trainer =>
-                                        '/trainer/schedule/${session.id}',
-                                      ScheduleCalendarRole.admin =>
-                                        '${Routes.adminSchedules}/${session.id}',
-                                    };
-                                    context.go(path);
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-                  ),
-                ],
+            );
+          }
+          final items = state.items;
+          final from = state.from;
+          final to = state.to;
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  from == null || to == null
+                      ? ''
+                      : '${from.toIso8601String().split('T').first} → '
+                            '${to.toIso8601String().split('T').first}',
+                ),
               ),
-          };
+              Expanded(
+                child: items.isEmpty
+                    ? const AppEmptyView(message: SchedulingStrings.noneFound)
+                    : RefreshIndicator(
+                        onRefresh: () =>
+                            context.read<ScheduleCalendarCubit>().load(),
+                        child: ListView.builder(
+                          itemCount: items.length,
+                          itemBuilder: (context, index) {
+                            final session = items[index];
+                            return ListTile(
+                              title: Text(session.title),
+                              subtitle: Text(
+                                '${session.startTime.toLocal()} · '
+                                '${session.status.name}'
+                                '${session.isFull ? ' · full' : ''}',
+                              ),
+                              onTap: () {
+                                final path = switch (role) {
+                                  ScheduleCalendarRole.member =>
+                                    '/schedule/${session.id}',
+                                  ScheduleCalendarRole.trainer =>
+                                    '/trainer/schedule/${session.id}',
+                                  ScheduleCalendarRole.admin =>
+                                    '${Routes.adminSchedules}/${session.id}',
+                                };
+                                context.go(path);
+                              },
+                            );
+                          },
+                        ),
+                      ),
+              ),
+            ],
+          );
         },
       ),
     );

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -40,10 +42,15 @@ class _TrainerAvailabilityBody extends StatelessWidget {
       appBar: AppBar(title: const Text(SchedulingStrings.availabilityTitle)),
       body: BlocBuilder<TrainerAvailabilityCubit, TrainerAvailabilityState>(
         builder: (context, state) {
-          return switch (state) {
-            TrainerAvailabilityLoading() => const AppLoading(),
-            TrainerAvailabilityFailure(:final message) => AppErrorView(
-              message: message,
+          final slots = state.slots;
+          if (state.status == LoadStatus.loading && !state.hasLoaded) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && !state.hasLoaded) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? 'Something went wrong'
+                  : failureMessage(state.failure!),
               onRetry: () {
                 final session = context.read<SessionCubit>().state;
                 if (session is SessionAuthenticated) {
@@ -52,12 +59,14 @@ class _TrainerAvailabilityBody extends StatelessWidget {
                   );
                 }
               },
-            ),
-            TrainerAvailabilityLoaded(:final slots) => slots.isEmpty
-                ? const AppEmptyView(
-                    message: SchedulingStrings.availabilityEmpty,
-                  )
-                : ListView.builder(
+            );
+          }
+          if (slots.isEmpty) {
+            return const AppEmptyView(
+              message: SchedulingStrings.availabilityEmpty,
+            );
+          }
+          return ListView.builder(
                     itemCount: slots.length,
                     itemBuilder: (context, index) {
                       final slot = slots[index];
@@ -74,8 +83,7 @@ class _TrainerAvailabilityBody extends StatelessWidget {
                         ),
                       );
                     },
-                  ),
-          };
+          );
         },
       ),
     );

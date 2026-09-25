@@ -4,73 +4,56 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../session/domain/entities/user_type.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/entities/membership_product.dart';
-import '../../domain/usecases/get_membership_products_usecase.dart';
+import '../cubit/membership_packages_catalog_cubit.dart';
 import '../membership_strings.dart';
 import 'membership_product_form_screen.dart';
 
 /// Screen 5.1 — Membership Packages Catalog (FR-MEMB-001/002/003). Admin gets
 /// create/edit; member/trainer get a read-only browse (`memberships.read`).
-class MembershipPackagesCatalogScreen extends StatefulWidget {
+class MembershipPackagesCatalogScreen extends StatelessWidget {
   const MembershipPackagesCatalogScreen({super.key, this.readOnly = false});
 
   final bool readOnly;
 
   @override
-  State<MembershipPackagesCatalogScreen> createState() =>
-      _MembershipPackagesCatalogScreenState();
-}
-
-class _MembershipPackagesCatalogScreenState
-    extends State<MembershipPackagesCatalogScreen> {
-  final _getProducts = getIt<GetMembershipProductsUseCase>();
-
-  bool _loading = true;
-  String? _error;
-  List<MembershipProduct> _items = const [];
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    final result = await _getProducts(const GetMembershipProductsParams());
-    if (!mounted) return;
-    result.fold(
-      (failure) => setState(() {
-        _loading = false;
-        _error = failureMessage(failure);
-      }),
-      (page) => setState(() {
-        _loading = false;
-        _items = page.items;
-      }),
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => getIt<MembershipPackagesCatalogCubit>()..load(),
+      child: _CatalogBody(readOnly: readOnly),
     );
   }
+}
 
-  Future<void> _openForm({MembershipProduct? product}) async {
+class _CatalogBody extends StatelessWidget {
+  const _CatalogBody({required this.readOnly});
+
+  final bool readOnly;
+
+  Future<void> _openForm(
+    BuildContext context, {
+    MembershipProduct? product,
+  }) async {
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => MembershipProductFormScreen(product: product),
       ),
     );
-    if (saved == true && mounted) _load();
+    if (saved == true && context.mounted) {
+      await context.read<MembershipPackagesCatalogCubit>().load();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final canCreate = !widget.readOnly && context.can('memberships.create');
-    final canUpdate = !widget.readOnly && context.can('memberships.update');
+    final canCreate = !readOnly && context.can('memberships.create');
+    final canUpdate = !readOnly && context.can('memberships.update');
     final session = context.watch<SessionCubit>().state;
-    final hidePricing = session is SessionAuthenticated &&
+    final hidePricing =
+        session is SessionAuthenticated &&
         session.principal.userType == UserType.trainer;
 
     return Scaffold(
@@ -81,27 +64,53 @@ class _MembershipPackagesCatalogScreenState
             IconButton(
               icon: const Icon(Icons.add),
               tooltip: MembershipStrings.addTooltip,
-              onPressed: () => _openForm(),
+              onPressed: () => _openForm(context),
             ),
         ],
       ),
-      body: _buildBody(canUpdate, hidePricing: hidePricing),
+      body: BlocBuilder<
+        MembershipPackagesCatalogCubit,
+        MembershipPackagesCatalogState
+      >(
+        builder: (context, state) => _buildBody(
+          context,
+          state,
+          canUpdate: canUpdate,
+          hidePricing: hidePricing,
+        ),
+      ),
     );
   }
 
-  Widget _buildBody(bool canUpdate, {required bool hidePricing}) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_error != null) {
+  Widget _buildBody(
+    BuildContext context,
+    MembershipPackagesCatalogState state, {
+    required bool canUpdate,
+    required bool hidePricing,
+  }) {
+    final noItems = state.items.isEmpty;
+    if (noItems &&
+        (state.status == LoadStatus.initial ||
+            state.status == LoadStatus.loading)) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (noItems && state.status == LoadStatus.failure) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_error!, textAlign: TextAlign.center),
+              Text(
+                state.failure == null
+                    ? MembershipStrings.noneFound
+                    : failureMessage(state.failure!),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 16),
               FilledButton(
-                onPressed: _load,
+                onPressed: () =>
+                    context.read<MembershipPackagesCatalogCubit>().load(),
                 child: const Text(MembershipStrings.retry),
               ),
             ],
@@ -109,15 +118,15 @@ class _MembershipPackagesCatalogScreenState
         ),
       );
     }
-    if (_items.isEmpty) {
+    if (noItems) {
       return const Center(child: Text(MembershipStrings.noneFound));
     }
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: () => context.read<MembershipPackagesCatalogCubit>().load(),
       child: ListView.builder(
-        itemCount: _items.length,
+        itemCount: state.items.length,
         itemBuilder: (context, index) {
-          final product = _items[index];
+          final product = state.items[index];
           final subtitle = hidePricing
               ? '${product.code} · ${product.durationDays}d'
               : '${product.code} · ${product.durationDays}d · ${product.basePrice}';
@@ -127,7 +136,7 @@ class _MembershipPackagesCatalogScreenState
             trailing: product.isActive
                 ? null
                 : const Icon(Icons.visibility_off_outlined, size: 18),
-            onTap: canUpdate ? () => _openForm(product: product) : null,
+            onTap: canUpdate ? () => _openForm(context, product: product) : null,
           );
         },
       ),

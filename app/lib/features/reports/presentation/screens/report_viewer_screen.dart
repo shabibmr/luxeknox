@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/app_report_type.dart';
@@ -111,11 +113,7 @@ class _ReportViewerBodyState extends State<_ReportViewerBody> {
       ),
       body: BlocBuilder<ReportCubit, ReportState>(
         builder: (context, state) {
-          final query = switch (state) {
-            ReportLoading(:final query) => query,
-            ReportLoaded(:final query) => query,
-            ReportFailure(:final query) => query,
-          };
+          final query = state.query;
           _from = query.from ?? _from;
           _to = query.to ?? _to;
 
@@ -163,62 +161,73 @@ class _ReportViewerBodyState extends State<_ReportViewerBody> {
                 ),
               ),
               const Divider(height: 24),
-              Expanded(
-                child: switch (state) {
-                  ReportLoading() => const AppLoading(),
-                  ReportFailure(:final message) => AppErrorView(
-                    message: message,
-                    onRetry: () => context.read<ReportCubit>().refresh(),
-                  ),
-                  ReportLoaded(
-                    :final result,
-                    :final pageIndex,
-                    :final exporting,
-                  ) =>
-                    Stack(
-                      children: [
-                        RefreshIndicator(
-                          onRefresh: () =>
-                              context.read<ReportCubit>().refresh(),
-                          child: ListView(
-                            padding: const EdgeInsets.all(16),
-                            children: [
-                              ReportPaginationBar(
-                                pageIndex: pageIndex,
-                                pageCount: state.pageCount,
-                                totalRows: result.rows.length,
-                                onPrevious: pageIndex > 0
-                                    ? () => context
-                                        .read<ReportCubit>()
-                                        .setPage(pageIndex - 1)
-                                    : null,
-                                onNext: pageIndex < state.pageCount - 1
-                                    ? () => context
-                                        .read<ReportCubit>()
-                                        .setPage(pageIndex + 1)
-                                    : null,
-                              ),
-                              const SizedBox(height: 8),
-                              ReportDataTable(
-                                columns: result.columns,
-                                rows: state.pageRows,
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (exporting)
-                          const ColoredBox(
-                            color: Color(0x33000000),
-                            child: AppLoading(),
-                          ),
-                      ],
-                    ),
-                },
-              ),
+              Expanded(child: _ReportBody(state: state)),
             ],
           );
         },
       ),
+    );
+  }
+}
+
+class _ReportBody extends StatelessWidget {
+  const _ReportBody({required this.state});
+
+  final ReportState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final result = state.result;
+    if (state.status == LoadStatus.loading && result == null) {
+      return const AppLoading();
+    }
+    if (state.status == LoadStatus.failure && result == null) {
+      return AppErrorView(
+        message: state.failure == null ? '' : failureMessage(state.failure!),
+        onRetry: () => context.read<ReportCubit>().refresh(),
+      );
+    }
+    if (result == null) return const AppLoading();
+    final pageIndex = state.pageIndex;
+    return Stack(
+      children: [
+        RefreshIndicator(
+          onRefresh: () => context.read<ReportCubit>().refresh(),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (state.status == LoadStatus.failure && state.failure != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    failureMessage(state.failure!),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              ReportPaginationBar(
+                pageIndex: pageIndex,
+                pageCount: state.pageCount,
+                totalRows: result.rows.length,
+                onPrevious: pageIndex > 0
+                    ? () => context.read<ReportCubit>().setPage(pageIndex - 1)
+                    : null,
+                onNext: pageIndex < state.pageCount - 1
+                    ? () => context.read<ReportCubit>().setPage(pageIndex + 1)
+                    : null,
+              ),
+              const SizedBox(height: 8),
+              ReportDataTable(columns: result.columns, rows: state.pageRows),
+            ],
+          ),
+        ),
+        if (state.exporting)
+          const ColoredBox(
+            color: Color(0x33000000),
+            child: AppLoading(),
+          ),
+      ],
     );
   }
 }

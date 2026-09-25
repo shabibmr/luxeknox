@@ -1,53 +1,26 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/diet_plan.dart';
 import '../../domain/usecases/archive_diet_plan_usecase.dart';
 import '../../domain/usecases/assign_diet_plan_usecase.dart';
 import '../../domain/usecases/get_diet_plan_usecase.dart';
 import '../../domain/usecases/publish_diet_plan_usecase.dart';
 
-sealed class DietPlanDetailState extends Equatable {
-  const DietPlanDetailState();
+part 'diet_plan_detail_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class DietPlanDetailLoading extends DietPlanDetailState {
-  const DietPlanDetailLoading();
-}
-
-final class DietPlanDetailLoaded extends DietPlanDetailState {
-  const DietPlanDetailLoaded(this.plan, {this.assignedPlan});
-
-  final DietPlan plan;
-
-  /// Set after a successful template assign; UI navigates then clears.
-  final DietPlan? assignedPlan;
-
-  @override
-  List<Object?> get props => [plan, assignedPlan];
-}
-
-final class DietPlanDetailFailure extends DietPlanDetailState {
-  const DietPlanDetailFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-final class DietPlanDetailActionInFlight extends DietPlanDetailState {
-  const DietPlanDetailActionInFlight(this.plan);
-
-  final DietPlan plan;
-
-  @override
-  List<Object?> get props => [plan];
+@freezed
+abstract class DietPlanDetailState with _$DietPlanDetailState {
+  const factory DietPlanDetailState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    DietPlan? plan,
+    DietPlan? assignedPlan,
+    @Default(false) bool actionInFlight,
+    Failure? failure,
+  }) = _DietPlanDetailState;
 }
 
 @injectable
@@ -57,7 +30,7 @@ class DietPlanDetailCubit extends Cubit<DietPlanDetailState> {
     this._publishPlan,
     this._archivePlan,
     this._assignPlan,
-  ) : super(const DietPlanDetailLoading());
+  ) : super(const DietPlanDetailState());
 
   final GetDietPlanUseCase _getPlan;
   final PublishDietPlanUseCase _publishPlan;
@@ -68,11 +41,28 @@ class DietPlanDetailCubit extends Cubit<DietPlanDetailState> {
 
   Future<void> load(String planId) async {
     _planId = planId;
-    emit(const DietPlanDetailLoading());
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        actionInFlight: false,
+        assignedPlan: null,
+      ),
+    );
     final result = await _getPlan(planId);
     result.fold(
-      (failure) => emit(DietPlanDetailFailure(failureMessage(failure))),
-      (plan) => emit(DietPlanDetailLoaded(plan)),
+      (failure) => emit(
+        state.copyWith(status: LoadStatus.failure, failure: failure),
+      ),
+      (plan) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          actionInFlight: false,
+          plan: plan,
+          assignedPlan: null,
+        ),
+      ),
     );
   }
 
@@ -84,67 +74,109 @@ class DietPlanDetailCubit extends Cubit<DietPlanDetailState> {
 
   Future<void> publish() async {
     final planId = _planId;
-    final current = state;
-    if (planId == null) return;
-    final plan = switch (current) {
-      DietPlanDetailLoaded(:final plan) => plan,
-      DietPlanDetailActionInFlight(:final plan) => plan,
-      _ => null,
-    };
-    if (plan == null) return;
+    if (planId == null || state.plan == null) return;
 
-    emit(DietPlanDetailActionInFlight(plan));
+    emit(
+      state.copyWith(
+        actionInFlight: true,
+        failure: null,
+        assignedPlan: null,
+      ),
+    );
     final result = await _publishPlan(planId);
     result.fold(
-      (failure) => emit(DietPlanDetailFailure(failureMessage(failure))),
-      (updated) => emit(DietPlanDetailLoaded(updated)),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          actionInFlight: false,
+          assignedPlan: null,
+        ),
+      ),
+      (updated) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          actionInFlight: false,
+          plan: updated,
+          assignedPlan: null,
+        ),
+      ),
     );
   }
 
   Future<void> archive() async {
     final planId = _planId;
-    final current = state;
-    if (planId == null) return;
-    final plan = switch (current) {
-      DietPlanDetailLoaded(:final plan) => plan,
-      DietPlanDetailActionInFlight(:final plan) => plan,
-      _ => null,
-    };
-    if (plan == null) return;
+    if (planId == null || state.plan == null) return;
 
-    emit(DietPlanDetailActionInFlight(plan));
+    emit(
+      state.copyWith(
+        actionInFlight: true,
+        failure: null,
+        assignedPlan: null,
+      ),
+    );
     final result = await _archivePlan(planId);
     result.fold(
-      (failure) => emit(DietPlanDetailFailure(failureMessage(failure))),
-      (updated) => emit(DietPlanDetailLoaded(updated)),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          actionInFlight: false,
+          assignedPlan: null,
+        ),
+      ),
+      (updated) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          actionInFlight: false,
+          plan: updated,
+          assignedPlan: null,
+        ),
+      ),
     );
   }
 
   Future<void> assignToMember(String memberId) async {
     final planId = _planId;
-    final current = state;
-    if (planId == null) return;
-    final plan = switch (current) {
-      DietPlanDetailLoaded(:final plan) => plan,
-      DietPlanDetailActionInFlight(:final plan) => plan,
-      _ => null,
-    };
-    if (plan == null) return;
+    final plan = state.plan;
+    if (planId == null || plan == null) return;
 
-    emit(DietPlanDetailActionInFlight(plan));
+    emit(
+      state.copyWith(
+        actionInFlight: true,
+        failure: null,
+        assignedPlan: null,
+      ),
+    );
     final result = await _assignPlan(
       AssignDietPlanParams(planId: planId, memberId: memberId),
     );
     result.fold(
-      (failure) => emit(DietPlanDetailFailure(failureMessage(failure))),
-      (assigned) => emit(DietPlanDetailLoaded(plan, assignedPlan: assigned)),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          actionInFlight: false,
+          assignedPlan: null,
+        ),
+      ),
+      (assigned) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          actionInFlight: false,
+          plan: plan,
+          assignedPlan: assigned,
+        ),
+      ),
     );
   }
 
   void clearAssignedPlan() {
-    final current = state;
-    if (current is DietPlanDetailLoaded && current.assignedPlan != null) {
-      emit(DietPlanDetailLoaded(current.plan));
+    if (state.assignedPlan != null) {
+      emit(state.copyWith(assignedPlan: null));
     }
   }
 }

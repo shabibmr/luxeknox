@@ -13,11 +13,16 @@ part 'health.g.dart';
 ///
 /// Properties:
 /// * [status] 
+/// * [timestamp] - UTC ISO-8601
 @BuiltValue()
 abstract class Health implements Built<Health, HealthBuilder> {
   @BuiltValueField(wireName: r'status')
   HealthStatusEnum get status;
   // enum statusEnum {  ok,  };
+
+  /// UTC ISO-8601
+  @BuiltValueField(wireName: r'timestamp')
+  DateTime get timestamp;
 
   Health._();
 
@@ -46,6 +51,11 @@ class _$HealthSerializer implements PrimitiveSerializer<Health> {
     yield serializers.serialize(
       object.status,
       specifiedType: const FullType(HealthStatusEnum),
+    );
+    yield r'timestamp';
+    yield serializers.serialize(
+      object.timestamp,
+      specifiedType: const FullType(DateTime),
     );
   }
 
@@ -76,6 +86,13 @@ class _$HealthSerializer implements PrimitiveSerializer<Health> {
             specifiedType: const FullType(HealthStatusEnum),
           ) as HealthStatusEnum;
           result.status = valueDes;
+          break;
+        case r'timestamp':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(DateTime),
+          ) as DateTime;
+          result.timestamp = valueDes;
           break;
         default:
           unhandled.add(key);

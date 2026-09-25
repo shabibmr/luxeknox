@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
-import '../../domain/entities/membership.dart';
-import '../../domain/usecases/get_memberships_usecase.dart';
+import '../../../../core/presentation/load_status.dart';
+import '../cubit/trainer_membership_summary_cubit.dart';
 import '../membership_strings.dart';
 import '../widgets/membership_status_chip.dart';
 
@@ -11,104 +12,77 @@ import '../widgets/membership_status_chip.dart';
 /// contract. FR-MEMB-007: no pricing. The backend already omits the nested
 /// `product` object for trainer-scoped reads, so there is nothing price-like
 /// to accidentally render here — only plan-adjacent facts.
-class TrainerMembershipSummaryScreen extends StatefulWidget {
+class TrainerMembershipSummaryScreen extends StatelessWidget {
   const TrainerMembershipSummaryScreen({super.key, required this.memberId});
 
   final String memberId;
 
   @override
-  State<TrainerMembershipSummaryScreen> createState() =>
-      _TrainerMembershipSummaryScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => getIt<TrainerMembershipSummaryCubit>()..load(memberId),
+      child: const _TrainerMembershipSummaryBody(),
+    );
+  }
 }
 
-class _TrainerMembershipSummaryScreenState
-    extends State<TrainerMembershipSummaryScreen> {
-  final _getMemberships = getIt<GetMembershipsUseCase>();
-
-  bool _loading = true;
-  String? _error;
-  Membership? _membership;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    final result = await _getMemberships(
-      GetMembershipsParams(memberId: widget.memberId),
-    );
-    if (!mounted) return;
-    result.fold(
-      (failure) => setState(() {
-        _loading = false;
-        _error = failureMessage(failure);
-      }),
-      (page) => setState(() {
-        _loading = false;
-        _membership = page.items.isEmpty
-            ? null
-            : page.items.firstWhere(
-                (m) => m.isActiveOrFrozen,
-                orElse: () => page.items.first,
-              );
-      }),
-    );
-  }
+class _TrainerMembershipSummaryBody extends StatelessWidget {
+  const _TrainerMembershipSummaryBody();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(MembershipStrings.trainerSummaryTitle)),
-      body: _buildBody(),
-    );
-  }
-
-  Widget _buildBody() {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-
-    final membership = _membership;
-    if (_error != null || membership == null) {
-      return Center(
-        child: Text(_error ?? MembershipStrings.noActiveMembership),
-      );
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
+      body: BlocBuilder<TrainerMembershipSummaryCubit, TrainerMembershipSummaryState>(
+        builder: (context, state) {
+          final membership = state.membership;
+          if (membership == null &&
+              (state.status == LoadStatus.initial ||
+                  state.status == LoadStatus.loading)) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (membership == null) {
+            return Center(
               child: Text(
-                'Membership #${membership.productId}',
-                style: Theme.of(context).textTheme.titleLarge,
+                state.failure == null
+                    ? MembershipStrings.noActiveMembership
+                    : failureMessage(state.failure!),
               ),
-            ),
-            MembershipStatusChip(status: membership.status),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _infoRow(
-          MembershipStrings.startDateLabel,
-          membership.startDate.toString().split(' ').first,
-        ),
-        _infoRow(
-          MembershipStrings.endDateLabel,
-          membership.endDate.toString().split(' ').first,
-        ),
-        if (membership.remainingPtSessions != null)
-          _infoRow(
-            MembershipStrings.remainingPtSessions,
-            membership.remainingPtSessions.toString(),
-          ),
-      ],
+            );
+          }
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Membership #${membership.productId}',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  MembershipStatusChip(status: membership.status),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _infoRow(
+                MembershipStrings.startDateLabel,
+                membership.startDate.toString().split(' ').first,
+              ),
+              _infoRow(
+                MembershipStrings.endDateLabel,
+                membership.endDate.toString().split(' ').first,
+              ),
+              if (membership.remainingPtSessions != null)
+                _infoRow(
+                  MembershipStrings.remainingPtSessions,
+                  membership.remainingPtSessions.toString(),
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 

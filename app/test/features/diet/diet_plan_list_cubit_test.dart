@@ -1,5 +1,6 @@
 import 'package:app/core/error/failures.dart';
 import 'package:app/core/pagination/cursor_page.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/diet/domain/entities/diet_plan.dart';
 import 'package:app/features/diet/domain/entities/diet_plan_status.dart';
 import 'package:app/features/diet/domain/usecases/list_diet_plans_usecase.dart';
@@ -55,13 +56,20 @@ void main() {
       await cubit.setFilter(DietPlanListFilter.active);
     },
     expect: () => [
-      isA<DietPlanListLoading>(),
-      isA<DietPlanListLoaded>().having(
-        (s) => s.items.map((p) => p.id).toList(),
-        'ids',
-        ['1', '2', '3'],
+      isA<DietPlanListState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
       ),
-      isA<DietPlanListLoaded>()
+      isA<DietPlanListState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having(
+            (s) => s.items.map((p) => p.id).toList(),
+            'ids',
+            ['1', '2', '3'],
+          ),
+      isA<DietPlanListState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.filter, 'filter', DietPlanListFilter.active)
           .having((s) => s.items.map((p) => p.id).toList(), 'ids', ['2']),
     ],
@@ -77,8 +85,15 @@ void main() {
     },
     act: (cubit) => cubit.load(),
     expect: () => [
-      isA<DietPlanListLoading>(),
-      isA<DietPlanListFailure>(),
+      isA<DietPlanListState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<DietPlanListState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>())
+          .having((s) => s.items, 'items', isEmpty),
     ],
   );
 }

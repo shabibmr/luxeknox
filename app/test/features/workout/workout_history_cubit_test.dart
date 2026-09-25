@@ -1,5 +1,6 @@
 import 'package:app/core/error/failures.dart';
 import 'package:app/core/pagination/cursor_page.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/workout/domain/entities/workout_personal_record.dart';
 import 'package:app/features/workout/domain/entities/workout_session.dart';
 import 'package:app/features/workout/domain/entities/workout_session_set.dart';
@@ -86,8 +87,13 @@ void main() {
     },
     act: (cubit) => cubit.load(memberId: '7'),
     expect: () => [
-      isA<WorkoutHistoryLoading>(),
-      isA<WorkoutHistoryLoaded>()
+      isA<WorkoutHistoryState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<WorkoutHistoryState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.items.map((e) => e.id).toList(), 'ids', ['1', '2'])
           .having((s) => s.hasMore, 'hasMore', true)
           .having((s) => s.nextCursor, 'cursor', 'c2')
@@ -113,8 +119,14 @@ void main() {
     },
     act: (cubit) => cubit.load(memberId: '7'),
     expect: () => [
-      isA<WorkoutHistoryLoading>(),
-      isA<WorkoutHistoryFailure>(),
+      isA<WorkoutHistoryState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<WorkoutHistoryState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>()),
     ],
   );
 
@@ -160,16 +172,24 @@ void main() {
       await cubit.loadMore();
     },
     expect: () => [
-      isA<WorkoutHistoryLoading>(),
-      isA<WorkoutHistoryLoaded>()
+      isA<WorkoutHistoryState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<WorkoutHistoryState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.items.length, 'len', 1)
           .having(
             (s) => s.personalRecords.single.maxWeightKg,
             'pr',
             50,
           ),
-      isA<WorkoutHistoryLoaded>().having((s) => s.loadingMore, 'loading', true),
-      isA<WorkoutHistoryLoaded>()
+      isA<WorkoutHistoryState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.loadingMore, 'loading', true),
+      isA<WorkoutHistoryState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.items.map((e) => e.id).toList(), 'ids', ['1', '2'])
           .having((s) => s.hasMore, 'hasMore', false)
           .having((s) => s.totalVolumeKg, 'volume', 150)

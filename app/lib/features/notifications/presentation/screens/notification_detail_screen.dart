@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../cubit/notification_detail_cubit.dart';
@@ -32,31 +34,38 @@ class _DetailBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<NotificationDetailCubit, NotificationDetailState>(
-      listenWhen: (prev, next) =>
-          next is NotificationDetailLoaded && next.actionError != null,
+      listenWhen: (previous, next) =>
+          next.notification != null &&
+          next.status != LoadStatus.failure &&
+          next.failure != null &&
+          next.failure != previous.failure,
       listener: (context, state) {
-        if (state is NotificationDetailLoaded && state.actionError != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.actionError!)));
-        }
+        final failure = state.failure;
+        if (failure == null) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failureMessage(failure))));
       },
       builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(title: const Text(NotificationStrings.detailTitle)),
-          body: switch (state) {
-            NotificationDetailLoading() => const AppLoading(),
-            NotificationDetailFailure(:final message) => AppErrorView(
-              message: message,
-              onRetry: () => context
-                  .read<NotificationDetailCubit>()
-                  .load(notificationId),
+        final notification = state.notification;
+        final deepLinkPath = state.deepLinkPath;
+        final Widget body;
+        if (state.status == LoadStatus.loading && notification == null) {
+          body = const AppLoading();
+        } else if (state.status == LoadStatus.failure &&
+            notification == null) {
+          body = AppErrorView(
+            message: state.failure == null
+                ? ''
+                : failureMessage(state.failure!),
+            onRetry: () => context.read<NotificationDetailCubit>().load(
+              notificationId,
             ),
-            NotificationDetailLoaded(
-              :final notification,
-              :final deepLinkPath,
-            ) =>
-              ListView(
+          );
+        } else if (notification == null) {
+          body = const AppLoading();
+        } else {
+          body = ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
                   Text(
@@ -100,8 +109,11 @@ class _DetailBody extends StatelessWidget {
                     ),
                   ],
                 ],
-              ),
-          },
+              );
+        }
+        return Scaffold(
+          appBar: AppBar(title: const Text(NotificationStrings.detailTitle)),
+          body: body,
         );
       },
     );

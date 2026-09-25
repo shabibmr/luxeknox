@@ -3,11 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
-import '../cubit/members_directory_cubit.dart';
+import '../bloc/members_directory_bloc.dart';
 import '../people_strings.dart';
 
 class MembersDirectoryScreen extends StatelessWidget {
@@ -20,7 +22,8 @@ class MembersDirectoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<MembersDirectoryCubit>()..load(),
+      create: (_) =>
+          getIt<MembersDirectoryBloc>()..add(const MembersDirectoryStarted()),
       child: _MembersDirectoryBody(
         memberDetailPathBuilder: memberDetailPathBuilder,
       ),
@@ -46,6 +49,12 @@ class _MembersDirectoryBodyState extends State<_MembersDirectoryBody> {
     super.dispose();
   }
 
+  void _onQueryChanged(String value) {
+    context.read<MembersDirectoryBloc>().add(
+      MembersDirectoryQueryChanged(value),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,70 +74,74 @@ class _MembersDirectoryBodyState extends State<_MembersDirectoryBody> {
                 hintText: PeopleStrings.searchHint,
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.search),
-                  onPressed: () => context.read<MembersDirectoryCubit>().load(
-                    query: _searchController.text,
-                  ),
+                  onPressed: () => _onQueryChanged(_searchController.text),
                 ),
               ),
-              onSubmitted: (value) =>
-                  context.read<MembersDirectoryCubit>().load(query: value),
+              onChanged: _onQueryChanged,
+              onSubmitted: _onQueryChanged,
             ),
           ),
           Expanded(
-            child: BlocBuilder<MembersDirectoryCubit, MembersDirectoryState>(
+            child: BlocConsumer<MembersDirectoryBloc, MembersDirectoryState>(
+              listener: (context, state) {
+                if (state.status == LoadStatus.failure &&
+                    state.items.isNotEmpty &&
+                    state.failure != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(failureMessage(state.failure!))),
+                  );
+                }
+              },
               builder: (context, state) {
-                return switch (state) {
-                  MembersDirectoryLoading() => const AppLoading(),
-                  MembersDirectoryFailure(:final message) => AppErrorView(
-                    message: message,
-                    onRetry: () => context.read<MembersDirectoryCubit>().load(
-                      query: _searchController.text,
+                if (state.items.isEmpty && state.status == LoadStatus.failure) {
+                  return AppErrorView(
+                    message: failureMessage(state.failure!),
+                    onRetry: () => context.read<MembersDirectoryBloc>().add(
+                      const MembersDirectoryStarted(),
                     ),
-                  ),
-                  MembersDirectoryLoaded(
-                    :final items,
-                    :final hasMore,
-                    :final loadingMore,
-                  ) =>
-                    items.isEmpty
-                        ? const AppEmptyView(
-                            message: PeopleStrings.emptyMembers,
-                          )
-                        : ListView.builder(
-                            itemCount: items.length + (hasMore ? 1 : 0),
-                            itemBuilder: (context, index) {
-                              if (index >= items.length) {
-                                return TextButton(
-                                  onPressed: loadingMore
-                                      ? null
-                                      : () => context
-                                            .read<MembersDirectoryCubit>()
-                                            .loadMore(),
-                                  child: Text(
-                                    loadingMore ? '…' : PeopleStrings.loadMore,
-                                  ),
-                                );
-                              }
-                              final member = items[index];
-                              final pathBuilder =
-                                  widget.memberDetailPathBuilder;
-                              final path = pathBuilder != null
-                                  ? pathBuilder(member.id)
-                                  : Routes.adminMembersDetail.replaceFirst(
-                                      ':id',
-                                      '${member.id}',
-                                    );
-                              return ListTile(
-                                title: Text(member.fullName),
-                                subtitle: Text(member.membershipNumber),
-                                trailing: member.membershipStatus == null
-                                    ? null
-                                    : Text(member.membershipStatus!),
-                                onTap: () => context.push(path),
-                              );
-                            },
-                          ),
-                };
+                  );
+                }
+                if (state.items.isEmpty && state.status != LoadStatus.success) {
+                  return const AppLoading();
+                }
+                if (state.items.isEmpty) {
+                  return const AppEmptyView(
+                    message: PeopleStrings.emptyMembers,
+                  );
+                }
+                return ListView.builder(
+                  itemCount: state.items.length + (state.hasMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index >= state.items.length) {
+                      final loadingMore = state.loadingMore;
+                      return TextButton(
+                        onPressed:
+                            loadingMore || state.status == LoadStatus.loading
+                            ? null
+                            : () => context.read<MembersDirectoryBloc>().add(
+                                const MembersDirectoryLoadMoreRequested(),
+                              ),
+                        child: Text(loadingMore ? '…' : PeopleStrings.loadMore),
+                      );
+                    }
+                    final member = state.items[index];
+                    final pathBuilder = widget.memberDetailPathBuilder;
+                    final path = pathBuilder != null
+                        ? pathBuilder(member.id)
+                        : Routes.adminMembersDetail.replaceFirst(
+                            ':id',
+                            '${member.id}',
+                          );
+                    return ListTile(
+                      title: Text(member.fullName),
+                      subtitle: Text(member.membershipNumber),
+                      trailing: member.membershipStatus == null
+                          ? null
+                          : Text(member.membershipStatus!),
+                      onTap: () => context.push(path),
+                    );
+                  },
+                );
               },
             ),
           ),

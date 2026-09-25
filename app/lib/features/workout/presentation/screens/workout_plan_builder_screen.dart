@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -35,25 +37,42 @@ class _BuilderBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<WorkoutPlanBuilderCubit, WorkoutPlanBuilderState>(
       builder: (context, state) {
-        return switch (state) {
-          WorkoutPlanBuilderLoading() => Scaffold(
-            appBar: AppBar(title: const Text(WorkoutStrings.createTitle)),
+        final showForm =
+            state.status == LoadStatus.success ||
+            state.saving ||
+            (state.status == LoadStatus.failure &&
+                (state.planId != null ||
+                    state.title.isNotEmpty ||
+                    state.exercises.isNotEmpty));
+        if (state.status == LoadStatus.loading && !showForm) {
+          return Scaffold(
+            appBar: AppBar(title: Text(WorkoutStrings.createTitle)),
             body: const AppLoading(),
-          ),
-          WorkoutPlanBuilderFailure(:final message) => Scaffold(
-            appBar: AppBar(title: const Text(WorkoutStrings.editTitle)),
+          );
+        }
+        if (state.status == LoadStatus.failure && !showForm) {
+          return Scaffold(
+            appBar: AppBar(title: Text(WorkoutStrings.editTitle)),
             body: AppErrorView(
-              message: message,
+              message: state.failure == null
+                  ? 'Something went wrong'
+                  : failureMessage(state.failure!),
               onRetry: () => context
                   .read<WorkoutPlanBuilderCubit>()
                   .init(planId: planId),
             ),
-          ),
-          WorkoutPlanBuilderReady() => UnsavedChangesScope(
-            hasUnsavedChanges: state.dirty && !state.saving,
-            child: _BuilderForm(state: state),
-          ),
-        };
+          );
+        }
+        if (!showForm) {
+          return Scaffold(
+            appBar: AppBar(title: Text(WorkoutStrings.createTitle)),
+            body: const SizedBox.shrink(),
+          );
+        }
+        return UnsavedChangesScope(
+          hasUnsavedChanges: state.dirty && !state.saving,
+          child: _BuilderForm(state: state),
+        );
       },
     );
   }
@@ -62,7 +81,7 @@ class _BuilderBody extends StatelessWidget {
 class _BuilderForm extends StatefulWidget {
   const _BuilderForm({required this.state});
 
-  final WorkoutPlanBuilderReady state;
+  final WorkoutPlanBuilderState state;
 
   @override
   State<_BuilderForm> createState() => _BuilderFormState();
@@ -170,9 +189,11 @@ class _BuilderFormState extends State<_BuilderForm> {
     if (!mounted) return;
     if (!ok) {
       final err = cubit.state;
-      final message = err is WorkoutPlanBuilderReady
-          ? (err.errorMessage ?? WorkoutStrings.saveFailed)
-          : WorkoutStrings.saveFailed;
+      final message =
+          err.errorMessage ??
+          (err.failure == null
+              ? WorkoutStrings.saveFailed
+              : failureMessage(err.failure!));
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       return;
     }
@@ -187,7 +208,7 @@ class _BuilderFormState extends State<_BuilderForm> {
       }
     }
     final ready = cubit.state;
-    if (ready is WorkoutPlanBuilderReady && ready.planId != null) {
+    if (ready.status == LoadStatus.success && ready.planId != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -241,11 +262,11 @@ class _BuilderFormState extends State<_BuilderForm> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            if (state.errorMessage != null)
+            if (state.errorMessage != null || state.failure != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
-                  state.errorMessage!,
+                  state.errorMessage ?? failureMessage(state.failure!),
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ),

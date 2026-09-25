@@ -1,62 +1,55 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/payment_method.dart';
 import '../../domain/usecases/create_payment_method_usecase.dart';
 import '../../domain/usecases/get_payment_methods_usecase.dart';
 
-sealed class PaymentMethodsState extends Equatable {
-  const PaymentMethodsState();
+part 'payment_methods_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class PaymentMethodsLoading extends PaymentMethodsState {
-  const PaymentMethodsLoading();
-}
-
-final class PaymentMethodsLoaded extends PaymentMethodsState {
-  const PaymentMethodsLoaded(
-    this.items, {
-    this.creating = false,
-    this.message,
-  });
-
-  final List<PaymentMethod> items;
-  final bool creating;
-  final String? message;
-
-  @override
-  List<Object?> get props => [items, creating, message];
-}
-
-final class PaymentMethodsFailure extends PaymentMethodsState {
-  const PaymentMethodsFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+@freezed
+abstract class PaymentMethodsState with _$PaymentMethodsState {
+  const factory PaymentMethodsState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default(<PaymentMethod>[]) List<PaymentMethod> items,
+    @Default(false) bool creating,
+    Failure? failure,
+  }) = _PaymentMethodsState;
 }
 
 @injectable
 class PaymentMethodsCubit extends Cubit<PaymentMethodsState> {
   PaymentMethodsCubit(this._getMethods, this._createMethod)
-    : super(const PaymentMethodsLoading());
+    : super(const PaymentMethodsState());
 
   final GetPaymentMethodsUseCase _getMethods;
   final CreatePaymentMethodUseCase _createMethod;
 
   Future<void> load() async {
-    emit(const PaymentMethodsLoading());
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        creating: false,
+      ),
+    );
     final result = await _getMethods(const NoParams());
     result.fold(
-      (failure) => emit(PaymentMethodsFailure(failureMessage(failure))),
-      (items) => emit(PaymentMethodsLoaded(items)),
+      (failure) => emit(
+        state.copyWith(status: LoadStatus.failure, failure: failure),
+      ),
+      (items) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          items: items,
+          failure: null,
+          creating: false,
+        ),
+      ),
     );
   }
 
@@ -65,9 +58,8 @@ class PaymentMethodsCubit extends Cubit<PaymentMethodsState> {
     bool? isDigital,
     bool? isActive,
   }) async {
-    final current = state;
-    if (current is! PaymentMethodsLoaded || current.creating) return;
-    emit(PaymentMethodsLoaded(current.items, creating: true));
+    if (state.status != LoadStatus.success || state.creating) return;
+    emit(state.copyWith(creating: true, failure: null));
     final result = await _createMethod(
       CreatePaymentMethodParams(
         methodName: name,
@@ -77,10 +69,7 @@ class PaymentMethodsCubit extends Cubit<PaymentMethodsState> {
     );
     result.fold(
       (failure) => emit(
-        PaymentMethodsLoaded(
-          current.items,
-          message: failureMessage(failure),
-        ),
+        state.copyWith(creating: false, failure: failure),
       ),
       (_) => load(),
     );

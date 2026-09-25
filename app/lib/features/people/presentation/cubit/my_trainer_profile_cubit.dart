@@ -1,53 +1,43 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/trainer_summary.dart';
 import '../../domain/usecases/get_assigned_trainer_usecase.dart';
 
-sealed class MyTrainerProfileState extends Equatable {
-  const MyTrainerProfileState();
+part 'my_trainer_profile_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class MyTrainerProfileLoading extends MyTrainerProfileState {
-  const MyTrainerProfileLoading();
-}
-
-final class MyTrainerProfileLoaded extends MyTrainerProfileState {
-  const MyTrainerProfileLoaded({this.trainer});
-
-  final TrainerSummary? trainer;
-
-  @override
-  List<Object?> get props => [trainer];
-}
-
-final class MyTrainerProfileFailure extends MyTrainerProfileState {
-  const MyTrainerProfileFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+@freezed
+abstract class MyTrainerProfileState with _$MyTrainerProfileState {
+  const factory MyTrainerProfileState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    TrainerSummary? trainer,
+    Failure? failure,
+  }) = _MyTrainerProfileState;
 }
 
 @injectable
 class MyTrainerProfileCubit extends Cubit<MyTrainerProfileState> {
   MyTrainerProfileCubit(this._getAssignedTrainer)
-      : super(const MyTrainerProfileLoading());
+    : super(const MyTrainerProfileState());
 
   final GetAssignedTrainerUseCase _getAssignedTrainer;
 
   Future<void> load(int memberId) async {
-    emit(const MyTrainerProfileLoading());
+    emit(state.copyWith(status: LoadStatus.loading, failure: null));
     final result = await _getAssignedTrainer(memberId);
     result.fold(
-      (failure) => emit(MyTrainerProfileFailure(failureMessage(failure))),
-      (trainer) => emit(MyTrainerProfileLoaded(trainer: trainer)),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
+      (trainer) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          trainer: trainer,
+          failure: null,
+        ),
+      ),
     );
   }
 }

@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -168,14 +170,20 @@ class _ProgressHubBody extends StatelessWidget {
           Expanded(
             child: BlocBuilder<GoalsListCubit, GoalsListState>(
               builder: (context, state) {
-                return switch (state) {
-                  GoalsListLoading() => const AppLoading(),
-                  GoalsListFailure(:final message) => AppErrorView(
-                    message: message,
+                final showData =
+                    state.status == LoadStatus.success || state.items.isNotEmpty;
+                if (state.status == LoadStatus.loading && !showData) {
+                  return const AppLoading();
+                }
+                if (state.status == LoadStatus.failure && !showData) {
+                  return AppErrorView(
+                    message: failureMessage(state.failure!),
                     onRetry: () =>
                         context.read<GoalsListCubit>().load(memberId),
-                  ),
-                  GoalsListLoaded(:final items) => items.isEmpty
+                  );
+                }
+                final items = state.items;
+                return items.isEmpty
                       ? const AppEmptyView(message: GoalsStrings.noneGoals)
                       : RefreshIndicator(
                           onRefresh: () =>
@@ -247,8 +255,7 @@ class _ProgressHubBody extends StatelessWidget {
                               );
                             },
                           ),
-                        ),
-                };
+                        );
               },
             ),
           ),

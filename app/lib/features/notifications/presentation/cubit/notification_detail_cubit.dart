@@ -1,82 +1,49 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/app_notification.dart';
 import '../../domain/helpers/deep_link_parser.dart';
 import '../../domain/helpers/deep_link_resolver.dart';
 import '../../domain/usecases/notification_usecases.dart';
 
-sealed class NotificationDetailState extends Equatable {
-  const NotificationDetailState();
+part 'notification_detail_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class NotificationDetailLoading extends NotificationDetailState {
-  const NotificationDetailLoading();
-}
-
-final class NotificationDetailLoaded extends NotificationDetailState {
-  const NotificationDetailLoaded({
-    required this.notification,
-    this.deepLinkPath,
-    this.actionError,
-  });
-
-  final AppNotification notification;
-  final String? deepLinkPath;
-  final String? actionError;
-
-  NotificationDetailLoaded copyWith({
+@freezed
+abstract class NotificationDetailState with _$NotificationDetailState {
+  const factory NotificationDetailState({
+    @Default(LoadStatus.initial) LoadStatus status,
     AppNotification? notification,
     String? deepLinkPath,
-    String? actionError,
-    bool clearActionError = false,
-  }) {
-    return NotificationDetailLoaded(
-      notification: notification ?? this.notification,
-      deepLinkPath: deepLinkPath ?? this.deepLinkPath,
-      actionError: clearActionError ? null : (actionError ?? this.actionError),
-    );
-  }
-
-  @override
-  List<Object?> get props => [notification, deepLinkPath, actionError];
-}
-
-final class NotificationDetailFailure extends NotificationDetailState {
-  const NotificationDetailFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+    Failure? failure,
+  }) = _NotificationDetailState;
 }
 
 @injectable
 class NotificationDetailCubit extends Cubit<NotificationDetailState> {
   NotificationDetailCubit(this._getNotification, this._markRead)
-    : super(const NotificationDetailLoading());
+    : super(const NotificationDetailState());
 
   final GetNotificationUseCase _getNotification;
   final MarkNotificationReadUseCase _markRead;
 
   Future<void> load(String id) async {
-    emit(const NotificationDetailLoading());
+    emit(state.copyWith(status: LoadStatus.loading, failure: null));
     final result = await _getNotification(id);
     await result.fold(
       (failure) async {
-        emit(NotificationDetailFailure(failureMessage(failure)));
+        emit(state.copyWith(status: LoadStatus.failure, failure: failure));
       },
       (notification) async {
         final path = _deepLinkPathFor(notification);
         emit(
-          NotificationDetailLoaded(
+          state.copyWith(
+            status: LoadStatus.success,
             notification: notification,
             deepLinkPath: path,
+            failure: null,
           ),
         );
         if (notification.unread) {
@@ -88,19 +55,14 @@ class NotificationDetailCubit extends Cubit<NotificationDetailState> {
 
   Future<void> markRead() async {
     final current = state;
-    if (current is! NotificationDetailLoaded) return;
-    if (!current.notification.unread) return;
+    final notification = current.notification;
+    if (notification == null || !notification.unread) return;
 
-    final result = await _markRead(current.notification.id);
+    final result = await _markRead(notification.id);
     result.fold(
-      (failure) => emit(
-        current.copyWith(actionError: failureMessage(failure)),
-      ),
+      (failure) => emit(current.copyWith(failure: failure)),
       (updated) => emit(
-        current.copyWith(
-          notification: updated,
-          clearActionError: true,
-        ),
+        current.copyWith(notification: updated, failure: null),
       ),
     );
   }

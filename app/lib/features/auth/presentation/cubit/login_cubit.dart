@@ -1,21 +1,20 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../auth_strings.dart';
 
-enum LoginStatus { idle, submitting, failure }
+part 'login_cubit.freezed.dart';
 
-class LoginState extends Equatable {
-  const LoginState({this.status = LoginStatus.idle, this.errorMessage});
-
-  final LoginStatus status;
-  final String? errorMessage;
-
-  @override
-  List<Object?> get props => [status, errorMessage];
+@freezed
+abstract class LoginState with _$LoginState {
+  const factory LoginState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    String? errorMessage,
+  }) = _LoginState;
 }
 
 /// Drives the login form. Delegates the actual login call to [SessionCubit]
@@ -33,20 +32,20 @@ class LoginCubit extends Cubit<LoginState> {
     if (trimmedIdentifier.isEmpty || password.isEmpty) {
       emit(
         const LoginState(
-          status: LoginStatus.failure,
+          status: LoadStatus.failure,
           errorMessage: AuthStrings.enterCredentials,
         ),
       );
       return;
     }
 
-    emit(const LoginState(status: LoginStatus.submitting));
+    emit(const LoginState(status: LoadStatus.loading));
 
     final result = await _sessionCubit.login(trimmedIdentifier, password);
     result.fold(
       (failure) => emit(
         LoginState(
-          status: LoginStatus.failure,
+          status: LoadStatus.failure,
           errorMessage: _messageFor(failure),
         ),
       ),

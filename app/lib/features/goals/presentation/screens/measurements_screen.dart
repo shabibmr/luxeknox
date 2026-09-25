@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -60,7 +62,7 @@ class _MeasurementsBody extends StatelessWidget {
   final String memberId;
   final List<String> mandatoryMetricIds;
 
-  Future<void> _openCreate(BuildContext context, MeasurementsLoaded state) async {
+  Future<void> _openCreate(BuildContext context, MeasurementsState state) async {
     final controllers = <String, TextEditingController>{
       for (final m in state.metrics) m.id: TextEditingController(),
     };
@@ -147,7 +149,7 @@ class _MeasurementsBody extends StatelessWidget {
   }
 
   List<MetricChartPoint> _chartPoints(
-    MeasurementsLoaded state,
+    MeasurementsState state,
     String metricId,
   ) {
     final points = <MetricChartPoint>[];
@@ -167,7 +169,11 @@ class _MeasurementsBody extends StatelessWidget {
       appBar: AppBar(title: const Text(GoalsStrings.measurementsTitle)),
       floatingActionButton: BlocBuilder<MeasurementsCubit, MeasurementsState>(
         builder: (context, state) {
-          if (state is! MeasurementsLoaded) return const SizedBox.shrink();
+          final showData =
+              state.status == LoadStatus.success ||
+              state.sessions.isNotEmpty ||
+              state.metrics.isNotEmpty;
+          if (!showData) return const SizedBox.shrink();
           return FloatingActionButton(
             tooltip: GoalsStrings.addMeasurement,
             onPressed: () => _openCreate(context, state),
@@ -177,27 +183,36 @@ class _MeasurementsBody extends StatelessWidget {
       ),
       body: BlocConsumer<MeasurementsCubit, MeasurementsState>(
         listener: (context, state) {
-          if (state is MeasurementsLoaded && state.error != null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.error!)));
+          final showData =
+              state.status == LoadStatus.success ||
+              state.sessions.isNotEmpty ||
+              state.metrics.isNotEmpty;
+          if (state.failure != null && showData) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
+            );
           }
         },
         builder: (context, state) {
-          return switch (state) {
-            MeasurementsLoading() => const AppLoading(),
-            MeasurementsFailure(:final message) => AppErrorView(
-              message: message,
+          final showData =
+              state.status == LoadStatus.success ||
+              state.sessions.isNotEmpty ||
+              state.metrics.isNotEmpty;
+          if (state.status == LoadStatus.loading && !showData) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && !showData) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () => context.read<MeasurementsCubit>().load(
                 memberId,
                 mandatoryMetricIds: mandatoryMetricIds,
               ),
-            ),
-            MeasurementsLoaded(
-              :final sessions,
-              :final metrics,
-            ) =>
-              sessions.isEmpty && metrics.isEmpty
+            );
+          }
+          final sessions = state.sessions;
+          final metrics = state.metrics;
+          return sessions.isEmpty && metrics.isEmpty
                   ? const AppEmptyView(message: GoalsStrings.measurementsEmpty)
                   : ListView(
                       padding: const EdgeInsets.all(16),
@@ -238,8 +253,7 @@ class _MeasurementsBody extends StatelessWidget {
                               ),
                             ),
                       ],
-                    ),
-          };
+                    );
         },
       ),
     );

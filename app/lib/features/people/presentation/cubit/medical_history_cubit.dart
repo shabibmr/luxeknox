@@ -1,51 +1,29 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/error/failures.dart';
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/medical_record.dart';
 import '../../domain/usecases/create_medical_record_usecase.dart';
 import '../../domain/usecases/delete_medical_record_usecase.dart';
 import '../../domain/usecases/list_medical_records_usecase.dart';
 import '../../domain/usecases/update_medical_record_usecase.dart';
 
-sealed class MedicalHistoryState extends Equatable {
-  const MedicalHistoryState();
+part 'medical_history_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class MedicalHistoryLoading extends MedicalHistoryState {
-  const MedicalHistoryLoading();
-}
-
-final class MedicalHistoryLoaded extends MedicalHistoryState {
-  const MedicalHistoryLoaded(this.records, {this.message});
-
-  final List<MedicalRecord> records;
-  final String? message;
-
-  @override
-  List<Object?> get props => [records, message];
-}
-
-final class MedicalHistoryFailure extends MedicalHistoryState {
-  const MedicalHistoryFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+@freezed
+abstract class MedicalHistoryState with _$MedicalHistoryState {
+  const factory MedicalHistoryState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default(<MedicalRecord>[]) List<MedicalRecord> records,
+    String? message,
+    Failure? failure,
+  }) = _MedicalHistoryState;
 }
 
 class MedicalHistoryCubit extends Cubit<MedicalHistoryState> {
-  MedicalHistoryCubit(
-    this._list,
-    this._create,
-    this._update,
-    this._delete,
-  ) : super(const MedicalHistoryLoading());
+  MedicalHistoryCubit(this._list, this._create, this._update, this._delete)
+    : super(const MedicalHistoryState());
 
   final ListMedicalRecordsUseCase _list;
   final CreateMedicalRecordUseCase _create;
@@ -56,18 +34,34 @@ class MedicalHistoryCubit extends Cubit<MedicalHistoryState> {
 
   Future<void> load(int memberId) async {
     _memberId = memberId;
-    emit(const MedicalHistoryLoading());
+    emit(
+      state.copyWith(status: LoadStatus.loading, failure: null, message: null),
+    );
     final result = await _list(memberId);
     result.fold(
-      (failure) => emit(MedicalHistoryFailure(_message(failure))),
-      (records) => emit(MedicalHistoryLoaded(records)),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
+      (records) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          records: records,
+          failure: null,
+          message: null,
+        ),
+      ),
     );
   }
 
   Future<void> add(MedicalRecord record) async {
     final result = await _create(record);
     await result.fold(
-      (failure) async => emit(MedicalHistoryFailure(_message(failure))),
+      (failure) async => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          message: null,
+        ),
+      ),
       (_) async {
         final id = _memberId;
         if (id != null) await load(id);
@@ -78,7 +72,13 @@ class MedicalHistoryCubit extends Cubit<MedicalHistoryState> {
   Future<void> save(MedicalRecord record) async {
     final result = await _update(record);
     await result.fold(
-      (failure) async => emit(MedicalHistoryFailure(_message(failure))),
+      (failure) async => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          message: null,
+        ),
+      ),
       (_) async {
         final id = _memberId;
         if (id != null) await load(id);
@@ -93,10 +93,14 @@ class MedicalHistoryCubit extends Cubit<MedicalHistoryState> {
       DeleteMedicalRecordParams(memberId: memberId, recordId: recordId),
     );
     await result.fold(
-      (failure) async => emit(MedicalHistoryFailure(_message(failure))),
+      (failure) async => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          message: null,
+        ),
+      ),
       (_) async => load(memberId),
     );
   }
-
-  String _message(Failure failure) => failureMessage(failure);
 }

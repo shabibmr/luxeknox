@@ -167,17 +167,19 @@ class SchedulingRepositoryImpl implements SchedulingRepository {
   @override
   Future<Either<Failure, Unit>> removeParticipant({
     required String scheduleId,
-    required String participantId,
+    required String memberId,
+    String? reason,
   }) async {
     final schedId = _parseId(scheduleId);
-    final partId = _parseId(participantId);
-    if (schedId == null || partId == null) {
-      return const Left(ValidationFailure(['Invalid schedule or participant id']));
+    final memId = _parseId(memberId);
+    if (schedId == null || memId == null) {
+      return const Left(ValidationFailure(['Invalid schedule or member id']));
     }
     try {
       await _remote.removeParticipant(
         scheduleId: schedId,
-        participantId: partId,
+        memberId: memId,
+        reason: reason,
       );
       return const Right(unit);
     } catch (e) {

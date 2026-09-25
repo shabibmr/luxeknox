@@ -1,50 +1,31 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/schedule_session.dart';
 import '../../domain/usecases/schedule_usecases.dart';
 
-sealed class ScheduleCalendarState extends Equatable {
-  const ScheduleCalendarState();
+part 'schedule_calendar_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class ScheduleCalendarLoading extends ScheduleCalendarState {
-  const ScheduleCalendarLoading();
-}
-
-final class ScheduleCalendarLoaded extends ScheduleCalendarState {
-  const ScheduleCalendarLoaded({
-    required this.items,
-    required this.from,
-    required this.to,
-  });
-
-  final List<ScheduleSession> items;
-  final DateTime from;
-  final DateTime to;
-
-  @override
-  List<Object?> get props => [items, from, to];
-}
-
-final class ScheduleCalendarFailure extends ScheduleCalendarState {
-  const ScheduleCalendarFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+@freezed
+abstract class ScheduleCalendarState with _$ScheduleCalendarState {
+  const factory ScheduleCalendarState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default(<ScheduleSession>[]) List<ScheduleSession> items,
+    /// True after a successful fetch, so an empty range is still data.
+    @Default(false) bool hasLoaded,
+    DateTime? from,
+    DateTime? to,
+    Failure? failure,
+  }) = _ScheduleCalendarState;
 }
 
 @injectable
 class ScheduleCalendarCubit extends Cubit<ScheduleCalendarState> {
   ScheduleCalendarCubit(this._listSchedules)
-    : super(const ScheduleCalendarLoading());
+    : super(const ScheduleCalendarState());
 
   final ListSchedulesUseCase _listSchedules;
 
@@ -64,7 +45,14 @@ class ScheduleCalendarCubit extends Cubit<ScheduleCalendarState> {
     _to = to ?? _from!.add(const Duration(days: 7));
     _trainerId = trainerId ?? _trainerId;
     _memberId = memberId ?? _memberId;
-    emit(const ScheduleCalendarLoading());
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        from: _from,
+        to: _to,
+      ),
+    );
     final result = await _listSchedules(
       ListSchedulesParams(
         from: _from,
@@ -74,9 +62,18 @@ class ScheduleCalendarCubit extends Cubit<ScheduleCalendarState> {
       ),
     );
     result.fold(
-      (failure) => emit(ScheduleCalendarFailure(failureMessage(failure))),
+      (failure) => emit(
+        state.copyWith(status: LoadStatus.failure, failure: failure),
+      ),
       (page) => emit(
-        ScheduleCalendarLoaded(items: page.items, from: _from!, to: _to!),
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          items: page.items,
+          hasLoaded: true,
+          from: _from,
+          to: _to,
+        ),
       ),
     );
   }

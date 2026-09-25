@@ -1,58 +1,24 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/goal_metric.dart';
 import '../../domain/entities/goal_metric_category.dart';
 import '../../domain/usecases/goal_metrics_usecases.dart';
 
-sealed class GoalMetricsAdminState extends Equatable {
-  const GoalMetricsAdminState();
+part 'goal_metrics_admin_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class GoalMetricsAdminLoading extends GoalMetricsAdminState {
-  const GoalMetricsAdminLoading();
-}
-
-final class GoalMetricsAdminLoaded extends GoalMetricsAdminState {
-  const GoalMetricsAdminLoaded({
-    required this.items,
-    this.submitting = false,
-    this.error,
-  });
-
-  final List<GoalMetric> items;
-  final bool submitting;
-  final String? error;
-
-  GoalMetricsAdminLoaded copyWith({
-    List<GoalMetric>? items,
-    bool? submitting,
-    String? error,
-  }) {
-    return GoalMetricsAdminLoaded(
-      items: items ?? this.items,
-      submitting: submitting ?? this.submitting,
-      error: error,
-    );
-  }
-
-  @override
-  List<Object?> get props => [items, submitting, error];
-}
-
-final class GoalMetricsAdminFailure extends GoalMetricsAdminState {
-  const GoalMetricsAdminFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+@freezed
+abstract class GoalMetricsAdminState with _$GoalMetricsAdminState {
+  const factory GoalMetricsAdminState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    @Default(<GoalMetric>[]) List<GoalMetric> items,
+    @Default(false) bool submitting,
+    Failure? failure,
+  }) = _GoalMetricsAdminState;
 }
 
 @injectable
@@ -61,18 +27,42 @@ class GoalMetricsAdminCubit extends Cubit<GoalMetricsAdminState> {
     this._listMetrics,
     this._createMetric,
     this._updateMetric,
-  ) : super(const GoalMetricsAdminLoading());
+  ) : super(const GoalMetricsAdminState());
 
   final ListGoalMetricsUseCase _listMetrics;
   final CreateGoalMetricUseCase _createMetric;
   final UpdateGoalMetricUseCase _updateMetric;
 
+  bool _loaded = false;
+
   Future<void> load() async {
-    emit(const GoalMetricsAdminLoading());
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        submitting: false,
+      ),
+    );
     final result = await _listMetrics(const NoParams());
     result.fold(
-      (failure) => emit(GoalMetricsAdminFailure(failureMessage(failure))),
-      (page) => emit(GoalMetricsAdminLoaded(items: page.items)),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          submitting: false,
+        ),
+      ),
+      (page) {
+        _loaded = true;
+        emit(
+          state.copyWith(
+            status: LoadStatus.success,
+            failure: null,
+            submitting: false,
+            items: page.items,
+          ),
+        );
+      },
     );
   }
 
@@ -84,8 +74,16 @@ class GoalMetricsAdminCubit extends Cubit<GoalMetricsAdminState> {
     bool isActive = true,
   }) async {
     final current = state;
-    if (current is! GoalMetricsAdminLoaded) return false;
-    emit(current.copyWith(submitting: true, error: null));
+    if (!_loaded || current.status == LoadStatus.loading || current.submitting) {
+      return false;
+    }
+    emit(
+      current.copyWith(
+        submitting: true,
+        failure: null,
+        status: LoadStatus.success,
+      ),
+    );
 
     final result = id == null
         ? await _createMetric(
@@ -111,7 +109,8 @@ class GoalMetricsAdminCubit extends Cubit<GoalMetricsAdminState> {
         emit(
           current.copyWith(
             submitting: false,
-            error: failureMessage(failure),
+            status: LoadStatus.failure,
+            failure: failure,
           ),
         );
         return false;

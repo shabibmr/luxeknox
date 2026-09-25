@@ -12,23 +12,23 @@ Method | HTTP request | Description
 [**createEmergencyContact**](HEALTHApi.md#createemergencycontact) | **POST** /users/{id}/emergency-contacts | Add an emergency contact
 [**createHealthCondition**](HEALTHApi.md#createhealthcondition) | **POST** /health-conditions | Create a condition
 [**createMedicalHistory**](HEALTHApi.md#createmedicalhistory) | **POST** /members/{id}/medical-histories | Add a medical history row
-[**createMemberDocument**](HEALTHApi.md#creatememberdocument) | **POST** /members/{id}/documents | Attach a document metadata row (deferred)
-[**createMemberPhoto**](HEALTHApi.md#creatememberphoto) | **POST** /members/{id}/photos | Add a gallery photo (deferred)
+[**createMemberDocument**](HEALTHApi.md#creatememberdocument) | **POST** /members/{id}/documents | Attach a document metadata row
+[**createMemberPhoto**](HEALTHApi.md#creatememberphoto) | **POST** /members/{id}/photos | Add a gallery photo
 [**deleteEmergencyContact**](HEALTHApi.md#deleteemergencycontact) | **DELETE** /users/{id}/emergency-contacts/{contactId} | Remove an emergency contact
 [**deleteMedicalHistory**](HEALTHApi.md#deletemedicalhistory) | **DELETE** /members/{id}/medical-histories/{historyId} | Soft-remove a medical history row
-[**deleteMemberDocument**](HEALTHApi.md#deletememberdocument) | **DELETE** /members/{id}/documents/{documentId} | Delete a document row (deferred)
+[**deleteMemberDocument**](HEALTHApi.md#deletememberdocument) | **DELETE** /members/{id}/documents/{documentId} | Delete a document row
 [**getMemberHealth**](HEALTHApi.md#getmemberhealth) | **GET** /members/{id}/health | Current health row
 [**listEmergencyContacts**](HEALTHApi.md#listemergencycontacts) | **GET** /users/{id}/emergency-contacts | Emergency contacts for a user
 [**listHealthConditions**](HEALTHApi.md#listhealthconditions) | **GET** /health-conditions | Condition catalog
 [**listMedicalHistories**](HEALTHApi.md#listmedicalhistories) | **GET** /members/{id}/medical-histories | Medical history list
-[**listMemberDocuments**](HEALTHApi.md#listmemberdocuments) | **GET** /members/{id}/documents | Member documents (deferred uploads)
-[**listMemberPhotos**](HEALTHApi.md#listmemberphotos) | **GET** /members/{id}/photos | Member gallery (deferred)
+[**listMemberDocuments**](HEALTHApi.md#listmemberdocuments) | **GET** /members/{id}/documents | Member documents
+[**listMemberPhotos**](HEALTHApi.md#listmemberphotos) | **GET** /members/{id}/photos | Member gallery
 [**putMemberHealth**](HEALTHApi.md#putmemberhealth) | **PUT** /members/{id}/health | Replace current health row
-[**setMemberAvatar**](HEALTHApi.md#setmemberavatar) | **POST** /members/{id}/photos/{photoId}/avatar | Set current avatar from a gallery shot (deferred)
+[**setMemberAvatar**](HEALTHApi.md#setmemberavatar) | **POST** /members/{id}/photos/{photoId}/avatar | Set current avatar from a gallery shot
 [**updateEmergencyContact**](HEALTHApi.md#updateemergencycontact) | **PATCH** /users/{id}/emergency-contacts/{contactId} | Update an emergency contact
 [**updateHealthCondition**](HEALTHApi.md#updatehealthcondition) | **PATCH** /health-conditions/{id} | Update a condition
 [**updateMedicalHistory**](HEALTHApi.md#updatemedicalhistory) | **PATCH** /members/{id}/medical-histories/{historyId} | Update a medical history row
-[**verifyMemberDocument**](HEALTHApi.md#verifymemberdocument) | **POST** /members/{id}/documents/{documentId}/verify | Verify a document (deferred)
+[**verifyMemberDocument**](HEALTHApi.md#verifymemberdocument) | **POST** /members/{id}/documents/{documentId}/verify | Verify a document
 
 
 # **createEmergencyContact**
@@ -161,7 +161,7 @@ Name | Type | Description  | Notes
 # **createMemberDocument**
 > MemberDocument createMemberDocument(id, memberDocumentWrite)
 
-Attach a document metadata row (deferred)
+Attach a document metadata row
 
 ### Example
 ```dart
@@ -204,7 +204,7 @@ Name | Type | Description  | Notes
 # **createMemberPhoto**
 > MemberPhoto createMemberPhoto(id, memberPhotoWrite)
 
-Add a gallery photo (deferred)
+Add a gallery photo
 
 ### Example
 ```dart
@@ -331,7 +331,7 @@ void (empty response body)
 # **deleteMemberDocument**
 > deleteMemberDocument(id, documentId)
 
-Delete a document row (deferred)
+Delete a document row
 
 ### Example
 ```dart
@@ -543,7 +543,7 @@ Name | Type | Description  | Notes
 # **listMemberDocuments**
 > MemberDocumentPage listMemberDocuments(id)
 
-Member documents (deferred uploads)
+Member documents
 
 ### Example
 ```dart
@@ -584,7 +584,7 @@ Name | Type | Description  | Notes
 # **listMemberPhotos**
 > MemberPhotoPage listMemberPhotos(id)
 
-Member gallery (deferred)
+Member gallery
 
 ### Example
 ```dart
@@ -668,7 +668,7 @@ Name | Type | Description  | Notes
 # **setMemberAvatar**
 > MemberPhoto setMemberAvatar(id, photoId)
 
-Set current avatar from a gallery shot (deferred)
+Set current avatar from a gallery shot
 
 ### Example
 ```dart
@@ -844,7 +844,7 @@ Name | Type | Description  | Notes
 # **verifyMemberDocument**
 > MemberDocument verifyMemberDocument(id, documentId)
 
-Verify a document (deferred)
+Verify a document
 
 ### Example
 ```dart

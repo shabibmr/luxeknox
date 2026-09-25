@@ -1,8 +1,9 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../exercises/domain/entities/exercise.dart';
 import '../../domain/entities/workout_plan.dart';
 import '../../domain/entities/workout_plan_exercise_input.dart';
@@ -12,49 +13,32 @@ import '../../domain/usecases/publish_workout_plan_usecase.dart';
 import '../../domain/usecases/replace_workout_plan_exercises_usecase.dart';
 import '../../domain/usecases/update_workout_plan_usecase.dart';
 
-sealed class WorkoutPlanBuilderState extends Equatable {
-  const WorkoutPlanBuilderState();
+part 'workout_plan_builder_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
+@freezed
+abstract class WorkoutPlanBuilderState with _$WorkoutPlanBuilderState {
+  const WorkoutPlanBuilderState._();
 
-final class WorkoutPlanBuilderLoading extends WorkoutPlanBuilderState {
-  const WorkoutPlanBuilderLoading();
-}
-
-final class WorkoutPlanBuilderReady extends WorkoutPlanBuilderState {
-  const WorkoutPlanBuilderReady({
-    this.planId,
-    this.rowVersion,
-    required this.title,
-    this.description = '',
-    this.targetGoal = '',
-    this.difficulty = '',
-    this.durationWeeks,
-    this.isTemplate = false,
-    this.memberId = '',
-    this.exercises = const [],
-    this.dirty = false,
-    this.saving = false,
-    this.errorMessage,
-    this.savedPlan,
-  });
-
-  final String? planId;
-  final int? rowVersion;
-  final String title;
-  final String description;
-  final String targetGoal;
-  final String difficulty;
-  final int? durationWeeks;
-  final bool isTemplate;
-  final String memberId;
-  final List<WorkoutPlanExerciseInput> exercises;
-  final bool dirty;
-  final bool saving;
-  final String? errorMessage;
-  final WorkoutPlan? savedPlan;
+  const factory WorkoutPlanBuilderState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    String? planId,
+    int? rowVersion,
+    @Default('') String title,
+    @Default('') String description,
+    @Default('') String targetGoal,
+    @Default('') String difficulty,
+    int? durationWeeks,
+    @Default(false) bool isTemplate,
+    @Default('') String memberId,
+    @Default(<WorkoutPlanExerciseInput>[])
+    List<WorkoutPlanExerciseInput> exercises,
+    @Default(false) bool dirty,
+    @Default(false) bool saving,
+    /// Local validation such as a missing title. API errors use [failure].
+    String? errorMessage,
+    Failure? failure,
+    WorkoutPlan? savedPlan,
+  }) = _WorkoutPlanBuilderState;
 
   bool get isEditMode => planId != null;
 
@@ -68,71 +52,6 @@ final class WorkoutPlanBuilderReady extends WorkoutPlanBuilderState {
     }
     return map;
   }
-
-  WorkoutPlanBuilderReady copyWith({
-    String? planId,
-    int? rowVersion,
-    String? title,
-    String? description,
-    String? targetGoal,
-    String? difficulty,
-    int? durationWeeks,
-    bool? isTemplate,
-    String? memberId,
-    List<WorkoutPlanExerciseInput>? exercises,
-    bool? dirty,
-    bool? saving,
-    String? errorMessage,
-    WorkoutPlan? savedPlan,
-    bool clearError = false,
-    bool clearSaved = false,
-    bool clearDurationWeeks = false,
-  }) {
-    return WorkoutPlanBuilderReady(
-      planId: planId ?? this.planId,
-      rowVersion: rowVersion ?? this.rowVersion,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      targetGoal: targetGoal ?? this.targetGoal,
-      difficulty: difficulty ?? this.difficulty,
-      durationWeeks:
-          clearDurationWeeks ? null : (durationWeeks ?? this.durationWeeks),
-      isTemplate: isTemplate ?? this.isTemplate,
-      memberId: memberId ?? this.memberId,
-      exercises: exercises ?? this.exercises,
-      dirty: dirty ?? this.dirty,
-      saving: saving ?? this.saving,
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-      savedPlan: clearSaved ? null : (savedPlan ?? this.savedPlan),
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-    planId,
-    rowVersion,
-    title,
-    description,
-    targetGoal,
-    difficulty,
-    durationWeeks,
-    isTemplate,
-    memberId,
-    exercises,
-    dirty,
-    saving,
-    errorMessage,
-    savedPlan,
-  ];
-}
-
-final class WorkoutPlanBuilderFailure extends WorkoutPlanBuilderState {
-  const WorkoutPlanBuilderFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
 }
 
 @injectable
@@ -143,7 +62,7 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
     this._updatePlan,
     this._replaceExercises,
     this._publishPlan,
-  ) : super(const WorkoutPlanBuilderLoading());
+  ) : super(const WorkoutPlanBuilderState());
 
   final GetWorkoutPlanUseCase _getPlan;
   final CreateWorkoutPlanUseCase _createPlan;
@@ -151,17 +70,33 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
   final ReplaceWorkoutPlanExercisesUseCase _replaceExercises;
   final PublishWorkoutPlanUseCase _publishPlan;
 
+  bool get _canEdit =>
+      state.status == LoadStatus.success ||
+      (state.status == LoadStatus.failure &&
+          (state.planId != null ||
+              state.title.isNotEmpty ||
+              state.exercises.isNotEmpty));
+
   Future<void> init({String? planId}) async {
     if (planId == null) {
-      emit(const WorkoutPlanBuilderReady(title: ''));
+      emit(const WorkoutPlanBuilderState(status: LoadStatus.success));
       return;
     }
-    emit(const WorkoutPlanBuilderLoading());
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        errorMessage: null,
+      ),
+    );
     final result = await _getPlan(planId);
     result.fold(
-      (failure) => emit(WorkoutPlanBuilderFailure(failureMessage(failure))),
+      (failure) => emit(
+        state.copyWith(status: LoadStatus.failure, failure: failure),
+      ),
       (plan) => emit(
-        WorkoutPlanBuilderReady(
+        WorkoutPlanBuilderState(
+          status: LoadStatus.success,
           planId: plan.id,
           rowVersion: plan.rowVersion,
           title: plan.title,
@@ -191,70 +126,61 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
     );
   }
 
-  WorkoutPlanBuilderReady? get _ready {
-    final s = state;
-    return s is WorkoutPlanBuilderReady ? s : null;
-  }
-
-  void setTitle(String value) {
-    final ready = _ready;
-    if (ready == null) return;
-    emit(ready.copyWith(title: value, dirty: true, clearError: true));
-  }
-
-  void setDescription(String value) {
-    final ready = _ready;
-    if (ready == null) return;
-    emit(ready.copyWith(description: value, dirty: true, clearError: true));
-  }
-
-  void setTargetGoal(String value) {
-    final ready = _ready;
-    if (ready == null) return;
-    emit(ready.copyWith(targetGoal: value, dirty: true, clearError: true));
-  }
-
-  void setDifficulty(String value) {
-    final ready = _ready;
-    if (ready == null) return;
-    emit(ready.copyWith(difficulty: value, dirty: true, clearError: true));
-  }
-
-  void setDurationWeeks(int? value) {
-    final ready = _ready;
-    if (ready == null) return;
+  void _touch(WorkoutPlanBuilderState next) {
     emit(
-      ready.copyWith(
-        durationWeeks: value,
-        clearDurationWeeks: value == null,
+      next.copyWith(
         dirty: true,
-        clearError: true,
+        errorMessage: null,
+        failure: null,
+        status: LoadStatus.success,
       ),
     );
   }
 
+  void setTitle(String value) {
+    if (!_canEdit) return;
+    _touch(state.copyWith(title: value));
+  }
+
+  void setDescription(String value) {
+    if (!_canEdit) return;
+    _touch(state.copyWith(description: value));
+  }
+
+  void setTargetGoal(String value) {
+    if (!_canEdit) return;
+    _touch(state.copyWith(targetGoal: value));
+  }
+
+  void setDifficulty(String value) {
+    if (!_canEdit) return;
+    _touch(state.copyWith(difficulty: value));
+  }
+
+  void setDurationWeeks(int? value) {
+    if (!_canEdit) return;
+    _touch(state.copyWith(durationWeeks: value));
+  }
+
   void setIsTemplate(bool value) {
-    final ready = _ready;
-    if (ready == null) return;
-    emit(ready.copyWith(isTemplate: value, dirty: true, clearError: true));
+    if (!_canEdit) return;
+    _touch(state.copyWith(isTemplate: value));
   }
 
   void setMemberId(String value) {
-    final ready = _ready;
-    if (ready == null) return;
-    emit(ready.copyWith(memberId: value, dirty: true, clearError: true));
+    if (!_canEdit) return;
+    _touch(state.copyWith(memberId: value));
   }
 
   void addExercise(Exercise exercise, {int dayNumber = 1}) {
-    final ready = _ready;
-    if (ready == null) return;
-    final dayItems =
-        ready.exercises.where((e) => e.dayNumber == dayNumber).toList();
+    if (!_canEdit) return;
+    final dayItems = state.exercises.where((e) => e.dayNumber == dayNumber);
     final nextIndex = dayItems.isEmpty
         ? 0
-        : dayItems.map((e) => e.orderIndex).reduce((a, b) => a > b ? a : b) + 1;
+        : dayItems.map((e) => e.orderIndex).reduce((a, b) => a > b ? a : b) +
+              1;
     final next = [
-      ...ready.exercises,
+      ...state.exercises,
       WorkoutPlanExerciseInput(
         exerciseId: exercise.id,
         exerciseName: exercise.name,
@@ -262,13 +188,12 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
         orderIndex: nextIndex,
       ),
     ];
-    emit(ready.copyWith(exercises: next, dirty: true, clearError: true));
+    _touch(state.copyWith(exercises: next));
   }
 
   void removeExercise({required int dayNumber, required int indexInDay}) {
-    final ready = _ready;
-    if (ready == null) return;
-    final byDay = ready.exercisesByDay;
+    if (!_canEdit) return;
+    final byDay = state.exercisesByDay;
     final dayList = List<WorkoutPlanExerciseInput>.from(
       byDay[dayNumber] ?? const [],
     );
@@ -278,15 +203,8 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
       for (var i = 0; i < dayList.length; i++)
         dayList[i].copyWith(orderIndex: i),
     ];
-    final others =
-        ready.exercises.where((e) => e.dayNumber != dayNumber).toList();
-    emit(
-      ready.copyWith(
-        exercises: [...others, ...reindexed],
-        dirty: true,
-        clearError: true,
-      ),
-    );
+    final others = state.exercises.where((e) => e.dayNumber != dayNumber);
+    _touch(state.copyWith(exercises: [...others, ...reindexed]));
   }
 
   void reorderWithinDay({
@@ -294,9 +212,8 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
     required int oldIndex,
     required int newIndex,
   }) {
-    final ready = _ready;
-    if (ready == null) return;
-    final byDay = ready.exercisesByDay;
+    if (!_canEdit) return;
+    final byDay = state.exercisesByDay;
     final dayList = List<WorkoutPlanExerciseInput>.from(
       byDay[dayNumber] ?? const [],
     );
@@ -310,15 +227,8 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
       for (var i = 0; i < dayList.length; i++)
         dayList[i].copyWith(orderIndex: i),
     ];
-    final others =
-        ready.exercises.where((e) => e.dayNumber != dayNumber).toList();
-    emit(
-      ready.copyWith(
-        exercises: [...others, ...reindexed],
-        dirty: true,
-        clearError: true,
-      ),
-    );
+    final others = state.exercises.where((e) => e.dayNumber != dayNumber);
+    _touch(state.copyWith(exercises: [...others, ...reindexed]));
   }
 
   void moveToDay({
@@ -326,9 +236,8 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
     required int indexInDay,
     required int toDay,
   }) {
-    final ready = _ready;
-    if (ready == null || fromDay == toDay) return;
-    final byDay = ready.exercisesByDay;
+    if (!_canEdit || fromDay == toDay) return;
+    final byDay = state.exercisesByDay;
     final fromList = List<WorkoutPlanExerciseInput>.from(
       byDay[fromDay] ?? const [],
     );
@@ -345,100 +254,109 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
         ? 0
         : toList.map((e) => e.orderIndex).reduce((a, b) => a > b ? a : b) + 1;
     toList.add(moving.copyWith(dayNumber: toDay, orderIndex: nextIndex));
-    final others = ready.exercises
+    final others = state.exercises
         .where((e) => e.dayNumber != fromDay && e.dayNumber != toDay)
         .toList();
-    emit(
-      ready.copyWith(
-        exercises: [...others, ...fromReindexed, ...toList],
-        dirty: true,
-        clearError: true,
-      ),
+    _touch(
+      state.copyWith(exercises: [...others, ...fromReindexed, ...toList]),
     );
   }
 
   Future<bool> save() async {
-    final ready = _ready;
-    if (ready == null) return false;
-    final title = ready.title.trim();
+    if (!_canEdit) return false;
+    final draft = state;
+    final title = draft.title.trim();
     if (title.isEmpty) {
-      emit(ready.copyWith(errorMessage: 'Title is required'));
+      emit(
+        draft.copyWith(errorMessage: 'Title is required', failure: null),
+      );
       return false;
     }
 
-    emit(ready.copyWith(saving: true, clearError: true, clearSaved: true));
+    emit(
+      draft.copyWith(
+        saving: true,
+        errorMessage: null,
+        failure: null,
+        savedPlan: null,
+        status: LoadStatus.success,
+      ),
+    );
 
     WorkoutPlan? plan;
-    if (ready.planId == null) {
+    if (draft.planId == null) {
       final created = await _createPlan(
         CreateWorkoutPlanParams(
           title: title,
-          description: ready.description.trim().isEmpty
+          description: draft.description.trim().isEmpty
               ? null
-              : ready.description.trim(),
-          memberId: ready.memberId.trim().isEmpty
+              : draft.description.trim(),
+          memberId: draft.memberId.trim().isEmpty
               ? null
-              : ready.memberId.trim(),
-          targetGoal: ready.targetGoal.trim().isEmpty
+              : draft.memberId.trim(),
+          targetGoal: draft.targetGoal.trim().isEmpty
               ? null
-              : ready.targetGoal.trim(),
-          difficulty: ready.difficulty.trim().isEmpty
+              : draft.targetGoal.trim(),
+          difficulty: draft.difficulty.trim().isEmpty
               ? null
-              : ready.difficulty.trim(),
-          durationWeeks: ready.durationWeeks,
-          isTemplate: ready.isTemplate,
+              : draft.difficulty.trim(),
+          durationWeeks: draft.durationWeeks,
+          isTemplate: draft.isTemplate,
         ),
       );
-      final failureOrPlan = created;
-      var failed = false;
-      failureOrPlan.fold(
-        (failure) {
-          failed = true;
-          emit(
-            ready.copyWith(
-              saving: false,
-              errorMessage: failureMessage(failure),
-            ),
-          );
-        },
-        (p) => plan = p,
-      );
+      final failed = created.fold((failure) {
+        emit(
+          draft.copyWith(
+            saving: false,
+            status: LoadStatus.failure,
+            failure: failure,
+            errorMessage: null,
+            savedPlan: null,
+          ),
+        );
+        return true;
+      }, (p) {
+        plan = p;
+        return false;
+      });
       if (failed) return false;
     } else {
       final updated = await _updatePlan(
         UpdateWorkoutPlanParams(
-          id: ready.planId!,
-          rowVersion: ready.rowVersion ?? 0,
+          id: draft.planId!,
+          rowVersion: draft.rowVersion ?? 0,
           title: title,
-          description: ready.description.trim().isEmpty
+          description: draft.description.trim().isEmpty
               ? null
-              : ready.description.trim(),
-          memberId: ready.memberId.trim().isEmpty
+              : draft.description.trim(),
+          memberId: draft.memberId.trim().isEmpty
               ? null
-              : ready.memberId.trim(),
-          targetGoal: ready.targetGoal.trim().isEmpty
+              : draft.memberId.trim(),
+          targetGoal: draft.targetGoal.trim().isEmpty
               ? null
-              : ready.targetGoal.trim(),
-          difficulty: ready.difficulty.trim().isEmpty
+              : draft.targetGoal.trim(),
+          difficulty: draft.difficulty.trim().isEmpty
               ? null
-              : ready.difficulty.trim(),
-          durationWeeks: ready.durationWeeks,
-          isTemplate: ready.isTemplate,
+              : draft.difficulty.trim(),
+          durationWeeks: draft.durationWeeks,
+          isTemplate: draft.isTemplate,
         ),
       );
-      var failed = false;
-      updated.fold(
-        (failure) {
-          failed = true;
-          emit(
-            ready.copyWith(
-              saving: false,
-              errorMessage: failureMessage(failure),
-            ),
-          );
-        },
-        (p) => plan = p,
-      );
+      final failed = updated.fold((failure) {
+        emit(
+          draft.copyWith(
+            saving: false,
+            status: LoadStatus.failure,
+            failure: failure,
+            errorMessage: null,
+            savedPlan: null,
+          ),
+        );
+        return true;
+      }, (p) {
+        plan = p;
+        return false;
+      });
       if (failed) return false;
     }
 
@@ -447,25 +365,29 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
       ReplaceWorkoutPlanExercisesParams(
         id: savedMeta.id,
         rowVersion: savedMeta.rowVersion,
-        exercises: ready.exercises,
+        exercises: draft.exercises,
       ),
     );
 
     return replaced.fold(
       (failure) {
         emit(
-          ready.copyWith(
+          draft.copyWith(
             planId: savedMeta.id,
             rowVersion: savedMeta.rowVersion,
             saving: false,
-            errorMessage: failureMessage(failure),
+            status: LoadStatus.failure,
+            failure: failure,
+            errorMessage: null,
+            savedPlan: null,
           ),
         );
         return false;
       },
       (full) {
         emit(
-          WorkoutPlanBuilderReady(
+          WorkoutPlanBuilderState(
+            status: LoadStatus.success,
             planId: full.id,
             rowVersion: full.rowVersion,
             title: full.title,
@@ -490,8 +412,6 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
                   ),
                 )
                 .toList(),
-            dirty: false,
-            saving: false,
             savedPlan: full,
           ),
         );
@@ -501,27 +421,39 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
   }
 
   Future<bool> publish() async {
-    final ready = _ready;
-    if (ready == null || ready.planId == null) return false;
-    emit(ready.copyWith(saving: true, clearError: true));
-    final result = await _publishPlan(ready.planId!);
+    final draft = state;
+    if (!_canEdit || draft.planId == null) return false;
+    emit(
+      draft.copyWith(
+        saving: true,
+        errorMessage: null,
+        failure: null,
+        status: LoadStatus.success,
+      ),
+    );
+    final result = await _publishPlan(draft.planId!);
     return result.fold(
       (failure) {
         emit(
-          ready.copyWith(
+          draft.copyWith(
             saving: false,
-            errorMessage: failureMessage(failure),
+            status: LoadStatus.failure,
+            failure: failure,
+            errorMessage: null,
           ),
         );
         return false;
       },
       (plan) {
         emit(
-          ready.copyWith(
+          draft.copyWith(
             saving: false,
             dirty: false,
             rowVersion: plan.rowVersion,
             savedPlan: plan,
+            status: LoadStatus.success,
+            failure: null,
+            errorMessage: null,
           ),
         );
         return true;

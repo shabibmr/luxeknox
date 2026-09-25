@@ -1,65 +1,68 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../core/error/failures.dart';
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/health_info.dart';
 import '../../domain/usecases/get_health_info_usecase.dart';
 import '../../domain/usecases/update_health_info_usecase.dart';
 
-sealed class HealthInfoState extends Equatable {
-  const HealthInfoState();
+part 'health_info_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class HealthInfoLoading extends HealthInfoState {
-  const HealthInfoLoading();
-}
-
-final class HealthInfoLoaded extends HealthInfoState {
-  const HealthInfoLoaded(this.info, {this.message});
-
-  final HealthInfo info;
-  final String? message;
-
-  @override
-  List<Object?> get props => [info, message];
-}
-
-final class HealthInfoFailure extends HealthInfoState {
-  const HealthInfoFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
+@freezed
+abstract class HealthInfoState with _$HealthInfoState {
+  const factory HealthInfoState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    HealthInfo? info,
+    String? message,
+    Failure? failure,
+  }) = _HealthInfoState;
 }
 
 class HealthInfoCubit extends Cubit<HealthInfoState> {
   HealthInfoCubit(this._getHealth, this._updateHealth)
-    : super(const HealthInfoLoading());
+    : super(const HealthInfoState());
 
   final GetHealthInfoUseCase _getHealth;
   final UpdateHealthInfoUseCase _updateHealth;
 
   Future<void> load(int memberId) async {
-    emit(const HealthInfoLoading());
+    emit(
+      state.copyWith(status: LoadStatus.loading, failure: null, message: null),
+    );
     final result = await _getHealth(memberId);
     result.fold(
-      (failure) => emit(HealthInfoFailure(_message(failure))),
-      (info) => emit(HealthInfoLoaded(info)),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
+      (info) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          info: info,
+          failure: null,
+          message: null,
+        ),
+      ),
     );
   }
 
   Future<void> save(HealthInfo info) async {
     final result = await _updateHealth(info);
     result.fold(
-      (failure) => emit(HealthInfoFailure(_message(failure))),
-      (updated) => emit(HealthInfoLoaded(updated, message: 'saved')),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          message: null,
+        ),
+      ),
+      (updated) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          info: updated,
+          message: 'saved',
+          failure: null,
+        ),
+      ),
     );
   }
-
-  String _message(Failure failure) => failureMessage(failure);
 }

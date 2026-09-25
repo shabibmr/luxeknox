@@ -1,4 +1,5 @@
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/reports/domain/entities/app_report_type.dart';
 import 'package:app/features/reports/domain/entities/report_query.dart';
 import 'package:app/features/reports/domain/entities/report_result.dart';
@@ -48,12 +49,14 @@ void main() {
     },
     act: (cubit) => cubit.load(AppReportType.members),
     expect: () => [
-      isA<ReportLoading>(),
-      isA<ReportLoaded>().having(
-        (s) => s.result.rows.length,
-        'rows',
-        3,
+      isA<ReportState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
       ),
+      isA<ReportState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.result?.rows.length, 'rows', 3),
     ],
   );
 
@@ -70,11 +73,16 @@ void main() {
       cubit.setPage(1);
     },
     expect: () => [
-      isA<ReportLoading>(),
-      isA<ReportLoaded>()
+      isA<ReportState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<ReportState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.pageCount, 'pageCount', 3)
           .having((s) => s.pageRows.length, 'page0', 50),
-      isA<ReportLoaded>()
+      isA<ReportState>()
           .having((s) => s.pageIndex, 'pageIndex', 1)
           .having((s) => s.pageRows.length, 'page1', 50),
     ],
@@ -92,10 +100,18 @@ void main() {
       await cubit.exportCsv();
     },
     expect: () => [
-      isA<ReportLoading>(),
-      isA<ReportLoaded>(),
-      isA<ReportLoaded>().having((s) => s.exporting, 'exporting', true),
-      isA<ReportLoaded>()
+      isA<ReportState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<ReportState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.success,
+      ),
+      isA<ReportState>().having((s) => s.exporting, 'exporting', true),
+      isA<ReportState>()
           .having((s) => s.exportedCsv, 'csv', 'a,b\n1,2\n')
           .having((s) => s.exporting, 'exporting', false),
     ],
@@ -111,8 +127,14 @@ void main() {
     },
     act: (cubit) => cubit.load(AppReportType.attendance),
     expect: () => [
-      isA<ReportLoading>(),
-      isA<ReportFailure>(),
+      isA<ReportState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.loading,
+      ),
+      isA<ReportState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>()),
     ],
   );
 }

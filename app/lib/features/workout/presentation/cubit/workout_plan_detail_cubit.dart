@@ -1,53 +1,27 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/workout_plan.dart';
 import '../../domain/usecases/archive_workout_plan_usecase.dart';
 import '../../domain/usecases/assign_workout_plan_usecase.dart';
 import '../../domain/usecases/get_workout_plan_usecase.dart';
 import '../../domain/usecases/publish_workout_plan_usecase.dart';
 
-sealed class WorkoutPlanDetailState extends Equatable {
-  const WorkoutPlanDetailState();
+part 'workout_plan_detail_cubit.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-final class WorkoutPlanDetailLoading extends WorkoutPlanDetailState {
-  const WorkoutPlanDetailLoading();
-}
-
-final class WorkoutPlanDetailLoaded extends WorkoutPlanDetailState {
-  const WorkoutPlanDetailLoaded(this.plan, {this.assignedPlan});
-
-  final WorkoutPlan plan;
-
-  /// Set after a successful template assign; UI navigates then clears.
-  final WorkoutPlan? assignedPlan;
-
-  @override
-  List<Object?> get props => [plan, assignedPlan];
-}
-
-final class WorkoutPlanDetailFailure extends WorkoutPlanDetailState {
-  const WorkoutPlanDetailFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-final class WorkoutPlanDetailActionInFlight extends WorkoutPlanDetailState {
-  const WorkoutPlanDetailActionInFlight(this.plan);
-
-  final WorkoutPlan plan;
-
-  @override
-  List<Object?> get props => [plan];
+@freezed
+abstract class WorkoutPlanDetailState with _$WorkoutPlanDetailState {
+  const factory WorkoutPlanDetailState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    WorkoutPlan? plan,
+    /// Set after a successful template assign; UI navigates then clears.
+    WorkoutPlan? assignedPlan,
+    @Default(false) bool actionInFlight,
+    Failure? failure,
+  }) = _WorkoutPlanDetailState;
 }
 
 @injectable
@@ -57,7 +31,7 @@ class WorkoutPlanDetailCubit extends Cubit<WorkoutPlanDetailState> {
     this._publishPlan,
     this._archivePlan,
     this._assignPlan,
-  ) : super(const WorkoutPlanDetailLoading());
+  ) : super(const WorkoutPlanDetailState());
 
   final GetWorkoutPlanUseCase _getPlan;
   final PublishWorkoutPlanUseCase _publishPlan;
@@ -68,77 +42,119 @@ class WorkoutPlanDetailCubit extends Cubit<WorkoutPlanDetailState> {
 
   Future<void> load(String planId) async {
     _planId = planId;
-    emit(const WorkoutPlanDetailLoading());
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        failure: null,
+        assignedPlan: null,
+        actionInFlight: false,
+      ),
+    );
     final result = await _getPlan(planId);
     result.fold(
-      (failure) => emit(WorkoutPlanDetailFailure(failureMessage(failure))),
-      (plan) => emit(WorkoutPlanDetailLoaded(plan)),
+      (failure) => emit(
+        state.copyWith(status: LoadStatus.failure, failure: failure),
+      ),
+      (plan) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          plan: plan,
+          actionInFlight: false,
+        ),
+      ),
     );
   }
 
   Future<void> publish() async {
     final planId = _planId;
-    final current = state;
-    if (planId == null) return;
-    final plan = switch (current) {
-      WorkoutPlanDetailLoaded(:final plan) => plan,
-      WorkoutPlanDetailActionInFlight(:final plan) => plan,
-      _ => null,
-    };
-    if (plan == null) return;
+    final plan = state.plan;
+    if (planId == null || plan == null || state.actionInFlight) return;
+    if (state.status == LoadStatus.loading) return;
 
-    emit(WorkoutPlanDetailActionInFlight(plan));
+    emit(state.copyWith(actionInFlight: true, failure: null));
     final result = await _publishPlan(planId);
     result.fold(
-      (failure) => emit(WorkoutPlanDetailFailure(failureMessage(failure))),
-      (updated) => emit(WorkoutPlanDetailLoaded(updated)),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          actionInFlight: false,
+        ),
+      ),
+      (updated) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          actionInFlight: false,
+          plan: updated,
+          assignedPlan: null,
+        ),
+      ),
     );
   }
 
   Future<void> archive() async {
     final planId = _planId;
-    final current = state;
-    if (planId == null) return;
-    final plan = switch (current) {
-      WorkoutPlanDetailLoaded(:final plan) => plan,
-      WorkoutPlanDetailActionInFlight(:final plan) => plan,
-      _ => null,
-    };
-    if (plan == null) return;
+    final plan = state.plan;
+    if (planId == null || plan == null || state.actionInFlight) return;
+    if (state.status == LoadStatus.loading) return;
 
-    emit(WorkoutPlanDetailActionInFlight(plan));
+    emit(state.copyWith(actionInFlight: true, failure: null));
     final result = await _archivePlan(planId);
     result.fold(
-      (failure) => emit(WorkoutPlanDetailFailure(failureMessage(failure))),
-      (updated) => emit(WorkoutPlanDetailLoaded(updated)),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          actionInFlight: false,
+        ),
+      ),
+      (updated) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          actionInFlight: false,
+          plan: updated,
+          assignedPlan: null,
+        ),
+      ),
     );
   }
 
   Future<void> assignToMember(String memberId) async {
     final planId = _planId;
-    final current = state;
-    if (planId == null) return;
-    final plan = switch (current) {
-      WorkoutPlanDetailLoaded(:final plan) => plan,
-      WorkoutPlanDetailActionInFlight(:final plan) => plan,
-      _ => null,
-    };
-    if (plan == null) return;
+    final plan = state.plan;
+    if (planId == null || plan == null || state.actionInFlight) return;
+    if (state.status == LoadStatus.loading) return;
 
-    emit(WorkoutPlanDetailActionInFlight(plan));
+    emit(state.copyWith(actionInFlight: true, failure: null));
     final result = await _assignPlan(
       AssignWorkoutPlanParams(planId: planId, memberId: memberId),
     );
     result.fold(
-      (failure) => emit(WorkoutPlanDetailFailure(failureMessage(failure))),
-      (assigned) => emit(WorkoutPlanDetailLoaded(plan, assignedPlan: assigned)),
+      (failure) => emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: failure,
+          actionInFlight: false,
+        ),
+      ),
+      (assigned) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          actionInFlight: false,
+          plan: plan,
+          assignedPlan: assigned,
+        ),
+      ),
     );
   }
 
   void clearAssignedPlan() {
-    final current = state;
-    if (current is WorkoutPlanDetailLoaded && current.assignedPlan != null) {
-      emit(WorkoutPlanDetailLoaded(current.plan));
+    if (state.assignedPlan != null) {
+      emit(state.copyWith(assignedPlan: null));
     }
   }
 }

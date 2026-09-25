@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 
 class RestTimerState extends Equatable {
   const RestTimerState({
@@ -46,8 +47,9 @@ class RestTimerState extends Equatable {
 }
 
 /// Client-only rest countdown. No API.
+@injectable
 class RestTimerCubit extends Cubit<RestTimerState> {
-  RestTimerCubit({this.ticker}) : super(const RestTimerState.idle());
+  RestTimerCubit({@ignoreParam this.ticker}) : super(const RestTimerState.idle());
 
   /// Optional tick stream factory for tests (emits once per second).
   final Stream<void> Function()? ticker;

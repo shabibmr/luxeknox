@@ -1,4 +1,5 @@
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/core/pagination/cursor_page.dart';
 import 'package:app/features/foods/domain/entities/food.dart';
 import 'package:app/features/foods/domain/entities/food_filter.dart';
@@ -43,7 +44,7 @@ void main() {
   group('FoodListBloc (Q1)', () {
     test('initial state has initial status and empty items', () {
       final bloc = FoodListBloc(getFoodsUseCase: mockUseCase);
-      expect(bloc.state.status, FoodListStatus.initial);
+      expect(bloc.state.status, LoadStatus.initial);
       expect(bloc.state.items, isEmpty);
     });
 
@@ -59,9 +60,9 @@ void main() {
       },
       act: (bloc) => bloc.add(const FoodListStarted()),
       expect: () => [
-        const FoodListState(status: FoodListStatus.loading),
+        const FoodListState(status: LoadStatus.loading),
         const FoodListState(
-          status: FoodListStatus.success,
+          status: LoadStatus.success,
           items: [tFood1],
           cursor: 'c1',
           hasMore: true,
@@ -84,7 +85,7 @@ void main() {
         return FoodListBloc(getFoodsUseCase: mockUseCase);
       },
       seed: () => const FoodListState(
-        status: FoodListStatus.success,
+        status: LoadStatus.success,
         items: [tFood1],
         cursor: 'c1',
         hasMore: true,
@@ -92,13 +93,13 @@ void main() {
       act: (bloc) => bloc.add(const FoodListNextPageRequested()),
       expect: () => [
         const FoodListState(
-          status: FoodListStatus.loading,
+          status: LoadStatus.loading,
           items: [tFood1],
           cursor: 'c1',
           hasMore: true,
         ),
         const FoodListState(
-          status: FoodListStatus.success,
+          status: LoadStatus.success,
           items: [tFood1, tFood2],
           cursor: null,
           hasMore: false,
@@ -116,9 +117,9 @@ void main() {
       },
       act: (bloc) => bloc.add(const FoodListStarted()),
       expect: () => [
-        const FoodListState(status: FoodListStatus.loading),
+        const FoodListState(status: LoadStatus.loading),
         const FoodListState(
-          status: FoodListStatus.failure,
+          status: LoadStatus.failure,
           failure: NetworkFailure(),
         ),
       ],

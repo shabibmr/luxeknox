@@ -4,14 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/attendance_enums.dart';
 import '../attendance_strings.dart';
+import '../bloc/check_in_bloc.dart';
 import '../cubit/attendance_history_cubit.dart';
-import '../cubit/attendance_pass_cubit.dart';
 
 class AdminAttendanceScreen extends StatelessWidget {
   const AdminAttendanceScreen({super.key});
@@ -48,13 +50,21 @@ class _AdminAttendanceBody extends StatelessWidget {
       ),
       body: BlocBuilder<AttendanceLiveFeedCubit, LiveFeedState>(
         builder: (context, state) {
-          return switch (state) {
-            LiveFeedLoading() => const AppLoading(),
-            LiveFeedFailure(:final message) => AppErrorView(
-              message: message,
+          final noFeed = state.items.isEmpty && state.footfall.isEmpty;
+          if (state.status == LoadStatus.loading && noFeed) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && noFeed) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? ''
+                  : failureMessage(state.failure!),
               onRetry: () => context.read<AttendanceLiveFeedCubit>().load(),
-            ),
-            LiveFeedLoaded(:final items, :final footfall) => RefreshIndicator(
+            );
+          }
+          final items = state.items;
+          final footfall = state.footfall;
+          return RefreshIndicator(
               onRefresh: () => context.read<AttendanceLiveFeedCubit>().load(),
               child: ListView(
                 padding: const EdgeInsets.all(16),
@@ -117,10 +127,19 @@ class _AdminAttendanceBody extends StatelessWidget {
                         ),
                       ),
                     ),
+                  if (state.failure != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        failureMessage(state.failure!),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
                 ],
               ),
-            ),
-          };
+            );
         },
       ),
     );
@@ -148,22 +167,24 @@ class _ManualCheckInScreenState extends State<ManualCheckInScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<CheckInCubit>(),
-      child: BlocConsumer<CheckInCubit, CheckInCubitState>(
+      create: (_) => getIt<CheckInBloc>(),
+      child: BlocConsumer<CheckInBloc, CheckInState>(
+        listenWhen: (previous, next) => previous.status != next.status,
         listener: (context, state) {
-          if (state is CheckInSuccess) {
+          if (state.status == LoadStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(AttendanceStrings.checkInSuccess)),
             );
             context.pop();
-          } else if (state is CheckInIdle && state.message != null) {
+          } else if (state.status == LoadStatus.failure &&
+              state.message != null) {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text(state.message!)));
           }
         },
         builder: (context, state) {
-          final busy = state is CheckInIdle && state.actionInFlight;
+          final busy = state.status == LoadStatus.loading;
           return Scaffold(
             appBar: AppBar(
               title: const Text(AttendanceStrings.manualOverride),
@@ -192,12 +213,15 @@ class _ManualCheckInScreenState extends State<ManualCheckInScreen> {
                       : () {
                           final id = _userIdController.text.trim();
                           if (id.isEmpty) return;
-                          context.read<CheckInCubit>().submit(
-                            userId: id,
-                            method: AttendanceCheckInMethod.manualOverride,
-                            gateIdentifier: _gateController.text.trim().isEmpty
-                                ? null
-                                : _gateController.text.trim(),
+                          context.read<CheckInBloc>().add(
+                            CheckInSubmitted(
+                              userId: id,
+                              method: AttendanceCheckInMethod.manualOverride,
+                              gateIdentifier:
+                                  _gateController.text.trim().isEmpty
+                                  ? null
+                                  : _gateController.text.trim(),
+                            ),
                           );
                         },
                   child: Text(
@@ -227,13 +251,13 @@ class _QrScanCheckInScreenState extends State<QrScanCheckInScreen> {
   String? _cameraError;
   bool _handledScan = false;
   late final MobileScannerController _scanner;
-  late final CheckInCubit _cubit;
+  late final CheckInBloc _cubit;
 
   @override
   void initState() {
     super.initState();
     _scanner = MobileScannerController();
-    _cubit = getIt<CheckInCubit>();
+    _cubit = getIt<CheckInBloc>();
   }
 
   @override
@@ -257,9 +281,11 @@ class _QrScanCheckInScreenState extends State<QrScanCheckInScreen> {
     if (raw == null) return;
     _handledScan = true;
     _payloadController.text = raw;
-    _cubit.submit(
-      method: AttendanceCheckInMethod.qrCode,
-      payload: raw,
+    _cubit.add(
+      CheckInSubmitted(
+        method: AttendanceCheckInMethod.qrCode,
+        payload: raw,
+      ),
     );
   }
 
@@ -267,14 +293,16 @@ class _QrScanCheckInScreenState extends State<QrScanCheckInScreen> {
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: _cubit,
-      child: BlocConsumer<CheckInCubit, CheckInCubitState>(
+      child: BlocConsumer<CheckInBloc, CheckInState>(
+        listenWhen: (previous, next) => previous.status != next.status,
         listener: (context, state) {
-          if (state is CheckInSuccess) {
+          if (state.status == LoadStatus.success) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(AttendanceStrings.checkInSuccess)),
             );
             context.pop();
-          } else if (state is CheckInIdle && state.message != null) {
+          } else if (state.status == LoadStatus.failure &&
+              state.message != null) {
             _handledScan = false;
             ScaffoldMessenger.of(
               context,
@@ -282,7 +310,7 @@ class _QrScanCheckInScreenState extends State<QrScanCheckInScreen> {
           }
         },
         builder: (context, state) {
-          final busy = state is CheckInIdle && state.actionInFlight;
+          final busy = state.status == LoadStatus.loading;
           return Scaffold(
             appBar: AppBar(title: const Text(AttendanceStrings.scanQr)),
             body: Column(
@@ -335,9 +363,11 @@ class _QrScanCheckInScreenState extends State<QrScanCheckInScreen> {
                                 final payload =
                                     _payloadController.text.trim();
                                 if (payload.isEmpty) return;
-                                _cubit.submit(
-                                  method: AttendanceCheckInMethod.qrCode,
-                                  payload: payload,
+                                _cubit.add(
+                                  CheckInSubmitted(
+                                    method: AttendanceCheckInMethod.qrCode,
+                                    payload: payload,
+                                  ),
                                 );
                               },
                         child: Text(

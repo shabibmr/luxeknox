@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/presentation/load_status.dart';
 import 'package:app/features/workout/domain/entities/workout_plan.dart';
 import 'package:app/features/workout/domain/entities/workout_plan_exercise.dart';
 import 'package:app/features/workout/domain/entities/workout_plan_status.dart';
@@ -10,7 +11,7 @@ import 'package:app/features/workout/domain/usecases/complete_workout_session_us
 import 'package:app/features/workout/domain/usecases/get_workout_plan_usecase.dart';
 import 'package:app/features/workout/domain/usecases/log_workout_set_usecase.dart';
 import 'package:app/features/workout/domain/usecases/start_workout_session_usecase.dart';
-import 'package:app/features/workout/presentation/cubit/active_workout_cubit.dart';
+import 'package:app/features/workout/presentation/bloc/active_workout_bloc.dart';
 import 'package:app/features/workout/presentation/cubit/rest_timer_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -115,23 +116,27 @@ void main() {
   });
 
   tearDown(() async {
-    await restTimer.close();
+    if (!restTimer.isClosed) {
+      await restTimer.close();
+    }
     await tickController.close();
   });
 
-  ActiveWorkoutCubit buildCubit() {
-    final cubit = ActiveWorkoutCubit(
+  ActiveWorkoutBloc buildBloc() {
+    final bloc = ActiveWorkoutBloc(
       startSession,
       logSet,
       completeSession,
       getPlan,
       restTimer,
     );
-    cubit.configure(memberId: '7', workoutPlanId: '3');
-    return cubit;
+    bloc.add(
+      const ActiveWorkoutConfigured(memberId: '7', workoutPlanId: '3'),
+    );
+    return bloc;
   }
 
-  blocTest<ActiveWorkoutCubit, ActiveWorkoutState>(
+  blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
     'starts session, logs set (starts rest), completes',
     build: () {
       when(() => startSession(any())).thenAnswer(
@@ -150,32 +155,52 @@ void main() {
           ),
         ),
       );
-      return buildCubit();
+      return buildBloc();
     },
-    act: (cubit) async {
-      await cubit.start(workoutPlanId: '3');
-      await cubit.logSet(
-        exerciseId: '100',
-        repsCompleted: 10,
-        weightLiftedKg: 50,
+    act: (bloc) async {
+      bloc.add(const ActiveWorkoutStarted(workoutPlanId: '3'));
+      await bloc.stream.firstWhere(
+        (s) => s.status == LoadStatus.success && s.session != null,
       );
+      bloc.add(
+        const ActiveWorkoutSetLogged(
+          exerciseId: '100',
+          repsCompleted: 10,
+          weightLiftedKg: 50,
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s.loggedSets.length == 1);
       expect(restTimer.state.isRunning, isTrue);
       expect(restTimer.state.remainingSeconds, 45);
-      await cubit.complete();
+      bloc.add(const ActiveWorkoutCompletionRequested());
+      await bloc.stream.firstWhere((s) => s.completed);
     },
     expect: () => [
-      isA<ActiveWorkoutStarting>(),
-      isA<ActiveWorkoutInProgress>()
-          .having((s) => s.session.id, 'session', 's1')
-          .having((s) => s.plan?.id, 'plan', '3'),
-      isA<ActiveWorkoutInProgress>().having((s) => s.logging, 'logging', true),
-      isA<ActiveWorkoutInProgress>()
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.initial)
+          .having((s) => s.initialPlanId, 'initialPlanId', '3'),
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.loading)
+          .having((s) => s.session, 'session', isNull),
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.session?.id, 'session', 's1')
+          .having((s) => s.plan?.id, 'plan', '3')
+          .having((s) => s.completed, 'completed', false),
+      isA<ActiveWorkoutState>().having((s) => s.logging, 'logging', true),
+      isA<ActiveWorkoutState>()
           .having((s) => s.loggedSets.length, 'sets', 1)
-          .having((s) => s.logging, 'logging', false),
-      isA<ActiveWorkoutCompleting>(),
-      isA<ActiveWorkoutCompleted>()
-          .having((s) => s.session.durationMinutes, 'duration', 40)
-          .having((s) => s.session.totalVolumeKg, 'volume', 500)
+          .having((s) => s.logging, 'logging', false)
+          .having((s) => s.status, 'status', LoadStatus.success),
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.loading)
+          .having((s) => s.session?.id, 'session', 's1')
+          .having((s) => s.loggedSets.length, 'sets', 1),
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.completed, 'completed', true)
+          .having((s) => s.session?.durationMinutes, 'duration', 40)
+          .having((s) => s.session?.totalVolumeKg, 'volume', 500)
           .having((s) => s.loggedSetCount, 'loggedSetCount', 1),
     ],
     verify: (_) {
@@ -188,7 +213,7 @@ void main() {
     },
   );
 
-  blocTest<ActiveWorkoutCubit, ActiveWorkoutState>(
+  blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
     'complete forwards notes and rating',
     build: () {
       when(() => startSession(any())).thenAnswer(
@@ -211,19 +236,39 @@ void main() {
           );
         },
       );
-      return buildCubit();
+      return buildBloc();
     },
-    act: (cubit) async {
-      await cubit.start(workoutPlanId: '3');
-      await cubit.complete(notes: 'Felt strong', clientFeedbackRating: 5);
+    act: (bloc) async {
+      bloc.add(const ActiveWorkoutStarted(workoutPlanId: '3'));
+      await bloc.stream.firstWhere(
+        (s) => s.status == LoadStatus.success && s.session != null,
+      );
+      bloc.add(
+        const ActiveWorkoutCompletionRequested(
+          notes: 'Felt strong',
+          clientFeedbackRating: 5,
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s.completed);
     },
     expect: () => [
-      isA<ActiveWorkoutStarting>(),
-      isA<ActiveWorkoutInProgress>(),
-      isA<ActiveWorkoutCompleting>(),
-      isA<ActiveWorkoutCompleted>()
-          .having((s) => s.session.notes, 'notes', 'Felt strong')
-          .having((s) => s.session.clientFeedbackRating, 'rating', 5)
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.initial)
+          .having((s) => s.initialPlanId, 'initialPlanId', '3'),
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.loading)
+          .having((s) => s.session, 'session', isNull),
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.completed, 'completed', false),
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.loading)
+          .having((s) => s.session?.id, 'session', 's1'),
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.success)
+          .having((s) => s.completed, 'completed', true)
+          .having((s) => s.session?.notes, 'notes', 'Felt strong')
+          .having((s) => s.session?.clientFeedbackRating, 'rating', 5)
           .having((s) => s.loggedSetCount, 'loggedSetCount', 0),
     ],
     verify: (_) {
@@ -236,18 +281,29 @@ void main() {
     },
   );
 
-  blocTest<ActiveWorkoutCubit, ActiveWorkoutState>(
+  blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
     'start failure',
     build: () {
       when(() => startSession(any())).thenAnswer(
         (_) async => const Left(NetworkFailure()),
       );
-      return buildCubit();
+      return buildBloc();
     },
-    act: (cubit) => cubit.start(),
+    act: (bloc) async {
+      bloc.add(const ActiveWorkoutStarted());
+      await bloc.stream.firstWhere((s) => s.status == LoadStatus.failure);
+    },
     expect: () => [
-      isA<ActiveWorkoutStarting>(),
-      isA<ActiveWorkoutFailure>(),
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.initial)
+          .having((s) => s.initialPlanId, 'initialPlanId', '3'),
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.loading)
+          .having((s) => s.session, 'session', isNull),
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>())
+          .having((s) => s.session, 'session', isNull),
     ],
   );
 }

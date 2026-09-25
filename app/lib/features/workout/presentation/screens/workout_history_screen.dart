@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -49,24 +51,28 @@ class _WorkoutHistoryBody extends StatelessWidget {
       appBar: AppBar(title: Text(_title)),
       body: BlocBuilder<WorkoutHistoryCubit, WorkoutHistoryState>(
         builder: (context, state) {
-          return switch (state) {
-            WorkoutHistoryLoading() => const AppLoading(),
-            WorkoutHistoryFailure(:final message) => AppErrorView(
-              message: message,
+          final items = state.items;
+          if (state.status == LoadStatus.loading && !state.hasLoaded) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && !state.hasLoaded) {
+            return AppErrorView(
+              message: state.failure == null
+                  ? 'Something went wrong'
+                  : failureMessage(state.failure!),
               onRetry: () => context
                   .read<WorkoutHistoryCubit>()
                   .load(memberId: memberId),
-            ),
-            WorkoutHistoryLoaded(
-              :final items,
-              :final personalRecords,
-              :final totalVolumeKg,
-              :final hasMore,
-              :final loadingMore,
-            ) =>
-              items.isEmpty
-                  ? const AppEmptyView(message: WorkoutStrings.historyEmpty)
-                  : RefreshIndicator(
+            );
+          }
+          if (items.isEmpty) {
+            return const AppEmptyView(message: WorkoutStrings.historyEmpty);
+          }
+          final personalRecords = state.personalRecords;
+          final totalVolumeKg = state.totalVolumeKg;
+          final hasMore = state.hasMore;
+          final loadingMore = state.loadingMore;
+          return RefreshIndicator(
                       onRefresh: () => context
                           .read<WorkoutHistoryCubit>()
                           .load(memberId: memberId),
@@ -145,8 +151,7 @@ class _WorkoutHistoryBody extends StatelessWidget {
                           ),
                         ],
                       ),
-                    ),
-          };
+          );
         },
       ),
     );

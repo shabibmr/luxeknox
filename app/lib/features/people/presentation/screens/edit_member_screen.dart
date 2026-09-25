@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/person.dart';
@@ -35,25 +37,31 @@ class _EditMemberBody extends StatelessWidget {
       appBar: AppBar(title: const Text(PeopleStrings.editMemberTitle)),
       body: BlocConsumer<EditMemberCubit, EditMemberState>(
         listener: (context, state) {
-          if (state is EditMemberLoaded && state.saved) {
+          if (state.saved) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(PeopleStrings.memberSaved)),
             );
             context.pop();
+          } else if (state.status == LoadStatus.failure &&
+              state.person != null &&
+              state.failure != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
+            );
           }
         },
         builder: (context, state) {
-          return switch (state) {
-            EditMemberLoading() => const AppLoading(),
-            EditMemberFailure(:final message) => AppErrorView(
-              message: message,
+          if (state.person == null && state.status == LoadStatus.failure) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () => context.read<EditMemberCubit>().load(memberId),
-            ),
-            EditMemberLoaded(:final person, :final saving) => _EditMemberForm(
-              person: person,
-              saving: saving,
-            ),
-          };
+            );
+          }
+          final person = state.person;
+          if (person == null) {
+            return const AppLoading();
+          }
+          return _EditMemberForm(person: person, saving: state.saving);
         },
       ),
     );

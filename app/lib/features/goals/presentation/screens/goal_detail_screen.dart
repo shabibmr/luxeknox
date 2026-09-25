@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../cubit/goal_detail_cubit.dart';
@@ -79,22 +81,27 @@ class _GoalDetailBodyState extends State<_GoalDetailBody> {
       appBar: AppBar(title: const Text(GoalsStrings.goalDetailTitle)),
       body: BlocConsumer<GoalDetailCubit, GoalDetailState>(
         listener: (context, state) {
-          if (state is GoalDetailLoaded && state.toast != null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.toast!)));
+          if (state.goal != null && state.failure != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(state.failure!))),
+            );
           }
         },
         builder: (context, state) {
-          return switch (state) {
-            GoalDetailLoading() => const AppLoading(),
-            GoalDetailFailure(:final message) => AppErrorView(
-              message: message,
+          final goal = state.goal;
+          final submitting = state.submitting;
+          if (state.status == LoadStatus.loading && goal == null) {
+            return const AppLoading();
+          }
+          if (state.status == LoadStatus.failure && goal == null) {
+            return AppErrorView(
+              message: failureMessage(state.failure!),
               onRetry: () =>
                   context.read<GoalDetailCubit>().load(widget.goalId),
-            ),
-            GoalDetailLoaded(:final goal, :final submitting) =>
-              ListView(
+            );
+          }
+          if (goal == null) return const SizedBox.shrink();
+          return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
                   GoalProgressBar(goal: goal),
@@ -144,8 +151,7 @@ class _GoalDetailBodyState extends State<_GoalDetailBody> {
                         : const Text(GoalsStrings.checkInSubmit),
                   ),
                 ],
-              ),
-          };
+              );
         },
       ),
     );

@@ -76,10 +76,12 @@ Class | Method | HTTP request | Description
 [*APIApi*](doc/APIApi.md) | [**getReady**](doc/APIApi.md#getready) | **GET** /ready | Database readiness
 [*ATTNApi*](doc/ATTNApi.md) | [**checkIn**](doc/ATTNApi.md#checkin) | **POST** /attendances/check-in | Gate check-in (user session or device key)
 [*ATTNApi*](doc/ATTNApi.md) | [**checkOut**](doc/ATTNApi.md#checkout) | **POST** /attendances/{id}/check-out | Gate check-out
+[*ATTNApi*](doc/ATTNApi.md) | [**getAttendanceOccupancy**](doc/ATTNApi.md#getattendanceoccupancy) | **GET** /attendances/occupancy | Live gate occupancy (open check-ins)
 [*ATTNApi*](doc/ATTNApi.md) | [**getAttendancePass**](doc/ATTNApi.md#getattendancepass) | **GET** /attendance/pass | Member digital pass (QR payload)
 [*ATTNApi*](doc/ATTNApi.md) | [**getAttendanceSummary**](doc/ATTNApi.md#getattendancesummary) | **GET** /attendances/summary | Scoped attendance summary
 [*ATTNApi*](doc/ATTNApi.md) | [**listAttendanceHistories**](doc/ATTNApi.md#listattendancehistories) | **GET** /attendance-histories | Daily footfall aggregates
 [*ATTNApi*](doc/ATTNApi.md) | [**listAttendances**](doc/ATTNApi.md#listattendances) | **GET** /attendances | Gate attendance log
+[*ATTNApi*](doc/ATTNApi.md) | [**manualOverrideCheckIn**](doc/ATTNApi.md#manualoverridecheckin) | **POST** /attendances/override | Manual gate check-in override (bypasses eligibility/caps)
 [*ATTNApi*](doc/ATTNApi.md) | [**markSessionAttendance**](doc/ATTNApi.md#marksessionattendance) | **POST** /schedules/{id}/participants/{participantId}/mark | Mark session attended / no-show
 [*AUTHApi*](doc/AUTHApi.md) | [**changePassword**](doc/AUTHApi.md#changepassword) | **POST** /auth/password/change | Change password; invalidates other sessions
 [*AUTHApi*](doc/AUTHApi.md) | [**forgotPassword**](doc/AUTHApi.md#forgotpassword) | **POST** /auth/password/forgot | Request a password-reset token
@@ -104,6 +106,7 @@ Class | Method | HTTP request | Description
 [*DIETApi*](doc/DIETApi.md) | [**updateDietPlan**](doc/DIETApi.md#updatedietplan) | **PATCH** /diet-plans/{id} | Update diet plan metadata (requires row_version)
 [*DIETApi*](doc/DIETApi.md) | [**updateFood**](doc/DIETApi.md#updatefood) | **PATCH** /foods/{id} | Update a food
 [*GOALApi*](doc/GOALApi.md) | [**checkInGoal**](doc/GOALApi.md#checkingoal) | **POST** /goals/{id}/check-ins | Record a goal check-in
+[*GOALApi*](doc/GOALApi.md) | [**compareProgressPhotos**](doc/GOALApi.md#compareprogressphotos) | **GET** /members/{id}/progress-photos/comparison | Compare progress photos across two dates and poses
 [*GOALApi*](doc/GOALApi.md) | [**createGoalMetric**](doc/GOALApi.md#creategoalmetric) | **POST** /goal-metrics | Create a metric
 [*GOALApi*](doc/GOALApi.md) | [**createMeasurement**](doc/GOALApi.md#createmeasurement) | **POST** /members/{id}/measurements | Record a measurement session
 [*GOALApi*](doc/GOALApi.md) | [**createMemberGoal**](doc/GOALApi.md#createmembergoal) | **POST** /members/{id}/goals | Create a goal
@@ -112,6 +115,7 @@ Class | Method | HTTP request | Description
 [*GOALApi*](doc/GOALApi.md) | [**deleteProgressPhoto**](doc/GOALApi.md#deleteprogressphoto) | **DELETE** /progress-photos/{id} | Delete a progress photo (deferred)
 [*GOALApi*](doc/GOALApi.md) | [**getGoal**](doc/GOALApi.md#getgoal) | **GET** /goals/{id} | Goal detail
 [*GOALApi*](doc/GOALApi.md) | [**getMeasurement**](doc/GOALApi.md#getmeasurement) | **GET** /measurements/{id} | Measurement session with values
+[*GOALApi*](doc/GOALApi.md) | [**getMeasurementChart**](doc/GOALApi.md#getmeasurementchart) | **GET** /members/{id}/measurements/chart | Longitudinal metric chart series
 [*GOALApi*](doc/GOALApi.md) | [**listGoalMetrics**](doc/GOALApi.md#listgoalmetrics) | **GET** /goal-metrics | Measurement type catalog
 [*GOALApi*](doc/GOALApi.md) | [**listMeasurements**](doc/GOALApi.md#listmeasurements) | **GET** /members/{id}/measurements | Measurement sessions
 [*GOALApi*](doc/GOALApi.md) | [**listMemberGoals**](doc/GOALApi.md#listmembergoals) | **GET** /members/{id}/goals | Member goals
@@ -122,25 +126,25 @@ Class | Method | HTTP request | Description
 [*HEALTHApi*](doc/HEALTHApi.md) | [**createEmergencyContact**](doc/HEALTHApi.md#createemergencycontact) | **POST** /users/{id}/emergency-contacts | Add an emergency contact
 [*HEALTHApi*](doc/HEALTHApi.md) | [**createHealthCondition**](doc/HEALTHApi.md#createhealthcondition) | **POST** /health-conditions | Create a condition
 [*HEALTHApi*](doc/HEALTHApi.md) | [**createMedicalHistory**](doc/HEALTHApi.md#createmedicalhistory) | **POST** /members/{id}/medical-histories | Add a medical history row
-[*HEALTHApi*](doc/HEALTHApi.md) | [**createMemberDocument**](doc/HEALTHApi.md#creatememberdocument) | **POST** /members/{id}/documents | Attach a document metadata row (deferred)
-[*HEALTHApi*](doc/HEALTHApi.md) | [**createMemberPhoto**](doc/HEALTHApi.md#creatememberphoto) | **POST** /members/{id}/photos | Add a gallery photo (deferred)
+[*HEALTHApi*](doc/HEALTHApi.md) | [**createMemberDocument**](doc/HEALTHApi.md#creatememberdocument) | **POST** /members/{id}/documents | Attach a document metadata row
+[*HEALTHApi*](doc/HEALTHApi.md) | [**createMemberPhoto**](doc/HEALTHApi.md#creatememberphoto) | **POST** /members/{id}/photos | Add a gallery photo
 [*HEALTHApi*](doc/HEALTHApi.md) | [**deleteEmergencyContact**](doc/HEALTHApi.md#deleteemergencycontact) | **DELETE** /users/{id}/emergency-contacts/{contactId} | Remove an emergency contact
 [*HEALTHApi*](doc/HEALTHApi.md) | [**deleteMedicalHistory**](doc/HEALTHApi.md#deletemedicalhistory) | **DELETE** /members/{id}/medical-histories/{historyId} | Soft-remove a medical history row
-[*HEALTHApi*](doc/HEALTHApi.md) | [**deleteMemberDocument**](doc/HEALTHApi.md#deletememberdocument) | **DELETE** /members/{id}/documents/{documentId} | Delete a document row (deferred)
+[*HEALTHApi*](doc/HEALTHApi.md) | [**deleteMemberDocument**](doc/HEALTHApi.md#deletememberdocument) | **DELETE** /members/{id}/documents/{documentId} | Delete a document row
 [*HEALTHApi*](doc/HEALTHApi.md) | [**getMemberHealth**](doc/HEALTHApi.md#getmemberhealth) | **GET** /members/{id}/health | Current health row
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listEmergencyContacts**](doc/HEALTHApi.md#listemergencycontacts) | **GET** /users/{id}/emergency-contacts | Emergency contacts for a user
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listHealthConditions**](doc/HEALTHApi.md#listhealthconditions) | **GET** /health-conditions | Condition catalog
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listMedicalHistories**](doc/HEALTHApi.md#listmedicalhistories) | **GET** /members/{id}/medical-histories | Medical history list
-[*HEALTHApi*](doc/HEALTHApi.md) | [**listMemberDocuments**](doc/HEALTHApi.md#listmemberdocuments) | **GET** /members/{id}/documents | Member documents (deferred uploads)
-[*HEALTHApi*](doc/HEALTHApi.md) | [**listMemberPhotos**](doc/HEALTHApi.md#listmemberphotos) | **GET** /members/{id}/photos | Member gallery (deferred)
+[*HEALTHApi*](doc/HEALTHApi.md) | [**listMemberDocuments**](doc/HEALTHApi.md#listmemberdocuments) | **GET** /members/{id}/documents | Member documents
+[*HEALTHApi*](doc/HEALTHApi.md) | [**listMemberPhotos**](doc/HEALTHApi.md#listmemberphotos) | **GET** /members/{id}/photos | Member gallery
 [*HEALTHApi*](doc/HEALTHApi.md) | [**putMemberHealth**](doc/HEALTHApi.md#putmemberhealth) | **PUT** /members/{id}/health | Replace current health row
-[*HEALTHApi*](doc/HEALTHApi.md) | [**setMemberAvatar**](doc/HEALTHApi.md#setmemberavatar) | **POST** /members/{id}/photos/{photoId}/avatar | Set current avatar from a gallery shot (deferred)
+[*HEALTHApi*](doc/HEALTHApi.md) | [**setMemberAvatar**](doc/HEALTHApi.md#setmemberavatar) | **POST** /members/{id}/photos/{photoId}/avatar | Set current avatar from a gallery shot
 [*HEALTHApi*](doc/HEALTHApi.md) | [**updateEmergencyContact**](doc/HEALTHApi.md#updateemergencycontact) | **PATCH** /users/{id}/emergency-contacts/{contactId} | Update an emergency contact
 [*HEALTHApi*](doc/HEALTHApi.md) | [**updateHealthCondition**](doc/HEALTHApi.md#updatehealthcondition) | **PATCH** /health-conditions/{id} | Update a condition
 [*HEALTHApi*](doc/HEALTHApi.md) | [**updateMedicalHistory**](doc/HEALTHApi.md#updatemedicalhistory) | **PATCH** /members/{id}/medical-histories/{historyId} | Update a medical history row
-[*HEALTHApi*](doc/HEALTHApi.md) | [**verifyMemberDocument**](doc/HEALTHApi.md#verifymemberdocument) | **POST** /members/{id}/documents/{documentId}/verify | Verify a document (deferred)
-[*MEDIAApi*](doc/MEDIAApi.md) | [**createMediaUpload**](doc/MEDIAApi.md#createmediaupload) | **POST** /media/uploads | Signed PUT slot (deferred — ADR-0005)
-[*MEDIAApi*](doc/MEDIAApi.md) | [**getMediaUrl**](doc/MEDIAApi.md#getmediaurl) | **GET** /media/{key} | Short-lived signed GET (deferred — ADR-0005)
+[*HEALTHApi*](doc/HEALTHApi.md) | [**verifyMemberDocument**](doc/HEALTHApi.md#verifymemberdocument) | **POST** /members/{id}/documents/{documentId}/verify | Verify a document
+[*MEDIAApi*](doc/MEDIAApi.md) | [**createMediaUpload**](doc/MEDIAApi.md#createmediaupload) | **POST** /media/uploads | Signed PUT slot (ADR-0008)
+[*MEDIAApi*](doc/MEDIAApi.md) | [**getMediaUrl**](doc/MEDIAApi.md#getmediaurl) | **GET** /media/{key} | Short-lived signed GET (ADR-0008)
 [*MEMBApi*](doc/MEMBApi.md) | [**approveFreeze**](doc/MEMBApi.md#approvefreeze) | **POST** /freezes/{id}/approve | Approve a freeze
 [*MEMBApi*](doc/MEMBApi.md) | [**cancelMembership**](doc/MEMBApi.md#cancelmembership) | **POST** /memberships/{id}/cancel | Cancel a membership
 [*MEMBApi*](doc/MEMBApi.md) | [**createMembership**](doc/MEMBApi.md#createmembership) | **POST** /memberships | Assign a membership
@@ -198,7 +202,8 @@ Class | Method | HTTP request | Description
 [*RBACApi*](doc/RBACApi.md) | [**replaceRolePermissions**](doc/RBACApi.md#replacerolepermissions) | **PUT** /roles/{id}/permissions | Replace permission set on a non-system role
 [*RBACApi*](doc/RBACApi.md) | [**updateRole**](doc/RBACApi.md#updaterole) | **PATCH** /roles/{id} | Update a non-system role
 [*RPTApi*](doc/RPTApi.md) | [**getReport**](doc/RPTApi.md#getreport) | **GET** /reports/{type} | Analytics report
-[*SCHEDApi*](doc/SCHEDApi.md) | [**addScheduleParticipant**](doc/SCHEDApi.md#addscheduleparticipant) | **POST** /schedules/{id}/participants | Book a member onto a schedule
+[*SCHEDApi*](doc/SCHEDApi.md) | [**bookSchedule**](doc/SCHEDApi.md#bookschedule) | **POST** /schedules/{id}/book | Book or waitlist a member for a schedule
+[*SCHEDApi*](doc/SCHEDApi.md) | [**cancelBooking**](doc/SCHEDApi.md#cancelbooking) | **POST** /schedules/{id}/bookings/{memberId}/cancel | Cancel a member booking
 [*SCHEDApi*](doc/SCHEDApi.md) | [**cancelSchedule**](doc/SCHEDApi.md#cancelschedule) | **POST** /schedules/{id}/cancel | Cancel a schedule
 [*SCHEDApi*](doc/SCHEDApi.md) | [**completeSchedule**](doc/SCHEDApi.md#completeschedule) | **POST** /schedules/{id}/complete | Mark schedule completed
 [*SCHEDApi*](doc/SCHEDApi.md) | [**createFacility**](doc/SCHEDApi.md#createfacility) | **POST** /facilities | Create a facility
@@ -211,19 +216,23 @@ Class | Method | HTTP request | Description
 [*SCHEDApi*](doc/SCHEDApi.md) | [**listScheduleTypes**](doc/SCHEDApi.md#listscheduletypes) | **GET** /schedule-types | Schedule types
 [*SCHEDApi*](doc/SCHEDApi.md) | [**listSchedules**](doc/SCHEDApi.md#listschedules) | **GET** /schedules | Calendar list
 [*SCHEDApi*](doc/SCHEDApi.md) | [**putTrainerAvailability**](doc/SCHEDApi.md#puttraineravailability) | **PUT** /trainers/{id}/availability | Replace trainer availability
-[*SCHEDApi*](doc/SCHEDApi.md) | [**removeScheduleParticipant**](doc/SCHEDApi.md#removescheduleparticipant) | **DELETE** /schedules/{id}/participants/{participantId} | Cancel a booking
 [*SCHEDApi*](doc/SCHEDApi.md) | [**startSchedule**](doc/SCHEDApi.md#startschedule) | **POST** /schedules/{id}/start | Mark schedule ongoing
+[*SCHEDApi*](doc/SCHEDApi.md) | [**updateFacility**](doc/SCHEDApi.md#updatefacility) | **PATCH** /facilities/{id} | Update a facility
 [*SCHEDApi*](doc/SCHEDApi.md) | [**updateSchedule**](doc/SCHEDApi.md#updateschedule) | **PATCH** /schedules/{id} | Update a schedule (requires row_version)
+[*SCHEDApi*](doc/SCHEDApi.md) | [**updateScheduleType**](doc/SCHEDApi.md#updatescheduletype) | **PATCH** /schedule-types/{id} | Update a schedule type
 [*SYSApi*](doc/SYSApi.md) | [**getPublicSettings**](doc/SYSApi.md#getpublicsettings) | **GET** /settings/public | Timezone, currency, hours, page size
 [*SYSApi*](doc/SYSApi.md) | [**getSettings**](doc/SYSApi.md#getsettings) | **GET** /settings | All settings or one category
 [*SYSApi*](doc/SYSApi.md) | [**listAuditLogs**](doc/SYSApi.md#listauditlogs) | **GET** /audit-logs | Append-only admin audit (no update/delete)
 [*SYSApi*](doc/SYSApi.md) | [**putSettings**](doc/SYSApi.md#putsettings) | **PUT** /settings | Upsert known setting keys
+[*WORKApi*](doc/WORKApi.md) | [**archiveWorkoutPlan**](doc/WORKApi.md#archiveworkoutplan) | **POST** /workout-plans/{id}/archive | Archive a workout plan
 [*WORKApi*](doc/WORKApi.md) | [**assignWorkoutPlan**](doc/WORKApi.md#assignworkoutplan) | **POST** /workout-plans/{id}/assign | Copy a template onto a member (new plan + version 1)
 [*WORKApi*](doc/WORKApi.md) | [**completeWorkoutSession**](doc/WORKApi.md#completeworkoutsession) | **POST** /workout-sessions/{id}/complete | Complete a session
 [*WORKApi*](doc/WORKApi.md) | [**createExercise**](doc/WORKApi.md#createexercise) | **POST** /exercises | Create an exercise
 [*WORKApi*](doc/WORKApi.md) | [**createWorkoutPlan**](doc/WORKApi.md#createworkoutplan) | **POST** /workout-plans | Create a plan (also creates version 1)
 [*WORKApi*](doc/WORKApi.md) | [**getExercise**](doc/WORKApi.md#getexercise) | **GET** /exercises/{id} | Exercise detail
+[*WORKApi*](doc/WORKApi.md) | [**getPersonalRecords**](doc/WORKApi.md#getpersonalrecords) | **GET** /workout-sessions/personal-records | Member personal records across completed sessions
 [*WORKApi*](doc/WORKApi.md) | [**getWorkoutPlan**](doc/WORKApi.md#getworkoutplan) | **GET** /workout-plans/{id} | Plan with current version line items
+[*WORKApi*](doc/WORKApi.md) | [**getWorkoutSession**](doc/WORKApi.md#getworkoutsession) | **GET** /workout-sessions/{id} | Get workout session details
 [*WORKApi*](doc/WORKApi.md) | [**listExercises**](doc/WORKApi.md#listexercises) | **GET** /exercises | Exercise library
 [*WORKApi*](doc/WORKApi.md) | [**listWorkoutPlanVersions**](doc/WORKApi.md#listworkoutplanversions) | **GET** /workout-plans/{id}/versions | Plan version snapshots
 [*WORKApi*](doc/WORKApi.md) | [**listWorkoutPlans**](doc/WORKApi.md#listworkoutplans) | **GET** /workout-plans | Workout plans and templates
@@ -250,7 +259,9 @@ Class | Method | HTTP request | Description
  - [AttendanceSummary](doc/AttendanceSummary.md)
  - [AuditLog](doc/AuditLog.md)
  - [AuditLogPage](doc/AuditLogPage.md)
+ - [BookRequest](doc/BookRequest.md)
  - [BroadcastRequest](doc/BroadcastRequest.md)
+ - [CancelBookingRequest](doc/CancelBookingRequest.md)
  - [CancelRequest](doc/CancelRequest.md)
  - [ChangePasswordRequest](doc/ChangePasswordRequest.md)
  - [CheckInRequest](doc/CheckInRequest.md)
@@ -307,6 +318,8 @@ Class | Method | HTTP request | Description
  - [HealthConditionWrite](doc/HealthConditionWrite.md)
  - [LoginRequest](doc/LoginRequest.md)
  - [LogoutRequest](doc/LogoutRequest.md)
+ - [LongitudinalDataPoint](doc/LongitudinalDataPoint.md)
+ - [ManualOverrideRequest](doc/ManualOverrideRequest.md)
  - [MarkAttendanceRequest](doc/MarkAttendanceRequest.md)
  - [MeResponse](doc/MeResponse.md)
  - [MeResponseProfile](doc/MeResponseProfile.md)
@@ -350,6 +363,8 @@ Class | Method | HTTP request | Description
  - [MembershipStatus](doc/MembershipStatus.md)
  - [Notification](doc/Notification.md)
  - [NotificationPage](doc/NotificationPage.md)
+ - [Occupancy](doc/Occupancy.md)
+ - [OccupancyByGateInner](doc/OccupancyByGateInner.md)
  - [PageMeta](doc/PageMeta.md)
  - [Payment](doc/Payment.md)
  - [PaymentAdjustRequest](doc/PaymentAdjustRequest.md)
@@ -364,15 +379,20 @@ Class | Method | HTTP request | Description
  - [Permission](doc/Permission.md)
  - [PermissionAction](doc/PermissionAction.md)
  - [PermissionPage](doc/PermissionPage.md)
+ - [PersonalRecord](doc/PersonalRecord.md)
  - [Principal](doc/Principal.md)
  - [ProgressNote](doc/ProgressNote.md)
  - [ProgressNotePage](doc/ProgressNotePage.md)
  - [ProgressNoteWrite](doc/ProgressNoteWrite.md)
  - [ProgressPhoto](doc/ProgressPhoto.md)
+ - [ProgressPhotoComparison](doc/ProgressPhotoComparison.md)
+ - [ProgressPhotoComparisonComparisonByPose](doc/ProgressPhotoComparisonComparisonByPose.md)
+ - [ProgressPhotoComparisonPosePair](doc/ProgressPhotoComparisonPosePair.md)
  - [ProgressPhotoPage](doc/ProgressPhotoPage.md)
  - [ProgressPhotoWrite](doc/ProgressPhotoWrite.md)
  - [PublicSettings](doc/PublicSettings.md)
  - [Ready](doc/Ready.md)
+ - [ReadyJobs](doc/ReadyJobs.md)
  - [RefreshRequest](doc/RefreshRequest.md)
  - [RejectRequest](doc/RejectRequest.md)
  - [Report](doc/Report.md)
@@ -387,7 +407,6 @@ Class | Method | HTTP request | Description
  - [ScheduleHistoryPage](doc/ScheduleHistoryPage.md)
  - [SchedulePage](doc/SchedulePage.md)
  - [ScheduleParticipant](doc/ScheduleParticipant.md)
- - [ScheduleParticipantWrite](doc/ScheduleParticipantWrite.md)
  - [ScheduleStatus](doc/ScheduleStatus.md)
  - [ScheduleType](doc/ScheduleType.md)
  - [ScheduleTypePage](doc/ScheduleTypePage.md)
