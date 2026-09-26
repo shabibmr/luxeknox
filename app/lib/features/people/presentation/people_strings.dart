@@ -22,6 +22,7 @@ abstract final class PeopleStrings {
   static const notes = 'Notes';
   static const editProfile = 'Edit profile';
   static const health = 'Health';
+  static const goals = 'Goals & progress';
   static const medicalHistory = 'Medical history';
   static const emergencyContacts = 'Emergency contacts';
   static const documents = 'Documents';

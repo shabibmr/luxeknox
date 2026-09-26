@@ -8,6 +8,7 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/person.dart';
+import '../../../goals/presentation/screens/progress_hub_screen.dart';
 import '../cubit/member_dossier_cubit.dart';
 import '../people_strings.dart';
 import 'documents_screen.dart';
@@ -234,6 +235,18 @@ class _DossierContentState extends State<_DossierContent> {
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => HealthInfoScreen(memberId: person.id),
+            ),
+          ),
+        ),
+        ListTile(
+          title: const Text(PeopleStrings.goals),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => ProgressHubScreen(
+                memberId: person.id.toString(),
+                canCreateGoals: true,
+              ),
             ),
           ),
         ),

@@ -85,6 +85,7 @@ void main() {
         Routes.adminMembersAssignMembership,
         Routes.adminMembersWorkoutHistory,
         Routes.adminMembersDietHistory,
+        Routes.adminMembersGoals,
         Routes.adminMemberships,
         Routes.adminMembershipsDetail,
         Routes.adminMembershipsRenew,
@@ -118,7 +119,7 @@ void main() {
       // set's length equals the number of entries listed.
       expect(
         allRoutes.length,
-        94,
+        95,
         reason: 'All route constants should be unique; duplicate values found',
       );
     });
@@ -127,6 +128,7 @@ void main() {
       expect(Routes.memberScheduleById('42'), '/schedule/42');
       expect(Routes.memberProgressGoalById('7'), '/progress/goal/7');
       expect(Routes.adminMemberById('9'), '/admin/members/9');
+      expect(Routes.adminMemberGoalsById('9'), '/admin/members/9/goals');
       expect(Routes.adminPaymentById('15'), '/admin/payments/15');
       expect(Routes.memberProfilePaymentById('15'), '/profile/payments/15');
       expect(Routes.trainerMemberById('3'), '/trainer/members/3');

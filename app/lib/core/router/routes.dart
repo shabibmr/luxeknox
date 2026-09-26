@@ -149,6 +149,7 @@ class Routes {
       '/admin/members/:id/workout-history';
   static const String adminMembersDietHistory =
       '/admin/members/:id/diet-history';
+  static const String adminMembersGoals = '/admin/members/:id/goals';
 
   // Memberships Stack
   static const String adminMemberships = '/admin/memberships';
@@ -268,6 +269,8 @@ class Routes {
 
   static String adminMembersDietHistoryById(String id) =>
       '/admin/members/$id/diet-history';
+
+  static String adminMemberGoalsById(String id) => '/admin/members/$id/goals';
 
   static String trainerMembersWorkoutHistoryById(String id) =>
       '/trainer/members/$id/workout-history';
