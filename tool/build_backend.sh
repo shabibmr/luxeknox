@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# Builds the Nest API backend (apps/api).
+# Builds the Nest API backend (apps/api), then starts it in the foreground.
 #
 # Usage:
-#   bash tool/build_backend.sh              # pnpm --filter api build
-#   bash tool/build_backend.sh --install    # pnpm install --frozen-lockfile, then build
+#   bash tool/build_backend.sh              # build, then pnpm --filter api start:dev
+#   bash tool/build_backend.sh --install    # frozen-lockfile install, build, then start:dev
+#   bash tool/build_backend.sh --build-only # build only (no start)
 #   bash tool/build_backend.sh --typecheck
 #   bash tool/build_backend.sh --log-file PATH
 #
 # Build stdout/stderr are tee'd to apps/api/logs/backend-<mode>-<timestamp>.log
-# (or --log-file). Equivalent: pnpm api:build | deploy/build.sh --api-only
+# (or --log-file). Equivalent build-only: pnpm backend:build | deploy/build.sh --api-only
 
 set -euo pipefail
 
@@ -16,13 +17,17 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 DO_INSTALL=0
-MODE=build
+MODE=run
 LOG_FILE=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --install|-i)
       DO_INSTALL=1
+      shift
+      ;;
+    --build-only|-b)
+      MODE=build
       shift
       ;;
     --typecheck|-t)
@@ -42,12 +47,12 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --help|-h)
-      sed -n '2,12p' "$0"
+      sed -n '2,13p' "$0"
       exit 0
       ;;
     *)
       echo "unknown argument: $1" >&2
-      echo "Usage: bash tool/build_backend.sh [--install] [--typecheck] [--log-file PATH]" >&2
+      echo "Usage: bash tool/build_backend.sh [--install] [--build-only] [--typecheck] [--log-file PATH]" >&2
       exit 1
       ;;
   esac
@@ -108,12 +113,25 @@ if [[ "$status" -eq 0 ]]; then
         status=$?
       fi
       ;;
+    run)
+      echo "==> Building API (apps/api)" | tee -a "$LOG_FILE"
+      if ! run_logged pnpm --filter api build; then
+        status=$?
+      else
+        echo "==> Starting API (start:dev) on :3000" | tee -a "$LOG_FILE"
+        echo "    health: http://127.0.0.1:3000/v1/health" | tee -a "$LOG_FILE"
+        # Foreground; Ctrl+C stops the server. Tee keeps the same log file.
+        if ! run_logged pnpm --filter api start:dev; then
+          status=$?
+        fi
+      fi
+      ;;
   esac
 fi
 
 if [[ "$status" -eq 0 ]]; then
   echo "==> Backend $MODE complete" | tee -a "$LOG_FILE"
-  if [[ "$MODE" == build && -f apps/api/dist/main.js ]]; then
+  if [[ "$MODE" == build || "$MODE" == run ]] && [[ -f apps/api/dist/main.js ]]; then
     echo "    output: apps/api/dist/" | tee -a "$LOG_FILE"
   fi
 else

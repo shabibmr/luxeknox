@@ -6,7 +6,8 @@
   "scripts": {
     "api:dev": "pnpm --filter api start:dev",
     "api:build": "pnpm --filter api build",
-    "backend:build": "bash tool/build_backend.sh",
+    "backend:build": "bash tool/build_backend.sh --build-only",
+    "backend:dev": "bash tool/build_backend.sh",
     "api:start": "pnpm --filter api start",
     "api:test": "pnpm --filter api test",
     "api:test:e2e": "pnpm --filter api test:e2e",
