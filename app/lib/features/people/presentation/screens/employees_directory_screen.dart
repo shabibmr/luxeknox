@@ -80,11 +80,16 @@ class _EmployeesDirectoryBodyState extends State<_EmployeesDirectoryBody> {
     }
   }
 
-  void _selectEmployee(int id, bool isWide) {
+  Future<void> _selectEmployee(int id, bool isWide) async {
     if (isWide) {
       setState(() => _selectedEmployeeId = id);
     } else {
-      context.push(Routes.adminEmployeesEditById(id));
+      await context.push(Routes.adminEmployeesEditById(id));
+      if (mounted) {
+        context.read<EmployeesDirectoryCubit>().load(
+          query: _searchController.text,
+        );
+      }
     }
   }
 
@@ -132,6 +137,11 @@ class _EmployeesDirectoryBodyState extends State<_EmployeesDirectoryBody> {
                         key: ValueKey(_selectedEmployeeId),
                         employeeId: _selectedEmployeeId!,
                         embedded: true,
+                        onSaved: () {
+                          context.read<EmployeesDirectoryCubit>().load(
+                            query: _searchController.text,
+                          );
+                        },
                       ),
               ),
             ],

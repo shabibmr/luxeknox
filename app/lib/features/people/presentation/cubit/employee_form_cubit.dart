@@ -55,7 +55,14 @@ class EmployeeFormState extends Equatable {
 
   bool get isDirty {
     if (mode == EmployeeFormMode.create) {
-      return createInput != const NewEmployeeInput(email: '', roleId: 0);
+      return createInput.firstName.trim().isNotEmpty ||
+          createInput.lastName.trim().isNotEmpty ||
+          createInput.email.trim().isNotEmpty ||
+          (createInput.phoneNumber?.trim().isNotEmpty ?? false) ||
+          (createInput.password?.trim().isNotEmpty ?? false) ||
+          createInput.jobTitle.trim().isNotEmpty ||
+          (createInput.department?.trim().isNotEmpty ?? false) ||
+          createInput.hireDate != null;
     }
     final loaded = loadedEmployee;
     if (loaded == null) return false;
@@ -345,8 +352,36 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
       (failure) => emit(
         state.copyWith(rolesLoading: false, error: _message(failure)),
       ),
-      (roles) => emit(state.copyWith(rolesLoading: false, roles: roles)),
+      (roles) {
+        final defaultRole = _findEmployeeRole(roles);
+        final nextCreateInput = defaultRole != null && state.createInput.roleId <= 0
+            ? state.createInput.copyWith(roleId: defaultRole.id)
+            : state.createInput;
+        emit(
+          state.copyWith(
+            rolesLoading: false,
+            roles: roles,
+            createInput: nextCreateInput,
+          ),
+        );
+      },
     );
+  }
+
+  static Role? _findEmployeeRole(List<Role> roles) {
+    if (roles.isEmpty) return null;
+    for (final role in roles) {
+      if (role.name.trim().toLowerCase() == 'employee / front desk') {
+        return role;
+      }
+    }
+    for (final role in roles) {
+      final lower = role.name.toLowerCase();
+      if (lower.contains('employee') || lower.contains('front desk')) {
+        return role;
+      }
+    }
+    return roles.first;
   }
 
   String? _validateCreate(NewEmployeeInput input) {

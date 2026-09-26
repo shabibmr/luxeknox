@@ -165,7 +165,14 @@ class _MembersDirectoryBodyState extends State<_MembersDirectoryBody> {
                       trailing: member.membershipStatus == null
                           ? null
                           : Text(member.membershipStatus!),
-                      onTap: () => context.push(path),
+                      onTap: () async {
+                        await context.push(path);
+                        if (context.mounted) {
+                          context.read<MembersDirectoryBloc>().add(
+                            const MembersDirectoryStarted(),
+                          );
+                        }
+                      },
                     );
                   },
                 );

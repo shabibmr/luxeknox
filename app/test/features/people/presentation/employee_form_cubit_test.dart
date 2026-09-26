@@ -46,7 +46,7 @@ void main() {
   );
 
   const roles = [
-    Role(id: 3, name: 'Staff', isSystemRole: false),
+    Role(id: 3, name: 'Employee / Front Desk', isSystemRole: false),
     Role(id: 4, name: 'Manager', isSystemRole: true),
   ];
 
@@ -79,10 +79,11 @@ void main() {
 
   tearDown(() => cubit.close());
 
-  test('initCreate loads roles', () async {
+  test('initCreate loads roles and defaults roleId to Employee / Front Desk role', () async {
     await cubit.initCreate();
     expect(cubit.state.mode, EmployeeFormMode.create);
     expect(cubit.state.roles, roles);
+    expect(cubit.state.createInput.roleId, 3);
     expect(cubit.state.rolesLoading, isFalse);
   });
 

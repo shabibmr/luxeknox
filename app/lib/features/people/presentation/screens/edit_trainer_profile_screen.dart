@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
@@ -18,23 +20,35 @@ class EditTrainerProfileScreen extends StatelessWidget {
     super.key,
     required this.trainerId,
     this.isAdmin = false,
+    this.embedded = false,
+    this.onSaved,
   });
 
   final int trainerId;
   final bool isAdmin;
+  final bool embedded;
+  final VoidCallback? onSaved;
 
   @override
   Widget build(BuildContext context) {
     if (isAdmin && !context.can('trainers.update')) {
       return Scaffold(
-        appBar: AppBar(title: const Text(PeopleStrings.editProfile)),
+        appBar: AppBar(
+          title: const Text(PeopleStrings.editProfile),
+          automaticallyImplyLeading: !embedded,
+        ),
         body: const Center(child: Text(PeopleStrings.noPermission)),
       );
     }
 
     return BlocProvider(
       create: (_) => getIt<EditTrainerProfileCubit>()..load(trainerId),
-      child: _EditTrainerProfileBody(trainerId: trainerId, isAdmin: isAdmin),
+      child: _EditTrainerProfileBody(
+        trainerId: trainerId,
+        isAdmin: isAdmin,
+        embedded: embedded,
+        onSaved: onSaved,
+      ),
     );
   }
 }
@@ -43,21 +57,32 @@ class _EditTrainerProfileBody extends StatelessWidget {
   const _EditTrainerProfileBody({
     required this.trainerId,
     required this.isAdmin,
+    this.embedded = false,
+    this.onSaved,
   });
 
   final int trainerId;
   final bool isAdmin;
+  final bool embedded;
+  final VoidCallback? onSaved;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(PeopleStrings.editProfile)),
+      appBar: AppBar(
+        title: const Text(PeopleStrings.editProfile),
+        automaticallyImplyLeading: !embedded,
+      ),
       body: BlocConsumer<EditTrainerProfileCubit, EditTrainerProfileState>(
         listener: (context, state) {
           if (state.message != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(PeopleStrings.profileSaved)),
             );
+            onSaved?.call();
+            if (!embedded && Navigator.of(context).canPop()) {
+              context.pop(true);
+            }
           } else if (state.status == LoadStatus.failure &&
               state.profile != null &&
               state.failure != null) {

@@ -145,7 +145,7 @@ void main() {
     );
   }
 
-  testWidgets('renders create form fields including role and hire date', (
+  testWidgets('renders create form fields including hire date and hides role', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(800, 2000);
@@ -169,7 +169,7 @@ void main() {
     expect(find.text(PeopleStrings.jobTitle), findsOneWidget);
     expect(find.text(PeopleStrings.department), findsOneWidget);
     expect(find.text(PeopleStrings.hireDate), findsOneWidget);
-    expect(find.text(PeopleStrings.role), findsOneWidget);
+    expect(find.text(PeopleStrings.role), findsNothing);
     expect(find.text(PeopleStrings.createEmployee), findsOneWidget);
   });
 

@@ -79,11 +79,16 @@ class _TrainersDirectoryBodyState extends State<_TrainersDirectoryBody> {
     }
   }
 
-  void _selectTrainer(int id, bool isWide) {
+  Future<void> _selectTrainer(int id, bool isWide) async {
     if (isWide) {
       setState(() => _selectedTrainerId = id);
     } else {
-      context.push(Routes.adminTrainersEditById(id));
+      await context.push(Routes.adminTrainersEditById(id));
+      if (mounted) {
+        context.read<TrainersDirectoryCubit>().load(
+          query: _searchController.text,
+        );
+      }
     }
   }
 
@@ -128,6 +133,12 @@ class _TrainersDirectoryBodyState extends State<_TrainersDirectoryBody> {
                         key: ValueKey(_selectedTrainerId),
                         trainerId: _selectedTrainerId!,
                         isAdmin: true,
+                        embedded: true,
+                        onSaved: () {
+                          context.read<TrainersDirectoryCubit>().load(
+                            query: _searchController.text,
+                          );
+                        },
                       ),
               ),
             ],

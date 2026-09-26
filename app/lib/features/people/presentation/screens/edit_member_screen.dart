@@ -41,7 +41,7 @@ class _EditMemberBody extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(PeopleStrings.memberSaved)),
             );
-            context.pop();
+            context.pop(true);
           } else if (state.status == LoadStatus.failure &&
               state.person != null &&
               state.failure != null) {

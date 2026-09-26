@@ -15,17 +15,22 @@ import '../people_strings.dart';
 
 /// Admin create/edit employee form.
 class EmployeeFormScreen extends StatelessWidget {
-  const EmployeeFormScreen.create({super.key, this.embedded = false})
-    : employeeId = null;
+  const EmployeeFormScreen.create({
+    super.key,
+    this.embedded = false,
+    this.onSaved,
+  }) : employeeId = null;
 
   const EmployeeFormScreen.edit({
     super.key,
     required this.employeeId,
     this.embedded = false,
+    this.onSaved,
   });
 
   final int? employeeId;
   final bool embedded;
+  final VoidCallback? onSaved;
 
   @override
   Widget build(BuildContext context) {
@@ -55,15 +60,16 @@ class EmployeeFormScreen extends StatelessWidget {
         }
         return cubit;
       },
-      child: _EmployeeFormBody(embedded: embedded),
+      child: _EmployeeFormBody(embedded: embedded, onSaved: onSaved),
     );
   }
 }
 
 class _EmployeeFormBody extends StatefulWidget {
-  const _EmployeeFormBody({required this.embedded});
+  const _EmployeeFormBody({required this.embedded, this.onSaved});
 
   final bool embedded;
+  final VoidCallback? onSaved;
 
   @override
   State<_EmployeeFormBody> createState() => _EmployeeFormBodyState();
@@ -158,6 +164,7 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
 
     final ok = await cubit.changeStatus(next);
     if (!mounted || !ok) return;
+    widget.onSaved?.call();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text(PeopleStrings.statusUpdated)),
     );
@@ -212,6 +219,7 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
               ),
             ),
           );
+          widget.onSaved?.call();
           if (widget.embedded) {
             context.read<EmployeeFormCubit>().acknowledgeSaved();
           } else {
@@ -250,9 +258,6 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
         final hireDate = state.isCreate
             ? state.createInput.hireDate
             : state.updateInput.hireDate;
-        final selectedRoleId = state.isCreate
-            ? (state.createInput.roleId > 0 ? state.createInput.roleId : null)
-            : state.loadedEmployee?.roleId;
         final loaded = state.loadedEmployee;
 
         return UnsavedChangesScope(
@@ -489,43 +494,6 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                     ],
                   ),
                 ),
-                if (state.isCreate) ...[
-                  const SizedBox(height: 8),
-                  if (state.rolesLoading)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: LinearProgressIndicator(),
-                    )
-                  else
-                    DropdownButtonFormField<int>(
-                      // ignore: deprecated_member_use
-                      value: selectedRoleId != null &&
-                              state.roles.any((r) => r.id == selectedRoleId)
-                          ? selectedRoleId
-                          : null,
-                      decoration: const InputDecoration(
-                        labelText: PeopleStrings.role,
-                      ),
-                      items: [
-                        for (final role in state.roles)
-                          DropdownMenuItem(
-                            value: role.id,
-                            child: Text(role.name),
-                          ),
-                      ],
-                      onChanged: submitting
-                          ? null
-                          : (value) {
-                              if (value == null) return;
-                              context
-                                  .read<EmployeeFormCubit>()
-                                  .updateCreateInput(
-                                    (i) => i.copyWith(roleId: value),
-                                  );
-                            },
-                      hint: const Text(PeopleStrings.selectRole),
-                    ),
-                ],
                 const SizedBox(height: 24),
                 FilledButton(
                   onPressed: submitting ? null : _submit,

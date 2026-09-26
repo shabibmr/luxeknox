@@ -44,7 +44,14 @@ class _MemberDossierBody extends StatelessWidget {
           IconButton(
             tooltip: PeopleStrings.editMemberTitle,
             icon: const Icon(Icons.edit_outlined),
-            onPressed: () => context.push('/admin/members/$memberId/edit'),
+            onPressed: () async {
+              final saved = await context.push<bool>(
+                '/admin/members/$memberId/edit',
+              );
+              if (saved == true && context.mounted) {
+                context.read<MemberDossierCubit>().load(memberId);
+              }
+            },
           ),
         ],
       ),
