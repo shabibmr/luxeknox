@@ -72,33 +72,46 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
             onStepCancel: state.step == 0 ? null : cubit.previousStep,
             controlsBuilder: (context, details) {
               final isLast = state.step == AddMemberWizardState.stepCount - 1;
+              // Stepper's AnimatedCrossFade can pass tight infinite width into
+              // controls. Align.loosen() + widthFactor shrink-wrap so
+              // FilledButton's internal ConstrainedBox never sees
+              // minWidth: Infinity (BoxConstraints forces an infinite width).
               return Padding(
                 padding: const EdgeInsets.only(top: 16),
-                child: Row(
-                  children: [
-                    FilledButton(
-                      onPressed: state.submitting
-                          ? null
-                          : details.onStepContinue,
-                      child: state.submitting
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(
-                              isLast
-                                  ? PeopleStrings.createMember
-                                  : PeopleStrings.next,
-                            ),
-                    ),
-                    const SizedBox(width: 12),
-                    if (details.onStepCancel != null)
-                      TextButton(
-                        onPressed: details.onStepCancel,
-                        child: const Text(PeopleStrings.back),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  widthFactor: 1.0,
+                  heightFactor: 1.0,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FilledButton(
+                        onPressed: state.submitting
+                            ? null
+                            : details.onStepContinue,
+                        child: state.submitting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                isLast
+                                    ? PeopleStrings.createMember
+                                    : PeopleStrings.next,
+                              ),
                       ),
-                  ],
+                      if (details.onStepCancel != null) ...[
+                        const SizedBox(width: 12),
+                        TextButton(
+                          onPressed: details.onStepCancel,
+                          child: const Text(PeopleStrings.back),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               );
             },

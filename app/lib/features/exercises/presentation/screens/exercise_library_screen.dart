@@ -309,10 +309,10 @@ class _ExerciseListPane extends StatelessWidget {
                       );
                     }
                     final exercise = state.items[index];
-                    return Container(
+                    return Material(
                       color: exercise.id == selectedExerciseId
                           ? Theme.of(context).colorScheme.primaryContainer
-                          : null,
+                          : Colors.transparent,
                       child: ExerciseListItem(
                         exercise: exercise,
                         onTap: () => onSelectExercise(exercise.id),
