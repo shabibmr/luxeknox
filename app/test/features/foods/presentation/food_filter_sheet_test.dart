@@ -1,5 +1,5 @@
-import 'package:app/features/foods/domain/entities/food_filter.dart';
-import 'package:app/features/foods/presentation/widgets/food_filter_sheet.dart';
+import 'package:luxeknox/features/foods/domain/entities/food_filter.dart';
+import 'package:luxeknox/features/foods/presentation/widgets/food_filter_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

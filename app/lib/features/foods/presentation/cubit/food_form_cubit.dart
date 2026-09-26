@@ -22,11 +22,8 @@ abstract class FoodFormState with _$FoodFormState {
 
 @injectable
 class FoodFormCubit extends Cubit<FoodFormState> {
-  FoodFormCubit(
-    this._createFood,
-    this._updateFood,
-    this._deactivateFood,
-  ) : super(const FoodFormState());
+  FoodFormCubit(this._createFood, this._updateFood, this._deactivateFood)
+    : super(const FoodFormState());
 
   final CreateFoodUseCase _createFood;
   final UpdateFoodUseCase _updateFood;
@@ -49,9 +46,8 @@ class FoodFormCubit extends Cubit<FoodFormState> {
     final result = await action();
     if (isClosed) return;
     result.fold(
-      (failure) => emit(
-        FoodFormState(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(FoodFormState(status: LoadStatus.failure, failure: failure)),
       (_) => emit(const FoodFormState(status: LoadStatus.success)),
     );
   }

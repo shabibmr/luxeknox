@@ -1,9 +1,9 @@
 import 'package:api_client/api_client.dart' as api;
-import 'package:app/core/error/failures.dart';
-import 'package:app/features/foods/data/datasources/food_remote_datasource.dart';
-import 'package:app/features/foods/data/models/food_model.dart';
-import 'package:app/features/foods/data/repositories/food_repository_impl.dart';
-import 'package:app/features/foods/domain/entities/food_filter.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/features/foods/data/datasources/food_remote_datasource.dart';
+import 'package:luxeknox/features/foods/data/models/food_model.dart';
+import 'package:luxeknox/features/foods/data/repositories/food_repository_impl.dart';
+import 'package:luxeknox/features/foods/domain/entities/food_filter.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -146,7 +146,7 @@ void main() {
       );
     });
 
-    test('deactivate fetches then updates with isVerified false', () async {
+    test('deactivate fetches then updates with isActive false', () async {
       when(() => mockDataSource.getFood(1)).thenAnswer((_) async => tApiModel);
       when(
         () => mockDataSource.updateFood(1, any()),
@@ -159,7 +159,8 @@ void main() {
         () => mockDataSource.updateFood(1, captureAny()),
       ).captured;
       final write = captured.single as api.FoodWrite;
-      expect(write.isVerified, isFalse);
+      expect(write.isActive, isFalse);
+      expect(write.isVerified, isTrue);
     });
 
     test('deactivate with non-integer id returns NotFoundFailure', () async {

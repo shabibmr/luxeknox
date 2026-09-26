@@ -62,10 +62,7 @@ abstract class FoodRepository {
 
   /// Deactivates a food by its ID.
   ///
-  /// The contract has no dedicated `is_active`/deactivate concept for foods
-  /// (see `FoodFilter` doc comment); this marks the food unverified
-  /// (`is_verified: false`) via `PATCH /foods/{id}` as the closest available
-  /// analogue, mirroring `ExerciseRepository.deactivate`.
+  /// Soft-delete: GET then PATCH with `is_active: false` (verified unchanged).
   ///
   /// Parameters:
   ///   - [id]: The unique identifier of the food to deactivate.

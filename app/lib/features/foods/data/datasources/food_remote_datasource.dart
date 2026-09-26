@@ -33,6 +33,8 @@ class FoodRemoteDataSourceImpl implements FoodRemoteDataSource {
     final offset = int.tryParse(cursor ?? '') ?? 0;
     final response = await _dietApi.listFoods(
       q: filter.query,
+      isVerified: filter.isVerified,
+      isActive: filter.isActive,
       limit: limit,
       offset: offset,
     );

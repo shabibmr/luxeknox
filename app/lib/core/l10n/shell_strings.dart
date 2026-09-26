@@ -80,7 +80,7 @@ abstract final class ShellStrings {
   static const attendance = 'Attendance';
   static const schedules = 'Schedules';
   static const workoutLibrary = 'Workout Library';
-  static const dietLibrary = 'Diet Library';
+  static const dietLibrary = 'Food Library';
   static const goalMetrics = 'Goal Metrics';
   static const notificationsBroadcast = 'Broadcast Notifications';
   static const reports = 'Reports';

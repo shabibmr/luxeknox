@@ -23,7 +23,7 @@ class FoodFormScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final requiredSlug = isEditing ? 'foods.update' : 'foods.create';
+    final requiredSlug = isEditing ? 'diet.update' : 'diet.create';
 
     if (!context.can(requiredSlug)) {
       return Scaffold(
@@ -150,6 +150,7 @@ class _FoodFormViewState extends State<_FoodFormView> {
       fatGrams: _parseOrNull(_fatController.text),
       fiberGrams: _parseOrNull(_fiberController.text),
       isVerified: _isVerified,
+      isActive: widget.food?.isActive ?? true,
     );
 
     final cubit = context.read<FoodFormCubit>();

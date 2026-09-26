@@ -120,7 +120,7 @@ pie title Screen Consolidation Summary
 | **33** | **Diet Plans Catalog & List** | **R** (Assigned)| **E** (Clients) | **F** (Templates)| **Member**: Active meal plan & archived past diets.<br>**Trainer**: Client diet plans + draft diets.<br>**Admin**: Gym master nutrition templates (Keto, Deficit, etc.). |
 | **34** | **Diet Plan Details Screen** | **R** (Self) | **E** (Manage) | **F** (All) | Structured daily meals (Breakfast, Lunch, Dinner, Snacks), calorie & macro breakdown. |
 | **35** | **Diet Plan Builder / Editor** | **—** | **E** | **F** | Calorie target calculator, macro ratio sliders, meal slot builder. |
-| **36** | **Food Library Screen** | **R** (Browse) | **R** (Pick) | **F** (CRUD) | Nutritional database per 100g/serving. Admin can add/edit custom foods. |
+| **36** | **Food Library Screen** | **—** | **R** (Pick) | **F** (CRUD) | Nutritional database per 100g/serving. Admin can add/edit custom foods. **Member**: no dedicated Food Library route — foods appear only via diet plan/log context. |
 | **37** | **Diet History & Food Log** | **E** (Log) | **R** (Review) | **F** (All) | Member logs daily adherence; Trainer monitors compliance. |
 
 ---

@@ -5,12 +5,9 @@ import '../../domain/entities/food.dart';
 /// Maps between the generated `api.Food` model (from `packages/api_client`,
 /// built from `docs/openapi/v1.yaml`) and the domain `Food` entity.
 ///
-/// KNOWN CONTRACT MISMATCH (flagged, not invented silently — same convention
-/// as `ExerciseModelMapper`): `id` is `integer` on the OpenAPI schema but
-/// `String` on the domain entity; mapped via `toString()` / `int.parse(...)`.
-/// The nutrition fields (`serving_size`, `calories`, `protein_grams`,
-/// `carbs_grams`, `fat_grams`, `fiber_grams`) are `num?` on the wire and
-/// mapped to `double?` losslessly via `toDouble()`.
+/// `id` is `integer` on the OpenAPI schema but `String` on the domain entity;
+/// mapped via `toString()` / `int.parse(...)`. Nutrition fields are `num?` on
+/// the wire and mapped to `double?` via `toDouble()`.
 extension FoodModelMapper on api.Food {
   Food toDomain() {
     return Food(
@@ -24,6 +21,7 @@ extension FoodModelMapper on api.Food {
       fatGrams: fatGrams?.toDouble(),
       fiberGrams: fiberGrams?.toDouble(),
       isVerified: isVerified ?? false,
+      isActive: isActive,
     );
   }
 }
@@ -42,10 +40,7 @@ extension FoodEntityMapper on Food {
         ..fatGrams = fatGrams
         ..fiberGrams = fiberGrams
         ..isVerified = isVerified
-        // `is_active` has no domain-side representation yet — see the
-        // `FoodFilter` KNOWN CONTRACT MISMATCH doc comment. `api.Food.isActive`
-        // is non-nullable, so a value must be supplied to build; default true.
-        ..isActive = true;
+        ..isActive = isActive;
     });
   }
 
@@ -60,7 +55,8 @@ extension FoodEntityMapper on Food {
         ..carbsGrams = carbsGrams
         ..fatGrams = fatGrams
         ..fiberGrams = fiberGrams
-        ..isVerified = isVerified;
+        ..isVerified = isVerified
+        ..isActive = isActive;
     });
   }
 }

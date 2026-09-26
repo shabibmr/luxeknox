@@ -1,7 +1,7 @@
-import 'package:app/core/error/failures.dart';
-import 'package:app/features/foods/domain/entities/food.dart';
-import 'package:app/features/foods/domain/usecases/get_food_usecase.dart';
-import 'package:app/features/foods/presentation/cubit/food_detail_cubit.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/features/foods/domain/entities/food.dart';
+import 'package:luxeknox/features/foods/domain/usecases/get_food_usecase.dart';
+import 'package:luxeknox/features/foods/presentation/cubit/food_detail_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

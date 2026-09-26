@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/features/foods/domain/entities/food_filter.dart';
+import 'package:luxeknox/features/foods/domain/entities/food_filter.dart';
 
 void main() {
   group('FoodFilter', () {
@@ -35,6 +35,12 @@ void main() {
 
         expect(filter.isEmpty, isFalse);
       });
+
+      test('should return false when isActive is not null', () {
+        const filter = FoodFilter(isActive: true);
+
+        expect(filter.isEmpty, isFalse);
+      });
     });
 
     group('copyWith', () {
@@ -48,11 +54,16 @@ void main() {
       });
 
       test('should leave unchanged fields as is', () {
-        const original = FoodFilter(query: 'chicken', isVerified: true);
+        const original = FoodFilter(
+          query: 'chicken',
+          isVerified: true,
+          isActive: true,
+        );
 
         final updated = original.copyWith(query: 'beef');
 
         expect(updated.isVerified, original.isVerified);
+        expect(updated.isActive, original.isActive);
       });
 
       test('should allow setting a field to null explicitly', () {
@@ -65,9 +76,17 @@ void main() {
       });
 
       test('should clear all filters when all nulls are passed', () {
-        const original = FoodFilter(query: 'chicken', isVerified: true);
+        const original = FoodFilter(
+          query: 'chicken',
+          isVerified: true,
+          isActive: false,
+        );
 
-        final updated = original.copyWith(query: null, isVerified: null);
+        final updated = original.copyWith(
+          query: null,
+          isVerified: null,
+          isActive: null,
+        );
 
         expect(updated.isEmpty, isTrue);
       });
