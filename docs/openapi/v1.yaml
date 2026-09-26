@@ -882,6 +882,14 @@ paths:
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Q"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/EmployeeStatus"
+        - name: department
+          in: query
+          schema:
+            type: string
       responses:
         "200":
           description: OK
@@ -6795,12 +6803,16 @@ components:
       enum: [active, on_probation, suspended, terminated]
     Employee:
       type: object
-      required: [id, user_id, job_title, status]
+      required: [id, user_id, first_name, last_name, job_title, status, role_id]
       properties:
         id:
           $ref: "#/components/schemas/Id"
         user_id:
           $ref: "#/components/schemas/Id"
+        first_name:
+          type: string
+        last_name:
+          type: string
         job_title:
           type: string
         department:
@@ -6812,8 +6824,6 @@ components:
           $ref: "#/components/schemas/EmployeeStatus"
         role_id:
           $ref: "#/components/schemas/Id"
-        user:
-          $ref: "#/components/schemas/User"
     EmployeeCreate:
       type: object
       required: [email, first_name, last_name, job_title, role_id]
@@ -6839,10 +6849,15 @@ components:
     EmployeeUpdate:
       type: object
       properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
         job_title:
           type: string
         department:
           type: string
+          nullable: true
         hire_date:
           $ref: "#/components/schemas/Date"
     EmployeeStatusRequest:

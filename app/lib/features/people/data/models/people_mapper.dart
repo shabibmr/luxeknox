@@ -175,29 +175,28 @@ api.TrainerCreate trainerCreateFromInput(NewTrainerInput input) {
 }
 
 EmployeeSummary employeeSummaryFromApi(api.Employee employee) {
-  final user = employee.user;
-  final email = user?.email;
-  final phone = user?.phoneNumber;
-  final fullName = [
-    if (email != null && email.isNotEmpty) email,
-    if (phone != null && phone.isNotEmpty) phone,
-  ].firstOrNull;
+  final name = '${employee.firstName} ${employee.lastName}'.trim();
   return EmployeeSummary(
     id: employee.id,
     userId: employee.userId,
-    fullName: fullName ?? 'Employee #${employee.id}',
+    fullName: name.isNotEmpty ? name : 'Employee #${employee.id}',
     jobTitle: employee.jobTitle,
     department: employee.department,
-    status: employee.status.name,
+    status: _apiEmployeeStatusWire(employee.status),
     roleId: employee.roleId,
-    email: email,
-    phoneNumber: phone,
     hireDate: _apiDateToDateTime(employee.hireDate),
   );
 }
 
-/// Nest `EmployeeResponseDto` is flat (`first_name`, …); OpenAPI `Employee`
-/// expects a nested `user`. Prefer this parser for live employee payloads.
+String _apiEmployeeStatusWire(api.EmployeeStatus status) {
+  if (status == api.EmployeeStatus.active) return 'active';
+  if (status == api.EmployeeStatus.onProbation) return 'on_probation';
+  if (status == api.EmployeeStatus.suspended) return 'suspended';
+  if (status == api.EmployeeStatus.terminated) return 'terminated';
+  return status.name;
+}
+
+/// Flat Nest / OpenAPI employee JSON (also used for raw PATCH responses).
 EmployeeSummary employeeSummaryFromJson(Map<String, dynamic> json) {
   final id = (json['id'] as num).toInt();
   final userId = (json['user_id'] as num?)?.toInt() ?? 0;
@@ -297,6 +296,16 @@ api.EmployeeUpdate employeeUpdateFromInput(EmployeeUpdateInput input) {
       ..department = input.department
       ..hireDate = _dateTimeToApiDate(input.hireDate),
   );
+}
+
+api.EmployeeStatusRequest employeeStatusRequestFromDomain(EmployeeStatus status) {
+  return api.EmployeeStatusRequest(
+    (b) => b..status = employeeStatusFromDomain(status),
+  );
+}
+
+api.AssignRoleRequest assignRoleRequestFromRoleId(int roleId) {
+  return api.AssignRoleRequest((b) => b..roleId = roleId);
 }
 
 api.EmployeeStatus employeeStatusFromDomain(EmployeeStatus status) {

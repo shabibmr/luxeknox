@@ -32,6 +32,10 @@ void main() {
         'employees.update',
       );
       expect(
+        RouteCapabilities.requiredSlug(Routes.adminEmployeeRolesById('9')),
+        'roles.update',
+      );
+      expect(
         RouteCapabilities.requiredSlug(Routes.adminEmployees),
         isNull,
       );

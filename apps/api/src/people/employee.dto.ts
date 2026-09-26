@@ -41,6 +41,8 @@ export type AssignRoleDto = z.infer<typeof assignRoleSchema>;
 
 export const employeeFilterQuerySchema = z.object({
   q: z.string().trim().min(1).optional(),
+  status: z.enum(EMPLOYEE_STATUSES).optional(),
+  department: z.string().trim().min(1).max(150).optional(),
 });
 
 export type EmployeeFilterQueryDto = z.infer<typeof employeeFilterQuerySchema>;

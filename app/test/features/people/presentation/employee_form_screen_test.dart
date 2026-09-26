@@ -270,7 +270,7 @@ void main() {
     expect(find.text(PeopleStrings.statusUpdated), findsOneWidget);
   });
 
-  testWidgets('directory FAB gated on employees.create', (tester) async {
+  testWidgets('directory AppBar + gated on employees.create', (tester) async {
     await tester.pumpWidget(
       wrap(
         const EmployeesDirectoryScreen(),
@@ -279,6 +279,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.byTooltip(PeopleStrings.addEmployeeTooltip), findsNothing);
 
     await tester.pumpWidget(
       wrap(
@@ -289,7 +290,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(FloatingActionButton), findsOneWidget);
-    expect(find.byTooltip(PeopleStrings.addEmployeeTitle), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.byIcon(Icons.add), findsOneWidget);
+    expect(find.byTooltip(PeopleStrings.addEmployeeTooltip), findsOneWidget);
   });
 }

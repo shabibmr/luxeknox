@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq, like, or, type SQL } from 'drizzle-orm';
+import { and, count, eq, like, or, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
@@ -17,6 +17,8 @@ export interface EmployeeWithRole extends Employee {
 
 export interface EmployeeFilterParams {
   q?: string;
+  status?: EmployeeStatus;
+  department?: string;
   limit: number;
   offset: number;
 }
@@ -63,7 +65,7 @@ export class EmployeeRepository extends BaseRepository<
   }
 
   async findManyFiltered(params: EmployeeFilterParams): Promise<EmployeeFilterResult> {
-    const { limit, offset, q } = params;
+    const { limit, offset, q, status, department } = params;
     const db = this.getDb() as any;
     const conditions: SQL[] = [];
 
@@ -78,8 +80,19 @@ export class EmployeeRepository extends BaseRepository<
         )!,
       );
     }
+    if (status) {
+      conditions.push(eq(employees.status, status));
+    }
+    if (department) {
+      conditions.push(like(employees.department, `%${department}%`));
+    }
 
-    const where = conditions.length === 0 ? undefined : conditions[0];
+    const where =
+      conditions.length === 0
+        ? undefined
+        : conditions.length === 1
+          ? conditions[0]
+          : and(...conditions);
 
     let rowsQuery = db
       .select({

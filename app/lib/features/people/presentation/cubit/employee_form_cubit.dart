@@ -213,6 +213,12 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
     );
   }
 
+  /// Clears [EmployeeFormState.saved] after an embedded save snackbar.
+  void acknowledgeSaved() {
+    if (state.saved == null) return;
+    emit(state.copyWith(clearSaved: true));
+  }
+
   /// Returns false when a submit is already in flight (double-submit guard).
   Future<bool> submit() async {
     if (state.submitting) return false;

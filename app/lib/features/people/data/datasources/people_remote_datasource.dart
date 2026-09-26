@@ -35,33 +35,34 @@ abstract class PeopleRemoteDataSource {
     int? offset,
   });
 
-  /// Nest employee list page (`data` + `meta`) as raw JSON.
-  Future<Map<String, dynamic>> listEmployeesRaw({
+  Future<api.EmployeePage> listEmployees({
     String? q,
+    String? status,
+    String? department,
     int? limit,
     int? offset,
   });
 
-  /// Nest flat employee payload (see `EmployeeResponseDto`).
-  Future<Map<String, dynamic>> getEmployeeRaw(int id);
+  Future<api.Employee> getEmployee(int id);
 
-  Future<Map<String, dynamic>> createEmployeeRaw(Map<String, dynamic> body);
+  Future<api.Employee> createEmployee(api.EmployeeCreate employeeCreate);
 
+  /// Raw PATCH so null `department` / `hire_date` clear (typed client omits nulls).
   Future<Map<String, dynamic>> updateEmployeeRaw(
     int id,
     Map<String, dynamic> body,
   );
 
-  Future<Map<String, dynamic>> setEmployeeStatusRaw(
+  Future<api.Employee> setEmployeeStatus(
     int id,
-    String statusWire,
+    api.EmployeeStatusRequest request,
   );
 
   Future<api.RolePage> listRoles({int? limit, int? offset});
 
-  Future<Map<String, dynamic>> assignEmployeeRoleRaw({
+  Future<api.Employee> assignEmployeeRole({
     required int id,
-    required int roleId,
+    required api.AssignRoleRequest assignRoleRequest,
   });
 }
 
@@ -188,34 +189,36 @@ class PeopleRemoteDataSourceImpl implements PeopleRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> listEmployeesRaw({
+  Future<api.EmployeePage> listEmployees({
     String? q,
+    String? status,
+    String? department,
     int? limit,
     int? offset,
   }) async {
-    final response = await _dio.get<dynamic>(
-      '/employees',
-      queryParameters: <String, dynamic>{
-        'q': ?((q != null && q.isNotEmpty) ? q : null),
-        'limit': ?limit,
-        'offset': ?offset,
-      },
+    return _unwrap(
+      await _peopleApi.listEmployees(
+        q: (q != null && q.isNotEmpty) ? q : null,
+        status: _employeeStatusQuery(status),
+        department: (department != null && department.isNotEmpty)
+            ? department
+            : null,
+        limit: limit,
+        offset: offset,
+      ),
     );
-    return _asJsonMap(response);
   }
 
   @override
-  Future<Map<String, dynamic>> getEmployeeRaw(int id) async {
-    final response = await _dio.get<dynamic>('/employees/$id');
-    return _asJsonMap(response);
+  Future<api.Employee> getEmployee(int id) async {
+    return _unwrap(await _peopleApi.getEmployee(id: id));
   }
 
   @override
-  Future<Map<String, dynamic>> createEmployeeRaw(
-    Map<String, dynamic> body,
-  ) async {
-    final response = await _dio.post<dynamic>('/employees', data: body);
-    return _asJsonMap(response);
+  Future<api.Employee> createEmployee(api.EmployeeCreate employeeCreate) async {
+    return _unwrap(
+      await _peopleApi.createEmployee(employeeCreate: employeeCreate),
+    );
   }
 
   @override
@@ -228,15 +231,16 @@ class PeopleRemoteDataSourceImpl implements PeopleRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> setEmployeeStatusRaw(
+  Future<api.Employee> setEmployeeStatus(
     int id,
-    String statusWire,
+    api.EmployeeStatusRequest request,
   ) async {
-    final response = await _dio.post<dynamic>(
-      '/employees/$id/status',
-      data: <String, dynamic>{'status': statusWire},
+    return _unwrap(
+      await _peopleApi.setEmployeeStatus(
+        id: id,
+        employeeStatusRequest: request,
+      ),
     );
-    return _asJsonMap(response);
   }
 
   @override
@@ -245,14 +249,26 @@ class PeopleRemoteDataSourceImpl implements PeopleRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> assignEmployeeRoleRaw({
+  Future<api.Employee> assignEmployeeRole({
     required int id,
-    required int roleId,
+    required api.AssignRoleRequest assignRoleRequest,
   }) async {
-    final response = await _dio.put<dynamic>(
-      '/employees/$id/role',
-      data: <String, dynamic>{'role_id': roleId},
+    return _unwrap(
+      await _rbacApi.assignEmployeeRole(
+        id: id,
+        assignRoleRequest: assignRoleRequest,
+      ),
     );
-    return _asJsonMap(response);
+  }
+
+  api.EmployeeStatus? _employeeStatusQuery(String? status) {
+    if (status == null || status.isEmpty || status == 'all') return null;
+    return switch (status) {
+      'active' => api.EmployeeStatus.active,
+      'on_probation' => api.EmployeeStatus.onProbation,
+      'suspended' => api.EmployeeStatus.suspended,
+      'terminated' => api.EmployeeStatus.terminated,
+      _ => null,
+    };
   }
 }

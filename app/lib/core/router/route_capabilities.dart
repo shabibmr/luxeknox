@@ -26,9 +26,12 @@ abstract final class RouteCapabilities {
   /// Returns the required capability slug for [path], or null if unrestricted
   /// beyond role-boundary checks.
   static String? requiredSlug(String path) {
-    // Edit is nested under :id — match suffix so list/detail stay ungated.
+    // Edit / roles are nested under :id — match suffix so list stays ungated.
     if (path.startsWith('/admin/employees/') && path.endsWith('/edit')) {
       return 'employees.update';
+    }
+    if (path.startsWith('/admin/employees/') && path.endsWith('/roles')) {
+      return 'roles.update';
     }
     if (path.startsWith('/admin/schedules/') && path.endsWith('/edit')) {
       return 'schedules.write';

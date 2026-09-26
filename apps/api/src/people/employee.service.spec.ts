@@ -121,3 +121,35 @@ describe('EmployeeService.setStatus', () => {
     expect(sessionCache.dropByUser).not.toHaveBeenCalled();
   });
 });
+
+describe('EmployeeService.list', () => {
+  it('forwards status and department filters to the repository', async () => {
+    const findManyFiltered = vi.fn().mockResolvedValue({ rows: [], total: 0 });
+    const paginationHelper = {
+      normalizeParams: vi.fn().mockResolvedValue({ limit: 20, offset: 0 }),
+    };
+    const service = new EmployeeService(
+      { findManyFiltered } as unknown as EmployeeRepository,
+      {} as PersonFactory,
+      paginationHelper as unknown as PaginationHelper,
+      { recordAudit: vi.fn() } as unknown as AuditService,
+      { revokeAllForUser: vi.fn() } as unknown as SessionRepository,
+      { dropByUser: vi.fn() } as unknown as SessionCache,
+      {} as unknown as DrizzleDb<any>,
+    );
+
+    await service.list(
+      { status: 'suspended', department: 'ops', limit: 20, offset: 0 },
+      actor(),
+    );
+
+    expect(findManyFiltered).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'suspended',
+        department: 'ops',
+        limit: 20,
+        offset: 0,
+      }),
+    );
+  });
+});

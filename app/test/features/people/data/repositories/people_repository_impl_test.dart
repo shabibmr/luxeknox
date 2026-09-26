@@ -55,6 +55,17 @@ void main() {
     'role_id': 3,
   };
 
+  final tApiEmployee = api.Employee(
+    (b) => b
+      ..id = 5
+      ..userId = 20
+      ..firstName = 'Ed'
+      ..lastName = 'Ford'
+      ..jobTitle = 'Front Desk'
+      ..status = api.EmployeeStatus.active
+      ..roleId = 3,
+  );
+
   setUpAll(() {
     registerFallbackValue(
       api.TrainerCreate(
@@ -63,6 +74,24 @@ void main() {
           ..firstName = 'F'
           ..lastName = 'L',
       ),
+    );
+    registerFallbackValue(
+      api.EmployeeCreate(
+        (b) => b
+          ..email = 'fallback@example.com'
+          ..firstName = 'F'
+          ..lastName = 'L'
+          ..jobTitle = 'Desk'
+          ..roleId = 1,
+      ),
+    );
+    registerFallbackValue(
+      api.EmployeeStatusRequest(
+        (b) => b..status = api.EmployeeStatus.active,
+      ),
+    );
+    registerFallbackValue(
+      api.AssignRoleRequest((b) => b..roleId = 1),
     );
     registerFallbackValue(<String, dynamic>{});
   });
@@ -132,8 +161,8 @@ void main() {
 
     test('returns Right(EmployeeSummary) on success and sends int roleId', () async {
       when(
-        () => mockDataSource.createEmployeeRaw(any()),
-      ).thenAnswer((_) async => tEmployeeJson);
+        () => mockDataSource.createEmployee(any()),
+      ).thenAnswer((_) async => tApiEmployee);
 
       final result = await repository.createEmployee(tInput);
 
@@ -148,15 +177,15 @@ void main() {
       );
 
       final captured = verify(
-        () => mockDataSource.createEmployeeRaw(captureAny()),
+        () => mockDataSource.createEmployee(captureAny()),
       ).captured;
-      final body = captured.single as Map<String, dynamic>;
-      expect(body['role_id'], 3);
-      expect(body['first_name'], 'Ed');
+      final body = captured.single as api.EmployeeCreate;
+      expect(body.roleId, 3);
+      expect(body.firstName, 'Ed');
     });
 
     test('returns ValidationFailure on 422', () async {
-      when(() => mockDataSource.createEmployeeRaw(any())).thenThrow(
+      when(() => mockDataSource.createEmployee(any())).thenThrow(
         _dioError(422, code: 'validation_error', details: ['roleId required']),
       );
 
@@ -170,7 +199,7 @@ void main() {
 
     test('returns ConflictFailure on 409', () async {
       when(
-        () => mockDataSource.createEmployeeRaw(any()),
+        () => mockDataSource.createEmployee(any()),
       ).thenThrow(_dioError(409, code: 'conflict'));
 
       final result = await repository.createEmployee(tInput);
@@ -237,11 +266,19 @@ void main() {
       'returns Right(EmployeeSummary) on success and sends wire status',
       () async {
         when(
-          () => mockDataSource.setEmployeeStatusRaw(5, any()),
-        ).thenAnswer((_) async => {
-              ...tEmployeeJson,
-              'status': 'on_probation',
-            });
+          () => mockDataSource.setEmployeeStatus(5, any()),
+        ).thenAnswer(
+          (_) async => api.Employee(
+            (b) => b
+              ..id = 5
+              ..userId = 20
+              ..firstName = 'Ed'
+              ..lastName = 'Ford'
+              ..jobTitle = 'Front Desk'
+              ..status = api.EmployeeStatus.onProbation
+              ..roleId = 3,
+          ),
+        );
 
         final result = await repository.setEmployeeStatus(
           5,
@@ -258,14 +295,15 @@ void main() {
         );
 
         final captured = verify(
-          () => mockDataSource.setEmployeeStatusRaw(5, captureAny()),
+          () => mockDataSource.setEmployeeStatus(5, captureAny()),
         ).captured;
-        expect(captured.single, 'on_probation');
+        final request = captured.single as api.EmployeeStatusRequest;
+        expect(request.status, api.EmployeeStatus.onProbation);
       },
     );
 
     test('returns ValidationFailure on 422', () async {
-      when(() => mockDataSource.setEmployeeStatusRaw(5, any())).thenThrow(
+      when(() => mockDataSource.setEmployeeStatus(5, any())).thenThrow(
         _dioError(422, code: 'validation_error', details: ['status invalid']),
       );
 
@@ -282,7 +320,7 @@ void main() {
 
     test('returns ConflictFailure on 409', () async {
       when(
-        () => mockDataSource.setEmployeeStatusRaw(5, any()),
+        () => mockDataSource.setEmployeeStatus(5, any()),
       ).thenThrow(_dioError(409, code: 'conflict'));
 
       final result = await repository.setEmployeeStatus(

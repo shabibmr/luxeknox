@@ -49,6 +49,7 @@ abstract class PeopleRepository {
 
   Future<Either<Failure, CursorPage<EmployeeSummary>>> listEmployees({
     String? query,
+    String? status,
     String? cursor,
   });
 

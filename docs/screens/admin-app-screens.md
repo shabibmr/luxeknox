@@ -75,12 +75,10 @@ The **Admin / Office App** is the central management interface for gym owners, f
 
 | Screen Name | Type | Access / Navigation Path | Purpose & UI Components |
 | :--- | :--- | :--- | :--- |
-| **Employees** | Directory Screen | `More > Employees` | Roster of front desk, maintenance, cleaning, and administrative staff. |
-| **Add Employee** | Form Screen | `Employees > Add Employee` | Staff registration: personal details, contact, emergency info, salary terms. |
-| **Employee Profile** | Detail Screen | `Employees > [Select Employee]` | Employment details, role permissions, documents, contact cards. |
-| **Edit Employee** | Form Screen | `Employee Profile > Edit` | Update employee information and credentials. |
-| **Employee Role** | Assignment Modal | `Employee Profile > Manage Role` | Assign system permissions (Admin, Receptionist, Manager, Auditor). |
-| **Employee Status** | Quick Action | `Employee Profile > Change Status` | Toggle status (Active, On Probation, Suspended, Terminated). |
+| **Employees** | Directory Screen | `More > Employees` | Staff roster with search, employment-status chips, infinite scroll, AppBar `+` create (gated by `employees.create`), and ≥840dp master–detail (list + embedded edit). Separate from Trainers. |
+| **Add Employee** | Form Screen | `Employees > +` (or create route) | Hire flow: name, contact, temporary password, job title, department, hire date, role. |
+| **Edit Employee** | Form Screen | `Employees > [Select Employee]` (push on narrow; side pane when wide) | Update job/department/hire date; change employment status with confirm; link to Manage roles. No separate read-only profile. |
+| **Employee Roles** | Full-screen Form | `Edit Employee > Manage roles` (`/admin/employees/:id/roles`, gated by `roles.update`) | Assign exactly one system role. |
 
 ---
 

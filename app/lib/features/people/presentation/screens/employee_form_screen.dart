@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/unsaved_changes_scope.dart';
@@ -14,14 +15,36 @@ import '../people_strings.dart';
 
 /// Admin create/edit employee form.
 class EmployeeFormScreen extends StatelessWidget {
-  const EmployeeFormScreen.create({super.key}) : employeeId = null;
+  const EmployeeFormScreen.create({super.key, this.embedded = false})
+    : employeeId = null;
 
-  const EmployeeFormScreen.edit({super.key, required this.employeeId});
+  const EmployeeFormScreen.edit({
+    super.key,
+    required this.employeeId,
+    this.embedded = false,
+  });
 
   final int? employeeId;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
+    final requiredSlug = employeeId == null
+        ? 'employees.create'
+        : 'employees.update';
+    if (!context.can(requiredSlug)) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            employeeId == null
+                ? PeopleStrings.addEmployeeTitle
+                : PeopleStrings.editEmployeeTitle,
+          ),
+          automaticallyImplyLeading: !embedded,
+        ),
+        body: const Center(child: Text(PeopleStrings.noPermission)),
+      );
+    }
     return BlocProvider(
       create: (_) {
         final cubit = getIt<EmployeeFormCubit>();
@@ -32,13 +55,15 @@ class EmployeeFormScreen extends StatelessWidget {
         }
         return cubit;
       },
-      child: const _EmployeeFormBody(),
+      child: _EmployeeFormBody(embedded: embedded),
     );
   }
 }
 
 class _EmployeeFormBody extends StatefulWidget {
-  const _EmployeeFormBody();
+  const _EmployeeFormBody({required this.embedded});
+
+  final bool embedded;
 
   @override
   State<_EmployeeFormBody> createState() => _EmployeeFormBodyState();
@@ -187,7 +212,11 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
               ),
             ),
           );
-          context.pop(state.saved!.id);
+          if (widget.embedded) {
+            context.read<EmployeeFormCubit>().acknowledgeSaved();
+          } else {
+            context.pop(state.saved!.id);
+          }
           return;
         }
         if (state.error != null) {
@@ -205,6 +234,7 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                     ? PeopleStrings.addEmployeeTitle
                     : PeopleStrings.editEmployeeTitle,
               ),
+              automaticallyImplyLeading: !widget.embedded,
             ),
             body: const AppLoading(),
           );
@@ -234,6 +264,7 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                     ? PeopleStrings.addEmployeeTitle
                     : PeopleStrings.editEmployeeTitle,
               ),
+              automaticallyImplyLeading: !widget.embedded,
             ),
             body: ListView(
               padding: const EdgeInsets.all(16),

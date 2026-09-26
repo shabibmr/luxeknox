@@ -118,6 +118,9 @@ abstract final class PeopleStrings {
   static const filterActive = 'Active';
   static const filterInactive = 'Inactive';
   static const selectTrainerPrompt = 'Select a trainer to view details';
+  static const selectEmployeePrompt = 'Select an employee to view details';
+  static const addEmployeeTooltip = 'Add employee';
+  static const filterStatusTooltip = 'Filter by status';
 
   // Add / Edit Employee
   static const addEmployeeTitle = 'Add Employee';

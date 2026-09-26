@@ -74,6 +74,12 @@ export class EmployeeController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
   @ApiQuery({ name: 'q', required: false, type: String })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['active', 'on_probation', 'suspended', 'terminated'],
+  })
+  @ApiQuery({ name: 'department', required: false, type: String })
   @ApiResponse({ status: 200, type: EmployeePageResponseDto })
   async list(
     @Query() query: Record<string, unknown>,
