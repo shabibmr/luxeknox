@@ -9,6 +9,8 @@ vi.mock('../platform/db/transaction-context', () => ({
   runInTransaction: async (_db: unknown, fn: () => Promise<unknown>) => fn(),
 }));
 
+import { MembershipService } from './membership.service';
+
 describe('MEM-012: Membership Integration with Schedule and Payment Dependencies', () => {
   const adminActor: AuthenticatedUser = {
     id: 1,
@@ -132,12 +134,23 @@ describe('MEM-012: Membership Integration with Schedule and Payment Dependencies
       normalizeParams: vi.fn().mockResolvedValue({ mode: 'offset', limit: 20, offset: 0 }),
     };
 
+    membService = new MembershipService(
+      membRepo as any,
+      membProductRepo as any,
+      memberRepo as any,
+      paginationHelper as any,
+      auditService as any,
+      domainEventBus as any,
+      {} as any,
+    );
+
     paymentService = new PaymentService(
       paymentRepo as any,
       methodRepo as any,
       memberRepo as any,
       membRepo as any,
       membProductRepo as any,
+      membService as any,
       settingsService as any,
       auditService as any,
       domainEventBus as any,
@@ -330,6 +343,7 @@ describe('MEM-012: Membership Integration with Schedule and Payment Dependencies
           status: 'active',
           row_version: 2,
         }),
+        1,
       );
 
       expect(paymentRepo.insertPayment).toHaveBeenCalledWith(

@@ -3,7 +3,7 @@
 - [ ] public settings
 - [ ] roles
 - [ ] permission matrix
-- [ ] employee role/status
+- [x] employee role/status
 - [ ] audit log
 - [ ] capability-aware actions
 - [ ] concurrent admin edit conflicts

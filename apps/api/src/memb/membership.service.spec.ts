@@ -97,7 +97,7 @@ describe('MembershipService', () => {
       insertExtension: vi.fn(),
     };
     productRepository = { findById: vi.fn() };
-    memberRepository = { findById: vi.fn() };
+    memberRepository = { findById: vi.fn().mockImplementation(async (id: number) => ({ id, user_id: 10 })) };
     auditService = { recordAudit: vi.fn().mockResolvedValue(undefined) };
     domainEventBus = { emit: vi.fn().mockResolvedValue(undefined) };
     paginationHelper = new PaginationHelper({
@@ -182,6 +182,7 @@ describe('MembershipService', () => {
           remaining_pt_sessions: 6,
           row_version: 2,
         }),
+        1,
       );
     });
   });
@@ -316,6 +317,114 @@ describe('MembershipService', () => {
       memberRepository.findById.mockResolvedValue({ id: 100, assigned_trainer_id: 99 });
 
       await expect(service.getById(1, trainer)).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('createOrRenewForPayment', () => {
+    it('creates new membership when none exists and emits membership.created', async () => {
+      repository.findActiveOrFrozenForMember.mockResolvedValue(null);
+      productRepository.findById.mockResolvedValue(makeProduct({ id: 2, duration_days: 60, pt_sessions_included: 8 }));
+      repository.insertMembership.mockResolvedValue(10);
+
+      const now = new Date('2026-03-01T10:00:00.000Z');
+      const membershipId = await service.createOrRenewForPayment({
+        memberId: 100,
+        productId: 2,
+        actor: ADMIN_USER,
+        now,
+      });
+
+      expect(membershipId).toBe(10);
+      expect(repository.insertMembership).toHaveBeenCalledWith(
+        expect.objectContaining({
+          member_id: 100,
+          product_id: 2,
+          start_date: '2026-03-01',
+          end_date: '2026-04-30',
+          remaining_pt_sessions: 8,
+          status: 'active',
+        }),
+      );
+      expect(domainEventBus.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventName: 'membership.created',
+          payload: expect.objectContaining({ membershipId: 10, memberId: 100 }),
+        }),
+      );
+    });
+
+    it('renews existing active membership, supports product switching and emits membership.renewed', async () => {
+      const existing = makeMembership({
+        id: 5,
+        product_id: 1,
+        status: 'active',
+        start_date: '2026-01-01',
+        end_date: '2026-01-31',
+        remaining_pt_sessions: 2,
+        row_version: 3,
+      });
+      repository.findActiveOrFrozenForMember.mockResolvedValue(existing);
+      productRepository.findById.mockResolvedValue(makeProduct({ id: 2, duration_days: 30, pt_sessions_included: 6 }));
+
+      const now = new Date('2026-01-15T12:00:00.000Z');
+      const membershipId = await service.createOrRenewForPayment({
+        memberId: 100,
+        productId: 2,
+        expectedRowVersion: 3,
+        actor: ADMIN_USER,
+        now,
+      });
+
+      expect(membershipId).toBe(5);
+      expect(repository.updateMembership).toHaveBeenCalledWith(
+        5,
+        expect.objectContaining({
+          product_id: 2,
+          end_date: '2026-03-03',
+          remaining_pt_sessions: 8,
+          status: 'active',
+          row_version: 4,
+        }),
+        3,
+      );
+      expect(domainEventBus.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventName: 'membership.renewed',
+          payload: { membershipId: 5 },
+        }),
+      );
+    });
+
+    it('rejects renewal when expectedRowVersion mismatches', async () => {
+      const existing = makeMembership({
+        id: 5,
+        row_version: 3,
+      });
+      repository.findActiveOrFrozenForMember.mockResolvedValue(existing);
+      productRepository.findById.mockResolvedValue(makeProduct({ id: 1 }));
+
+      const now = new Date('2026-01-15T12:00:00.000Z');
+      await expect(
+        service.createOrRenewForPayment({
+          memberId: 100,
+          productId: 1,
+          expectedRowVersion: 2,
+          actor: ADMIN_USER,
+          now,
+        }),
+      ).rejects.toThrow(ConflictError);
+    });
+
+    it('throws NotFoundError if product not found', async () => {
+      productRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.createOrRenewForPayment({
+          memberId: 100,
+          productId: 999,
+          actor: ADMIN_USER,
+        }),
+      ).rejects.toThrow(NotFoundError);
     });
   });
 });

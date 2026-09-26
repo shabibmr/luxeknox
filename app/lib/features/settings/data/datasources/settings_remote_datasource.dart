@@ -6,6 +6,8 @@ abstract class SettingsRemoteDataSource {
   Future<api.SettingsList> getSettings({api.SettingCategory? category});
 
   Future<api.SettingsList> putSettings(api.SettingsWrite write);
+
+  Future<api.PublicSettings> getPublicSettings();
 }
 
 @LazySingleton(as: SettingsRemoteDataSource)
@@ -34,5 +36,10 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
   @override
   Future<api.SettingsList> putSettings(api.SettingsWrite write) async {
     return _unwrap(await _sysApi.putSettings(settingsWrite: write));
+  }
+
+  @override
+  Future<api.PublicSettings> getPublicSettings() async {
+    return _unwrap(await _sysApi.getPublicSettings());
   }
 }

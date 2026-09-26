@@ -537,5 +537,65 @@ describe('WorkoutPlanService', () => {
       const template = await service.getById(100, memberActor);
       expect(template.id).toBe(100);
     });
+
+    it('rejects an unassigned trainer attempting to update another trainer member plan', async () => {
+      const { service, planRepo } = buildService();
+
+      planRepo.findPlanById.mockResolvedValue({
+        id: 20,
+        member_id: 40, // assigned to trainer 99
+        trainer_id: 99,
+        is_template: false,
+        status: 'draft',
+      });
+
+      await expect(
+        service.update(20, { title: 'Unauthorized update' }, trainerActor),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('rejects an unassigned trainer attempting to publish another trainer member plan', async () => {
+      const { service, planRepo } = buildService();
+
+      planRepo.findPlanById.mockResolvedValue({
+        id: 20,
+        member_id: 40, // assigned to trainer 99
+        trainer_id: 99,
+        is_template: false,
+        status: 'draft',
+      });
+
+      await expect(service.publish(20, trainerActor)).rejects.toThrow(NotFoundError);
+    });
+
+    it('rejects an unassigned trainer attempting to archive another trainer member plan', async () => {
+      const { service, planRepo } = buildService();
+
+      planRepo.findPlanById.mockResolvedValue({
+        id: 20,
+        member_id: 40, // assigned to trainer 99
+        trainer_id: 99,
+        is_template: false,
+        status: 'draft',
+      });
+
+      await expect(service.archive(20, trainerActor)).rejects.toThrow(NotFoundError);
+    });
+
+    it('rejects a member attempting to manage a workout plan', async () => {
+      const { service, planRepo } = buildService();
+
+      planRepo.findPlanById.mockResolvedValue({
+        id: 20,
+        member_id: 30,
+        trainer_id: 20,
+        is_template: false,
+        status: 'draft',
+      });
+
+      await expect(
+        service.update(20, { title: 'Unauthorized' }, memberActor),
+      ).rejects.toThrow(ForbiddenError);
+    });
   });
 });

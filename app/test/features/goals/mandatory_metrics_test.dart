@@ -1,4 +1,4 @@
-import 'package:app/features/goals/domain/helpers/mandatory_metrics.dart';
+import 'package:luxeknox/features/goals/domain/helpers/mandatory_metrics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

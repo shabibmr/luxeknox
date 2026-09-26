@@ -77,6 +77,7 @@ abstract class SchedulingRepository {
     required String id,
     String? reason,
     int? rowVersion,
+    bool? cancelSeries,
   });
 
   Future<Either<Failure, ScheduleParticipantEntry>> addParticipant({

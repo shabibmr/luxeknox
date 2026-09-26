@@ -1,5 +1,5 @@
-import 'package:app/features/notifications/domain/entities/app_notification.dart';
-import 'package:app/features/notifications/domain/helpers/unread_count.dart';
+import 'package:luxeknox/features/notifications/domain/entities/app_notification.dart';
+import 'package:luxeknox/features/notifications/domain/helpers/unread_count.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 AppNotification n({required String id, bool? isRead}) {

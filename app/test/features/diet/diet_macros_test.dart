@@ -1,7 +1,7 @@
-import 'package:app/features/diet/domain/entities/diet_macros.dart';
-import 'package:app/features/diet/domain/entities/diet_plan_food.dart';
-import 'package:app/features/diet/domain/entities/diet_plan_meal.dart';
-import 'package:app/features/diet/domain/entities/diet_plan_meal_input.dart';
+import 'package:luxeknox/features/diet/domain/entities/diet_macros.dart';
+import 'package:luxeknox/features/diet/domain/entities/diet_plan_food.dart';
+import 'package:luxeknox/features/diet/domain/entities/diet_plan_meal.dart';
+import 'package:luxeknox/features/diet/domain/entities/diet_plan_meal_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

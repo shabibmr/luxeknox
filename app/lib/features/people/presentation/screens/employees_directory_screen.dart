@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
@@ -41,10 +42,39 @@ class _EmployeesDirectoryBodyState extends State<_EmployeesDirectoryBody> {
     super.dispose();
   }
 
+  Future<void> _openCreateEmployee() async {
+    final createdId = await context.push<int>(Routes.adminEmployeesCreate);
+    if (!mounted || createdId == null) return;
+    await context.read<EmployeesDirectoryCubit>().load(
+      query: _searchController.text,
+    );
+    if (!mounted) return;
+    context.push(Routes.adminEmployeesEditById(createdId));
+  }
+
+  Future<void> _openEmployee(int id) async {
+    final updatedId = await context.push<int>(Routes.adminEmployeesEditById(id));
+    if (!mounted) return;
+    if (updatedId != null) {
+      await context.read<EmployeesDirectoryCubit>().load(
+        query: _searchController.text,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final canCreate = context.can('employees.create');
+
     return Scaffold(
       appBar: AppBar(title: const Text(PeopleStrings.employeesTitle)),
+      floatingActionButton: canCreate
+          ? FloatingActionButton(
+              onPressed: _openCreateEmployee,
+              tooltip: PeopleStrings.addEmployeeTitle,
+              child: const Icon(Icons.person_add_alt_1),
+            )
+          : null,
       body: Column(
         children: [
           Padding(
@@ -126,9 +156,7 @@ class _EmployeesDirectoryBodyState extends State<_EmployeesDirectoryBody> {
                           trailing: employee.status == null
                               ? null
                               : Text(employee.status!),
-                          onTap: () => context.push(
-                            Routes.adminEmployeeRolesById('${employee.id}'),
-                          ),
+                          onTap: () => _openEmployee(employee.id),
                         );
                       },
                     );

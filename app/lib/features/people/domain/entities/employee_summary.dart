@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-/// Lightweight employee row for admin directory.
+/// Lightweight employee row for admin directory and edit prefill.
 class EmployeeSummary extends Equatable {
   const EmployeeSummary({
     required this.id,
@@ -10,6 +10,9 @@ class EmployeeSummary extends Equatable {
     this.department,
     this.status,
     this.roleId,
+    this.email,
+    this.phoneNumber,
+    this.hireDate,
   });
 
   final int id;
@@ -19,6 +22,9 @@ class EmployeeSummary extends Equatable {
   final String? department;
   final String? status;
   final int? roleId;
+  final String? email;
+  final String? phoneNumber;
+  final DateTime? hireDate;
 
   @override
   List<Object?> get props => [
@@ -29,5 +35,8 @@ class EmployeeSummary extends Equatable {
     department,
     status,
     roleId,
+    email,
+    phoneNumber,
+    hireDate,
   ];
 }

@@ -169,13 +169,19 @@ class Routes {
   /// Lightweight More-branch root; hub chrome overlays this location.
   static const String adminMore = '/admin/more';
   static const String adminTrainers = '/admin/trainers';
+  static const String adminTrainersCreate = '/admin/trainers/create';
+  static const String adminTrainersEdit = '/admin/trainers/:id/edit';
   static const String adminEmployees = '/admin/employees';
+  static const String adminEmployeesCreate = '/admin/employees/create';
+  static const String adminEmployeesEdit = '/admin/employees/:id/edit';
   static const String adminEmployeesRoles = '/admin/employees/:id/roles';
   static const String adminPackages = '/admin/packages';
   static const String adminAttendance = '/admin/attendance';
   static const String adminAttendanceScan = '/admin/attendance/scan';
   static const String adminAttendanceManual = '/admin/attendance/manual';
   static const String adminSchedules = '/admin/schedules';
+  static const String adminSchedulesCreate = '/admin/schedules/create';
+  static const String adminSchedulesEdit = '/admin/schedules/:id/edit';
   static const String adminWorkoutLibrary = '/admin/workout-library';
   static const String adminDietLibrary = '/admin/diet-library';
   static const String adminGoalMetrics = '/admin/goal-metrics';
@@ -251,6 +257,10 @@ class Routes {
   static String adminEmployeeRolesById(String id) =>
       '/admin/employees/$id/roles';
 
+  static String adminEmployeesEditById(int id) => '/admin/employees/$id/edit';
+
+  static String adminTrainersEditById(int id) => '/admin/trainers/$id/edit';
+
   static String adminMemberById(String id) => '/admin/members/$id';
 
   static String adminMembersWorkoutHistoryById(String id) =>
@@ -267,7 +277,16 @@ class Routes {
 
   static String adminMembershipById(String id) => '/admin/memberships/$id';
 
+  static String adminMembershipsRenewById(String id) =>
+      '/admin/memberships/$id/renew';
+
+  static String adminMembershipsFreezeById(String id) =>
+      '/admin/memberships/$id/freeze';
+
   static String adminPaymentById(String id) => '/admin/payments/$id';
+
+  static String adminSchedulesEditById(String id) =>
+      '/admin/schedules/$id/edit';
 
   static String memberProfilePaymentById(String id) => '/profile/payments/$id';
 

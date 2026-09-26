@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ForbiddenException } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import type { MemberRepository } from '../people/member.repository';
 import type { AuditService } from '../platform/audit/audit.service';
-import { BusinessRuleError, NotFoundError } from '../platform/errors/app-error';
+import { BusinessRuleError, ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import { PaginationHelper } from '../platform/http/pagination';
 import type { SettingsService } from '../sys/settings.service';
 import type { GoalRepository } from './goal.repository';
@@ -218,7 +217,7 @@ describe('MeasurementService (GOA-006, GOA-007, GOA-008, GOA-013)', () => {
           },
           unassignedTrainer,
         ),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
   });
 

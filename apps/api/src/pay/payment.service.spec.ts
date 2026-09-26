@@ -10,8 +10,11 @@ vi.mock('../platform/db/transaction-context', () => ({
   runInTransaction: async (_db: unknown, fn: () => Promise<unknown>) => fn(),
 }));
 
+import { MembershipService } from '../memb/membership.service';
+
 describe('PaymentService', () => {
   let service: PaymentService;
+  let membershipService: MembershipService;
   let repository: Record<string, ReturnType<typeof vi.fn>>;
   let methodRepository: Record<string, ReturnType<typeof vi.fn>>;
   let memberRepository: Record<string, ReturnType<typeof vi.fn>>;
@@ -72,7 +75,7 @@ describe('PaymentService', () => {
       findById: vi.fn().mockResolvedValue({ id: 1, method_name: 'Cash', is_active: true }),
     };
     memberRepository = {
-      findById: vi.fn().mockResolvedValue({ id: 5, user_id: 10, assigned_trainer_id: 7 }),
+      findById: vi.fn().mockImplementation(async (id: number) => ({ id, user_id: 10, assigned_trainer_id: 7 })),
     };
     membershipRepository = {
       findActiveOrFrozenForMember: vi.fn().mockResolvedValue(null),
@@ -98,12 +101,23 @@ describe('PaymentService', () => {
       normalizeParams: vi.fn().mockResolvedValue({ mode: 'offset', limit: 20, offset: 0 }),
     };
 
+    membershipService = new MembershipService(
+      membershipRepository as any,
+      productRepository as any,
+      memberRepository as any,
+      paginationHelper as any,
+      auditService as any,
+      domainEventBus as any,
+      {} as any,
+    );
+
     service = new PaymentService(
       repository as any,
       methodRepository as any,
       memberRepository as any,
       membershipRepository as any,
       productRepository as any,
+      membershipService,
       settingsService as any,
       auditService as any,
       domainEventBus as any,
@@ -295,7 +309,9 @@ describe('PaymentService', () => {
 
     it('member cannot read another member payment', async () => {
       repository.findById.mockResolvedValue({ ...paymentRow, member_id: 99 });
-      await expect(service.getById(42, memberActor)).rejects.toBeInstanceOf(NotFoundError);
+      await expect(service.getById(42, memberActor)).rejects.toMatchObject({
+        response: { message: 'Payment not found' },
+      });
     });
   });
 
@@ -333,6 +349,7 @@ describe('PaymentService', () => {
           remaining_pt_sessions: 6,
           status: 'active',
         }),
+        1,
       );
       expect(membershipRepository.insertMembership).not.toHaveBeenCalled();
     });

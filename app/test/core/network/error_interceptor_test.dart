@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:app/core/error/failures.dart';
-import 'package:app/core/network/error_interceptor.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/core/network/error_interceptor.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 

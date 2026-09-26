@@ -1,9 +1,9 @@
-import 'package:app/core/error/failures.dart';
-import 'package:app/core/usecase/usecase.dart';
-import 'package:app/features/dashboard/domain/entities/dashboard_snapshot.dart';
-import 'package:app/features/dashboard/domain/usecases/get_dashboard_usecase.dart';
-import 'package:app/features/dashboard/presentation/cubit/dashboard_cubit.dart';
-import 'package:app/session/domain/entities/user_type.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/core/usecase/usecase.dart';
+import 'package:luxeknox/features/dashboard/domain/entities/dashboard_snapshot.dart';
+import 'package:luxeknox/features/dashboard/domain/usecases/get_dashboard_usecase.dart';
+import 'package:luxeknox/features/dashboard/presentation/cubit/dashboard_cubit.dart';
+import 'package:luxeknox/session/domain/entities/user_type.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

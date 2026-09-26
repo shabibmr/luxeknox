@@ -1,33 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../core/widgets/unsaved_changes_scope.dart';
 import '../../domain/entities/trainer_profile.dart';
 import '../cubit/edit_trainer_profile_cubit.dart';
 import '../people_strings.dart';
 
 class EditTrainerProfileScreen extends StatelessWidget {
-  const EditTrainerProfileScreen({super.key, required this.trainerId});
+  const EditTrainerProfileScreen({
+    super.key,
+    required this.trainerId,
+    this.isAdmin = false,
+  });
 
   final int trainerId;
+  final bool isAdmin;
 
   @override
   Widget build(BuildContext context) {
+    if (isAdmin && !context.can('trainers.update')) {
+      return Scaffold(
+        appBar: AppBar(title: const Text(PeopleStrings.editProfile)),
+        body: const Center(child: Text(PeopleStrings.noPermission)),
+      );
+    }
+
     return BlocProvider(
       create: (_) => getIt<EditTrainerProfileCubit>()..load(trainerId),
-      child: _EditTrainerProfileBody(trainerId: trainerId),
+      child: _EditTrainerProfileBody(trainerId: trainerId, isAdmin: isAdmin),
     );
   }
 }
 
 class _EditTrainerProfileBody extends StatelessWidget {
-  const _EditTrainerProfileBody({required this.trainerId});
+  const _EditTrainerProfileBody({
+    required this.trainerId,
+    required this.isAdmin,
+  });
 
   final int trainerId;
+  final bool isAdmin;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +78,7 @@ class _EditTrainerProfileBody extends StatelessWidget {
           if (profile == null) {
             return const AppLoading();
           }
-          return _TrainerProfileForm(profile: profile);
+          return _TrainerProfileForm(profile: profile, isAdmin: isAdmin);
         },
       ),
     );
@@ -67,9 +86,13 @@ class _EditTrainerProfileBody extends StatelessWidget {
 }
 
 class _TrainerProfileForm extends StatefulWidget {
-  const _TrainerProfileForm({required this.profile});
+  const _TrainerProfileForm({
+    required this.profile,
+    required this.isAdmin,
+  });
 
   final TrainerProfile profile;
+  final bool isAdmin;
 
   @override
   State<_TrainerProfileForm> createState() => _TrainerProfileFormState();
@@ -88,6 +111,10 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
   late final _hourlyRate = TextEditingController(
     text: widget.profile.hourlyRate ?? '',
   );
+  late final _maxClients = TextEditingController(
+    text: widget.profile.maxClientsCapacity?.toString() ?? '',
+  );
+  late bool _isActive = widget.profile.isActive;
 
   @override
   void dispose() {
@@ -97,71 +124,150 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
     _bio.dispose();
     _specializations.dispose();
     _hourlyRate.dispose();
+    _maxClients.dispose();
     super.dispose();
+  }
+
+  bool get _isDirty {
+    if (_firstName.text != widget.profile.firstName) return true;
+    if (_lastName.text != widget.profile.lastName) return true;
+    if (_phone.text != (widget.profile.phoneNumber ?? '')) return true;
+    if (_bio.text != (widget.profile.bio ?? '')) return true;
+    final origSpecs = widget.profile.specializations.join(', ');
+    if (_specializations.text != origSpecs) return true;
+    if (_hourlyRate.text != (widget.profile.hourlyRate ?? '')) return true;
+    if (widget.isAdmin) {
+      final origMax = widget.profile.maxClientsCapacity?.toString() ?? '';
+      if (_maxClients.text != origMax) return true;
+      if (_isActive != widget.profile.isActive) return true;
+    }
+    return false;
+  }
+
+  Future<void> _onActiveChanged(bool value) async {
+    if (!value && _isActive) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text(PeopleStrings.deactivateTrainerTitle),
+          content: const Text(PeopleStrings.deactivateTrainerConfirm),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text(PeopleStrings.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text(PeopleStrings.confirmStatusChange),
+            ),
+          ],
+        ),
+      );
+      if (confirmed == true && mounted) {
+        setState(() => _isActive = false);
+      }
+    } else {
+      setState(() => _isActive = value);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        TextField(
-          controller: _firstName,
-          decoration: const InputDecoration(labelText: PeopleStrings.firstName),
-        ),
-        TextField(
-          controller: _lastName,
-          decoration: const InputDecoration(labelText: PeopleStrings.lastName),
-        ),
-        TextField(
-          controller: _phone,
-          decoration: const InputDecoration(
-            labelText: PeopleStrings.phoneNumber,
+    return UnsavedChangesScope(
+      hasUnsavedChanges: _isDirty,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          TextField(
+            controller: _firstName,
+            decoration: const InputDecoration(labelText: PeopleStrings.firstName),
+            onChanged: (_) => setState(() {}),
           ),
-          keyboardType: TextInputType.phone,
-        ),
-        TextField(
-          controller: _bio,
-          decoration: const InputDecoration(labelText: PeopleStrings.bio),
-          maxLines: 3,
-        ),
-        TextField(
-          controller: _specializations,
-          decoration: const InputDecoration(
-            labelText: PeopleStrings.specializations,
-            hintText: PeopleStrings.specializationsHint,
+          TextField(
+            controller: _lastName,
+            decoration: const InputDecoration(labelText: PeopleStrings.lastName),
+            onChanged: (_) => setState(() {}),
           ),
-        ),
-        TextField(
-          controller: _hourlyRate,
-          decoration: const InputDecoration(
-            labelText: PeopleStrings.hourlyRate,
+          TextField(
+            controller: _phone,
+            decoration: const InputDecoration(
+              labelText: PeopleStrings.phoneNumber,
+            ),
+            keyboardType: TextInputType.phone,
+            onChanged: (_) => setState(() {}),
           ),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        ),
-        const SizedBox(height: 16),
-        FilledButton(
-          onPressed: () {
-            context.read<EditTrainerProfileCubit>().save(
-              widget.profile.copyWith(
-                firstName: _firstName.text.trim(),
-                lastName: _lastName.text.trim(),
-                phoneNumber: _optional(_phone.text),
-                bio: _optional(_bio.text),
-                specializations: _parseList(_specializations.text),
-                hourlyRate: _optional(_hourlyRate.text),
+          TextField(
+            controller: _bio,
+            decoration: const InputDecoration(labelText: PeopleStrings.bio),
+            maxLines: 3,
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _specializations,
+            decoration: const InputDecoration(
+              labelText: PeopleStrings.specializations,
+              hintText: PeopleStrings.specializationsHint,
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _hourlyRate,
+            decoration: const InputDecoration(
+              labelText: PeopleStrings.hourlyRate,
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) => setState(() {}),
+          ),
+          if (widget.isAdmin) ...[
+            TextField(
+              controller: _maxClients,
+              decoration: const InputDecoration(
+                labelText: PeopleStrings.maxClients,
               ),
-            );
-          },
-          child: const Text(PeopleStrings.save),
-        ),
-      ],
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onChanged: (_) => setState(() {}),
+            ),
+            SwitchListTile(
+              title: const Text(PeopleStrings.statusActive),
+              value: _isActive,
+              onChanged: _onActiveChanged,
+            ),
+          ],
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () {
+              context.read<EditTrainerProfileCubit>().save(
+                widget.profile.copyWith(
+                  firstName: _firstName.text.trim(),
+                  lastName: _lastName.text.trim(),
+                  phoneNumber: _optional(_phone.text),
+                  bio: _optional(_bio.text),
+                  specializations: _parseList(_specializations.text),
+                  hourlyRate: _optional(_hourlyRate.text),
+                  maxClientsCapacity: widget.isAdmin
+                      ? _optionalInt(_maxClients.text)
+                      : widget.profile.maxClientsCapacity,
+                  isActive: widget.isAdmin ? _isActive : widget.profile.isActive,
+                ),
+              );
+            },
+            child: const Text(PeopleStrings.save),
+          ),
+        ],
+      ),
     );
   }
 
   String? _optional(String value) {
     final trimmed = value.trim();
     return trimmed.isEmpty ? null : trimmed;
+  }
+
+  int? _optionalInt(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+    return int.tryParse(trimmed);
   }
 
   List<String> _parseList(String value) {

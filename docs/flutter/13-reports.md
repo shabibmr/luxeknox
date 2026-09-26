@@ -2,6 +2,7 @@
 - [x] report navigation
 - [x] filters
 - [x] date ranges
+- [x] report charts (`ReportChartSection` + per-type aggregations; payments/financial charts blocked on B5)
 - [ ] member report
 - [ ] membership report
 - [ ] attendance report

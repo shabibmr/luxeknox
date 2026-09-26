@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { NotFoundError } from '../platform/errors/app-error';
-import { assertPeopleRowScope } from './row-scope';
+import { assertMemberAccess, assertPeopleRowScope } from './row-scope';
 
 function principal(partial: Partial<AuthenticatedUser> & Pick<AuthenticatedUser, 'userType'>): AuthenticatedUser {
   return {
@@ -98,3 +98,51 @@ describe('assertPeopleRowScope', () => {
     ).toThrow(NotFoundError);
   });
 });
+
+describe('assertMemberAccess', () => {
+  const memberRepo = {
+    findById: async (id: number) => {
+      if (id === 10) {
+        return { id: 10, user_id: 100, assigned_trainer_id: 5 };
+      }
+      return null;
+    },
+  };
+
+  it('allows staff without loading member if staffBypass is true', async () => {
+    await expect(
+      assertMemberAccess(memberRepo, principal({ userType: 'admin' }), 10),
+    ).resolves.toBeUndefined();
+  });
+
+  it('allows assigned trainer to access member', async () => {
+    await expect(
+      assertMemberAccess(
+        memberRepo,
+        principal({ userType: 'trainer', id: 50, profileId: 5 }),
+        10,
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it('throws 404 when trainer is unassigned', async () => {
+    await expect(
+      assertMemberAccess(
+        memberRepo,
+        principal({ userType: 'trainer', id: 50, profileId: 99 }),
+        10,
+      ),
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  it('throws 404 when member does not exist', async () => {
+    await expect(
+      assertMemberAccess(
+        memberRepo,
+        principal({ userType: 'trainer', id: 50, profileId: 5 }),
+        999,
+      ),
+    ).rejects.toThrow(NotFoundError);
+  });
+});
+

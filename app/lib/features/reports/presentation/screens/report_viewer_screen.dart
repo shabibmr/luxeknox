@@ -11,6 +11,7 @@ import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/app_report_type.dart';
 import '../cubit/report_cubit.dart';
 import '../report_strings.dart';
+import '../widgets/report_chart_section.dart';
 import '../widgets/report_data_table.dart';
 import '../widgets/report_date_range_bar.dart';
 import '../widgets/report_filters_bar.dart';
@@ -206,6 +207,7 @@ class _ReportBody extends StatelessWidget {
                     ),
                   ),
                 ),
+              ReportChartSection(type: result.type, rows: result.rows),
               ReportPaginationBar(
                 pageIndex: pageIndex,
                 pageCount: state.pageCount,

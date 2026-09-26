@@ -231,8 +231,9 @@ export class MembershipService {
     }
     verifyRowVersion(dto.row_version, before.row_version);
 
-    const product = await this.productRepository.findById(before.product_id);
-    if (!product) {
+    const targetProductId = dto.product_id ?? before.product_id;
+    const product = await this.productRepository.findById(targetProductId);
+    if (!product || !product.is_active) {
       throw new NotFoundError('Membership product not found');
     }
 
@@ -245,13 +246,18 @@ export class MembershipService {
     const now = new Date();
 
     await runInTransaction(this.db, async () => {
-      await this.repository.updateMembership(id, {
-        end_date: newEndDate,
-        status: 'active',
-        remaining_pt_sessions: before.remaining_pt_sessions + product.pt_sessions_included,
-        row_version: before.row_version + 1,
-        updated_at: now,
-      });
+      await this.repository.updateMembership(
+        id,
+        {
+          product_id: targetProductId,
+          end_date: newEndDate,
+          status: 'active',
+          remaining_pt_sessions: before.remaining_pt_sessions + product.pt_sessions_included,
+          row_version: before.row_version + 1,
+          updated_at: now,
+        },
+        before.row_version,
+      );
 
       await this.repository.insertHistory({
         membership_id: id,
@@ -685,5 +691,142 @@ export class MembershipService {
       granted_by_user_id: actor.id,
       created_at: now,
     };
+  }
+
+  /**
+   * PAY-008 / MEMB consolidation: creates or renews membership when paying via desk/online.
+   * Participates in ambient transactions, emits domain events, updates audit log,
+   * and enforces row versioning.
+   */
+  async createOrRenewForPayment(params: {
+    memberId: number;
+    productId: number;
+    membershipId?: number | null;
+    startDate?: string;
+    expectedRowVersion?: number;
+    actor: AuthenticatedUser;
+    now?: Date;
+  }): Promise<number> {
+    const product = await this.productRepository.findById(params.productId);
+    if (!product || !product.is_active) {
+      throw new NotFoundError('Membership product not found or inactive');
+    }
+
+    const member = await this.memberRepository.findById(params.memberId);
+    if (!member) {
+      throw new NotFoundError('Member not found');
+    }
+
+    let existing: Membership | null = null;
+    if (params.membershipId != null) {
+      existing = await this.repository.findById(params.membershipId);
+      if (!existing) {
+        throw new NotFoundError('Membership not found');
+      }
+    } else {
+      existing = await this.repository.findActiveOrFrozenForMember(params.memberId);
+    }
+
+    const now = params.now ?? new Date();
+    const today = now.toISOString().slice(0, 10);
+
+    if (!existing) {
+      const startDate = params.startDate ?? today;
+      const endDate = addDays(startDate, product.duration_days);
+
+      const membershipId = await runInTransaction(this.db, async () => {
+        const id = await this.repository.insertMembership({
+          member_id: params.memberId,
+          product_id: params.productId,
+          start_date: startDate,
+          end_date: endDate,
+          remaining_pt_sessions: product.pt_sessions_included,
+          status: 'active',
+          locker_number: null,
+          auto_renew: false,
+          row_version: 1,
+          created_at: now,
+        });
+
+        await this.repository.insertHistory({
+          membership_id: id,
+          action: 'created',
+          old_end_date: null,
+          new_end_date: endDate,
+          performed_by_user_id: params.actor.id,
+          timestamp: now,
+        });
+
+        await this.auditService.recordAudit({
+          actorUserId: params.actor.id,
+          action: 'membership.created',
+          entityName: 'memberships',
+          entityId: id,
+          afterState: { member_id: params.memberId, product_id: params.productId, via: 'payment' },
+        });
+
+        return id;
+      });
+
+      await this.domainEventBus.emit({
+        eventName: 'membership.created',
+        occurredAt: now,
+        payload: { membershipId, memberId: params.memberId },
+      });
+
+      return membershipId;
+    }
+
+    if (params.expectedRowVersion != null) {
+      verifyRowVersion(params.expectedRowVersion, existing.row_version);
+    }
+
+    const continuationStart =
+      params.startDate ??
+      ((existing.status === 'active' || existing.status === 'frozen') && existing.end_date >= today
+        ? addDays(existing.end_date, 1)
+        : today);
+    const newEndDate = addDays(continuationStart, product.duration_days);
+
+    await runInTransaction(this.db, async () => {
+      await this.repository.updateMembership(
+        existing.id,
+        {
+          product_id: params.productId,
+          end_date: newEndDate,
+          status: 'active',
+          remaining_pt_sessions: existing.remaining_pt_sessions + product.pt_sessions_included,
+          row_version: existing.row_version + 1,
+          updated_at: now,
+        },
+        existing.row_version,
+      );
+
+      await this.repository.insertHistory({
+        membership_id: existing.id,
+        action: 'renewed',
+        old_end_date: existing.end_date,
+        new_end_date: newEndDate,
+        performed_by_user_id: params.actor.id,
+        timestamp: now,
+      });
+
+      await this.auditService.recordAudit({
+        actorUserId: params.actor.id,
+        action: 'membership.renewed',
+        entityName: 'memberships',
+        entityId: existing.id,
+        beforeState: { end_date: existing.end_date },
+        afterState: { end_date: newEndDate, via: 'payment' },
+      });
+    });
+
+    await this.domainEventBus.emit({
+      eventName: 'membership.renewed',
+      occurredAt: now,
+      payload: { membershipId: existing.id },
+    });
+
+    return existing.id;
   }
 }

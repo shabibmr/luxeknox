@@ -1,10 +1,10 @@
-import 'package:app/core/error/failures.dart';
-import 'package:app/core/presentation/load_status.dart';
-import 'package:app/core/pagination/cursor_page.dart';
-import 'package:app/features/goals/domain/entities/goal_status.dart';
-import 'package:app/features/goals/domain/entities/member_goal.dart';
-import 'package:app/features/goals/domain/usecases/goals_usecases.dart';
-import 'package:app/features/goals/presentation/cubit/goals_list_cubit.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/core/presentation/load_status.dart';
+import 'package:luxeknox/core/pagination/cursor_page.dart';
+import 'package:luxeknox/features/goals/domain/entities/goal_status.dart';
+import 'package:luxeknox/features/goals/domain/entities/member_goal.dart';
+import 'package:luxeknox/features/goals/domain/usecases/goals_usecases.dart';
+import 'package:luxeknox/features/goals/presentation/cubit/goals_list_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

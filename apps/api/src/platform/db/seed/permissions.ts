@@ -134,6 +134,7 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
 
   // SYS
   { module: 'SYS', action: 'read', slug: 'settings.read', description: 'View gym settings' },
+  { module: 'SYS', action: 'update', slug: 'settings.update', description: 'Update gym settings' },
   { module: 'SYS', action: 'read', slug: 'audit.read', description: 'View system audit logs' },
 
   // MEDIA — media.create is OpenAPI; media.write kept legacy

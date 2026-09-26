@@ -1,5 +1,5 @@
-import 'package:app/core/l10n/shell_strings.dart';
-import 'package:app/core/widgets/unsaved_changes_scope.dart';
+import 'package:luxeknox/core/l10n/shell_strings.dart';
+import 'package:luxeknox/core/widgets/unsaved_changes_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

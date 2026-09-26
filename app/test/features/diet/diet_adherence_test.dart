@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/features/diet/domain/entities/diet_adherence.dart';
+import 'package:luxeknox/features/diet/domain/entities/diet_adherence.dart';
 
 void main() {
   group('computeDietAdherence', () {

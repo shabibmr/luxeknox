@@ -9,13 +9,14 @@ import '../entities/trainer_summary.dart';
 import '../repositories/people_repository.dart';
 
 class ListTrainersParams extends Equatable {
-  const ListTrainersParams({this.query, this.cursor});
+  const ListTrainersParams({this.query, this.status, this.cursor});
 
   final String? query;
+  final String? status;
   final String? cursor;
 
   @override
-  List<Object?> get props => [query, cursor];
+  List<Object?> get props => [query, status, cursor];
 }
 
 @lazySingleton
@@ -29,6 +30,10 @@ class ListTrainersUseCase
   Future<Either<Failure, CursorPage<TrainerSummary>>> call(
     ListTrainersParams params,
   ) {
-    return _repository.listTrainers(query: params.query, cursor: params.cursor);
+    return _repository.listTrainers(
+      query: params.query,
+      status: params.status,
+      cursor: params.cursor,
+    );
   }
 }

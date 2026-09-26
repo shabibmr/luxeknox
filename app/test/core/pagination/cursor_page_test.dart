@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/core/pagination/cursor_page.dart';
+import 'package:luxeknox/core/pagination/cursor_page.dart';
 
 void main() {
   group('CursorPage value equality', () {

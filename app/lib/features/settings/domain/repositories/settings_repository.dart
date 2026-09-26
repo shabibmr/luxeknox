@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/failures.dart';
 import '../entities/app_setting.dart';
+import '../entities/gym_public_settings.dart';
 import '../entities/setting_category.dart';
 
 abstract class SettingsRepository {
@@ -14,4 +15,7 @@ abstract class SettingsRepository {
   Future<Either<Failure, List<AppSetting>>> updateSettings(
     List<AppSetting> items,
   );
+
+  /// Unauthenticated gym-wide display settings (timezone, currency, ...).
+  Future<Either<Failure, GymPublicSettings>> getPublicSettings();
 }

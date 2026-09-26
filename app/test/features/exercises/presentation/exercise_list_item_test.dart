@@ -1,5 +1,5 @@
-import 'package:app/features/exercises/domain/entities/exercise.dart';
-import 'package:app/features/exercises/presentation/widgets/exercise_list_item.dart';
+import 'package:luxeknox/features/exercises/domain/entities/exercise.dart';
+import 'package:luxeknox/features/exercises/presentation/widgets/exercise_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

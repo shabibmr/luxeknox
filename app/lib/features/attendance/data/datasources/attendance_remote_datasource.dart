@@ -22,6 +22,8 @@ abstract class AttendanceRemoteDataSource {
 
   Future<api.AttendanceSummary> getSummary({int? memberId});
 
+  Future<api.Occupancy> getOccupancy();
+
   Future<api.AttendanceHistoryPage> listHistories({
     api.Date? from,
     api.Date? to,
@@ -97,6 +99,11 @@ class AttendanceRemoteDataSourceImpl implements AttendanceRemoteDataSource {
   @override
   Future<api.AttendanceSummary> getSummary({int? memberId}) async {
     return _unwrap(await _attnApi.getAttendanceSummary(memberId: memberId));
+  }
+
+  @override
+  Future<api.Occupancy> getOccupancy() async {
+    return _unwrap(await _attnApi.getAttendanceOccupancy());
   }
 
   @override

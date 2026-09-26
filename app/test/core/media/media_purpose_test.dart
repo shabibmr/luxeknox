@@ -1,4 +1,4 @@
-import 'package:app/core/media/media_purpose.dart';
+import 'package:luxeknox/core/media/media_purpose.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

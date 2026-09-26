@@ -8,6 +8,7 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../attendance/domain/usecases/attendance_usecases.dart';
 import '../../domain/entities/schedule_enums.dart';
 import '../../domain/entities/schedule_session.dart';
+import '../../domain/repositories/scheduling_repository.dart';
 import '../../domain/usecases/schedule_usecases.dart';
 import '../scheduling_strings.dart';
 
@@ -19,9 +20,14 @@ abstract class ScheduleDetailState with _$ScheduleDetailState {
     @Default(LoadStatus.initial) LoadStatus status,
     ScheduleSession? session,
     @Default(false) bool actionInFlight,
-    /// Success copy and the double-submit guard. API errors use [failure].
+    /// Success / action copy. API errors use [failure] (and optionally [message]
+    /// for move-booking cap / rollback copy).
     String? message,
     Failure? failure,
+    /// Staff reschedule hit a stale `rowVersion` (409); session was reloaded.
+    @Default(false) bool isConflict,
+    /// Set after a successful move so the UI can navigate to the new session.
+    String? movedToScheduleId,
   }) = _ScheduleDetailState;
 }
 
@@ -35,6 +41,7 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
     this._start,
     this._complete,
     this._markAttendance,
+    this._updateSchedule,
   ) : super(const ScheduleDetailState());
 
   final GetScheduleUseCase _getSchedule;
@@ -44,6 +51,7 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
   final StartScheduleUseCase _start;
   final CompleteScheduleUseCase _complete;
   final MarkSessionAttendanceUseCase _markAttendance;
+  final UpdateScheduleUseCase _updateSchedule;
 
   String? _scheduleId;
   String? _activeIdempotencyKey;
@@ -61,6 +69,8 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
         failure: null,
         message: null,
         actionInFlight: false,
+        isConflict: false,
+        movedToScheduleId: null,
       ),
     );
     final result = await _getSchedule(scheduleId);
@@ -79,6 +89,7 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
           message: null,
           actionInFlight: false,
           session: session,
+          isConflict: false,
         ),
       ),
     );
@@ -100,6 +111,8 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
         message: null,
         failure: null,
         status: LoadStatus.success,
+        isConflict: false,
+        movedToScheduleId: null,
       ),
     );
     final result = await _book(
@@ -143,6 +156,8 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
         message: null,
         failure: null,
         status: LoadStatus.success,
+        isConflict: false,
+        movedToScheduleId: null,
       ),
     );
     final result = await _unbook(
@@ -166,7 +181,7 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
     );
   }
 
-  Future<void> cancel({String? reason}) async {
+  Future<void> cancel({String? reason, bool cancelSeries = false}) async {
     if (!_canAct) return;
     final scheduleId = _scheduleId;
     final session = state.session;
@@ -177,6 +192,8 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
         message: null,
         failure: null,
         status: LoadStatus.success,
+        isConflict: false,
+        movedToScheduleId: null,
       ),
     );
     final result = await _cancel(
@@ -184,6 +201,7 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
         scheduleId: scheduleId,
         reason: reason,
         rowVersion: session.rowVersion,
+        cancelSeries: cancelSeries,
       ),
     );
     result.fold(
@@ -217,6 +235,8 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
         message: null,
         failure: null,
         status: LoadStatus.success,
+        isConflict: false,
+        movedToScheduleId: null,
       ),
     );
     final result = await _start(scheduleId);
@@ -251,6 +271,8 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
         message: null,
         failure: null,
         status: LoadStatus.success,
+        isConflict: false,
+        movedToScheduleId: null,
       ),
     );
     final result = await _complete(scheduleId);
@@ -287,6 +309,8 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
         message: null,
         failure: null,
         status: LoadStatus.success,
+        isConflict: false,
+        movedToScheduleId: null,
       ),
     );
     final result = await _markAttendance(
@@ -308,6 +332,175 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
         );
       },
       (_) async => load(scheduleId),
+    );
+  }
+
+  /// Staff: patch session start/end with optimistic concurrency via [rowVersion].
+  Future<bool> reschedule({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    if (!_canAct) return false;
+    if (!end.isAfter(start)) {
+      emit(
+        state.copyWith(
+          failure: const ValidationFailure([
+            SchedulingStrings.endBeforeStartError,
+          ]),
+          message: null,
+          isConflict: false,
+        ),
+      );
+      return false;
+    }
+    final scheduleId = _scheduleId ?? state.session!.id;
+    final session = state.session!;
+    emit(
+      state.copyWith(
+        actionInFlight: true,
+        message: null,
+        failure: null,
+        status: LoadStatus.success,
+        isConflict: false,
+        movedToScheduleId: null,
+      ),
+    );
+    final result = await _updateSchedule(
+      UpdateScheduleParams(
+        id: scheduleId,
+        input: CreateScheduleInput(
+          startTime: start,
+          endTime: end,
+          rowVersion: session.rowVersion,
+        ),
+      ),
+    );
+
+    return await result.fold(
+      (failure) async {
+        final isConflict = failure is ConflictFailure;
+        if (isConflict) {
+          await load(scheduleId);
+          if (!isClosed) {
+            emit(
+              state.copyWith(
+                isConflict: true,
+                message: SchedulingStrings.rowVersionConflict,
+                failure: failure,
+                actionInFlight: false,
+              ),
+            );
+          }
+        } else {
+          emit(
+            state.copyWith(
+              actionInFlight: false,
+              status: LoadStatus.failure,
+              failure: failure,
+              message: null,
+              isConflict: false,
+            ),
+          );
+        }
+        return false;
+      },
+      (updated) async {
+        emit(
+          state.copyWith(
+            status: LoadStatus.success,
+            failure: null,
+            message: SchedulingStrings.rescheduleSuccess,
+            actionInFlight: false,
+            session: updated,
+            isConflict: false,
+          ),
+        );
+        return true;
+      },
+    );
+  }
+
+  /// Member: book [targetScheduleId], then cancel the seat on the current session.
+  ///
+  /// A [ConflictFailure] on book is treated as the member booking-cap and blocked
+  /// (no cancel-then-book). If cancel fails after a successful book, emits a
+  /// rollback warning — the member may hold seats on both sessions.
+  Future<bool> moveBooking({
+    required String targetScheduleId,
+    required String memberId,
+  }) async {
+    if (!_canAct) return false;
+    final currentId = _scheduleId ?? state.session?.id;
+    if (currentId == null || targetScheduleId == currentId) return false;
+
+    emit(
+      state.copyWith(
+        actionInFlight: true,
+        message: null,
+        failure: null,
+        status: LoadStatus.success,
+        isConflict: false,
+        movedToScheduleId: null,
+      ),
+    );
+
+    final bookKey = newIdempotencyKey();
+    final bookResult = await _book(
+      BookScheduleParams(
+        scheduleId: targetScheduleId,
+        memberId: memberId,
+        idempotencyKey: bookKey,
+      ),
+    );
+
+    final bookFailed = bookResult.fold<Failure?>((f) => f, (_) => null);
+    if (bookFailed != null) {
+      final isCap = bookFailed is ConflictFailure;
+      emit(
+        state.copyWith(
+          actionInFlight: false,
+          status: LoadStatus.failure,
+          failure: bookFailed,
+          message: isCap ? SchedulingStrings.moveBookingCapBlocked : null,
+        ),
+      );
+      return false;
+    }
+
+    final cancelResult = await _unbook(
+      UnbookScheduleParams(
+        scheduleId: currentId,
+        memberId: memberId,
+        reason: 'Moved to schedule $targetScheduleId',
+      ),
+    );
+
+    return cancelResult.fold(
+      (failure) {
+        emit(
+          state.copyWith(
+            actionInFlight: false,
+            status: LoadStatus.failure,
+            failure: failure,
+            message: SchedulingStrings.moveBookingCancelFailed,
+            movedToScheduleId: targetScheduleId,
+          ),
+        );
+        return false;
+      },
+      (_) {
+        _scheduleId = targetScheduleId;
+        emit(
+          state.copyWith(
+            actionInFlight: false,
+            status: LoadStatus.success,
+            failure: null,
+            message: SchedulingStrings.moveBookingSuccess,
+            movedToScheduleId: targetScheduleId,
+          ),
+        );
+        return true;
+      },
     );
   }
 }

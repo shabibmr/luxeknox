@@ -74,11 +74,26 @@ export class ReportsRepository {
       .groupBy(sql`COALESCE(${members.gender}, 'unspecified')`);
 
     // Demographic age buckets based on date_of_birth
-    const allMembersWithDob = await this.db
+    const currentYear = endUtc.getUTCFullYear();
+    const ageBucketExpr = sql<string>`
+      CASE
+        WHEN ${members.date_of_birth} IS NULL THEN 'unknown'
+        WHEN (${currentYear} - YEAR(${members.date_of_birth})) < 18 THEN '<18'
+        WHEN (${currentYear} - YEAR(${members.date_of_birth})) <= 24 THEN '18-24'
+        WHEN (${currentYear} - YEAR(${members.date_of_birth})) <= 34 THEN '25-34'
+        WHEN (${currentYear} - YEAR(${members.date_of_birth})) <= 44 THEN '35-44'
+        WHEN (${currentYear} - YEAR(${members.date_of_birth})) <= 54 THEN '45-54'
+        ELSE '55+'
+      END
+    `;
+
+    const ageCounts = await this.db
       .select({
-        dob: members.date_of_birth,
+        bucket: ageBucketExpr,
+        count: count(),
       })
-      .from(members);
+      .from(members)
+      .groupBy(ageBucketExpr);
 
     const ageBuckets: Record<string, number> = {
       '<18': 0,
@@ -90,20 +105,10 @@ export class ReportsRepository {
       unknown: 0,
     };
 
-    const currentYear = endUtc.getUTCFullYear();
-    for (const m of allMembersWithDob) {
-      if (!m.dob) {
-        ageBuckets.unknown++;
-        continue;
+    for (const row of ageCounts) {
+      if (row.bucket && row.bucket in ageBuckets) {
+        ageBuckets[row.bucket] = Number(row.count);
       }
-      const birthYear = parseInt(m.dob.slice(0, 4), 10);
-      const age = currentYear - birthYear;
-      if (age < 18) ageBuckets['<18']++;
-      else if (age <= 24) ageBuckets['18-24']++;
-      else if (age <= 34) ageBuckets['25-34']++;
-      else if (age <= 44) ageBuckets['35-44']++;
-      else if (age <= 54) ageBuckets['45-54']++;
-      else ageBuckets['55+']++;
     }
 
     const rows: Array<Record<string, any>> = [

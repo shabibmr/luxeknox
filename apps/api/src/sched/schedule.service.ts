@@ -16,7 +16,7 @@ import {
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { TrainerRepository } from '../people/trainer.repository';
-import type { CancelRequestDto, ScheduleTransitionDto, ScheduleWriteDto } from './schedule.dto';
+import type { CancelRequestDto, ScheduleCreateDto, ScheduleTransitionDto, ScheduleUpdateDto } from './schedule.dto';
 import { scheduleFilterQuerySchema } from './schedule.dto';
 import { FacilityRepository } from './facility.repository';
 import { buildWeeklyOccurrences } from './recurring-schedule';
@@ -185,18 +185,7 @@ export class ScheduleService {
     return this.present(schedule);
   }
 
-  async create(dto: ScheduleWriteDto, actor: AuthenticatedUser): Promise<ScheduleWithParticipants> {
-    if (
-      dto.schedule_type_id == null ||
-      dto.title == null ||
-      dto.start_time == null ||
-      dto.end_time == null
-    ) {
-      throw new BadRequestError(
-        'schedule_type_id, title, start_time and end_time are required to create a schedule',
-      );
-    }
-
+  async create(dto: ScheduleCreateDto, actor: AuthenticatedUser): Promise<ScheduleWithParticipants> {
     const scheduleType = await this.scheduleTypeRepository.findById(dto.schedule_type_id);
     if (!scheduleType) {
       throw new NotFoundError('Schedule type not found');
@@ -256,10 +245,10 @@ export class ScheduleService {
 
         const id = await this.repository.insertSchedule({
           series_id: seriesId,
-          schedule_type_id: dto.schedule_type_id!,
+          schedule_type_id: dto.schedule_type_id,
           facility_id: dto.facility_id ?? null,
           trainer_id: dto.trainer_id ?? null,
-          title: dto.title!,
+          title: dto.title,
           start_time: occurrence.start_time,
           end_time: occurrence.end_time,
           max_capacity: maxCapacity,
@@ -315,7 +304,7 @@ export class ScheduleService {
 
   async update(
     id: number,
-    dto: ScheduleWriteDto,
+    dto: ScheduleUpdateDto,
     actor: AuthenticatedUser,
   ): Promise<ScheduleWithParticipants> {
     const before = await this.repository.findById(id);

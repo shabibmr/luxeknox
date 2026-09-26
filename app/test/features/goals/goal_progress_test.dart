@@ -1,5 +1,5 @@
-import 'package:app/features/goals/domain/entities/goal_status.dart';
-import 'package:app/features/goals/domain/helpers/goal_progress.dart';
+import 'package:luxeknox/features/goals/domain/entities/goal_status.dart';
+import 'package:luxeknox/features/goals/domain/helpers/goal_progress.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

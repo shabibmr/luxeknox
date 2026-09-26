@@ -14,6 +14,7 @@ import {
 import { PaginationHelper, createPaginatedResponse } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { MemberRepository } from '../people/member.repository';
+import { assertMemberAccess } from '../people/row-scope';
 import {
   DietPlanRepository,
   type DietPlanWithDetails,
@@ -39,26 +40,6 @@ export class DietPlanService {
     private readonly paginationHelper: PaginationHelper,
   ) {}
 
-  private async assertCanAccessMember(actor: AuthenticatedUser, memberId: number): Promise<void> {
-    if (actor.userType === 'admin' || actor.userType === 'employee') {
-      return;
-    }
-    if (actor.userType === 'member') {
-      if (actor.profileId !== memberId) {
-        throw new NotFoundError('Member not found');
-      }
-      return;
-    }
-    if (actor.userType === 'trainer') {
-      const member = await this.memberRepo.findById(memberId);
-      if (!member || member.assigned_trainer_id !== actor.profileId) {
-        throw new NotFoundError('Member not found or not assigned to trainer');
-      }
-      return;
-    }
-    throw new ForbiddenError('Access denied');
-  }
-
   private async assertCanManagePlan(plan: DietPlan, actor: AuthenticatedUser): Promise<void> {
     if (actor.userType === 'admin' || actor.userType === 'employee') {
       return;
@@ -68,7 +49,7 @@ export class DietPlanService {
         return;
       }
       if (plan.member_id) {
-        await this.assertCanAccessMember(actor, plan.member_id);
+        await assertMemberAccess(this.memberRepo, actor, plan.member_id);
         return;
       }
       if (plan.is_template) {
@@ -98,7 +79,7 @@ export class DietPlanService {
       }
     } else if (actor.userType === 'trainer') {
       if (effectiveMemberId) {
-        await this.assertCanAccessMember(actor, effectiveMemberId);
+        await assertMemberAccess(this.memberRepo, actor, effectiveMemberId);
       }
       if (!effectiveMemberId && effectiveIsTemplate === undefined) {
         effectiveTrainerId = actor.profileId ?? undefined;
@@ -131,7 +112,7 @@ export class DietPlanService {
         }
       } else if (actor.userType === 'trainer') {
         if (plan.trainer_id !== actor.profileId && plan.member_id) {
-          await this.assertCanAccessMember(actor, plan.member_id);
+          await assertMemberAccess(this.memberRepo, actor, plan.member_id);
         }
       }
     }
@@ -150,7 +131,7 @@ export class DietPlanService {
         throw new ForbiddenError('Members cannot create diet templates');
       }
     } else if (dto.member_id) {
-      await this.assertCanAccessMember(actor, dto.member_id);
+      await assertMemberAccess(this.memberRepo, actor, dto.member_id);
     }
 
     const trainerId =
@@ -221,7 +202,7 @@ export class DietPlanService {
     }
 
     if (dto.member_id && !existing.is_template) {
-      await this.assertCanAccessMember(actor, dto.member_id);
+      await assertMemberAccess(this.memberRepo, actor, dto.member_id);
     }
 
     await this.planRepo.updatePlan(
@@ -323,7 +304,7 @@ export class DietPlanService {
       throw new BadRequestError('Specified diet plan is not a template');
     }
 
-    await this.assertCanAccessMember(actor, dto.member_id);
+    await assertMemberAccess(this.memberRepo, actor, dto.member_id);
 
     const activePlan = await this.planRepo.findActivePlanForMember(dto.member_id);
     if (activePlan) {
@@ -491,7 +472,7 @@ export class DietPlanService {
         }
       } else if (actor.userType === 'trainer') {
         if (plan.trainer_id !== actor.profileId && plan.member_id) {
-          await this.assertCanAccessMember(actor, plan.member_id);
+          await assertMemberAccess(this.memberRepo, actor, plan.member_id);
         }
       }
     }

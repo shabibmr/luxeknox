@@ -188,7 +188,6 @@ export 'package:api_client/src/model/schedule_history.dart';
 export 'package:api_client/src/model/schedule_history_page.dart';
 export 'package:api_client/src/model/schedule_page.dart';
 export 'package:api_client/src/model/schedule_participant.dart';
-export 'package:api_client/src/model/schedule_participant_write.dart';
 export 'package:api_client/src/model/schedule_status.dart';
 export 'package:api_client/src/model/schedule_type.dart';
 export 'package:api_client/src/model/schedule_type_page.dart';

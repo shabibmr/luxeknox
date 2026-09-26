@@ -123,6 +123,7 @@ class SchedulingRepositoryImpl implements SchedulingRepository {
     required String id,
     String? reason,
     int? rowVersion,
+    bool? cancelSeries,
   }) async {
     final intId = _parseId(id);
     if (intId == null) return const Left(NotFoundFailure());
@@ -132,7 +133,8 @@ class SchedulingRepositoryImpl implements SchedulingRepository {
         cancelRequest: api.CancelRequest(
           (b) => b
             ..reason = reason
-            ..rowVersion = rowVersion,
+            ..rowVersion = rowVersion
+            ..cancelSeries = cancelSeries,
         ),
       );
       return Right(cancelled.toDomain());
@@ -155,7 +157,7 @@ class SchedulingRepositoryImpl implements SchedulingRepository {
     try {
       final participant = await _remote.addParticipant(
         scheduleId: schedId,
-        write: api.ScheduleParticipantWrite((b) => b.memberId = memId),
+        write: api.BookRequest((b) => b.memberId = memId),
         idempotencyKey: idempotencyKey,
       );
       return Right(participant.toDomain());

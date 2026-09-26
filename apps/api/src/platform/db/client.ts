@@ -67,7 +67,10 @@ export function createAdminConnectionPool(): Pool {
   });
 }
 
-export type DrizzleDb<TSchema extends Record<string, unknown> = Record<string, never>> = MySql2Database<TSchema>;
+import * as schema from './schema';
+
+export type AppSchema = typeof schema;
+export type DrizzleDb<TSchema extends Record<string, unknown> = AppSchema> = MySql2Database<TSchema>;
 
 /**
  * Creates a Drizzle database instance backed by a mysql2 connection pool.
@@ -76,7 +79,7 @@ export type DrizzleDb<TSchema extends Record<string, unknown> = Record<string, n
  * @param pool mysql2/promise connection pool
  * @param schema Optional Drizzle schema mapping
  */
-export function createDrizzleClient<TSchema extends Record<string, unknown> = Record<string, never>>(
+export function createDrizzleClient<TSchema extends Record<string, unknown> = AppSchema>(
   pool: Pool,
   schema?: TSchema,
 ): DrizzleDb<TSchema> {

@@ -5,9 +5,13 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/map_thrown.dart';
 import '../../../../core/pagination/cursor_page.dart';
+import '../../domain/entities/employee_status.dart';
 import '../../domain/entities/employee_summary.dart';
+import '../../domain/entities/employee_update_input.dart';
 import '../../domain/entities/member_filter.dart';
+import '../../domain/entities/new_employee_input.dart';
 import '../../domain/entities/new_member_input.dart';
+import '../../domain/entities/new_trainer_input.dart';
 import '../../domain/entities/person.dart';
 import '../../domain/entities/profile_summary.dart';
 import '../../domain/entities/role.dart';
@@ -132,13 +136,32 @@ class PeopleRepositoryImpl implements PeopleRepository {
   }
 
   @override
+  Future<Either<Failure, TrainerProfile>> createTrainer(
+    NewTrainerInput input,
+  ) async {
+    try {
+      final created = await _remote.createTrainer(
+        trainerCreateFromInput(input),
+      );
+      return Right(trainerProfileFromApi(created));
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
   Future<Either<Failure, CursorPage<TrainerSummary>>> listTrainers({
     String? query,
+    String? status,
     String? cursor,
   }) async {
     try {
       final offset = cursor == null ? null : int.tryParse(cursor);
-      final page = await _remote.listTrainers(q: query, offset: offset);
+      final page = await _remote.listTrainers(
+        q: query,
+        status: status,
+        offset: offset,
+      );
       final nextOffset = (offset ?? 0) + page.data.length;
       return Right(
         CursorPage(
@@ -159,13 +182,33 @@ class PeopleRepositoryImpl implements PeopleRepository {
   }) async {
     try {
       final offset = cursor == null ? null : int.tryParse(cursor);
-      final page = await _remote.listEmployees(q: query, offset: offset);
-      final nextOffset = (offset ?? 0) + page.data.length;
+      final page = await _remote.listEmployeesRaw(q: query, offset: offset);
+      final rawItems = page['data'];
+      final items = <EmployeeSummary>[];
+      if (rawItems is List) {
+        for (final item in rawItems) {
+          if (item is Map<String, dynamic>) {
+            items.add(employeeSummaryFromJson(item));
+          } else if (item is Map) {
+            items.add(
+              employeeSummaryFromJson(
+                item.map((k, v) => MapEntry(k.toString(), v)),
+              ),
+            );
+          }
+        }
+      }
+      final meta = page['meta'];
+      var hasMore = false;
+      if (meta is Map) {
+        hasMore = meta['has_more'] == true;
+      }
+      final nextOffset = (offset ?? 0) + items.length;
       return Right(
         CursorPage(
-          items: page.data.map(employeeSummaryFromApi).toList(),
-          nextCursor: page.meta.hasMore ? '$nextOffset' : null,
-          hasMore: page.meta.hasMore,
+          items: items,
+          nextCursor: hasMore ? '$nextOffset' : null,
+          hasMore: hasMore,
         ),
       );
     } catch (e) {
@@ -176,8 +219,51 @@ class PeopleRepositoryImpl implements PeopleRepository {
   @override
   Future<Either<Failure, EmployeeSummary>> getEmployee(int id) async {
     try {
-      final employee = await _remote.getEmployee(id);
-      return Right(employeeSummaryFromApi(employee));
+      final employee = await _remote.getEmployeeRaw(id);
+      return Right(employeeSummaryFromJson(employee));
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EmployeeSummary>> createEmployee(
+    NewEmployeeInput input,
+  ) async {
+    try {
+      final created = await _remote.createEmployeeRaw(
+        employeeCreateBodyFromInput(input),
+      );
+      return Right(employeeSummaryFromJson(created));
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EmployeeSummary>> updateEmployee(
+    int id,
+    EmployeeUpdateInput input,
+  ) async {
+    try {
+      final updated = await _remote.updateEmployeeRaw(
+        id,
+        employeeUpdateBodyFromInput(input),
+      );
+      return Right(employeeSummaryFromJson(updated));
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EmployeeSummary>> setEmployeeStatus(
+    int id,
+    EmployeeStatus status,
+  ) async {
+    try {
+      final updated = await _remote.setEmployeeStatusRaw(id, status.wire);
+      return Right(employeeSummaryFromJson(updated));
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }
@@ -199,11 +285,11 @@ class PeopleRepositoryImpl implements PeopleRepository {
     required int roleId,
   }) async {
     try {
-      final updated = await _remote.assignEmployeeRole(
+      final updated = await _remote.assignEmployeeRoleRaw(
         id: employeeId,
-        request: api.AssignRoleRequest((b) => b..roleId = roleId),
+        roleId: roleId,
       );
-      return Right(employeeSummaryFromApi(updated));
+      return Right(employeeSummaryFromJson(updated));
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

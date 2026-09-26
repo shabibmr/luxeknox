@@ -1,5 +1,5 @@
-import 'package:app/features/people/domain/entities/person_scope.dart';
-import 'package:app/session/domain/entities/capabilities.dart';
+import 'package:luxeknox/features/people/domain/entities/person_scope.dart';
+import 'package:luxeknox/session/domain/entities/capabilities.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

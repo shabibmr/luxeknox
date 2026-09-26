@@ -1,6 +1,6 @@
 import 'package:api_client/api_client.dart' as api;
-import 'package:app/features/dashboard/data/models/dashboard_model.dart';
-import 'package:app/session/domain/entities/user_type.dart';
+import 'package:luxeknox/features/dashboard/data/models/dashboard_model.dart';
+import 'package:luxeknox/session/domain/entities/user_type.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:built_value/json_object.dart';
 import 'package:flutter_test/flutter_test.dart';

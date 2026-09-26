@@ -14,6 +14,7 @@ import {
 import { PaginationHelper, createPaginatedResponse } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { MemberRepository } from '../people/member.repository';
+import { assertMemberAccess } from '../people/row-scope';
 import {
   WorkoutPlanRepository,
   type WorkoutPlanWithDetails,
@@ -39,27 +40,7 @@ export class WorkoutPlanService {
     private readonly paginationHelper: PaginationHelper,
   ) {}
 
-  private async assertCanAccessMember(actor: AuthenticatedUser, memberId: number): Promise<void> {
-    if (actor.userType === 'admin' || actor.userType === 'employee') {
-      return;
-    }
-    if (actor.userType === 'member') {
-      if (actor.profileId !== memberId) {
-        throw new NotFoundError('Member not found');
-      }
-      return;
-    }
-    if (actor.userType === 'trainer') {
-      const member = await this.memberRepo.findById(memberId);
-      if (!member || member.assigned_trainer_id !== actor.profileId) {
-        throw new NotFoundError('Member not found or not assigned to trainer');
-      }
-      return;
-    }
-    throw new ForbiddenError('Access denied');
-  }
-
-  private assertCanManagePlan(plan: WorkoutPlan, actor: AuthenticatedUser): void {
+  private async assertCanManagePlan(plan: WorkoutPlan, actor: AuthenticatedUser): Promise<void> {
     if (actor.userType === 'admin' || actor.userType === 'employee') {
       return;
     }
@@ -67,8 +48,13 @@ export class WorkoutPlanService {
       if (plan.trainer_id === actor.profileId) {
         return;
       }
-      // Or if assigned to a member they train
-      return;
+      if (plan.member_id) {
+        await assertMemberAccess(this.memberRepo, actor, plan.member_id);
+        return;
+      }
+      if (plan.is_template) {
+        return;
+      }
     }
     throw new ForbiddenError('Only trainers or staff may manage workout plans');
   }
@@ -95,7 +81,7 @@ export class WorkoutPlanService {
       }
     } else if (actor.userType === 'trainer') {
       if (effectiveMemberId) {
-        await this.assertCanAccessMember(actor, effectiveMemberId);
+        await assertMemberAccess(this.memberRepo, actor, effectiveMemberId);
       }
       if (!effectiveMemberId && effectiveIsTemplate === undefined) {
         // Can see templates or own plans
@@ -129,7 +115,7 @@ export class WorkoutPlanService {
         }
       } else if (actor.userType === 'trainer') {
         if (plan.trainer_id !== actor.profileId && plan.member_id) {
-          await this.assertCanAccessMember(actor, plan.member_id);
+          await assertMemberAccess(this.memberRepo, actor, plan.member_id);
         }
       }
     }
@@ -148,7 +134,7 @@ export class WorkoutPlanService {
         throw new ForbiddenError('Members cannot create workout templates');
       }
     } else if (dto.member_id) {
-      await this.assertCanAccessMember(actor, dto.member_id);
+      await assertMemberAccess(this.memberRepo, actor, dto.member_id);
     }
 
     const trainerId =
@@ -207,14 +193,14 @@ export class WorkoutPlanService {
       throw new NotFoundError('Workout plan not found');
     }
 
-    this.assertCanManagePlan(existing, actor);
+    await this.assertCanManagePlan(existing, actor);
 
     if (existing.status === 'archived') {
       throw new BusinessRuleError('Cannot update an archived workout plan');
     }
 
     if (dto.member_id && !existing.is_template) {
-      await this.assertCanAccessMember(actor, dto.member_id);
+      await assertMemberAccess(this.memberRepo, actor, dto.member_id);
     }
 
     await this.planRepo.updatePlan(
@@ -242,7 +228,7 @@ export class WorkoutPlanService {
       throw new NotFoundError('Workout plan not found');
     }
 
-    this.assertCanManagePlan(existing, actor);
+    await this.assertCanManagePlan(existing, actor);
 
     if (existing.status === 'active') {
       return existing;
@@ -283,7 +269,7 @@ export class WorkoutPlanService {
       throw new NotFoundError('Workout plan not found');
     }
 
-    this.assertCanManagePlan(existing, actor);
+    await this.assertCanManagePlan(existing, actor);
 
     await this.planRepo.updatePlan(id, { status: 'archived' });
 
@@ -315,7 +301,7 @@ export class WorkoutPlanService {
       throw new BadRequestError('Specified workout plan is not a template');
     }
 
-    await this.assertCanAccessMember(actor, dto.member_id);
+    await assertMemberAccess(this.memberRepo, actor, dto.member_id);
 
     const activePlan = await this.planRepo.findActivePlanForMember(dto.member_id);
     if (activePlan) {
@@ -392,7 +378,7 @@ export class WorkoutPlanService {
       throw new NotFoundError('Workout plan not found');
     }
 
-    this.assertCanManagePlan(existing, actor);
+    await this.assertCanManagePlan(existing, actor);
 
     if (existing.status === 'archived') {
       throw new BusinessRuleError('Cannot modify exercises on an archived workout plan');
@@ -460,7 +446,7 @@ export class WorkoutPlanService {
         }
       } else if (actor.userType === 'trainer') {
         if (plan.trainer_id !== actor.profileId && plan.member_id) {
-          await this.assertCanAccessMember(actor, plan.member_id);
+          await assertMemberAccess(this.memberRepo, actor, plan.member_id);
         }
       }
     }

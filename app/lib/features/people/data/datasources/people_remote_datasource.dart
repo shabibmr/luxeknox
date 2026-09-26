@@ -26,26 +26,52 @@ abstract class PeopleRemoteDataSource {
 
   Future<api.Trainer> updateTrainer(int id, api.TrainerUpdate update);
 
-  Future<api.TrainerPage> listTrainers({String? q, int? limit, int? offset});
+  Future<api.Trainer> createTrainer(api.TrainerCreate trainerCreate);
 
-  Future<api.EmployeePage> listEmployees({String? q, int? limit, int? offset});
+  Future<api.TrainerPage> listTrainers({
+    String? q,
+    String? status,
+    int? limit,
+    int? offset,
+  });
 
-  Future<api.Employee> getEmployee(int id);
+  /// Nest employee list page (`data` + `meta`) as raw JSON.
+  Future<Map<String, dynamic>> listEmployeesRaw({
+    String? q,
+    int? limit,
+    int? offset,
+  });
+
+  /// Nest flat employee payload (see `EmployeeResponseDto`).
+  Future<Map<String, dynamic>> getEmployeeRaw(int id);
+
+  Future<Map<String, dynamic>> createEmployeeRaw(Map<String, dynamic> body);
+
+  Future<Map<String, dynamic>> updateEmployeeRaw(
+    int id,
+    Map<String, dynamic> body,
+  );
+
+  Future<Map<String, dynamic>> setEmployeeStatusRaw(
+    int id,
+    String statusWire,
+  );
 
   Future<api.RolePage> listRoles({int? limit, int? offset});
 
-  Future<api.Employee> assignEmployeeRole({
+  Future<Map<String, dynamic>> assignEmployeeRoleRaw({
     required int id,
-    required api.AssignRoleRequest request,
+    required int roleId,
   });
 }
 
 @LazySingleton(as: PeopleRemoteDataSource)
 class PeopleRemoteDataSourceImpl implements PeopleRemoteDataSource {
-  PeopleRemoteDataSourceImpl(this._peopleApi, this._rbacApi);
+  PeopleRemoteDataSourceImpl(this._peopleApi, this._rbacApi, this._dio);
 
   final api.PEOPLEApi _peopleApi;
   final api.RBACApi _rbacApi;
+  final Dio _dio;
 
   T _unwrap<T>(Response<T> response) {
     final data = response.data;
@@ -116,30 +142,101 @@ class PeopleRemoteDataSourceImpl implements PeopleRemoteDataSource {
   }
 
   @override
+  Future<api.Trainer> createTrainer(api.TrainerCreate trainerCreate) async {
+    return _unwrap(
+      await _peopleApi.createTrainer(trainerCreate: trainerCreate),
+    );
+  }
+
+  @override
   Future<api.TrainerPage> listTrainers({
     String? q,
+    String? status,
     int? limit,
     int? offset,
   }) async {
-    return _unwrap(
-      await _peopleApi.listTrainers(q: q, limit: limit, offset: offset),
+    final response = await _dio.get<dynamic>(
+      '/trainers',
+      queryParameters: <String, dynamic>{
+        'q': ?((q != null && q.isNotEmpty) ? q : null),
+        'status': ?((status != null && status.isNotEmpty && status != 'all')
+            ? status
+            : null),
+        'limit': ?limit,
+        'offset': ?offset,
+      },
+    );
+    final data = _asJsonMap(response);
+    return api.standardSerializers.deserializeWith(
+      api.TrainerPage.serializer,
+      data,
+    )!;
+  }
+
+  Map<String, dynamic> _asJsonMap(Response<dynamic> response) {
+    final data = response.data;
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) {
+      return data.map((k, v) => MapEntry(k.toString(), v));
+    }
+    throw DioException(
+      requestOptions: response.requestOptions,
+      type: DioExceptionType.badResponse,
+      response: response,
+      error: 'Expected JSON object, got ${data.runtimeType}',
     );
   }
 
   @override
-  Future<api.EmployeePage> listEmployees({
+  Future<Map<String, dynamic>> listEmployeesRaw({
     String? q,
     int? limit,
     int? offset,
   }) async {
-    return _unwrap(
-      await _peopleApi.listEmployees(q: q, limit: limit, offset: offset),
+    final response = await _dio.get<dynamic>(
+      '/employees',
+      queryParameters: <String, dynamic>{
+        'q': ?((q != null && q.isNotEmpty) ? q : null),
+        'limit': ?limit,
+        'offset': ?offset,
+      },
     );
+    return _asJsonMap(response);
   }
 
   @override
-  Future<api.Employee> getEmployee(int id) async {
-    return _unwrap(await _peopleApi.getEmployee(id: id));
+  Future<Map<String, dynamic>> getEmployeeRaw(int id) async {
+    final response = await _dio.get<dynamic>('/employees/$id');
+    return _asJsonMap(response);
+  }
+
+  @override
+  Future<Map<String, dynamic>> createEmployeeRaw(
+    Map<String, dynamic> body,
+  ) async {
+    final response = await _dio.post<dynamic>('/employees', data: body);
+    return _asJsonMap(response);
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateEmployeeRaw(
+    int id,
+    Map<String, dynamic> body,
+  ) async {
+    final response = await _dio.patch<dynamic>('/employees/$id', data: body);
+    return _asJsonMap(response);
+  }
+
+  @override
+  Future<Map<String, dynamic>> setEmployeeStatusRaw(
+    int id,
+    String statusWire,
+  ) async {
+    final response = await _dio.post<dynamic>(
+      '/employees/$id/status',
+      data: <String, dynamic>{'status': statusWire},
+    );
+    return _asJsonMap(response);
   }
 
   @override
@@ -148,12 +245,14 @@ class PeopleRemoteDataSourceImpl implements PeopleRemoteDataSource {
   }
 
   @override
-  Future<api.Employee> assignEmployeeRole({
+  Future<Map<String, dynamic>> assignEmployeeRoleRaw({
     required int id,
-    required api.AssignRoleRequest request,
+    required int roleId,
   }) async {
-    return _unwrap(
-      await _rbacApi.assignEmployeeRole(id: id, assignRoleRequest: request),
+    final response = await _dio.put<dynamic>(
+      '/employees/$id/role',
+      data: <String, dynamic>{'role_id': roleId},
     );
+    return _asJsonMap(response);
   }
 }

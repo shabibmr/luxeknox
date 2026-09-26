@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { PlatformModule } from '../platform/platform.module';
 import { RbacModule } from '../rbac/rbac.module';
+import { AuthModule } from '../auth/auth.module';
 import { SysModule } from '../sys/sys.module';
 import { PeopleModule } from '../people/people.module';
 import { SchedModule } from '../sched/sched.module';
@@ -23,6 +24,7 @@ import { NotificationJobsService } from './notification-jobs.service';
   imports: [
     PlatformModule,
     RbacModule,
+    forwardRef(() => AuthModule),
     SysModule,
     forwardRef(() => PeopleModule),
     forwardRef(() => SchedModule),

@@ -3,12 +3,16 @@ import 'package:built_collection/built_collection.dart';
 
 import '../../../../core/media/document_access.dart';
 import '../../domain/entities/emergency_contact.dart';
+import '../../domain/entities/employee_status.dart';
 import '../../domain/entities/employee_summary.dart';
+import '../../domain/entities/employee_update_input.dart';
 import '../../domain/entities/health_info.dart';
 import '../../domain/entities/medical_record.dart';
 import '../../domain/entities/member_document.dart';
 import '../../domain/entities/member_photo.dart';
+import '../../domain/entities/new_employee_input.dart';
 import '../../domain/entities/new_member_input.dart';
+import '../../domain/entities/new_trainer_input.dart';
 import '../../domain/entities/person.dart';
 import '../../domain/entities/profile_summary.dart';
 import '../../domain/entities/role.dart';
@@ -155,23 +159,148 @@ api.TrainerUpdate trainerUpdateFromProfile(TrainerProfile trainer) {
   );
 }
 
+api.TrainerCreate trainerCreateFromInput(NewTrainerInput input) {
+  return api.TrainerCreate(
+    (b) => b
+      ..email = input.email
+      ..phoneNumber = input.phoneNumber
+      ..password = input.password
+      ..firstName = input.firstName
+      ..lastName = input.lastName
+      ..bio = input.bio
+      ..specializations = ListBuilder<String>(input.specializations)
+      ..hourlyRate = input.hourlyRate
+      ..maxClientsCapacity = input.maxClientsCapacity,
+  );
+}
+
 EmployeeSummary employeeSummaryFromApi(api.Employee employee) {
   final user = employee.user;
-  final candidates = [
-    user?.email,
-    user?.phoneNumber,
-  ].whereType<String>().where((s) => s.isNotEmpty).toList();
+  final email = user?.email;
+  final phone = user?.phoneNumber;
+  final fullName = [
+    if (email != null && email.isNotEmpty) email,
+    if (phone != null && phone.isNotEmpty) phone,
+  ].firstOrNull;
   return EmployeeSummary(
     id: employee.id,
     userId: employee.userId,
-    fullName: candidates.isEmpty
-        ? 'Employee #${employee.id}'
-        : candidates.first,
+    fullName: fullName ?? 'Employee #${employee.id}',
     jobTitle: employee.jobTitle,
     department: employee.department,
     status: employee.status.name,
     roleId: employee.roleId,
+    email: email,
+    phoneNumber: phone,
+    hireDate: _apiDateToDateTime(employee.hireDate),
   );
+}
+
+/// Nest `EmployeeResponseDto` is flat (`first_name`, …); OpenAPI `Employee`
+/// expects a nested `user`. Prefer this parser for live employee payloads.
+EmployeeSummary employeeSummaryFromJson(Map<String, dynamic> json) {
+  final id = (json['id'] as num).toInt();
+  final userId = (json['user_id'] as num?)?.toInt() ?? 0;
+  final first = (json['first_name'] as String?)?.trim() ?? '';
+  final last = (json['last_name'] as String?)?.trim() ?? '';
+  final name = '$first $last'.trim();
+
+  Map<String, dynamic>? user;
+  final rawUser = json['user'];
+  if (rawUser is Map<String, dynamic>) {
+    user = rawUser;
+  } else if (rawUser is Map) {
+    user = rawUser.map((k, v) => MapEntry(k.toString(), v));
+  }
+
+  final email = (user?['email'] as String?) ?? (json['email'] as String?);
+  final phone =
+      (user?['phone_number'] as String?) ?? (json['phone_number'] as String?);
+
+  return EmployeeSummary(
+    id: id,
+    userId: userId,
+    fullName: name.isNotEmpty ? name : (email ?? 'Employee #$id'),
+    jobTitle: (json['job_title'] as String?) ?? '',
+    department: json['department'] as String?,
+    status: json['status'] as String?,
+    roleId: (json['role_id'] as num?)?.toInt(),
+    email: email,
+    phoneNumber: phone,
+    hireDate: _parseFlexibleDate(json['hire_date']),
+  );
+}
+
+DateTime? _parseFlexibleDate(Object? value) {
+  if (value == null) return null;
+  if (value is api.Date) return _apiDateToDateTime(value);
+  if (value is DateTime) {
+    return DateTime(value.year, value.month, value.day);
+  }
+  final text = value.toString().trim();
+  if (text.isEmpty) return null;
+  final parsed = DateTime.tryParse(text);
+  if (parsed == null) return null;
+  return DateTime(parsed.year, parsed.month, parsed.day);
+}
+
+String? _dateTimeToWireDate(DateTime? dateTime) {
+  if (dateTime == null) return null;
+  final y = dateTime.year.toString().padLeft(4, '0');
+  final m = dateTime.month.toString().padLeft(2, '0');
+  final d = dateTime.day.toString().padLeft(2, '0');
+  return '$y-$m-$d';
+}
+
+Map<String, dynamic> employeeCreateBodyFromInput(NewEmployeeInput input) {
+  return <String, dynamic>{
+    'email': input.email,
+    'phone_number': input.phoneNumber,
+    'password': input.password,
+    'first_name': input.firstName,
+    'last_name': input.lastName,
+    'job_title': input.jobTitle,
+    'department': input.department,
+    'hire_date': _dateTimeToWireDate(input.hireDate),
+    'role_id': input.roleId,
+  };
+}
+
+/// Always includes optional keys so null clears department / hire_date.
+Map<String, dynamic> employeeUpdateBodyFromInput(EmployeeUpdateInput input) {
+  return <String, dynamic>{
+    if (input.jobTitle != null) 'job_title': input.jobTitle,
+    'department': input.department,
+    'hire_date': _dateTimeToWireDate(input.hireDate),
+  };
+}
+
+api.EmployeeCreate employeeCreateFromInput(NewEmployeeInput input) {
+  return api.EmployeeCreate(
+    (b) => b
+      ..email = input.email
+      ..phoneNumber = input.phoneNumber
+      ..password = input.password
+      ..firstName = input.firstName
+      ..lastName = input.lastName
+      ..jobTitle = input.jobTitle
+      ..department = input.department
+      ..hireDate = _dateTimeToApiDate(input.hireDate)
+      ..roleId = input.roleId,
+  );
+}
+
+api.EmployeeUpdate employeeUpdateFromInput(EmployeeUpdateInput input) {
+  return api.EmployeeUpdate(
+    (b) => b
+      ..jobTitle = input.jobTitle
+      ..department = input.department
+      ..hireDate = _dateTimeToApiDate(input.hireDate),
+  );
+}
+
+api.EmployeeStatus employeeStatusFromDomain(EmployeeStatus status) {
+  return api.EmployeeStatus.valueOf(status.name);
 }
 
 api.MemberCreate memberCreateFromInput(NewMemberInput input) {

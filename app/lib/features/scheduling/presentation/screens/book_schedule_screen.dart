@@ -4,40 +4,252 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/error/failures.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../session/presentation/session_cubit.dart';
+import '../../domain/entities/open_slot.dart';
 import '../../domain/entities/schedule_enums.dart';
 import '../bloc/book_schedule_bloc.dart';
+import '../cubit/open_slots_cubit.dart';
 import '../cubit/schedule_calendar_cubit.dart';
 import '../scheduling_strings.dart';
+import '../widgets/open_slots_picker.dart';
 
-/// Member booking surface: lists upcoming sessions and books with idempotency.
+/// Member booking surface: PT uses open-slot picker; classes list upcoming sessions.
 class BookScheduleScreen extends StatelessWidget {
-  const BookScheduleScreen({super.key, required this.isPt});
+  const BookScheduleScreen({
+    super.key,
+    required this.isPt,
+    @visibleForTesting this.openSlotsCubit,
+    @visibleForTesting this.bookBloc,
+    @visibleForTesting this.calendarCubit,
+  });
 
   final bool isPt;
 
+  /// Test seam; production uses DI.
+  final OpenSlotsCubit? openSlotsCubit;
+  final BookScheduleBloc? bookBloc;
+  final ScheduleCalendarCubit? calendarCubit;
+
   @override
   Widget build(BuildContext context) {
+    if (isPt) {
+      return MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => openSlotsCubit ?? getIt<OpenSlotsCubit>(),
+          ),
+          BlocProvider(
+            create: (_) => bookBloc ?? getIt<BookScheduleBloc>(),
+          ),
+        ],
+        child: const _BookPtBody(),
+      );
+    }
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => getIt<ScheduleCalendarCubit>()..load(),
+          create: (_) {
+            final cubit = calendarCubit ?? getIt<ScheduleCalendarCubit>();
+            if (calendarCubit == null) {
+              cubit.load();
+            }
+            return cubit;
+          },
         ),
-        BlocProvider(create: (_) => getIt<BookScheduleBloc>()),
+        BlocProvider(
+          create: (_) => bookBloc ?? getIt<BookScheduleBloc>(),
+        ),
       ],
-      child: _BookScheduleBody(isPt: isPt),
+      child: const _BookClassBody(),
     );
   }
 }
 
-class _BookScheduleBody extends StatelessWidget {
-  const _BookScheduleBody({required this.isPt});
+class _BookPtBody extends StatefulWidget {
+  const _BookPtBody();
 
-  final bool isPt;
+  @override
+  State<_BookPtBody> createState() => _BookPtBodyState();
+}
+
+class _BookPtBodyState extends State<_BookPtBody> {
+  BookableOpenSlot? _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final session = context.read<SessionCubit>().state;
+      if (session is! SessionAuthenticated) return;
+      context.read<OpenSlotsCubit>().load(session.principal.profileId);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<BookScheduleBloc, BookScheduleState>(
+      listenWhen: (previous, current) => previous.status != current.status,
+      listener: (context, state) {
+        if (state.status == LoadStatus.failure && state.failure != null) {
+          if (state.failure is ConflictFailure) {
+            setState(() => _selected = null);
+            context.read<OpenSlotsCubit>().refreshAfterStaleSlot();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text(SchedulingStrings.openSlotsStale)),
+            );
+            return;
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(failureMessage(state.failure!))),
+          );
+          return;
+        }
+        final participant = state.participant;
+        if (state.status == LoadStatus.success && participant != null) {
+          final msg = participant.bookingStatus == BookingStatus.waitlisted
+              ? SchedulingStrings.waitlistedSuccess
+              : SchedulingStrings.bookSuccess;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(msg)),
+          );
+          setState(() => _selected = null);
+          context.read<OpenSlotsCubit>().refresh();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text(SchedulingStrings.bookPtTitle)),
+        body: BlocBuilder<OpenSlotsCubit, OpenSlotsState>(
+          builder: (context, state) {
+            if (state.status == LoadStatus.loading && !state.hasLoaded) {
+              return const AppLoading();
+            }
+            if (state.status == LoadStatus.failure && !state.hasLoaded) {
+              return AppErrorView(
+                message: state.failure == null
+                    ? 'Something went wrong'
+                    : failureMessage(state.failure!),
+                onRetry: () {
+                  final session = context.read<SessionCubit>().state;
+                  if (session is! SessionAuthenticated) return;
+                  context.read<OpenSlotsCubit>().load(
+                        session.principal.profileId,
+                      );
+                },
+              );
+            }
+            if (state.missingTrainer) {
+              return const AppEmptyView(
+                message: SchedulingStrings.openSlotsNoTrainer,
+              );
+            }
+
+            final cubit = context.read<OpenSlotsCubit>();
+            final daySlots = cubit.slotsForSelectedDay();
+            final submitting = context.select(
+              (BookScheduleBloc b) => b.state.status == LoadStatus.loading,
+            );
+
+            return RefreshIndicator(
+              onRefresh: () => cubit.refresh(),
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  if (state.trainer != null) ...[
+                    Text(
+                      SchedulingStrings.openSlotsTrainerLabel,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      state.trainer!.fullName,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (state.staleSlot) ...[
+                    Card(
+                      color: Theme.of(context).colorScheme.errorContainer,
+                      child: ListTile(
+                        title: const Text(SchedulingStrings.openSlotsStale),
+                        trailing: TextButton(
+                          onPressed: () => cubit.refresh(),
+                          child: const Text(SchedulingStrings.retry),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  if (state.hasLoaded &&
+                      state.slots.isEmpty &&
+                      !state.missingTrainer)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 32),
+                      child: Text(
+                        SchedulingStrings.openSlotsEmptyRange,
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  else ...[
+                    Text(
+                      SchedulingStrings.openSlotsSelectPrompt,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    OpenSlotsPicker(
+                      days: state.days,
+                      selectedDay: state.selectedDay,
+                      slotsForDay: daySlots,
+                      selectedScheduleId: _selected?.scheduleId,
+                      enabled: !submitting,
+                      onDaySelected: (day) {
+                        setState(() => _selected = null);
+                        cubit.selectDay(day);
+                      },
+                      onSlotSelected: (slot) {
+                        setState(() => _selected = slot);
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: submitting || _selected == null
+                          ? null
+                          : () => _book(context, _selected!),
+                      child: Text(
+                        submitting
+                            ? SchedulingStrings.submitting
+                            : SchedulingStrings.openSlotsBook,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void _book(BuildContext context, BookableOpenSlot slot) {
+    final session = context.read<SessionCubit>().state;
+    if (session is! SessionAuthenticated) return;
+    context.read<BookScheduleBloc>().add(
+          BookScheduleRequested(
+            scheduleId: slot.scheduleId,
+            memberId: session.principal.profileId,
+          ),
+        );
+  }
+}
+
+class _BookClassBody extends StatelessWidget {
+  const _BookClassBody();
 
   @override
   Widget build(BuildContext context) {
@@ -63,11 +275,7 @@ class _BookScheduleBody extends StatelessWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(
-            isPt
-                ? SchedulingStrings.bookPtTitle
-                : SchedulingStrings.bookClassTitle,
-          ),
+          title: const Text(SchedulingStrings.bookClassTitle),
         ),
         body: BlocBuilder<ScheduleCalendarCubit, ScheduleCalendarState>(
           builder: (context, state) {
@@ -136,10 +344,10 @@ class _BookAction extends StatelessWidget {
     final session = context.read<SessionCubit>().state;
     if (session is! SessionAuthenticated) return;
     context.read<BookScheduleBloc>().add(
-      BookScheduleRequested(
-        scheduleId: scheduleId,
-        memberId: session.principal.profileId,
-      ),
-    );
+          BookScheduleRequested(
+            scheduleId: scheduleId,
+            memberId: session.principal.profileId,
+          ),
+        );
   }
 }

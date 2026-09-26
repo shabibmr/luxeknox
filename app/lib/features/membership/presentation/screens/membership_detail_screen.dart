@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../session/domain/entities/user_type.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../cubit/membership_detail_cubit.dart';
@@ -47,9 +49,21 @@ class _MembershipDetailView extends StatelessWidget {
   }
 
   Future<void> _handleRenew(BuildContext context) async {
-    final failure = await context.read<MembershipDetailCubit>().renew();
-    if (!context.mounted || failure == null) return;
-    _showActionError(context, failure, 'renew');
+    final result = await context.push<bool>(
+      Routes.adminMembershipsRenewById(membershipId),
+    );
+    if (result == true && context.mounted) {
+      context.read<MembershipDetailCubit>().load(membershipId);
+    }
+  }
+
+  Future<void> _handleFreeze(BuildContext context) async {
+    final result = await context.push<bool>(
+      Routes.adminMembershipsFreezeById(membershipId),
+    );
+    if (result == true && context.mounted) {
+      context.read<MembershipDetailCubit>().load(membershipId);
+    }
   }
 
   Future<void> _handleCancel(BuildContext context) async {
@@ -209,6 +223,7 @@ class _MembershipDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canApprove = context.can('memberships.approve');
+    final canUpdate = context.can('memberships.update');
     final session = context.watch<SessionCubit>().state;
     final hidePricing =
         session is SessionAuthenticated &&
@@ -222,6 +237,7 @@ class _MembershipDetailView extends StatelessWidget {
             context,
             state,
             canApprove: canApprove,
+            canUpdate: canUpdate,
             hidePricing: hidePricing,
           );
         },
@@ -233,6 +249,7 @@ class _MembershipDetailView extends StatelessWidget {
     BuildContext context,
     MembershipDetailState state, {
     required bool canApprove,
+    required bool canUpdate,
     required bool hidePricing,
   }) {
     final membership = state.membership;
@@ -310,35 +327,46 @@ class _MembershipDetailView extends StatelessWidget {
               MembershipStrings.basePriceLabel,
               membership.product!.basePrice,
             ),
-          if (canApprove) ...[
+          if (canApprove || canUpdate) ...[
             const SizedBox(height: 16),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                OutlinedButton(
-                  onPressed: actionsLocked ? null : () => _handleRenew(context),
-                  child: const Text(MembershipStrings.renew),
-                ),
-                OutlinedButton(
-                  onPressed: actionsLocked
-                      ? null
-                      : () => _handleUpgrade(context),
-                  child: const Text(MembershipStrings.upgrade),
-                ),
-                OutlinedButton(
-                  onPressed: actionsLocked
-                      ? null
-                      : () => _handleExtend(context),
-                  child: const Text(MembershipStrings.grantExtension),
-                ),
-                OutlinedButton(
-                  onPressed: actionsLocked ? null : () => _handleCancel(context),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.error,
+                if (canApprove)
+                  OutlinedButton(
+                    onPressed: actionsLocked ? null : () => _handleRenew(context),
+                    child: const Text(MembershipStrings.renew),
                   ),
-                  child: const Text(MembershipStrings.cancelMembership),
-                ),
+                if (canUpdate)
+                  OutlinedButton(
+                    onPressed: actionsLocked
+                        ? null
+                        : () => _handleFreeze(context),
+                    child: const Text(MembershipStrings.freezeSubmit),
+                  ),
+                if (canApprove)
+                  OutlinedButton(
+                    onPressed: actionsLocked
+                        ? null
+                        : () => _handleUpgrade(context),
+                    child: const Text(MembershipStrings.upgrade),
+                  ),
+                if (canApprove)
+                  OutlinedButton(
+                    onPressed: actionsLocked
+                        ? null
+                        : () => _handleExtend(context),
+                    child: const Text(MembershipStrings.grantExtension),
+                  ),
+                if (canApprove)
+                  OutlinedButton(
+                    onPressed: actionsLocked ? null : () => _handleCancel(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                    child: const Text(MembershipStrings.cancelMembership),
+                  ),
               ],
             ),
           ],

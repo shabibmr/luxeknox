@@ -1,6 +1,7 @@
 import 'package:api_client/api_client.dart' as api;
 
 import '../../domain/entities/app_setting.dart';
+import '../../domain/entities/gym_public_settings.dart';
 import '../../domain/entities/setting_category.dart';
 
 SettingCategory _categoryFromApi(api.SettingCategory category) {
@@ -27,5 +28,16 @@ api.SettingsWriteItemsInner settingsWriteItemFromDomain(AppSetting setting) {
     (b) => b
       ..settingKey = setting.key
       ..settingValue = setting.value,
+  );
+}
+
+GymPublicSettings gymPublicSettingsFromApi(api.PublicSettings settings) {
+  return GymPublicSettings(
+    timezone: settings.timezone,
+    currency: settings.currency,
+    dateFormat: settings.dateFormat,
+    defaultPageSize: settings.defaultPageSize,
+    operatingHours: settings.operatingHours,
+    cancellationCutoffMinutes: settings.cancellationCutoffMinutes,
   );
 }

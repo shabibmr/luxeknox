@@ -1,8 +1,8 @@
-import 'package:app/core/media/document_access.dart';
-import 'package:app/core/media/document_preview_dialog.dart';
-import 'package:app/core/media/signed_media_image.dart';
-import 'package:app/core/media/signed_media_resolver.dart';
-import 'package:app/session/domain/entities/user_type.dart';
+import 'package:luxeknox/core/media/document_access.dart';
+import 'package:luxeknox/core/media/document_preview_dialog.dart';
+import 'package:luxeknox/core/media/signed_media_image.dart';
+import 'package:luxeknox/core/media/signed_media_resolver.dart';
+import 'package:luxeknox/session/domain/entities/user_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

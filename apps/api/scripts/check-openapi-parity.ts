@@ -19,39 +19,9 @@ import YAML from 'yaml';
 const HTTP_METHODS = new Set(['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace']);
 
 /**
- * Transitional allowlist for implemented catalogue + PEOPLE/MEDIA/HEALTH routes
- * that do not yet carry `x-parity: required` in yaml. Prefer annotating yaml and
- * shrinking this set over time.
+ * Transitional allowlist (now empty: all implemented MVP operations carry `x-parity: required` in YAML).
  */
-const IMPLEMENTED_MVP_PATH_ALLOWLIST = new Set([
-  // Vertical 1 — Exercise Library
-  '/exercises',
-  '/exercises/{id}',
-  // Vertical 2 — Food Library
-  '/foods',
-  '/foods/{id}',
-  // Vertical 3 — PEOPLE / MEDIA / HEALTH onboarding
-  '/members',
-  '/members/{id}',
-  '/members/{id}/assign-trainer',
-  '/trainers',
-  '/trainers/{id}',
-  '/trainers/{id}/members',
-  '/employees',
-  '/employees/{id}',
-  '/employees/{id}/role',
-  '/employees/{id}/status',
-  '/users/{id}/emergency-contacts',
-  '/users/{id}/emergency-contacts/{contactId}',
-  '/members/{id}/health',
-  '/members/{id}/documents',
-  '/members/{id}/documents/{documentId}/verify',
-  '/members/{id}/documents/{documentId}',
-  '/members/{id}/photos',
-  '/members/{id}/photos/{photoId}/avatar',
-  '/media/uploads',
-  '/media/{key}',
-]);
+const IMPLEMENTED_MVP_PATH_ALLOWLIST = new Set<string>([]);
 
 function normalizePath(p: string): string {
   const withPrefix = p.startsWith('/v1/') || p === '/v1' ? p : `/v1${p.startsWith('/') ? p : `/${p}`}`;
@@ -107,7 +77,7 @@ function isImplementedMvp(route: SpecRoute): boolean {
 }
 
 function isDeferredPath(rawPath: string): boolean {
-  return rawPath.includes('medical-histories') || rawPath.includes('health-conditions');
+  return rawPath.includes('health-conditions');
 }
 
 function main(): void {
@@ -154,7 +124,7 @@ function main(): void {
   if (deferredLeaked.length > 0) {
     const lines = deferredLeaked.map((m) => `  - ${m.key}`).join('\n');
     throw new Error(
-      `OpenAPI parity failed: deferred medical-histories/health-conditions appeared in required mvp set:\n${lines}`,
+      `OpenAPI parity failed: deferred health-conditions appeared in required mvp set:\n${lines}`,
     );
   }
 
@@ -163,7 +133,7 @@ function main(): void {
   );
   if (deferredYaml.length === 0) {
     throw new Error(
-      'OpenAPI parity failed: expected medical-histories/health-conditions to remain x-status: deferred in yaml',
+      'OpenAPI parity failed: expected health-conditions to remain x-status: deferred in yaml',
     );
   }
 
@@ -173,7 +143,7 @@ function main(): void {
   console.log(
     `[OpenAPI parity] OK — ${module0.length} module-0 + ${mvpRequired.length} implemented mvp ` +
       `(${viaAnnotation} x-parity:required, ${viaAllowlist} allowlist) present in live dump; ` +
-      `${deferredYaml.length} deferred medical/conditions ops excluded.`,
+      `${deferredYaml.length} deferred health-conditions ops excluded.`,
   );
 }
 

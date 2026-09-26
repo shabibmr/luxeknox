@@ -209,23 +209,31 @@ describe('AttendanceService', () => {
   });
 
   it('returns summary for a member', async () => {
-    repository.listCheckInDatesDesc.mockResolvedValue(['2026-09-21', '2026-09-20']);
-    repository.findLatestCheckIn.mockResolvedValue({
-      id: 1,
-      user_id: 10,
-      check_in_time: new Date('2026-09-21T10:00:00.000Z'),
-      check_out_time: null,
-      method: 'qr_code',
-      gate_identifier: null,
-      verified_by_user_id: null,
-      created_at: new Date(),
-      updated_at: new Date(),
-    });
-    repository.countCheckInsForUserBetween.mockResolvedValue(4);
-    const result = await service.summary({ member_id: 5 }, staffActor);
-    expect(result.visits_this_month).toBe(4);
-    expect(result.last_check_in).toBe('2026-09-21T10:00:00.000Z');
-    expect(result.streak_days).toBeGreaterThanOrEqual(1);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-21T12:00:00.000Z'));
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      repository.listCheckInDatesDesc.mockResolvedValue([today, yesterday]);
+      repository.findLatestCheckIn.mockResolvedValue({
+        id: 1,
+        user_id: 10,
+        check_in_time: new Date('2026-09-21T10:00:00.000Z'),
+        check_out_time: null,
+        method: 'qr_code',
+        gate_identifier: null,
+        verified_by_user_id: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      repository.countCheckInsForUserBetween.mockResolvedValue(4);
+      const result = await service.summary({ member_id: 5 }, staffActor);
+      expect(result.visits_this_month).toBe(4);
+      expect(result.last_check_in).toBe('2026-09-21T10:00:00.000Z');
+      expect(result.streak_days).toBeGreaterThanOrEqual(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('rolls up a day into attendance_histories', async () => {

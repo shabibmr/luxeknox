@@ -13,6 +13,7 @@ part 'cancel_request.g.dart';
 /// Properties:
 /// * [reason] 
 /// * [rowVersion] 
+/// * [cancelSeries] 
 @BuiltValue()
 abstract class CancelRequest implements Built<CancelRequest, CancelRequestBuilder> {
   @BuiltValueField(wireName: r'reason')
@@ -20,6 +21,9 @@ abstract class CancelRequest implements Built<CancelRequest, CancelRequestBuilde
 
   @BuiltValueField(wireName: r'row_version')
   int? get rowVersion;
+
+  @BuiltValueField(wireName: r'cancel_series')
+  bool? get cancelSeries;
 
   CancelRequest._();
 
@@ -56,6 +60,13 @@ class _$CancelRequestSerializer implements PrimitiveSerializer<CancelRequest> {
       yield serializers.serialize(
         object.rowVersion,
         specifiedType: const FullType(int),
+      );
+    }
+    if (object.cancelSeries != null) {
+      yield r'cancel_series';
+      yield serializers.serialize(
+        object.cancelSeries,
+        specifiedType: const FullType(bool),
       );
     }
   }
@@ -96,6 +107,14 @@ class _$CancelRequestSerializer implements PrimitiveSerializer<CancelRequest> {
           ) as int?;
           if (valueDes == null) continue;
           result.rowVersion = valueDes;
+          break;
+        case r'cancel_series':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(bool),
+          ) as bool?;
+          if (valueDes == null) continue;
+          result.cancelSeries = valueDes;
           break;
         default:
           unhandled.add(key);

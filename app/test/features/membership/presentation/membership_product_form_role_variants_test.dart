@@ -1,12 +1,12 @@
-import 'package:app/core/di/injector.dart';
-import 'package:app/features/membership/domain/entities/membership_product.dart';
-import 'package:app/features/membership/presentation/cubit/membership_product_form_cubit.dart';
-import 'package:app/features/membership/presentation/membership_strings.dart';
-import 'package:app/features/membership/presentation/screens/membership_product_form_screen.dart';
-import 'package:app/session/domain/entities/capabilities.dart';
-import 'package:app/session/domain/entities/principal.dart';
-import 'package:app/session/domain/entities/user_type.dart';
-import 'package:app/session/presentation/session_cubit.dart';
+import 'package:luxeknox/core/di/injector.dart';
+import 'package:luxeknox/features/membership/domain/entities/membership_product.dart';
+import 'package:luxeknox/features/membership/presentation/cubit/membership_product_form_cubit.dart';
+import 'package:luxeknox/features/membership/presentation/membership_strings.dart';
+import 'package:luxeknox/features/membership/presentation/screens/membership_product_form_screen.dart';
+import 'package:luxeknox/session/domain/entities/capabilities.dart';
+import 'package:luxeknox/session/domain/entities/principal.dart';
+import 'package:luxeknox/session/domain/entities/user_type.dart';
+import 'package:luxeknox/session/presentation/session_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -85,11 +85,17 @@ void main() {
   void expectForm(WidgetTester tester, {required bool allowed}) {
     if (allowed) {
       expect(find.text(MembershipStrings.noPermission), findsNothing);
-      expect(find.text(MembershipStrings.save), findsOneWidget);
+      expect(
+        find.text(MembershipStrings.save, skipOffstage: false),
+        findsOneWidget,
+      );
       expect(find.text(MembershipStrings.nameLabel), findsOneWidget);
     } else {
       expect(find.text(MembershipStrings.noPermission), findsOneWidget);
-      expect(find.text(MembershipStrings.save), findsNothing);
+      expect(
+        find.text(MembershipStrings.save, skipOffstage: false),
+        findsNothing,
+      );
     }
   }
 

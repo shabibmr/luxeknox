@@ -6,6 +6,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/error/map_thrown.dart';
 import '../../../../core/pagination/cursor_page.dart';
 import '../../domain/entities/attendance_history_day.dart';
+import '../../domain/entities/attendance_occupancy.dart';
 import '../../domain/entities/attendance_pass.dart';
 import '../../domain/entities/attendance_record.dart';
 import '../../domain/entities/attendance_summary.dart';
@@ -119,6 +120,16 @@ class AttendanceRepositoryImpl implements AttendanceRepository {
     try {
       final summary = await _remote.getSummary(memberId: parsed);
       return Right(summary.toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AttendanceOccupancy>> getOccupancy() async {
+    try {
+      final occupancy = await _remote.getOccupancy();
+      return Right(occupancy.toDomain());
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

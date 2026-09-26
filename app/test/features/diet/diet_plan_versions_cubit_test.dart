@@ -1,8 +1,8 @@
-import 'package:app/core/error/failures.dart';
-import 'package:app/core/presentation/load_status.dart';
-import 'package:app/features/diet/domain/entities/diet_plan_version.dart';
-import 'package:app/features/diet/domain/usecases/list_diet_plan_versions_usecase.dart';
-import 'package:app/features/diet/presentation/cubit/diet_plan_versions_cubit.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/core/presentation/load_status.dart';
+import 'package:luxeknox/features/diet/domain/entities/diet_plan_version.dart';
+import 'package:luxeknox/features/diet/domain/usecases/list_diet_plan_versions_usecase.dart';
+import 'package:luxeknox/features/diet/presentation/cubit/diet_plan_versions_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

@@ -2,9 +2,13 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/pagination/cursor_page.dart';
+import '../entities/employee_status.dart';
 import '../entities/employee_summary.dart';
+import '../entities/employee_update_input.dart';
 import '../entities/member_filter.dart';
+import '../entities/new_employee_input.dart';
 import '../entities/new_member_input.dart';
+import '../entities/new_trainer_input.dart';
 import '../entities/person.dart';
 import '../entities/profile_summary.dart';
 import '../entities/role.dart';
@@ -35,8 +39,11 @@ abstract class PeopleRepository {
 
   Future<Either<Failure, TrainerProfile>> updateTrainer(TrainerProfile trainer);
 
+  Future<Either<Failure, TrainerProfile>> createTrainer(NewTrainerInput input);
+
   Future<Either<Failure, CursorPage<TrainerSummary>>> listTrainers({
     String? query,
+    String? status,
     String? cursor,
   });
 
@@ -46,6 +53,20 @@ abstract class PeopleRepository {
   });
 
   Future<Either<Failure, EmployeeSummary>> getEmployee(int id);
+
+  Future<Either<Failure, EmployeeSummary>> createEmployee(
+    NewEmployeeInput input,
+  );
+
+  Future<Either<Failure, EmployeeSummary>> updateEmployee(
+    int id,
+    EmployeeUpdateInput input,
+  );
+
+  Future<Either<Failure, EmployeeSummary>> setEmployeeStatus(
+    int id,
+    EmployeeStatus status,
+  );
 
   Future<Either<Failure, List<Role>>> listRoles();
 

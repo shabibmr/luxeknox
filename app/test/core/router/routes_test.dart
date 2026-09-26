@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/core/router/routes.dart';
+import 'package:luxeknox/core/router/routes.dart';
 
 void main() {
   group('Routes', () {
@@ -96,7 +96,10 @@ void main() {
         Routes.adminPaymentsOutstanding,
         Routes.adminMore,
         Routes.adminTrainers,
+        Routes.adminTrainersCreate,
+        Routes.adminTrainersEdit,
         Routes.adminEmployees,
+        Routes.adminEmployeesCreate,
         Routes.adminPackages,
         Routes.adminAttendance,
         Routes.adminSchedules,
@@ -115,7 +118,7 @@ void main() {
       // set's length equals the number of entries listed.
       expect(
         allRoutes.length,
-        91,
+        94,
         reason: 'All route constants should be unique; duplicate values found',
       );
     });

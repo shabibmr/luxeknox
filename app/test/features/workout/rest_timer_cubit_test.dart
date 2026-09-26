@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app/features/workout/presentation/cubit/rest_timer_cubit.dart';
+import 'package:luxeknox/features/workout/presentation/cubit/rest_timer_cubit.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

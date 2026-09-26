@@ -1,5 +1,5 @@
-import 'package:app/features/auth/presentation/screens/splash_screen.dart';
-import 'package:app/session/presentation/session_cubit.dart';
+import 'package:luxeknox/features/auth/presentation/screens/splash_screen.dart';
+import 'package:luxeknox/session/presentation/session_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

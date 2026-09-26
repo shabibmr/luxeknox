@@ -88,3 +88,41 @@ export function assertPeopleRowScope(
   // Unrecognized / unexpected principal types fail closed.
   throw new NotFoundError('Resource not found');
 }
+
+export interface MemberLookup {
+  findById(id: number): Promise<{
+    id: number;
+    user_id?: number | null;
+    assigned_trainer_id?: number | null;
+  } | null>;
+}
+
+/** Staff short-circuit before findById; others load then assertPeopleRowScope. */
+export async function assertMemberAccess(
+  memberRepo: MemberLookup,
+  principal: AuthenticatedUser,
+  memberId: number,
+  options: AssertPeopleRowScopeOptions = {},
+): Promise<void> {
+  const staffBypass = options.staffBypass !== false;
+  if (staffBypass && (principal.userType === 'admin' || principal.userType === 'employee')) {
+    return;
+  }
+
+  const member = await memberRepo.findById(memberId);
+  if (!member) {
+    throw new NotFoundError('Member not found');
+  }
+
+  assertPeopleRowScope(
+    principal,
+    {
+      profileId: member.id,
+      userId: member.user_id,
+      assignedTrainerId: member.assigned_trainer_id,
+      kind: 'member',
+    },
+    options,
+  );
+}
+

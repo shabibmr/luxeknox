@@ -23,4 +23,18 @@ class DashboardStrings {
   static const String retry = 'Retry';
   static const String staleDataNotice =
       'Showing last loaded data — refresh failed.';
+
+  // Agenda (P4) — member bookings / trainer sessions for today + next 7 days.
+  static const String agendaSectionTitle = 'Agenda';
+  static const String todayAgendaMemberTitle = "Today's bookings";
+  static const String todayAgendaTrainerTitle = "Today's sessions";
+  static const String todayAgendaMemberEmpty = 'No bookings scheduled for today.';
+  static const String todayAgendaTrainerEmpty =
+      'No sessions scheduled for today.';
+  static const String upcomingAgendaTitle = 'Upcoming';
+  static const String upcomingAgendaEmpty = 'Nothing coming up in the next 7 days.';
+  static const String agendaError = 'Could not load your agenda.';
+
+  static String agendaItemCount(int count) =>
+      count == 1 ? '1 session' : '$count sessions';
 }

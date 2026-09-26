@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SettingsRepository } from './settings.repository';
+import { type SettingDto, resolveSettingCategory } from './settings.dto';
 
 /**
  * SettingsService provides typed access to system settings configured in `gym_settings`.
@@ -205,6 +206,32 @@ export class SettingsService {
       await this.refreshCache();
     }
     return Object.fromEntries(this.cache!.entries());
+  }
+
+  /**
+   * Returns settings list optionally filtered by category.
+   */
+  async listSettings(category?: string): Promise<SettingDto[]> {
+    const rows = await this.settingsRepository.findAll();
+    const settings: SettingDto[] = rows.map((row) => ({
+      id: row.id,
+      setting_key: row.setting_key,
+      setting_value: row.setting_value,
+      category: resolveSettingCategory(row.setting_key),
+    }));
+    if (category) {
+      return settings.filter((s) => s.category.toUpperCase() === category.toUpperCase());
+    }
+    return settings;
+  }
+
+  /**
+   * Upserts one or multiple settings and refreshes the cache.
+   */
+  async updateSettings(items: Array<{ setting_key: string; setting_value: string }>): Promise<SettingDto[]> {
+    await this.settingsRepository.upsertMany(items);
+    await this.refreshCache();
+    return this.listSettings();
   }
 
   /**

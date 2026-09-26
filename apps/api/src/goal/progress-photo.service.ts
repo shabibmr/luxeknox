@@ -1,9 +1,10 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { MemberRepository } from '../people/member.repository';
+import { assertMemberAccess } from '../people/row-scope';
 import { AuditService } from '../platform/audit/audit.service';
 import type { NewProgressPhoto, ProgressPhoto } from '../platform/db/schema/goals';
-import { NotFoundError } from '../platform/errors/app-error';
+import { ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import type {
@@ -34,26 +35,6 @@ export class ProgressPhotoService {
     private readonly auditService: AuditService,
   ) {}
 
-  async assertCanAccessMember(actor: AuthenticatedUser, memberId: number): Promise<boolean> {
-    if (actor.userType === 'admin' || actor.userType === 'employee') {
-      return true; // Admin/employee has access
-    }
-    if (actor.userType === 'member') {
-      if (actor.profileId !== memberId) {
-        throw new NotFoundError('Member not found');
-      }
-      return true; // Member accessing self
-    }
-    if (actor.userType === 'trainer') {
-      const member = await this.memberRepo.findById(memberId);
-      if (!member || member.assigned_trainer_id !== actor.profileId) {
-        throw new NotFoundError('Member not found or not assigned to trainer');
-      }
-      return true; // Trainer accessing assigned member
-    }
-    throw new ForbiddenException('Access denied');
-  }
-
   async canViewPrivatePhotos(actor: AuthenticatedUser, memberId: number): Promise<boolean> {
     if (actor.userType === 'member' && actor.profileId === memberId) {
       return true;
@@ -74,7 +55,7 @@ export class ProgressPhotoService {
     filter: ProgressPhotoFilterQueryDto,
     actor: AuthenticatedUser,
   ): Promise<PaginatedResponse<ProgressPhoto>> {
-    await this.assertCanAccessMember(actor, memberId);
+    await assertMemberAccess(this.memberRepo, actor, memberId);
     const includePrivate = await this.canViewPrivatePhotos(actor, memberId);
 
     const pagination = await this.paginationHelper.normalizeParams(rawQuery);
@@ -100,10 +81,10 @@ export class ProgressPhotoService {
     dto: ProgressPhotoWriteDto,
     actor: AuthenticatedUser,
   ): Promise<ProgressPhoto> {
-    await this.assertCanAccessMember(actor, memberId);
+    await assertMemberAccess(this.memberRepo, actor, memberId);
 
     if (actor.userType === 'member' && actor.profileId !== memberId) {
-      throw new ForbiddenException('Cannot upload photos for another member');
+      throw new ForbiddenError('Cannot upload photos for another member');
     }
 
     const now = new Date();
@@ -142,7 +123,7 @@ export class ProgressPhotoService {
     const isAdmin = actor.userType === 'admin';
 
     if (!isOwner && !isAdmin) {
-      throw new ForbiddenException('Only the owner or an admin may delete progress photos');
+      throw new ForbiddenError('Only the owner or an admin may delete progress photos');
     }
 
     await this.repository.deleteById(photoId);
@@ -161,7 +142,7 @@ export class ProgressPhotoService {
     query: ProgressPhotoComparisonQueryDto,
     actor: AuthenticatedUser,
   ): Promise<ProgressPhotoComparisonResult> {
-    await this.assertCanAccessMember(actor, memberId);
+    await assertMemberAccess(this.memberRepo, actor, memberId);
     const includePrivate = await this.canViewPrivatePhotos(actor, memberId);
 
     const photos = await this.repository.findComparisonByDates(

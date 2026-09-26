@@ -1,8 +1,8 @@
-import 'package:app/features/auth/presentation/widgets/sign_out_tile.dart';
-import 'package:app/session/domain/entities/capabilities.dart';
-import 'package:app/session/domain/entities/principal.dart';
-import 'package:app/session/domain/entities/user_type.dart';
-import 'package:app/session/presentation/session_cubit.dart';
+import 'package:luxeknox/features/auth/presentation/widgets/sign_out_tile.dart';
+import 'package:luxeknox/session/domain/entities/capabilities.dart';
+import 'package:luxeknox/session/domain/entities/principal.dart';
+import 'package:luxeknox/session/domain/entities/user_type.dart';
+import 'package:luxeknox/session/presentation/session_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

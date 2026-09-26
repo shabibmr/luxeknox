@@ -1,9 +1,10 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { MemberRepository } from '../people/member.repository';
+import { assertMemberAccess } from '../people/row-scope';
 import { AuditService } from '../platform/audit/audit.service';
 import type { NewProgressNote, ProgressNote, ProgressNoteType } from '../platform/db/schema/goals';
-import { NotFoundError } from '../platform/errors/app-error';
+import { ForbiddenError } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import type { ProgressNoteFilterQueryDto, ProgressNoteWriteDto } from './goal.dto';
@@ -18,26 +19,6 @@ export class ProgressNoteService {
     private readonly auditService: AuditService,
   ) {}
 
-  async assertCanAccessMember(actor: AuthenticatedUser, memberId: number): Promise<void> {
-    if (actor.userType === 'admin' || actor.userType === 'employee') {
-      return;
-    }
-    if (actor.userType === 'member') {
-      if (actor.profileId !== memberId) {
-        throw new NotFoundError('Member not found');
-      }
-      return;
-    }
-    if (actor.userType === 'trainer') {
-      const member = await this.memberRepo.findById(memberId);
-      if (!member || member.assigned_trainer_id !== actor.profileId) {
-        throw new NotFoundError('Member not found or not assigned to trainer');
-      }
-      return;
-    }
-    throw new ForbiddenException('Access denied');
-  }
-
   async assertCanWriteNote(
     actor: AuthenticatedUser,
     memberId: number,
@@ -48,24 +29,24 @@ export class ProgressNoteService {
     }
     if (actor.userType === 'member') {
       if (actor.profileId !== memberId) {
-        throw new ForbiddenException('Cannot write notes for another member');
+        throw new ForbiddenError('Cannot write notes for another member');
       }
       if (noteType !== 'member_note') {
-        throw new ForbiddenException('Members may only create member_note entries');
+        throw new ForbiddenError('Members may only create member_note entries');
       }
       return;
     }
     if (actor.userType === 'trainer') {
       const member = await this.memberRepo.findById(memberId);
       if (!member || member.assigned_trainer_id !== actor.profileId) {
-        throw new ForbiddenException('Trainer may only write assessments for assigned members');
+        throw new ForbiddenError('Trainer may only write assessments for assigned members');
       }
       if (noteType !== 'trainer_assessment') {
-        throw new ForbiddenException('Trainers may only create trainer_assessment entries');
+        throw new ForbiddenError('Trainers may only create trainer_assessment entries');
       }
       return;
     }
-    throw new ForbiddenException('Access denied');
+    throw new ForbiddenError('Access denied');
   }
 
   async listNotes(
@@ -74,7 +55,7 @@ export class ProgressNoteService {
     _filter: ProgressNoteFilterQueryDto,
     actor: AuthenticatedUser,
   ): Promise<PaginatedResponse<ProgressNote>> {
-    await this.assertCanAccessMember(actor, memberId);
+    await assertMemberAccess(this.memberRepo, actor, memberId);
 
     const pagination = await this.paginationHelper.normalizeParams(rawQuery);
     const offset = pagination.offset ?? 0;

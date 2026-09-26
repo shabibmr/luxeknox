@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:app/core/error/failures.dart';
-import 'package:app/core/media/media_downloader.dart';
-import 'package:app/core/media/signed_media_resolver.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/core/media/media_downloader.dart';
+import 'package:luxeknox/core/media/signed_media_resolver.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

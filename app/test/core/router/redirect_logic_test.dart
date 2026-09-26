@@ -1,9 +1,9 @@
-import 'package:app/core/router/redirect_logic.dart';
-import 'package:app/core/router/routes.dart';
-import 'package:app/session/domain/entities/capabilities.dart';
-import 'package:app/session/domain/entities/principal.dart';
-import 'package:app/session/domain/entities/user_type.dart';
-import 'package:app/session/presentation/session_cubit.dart';
+import 'package:luxeknox/core/router/redirect_logic.dart';
+import 'package:luxeknox/core/router/routes.dart';
+import 'package:luxeknox/session/domain/entities/capabilities.dart';
+import 'package:luxeknox/session/domain/entities/principal.dart';
+import 'package:luxeknox/session/domain/entities/user_type.dart';
+import 'package:luxeknox/session/presentation/session_cubit.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

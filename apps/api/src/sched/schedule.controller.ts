@@ -6,11 +6,13 @@ import { RequirePermission } from '../rbac/require-permission.decorator';
 import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
 import {
   cancelRequestSchema,
+  scheduleCreateSchema,
   scheduleTransitionSchema,
-  scheduleWriteSchema,
+  scheduleUpdateSchema,
   type CancelRequestDto,
+  type ScheduleCreateDto,
   type ScheduleTransitionDto,
-  type ScheduleWriteDto,
+  type ScheduleUpdateDto,
 } from './schedule.dto';
 import { ScheduleService } from './schedule.service';
 
@@ -35,7 +37,7 @@ export class ScheduleController {
   @HttpCode(201)
   @ApiOperation({ operationId: 'createSchedule', summary: 'Create a booking or class occurrence' })
   async create(
-    @Body(new ZodValidationPipe(scheduleWriteSchema)) dto: ScheduleWriteDto,
+    @Body(new ZodValidationPipe(scheduleCreateSchema)) dto: ScheduleCreateDto,
     @CurrentUser() currentUser: AuthenticatedUser,
   ) {
     return this.service.create(dto, currentUser);
@@ -58,7 +60,7 @@ export class ScheduleController {
   @ApiParam({ name: 'id', type: Number })
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body(new ZodValidationPipe(scheduleWriteSchema)) dto: ScheduleWriteDto,
+    @Body(new ZodValidationPipe(scheduleUpdateSchema)) dto: ScheduleUpdateDto,
     @CurrentUser() currentUser: AuthenticatedUser,
   ) {
     return this.service.update(id, dto, currentUser);

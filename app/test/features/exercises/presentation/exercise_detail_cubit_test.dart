@@ -1,7 +1,7 @@
-import 'package:app/core/error/failures.dart';
-import 'package:app/features/exercises/domain/entities/exercise.dart';
-import 'package:app/features/exercises/domain/usecases/get_exercise_usecase.dart';
-import 'package:app/features/exercises/presentation/cubit/exercise_detail_cubit.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/features/exercises/domain/entities/exercise.dart';
+import 'package:luxeknox/features/exercises/domain/usecases/get_exercise_usecase.dart';
+import 'package:luxeknox/features/exercises/presentation/cubit/exercise_detail_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

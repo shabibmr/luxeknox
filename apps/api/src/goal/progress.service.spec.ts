@@ -1,10 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ForbiddenException } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import type { MemberRepository } from '../people/member.repository';
 import type { AuditService } from '../platform/audit/audit.service';
 import type { ProgressNote, ProgressPhoto } from '../platform/db/schema/goals';
-import { NotFoundError } from '../platform/errors/app-error';
+import { ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import { PaginationHelper } from '../platform/http/pagination';
 import type { ProgressNoteRepository } from './progress-note.repository';
 import { ProgressNoteService } from './progress-note.service';
@@ -147,7 +146,7 @@ describe('ProgressService (GOA-010, GOA-011, GOA-012, GOA-014)', () => {
           },
           mockMemberUser,
         ),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
 
     it('allows assigned trainer to write trainer_assessment', async () => {
@@ -184,7 +183,7 @@ describe('ProgressService (GOA-010, GOA-011, GOA-012, GOA-014)', () => {
           },
           unassignedTrainer,
         ),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
   });
 
@@ -224,7 +223,7 @@ describe('ProgressService (GOA-010, GOA-011, GOA-012, GOA-014)', () => {
     it('rejects non-owner trainer attempting to delete progress photo', async () => {
       await expect(
         photoService.deletePhoto(1, mockTrainerUser),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
   });
 

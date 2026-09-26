@@ -1,6 +1,7 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { MemberRepository } from '../people/member.repository';
+import { assertMemberAccess } from '../people/row-scope';
 import { AuditService } from '../platform/audit/audit.service';
 import type {
   Goal,
@@ -8,7 +9,7 @@ import type {
   NewGoal,
   NewGoalHistory,
 } from '../platform/db/schema/goals';
-import { BusinessRuleError, NotFoundError } from '../platform/errors/app-error';
+import { BusinessRuleError, ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import type {
@@ -30,26 +31,6 @@ export class GoalService {
     private readonly auditService: AuditService,
   ) {}
 
-  async assertCanAccessMember(actor: AuthenticatedUser, memberId: number): Promise<void> {
-    if (actor.userType === 'admin' || actor.userType === 'employee') {
-      return;
-    }
-    if (actor.userType === 'member') {
-      if (actor.profileId !== memberId) {
-        throw new NotFoundError('Member not found');
-      }
-      return;
-    }
-    if (actor.userType === 'trainer') {
-      const member = await this.memberRepo.findById(memberId);
-      if (!member || member.assigned_trainer_id !== actor.profileId) {
-        throw new NotFoundError('Member not found or not assigned to trainer');
-      }
-      return;
-    }
-    throw new ForbiddenException('Access denied');
-  }
-
   async assertCanManageMemberGoal(actor: AuthenticatedUser, memberId: number): Promise<void> {
     if (actor.userType === 'admin' || actor.userType === 'employee') {
       return;
@@ -57,12 +38,12 @@ export class GoalService {
     if (actor.userType === 'trainer') {
       const member = await this.memberRepo.findById(memberId);
       if (!member || member.assigned_trainer_id !== actor.profileId) {
-        throw new ForbiddenException('Trainer may only manage goals for assigned members');
+        throw new ForbiddenError('Trainer may only manage goals for assigned members');
       }
       return;
     }
     // Per FR-GOAL-003: Member reads own goals; may not create in MVP
-    throw new ForbiddenException('Only trainers and staff may create or modify goals');
+    throw new ForbiddenError('Only trainers and staff may create or modify goals');
   }
 
   evaluateAchievement(baseline: number, target: number, current: number): boolean {
@@ -81,7 +62,7 @@ export class GoalService {
     filter: GoalFilterQueryDto,
     actor: AuthenticatedUser,
   ): Promise<PaginatedResponse<GoalWithMetric>> {
-    await this.assertCanAccessMember(actor, memberId);
+    await assertMemberAccess(this.memberRepo, actor, memberId);
 
     const pagination = await this.paginationHelper.normalizeParams(rawQuery);
     const offset = pagination.offset ?? 0;
@@ -107,7 +88,7 @@ export class GoalService {
       throw new NotFoundError(`Goal with id ${goalId} not found`);
     }
 
-    await this.assertCanAccessMember(actor, goal.member_id);
+    await assertMemberAccess(this.memberRepo, actor, goal.member_id);
     return goal;
   }
 
@@ -215,7 +196,7 @@ export class GoalService {
       throw new NotFoundError(`Goal with id ${goalId} not found`);
     }
 
-    await this.assertCanAccessMember(actor, goal.member_id);
+    await assertMemberAccess(this.memberRepo, actor, goal.member_id);
 
     const now = new Date();
     const recordedDate = dto.recorded_date ?? now.toISOString().slice(0, 10);

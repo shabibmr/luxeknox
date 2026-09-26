@@ -76,19 +76,47 @@ class CreateScheduleUseCase
   }
 }
 
+class UpdateScheduleParams extends Equatable {
+  const UpdateScheduleParams({
+    required this.id,
+    required this.input,
+  });
+
+  final String id;
+  final CreateScheduleInput input;
+
+  @override
+  List<Object?> get props => [id, input];
+}
+
+@lazySingleton
+class UpdateScheduleUseCase
+    implements UseCase<ScheduleSession, UpdateScheduleParams> {
+  const UpdateScheduleUseCase(this._repository);
+
+  final SchedulingRepository _repository;
+
+  @override
+  Future<Either<Failure, ScheduleSession>> call(UpdateScheduleParams params) {
+    return _repository.updateSchedule(id: params.id, input: params.input);
+  }
+}
+
 class CancelScheduleParams extends Equatable {
   const CancelScheduleParams({
     required this.scheduleId,
     this.reason,
     this.rowVersion,
+    this.cancelSeries = false,
   });
 
   final String scheduleId;
   final String? reason;
   final int? rowVersion;
+  final bool cancelSeries;
 
   @override
-  List<Object?> get props => [scheduleId, reason, rowVersion];
+  List<Object?> get props => [scheduleId, reason, rowVersion, cancelSeries];
 }
 
 @lazySingleton
@@ -104,6 +132,7 @@ class CancelScheduleUseCase
       id: params.scheduleId,
       reason: params.reason,
       rowVersion: params.rowVersion,
+      cancelSeries: params.cancelSeries,
     );
   }
 }
@@ -196,3 +225,4 @@ class CompleteScheduleUseCase implements UseCase<ScheduleSession, String> {
     return _repository.completeSchedule(id);
   }
 }
+

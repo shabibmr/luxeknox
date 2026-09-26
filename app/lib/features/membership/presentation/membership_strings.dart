@@ -66,6 +66,12 @@ class MembershipStrings {
   static const String noActiveMembership = 'No active membership on file.';
 
   static const String renew = 'Renew';
+  static const String renewTitle = 'Renew Membership';
+  static const String renewSubmit = 'Renew membership';
+  static const String freezeTitle = 'Freeze Membership';
+  static const String freezeSubmit = 'Freeze membership';
+  static const String invalidDateRange = 'End date must be after start date';
+  static const String selectProduct = 'Select package';
   static const String upgrade = 'Upgrade';
   static const String cancelMembership = 'Cancel membership';
   static const String cancelConfirm =

@@ -11,7 +11,9 @@ import '../../features/goals/presentation/screens/goal_metrics_admin_screen.dart
 import '../../features/notifications/presentation/screens/broadcast_screen.dart';
 import '../../features/membership/presentation/screens/create_membership_screen.dart';
 import '../../features/membership/presentation/screens/membership_detail_screen.dart';
+import '../../features/membership/presentation/screens/membership_freeze_screen.dart';
 import '../../features/membership/presentation/screens/membership_packages_catalog_screen.dart';
+import '../../features/membership/presentation/screens/membership_renew_screen.dart';
 import '../../features/membership/presentation/screens/memberships_directory_screen.dart';
 import '../../features/payments/presentation/payment_ledger_role.dart';
 import '../../features/payments/presentation/screens/outstanding_dues_screen.dart';
@@ -19,7 +21,10 @@ import '../../features/payments/presentation/screens/payment_detail_screen.dart'
 import '../../features/payments/presentation/screens/payment_methods_screen.dart';
 import '../../features/payments/presentation/screens/payments_ledger_screen.dart';
 import '../../features/people/presentation/screens/add_member_wizard_screen.dart';
+import '../../features/people/presentation/screens/add_trainer_screen.dart';
 import '../../features/people/presentation/screens/edit_member_screen.dart';
+import '../../features/people/presentation/screens/edit_trainer_profile_screen.dart';
+import '../../features/people/presentation/screens/employee_form_screen.dart';
 import '../../features/people/presentation/screens/employee_roles_screen.dart';
 import '../../features/people/presentation/screens/employees_directory_screen.dart';
 import '../../features/reports/presentation/screens/report_viewer_screen.dart';
@@ -30,6 +35,7 @@ import '../../features/people/presentation/screens/trainers_directory_screen.dar
 import '../../features/scheduling/presentation/screens/facilities_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_detail_screen.dart';
+import '../../features/scheduling/presentation/screens/schedule_form_screen.dart';
 import '../../features/settings/presentation/screens/settings_category_screen.dart';
 import '../../features/settings/presentation/screens/settings_hub_screen.dart';
 import '../../features/diet/presentation/diet_history_role.dart';
@@ -63,7 +69,9 @@ StatefulShellRoute createAdminBranchRoute() {
         routes: [
           GoRoute(
             path: Routes.adminMembers,
-            builder: (context, state) => const MembersDirectoryScreen(),
+            builder: (context, state) => const MembersDirectoryScreen(
+              addMemberPath: Routes.adminMembersAdd,
+            ),
             routes: [
               GoRoute(
                 path: 'add',
@@ -146,6 +154,20 @@ StatefulShellRoute createAdminBranchRoute() {
                 builder: (context, state) => MembershipDetailScreen(
                   membershipId: state.pathParameters['id']!,
                 ),
+                routes: [
+                  GoRoute(
+                    path: 'renew',
+                    builder: (context, state) => MembershipRenewScreen(
+                      membershipId: state.pathParameters['id']!,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'freeze',
+                    builder: (context, state) => MembershipFreezeScreen(
+                      membershipId: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -195,11 +217,49 @@ StatefulShellRoute createAdminBranchRoute() {
           GoRoute(
             path: Routes.adminTrainers,
             builder: (context, state) => const TrainersDirectoryScreen(),
+            routes: [
+              GoRoute(
+                path: 'create',
+                builder: (context, state) => const AddTrainerScreen(),
+              ),
+              GoRoute(
+                path: ':id/edit',
+                builder: (context, state) {
+                  final id = int.tryParse(state.pathParameters['id'] ?? '');
+                  if (id == null) {
+                    return const PlaceholderScreen(
+                      title: ShellStrings.trainers,
+                    );
+                  }
+                  return EditTrainerProfileScreen(
+                    trainerId: id,
+                    isAdmin: true,
+                  );
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: Routes.adminEmployees,
             builder: (context, state) => const EmployeesDirectoryScreen(),
             routes: [
+              GoRoute(
+                path: 'create',
+                builder: (context, state) =>
+                    const EmployeeFormScreen.create(),
+              ),
+              GoRoute(
+                path: ':id/edit',
+                builder: (context, state) {
+                  final id = int.tryParse(state.pathParameters['id'] ?? '');
+                  if (id == null) {
+                    return const PlaceholderScreen(
+                      title: ShellStrings.employees,
+                    );
+                  }
+                  return EmployeeFormScreen.edit(employeeId: id);
+                },
+              ),
               GoRoute(
                 path: ':id/roles',
                 builder: (context, state) {
@@ -243,6 +303,11 @@ StatefulShellRoute createAdminBranchRoute() {
                 const ScheduleCalendarScreen(role: ScheduleCalendarRole.admin),
             routes: [
               GoRoute(
+                path: 'create',
+                builder: (context, state) =>
+                    const ScheduleFormScreen.create(),
+              ),
+              GoRoute(
                 path: 'facilities',
                 builder: (context, state) => const FacilitiesScreen(),
               ),
@@ -252,6 +317,14 @@ StatefulShellRoute createAdminBranchRoute() {
                   scheduleId: state.pathParameters['id']!,
                   role: ScheduleCalendarRole.admin,
                 ),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (context, state) => ScheduleFormScreen.edit(
+                      scheduleId: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

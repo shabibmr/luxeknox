@@ -5,6 +5,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/pagination/cursor_page.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../entities/attendance_history_day.dart';
+import '../entities/attendance_occupancy.dart';
 import '../entities/attendance_pass.dart';
 import '../entities/attendance_record.dart';
 import '../entities/attendance_summary.dart';
@@ -108,6 +109,19 @@ class GetAttendanceSummaryUseCase
     GetAttendanceSummaryParams params,
   ) {
     return _repository.getSummary(memberId: params.memberId);
+  }
+}
+
+@lazySingleton
+class GetAttendanceOccupancyUseCase
+    implements UseCase<AttendanceOccupancy, NoParams> {
+  const GetAttendanceOccupancyUseCase(this._repository);
+
+  final AttendanceRepository _repository;
+
+  @override
+  Future<Either<Failure, AttendanceOccupancy>> call(NoParams params) {
+    return _repository.getOccupancy();
   }
 }
 

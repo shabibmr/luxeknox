@@ -77,6 +77,8 @@ export class TrainerService {
 
     const { rows, total } = await this.repository.findManyFiltered({
       q: filters.q,
+      status: filters.status,
+      is_active: filters.is_active,
       limit: pagination.limit,
       offset,
     });
@@ -174,10 +176,12 @@ export class TrainerService {
       if (dto.hourly_rate !== undefined) {
         patch.hourly_rate = dto.hourly_rate == null ? null : roundMoney(dto.hourly_rate);
       }
-      if (dto.max_clients_capacity !== undefined) {
+      if (dto.max_clients_capacity !== undefined && actor.userType !== 'trainer') {
         patch.max_clients_capacity = dto.max_clients_capacity;
       }
-      if (dto.is_active !== undefined) patch.is_active = dto.is_active;
+      if (dto.is_active !== undefined && actor.userType !== 'trainer') {
+        patch.is_active = dto.is_active;
+      }
 
       await this.repository.updateTrainer(id, patch);
 

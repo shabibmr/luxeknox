@@ -21,6 +21,9 @@ abstract final class ReportStrings {
   static const previousPage = 'Previous';
   static const nextPage = 'Next';
   static const rowsSummary = 'rows';
+  static const chartsTitle = 'Charts';
+  static const showCharts = 'Show charts';
+  static const hideCharts = 'Hide charts';
 
   static String titleFor(AppReportType type) => switch (type) {
     AppReportType.members => 'Members',

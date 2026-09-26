@@ -6,6 +6,7 @@
   "scripts": {
     "api:dev": "pnpm --filter api start:dev",
     "api:build": "pnpm --filter api build",
+    "backend:build": "bash tool/build_backend.sh",
     "api:start": "pnpm --filter api start",
     "api:test": "pnpm --filter api test",
     "api:test:e2e": "pnpm --filter api test:e2e",
@@ -13,6 +14,7 @@
     "api:typecheck": "pnpm --filter api typecheck",
     "api:migrate": "pnpm --filter api db:migrate",
     "api:seed": "pnpm --filter api db:seed",
+    "app:web": "bash tool/run_frontend_web.sh",
     "build": "deploy/build.sh",
     "deploy": "deploy/deploy.sh"
   }

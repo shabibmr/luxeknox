@@ -3,10 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../session/domain/entities/user_type.dart';
+import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/entities/dashboard_snapshot.dart';
+import '../cubit/dashboard_agenda_cubit.dart';
 import '../cubit/dashboard_cubit.dart';
 import '../dashboard_strings.dart';
 import '../widgets/dashboard_admin_section.dart';
+import '../widgets/dashboard_agenda_section.dart';
 import '../widgets/dashboard_member_section.dart';
 import '../widgets/dashboard_skeleton.dart';
 import '../widgets/dashboard_trainer_section.dart';
@@ -14,13 +18,32 @@ import '../widgets/dashboard_trainer_section.dart';
 /// Home screen for all three role shells (member/trainer/admin). The
 /// `GET /dashboard` response is role-scoped server-side, so a single screen
 /// simply renders whichever of `member`/`trainer`/`admin` is present.
+///
+/// Agenda (today + next 7 days) loads independently via [DashboardAgendaCubit]
+/// so its loading/error states never blank the membership/overview cards.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<DashboardCubit>()..load(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => getIt<DashboardCubit>()..load()),
+        BlocProvider(create: (context) {
+          final agenda = getIt<DashboardAgendaCubit>();
+          final session = context.read<SessionCubit>().state;
+          if (session is SessionAuthenticated) {
+            final role = session.principal.userType;
+            if (role == UserType.member || role == UserType.trainer) {
+              agenda.load(
+                role: role,
+                profileId: session.principal.profileId,
+              );
+            }
+          }
+          return agenda;
+        }),
+      ],
       child: Scaffold(
         appBar: AppBar(title: const Text(DashboardStrings.title)),
         body: const _DashboardBody(),
@@ -31,6 +54,13 @@ class DashboardScreen extends StatelessWidget {
 
 class _DashboardBody extends StatelessWidget {
   const _DashboardBody();
+
+  Future<void> _onRefresh(BuildContext context) {
+    return Future.wait([
+      context.read<DashboardCubit>().refresh(),
+      context.read<DashboardAgendaCubit>().refresh(),
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,13 +83,14 @@ class _DashboardBody extends StatelessWidget {
     }
 
     return RefreshIndicator(
-      onRefresh: () => context.read<DashboardCubit>().refresh(),
+      onRefresh: () => _onRefresh(context),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: const [
           _StaleDataBanner(),
           _MemberSection(),
           _TrainerSection(),
+          DashboardAgendaSection(),
           _AdminSection(),
           _EmptyNotice(),
         ],

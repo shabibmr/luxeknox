@@ -1,10 +1,10 @@
-import 'package:app/core/error/failures.dart';
-import 'package:app/core/presentation/load_status.dart';
-import 'package:app/core/usecase/usecase.dart';
-import 'package:app/features/payments/domain/entities/payment_method.dart';
-import 'package:app/features/payments/domain/usecases/create_payment_method_usecase.dart';
-import 'package:app/features/payments/domain/usecases/get_payment_methods_usecase.dart';
-import 'package:app/features/payments/presentation/cubit/payment_methods_cubit.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/core/presentation/load_status.dart';
+import 'package:luxeknox/core/usecase/usecase.dart';
+import 'package:luxeknox/features/payments/domain/entities/payment_method.dart';
+import 'package:luxeknox/features/payments/domain/usecases/create_payment_method_usecase.dart';
+import 'package:luxeknox/features/payments/domain/usecases/get_payment_methods_usecase.dart';
+import 'package:luxeknox/features/payments/presentation/cubit/payment_methods_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

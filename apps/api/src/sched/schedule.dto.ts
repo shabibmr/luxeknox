@@ -2,7 +2,23 @@ import { z } from 'zod';
 
 const isoDateTime = z.string().datetime({ offset: true }).or(z.string().datetime());
 
-export const scheduleWriteSchema = z.object({
+export const scheduleCreateSchema = z.object({
+  series_id: z.number().int().positive().optional(),
+  schedule_type_id: z.number().int().positive(),
+  facility_id: z.number().int().positive().optional(),
+  trainer_id: z.number().int().positive().optional(),
+  title: z.string().trim().min(1),
+  start_time: isoDateTime,
+  end_time: isoDateTime,
+  max_capacity: z.number().int().positive().optional(),
+  notes: z.string().optional(),
+  row_version: z.number().int().positive().optional(),
+  recur_until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+});
+
+export type ScheduleCreateDto = z.infer<typeof scheduleCreateSchema>;
+
+export const scheduleUpdateSchema = z.object({
   series_id: z.number().int().positive().optional(),
   schedule_type_id: z.number().int().positive().optional(),
   facility_id: z.number().int().positive().optional(),
@@ -16,7 +32,10 @@ export const scheduleWriteSchema = z.object({
   recur_until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
-export type ScheduleWriteDto = z.infer<typeof scheduleWriteSchema>;
+export type ScheduleUpdateDto = z.infer<typeof scheduleUpdateSchema>;
+
+export const scheduleWriteSchema = scheduleUpdateSchema;
+export type ScheduleWriteDto = ScheduleUpdateDto;
 
 export const scheduleFilterQuerySchema = z.object({
   from: isoDateTime.optional(),

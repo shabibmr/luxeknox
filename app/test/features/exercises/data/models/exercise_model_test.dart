@@ -1,6 +1,6 @@
 import 'package:api_client/api_client.dart' as api;
-import 'package:app/features/exercises/data/models/exercise_model.dart';
-import 'package:app/features/exercises/domain/entities/exercise.dart';
+import 'package:luxeknox/features/exercises/data/models/exercise_model.dart';
+import 'package:luxeknox/features/exercises/domain/entities/exercise.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter_test/flutter_test.dart';
 

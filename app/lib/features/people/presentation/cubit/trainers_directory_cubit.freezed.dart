@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TrainersDirectoryState {
 
- LoadStatus get status; List<TrainerSummary> get items; bool get hasMore; String? get nextCursor; String? get query; bool get loadingMore; Failure? get failure;
+ LoadStatus get status; List<TrainerSummary> get items; bool get hasMore; String? get nextCursor; String? get query; String get statusFilter; bool get loadingMore; Failure? get failure;
 /// Create a copy of TrainersDirectoryState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $TrainersDirectoryStateCopyWith<TrainersDirectoryState> get copyWith => _$Traine
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainersDirectoryState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.query, query) || other.query == query)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainersDirectoryState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.query, query) || other.query == query)&&(identical(other.statusFilter, statusFilter) || other.statusFilter == statusFilter)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(items),hasMore,nextCursor,query,loadingMore,failure);
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(items),hasMore,nextCursor,query,statusFilter,loadingMore,failure);
 
 @override
 String toString() {
-  return 'TrainersDirectoryState(status: $status, items: $items, hasMore: $hasMore, nextCursor: $nextCursor, query: $query, loadingMore: $loadingMore, failure: $failure)';
+  return 'TrainersDirectoryState(status: $status, items: $items, hasMore: $hasMore, nextCursor: $nextCursor, query: $query, statusFilter: $statusFilter, loadingMore: $loadingMore, failure: $failure)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $TrainersDirectoryStateCopyWith<$Res>  {
   factory $TrainersDirectoryStateCopyWith(TrainersDirectoryState value, $Res Function(TrainersDirectoryState) _then) = _$TrainersDirectoryStateCopyWithImpl;
 @useResult
 $Res call({
- LoadStatus status, List<TrainerSummary> items, bool hasMore, String? nextCursor, String? query, bool loadingMore, Failure? failure
+ LoadStatus status, List<TrainerSummary> items, bool hasMore, String? nextCursor, String? query, String statusFilter, bool loadingMore, Failure? failure
 });
 
 
@@ -62,14 +62,15 @@ class _$TrainersDirectoryStateCopyWithImpl<$Res>
 
 /// Create a copy of TrainersDirectoryState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? items = null,Object? hasMore = null,Object? nextCursor = freezed,Object? query = freezed,Object? loadingMore = null,Object? failure = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? items = null,Object? hasMore = null,Object? nextCursor = freezed,Object? query = freezed,Object? statusFilter = null,Object? loadingMore = null,Object? failure = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<TrainerSummary>,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
 as bool,nextCursor: freezed == nextCursor ? _self.nextCursor : nextCursor // ignore: cast_nullable_to_non_nullable
 as String?,query: freezed == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
-as String?,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable
+as String?,statusFilter: null == statusFilter ? _self.statusFilter : statusFilter // ignore: cast_nullable_to_non_nullable
+as String,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable
 as bool,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
 as Failure?,
   ));
@@ -156,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  List<TrainerSummary> items,  bool hasMore,  String? nextCursor,  String? query,  bool loadingMore,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  List<TrainerSummary> items,  bool hasMore,  String? nextCursor,  String? query,  String statusFilter,  bool loadingMore,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TrainersDirectoryState() when $default != null:
-return $default(_that.status,_that.items,_that.hasMore,_that.nextCursor,_that.query,_that.loadingMore,_that.failure);case _:
+return $default(_that.status,_that.items,_that.hasMore,_that.nextCursor,_that.query,_that.statusFilter,_that.loadingMore,_that.failure);case _:
   return orElse();
 
 }
@@ -177,10 +178,10 @@ return $default(_that.status,_that.items,_that.hasMore,_that.nextCursor,_that.qu
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  List<TrainerSummary> items,  bool hasMore,  String? nextCursor,  String? query,  bool loadingMore,  Failure? failure)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  List<TrainerSummary> items,  bool hasMore,  String? nextCursor,  String? query,  String statusFilter,  bool loadingMore,  Failure? failure)  $default,) {final _that = this;
 switch (_that) {
 case _TrainersDirectoryState():
-return $default(_that.status,_that.items,_that.hasMore,_that.nextCursor,_that.query,_that.loadingMore,_that.failure);case _:
+return $default(_that.status,_that.items,_that.hasMore,_that.nextCursor,_that.query,_that.statusFilter,_that.loadingMore,_that.failure);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +198,10 @@ return $default(_that.status,_that.items,_that.hasMore,_that.nextCursor,_that.qu
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  List<TrainerSummary> items,  bool hasMore,  String? nextCursor,  String? query,  bool loadingMore,  Failure? failure)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  List<TrainerSummary> items,  bool hasMore,  String? nextCursor,  String? query,  String statusFilter,  bool loadingMore,  Failure? failure)?  $default,) {final _that = this;
 switch (_that) {
 case _TrainersDirectoryState() when $default != null:
-return $default(_that.status,_that.items,_that.hasMore,_that.nextCursor,_that.query,_that.loadingMore,_that.failure);case _:
+return $default(_that.status,_that.items,_that.hasMore,_that.nextCursor,_that.query,_that.statusFilter,_that.loadingMore,_that.failure);case _:
   return null;
 
 }
@@ -212,7 +213,7 @@ return $default(_that.status,_that.items,_that.hasMore,_that.nextCursor,_that.qu
 
 
 class _TrainersDirectoryState implements TrainersDirectoryState {
-  const _TrainersDirectoryState({this.status = LoadStatus.initial, final  List<TrainerSummary> items = const <TrainerSummary>[], this.hasMore = false, this.nextCursor, this.query, this.loadingMore = false, this.failure}): _items = items;
+  const _TrainersDirectoryState({this.status = LoadStatus.initial, final  List<TrainerSummary> items = const <TrainerSummary>[], this.hasMore = false, this.nextCursor, this.query, this.statusFilter = 'all', this.loadingMore = false, this.failure}): _items = items;
   
 
 @override@JsonKey() final  LoadStatus status;
@@ -226,6 +227,7 @@ class _TrainersDirectoryState implements TrainersDirectoryState {
 @override@JsonKey() final  bool hasMore;
 @override final  String? nextCursor;
 @override final  String? query;
+@override@JsonKey() final  String statusFilter;
 @override@JsonKey() final  bool loadingMore;
 @override final  Failure? failure;
 
@@ -239,16 +241,16 @@ _$TrainersDirectoryStateCopyWith<_TrainersDirectoryState> get copyWith => __$Tra
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainersDirectoryState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.query, query) || other.query == query)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainersDirectoryState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.query, query) || other.query == query)&&(identical(other.statusFilter, statusFilter) || other.statusFilter == statusFilter)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_items),hasMore,nextCursor,query,loadingMore,failure);
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_items),hasMore,nextCursor,query,statusFilter,loadingMore,failure);
 
 @override
 String toString() {
-  return 'TrainersDirectoryState(status: $status, items: $items, hasMore: $hasMore, nextCursor: $nextCursor, query: $query, loadingMore: $loadingMore, failure: $failure)';
+  return 'TrainersDirectoryState(status: $status, items: $items, hasMore: $hasMore, nextCursor: $nextCursor, query: $query, statusFilter: $statusFilter, loadingMore: $loadingMore, failure: $failure)';
 }
 
 
@@ -259,7 +261,7 @@ abstract mixin class _$TrainersDirectoryStateCopyWith<$Res> implements $Trainers
   factory _$TrainersDirectoryStateCopyWith(_TrainersDirectoryState value, $Res Function(_TrainersDirectoryState) _then) = __$TrainersDirectoryStateCopyWithImpl;
 @override @useResult
 $Res call({
- LoadStatus status, List<TrainerSummary> items, bool hasMore, String? nextCursor, String? query, bool loadingMore, Failure? failure
+ LoadStatus status, List<TrainerSummary> items, bool hasMore, String? nextCursor, String? query, String statusFilter, bool loadingMore, Failure? failure
 });
 
 
@@ -276,14 +278,15 @@ class __$TrainersDirectoryStateCopyWithImpl<$Res>
 
 /// Create a copy of TrainersDirectoryState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? items = null,Object? hasMore = null,Object? nextCursor = freezed,Object? query = freezed,Object? loadingMore = null,Object? failure = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? items = null,Object? hasMore = null,Object? nextCursor = freezed,Object? query = freezed,Object? statusFilter = null,Object? loadingMore = null,Object? failure = freezed,}) {
   return _then(_TrainersDirectoryState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
 as List<TrainerSummary>,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
 as bool,nextCursor: freezed == nextCursor ? _self.nextCursor : nextCursor // ignore: cast_nullable_to_non_nullable
 as String?,query: freezed == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
-as String?,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable
+as String?,statusFilter: null == statusFilter ? _self.statusFilter : statusFilter // ignore: cast_nullable_to_non_nullable
+as String,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable
 as bool,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
 as Failure?,
   ));

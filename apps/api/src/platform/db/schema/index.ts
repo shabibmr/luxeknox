@@ -12,6 +12,7 @@ export * from './trainers';
 export * from './employees';
 export * from './members';
 export * from './member-health';
+export * from './medical-histories';
 export * from './member-documents';
 export * from './member-photos';
 export * from './memberships';

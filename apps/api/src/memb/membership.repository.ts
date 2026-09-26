@@ -206,8 +206,17 @@ export class MembershipRepository extends BaseRepository<
     return Number(result?.[0]?.insertId ?? 0);
   }
 
-  async updateMembership(id: number, values: Partial<NewMembership>): Promise<void> {
-    await this.update(eq(memberships.id, id), values);
+  async updateMembership(
+    id: number,
+    values: Partial<NewMembership>,
+    expectedRowVersion?: number,
+  ): Promise<void> {
+    const conditions: SQL[] = [eq(memberships.id, id)];
+    if (expectedRowVersion !== undefined) {
+      conditions.push(eq(memberships.row_version, expectedRowVersion));
+    }
+    const where = conditions.length === 1 ? conditions[0] : and(...conditions)!;
+    await this.update(where, values);
   }
 
   async insertHistory(values: NewMembershipHistory): Promise<void> {

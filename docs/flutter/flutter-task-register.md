@@ -87,7 +87,7 @@ This file is the single executable register. Each vertical below is also maintai
 - [x] schedule types
 - [x] facilities
 - [x] trainer availability
-- [ ] open slots
+- [x] open slots
 - [x] PT booking
 - [x] class booking
 - [ ] recurring series

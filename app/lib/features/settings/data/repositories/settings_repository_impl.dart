@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/map_thrown.dart';
 import '../../domain/entities/app_setting.dart';
+import '../../domain/entities/gym_public_settings.dart';
 import '../../domain/entities/setting_category.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../datasources/settings_remote_datasource.dart';
@@ -40,6 +41,16 @@ class SettingsRepositoryImpl implements SettingsRepository {
       );
       final list = await _remote.putSettings(write);
       return Right(list.data.map(appSettingFromApi).toList());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, GymPublicSettings>> getPublicSettings() async {
+    try {
+      final settings = await _remote.getPublicSettings();
+      return Right(gymPublicSettingsFromApi(settings));
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

@@ -1,10 +1,10 @@
-import 'package:app/core/error/failures.dart';
-import 'package:app/core/presentation/load_status.dart';
-import 'package:app/features/attendance/domain/entities/attendance_enums.dart';
-import 'package:app/features/attendance/domain/entities/attendance_record.dart';
-import 'package:app/features/attendance/domain/entities/check_in_input.dart';
-import 'package:app/features/attendance/domain/usecases/attendance_usecases.dart';
-import 'package:app/features/attendance/presentation/bloc/check_in_bloc.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/core/presentation/load_status.dart';
+import 'package:luxeknox/features/attendance/domain/entities/attendance_enums.dart';
+import 'package:luxeknox/features/attendance/domain/entities/attendance_record.dart';
+import 'package:luxeknox/features/attendance/domain/entities/check_in_input.dart';
+import 'package:luxeknox/features/attendance/domain/usecases/attendance_usecases.dart';
+import 'package:luxeknox/features/attendance/presentation/bloc/check_in_bloc.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

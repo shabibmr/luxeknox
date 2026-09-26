@@ -1,9 +1,9 @@
-import 'package:app/core/validation/validators.dart';
-import 'package:app/core/widgets/app_empty_view.dart';
-import 'package:app/core/widgets/app_error_view.dart';
-import 'package:app/core/widgets/app_loading.dart';
-import 'package:app/core/pagination/page_request.dart';
-import 'package:app/core/theme/app_theme.dart';
+import 'package:luxeknox/core/validation/validators.dart';
+import 'package:luxeknox/core/widgets/app_empty_view.dart';
+import 'package:luxeknox/core/widgets/app_error_view.dart';
+import 'package:luxeknox/core/widgets/app_loading.dart';
+import 'package:luxeknox/core/pagination/page_request.dart';
+import 'package:luxeknox/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

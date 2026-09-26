@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:api_client/api_client.dart' as api;
-import 'package:app/core/error/failures.dart';
-import 'package:app/core/media/media_purpose.dart';
-import 'package:app/core/media/media_uploader.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/core/media/media_purpose.dart';
+import 'package:luxeknox/core/media/media_uploader.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';

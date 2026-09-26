@@ -1,16 +1,25 @@
-import 'package:app/core/pagination/cursor_page.dart';
-import 'package:app/features/people/domain/entities/employee_summary.dart';
-import 'package:app/features/people/domain/entities/member_filter.dart';
-import 'package:app/features/people/domain/entities/person.dart';
-import 'package:app/features/people/domain/entities/profile_summary.dart';
-import 'package:app/features/people/domain/entities/trainer_summary.dart';
-import 'package:app/features/people/domain/repositories/people_repository.dart';
-import 'package:app/features/people/domain/usecases/assign_trainer_usecase.dart';
-import 'package:app/features/people/domain/usecases/get_member_usecase.dart';
-import 'package:app/features/people/domain/usecases/list_employees_usecase.dart';
-import 'package:app/features/people/domain/usecases/list_members_usecase.dart';
-import 'package:app/features/people/domain/usecases/list_trainers_usecase.dart';
-import 'package:app/features/people/domain/usecases/update_member_usecase.dart';
+import 'package:luxeknox/core/pagination/cursor_page.dart';
+import 'package:luxeknox/features/people/domain/entities/employee_status.dart';
+import 'package:luxeknox/features/people/domain/entities/employee_summary.dart';
+import 'package:luxeknox/features/people/domain/entities/employee_update_input.dart';
+import 'package:luxeknox/features/people/domain/entities/member_filter.dart';
+import 'package:luxeknox/features/people/domain/entities/new_employee_input.dart';
+import 'package:luxeknox/features/people/domain/entities/new_trainer_input.dart';
+import 'package:luxeknox/features/people/domain/entities/person.dart';
+import 'package:luxeknox/features/people/domain/entities/profile_summary.dart';
+import 'package:luxeknox/features/people/domain/entities/trainer_profile.dart';
+import 'package:luxeknox/features/people/domain/entities/trainer_summary.dart';
+import 'package:luxeknox/features/people/domain/repositories/people_repository.dart';
+import 'package:luxeknox/features/people/domain/usecases/assign_trainer_usecase.dart';
+import 'package:luxeknox/features/people/domain/usecases/create_employee_usecase.dart';
+import 'package:luxeknox/features/people/domain/usecases/create_trainer_usecase.dart';
+import 'package:luxeknox/features/people/domain/usecases/get_member_usecase.dart';
+import 'package:luxeknox/features/people/domain/usecases/list_employees_usecase.dart';
+import 'package:luxeknox/features/people/domain/usecases/list_members_usecase.dart';
+import 'package:luxeknox/features/people/domain/usecases/list_trainers_usecase.dart';
+import 'package:luxeknox/features/people/domain/usecases/set_employee_status_usecase.dart';
+import 'package:luxeknox/features/people/domain/usecases/update_employee_usecase.dart';
+import 'package:luxeknox/features/people/domain/usecases/update_member_usecase.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
@@ -156,5 +165,105 @@ void main() {
         () => mockRepository.listEmployees(query: null, cursor: null),
       ).called(1);
     });
+
+    test('CreateTrainerUseCase calls repository.createTrainer', () async {
+      const input = NewTrainerInput(
+        firstName: 'Jane',
+        lastName: 'Doe',
+        email: 'jane@example.com',
+      );
+      const trainer = TrainerProfile(id: 1, userId: 2, firstName: 'Jane', lastName: 'Doe');
+      when(
+        () => mockRepository.createTrainer(input),
+      ).thenAnswer((_) async => const Right(trainer));
+
+      final useCase = CreateTrainerUseCase(mockRepository);
+      final result = await useCase(input);
+
+      expect(result, const Right(trainer));
+      verify(() => mockRepository.createTrainer(input)).called(1);
+    });
+
+    test('CreateEmployeeUseCase calls repository.createEmployee', () async {
+      const input = NewEmployeeInput(
+        firstName: 'Ed',
+        lastName: 'Ford',
+        email: 'ed@example.com',
+        jobTitle: 'Front Desk',
+        roleId: 3,
+      );
+      const employee = EmployeeSummary(
+        id: 5,
+        userId: 6,
+        fullName: 'Ed Ford',
+        jobTitle: 'Front Desk',
+        roleId: 3,
+      );
+      when(
+        () => mockRepository.createEmployee(input),
+      ).thenAnswer((_) async => const Right(employee));
+
+      final useCase = CreateEmployeeUseCase(mockRepository);
+      final result = await useCase(input);
+
+      expect(result, const Right(employee));
+      verify(() => mockRepository.createEmployee(input)).called(1);
+    });
+
+    test('UpdateEmployeeUseCase calls repository.updateEmployee', () async {
+      const input = EmployeeUpdateInput(jobTitle: 'Manager');
+      const employee = EmployeeSummary(
+        id: 5,
+        userId: 6,
+        fullName: 'Ed Ford',
+        jobTitle: 'Manager',
+      );
+      when(
+        () => mockRepository.updateEmployee(5, input),
+      ).thenAnswer((_) async => const Right(employee));
+
+      final useCase = UpdateEmployeeUseCase(mockRepository);
+      final result = await useCase(
+        const UpdateEmployeeParams(id: 5, input: input),
+      );
+
+      expect(result, const Right(employee));
+      verify(() => mockRepository.updateEmployee(5, input)).called(1);
+    });
+
+    test(
+      'SetEmployeeStatusUseCase calls repository.setEmployeeStatus',
+      () async {
+        const employee = EmployeeSummary(
+          id: 5,
+          userId: 6,
+          fullName: 'Ed Ford',
+          jobTitle: 'Front Desk',
+          status: 'onProbation',
+        );
+        when(
+          () => mockRepository.setEmployeeStatus(
+            5,
+            EmployeeStatus.onProbation,
+          ),
+        ).thenAnswer((_) async => const Right(employee));
+
+        final useCase = SetEmployeeStatusUseCase(mockRepository);
+        final result = await useCase(
+          const SetEmployeeStatusParams(
+            id: 5,
+            status: EmployeeStatus.onProbation,
+          ),
+        );
+
+        expect(result, const Right(employee));
+        verify(
+          () => mockRepository.setEmployeeStatus(
+            5,
+            EmployeeStatus.onProbation,
+          ),
+        ).called(1);
+      },
+    );
   });
 }

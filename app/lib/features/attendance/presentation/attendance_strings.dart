@@ -33,4 +33,8 @@ abstract final class AttendanceStrings {
   static const openSession = 'Currently checked in';
   static const summaryLink = 'Summary & streak';
   static const historyLink = 'Full history';
+  static const liveOccupancy = 'Live occupancy';
+  static const checkedInNow = 'checked in now';
+  static const occupancyLoadFailed = 'Could not load live occupancy';
+  static String asOf(String time) => 'As of $time';
 }

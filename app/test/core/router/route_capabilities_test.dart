@@ -1,5 +1,5 @@
-import 'package:app/core/router/route_capabilities.dart';
-import 'package:app/core/router/routes.dart';
+import 'package:luxeknox/core/router/route_capabilities.dart';
+import 'package:luxeknox/core/router/routes.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -18,6 +18,22 @@ void main() {
       expect(
         RouteCapabilities.requiredSlug(Routes.adminMembersAdd),
         'members.create',
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminTrainersCreate),
+        'trainers.create',
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminEmployeesCreate),
+        'employees.create',
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminEmployeesEditById(9)),
+        'employees.update',
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminEmployees),
+        isNull,
       );
       expect(
         RouteCapabilities.requiredSlug(Routes.adminNotificationsBroadcast),

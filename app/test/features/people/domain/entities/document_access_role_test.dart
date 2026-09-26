@@ -1,5 +1,5 @@
-import 'package:app/core/media/document_access.dart';
-import 'package:app/session/domain/entities/user_type.dart';
+import 'package:luxeknox/core/media/document_access.dart';
+import 'package:luxeknox/session/domain/entities/user_type.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

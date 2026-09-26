@@ -3,12 +3,12 @@ import type { AuthenticatedUser } from '../auth/auth.guard';
 import { DomainEventBus } from '../platform/events/domain-events';
 import {
   BadRequestError,
-  ForbiddenError,
   NotFoundError,
 } from '../platform/errors/app-error';
 import { PaginationHelper, createPaginatedResponse } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { MemberRepository } from '../people/member.repository';
+import { assertMemberAccess } from '../people/row-scope';
 import { SettingsService } from '../sys/settings.service';
 import { DietPlanRepository } from './diet-plan.repository';
 import {
@@ -32,26 +32,6 @@ export class DietLogService {
     private readonly paginationHelper: PaginationHelper,
   ) {}
 
-  private async assertCanAccessMember(actor: AuthenticatedUser, memberId: number): Promise<void> {
-    if (actor.userType === 'admin' || actor.userType === 'employee') {
-      return;
-    }
-    if (actor.userType === 'member') {
-      if (actor.profileId !== memberId) {
-        throw new NotFoundError('Member not found');
-      }
-      return;
-    }
-    if (actor.userType === 'trainer') {
-      const member = await this.memberRepo.findById(memberId);
-      if (!member || member.assigned_trainer_id !== actor.profileId) {
-        throw new NotFoundError('Member not found or not assigned to trainer');
-      }
-      return;
-    }
-    throw new ForbiddenError('Access denied');
-  }
-
   async putLog(
     memberId: number,
     dateStr: string,
@@ -62,7 +42,7 @@ export class DietLogService {
       throw new BadRequestError('Invalid date format. Expected YYYY-MM-DD.');
     }
 
-    await this.assertCanAccessMember(actor, memberId);
+    await assertMemberAccess(this.memberRepo, actor, memberId);
 
     let planId = dto.diet_plan_id;
     let targetCalories: number | null = null;
@@ -121,7 +101,7 @@ export class DietLogService {
     filter: DietLogFilterQueryDto,
     actor: AuthenticatedUser,
   ): Promise<PaginatedResponse<DietHistory>> {
-    await this.assertCanAccessMember(actor, memberId);
+    await assertMemberAccess(this.memberRepo, actor, memberId);
 
     const { limit, offset } = await this.paginationHelper.normalizeParams(rawQuery);
 
@@ -143,7 +123,7 @@ export class DietLogService {
     actor?: AuthenticatedUser,
   ): Promise<DietLogRollupSummary> {
     if (actor) {
-      await this.assertCanAccessMember(actor, memberId);
+      await assertMemberAccess(this.memberRepo, actor, memberId);
     }
     return this.logRepo.getRollupSummary(memberId, from, to);
   }

@@ -3,8 +3,8 @@
 // Replace by running (after `firebase login`):
 //   cd app && flutterfire configure --project=<your-project-id> \
 //     --platforms=android,ios,web \
-//     --android-package-name=com.luxeknox.app \
-//     --ios-bundle-id=com.luxeknox.app
+//     --android-package-name=com.algo.luxeknox \
+//     --ios-bundle-id=com.algo.luxeknox
 //
 // Until then [DefaultFirebaseOptions.isConfigured] is false and the app
 // keeps stub device tokens + no FCM listeners.
@@ -59,7 +59,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '000000000000',
     projectId: 'luxeknox-placeholder',
     storageBucket: 'luxeknox-placeholder.appspot.com',
-    iosBundleId: 'com.luxeknox.app',
+    iosBundleId: 'com.algo.luxeknox',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -68,6 +68,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '000000000000',
     projectId: 'luxeknox-placeholder',
     storageBucket: 'luxeknox-placeholder.appspot.com',
-    iosBundleId: 'com.luxeknox.app',
+    iosBundleId: 'com.algo.luxeknox',
   );
 }

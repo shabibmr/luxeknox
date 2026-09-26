@@ -1,4 +1,4 @@
-import 'package:app/features/reports/domain/entities/app_report_type.dart';
+import 'package:luxeknox/features/reports/domain/entities/app_report_type.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

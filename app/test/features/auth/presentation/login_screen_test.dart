@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:app/core/di/injector.dart';
-import 'package:app/core/error/failures.dart';
-import 'package:app/features/auth/presentation/cubit/login_cubit.dart';
-import 'package:app/features/auth/presentation/screens/login_screen.dart';
-import 'package:app/session/domain/entities/capabilities.dart';
-import 'package:app/session/domain/entities/principal.dart';
-import 'package:app/session/domain/entities/user_type.dart';
-import 'package:app/session/presentation/session_cubit.dart';
+import 'package:luxeknox/core/di/injector.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/features/auth/presentation/cubit/login_cubit.dart';
+import 'package:luxeknox/features/auth/presentation/screens/login_screen.dart';
+import 'package:luxeknox/session/domain/entities/capabilities.dart';
+import 'package:luxeknox/session/domain/entities/principal.dart';
+import 'package:luxeknox/session/domain/entities/user_type.dart';
+import 'package:luxeknox/session/presentation/session_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

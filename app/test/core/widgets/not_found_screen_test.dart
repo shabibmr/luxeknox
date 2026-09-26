@@ -1,5 +1,5 @@
-import 'package:app/core/l10n/shell_strings.dart';
-import 'package:app/core/widgets/not_found_screen.dart';
+import 'package:luxeknox/core/l10n/shell_strings.dart';
+import 'package:luxeknox/core/widgets/not_found_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

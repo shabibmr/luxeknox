@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:app/core/config/app_config.dart';
-import 'package:app/core/network/auth_interceptor.dart';
-import 'package:app/core/network/dio_client.dart';
-import 'package:app/core/network/error_interceptor.dart';
-import 'package:app/core/network/logging_interceptor.dart';
-import 'package:app/core/network/refresh_interceptor.dart';
-import 'package:app/core/storage/token_storage.dart';
+import 'package:luxeknox/core/config/app_config.dart';
+import 'package:luxeknox/core/network/auth_interceptor.dart';
+import 'package:luxeknox/core/network/dio_client.dart';
+import 'package:luxeknox/core/network/error_interceptor.dart';
+import 'package:luxeknox/core/network/logging_interceptor.dart';
+import 'package:luxeknox/core/network/refresh_interceptor.dart';
+import 'package:luxeknox/core/storage/token_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

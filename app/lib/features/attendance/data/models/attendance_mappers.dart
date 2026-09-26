@@ -2,6 +2,7 @@ import 'package:api_client/api_client.dart' as api;
 
 import '../../domain/entities/attendance_enums.dart';
 import '../../domain/entities/attendance_history_day.dart';
+import '../../domain/entities/attendance_occupancy.dart';
 import '../../domain/entities/attendance_pass.dart';
 import '../../domain/entities/attendance_record.dart';
 import '../../domain/entities/attendance_summary.dart';
@@ -62,6 +63,23 @@ extension AttendanceSummaryMapper on api.AttendanceSummary {
       streakDays: streakDays,
       lastCheckIn: lastCheckIn?.toLocal(),
       visitsThisMonth: visitsThisMonth,
+    );
+  }
+}
+
+extension AttendanceOccupancyMapper on api.Occupancy {
+  AttendanceOccupancy toDomain() {
+    return AttendanceOccupancy(
+      checkedInNow: checkedInNow,
+      asOf: asOf.toLocal(),
+      byGate: byGate
+          .map(
+            (g) => GateOccupancy(
+              gateIdentifier: g.gateIdentifier,
+              count: g.count,
+            ),
+          )
+          .toList(),
     );
   }
 }

@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:app/core/media/image_compressor.dart';
-import 'package:app/core/media/media_purpose.dart';
+import 'package:luxeknox/core/media/image_compressor.dart';
+import 'package:luxeknox/core/media/media_purpose.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 

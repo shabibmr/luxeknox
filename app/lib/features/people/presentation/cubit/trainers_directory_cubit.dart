@@ -17,6 +17,7 @@ abstract class TrainersDirectoryState with _$TrainersDirectoryState {
     @Default(false) bool hasMore,
     String? nextCursor,
     String? query,
+    @Default('all') String statusFilter,
     @Default(false) bool loadingMore,
     Failure? failure,
   }) = _TrainersDirectoryState;
@@ -29,17 +30,22 @@ class TrainersDirectoryCubit extends Cubit<TrainersDirectoryState> {
 
   final ListTrainersUseCase _listTrainers;
 
-  Future<void> load({String? query}) async {
+  Future<void> load({String? query, String? statusFilter}) async {
     final normalized = _normalizeQuery(query);
+    final effectiveStatus = statusFilter ?? state.statusFilter;
     emit(
       state.copyWith(
         status: LoadStatus.loading,
         failure: null,
         query: normalized,
+        statusFilter: effectiveStatus,
         loadingMore: false,
       ),
     );
-    final result = await _listTrainers(ListTrainersParams(query: normalized));
+    final statusParam = effectiveStatus == 'all' ? null : effectiveStatus;
+    final result = await _listTrainers(
+      ListTrainersParams(query: normalized, status: statusParam),
+    );
     result.fold(
       (failure) =>
           emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
@@ -50,6 +56,7 @@ class TrainersDirectoryCubit extends Cubit<TrainersDirectoryState> {
           hasMore: page.hasMore,
           nextCursor: page.nextCursor,
           query: normalized,
+          statusFilter: effectiveStatus,
           loadingMore: false,
           failure: null,
         ),
@@ -65,6 +72,8 @@ class TrainersDirectoryCubit extends Cubit<TrainersDirectoryState> {
     }
     final query = state.query;
     final cursor = state.nextCursor;
+    final statusParam =
+        state.statusFilter == 'all' ? null : state.statusFilter;
     emit(
       state.copyWith(
         status: LoadStatus.success,
@@ -73,7 +82,7 @@ class TrainersDirectoryCubit extends Cubit<TrainersDirectoryState> {
       ),
     );
     final result = await _listTrainers(
-      ListTrainersParams(query: query, cursor: cursor),
+      ListTrainersParams(query: query, status: statusParam, cursor: cursor),
     );
     result.fold(
       (failure) => emit(
@@ -90,6 +99,7 @@ class TrainersDirectoryCubit extends Cubit<TrainersDirectoryState> {
           hasMore: page.hasMore,
           nextCursor: page.nextCursor,
           query: query,
+          statusFilter: state.statusFilter,
           loadingMore: false,
           failure: null,
         ),

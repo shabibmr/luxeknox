@@ -1,5 +1,5 @@
-import 'package:app/core/theme/app_theme.dart';
-import 'package:app/l10n/app_localizations.dart';
+import 'package:luxeknox/core/theme/app_theme.dart';
+import 'package:luxeknox/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -14,8 +14,11 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ScheduleDetailState {
 
- LoadStatus get status; ScheduleSession? get session; bool get actionInFlight;/// Success copy and the double-submit guard. API errors use [failure].
- String? get message; Failure? get failure;
+ LoadStatus get status; ScheduleSession? get session; bool get actionInFlight;/// Success / action copy. API errors use [failure] (and optionally [message]
+/// for move-booking cap / rollback copy).
+ String? get message; Failure? get failure;/// Staff reschedule hit a stale `rowVersion` (409); session was reloaded.
+ bool get isConflict;/// Set after a successful move so the UI can navigate to the new session.
+ String? get movedToScheduleId;
 /// Create a copy of ScheduleDetailState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +29,16 @@ $ScheduleDetailStateCopyWith<ScheduleDetailState> get copyWith => _$ScheduleDeta
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScheduleDetailState&&(identical(other.status, status) || other.status == status)&&(identical(other.session, session) || other.session == session)&&(identical(other.actionInFlight, actionInFlight) || other.actionInFlight == actionInFlight)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScheduleDetailState&&(identical(other.status, status) || other.status == status)&&(identical(other.session, session) || other.session == session)&&(identical(other.actionInFlight, actionInFlight) || other.actionInFlight == actionInFlight)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.isConflict, isConflict) || other.isConflict == isConflict)&&(identical(other.movedToScheduleId, movedToScheduleId) || other.movedToScheduleId == movedToScheduleId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,session,actionInFlight,message,failure);
+int get hashCode => Object.hash(runtimeType,status,session,actionInFlight,message,failure,isConflict,movedToScheduleId);
 
 @override
 String toString() {
-  return 'ScheduleDetailState(status: $status, session: $session, actionInFlight: $actionInFlight, message: $message, failure: $failure)';
+  return 'ScheduleDetailState(status: $status, session: $session, actionInFlight: $actionInFlight, message: $message, failure: $failure, isConflict: $isConflict, movedToScheduleId: $movedToScheduleId)';
 }
 
 
@@ -46,7 +49,7 @@ abstract mixin class $ScheduleDetailStateCopyWith<$Res>  {
   factory $ScheduleDetailStateCopyWith(ScheduleDetailState value, $Res Function(ScheduleDetailState) _then) = _$ScheduleDetailStateCopyWithImpl;
 @useResult
 $Res call({
- LoadStatus status, ScheduleSession? session, bool actionInFlight, String? message, Failure? failure
+ LoadStatus status, ScheduleSession? session, bool actionInFlight, String? message, Failure? failure, bool isConflict, String? movedToScheduleId
 });
 
 
@@ -63,14 +66,16 @@ class _$ScheduleDetailStateCopyWithImpl<$Res>
 
 /// Create a copy of ScheduleDetailState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? session = freezed,Object? actionInFlight = null,Object? message = freezed,Object? failure = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? session = freezed,Object? actionInFlight = null,Object? message = freezed,Object? failure = freezed,Object? isConflict = null,Object? movedToScheduleId = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,session: freezed == session ? _self.session : session // ignore: cast_nullable_to_non_nullable
 as ScheduleSession?,actionInFlight: null == actionInFlight ? _self.actionInFlight : actionInFlight // ignore: cast_nullable_to_non_nullable
 as bool,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
-as Failure?,
+as Failure?,isConflict: null == isConflict ? _self.isConflict : isConflict // ignore: cast_nullable_to_non_nullable
+as bool,movedToScheduleId: freezed == movedToScheduleId ? _self.movedToScheduleId : movedToScheduleId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -155,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  ScheduleSession? session,  bool actionInFlight,  String? message,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  ScheduleSession? session,  bool actionInFlight,  String? message,  Failure? failure,  bool isConflict,  String? movedToScheduleId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ScheduleDetailState() when $default != null:
-return $default(_that.status,_that.session,_that.actionInFlight,_that.message,_that.failure);case _:
+return $default(_that.status,_that.session,_that.actionInFlight,_that.message,_that.failure,_that.isConflict,_that.movedToScheduleId);case _:
   return orElse();
 
 }
@@ -176,10 +181,10 @@ return $default(_that.status,_that.session,_that.actionInFlight,_that.message,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  ScheduleSession? session,  bool actionInFlight,  String? message,  Failure? failure)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  ScheduleSession? session,  bool actionInFlight,  String? message,  Failure? failure,  bool isConflict,  String? movedToScheduleId)  $default,) {final _that = this;
 switch (_that) {
 case _ScheduleDetailState():
-return $default(_that.status,_that.session,_that.actionInFlight,_that.message,_that.failure);case _:
+return $default(_that.status,_that.session,_that.actionInFlight,_that.message,_that.failure,_that.isConflict,_that.movedToScheduleId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +201,10 @@ return $default(_that.status,_that.session,_that.actionInFlight,_that.message,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  ScheduleSession? session,  bool actionInFlight,  String? message,  Failure? failure)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  ScheduleSession? session,  bool actionInFlight,  String? message,  Failure? failure,  bool isConflict,  String? movedToScheduleId)?  $default,) {final _that = this;
 switch (_that) {
 case _ScheduleDetailState() when $default != null:
-return $default(_that.status,_that.session,_that.actionInFlight,_that.message,_that.failure);case _:
+return $default(_that.status,_that.session,_that.actionInFlight,_that.message,_that.failure,_that.isConflict,_that.movedToScheduleId);case _:
   return null;
 
 }
@@ -211,15 +216,20 @@ return $default(_that.status,_that.session,_that.actionInFlight,_that.message,_t
 
 
 class _ScheduleDetailState implements ScheduleDetailState {
-  const _ScheduleDetailState({this.status = LoadStatus.initial, this.session, this.actionInFlight = false, this.message, this.failure});
+  const _ScheduleDetailState({this.status = LoadStatus.initial, this.session, this.actionInFlight = false, this.message, this.failure, this.isConflict = false, this.movedToScheduleId});
   
 
 @override@JsonKey() final  LoadStatus status;
 @override final  ScheduleSession? session;
 @override@JsonKey() final  bool actionInFlight;
-/// Success copy and the double-submit guard. API errors use [failure].
+/// Success / action copy. API errors use [failure] (and optionally [message]
+/// for move-booking cap / rollback copy).
 @override final  String? message;
 @override final  Failure? failure;
+/// Staff reschedule hit a stale `rowVersion` (409); session was reloaded.
+@override@JsonKey() final  bool isConflict;
+/// Set after a successful move so the UI can navigate to the new session.
+@override final  String? movedToScheduleId;
 
 /// Create a copy of ScheduleDetailState
 /// with the given fields replaced by the non-null parameter values.
@@ -231,16 +241,16 @@ _$ScheduleDetailStateCopyWith<_ScheduleDetailState> get copyWith => __$ScheduleD
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScheduleDetailState&&(identical(other.status, status) || other.status == status)&&(identical(other.session, session) || other.session == session)&&(identical(other.actionInFlight, actionInFlight) || other.actionInFlight == actionInFlight)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScheduleDetailState&&(identical(other.status, status) || other.status == status)&&(identical(other.session, session) || other.session == session)&&(identical(other.actionInFlight, actionInFlight) || other.actionInFlight == actionInFlight)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.isConflict, isConflict) || other.isConflict == isConflict)&&(identical(other.movedToScheduleId, movedToScheduleId) || other.movedToScheduleId == movedToScheduleId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,session,actionInFlight,message,failure);
+int get hashCode => Object.hash(runtimeType,status,session,actionInFlight,message,failure,isConflict,movedToScheduleId);
 
 @override
 String toString() {
-  return 'ScheduleDetailState(status: $status, session: $session, actionInFlight: $actionInFlight, message: $message, failure: $failure)';
+  return 'ScheduleDetailState(status: $status, session: $session, actionInFlight: $actionInFlight, message: $message, failure: $failure, isConflict: $isConflict, movedToScheduleId: $movedToScheduleId)';
 }
 
 
@@ -251,7 +261,7 @@ abstract mixin class _$ScheduleDetailStateCopyWith<$Res> implements $ScheduleDet
   factory _$ScheduleDetailStateCopyWith(_ScheduleDetailState value, $Res Function(_ScheduleDetailState) _then) = __$ScheduleDetailStateCopyWithImpl;
 @override @useResult
 $Res call({
- LoadStatus status, ScheduleSession? session, bool actionInFlight, String? message, Failure? failure
+ LoadStatus status, ScheduleSession? session, bool actionInFlight, String? message, Failure? failure, bool isConflict, String? movedToScheduleId
 });
 
 
@@ -268,14 +278,16 @@ class __$ScheduleDetailStateCopyWithImpl<$Res>
 
 /// Create a copy of ScheduleDetailState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? session = freezed,Object? actionInFlight = null,Object? message = freezed,Object? failure = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? session = freezed,Object? actionInFlight = null,Object? message = freezed,Object? failure = freezed,Object? isConflict = null,Object? movedToScheduleId = freezed,}) {
   return _then(_ScheduleDetailState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,session: freezed == session ? _self.session : session // ignore: cast_nullable_to_non_nullable
 as ScheduleSession?,actionInFlight: null == actionInFlight ? _self.actionInFlight : actionInFlight // ignore: cast_nullable_to_non_nullable
 as bool,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
-as Failure?,
+as Failure?,isConflict: null == isConflict ? _self.isConflict : isConflict // ignore: cast_nullable_to_non_nullable
+as bool,movedToScheduleId: freezed == movedToScheduleId ? _self.movedToScheduleId : movedToScheduleId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

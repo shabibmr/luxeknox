@@ -1,13 +1,13 @@
-import 'package:app/core/di/injector.dart';
-import 'package:app/core/presentation/load_status.dart';
-import 'package:app/features/scheduling/domain/entities/schedule_enums.dart';
-import 'package:app/features/scheduling/domain/entities/schedule_session.dart';
-import 'package:app/features/scheduling/presentation/cubit/schedule_calendar_cubit.dart';
-import 'package:app/features/scheduling/presentation/screens/schedule_calendar_screen.dart';
-import 'package:app/session/domain/entities/capabilities.dart';
-import 'package:app/session/domain/entities/principal.dart';
-import 'package:app/session/domain/entities/user_type.dart';
-import 'package:app/session/presentation/session_cubit.dart';
+import 'package:luxeknox/core/di/injector.dart';
+import 'package:luxeknox/core/presentation/load_status.dart';
+import 'package:luxeknox/features/scheduling/domain/entities/schedule_enums.dart';
+import 'package:luxeknox/features/scheduling/domain/entities/schedule_session.dart';
+import 'package:luxeknox/features/scheduling/presentation/cubit/schedule_calendar_cubit.dart';
+import 'package:luxeknox/features/scheduling/presentation/screens/schedule_calendar_screen.dart';
+import 'package:luxeknox/session/domain/entities/capabilities.dart';
+import 'package:luxeknox/session/domain/entities/principal.dart';
+import 'package:luxeknox/session/domain/entities/user_type.dart';
+import 'package:luxeknox/session/presentation/session_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -145,5 +145,42 @@ void main() {
     expect(find.byIcon(Icons.groups_outlined), findsNothing);
     expect(find.byIcon(Icons.event_available_outlined), findsNothing);
     expect(find.text('Morning PT'), findsOneWidget);
+  });
+
+  testWidgets('shows recurring indicator when session is recurring', (
+    tester,
+  ) async {
+    final recurringSession = ScheduleSession(
+      id: 's2',
+      seriesId: 'series-123',
+      scheduleTypeId: 'type',
+      title: 'Recurring PT',
+      startTime: DateTime.utc(2026, 9, 21, 9),
+      endTime: DateTime.utc(2026, 9, 21, 10),
+      status: ScheduleSessionStatus.scheduled,
+      rowVersion: 1,
+    );
+
+    whenListen(
+      calendar,
+      const Stream<ScheduleCalendarState>.empty(),
+      initialState: ScheduleCalendarState(
+        status: LoadStatus.success,
+        hasLoaded: true,
+        items: [recurringSession],
+        from: from,
+        to: to,
+      ),
+    );
+
+    await tester.pumpWidget(
+      wrap(
+        const ScheduleCalendarScreen(role: ScheduleCalendarRole.admin),
+        adminPrincipal,
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('recurring_indicator')), findsOneWidget);
   });
 }

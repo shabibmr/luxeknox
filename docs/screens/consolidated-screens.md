@@ -149,7 +149,7 @@ pie title Screen Consolidation Summary
 
 | # | Consolidated Screen Name | Member | Trainer | Admin | Role Variations & Adaptations |
 | :-: | :--- | :---: | :---: | :---: | :--- |
-| **44** | **Staff Directory & Roles** | **—** | **—** | **F** | Combined management for Trainers & Employees (add staff, assign roles, edit shift & status). |
+| **44** | **Staff Directory & Roles** | **—** | **—** | **F** | Combined management for Trainers & Employees with 840dp master–detail layout, status filtering (`All`/`Active`/`Inactive`), atomic onboarding, role assignment, and direct modular domain links (Scheduling, Attendance, Reports, Member Dossiers). |
 | **45** | **Reports & Business Analytics** | **—** | **R** (Own PT) | **F** (Full) | **Trainer**: View own sessions & retention rate.<br>**Admin**: Comprehensive financial, membership, churn, and attendance analytics. |
 | **46** | **Gym & Hardware Settings** | **—** | **—** | **F** | Gym profile, turnstile & biometric gate sync, booking rules, tax settings, metrics config. |
 

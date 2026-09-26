@@ -144,7 +144,20 @@ class _ScheduleCalendarBody extends StatelessWidget {
                           itemBuilder: (context, index) {
                             final session = items[index];
                             return ListTile(
-                              title: Text(session.title),
+                              title: Row(
+                                children: [
+                                  Expanded(child: Text(session.title)),
+                                  if (session.isRecurring) ...[
+                                    const SizedBox(width: 4),
+                                    const Icon(
+                                      Icons.repeat,
+                                      size: 16,
+                                      key: Key('recurring_indicator'),
+                                      color: Colors.grey,
+                                    ),
+                                  ],
+                                ],
+                              ),
                               subtitle: Text(
                                 '${session.startTime.toLocal()} · '
                                 '${session.status.name}'
@@ -170,6 +183,21 @@ class _ScheduleCalendarBody extends StatelessWidget {
           );
         },
       ),
+      floatingActionButton: role == ScheduleCalendarRole.admin
+          ? FloatingActionButton(
+              key: const Key('admin_create_schedule_fab'),
+              onPressed: () async {
+                final created = await context.push<bool>(
+                  Routes.adminSchedulesCreate,
+                );
+                if (created == true && context.mounted) {
+                  context.read<ScheduleCalendarCubit>().load();
+                }
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }
+

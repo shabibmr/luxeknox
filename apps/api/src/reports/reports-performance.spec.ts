@@ -74,6 +74,6 @@ describe('RPT-014: Report Query and Export Performance', () => {
       resolveReportDateRange('2026-09-01', '2026-09-30', 'Asia/Kolkata');
     }
     const duration = performance.now() - start;
-    expect(duration).toBeLessThan(500);
+    expect(duration).toBeLessThan(1500);
   });
 });

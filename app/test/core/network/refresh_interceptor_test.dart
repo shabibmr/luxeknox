@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:app/core/error/failures.dart';
-import 'package:app/core/network/error_interceptor.dart';
-import 'package:app/core/network/refresh_interceptor.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/core/network/error_interceptor.dart';
+import 'package:luxeknox/core/network/refresh_interceptor.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

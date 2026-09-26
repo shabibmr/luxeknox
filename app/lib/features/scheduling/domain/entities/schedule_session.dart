@@ -71,6 +71,8 @@ class ScheduleSession extends Equatable {
   bool get isFull =>
       maxCapacity != null && bookedCount >= maxCapacity!;
 
+  bool get isRecurring => seriesId != null && seriesId!.isNotEmpty;
+
   @override
   List<Object?> get props => [
     id,

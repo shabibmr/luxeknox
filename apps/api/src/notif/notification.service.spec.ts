@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
+import { BadRequestError, ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import { PaginationHelper } from '../platform/http/pagination';
 import { NotificationService } from './notification.service';
 import { LoggingPushDispatcherAdapter } from './push-dispatcher.adapter';
@@ -178,11 +178,11 @@ describe('NotificationService (V13: NOT-003 to NOT-015)', () => {
       expect(item.id).toBe(1);
     });
 
-    it('throws NotFoundException when notification is not in user inbox', async () => {
+    it('throws NotFoundError when notification is not in user inbox', async () => {
       repo.findUserInboxItem.mockResolvedValue(null);
 
       await expect(service.getNotificationDetail(mockMember, 999)).rejects.toThrow(
-        NotFoundException,
+        NotFoundError,
       );
     });
 
@@ -228,10 +228,10 @@ describe('NotificationService (V13: NOT-003 to NOT-015)', () => {
       expect(repo.upsertDevice).toHaveBeenCalled();
     });
 
-    it('deletes device and throws NotFoundException if not owned by user', async () => {
+    it('deletes device and throws NotFoundError if not owned by user', async () => {
       repo.deleteDevice.mockResolvedValue(false);
 
-      await expect(service.deleteDevice(mockMember, 99)).rejects.toThrow(NotFoundException);
+      await expect(service.deleteDevice(mockMember, 99)).rejects.toThrow(NotFoundError);
     });
   });
 
@@ -264,7 +264,7 @@ describe('NotificationService (V13: NOT-003 to NOT-015)', () => {
           message: 'Spam',
           audience: 'all_members',
         }),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
 
     it('trainer cannot broadcast to all_members', async () => {
@@ -274,7 +274,7 @@ describe('NotificationService (V13: NOT-003 to NOT-015)', () => {
           message: 'Hey everyone',
           audience: 'all_members',
         }),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
 
     it('trainer can broadcast to assigned_clients', async () => {

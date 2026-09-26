@@ -178,6 +178,7 @@ paths:
       summary: Change password; invalidates other sessions
       tags: [AUTH]
       x-status: mvp
+      x-parity: required
       x-permission: users.update
       security:
         - bearerAuth: []
@@ -210,6 +211,7 @@ paths:
       summary: Request a password-reset token
       tags: [AUTH]
       x-status: mvp
+      x-parity: required
       security: []
       requestBody:
         required: true
@@ -239,6 +241,7 @@ paths:
       summary: Consume a one-time reset token
       tags: [AUTH]
       x-status: mvp
+      x-parity: required
       security: []
       requestBody:
         required: true
@@ -297,6 +300,7 @@ paths:
       summary: List roles
       tags: [RBAC]
       x-status: mvp
+      x-parity: required
       x-permission: roles.read
       security:
         - bearerAuth: []
@@ -329,6 +333,7 @@ paths:
       summary: Create a custom role
       tags: [RBAC]
       x-status: mvp
+      x-parity: required
       x-permission: roles.create
       security:
         - bearerAuth: []
@@ -365,6 +370,7 @@ paths:
       summary: Get a role and its permissions
       tags: [RBAC]
       x-status: mvp
+      x-parity: required
       x-permission: roles.read
       security:
         - bearerAuth: []
@@ -396,6 +402,7 @@ paths:
       summary: Update a non-system role
       tags: [RBAC]
       x-status: mvp
+      x-parity: required
       x-permission: roles.update
       security:
         - bearerAuth: []
@@ -434,6 +441,7 @@ paths:
       summary: Replace permission set on a non-system role
       tags: [RBAC]
       x-status: mvp
+      x-parity: required
       x-permission: roles.update
       security:
         - bearerAuth: []
@@ -472,6 +480,7 @@ paths:
       summary: List permission catalog
       tags: [RBAC]
       x-status: mvp
+      x-parity: required
       x-permission: roles.read
       security:
         - bearerAuth: []
@@ -1261,7 +1270,8 @@ paths:
       operationId: listMedicalHistories
       summary: Medical history list
       tags: [HEALTH]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: health.read
       security:
         - bearerAuth: []
@@ -1294,7 +1304,8 @@ paths:
       operationId: createMedicalHistory
       summary: Add a medical history row
       tags: [HEALTH]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1332,7 +1343,8 @@ paths:
       operationId: updateMedicalHistory
       summary: Update a medical history row
       tags: [HEALTH]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -1370,7 +1382,8 @@ paths:
       operationId: deleteMedicalHistory
       summary: Soft-remove a medical history row
       tags: [HEALTH]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: health.update
       security:
         - bearerAuth: []
@@ -2362,6 +2375,7 @@ paths:
       summary: Schedule types
       tags: [SCHED]
       x-status: mvp
+      x-parity: required
       x-permission: schedules.read
       security:
         - bearerAuth: []
@@ -2391,7 +2405,8 @@ paths:
       summary: Create a schedule type
       tags: [SCHED]
       x-status: mvp
-      x-permission: schedules.create
+      x-parity: required
+      x-permission: schedules.write
       security:
         - bearerAuth: []
       requestBody:
@@ -2427,7 +2442,8 @@ paths:
       summary: Update a schedule type
       tags: [SCHED]
       x-status: mvp
-      x-permission: schedules.update
+      x-parity: required
+      x-permission: schedules.write
       security:
         - bearerAuth: []
       parameters:
@@ -2465,6 +2481,7 @@ paths:
       summary: Rooms and studios
       tags: [SCHED]
       x-status: mvp
+      x-parity: required
       x-permission: schedules.read
       security:
         - bearerAuth: []
@@ -2494,7 +2511,8 @@ paths:
       summary: Create a facility
       tags: [SCHED]
       x-status: mvp
-      x-permission: schedules.create
+      x-parity: required
+      x-permission: schedules.write
       security:
         - bearerAuth: []
       requestBody:
@@ -2530,7 +2548,8 @@ paths:
       summary: Update a facility
       tags: [SCHED]
       x-status: mvp
-      x-permission: schedules.update
+      x-parity: required
+      x-permission: schedules.write
       security:
         - bearerAuth: []
       parameters:
@@ -2568,6 +2587,7 @@ paths:
       summary: Trainer hours and block-outs
       tags: [SCHED]
       x-status: mvp
+      x-parity: required
       x-permission: schedules.read
       security:
         - bearerAuth: []
@@ -2599,7 +2619,8 @@ paths:
       summary: Replace trainer availability
       tags: [SCHED]
       x-status: mvp
-      x-permission: schedules.update
+      x-parity: required
+      x-permission: schedules.write
       security:
         - bearerAuth: []
       parameters:
@@ -2637,6 +2658,7 @@ paths:
       summary: Calendar list
       tags: [SCHED]
       x-status: mvp
+      x-parity: required
       x-permission: schedules.read
       security:
         - bearerAuth: []
@@ -2673,7 +2695,8 @@ paths:
       summary: Create a booking or class occurrence
       tags: [SCHED]
       x-status: mvp
-      x-permission: schedules.create
+      x-parity: required
+      x-permission: schedules.write
       security:
         - bearerAuth: []
       parameters:
@@ -2711,6 +2734,7 @@ paths:
       summary: Schedule detail
       tags: [SCHED]
       x-status: mvp
+      x-parity: required
       x-permission: schedules.read
       security:
         - bearerAuth: []
@@ -2742,7 +2766,8 @@ paths:
       summary: Update a schedule (requires row_version)
       tags: [SCHED]
       x-status: mvp
-      x-permission: schedules.update
+      x-parity: required
+      x-permission: schedules.write
       security:
         - bearerAuth: []
       parameters:
@@ -2780,7 +2805,8 @@ paths:
       summary: Cancel a schedule
       tags: [SCHED]
       x-status: mvp
-      x-permission: schedules.update
+      x-parity: required
+      x-permission: schedules.cancel
       security:
         - bearerAuth: []
       parameters:
@@ -2792,7 +2818,7 @@ paths:
             schema:
               $ref: "#/components/schemas/CancelRequest"
       responses:
-        "200":
+        "201":
           description: OK
           content:
             application/json:
@@ -2818,6 +2844,7 @@ paths:
       summary: Book or waitlist a member for a schedule
       tags: [SCHED]
       x-status: mvp
+      x-parity: required
       x-permission: schedules.book
       security:
         - bearerAuth: []
@@ -2856,6 +2883,7 @@ paths:
       summary: Cancel a member booking
       tags: [SCHED]
       x-status: mvp
+      x-parity: required
       x-permission: schedules.cancel
       security:
         - bearerAuth: []
@@ -2869,7 +2897,7 @@ paths:
             schema:
               $ref: "#/components/schemas/CancelBookingRequest"
       responses:
-        "200":
+        "201":
           description: OK
           content:
             application/json:
@@ -2895,13 +2923,14 @@ paths:
       summary: Mark schedule ongoing
       tags: [SCHED]
       x-status: mvp
-      x-permission: schedules.update
+      x-parity: required
+      x-permission: schedules.write
       security:
         - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/Id"
       responses:
-        "200":
+        "201":
           description: OK
           content:
             application/json:
@@ -2927,13 +2956,14 @@ paths:
       summary: Mark schedule completed
       tags: [SCHED]
       x-status: mvp
-      x-permission: schedules.update
+      x-parity: required
+      x-permission: schedules.write
       security:
         - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/Id"
       responses:
-        "200":
+        "201":
           description: OK
           content:
             application/json:
@@ -2959,6 +2989,7 @@ paths:
       summary: Schedule history
       tags: [SCHED]
       x-status: mvp
+      x-parity: required
       x-permission: schedules.read
       security:
         - bearerAuth: []
@@ -2992,6 +3023,7 @@ paths:
       summary: Member digital pass (QR payload)
       tags: [ATTN]
       x-status: mvp
+      x-parity: required
       x-permission: attendance.read
       security:
         - bearerAuth: []
@@ -3022,7 +3054,7 @@ paths:
       summary: Gate check-in (user session or device key)
       tags: [ATTN]
       x-status: mvp
-      x-permission: attendance.create
+      x-parity: required
       security:
         - bearerAuth: []
         - deviceKey: []
@@ -3061,13 +3093,14 @@ paths:
       summary: Gate check-out
       tags: [ATTN]
       x-status: mvp
+      x-parity: required
       x-permission: attendance.update
       security:
         - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/Id"
       responses:
-        "200":
+        "201":
           description: OK
           content:
             application/json:
@@ -3093,6 +3126,7 @@ paths:
       summary: Manual gate check-in override (bypasses eligibility/caps)
       tags: [ATTN]
       x-status: mvp
+      x-parity: required
       x-permission: attendance.override
       security:
         - bearerAuth: []
@@ -3129,6 +3163,7 @@ paths:
       summary: Live gate occupancy (open check-ins)
       tags: [ATTN]
       x-status: mvp
+      x-parity: required
       x-permission: attendance.read
       security:
         - bearerAuth: []
@@ -3159,6 +3194,7 @@ paths:
       summary: Gate attendance log
       tags: [ATTN]
       x-status: mvp
+      x-parity: required
       x-permission: attendance.read
       security:
         - bearerAuth: []
@@ -3195,6 +3231,7 @@ paths:
       summary: Scoped attendance summary
       tags: [ATTN]
       x-status: mvp
+      x-parity: required
       x-permission: attendance.read
       security:
         - bearerAuth: []
@@ -3227,6 +3264,7 @@ paths:
       summary: Mark session attended / no-show
       tags: [ATTN]
       x-status: mvp
+      x-parity: required
       x-permission: attendance.update
       security:
         - bearerAuth: []
@@ -3240,7 +3278,7 @@ paths:
             schema:
               $ref: "#/components/schemas/MarkAttendanceRequest"
       responses:
-        "200":
+        "201":
           description: OK
           content:
             application/json:
@@ -3266,6 +3304,7 @@ paths:
       summary: Daily footfall aggregates
       tags: [ATTN]
       x-status: mvp
+      x-parity: required
       x-permission: attendance.read
       security:
         - bearerAuth: []
@@ -3299,6 +3338,7 @@ paths:
       summary: Payment methods
       tags: [PAY]
       x-status: mvp
+      x-parity: required
       x-permission: payments.read
       security:
         - bearerAuth: []
@@ -3328,6 +3368,7 @@ paths:
       summary: Create a payment method
       tags: [PAY]
       x-status: mvp
+      x-parity: required
       x-permission: payments.create
       security:
         - bearerAuth: []
@@ -3364,6 +3405,7 @@ paths:
       summary: Invoice ledger
       tags: [PAY]
       x-status: mvp
+      x-parity: required
       x-permission: payments.read
       security:
         - bearerAuth: []
@@ -3398,6 +3440,7 @@ paths:
       summary: Record POS / issue invoice
       tags: [PAY]
       x-status: mvp
+      x-parity: required
       x-permission: payments.create
       security:
         - bearerAuth: []
@@ -3436,6 +3479,7 @@ paths:
       summary: Pending and partial invoices
       tags: [PAY]
       x-status: mvp
+      x-parity: required
       x-permission: payments.read
       security:
         - bearerAuth: []
@@ -3469,6 +3513,7 @@ paths:
       summary: Invoice detail with history
       tags: [PAY]
       x-status: mvp
+      x-parity: required
       x-permission: payments.read
       security:
         - bearerAuth: []
@@ -3501,6 +3546,7 @@ paths:
       summary: Refund against an invoice
       tags: [PAY]
       x-status: mvp
+      x-parity: required
       x-permission: payments.approve
       security:
         - bearerAuth: []
@@ -3514,7 +3560,7 @@ paths:
             schema:
               $ref: "#/components/schemas/PaymentAdjustRequest"
       responses:
-        "200":
+        "201":
           description: OK
           content:
             application/json:
@@ -3540,6 +3586,7 @@ paths:
       summary: Adjust an invoice
       tags: [PAY]
       x-status: mvp
+      x-parity: required
       x-permission: payments.approve
       security:
         - bearerAuth: []
@@ -3552,7 +3599,7 @@ paths:
             schema:
               $ref: "#/components/schemas/PaymentAdjustRequest"
       responses:
-        "200":
+        "201":
           description: OK
           content:
             application/json:
@@ -3578,6 +3625,7 @@ paths:
       summary: Receipt (re-rendered in MVP; no stored PDF)
       tags: [PAY]
       x-status: mvp
+      x-parity: required
       x-permission: payments.read
       security:
         - bearerAuth: []
@@ -3755,6 +3803,7 @@ paths:
       summary: Workout plans and templates
       tags: [WORK]
       x-status: mvp
+      x-parity: required
       x-permission: workouts.read
       security:
         - bearerAuth: []
@@ -3789,7 +3838,8 @@ paths:
       summary: Create a plan (also creates version 1)
       tags: [WORK]
       x-status: mvp
-      x-permission: workouts.create
+      x-parity: required
+      x-permission: workouts.write
       security:
         - bearerAuth: []
       requestBody:
@@ -3825,6 +3875,7 @@ paths:
       summary: Plan with current version line items
       tags: [WORK]
       x-status: mvp
+      x-parity: required
       x-permission: workouts.read
       security:
         - bearerAuth: []
@@ -3856,7 +3907,8 @@ paths:
       summary: Update plan metadata (requires row_version)
       tags: [WORK]
       x-status: mvp
-      x-permission: workouts.update
+      x-parity: required
+      x-permission: workouts.write
       security:
         - bearerAuth: []
       parameters:
@@ -3894,7 +3946,8 @@ paths:
       summary: Publish a draft plan
       tags: [WORK]
       x-status: mvp
-      x-permission: workouts.update
+      x-parity: required
+      x-permission: workouts.write
       security:
         - bearerAuth: []
       parameters:
@@ -3926,7 +3979,8 @@ paths:
       summary: Archive a workout plan
       tags: [WORK]
       x-status: mvp
-      x-permission: workouts.update
+      x-parity: required
+      x-permission: workouts.write
       security:
         - bearerAuth: []
       parameters:
@@ -3958,7 +4012,8 @@ paths:
       summary: Copy a template onto a member (new plan + version 1)
       tags: [WORK]
       x-status: mvp
-      x-permission: workouts.update
+      x-parity: required
+      x-permission: workouts.write
       security:
         - bearerAuth: []
       parameters:
@@ -3996,6 +4051,7 @@ paths:
       summary: Plan version snapshots
       tags: [WORK]
       x-status: mvp
+      x-parity: required
       x-permission: workouts.read
       security:
         - bearerAuth: []
@@ -4028,7 +4084,8 @@ paths:
       summary: Replace current-version line items (inserts a new version)
       tags: [WORK]
       x-status: mvp
-      x-permission: workouts.update
+      x-parity: required
+      x-permission: workouts.write
       security:
         - bearerAuth: []
       parameters:
@@ -4066,6 +4123,7 @@ paths:
       summary: Workout history
       tags: [WORK]
       x-status: mvp
+      x-parity: required
       x-permission: workouts.read
       security:
         - bearerAuth: []
@@ -4099,7 +4157,8 @@ paths:
       summary: Start a live session
       tags: [WORK]
       x-status: mvp
-      x-permission: workouts.create
+      x-parity: required
+      x-permission: workouts.write
       security:
         - bearerAuth: []
       requestBody:
@@ -4135,6 +4194,7 @@ paths:
       summary: Member personal records across completed sessions
       tags: [WORK]
       x-status: mvp
+      x-parity: required
       x-permission: workouts.read
       security:
         - bearerAuth: []
@@ -4170,6 +4230,7 @@ paths:
       summary: Get workout session details
       tags: [WORK]
       x-status: mvp
+      x-parity: required
       x-permission: workouts.read
       security:
         - bearerAuth: []
@@ -4202,7 +4263,8 @@ paths:
       summary: Log a set
       tags: [WORK]
       x-status: mvp
-      x-permission: workouts.update
+      x-parity: required
+      x-permission: workouts.write
       security:
         - bearerAuth: []
       parameters:
@@ -4240,7 +4302,8 @@ paths:
       summary: Complete a session
       tags: [WORK]
       x-status: mvp
-      x-permission: workouts.update
+      x-parity: required
+      x-permission: workouts.write
       security:
         - bearerAuth: []
       parameters:
@@ -4416,7 +4479,8 @@ paths:
       summary: Diet plans and templates
       tags: [DIET]
       x-status: mvp
-      x-permission: diet.read
+      x-parity: required
+      x-permission: diets.read
       security:
         - bearerAuth: []
       parameters:
@@ -4450,7 +4514,8 @@ paths:
       summary: Create a diet plan (also creates version 1)
       tags: [DIET]
       x-status: mvp
-      x-permission: diet.create
+      x-parity: required
+      x-permission: diets.write
       security:
         - bearerAuth: []
       requestBody:
@@ -4486,7 +4551,8 @@ paths:
       summary: Plan with current version meals
       tags: [DIET]
       x-status: mvp
-      x-permission: diet.read
+      x-parity: required
+      x-permission: diets.read
       security:
         - bearerAuth: []
       parameters:
@@ -4517,7 +4583,8 @@ paths:
       summary: Update diet plan metadata (requires row_version)
       tags: [DIET]
       x-status: mvp
-      x-permission: diet.update
+      x-parity: required
+      x-permission: diets.write
       security:
         - bearerAuth: []
       parameters:
@@ -4555,7 +4622,8 @@ paths:
       summary: Publish a draft diet plan
       tags: [DIET]
       x-status: mvp
-      x-permission: diet.update
+      x-parity: required
+      x-permission: diets.write
       security:
         - bearerAuth: []
       parameters:
@@ -4587,7 +4655,8 @@ paths:
       summary: Copy a template onto a member
       tags: [DIET]
       x-status: mvp
-      x-permission: diet.update
+      x-parity: required
+      x-permission: diets.write
       security:
         - bearerAuth: []
       parameters:
@@ -4625,7 +4694,8 @@ paths:
       summary: Diet plan versions
       tags: [DIET]
       x-status: mvp
-      x-permission: diet.read
+      x-parity: required
+      x-permission: diets.read
       security:
         - bearerAuth: []
       parameters:
@@ -4657,7 +4727,8 @@ paths:
       summary: Replace current-version meals (inserts a new version)
       tags: [DIET]
       x-status: mvp
-      x-permission: diet.update
+      x-parity: required
+      x-permission: diets.write
       security:
         - bearerAuth: []
       parameters:
@@ -4695,7 +4766,8 @@ paths:
       summary: Upsert a day's intake log
       tags: [DIET]
       x-status: mvp
-      x-permission: diet.update
+      x-parity: required
+      x-permission: diets.write
       security:
         - bearerAuth: []
       parameters:
@@ -4734,7 +4806,8 @@ paths:
       summary: Diet adherence history
       tags: [DIET]
       x-status: mvp
-      x-permission: diet.read
+      x-parity: required
+      x-permission: diets.read
       security:
         - bearerAuth: []
       parameters:
@@ -4768,6 +4841,7 @@ paths:
       summary: Measurement type catalog
       tags: [GOAL]
       x-status: mvp
+      x-parity: required
       x-permission: goals.read
       security:
         - bearerAuth: []
@@ -4797,7 +4871,8 @@ paths:
       summary: Create a metric
       tags: [GOAL]
       x-status: mvp
-      x-permission: goals.create
+      x-parity: required
+      x-permission: goals.write
       security:
         - bearerAuth: []
       requestBody:
@@ -4833,7 +4908,8 @@ paths:
       summary: Update a metric
       tags: [GOAL]
       x-status: mvp
-      x-permission: goals.update
+      x-parity: required
+      x-permission: goals.write
       security:
         - bearerAuth: []
       parameters:
@@ -4871,6 +4947,7 @@ paths:
       summary: Member goals
       tags: [GOAL]
       x-status: mvp
+      x-parity: required
       x-permission: goals.read
       security:
         - bearerAuth: []
@@ -4902,7 +4979,8 @@ paths:
       summary: Create a goal
       tags: [GOAL]
       x-status: mvp
-      x-permission: goals.create
+      x-parity: required
+      x-permission: goals.write
       security:
         - bearerAuth: []
       parameters:
@@ -4940,6 +5018,7 @@ paths:
       summary: Goal detail
       tags: [GOAL]
       x-status: mvp
+      x-parity: required
       x-permission: goals.read
       security:
         - bearerAuth: []
@@ -4971,7 +5050,8 @@ paths:
       summary: Update a goal
       tags: [GOAL]
       x-status: mvp
-      x-permission: goals.update
+      x-parity: required
+      x-permission: goals.write
       security:
         - bearerAuth: []
       parameters:
@@ -5009,7 +5089,8 @@ paths:
       summary: Record a goal check-in
       tags: [GOAL]
       x-status: mvp
-      x-permission: goals.update
+      x-parity: required
+      x-permission: goals.write
       security:
         - bearerAuth: []
       parameters:
@@ -5047,6 +5128,7 @@ paths:
       summary: Longitudinal metric chart series
       tags: [GOAL]
       x-status: mvp
+      x-parity: required
       x-permission: goals.read
       security:
         - bearerAuth: []
@@ -5091,6 +5173,7 @@ paths:
       summary: Measurement sessions
       tags: [GOAL]
       x-status: mvp
+      x-parity: required
       x-permission: goals.read
       security:
         - bearerAuth: []
@@ -5124,7 +5207,8 @@ paths:
       summary: Record a measurement session
       tags: [GOAL]
       x-status: mvp
-      x-permission: goals.create
+      x-parity: required
+      x-permission: goals.write
       security:
         - bearerAuth: []
       parameters:
@@ -5162,6 +5246,7 @@ paths:
       summary: Measurement session with values
       tags: [GOAL]
       x-status: mvp
+      x-parity: required
       x-permission: goals.read
       security:
         - bearerAuth: []
@@ -5194,6 +5279,7 @@ paths:
       summary: Compare progress photos across two dates and poses
       tags: [GOAL]
       x-status: mvp
+      x-parity: required
       x-permission: goals.read
       security:
         - bearerAuth: []
@@ -5233,9 +5319,10 @@ paths:
   /members/{id}/progress-photos:
     get:
       operationId: listProgressPhotos
-      summary: Progress photos (deferred)
+      summary: Progress photos
       tags: [GOAL]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: goals.read
       security:
         - bearerAuth: []
@@ -5264,10 +5351,11 @@ paths:
           $ref: "#/components/responses/Error429"
     post:
       operationId: createProgressPhoto
-      summary: Add a progress photo (deferred)
+      summary: Add a progress photo
       tags: [GOAL]
-      x-status: deferred
-      x-permission: goals.create
+      x-status: mvp
+      x-parity: required
+      x-permission: goals.write
       security:
         - bearerAuth: []
       parameters:
@@ -5302,10 +5390,11 @@ paths:
   /progress-photos/{id}:
     delete:
       operationId: deleteProgressPhoto
-      summary: Delete a progress photo (deferred)
+      summary: Delete a progress photo
       tags: [GOAL]
-      x-status: deferred
-      x-permission: goals.update
+      x-status: mvp
+      x-parity: required
+      x-permission: goals.write
       security:
         - bearerAuth: []
       parameters:
@@ -5333,6 +5422,7 @@ paths:
       summary: Coach / member notes
       tags: [GOAL]
       x-status: mvp
+      x-parity: required
       x-permission: goals.read
       security:
         - bearerAuth: []
@@ -5365,7 +5455,8 @@ paths:
       summary: Add a progress note
       tags: [GOAL]
       x-status: mvp
-      x-permission: goals.create
+      x-parity: required
+      x-permission: goals.write
       security:
         - bearerAuth: []
       parameters:
@@ -5403,6 +5494,7 @@ paths:
       summary: Inbox
       tags: [NOTIF]
       x-status: mvp
+      x-parity: required
       x-permission: notifications.read
       security:
         - bearerAuth: []
@@ -5436,6 +5528,7 @@ paths:
       summary: Notification detail
       tags: [NOTIF]
       x-status: mvp
+      x-parity: required
       x-permission: notifications.read
       security:
         - bearerAuth: []
@@ -5468,6 +5561,7 @@ paths:
       summary: Mark one notification read
       tags: [NOTIF]
       x-status: mvp
+      x-parity: required
       x-permission: notifications.update
       security:
         - bearerAuth: []
@@ -5500,6 +5594,7 @@ paths:
       summary: Mark all read
       tags: [NOTIF]
       x-status: mvp
+      x-parity: required
       x-permission: notifications.update
       security:
         - bearerAuth: []
@@ -5526,6 +5621,7 @@ paths:
       summary: Broadcast to a role-scoped audience
       tags: [NOTIF]
       x-status: mvp
+      x-parity: required
       x-permission: notifications.broadcast
       security:
         - bearerAuth: []
@@ -5562,6 +5658,7 @@ paths:
       summary: Sent broadcasts
       tags: [NOTIF]
       x-status: mvp
+      x-parity: required
       x-permission: notifications.broadcast
       security:
         - bearerAuth: []
@@ -5595,6 +5692,7 @@ paths:
       summary: Registered push devices for the current user
       tags: [NOTIF]
       x-status: mvp
+      x-parity: required
       x-permission: notifications.read
       security:
         - bearerAuth: []
@@ -5624,6 +5722,7 @@ paths:
       summary: Register a push token
       tags: [NOTIF]
       x-status: mvp
+      x-parity: required
       x-permission: notifications.update
       security:
         - bearerAuth: []
@@ -5660,6 +5759,7 @@ paths:
       summary: Unregister a device
       tags: [NOTIF]
       x-status: mvp
+      x-parity: required
       x-permission: notifications.update
       security:
         - bearerAuth: []
@@ -5693,6 +5793,7 @@ paths:
         profile of that kind.
       tags: [DASH]
       x-status: mvp
+      x-parity: required
       security:
         - bearerAuth: []
       responses:
@@ -5722,6 +5823,7 @@ paths:
       summary: Analytics report
       tags: [RPT]
       x-status: mvp
+      x-parity: required
       x-permission: reports.read
       security:
         - bearerAuth: []
@@ -5816,7 +5918,8 @@ paths:
       operationId: putSettings
       summary: Upsert known setting keys
       tags: [SYS]
-      x-status: deferred
+      x-status: mvp
+      x-parity: required
       x-permission: settings.update
       security:
         - bearerAuth: []
@@ -5853,6 +5956,7 @@ paths:
       summary: Append-only admin audit (no update/delete)
       tags: [SYS]
       x-status: mvp
+      x-parity: required
       x-permission: audit.read
       security:
         - bearerAuth: []
@@ -5882,6 +5986,74 @@ paths:
           $ref: "#/components/responses/Error404"
         "409":
           $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /media/objects:
+    put:
+      operationId: putMediaObject
+      summary: Local adapter signed PUT (ADR-0008 HMAC query auth)
+      description: >
+        Local-disk signed upload target. Auth is HMAC query signature
+        (key, expires, sig, content_type), not Bearer. Returns 204.
+      tags: [MEDIA]
+      x-status: mvp
+      x-parity: required
+      security: []
+      parameters:
+        - { name: key, in: query, required: true, schema: { type: string } }
+        - { name: expires, in: query, required: true, schema: { type: string } }
+        - { name: sig, in: query, required: true, schema: { type: string } }
+        - { name: content_type, in: query, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "204":
+          description: No content
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    get:
+      operationId: getMediaObject
+      summary: Local adapter signed GET (ADR-0008 HMAC query auth)
+      description: >
+        Local-disk signed download target. Auth is HMAC query signature
+        (key, expires, sig), not Bearer. Returns raw object bytes.
+      tags: [MEDIA]
+      x-status: mvp
+      x-parity: required
+      security: []
+      parameters:
+        - { name: key, in: query, required: true, schema: { type: string } }
+        - { name: expires, in: query, required: true, schema: { type: string } }
+        - { name: sig, in: query, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Object bytes
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "404":
+          $ref: "#/components/responses/Error404"
         "422":
           $ref: "#/components/responses/Error422"
         "429":
@@ -6177,23 +6349,33 @@ components:
       type: object
       required: [password]
       properties:
+        identifier:
+          type: string
+          maxLength: 255
+          description: Email or phone number (Nest unified field).
         email:
           type: string
           format: email
         phone_number:
           type: string
           description: E.164
+        phoneNumber:
+          type: string
+          description: E.164 camelCase alias accepted by Nest.
         password:
           type: string
           format: password
-      description: Supply email or phone_number, not both required together — at least one identifier.
+      description: Supply identifier, email, phone_number, or phoneNumber (at least one) plus password.
     RefreshRequest:
       type: object
-      required: [refresh_token]
       properties:
         refresh_token:
           type: string
           description: Opaque `gk_rt_…`
+        refreshToken:
+          type: string
+          description: Opaque `gk_rt_…` camelCase alias accepted by Nest.
+      description: Provide refresh_token or refreshToken (must start with gk_rt_).
     LogoutRequest:
       type: object
       properties:
@@ -6250,12 +6432,36 @@ components:
             type: string
     SessionResponse:
       type: object
-      required: [access_token, refresh_token, principal]
+      required: [accessToken, refreshToken, tokenType, expiresIn, principal]
+      description: Nest returns camelCase primary fields plus optional snake_case aliases.
       properties:
+        accessToken:
+          type: string
+          description: Opaque access token (primary Nest field).
         access_token:
           type: string
+          description: Snake_case alias of accessToken.
+        refreshToken:
+          type: string
+          description: Opaque refresh token (primary Nest field).
         refresh_token:
           type: string
+          description: Snake_case alias of refreshToken.
+        tokenType:
+          type: string
+          enum: [Bearer]
+        token_type:
+          type: string
+          enum: [Bearer]
+          description: Snake_case alias of tokenType.
+        expiresIn:
+          type: integer
+          enum: [1800]
+          description: Access token TTL in seconds.
+        expires_in:
+          type: integer
+          enum: [1800]
+          description: Snake_case alias of expiresIn.
         principal:
           $ref: "#/components/schemas/Principal"
     MeResponse:
@@ -7390,6 +7596,8 @@ components:
           type: string
         row_version:
           type: integer
+        cancel_series:
+          type: boolean
     ScheduleHistory:
       type: object
       required: [id, schedule_id, action, timestamp]

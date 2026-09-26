@@ -1,5 +1,5 @@
-import 'package:app/core/widgets/destination_hub_screen.dart';
-import 'package:app/core/widgets/more_hub_screen.dart';
+import 'package:luxeknox/core/widgets/destination_hub_screen.dart';
+import 'package:luxeknox/core/widgets/more_hub_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';

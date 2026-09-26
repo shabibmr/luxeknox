@@ -6,6 +6,8 @@ abstract final class RouteCapabilities {
   static const List<(String prefix, String slug)> requirements = [
     ('/admin/memberships/create', 'memberships.create'),
     ('/admin/members/add', 'members.create'),
+    ('/admin/trainers/create', 'trainers.create'),
+    ('/admin/employees/create', 'employees.create'),
     ('/admin/notifications/broadcast', 'notifications.send'),
     ('/trainer/notifications/broadcast', 'notifications.send'),
     ('/admin/attendance/manual', 'attendance.override'),
@@ -16,6 +18,7 @@ abstract final class RouteCapabilities {
     ('/admin/reports', 'reports.read'),
     ('/admin/goal-metrics', 'goals.create'),
     ('/admin/settings', 'settings.read'),
+    ('/admin/schedules/create', 'schedules.write'),
     ('/trainer/plans/workouts/create', 'workouts.write'),
     ('/trainer/plans/diets/create', 'diets.write'),
   ];
@@ -24,6 +27,18 @@ abstract final class RouteCapabilities {
   /// beyond role-boundary checks.
   static String? requiredSlug(String path) {
     // Edit is nested under :id — match suffix so list/detail stay ungated.
+    if (path.startsWith('/admin/employees/') && path.endsWith('/edit')) {
+      return 'employees.update';
+    }
+    if (path.startsWith('/admin/schedules/') && path.endsWith('/edit')) {
+      return 'schedules.write';
+    }
+    if (path.startsWith('/admin/memberships/') && path.endsWith('/renew')) {
+      return 'memberships.approve';
+    }
+    if (path.startsWith('/admin/memberships/') && path.endsWith('/freeze')) {
+      return 'memberships.update';
+    }
     if (path.startsWith('/trainer/plans/workouts/') && path.endsWith('/edit')) {
       return 'workouts.write';
     }

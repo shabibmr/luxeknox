@@ -1,13 +1,15 @@
 import {
-  BadRequestException,
-  ForbiddenException,
   Injectable,
   Logger,
-  NotFoundException,
 } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { AuditService } from '../platform/audit/audit.service';
 import { DomainEventBus } from '../platform/events/domain-events';
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import type { UserDevice } from '../platform/db/schema/notifications';
@@ -213,7 +215,7 @@ export class NotificationService {
   async getNotificationDetail(user: AuthenticatedUser, id: number): Promise<InboxItem> {
     const item = await this.repository.findUserInboxItem(user.id, id);
     if (!item) {
-      throw new NotFoundException(`Notification with ID ${id} not found in inbox`);
+      throw new NotFoundError(`Notification with ID ${id} not found in inbox`);
     }
     return item;
   }
@@ -222,7 +224,7 @@ export class NotificationService {
     const now = new Date();
     const updated = await this.repository.markDeliveryRead(user.id, id, now);
     if (!updated) {
-      throw new NotFoundException(`Notification with ID ${id} not found in inbox`);
+      throw new NotFoundError(`Notification with ID ${id} not found in inbox`);
     }
     return this.getNotificationDetail(user, id);
   }
@@ -253,7 +255,7 @@ export class NotificationService {
   async deleteDevice(user: AuthenticatedUser, id: number): Promise<void> {
     const deleted = await this.repository.deleteDevice(id, user.id);
     if (!deleted) {
-      throw new NotFoundException(`Device with ID ${id} not found for this account`);
+      throw new NotFoundError(`Device with ID ${id} not found for this account`);
     }
   }
 
@@ -266,11 +268,11 @@ export class NotificationService {
 
     if (audience === 'assigned_clients') {
       if (user.userType !== 'trainer' && user.userType !== 'admin') {
-        throw new ForbiddenException('Only trainers or administrators can broadcast to assigned clients');
+        throw new ForbiddenError('Only trainers or administrators can broadcast to assigned clients');
       }
       if (user.userType === 'trainer') {
         if (!user.profileId) {
-          throw new BadRequestException('Trainer profile not associated with this account');
+          throw new BadRequestError('Trainer profile not associated with this account');
         }
         recipientUserIds = await this.repository.findActiveAssignedClientUserIds(user.profileId);
       } else {
@@ -279,16 +281,16 @@ export class NotificationService {
       }
     } else if (audience === 'role') {
       if (user.userType !== 'admin') {
-        throw new ForbiddenException('Only administrators can broadcast by role');
+        throw new ForbiddenError('Only administrators can broadcast by role');
       }
       if (!dto.role_id) {
-        throw new BadRequestException('role_id is required when audience is "role"');
+        throw new BadRequestError('role_id is required when audience is "role"');
       }
       recipientUserIds = await this.repository.findActiveUserIdsForRole(dto.role_id);
     } else {
       // all_members
       if (user.userType !== 'admin') {
-        throw new ForbiddenException('Only administrators can broadcast to all members');
+        throw new ForbiddenError('Only administrators can broadcast to all members');
       }
       recipientUserIds = await this.repository.findAllActiveMemberUserIds();
     }
@@ -306,7 +308,7 @@ export class NotificationService {
 
     const notif = await this.repository.findNotificationById(notifId);
     if (!notif) {
-      throw new NotFoundException('Failed to retrieve created broadcast');
+      throw new NotFoundError('Failed to retrieve created broadcast');
     }
 
     await this.auditService.recordAudit({

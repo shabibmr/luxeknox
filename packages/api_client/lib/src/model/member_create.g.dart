@@ -12,7 +12,7 @@ class _$MemberCreate extends MemberCreate {
   @override
   final String? phoneNumber;
   @override
-  final String? password;
+  final String password;
   @override
   final String firstName;
   @override
@@ -34,7 +34,7 @@ class _$MemberCreate extends MemberCreate {
   _$MemberCreate._(
       {this.email,
       this.phoneNumber,
-      this.password,
+      required this.password,
       required this.firstName,
       required this.lastName,
       this.gender,
@@ -185,7 +185,8 @@ class MemberCreateBuilder
         _$MemberCreate._(
           email: email,
           phoneNumber: phoneNumber,
-          password: password,
+          password: BuiltValueNullFieldError.checkNotNull(
+              password, r'MemberCreate', 'password'),
           firstName: BuiltValueNullFieldError.checkNotNull(
               firstName, r'MemberCreate', 'firstName'),
           lastName: BuiltValueNullFieldError.checkNotNull(

@@ -1,6 +1,6 @@
-import 'package:app/features/goals/domain/entities/photo_pose.dart';
-import 'package:app/features/goals/domain/entities/progress_photo.dart';
-import 'package:app/features/goals/domain/helpers/photo_privacy.dart';
+import 'package:luxeknox/features/goals/domain/entities/photo_pose.dart';
+import 'package:luxeknox/features/goals/domain/entities/progress_photo.dart';
+import 'package:luxeknox/features/goals/domain/helpers/photo_privacy.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 ProgressPhoto photo({required String id, required bool isPrivate}) {

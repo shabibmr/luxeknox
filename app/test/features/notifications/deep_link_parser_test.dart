@@ -1,6 +1,6 @@
-import 'package:app/features/notifications/domain/helpers/deep_link_parser.dart';
-import 'package:app/features/notifications/domain/helpers/deep_link_resolver.dart';
-import 'package:app/features/notifications/domain/helpers/notification_push_handler.dart';
+import 'package:luxeknox/features/notifications/domain/helpers/deep_link_parser.dart';
+import 'package:luxeknox/features/notifications/domain/helpers/deep_link_resolver.dart';
+import 'package:luxeknox/features/notifications/domain/helpers/notification_push_handler.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

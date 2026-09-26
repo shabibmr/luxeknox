@@ -7,15 +7,15 @@ part of 'ready.dart';
 // **************************************************************************
 
 const ReadyStatusEnum _$readyStatusEnum_ok = const ReadyStatusEnum._('ok');
-const ReadyStatusEnum _$readyStatusEnum_degraded =
-    const ReadyStatusEnum._('degraded');
+const ReadyStatusEnum _$readyStatusEnum_error =
+    const ReadyStatusEnum._('error');
 
 ReadyStatusEnum _$readyStatusEnumValueOf(String name) {
   switch (name) {
     case 'ok':
       return _$readyStatusEnum_ok;
-    case 'degraded':
-      return _$readyStatusEnum_degraded;
+    case 'error':
+      return _$readyStatusEnum_error;
     default:
       throw ArgumentError(name);
   }
@@ -24,20 +24,20 @@ ReadyStatusEnum _$readyStatusEnumValueOf(String name) {
 final BuiltSet<ReadyStatusEnum> _$readyStatusEnumValues =
     BuiltSet<ReadyStatusEnum>(const <ReadyStatusEnum>[
   _$readyStatusEnum_ok,
-  _$readyStatusEnum_degraded,
+  _$readyStatusEnum_error,
 ]);
 
-const ReadyDatabaseEnum _$readyDatabaseEnum_up =
-    const ReadyDatabaseEnum._('up');
-const ReadyDatabaseEnum _$readyDatabaseEnum_down =
-    const ReadyDatabaseEnum._('down');
+const ReadyDatabaseEnum _$readyDatabaseEnum_connected =
+    const ReadyDatabaseEnum._('connected');
+const ReadyDatabaseEnum _$readyDatabaseEnum_disconnected =
+    const ReadyDatabaseEnum._('disconnected');
 
 ReadyDatabaseEnum _$readyDatabaseEnumValueOf(String name) {
   switch (name) {
-    case 'up':
-      return _$readyDatabaseEnum_up;
-    case 'down':
-      return _$readyDatabaseEnum_down;
+    case 'connected':
+      return _$readyDatabaseEnum_connected;
+    case 'disconnected':
+      return _$readyDatabaseEnum_disconnected;
     default:
       throw ArgumentError(name);
   }
@@ -45,8 +45,8 @@ ReadyDatabaseEnum _$readyDatabaseEnumValueOf(String name) {
 
 final BuiltSet<ReadyDatabaseEnum> _$readyDatabaseEnumValues =
     BuiltSet<ReadyDatabaseEnum>(const <ReadyDatabaseEnum>[
-  _$readyDatabaseEnum_up,
-  _$readyDatabaseEnum_down,
+  _$readyDatabaseEnum_connected,
+  _$readyDatabaseEnum_disconnected,
 ]);
 
 Serializer<ReadyStatusEnum> _$readyStatusEnumSerializer =
@@ -58,11 +58,11 @@ class _$ReadyStatusEnumSerializer
     implements PrimitiveSerializer<ReadyStatusEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
     'ok': 'ok',
-    'degraded': 'degraded',
+    'error': 'error',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'ok': 'ok',
-    'degraded': 'degraded',
+    'error': 'error',
   };
 
   @override
@@ -85,12 +85,12 @@ class _$ReadyStatusEnumSerializer
 class _$ReadyDatabaseEnumSerializer
     implements PrimitiveSerializer<ReadyDatabaseEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
-    'up': 'up',
-    'down': 'down',
+    'connected': 'connected',
+    'disconnected': 'disconnected',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
-    'up': 'up',
-    'down': 'down',
+    'connected': 'connected',
+    'disconnected': 'disconnected',
   };
 
   @override
@@ -115,11 +115,20 @@ class _$Ready extends Ready {
   final ReadyStatusEnum status;
   @override
   final ReadyDatabaseEnum database;
+  @override
+  final DateTime timestamp;
+  @override
+  final ReadyJobs? jobs;
 
   factory _$Ready([void Function(ReadyBuilder)? updates]) =>
       (ReadyBuilder()..update(updates))._build();
 
-  _$Ready._({required this.status, required this.database}) : super._();
+  _$Ready._(
+      {required this.status,
+      required this.database,
+      required this.timestamp,
+      this.jobs})
+      : super._();
   @override
   Ready rebuild(void Function(ReadyBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -132,7 +141,9 @@ class _$Ready extends Ready {
     if (identical(other, this)) return true;
     return other is Ready &&
         status == other.status &&
-        database == other.database;
+        database == other.database &&
+        timestamp == other.timestamp &&
+        jobs == other.jobs;
   }
 
   @override
@@ -140,6 +151,8 @@ class _$Ready extends Ready {
     var _$hash = 0;
     _$hash = $jc(_$hash, status.hashCode);
     _$hash = $jc(_$hash, database.hashCode);
+    _$hash = $jc(_$hash, timestamp.hashCode);
+    _$hash = $jc(_$hash, jobs.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -148,7 +161,9 @@ class _$Ready extends Ready {
   String toString() {
     return (newBuiltValueToStringHelper(r'Ready')
           ..add('status', status)
-          ..add('database', database))
+          ..add('database', database)
+          ..add('timestamp', timestamp)
+          ..add('jobs', jobs))
         .toString();
   }
 }
@@ -164,6 +179,14 @@ class ReadyBuilder implements Builder<Ready, ReadyBuilder> {
   ReadyDatabaseEnum? get database => _$this._database;
   set database(ReadyDatabaseEnum? database) => _$this._database = database;
 
+  DateTime? _timestamp;
+  DateTime? get timestamp => _$this._timestamp;
+  set timestamp(DateTime? timestamp) => _$this._timestamp = timestamp;
+
+  ReadyJobsBuilder? _jobs;
+  ReadyJobsBuilder get jobs => _$this._jobs ??= ReadyJobsBuilder();
+  set jobs(ReadyJobsBuilder? jobs) => _$this._jobs = jobs;
+
   ReadyBuilder() {
     Ready._defaults(this);
   }
@@ -173,6 +196,8 @@ class ReadyBuilder implements Builder<Ready, ReadyBuilder> {
     if ($v != null) {
       _status = $v.status;
       _database = $v.database;
+      _timestamp = $v.timestamp;
+      _jobs = $v.jobs?.toBuilder();
       _$v = null;
     }
     return this;
@@ -192,13 +217,28 @@ class ReadyBuilder implements Builder<Ready, ReadyBuilder> {
   Ready build() => _build();
 
   _$Ready _build() {
-    final _$result = _$v ??
-        _$Ready._(
-          status:
-              BuiltValueNullFieldError.checkNotNull(status, r'Ready', 'status'),
-          database: BuiltValueNullFieldError.checkNotNull(
-              database, r'Ready', 'database'),
-        );
+    _$Ready _$result;
+    try {
+      _$result = _$v ??
+          _$Ready._(
+            status: BuiltValueNullFieldError.checkNotNull(
+                status, r'Ready', 'status'),
+            database: BuiltValueNullFieldError.checkNotNull(
+                database, r'Ready', 'database'),
+            timestamp: BuiltValueNullFieldError.checkNotNull(
+                timestamp, r'Ready', 'timestamp'),
+            jobs: _jobs?.build(),
+          );
+    } catch (_) {
+      late String _$failedField;
+      try {
+        _$failedField = 'jobs';
+        _jobs?.build();
+      } catch (e) {
+        throw BuiltValueNestedFieldError(r'Ready', _$failedField, e.toString());
+      }
+      rethrow;
+    }
     replace(_$result);
     return _$result;
   }

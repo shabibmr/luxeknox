@@ -437,14 +437,3 @@ lib/src/model/workout_session_page.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
-test/book_request_test.dart
-test/cancel_booking_request_test.dart
-test/longitudinal_data_point_test.dart
-test/manual_override_request_test.dart
-test/occupancy_by_gate_inner_test.dart
-test/occupancy_test.dart
-test/personal_record_test.dart
-test/progress_photo_comparison_comparison_by_pose_test.dart
-test/progress_photo_comparison_pose_pair_test.dart
-test/progress_photo_comparison_test.dart
-test/ready_jobs_test.dart

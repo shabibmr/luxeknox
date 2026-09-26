@@ -5,12 +5,12 @@ import {
   BadRequestError,
   BusinessRuleError,
   ConflictError,
-  ForbiddenError,
   NotFoundError,
 } from '../platform/errors/app-error';
 import { PaginationHelper, createPaginatedResponse } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { MemberRepository } from '../people/member.repository';
+import { assertMemberAccess } from '../people/row-scope';
 import { WorkoutPlanRepository } from './workout-plan.repository';
 import {
   WorkoutSessionRepository,
@@ -35,26 +35,6 @@ export class WorkoutSessionService {
     private readonly paginationHelper: PaginationHelper,
   ) {}
 
-  private async assertCanAccessMember(actor: AuthenticatedUser, memberId: number): Promise<void> {
-    if (actor.userType === 'admin' || actor.userType === 'employee') {
-      return;
-    }
-    if (actor.userType === 'member') {
-      if (actor.profileId !== memberId) {
-        throw new NotFoundError('Member not found');
-      }
-      return;
-    }
-    if (actor.userType === 'trainer') {
-      const member = await this.memberRepo.findById(memberId);
-      if (!member || member.assigned_trainer_id !== actor.profileId) {
-        throw new NotFoundError('Member not found or not assigned to trainer');
-      }
-      return;
-    }
-    throw new ForbiddenError('Access denied');
-  }
-
   async listSessions(
     rawQuery: Record<string, unknown>,
     filter: WorkoutSessionFilterQueryDto,
@@ -67,7 +47,7 @@ export class WorkoutSessionService {
     if (actor.userType === 'member') {
       effectiveMemberId = actor.profileId ?? undefined;
     } else if (actor.userType === 'trainer' && effectiveMemberId) {
-      await this.assertCanAccessMember(actor, effectiveMemberId);
+      await assertMemberAccess(this.memberRepo, actor, effectiveMemberId);
     }
 
     const { rows, total } = await this.sessionRepo.findSessions(
@@ -85,7 +65,7 @@ export class WorkoutSessionService {
       throw new NotFoundError('Workout session not found');
     }
 
-    await this.assertCanAccessMember(actor, session.member_id);
+    await assertMemberAccess(this.memberRepo, actor, session.member_id);
     return session;
   }
 
@@ -102,7 +82,7 @@ export class WorkoutSessionService {
       throw new BadRequestError('member_id is required');
     }
 
-    await this.assertCanAccessMember(actor, memberId);
+    await assertMemberAccess(this.memberRepo, actor, memberId);
 
     const activeSession = await this.sessionRepo.findActiveSessionForMember(memberId);
     if (activeSession) {
@@ -167,7 +147,7 @@ export class WorkoutSessionService {
       throw new NotFoundError('Workout session not found');
     }
 
-    await this.assertCanAccessMember(actor, session.member_id);
+    await assertMemberAccess(this.memberRepo, actor, session.member_id);
 
     if (session.completed_at !== null) {
       throw new BusinessRuleError('Cannot log sets for a completed workout session');
@@ -195,7 +175,7 @@ export class WorkoutSessionService {
       throw new NotFoundError('Workout session not found');
     }
 
-    await this.assertCanAccessMember(actor, session.member_id);
+    await assertMemberAccess(this.memberRepo, actor, session.member_id);
 
     if (session.completed_at !== null) {
       return session;
@@ -256,7 +236,7 @@ export class WorkoutSessionService {
       throw new BadRequestError('member_id is required');
     }
 
-    await this.assertCanAccessMember(actor, memberId);
+    await assertMemberAccess(this.memberRepo, actor, memberId);
 
     return this.sessionRepo.findPersonalRecords(memberId, exerciseId);
   }

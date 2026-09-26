@@ -14,7 +14,6 @@ class _$BookRequest extends BookRequest {
       (BookRequestBuilder()..update(updates))._build();
 
   _$BookRequest._({this.memberId}) : super._();
-
   @override
   BookRequest rebuild(void Function(BookRequestBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -30,17 +29,17 @@ class _$BookRequest extends BookRequest {
 
   @override
   int get hashCode {
-    var hash = 0;
-    hash = $jc(hash, memberId.hashCode);
-    hash = $jf(hash);
-    return hash;
+    var _$hash = 0;
+    _$hash = $jc(_$hash, memberId.hashCode);
+    _$hash = $jf(_$hash);
+    return _$hash;
   }
 
   @override
   String toString() {
-    return (newBuiltValueToStringHelper(
-      r'BookRequest',
-    )..add('memberId', memberId)).toString();
+    return (newBuiltValueToStringHelper(r'BookRequest')
+          ..add('memberId', memberId))
+        .toString();
   }
 }
 
@@ -78,9 +77,12 @@ class BookRequestBuilder implements Builder<BookRequest, BookRequestBuilder> {
   BookRequest build() => _build();
 
   _$BookRequest _build() {
-    final result = _$v ?? _$BookRequest._(memberId: memberId);
-    replace(result);
-    return result;
+    final _$result = _$v ??
+        _$BookRequest._(
+          memberId: memberId,
+        );
+    replace(_$result);
+    return _$result;
   }
 }
 

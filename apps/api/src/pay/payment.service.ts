@@ -2,7 +2,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { MembershipProductRepository } from '../memb/membership-product.repository';
 import { MembershipRepository } from '../memb/membership.repository';
+import { MembershipService } from '../memb/membership.service';
 import { MemberRepository } from '../people/member.repository';
+import { assertMemberAccess } from '../people/row-scope';
 import { AuditService } from '../platform/audit/audit.service';
 import { verifyRowVersion } from '../platform/concurrency/row-version';
 import type { DrizzleDb } from '../platform/db/client';
@@ -12,7 +14,6 @@ import { runInTransaction } from '../platform/db/transaction-context';
 import {
   BadRequestError,
   BusinessRuleError,
-  ForbiddenError,
   NotFoundError,
 } from '../platform/errors/app-error';
 import { DomainEventBus } from '../platform/events/domain-events';
@@ -39,13 +40,6 @@ import type {
 import { PaymentMethodRepository } from './payment-method.repository';
 import { PaymentRepository, type PaymentListScope } from './payment.repository';
 
-function addDays(isoDate: string, days: number): string {
-  const [y, m, d] = isoDate.split('-').map(Number);
-  const date = new Date(Date.UTC(y, m - 1, d));
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
-}
-
 @Injectable()
 export class PaymentService {
   constructor(
@@ -54,6 +48,7 @@ export class PaymentService {
     private readonly memberRepository: MemberRepository,
     private readonly membershipRepository: MembershipRepository,
     private readonly productRepository: MembershipProductRepository,
+    private readonly membershipService: MembershipService,
     private readonly settingsService: SettingsService,
     private readonly auditService: AuditService,
     private readonly domainEventBus: DomainEventBus,
@@ -80,19 +75,15 @@ export class PaymentService {
 
   /** PAY-007: admin/employee all; member own; trainer assigned members. */
   private async assertReadScope(actor: AuthenticatedUser, payment: Payment): Promise<void> {
-    if (actor.userType === 'admin' || actor.userType === 'employee') {
-      return;
+    try {
+      await assertMemberAccess(this.memberRepository, actor, payment.member_id);
+    } catch (err) {
+      // Uniform 404 with getById so callers cannot tell missing vs unauthorized payment.
+      if (err instanceof NotFoundError) {
+        throw new NotFoundError('Payment not found');
+      }
+      throw err;
     }
-    if (actor.userType === 'member') {
-      if (actor.profileId === payment.member_id) return;
-      throw new NotFoundError('Payment not found');
-    }
-    if (actor.userType === 'trainer') {
-      const member = await this.memberRepository.findById(payment.member_id);
-      if (member && member.assigned_trainer_id === actor.profileId) return;
-      throw new NotFoundError('Payment not found');
-    }
-    throw new ForbiddenError();
   }
 
   toHistoryDto(row: PaymentHistory): PaymentHistoryDto {
@@ -180,85 +171,6 @@ export class PaymentService {
     return net;
   }
 
-  /** PAY-008: assign or renew membership inside the caller's transaction. */
-  private async coordinateMembership(
-    memberId: number,
-    productId: number,
-    actor: AuthenticatedUser,
-    now: Date,
-  ): Promise<number> {
-    const product = await this.productRepository.findById(productId);
-    if (!product || !product.is_active) {
-      throw new NotFoundError('Membership product not found');
-    }
-
-    const existing = await this.membershipRepository.findActiveOrFrozenForMember(memberId);
-    const today = now.toISOString().slice(0, 10);
-
-    if (!existing) {
-      const endDate = addDays(today, product.duration_days);
-      const membershipId = await this.membershipRepository.insertMembership({
-        member_id: memberId,
-        product_id: productId,
-        start_date: today,
-        end_date: endDate,
-        remaining_pt_sessions: product.pt_sessions_included,
-        status: 'active',
-        locker_number: null,
-        auto_renew: false,
-        row_version: 1,
-        created_at: now,
-      });
-      await this.membershipRepository.insertHistory({
-        membership_id: membershipId,
-        action: 'created',
-        old_end_date: null,
-        new_end_date: endDate,
-        performed_by_user_id: actor.id,
-        timestamp: now,
-      });
-      await this.auditService.recordAudit({
-        actorUserId: actor.id,
-        action: 'membership.created',
-        entityName: 'memberships',
-        entityId: membershipId,
-        afterState: { member_id: memberId, product_id: productId, via: 'payment' },
-      });
-      return membershipId;
-    }
-
-    const continuationStart =
-      (existing.status === 'active' || existing.status === 'frozen') && existing.end_date >= today
-        ? addDays(existing.end_date, 1)
-        : today;
-    const newEndDate = addDays(continuationStart, product.duration_days);
-    await this.membershipRepository.updateMembership(existing.id, {
-      product_id: productId,
-      end_date: newEndDate,
-      status: 'active',
-      remaining_pt_sessions: existing.remaining_pt_sessions + product.pt_sessions_included,
-      row_version: existing.row_version + 1,
-      updated_at: now,
-    });
-    await this.membershipRepository.insertHistory({
-      membership_id: existing.id,
-      action: 'renewed',
-      old_end_date: existing.end_date,
-      new_end_date: newEndDate,
-      performed_by_user_id: actor.id,
-      timestamp: now,
-    });
-    await this.auditService.recordAudit({
-      actorUserId: actor.id,
-      action: 'membership.renewed',
-      entityName: 'memberships',
-      entityId: existing.id,
-      beforeState: { end_date: existing.end_date },
-      afterState: { end_date: newEndDate, via: 'payment' },
-    });
-    return existing.id;
-  }
-
   private async ensureReceipt(paymentId: number, now: Date): Promise<PaymentReceipt> {
     const existing = await this.repository.findReceiptByPaymentId(paymentId);
     if (existing) return existing;
@@ -329,12 +241,15 @@ export class PaymentService {
 
       let membershipId: number | null = dto.membership_id ?? null;
       if (shouldActivateMembership && dto.product_id != null) {
-        membershipId = await this.coordinateMembership(
-          dto.member_id,
-          dto.product_id,
+        membershipId = await this.membershipService.createOrRenewForPayment({
+          memberId: dto.member_id,
+          productId: dto.product_id,
+          membershipId: dto.membership_id ?? null,
+          startDate: dto.start_date,
+          expectedRowVersion: dto.expected_row_version,
           actor,
           now,
-        );
+        });
       }
 
       const created = await this.repository.insertPayment({
@@ -655,6 +570,7 @@ export class PaymentService {
       {
         member_id: dto.member_id,
         product_id: dto.product_id,
+        start_date: dto.start_date,
         subtotal: product.base_price,
         discount_amount: dto.discount_amount,
         payment_method_id: dto.payment_method_id,
@@ -702,6 +618,7 @@ export class PaymentService {
         member_id: membership.member_id,
         membership_id: membership.id,
         product_id: productId,
+        expected_row_version: dto.expected_row_version,
         subtotal: product.base_price,
         discount_amount: dto.discount_amount,
         payment_method_id: dto.payment_method_id,

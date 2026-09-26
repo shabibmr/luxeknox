@@ -31,7 +31,7 @@ abstract class SchedulingRemoteDataSource {
 
   Future<api.ScheduleParticipant> addParticipant({
     required int scheduleId,
-    required api.ScheduleParticipantWrite write,
+    required api.BookRequest write,
     String? idempotencyKey,
   });
 
@@ -141,13 +141,13 @@ class SchedulingRemoteDataSourceImpl implements SchedulingRemoteDataSource {
   @override
   Future<api.ScheduleParticipant> addParticipant({
     required int scheduleId,
-    required api.ScheduleParticipantWrite write,
+    required api.BookRequest write,
     String? idempotencyKey,
   }) async {
     return _unwrap(
       await _schedApi.bookSchedule(
         id: scheduleId,
-        bookRequest: api.BookRequest((b) => b.memberId = write.memberId),
+        bookRequest: write,
       ),
     );
   }

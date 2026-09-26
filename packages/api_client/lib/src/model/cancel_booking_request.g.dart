@@ -10,16 +10,15 @@ class _$CancelBookingRequest extends CancelBookingRequest {
   @override
   final String? reason;
 
-  factory _$CancelBookingRequest([
-    void Function(CancelBookingRequestBuilder)? updates,
-  ]) => (CancelBookingRequestBuilder()..update(updates))._build();
+  factory _$CancelBookingRequest(
+          [void Function(CancelBookingRequestBuilder)? updates]) =>
+      (CancelBookingRequestBuilder()..update(updates))._build();
 
   _$CancelBookingRequest._({this.reason}) : super._();
-
   @override
   CancelBookingRequest rebuild(
-    void Function(CancelBookingRequestBuilder) updates,
-  ) => (toBuilder()..update(updates)).build();
+          void Function(CancelBookingRequestBuilder) updates) =>
+      (toBuilder()..update(updates)).build();
 
   @override
   CancelBookingRequestBuilder toBuilder() =>
@@ -33,17 +32,17 @@ class _$CancelBookingRequest extends CancelBookingRequest {
 
   @override
   int get hashCode {
-    var hash = 0;
-    hash = $jc(hash, reason.hashCode);
-    hash = $jf(hash);
-    return hash;
+    var _$hash = 0;
+    _$hash = $jc(_$hash, reason.hashCode);
+    _$hash = $jf(_$hash);
+    return _$hash;
   }
 
   @override
   String toString() {
-    return (newBuiltValueToStringHelper(
-      r'CancelBookingRequest',
-    )..add('reason', reason)).toString();
+    return (newBuiltValueToStringHelper(r'CancelBookingRequest')
+          ..add('reason', reason))
+        .toString();
   }
 }
 
@@ -82,9 +81,12 @@ class CancelBookingRequestBuilder
   CancelBookingRequest build() => _build();
 
   _$CancelBookingRequest _build() {
-    final result = _$v ?? _$CancelBookingRequest._(reason: reason);
-    replace(result);
-    return result;
+    final _$result = _$v ??
+        _$CancelBookingRequest._(
+          reason: reason,
+        );
+    replace(_$result);
+    return _$result;
   }
 }
 

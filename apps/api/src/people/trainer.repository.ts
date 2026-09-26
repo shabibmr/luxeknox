@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq, like, or, type SQL } from 'drizzle-orm';
+import { and, count, eq, like, or, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
@@ -8,6 +8,8 @@ import { members } from '../platform/db/schema/members';
 
 export interface TrainerFilterParams {
   q?: string;
+  status?: 'all' | 'active' | 'inactive';
+  is_active?: boolean;
   limit: number;
   offset: number;
 }
@@ -38,7 +40,19 @@ export class TrainerRepository extends BaseRepository<typeof trainers, Trainer, 
       );
     }
 
-    const where = conditions.length === 0 ? undefined : conditions[0];
+    const isActive =
+      params.is_active ??
+      (params.status === 'active' ? true : params.status === 'inactive' ? false : undefined);
+    if (isActive !== undefined) {
+      conditions.push(eq(trainers.is_active, isActive));
+    }
+
+    const where =
+      conditions.length === 0
+        ? undefined
+        : conditions.length === 1
+        ? conditions[0]
+        : and(...conditions);
 
     let rowsQuery = db.select().from(trainers);
     let countQuery = db.select({ value: count() }).from(trainers);

@@ -212,4 +212,42 @@ describe('SettingsService', () => {
       expect(mockRepository.findAll).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('listSettings', () => {
+    it('returns all settings with categories', async () => {
+      const list = await service.listSettings();
+      expect(list).toHaveLength(4);
+      const tz = list.find((s) => s.setting_key === 'timezone');
+      expect(tz?.category).toBe('GENERAL');
+      const cur = list.find((s) => s.setting_key === 'currency');
+      expect(cur?.category).toBe('BILLING');
+    });
+
+    it('filters settings by category', async () => {
+      const billingSettings = await service.listSettings('BILLING');
+      expect(billingSettings.every((s) => s.category === 'BILLING')).toBe(true);
+      expect(billingSettings.some((s) => s.setting_key === 'currency')).toBe(true);
+    });
+  });
+
+  describe('updateSettings', () => {
+    it('upserts items, refreshes cache and returns updated list', async () => {
+      mockRepository.upsertMany = vi.fn().mockResolvedValue([]);
+      mockRepository.findAll = vi.fn().mockResolvedValue([
+        { id: 1, setting_key: 'timezone', setting_value: 'Asia/Dubai', description: null, created_at: new Date(), updated_at: new Date() },
+      ]);
+
+      const updated = await service.updateSettings([
+        { setting_key: 'timezone', setting_value: 'Asia/Dubai' },
+      ]);
+
+      expect(mockRepository.upsertMany).toHaveBeenCalledWith([
+        { setting_key: 'timezone', setting_value: 'Asia/Dubai' },
+      ]);
+      expect(updated[0].setting_value).toBe('Asia/Dubai');
+
+      const tz = await service.getTimezone();
+      expect(tz).toBe('Asia/Dubai');
+    });
+  });
 });

@@ -4,11 +4,11 @@
 - [x] schedule types
 - [x] facilities
 - [x] trainer availability
-- [ ] open slots
+- [x] open slots
 - [x] PT booking
 - [x] class booking
-- [ ] recurring series
-- [x] cancel/reschedule (cancel done; reschedule UI open)
+- [x] recurring series
+- [x] cancel/reschedule
 - [x] waitlist
 - [x] trainer start/complete
 - [x] double-submit protection

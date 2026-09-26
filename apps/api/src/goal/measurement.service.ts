@@ -1,9 +1,10 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { MemberRepository } from '../people/member.repository';
+import { assertMemberAccess } from '../people/row-scope';
 import { AuditService } from '../platform/audit/audit.service';
 import type { NewGoalHistory } from '../platform/db/schema/goals';
-import { BusinessRuleError, NotFoundError } from '../platform/errors/app-error';
+import { BusinessRuleError, ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { SettingsService } from '../sys/settings.service';
@@ -31,44 +32,24 @@ export class MeasurementService {
     private readonly auditService: AuditService,
   ) {}
 
-  async assertCanAccessMember(actor: AuthenticatedUser, memberId: number): Promise<void> {
-    if (actor.userType === 'admin' || actor.userType === 'employee') {
-      return;
-    }
-    if (actor.userType === 'member') {
-      if (actor.profileId !== memberId) {
-        throw new NotFoundError('Member not found');
-      }
-      return;
-    }
-    if (actor.userType === 'trainer') {
-      const member = await this.memberRepo.findById(memberId);
-      if (!member || member.assigned_trainer_id !== actor.profileId) {
-        throw new NotFoundError('Member not found or not assigned to trainer');
-      }
-      return;
-    }
-    throw new ForbiddenException('Access denied');
-  }
-
   async assertCanRecordMeasurement(actor: AuthenticatedUser, memberId: number): Promise<void> {
     if (actor.userType === 'admin' || actor.userType === 'employee') {
       return;
     }
     if (actor.userType === 'member') {
       if (actor.profileId !== memberId) {
-        throw new ForbiddenException('Cannot record measurements for another member');
+        throw new ForbiddenError('Cannot record measurements for another member');
       }
       return;
     }
     if (actor.userType === 'trainer') {
       const member = await this.memberRepo.findById(memberId);
       if (!member || member.assigned_trainer_id !== actor.profileId) {
-        throw new ForbiddenException('Trainer may only record measurements for assigned members');
+        throw new ForbiddenError('Trainer may only record measurements for assigned members');
       }
       return;
     }
-    throw new ForbiddenException('Access denied');
+    throw new ForbiddenError('Access denied');
   }
 
   async validateMandatoryMetrics(providedMetricIds: number[]): Promise<void> {
@@ -160,7 +141,7 @@ export class MeasurementService {
     filter: MeasurementFilterQueryDto,
     actor: AuthenticatedUser,
   ): Promise<PaginatedResponse<MeasurementWithValues>> {
-    await this.assertCanAccessMember(actor, memberId);
+    await assertMemberAccess(this.memberRepo, actor, memberId);
 
     const pagination = await this.paginationHelper.normalizeParams(rawQuery);
     const offset = pagination.offset ?? 0;
@@ -192,7 +173,7 @@ export class MeasurementService {
       throw new NotFoundError(`Measurement session with id ${id} not found`);
     }
 
-    await this.assertCanAccessMember(actor, session.member_id);
+    await assertMemberAccess(this.memberRepo, actor, session.member_id);
     return session;
   }
 
@@ -203,7 +184,7 @@ export class MeasurementService {
     toStr: string | undefined,
     actor: AuthenticatedUser,
   ): Promise<LongitudinalDataPoint[]> {
-    await this.assertCanAccessMember(actor, memberId);
+    await assertMemberAccess(this.memberRepo, actor, memberId);
 
     const fromDate = fromStr ? new Date(fromStr) : undefined;
     const toDate = toStr ? new Date(toStr) : undefined;

@@ -28,6 +28,11 @@ export const paymentCreateSchema = z
     member_id: z.number().int().positive(),
     membership_id: z.number().int().positive().optional(),
     product_id: z.number().int().positive().optional(),
+    start_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid start_date format. Expected YYYY-MM-DD')
+      .optional(),
+    expected_row_version: z.number().int().positive().optional(),
     subtotal: moneySchema,
     discount_amount: moneySchema.optional(),
     payment_method_id: z.number().int().positive().optional(),

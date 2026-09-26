@@ -1,10 +1,10 @@
-import 'package:app/core/pagination/cursor_page.dart';
-import 'package:app/features/notifications/domain/entities/app_notification.dart';
-import 'package:app/features/notifications/domain/entities/broadcast_audience.dart';
-import 'package:app/features/notifications/domain/entities/broadcast_request_input.dart';
-import 'package:app/features/notifications/domain/usecases/notification_usecases.dart';
-import 'package:app/features/notifications/presentation/cubit/broadcast_cubit.dart';
-import 'package:app/features/notifications/presentation/notification_strings.dart';
+import 'package:luxeknox/core/pagination/cursor_page.dart';
+import 'package:luxeknox/features/notifications/domain/entities/app_notification.dart';
+import 'package:luxeknox/features/notifications/domain/entities/broadcast_audience.dart';
+import 'package:luxeknox/features/notifications/domain/entities/broadcast_request_input.dart';
+import 'package:luxeknox/features/notifications/domain/usecases/notification_usecases.dart';
+import 'package:luxeknox/features/notifications/presentation/cubit/broadcast_cubit.dart';
+import 'package:luxeknox/features/notifications/presentation/notification_strings.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

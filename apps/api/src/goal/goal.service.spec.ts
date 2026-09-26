@@ -1,10 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ForbiddenException } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import type { MemberRepository } from '../people/member.repository';
 import type { AuditService } from '../platform/audit/audit.service';
 import type { GoalMetric } from '../platform/db/schema/goals';
-import { BusinessRuleError, NotFoundError } from '../platform/errors/app-error';
+import { BusinessRuleError, ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import { PaginationHelper } from '../platform/http/pagination';
 import type { GoalMetricRepository } from './goal-metric.repository';
 import { GoalMetricService } from './goal-metric.service';
@@ -276,7 +275,7 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
           },
           mockMemberUser,
         ),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
 
     it('rejects unassigned trainer attempting to create goal for member', async () => {
@@ -296,7 +295,7 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
           },
           unassignedTrainer,
         ),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
 
     it('allows member to list their own goals with joined metrics', async () => {
