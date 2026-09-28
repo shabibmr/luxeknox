@@ -36,6 +36,17 @@ export type TrainerUpdateDto = z.infer<typeof trainerUpdateSchema>;
 
 export const trainerFilterQuerySchema = z.object({
   q: z.string().trim().min(1).optional(),
+  status: z.enum(['all', 'active', 'inactive']).optional(),
+  is_active: z
+    .union([z.boolean(), z.string()])
+    .optional()
+    .transform((val) => {
+      if (val === undefined || val === null || val === '') return undefined;
+      if (typeof val === 'boolean') return val;
+      if (val === 'true') return true;
+      if (val === 'false') return false;
+      return undefined;
+    }),
 });
 
 export type TrainerFilterQueryDto = z.infer<typeof trainerFilterQuerySchema>;

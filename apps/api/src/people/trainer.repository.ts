@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq, ilike, or, type SQL } from 'drizzle-orm';
+import { and, count, eq, ilike, or, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
@@ -8,6 +8,8 @@ import { members } from '../platform/db/schema/members';
 
 export interface TrainerFilterParams {
   q?: string;
+  status?: 'all' | 'active' | 'inactive';
+  is_active?: boolean;
   limit: number;
   offset: number;
 }
@@ -38,7 +40,19 @@ export class TrainerRepository extends BaseRepository<typeof trainers, Trainer, 
       );
     }
 
-    const where = conditions.length === 0 ? undefined : conditions[0];
+    const isActive =
+      params.is_active ??
+      (params.status === 'active' ? true : params.status === 'inactive' ? false : undefined);
+    if (isActive !== undefined) {
+      conditions.push(eq(trainers.is_active, isActive));
+    }
+
+    const where =
+      conditions.length === 0
+        ? undefined
+        : conditions.length === 1
+        ? conditions[0]
+        : and(...conditions);
 
     let rowsQuery = db.select().from(trainers);
     let countQuery = db.select({ value: count() }).from(trainers);
@@ -60,6 +74,21 @@ export class TrainerRepository extends BaseRepository<typeof trainers, Trainer, 
 
   async updateTrainer(id: number, values: Partial<NewTrainer>): Promise<void> {
     await this.update(eq(trainers.id, id), values);
+  }
+
+  async countTotal(): Promise<number> {
+    const db = this.getDb() as any;
+    const rows = await db.select({ value: count() }).from(trainers);
+    return Number(rows[0]?.value ?? 0);
+  }
+
+  async countActive(): Promise<number> {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select({ value: count() })
+      .from(trainers)
+      .where(eq(trainers.is_active, true));
+    return Number(rows[0]?.value ?? 0);
   }
 
   async countAssignedMembers(trainerId: number): Promise<number> {

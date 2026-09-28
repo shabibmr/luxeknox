@@ -11,10 +11,12 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**checkIn**](ATTNApi.md#checkin) | **POST** /attendances/check-in | Gate check-in (user session or device key)
 [**checkOut**](ATTNApi.md#checkout) | **POST** /attendances/{id}/check-out | Gate check-out
+[**getAttendanceOccupancy**](ATTNApi.md#getattendanceoccupancy) | **GET** /attendances/occupancy | Live gate occupancy (open check-ins)
 [**getAttendancePass**](ATTNApi.md#getattendancepass) | **GET** /attendance/pass | Member digital pass (QR payload)
 [**getAttendanceSummary**](ATTNApi.md#getattendancesummary) | **GET** /attendances/summary | Scoped attendance summary
 [**listAttendanceHistories**](ATTNApi.md#listattendancehistories) | **GET** /attendance-histories | Daily footfall aggregates
 [**listAttendances**](ATTNApi.md#listattendances) | **GET** /attendances | Gate attendance log
+[**manualOverrideCheckIn**](ATTNApi.md#manualoverridecheckin) | **POST** /attendances/override | Manual gate check-in override (bypasses eligibility/caps)
 [**markSessionAttendance**](ATTNApi.md#marksessionattendance) | **POST** /schedules/{id}/participants/{participantId}/mark | Mark session attended / no-show
 
 
@@ -94,6 +96,43 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**Attendance**](Attendance.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getAttendanceOccupancy**
+> Occupancy getAttendanceOccupancy()
+
+Live gate occupancy (open check-ins)
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getATTNApi();
+
+try {
+    final response = api.getAttendanceOccupancy();
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling ATTNApi->getAttendanceOccupancy: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**Occupancy**](Occupancy.md)
 
 ### Authorization
 
@@ -272,6 +311,47 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **manualOverrideCheckIn**
+> Attendance manualOverrideCheckIn(manualOverrideRequest)
+
+Manual gate check-in override (bypasses eligibility/caps)
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getATTNApi();
+final ManualOverrideRequest manualOverrideRequest = ; // ManualOverrideRequest | 
+
+try {
+    final response = api.manualOverrideCheckIn(manualOverrideRequest);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling ATTNApi->manualOverrideCheckIn: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **manualOverrideRequest** | [**ManualOverrideRequest**](ManualOverrideRequest.md)|  | 
+
+### Return type
+
+[**Attendance**](Attendance.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

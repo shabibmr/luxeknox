@@ -17,6 +17,7 @@ class UploadDocumentParams extends Equatable {
     required this.title,
     required this.bytes,
     required this.contentType,
+    this.onProgress,
   });
 
   final int memberId;
@@ -24,6 +25,7 @@ class UploadDocumentParams extends Equatable {
   final String title;
   final Uint8List bytes;
   final String contentType;
+  final void Function(int sent, int total)? onProgress;
 
   @override
   List<Object?> get props => [memberId, purpose, title, bytes, contentType];
@@ -44,6 +46,16 @@ class UploadDocumentUseCase
       title: params.title,
       bytes: params.bytes,
       contentType: params.contentType,
+      onProgress: params.onProgress,
     );
   }
+}
+
+@lazySingleton
+class CancelDocumentUploadUseCase {
+  const CancelDocumentUploadUseCase(this._repository);
+
+  final DocumentRepository _repository;
+
+  void call() => _repository.cancelUpload();
 }

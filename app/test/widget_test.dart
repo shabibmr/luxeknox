@@ -1,7 +1,7 @@
-import 'package:app/core/di/injector.dart';
-import 'package:app/core/router/app_router.dart';
-import 'package:app/main.dart';
-import 'package:app/session/presentation/session_cubit.dart';
+import 'package:luxeknox/core/di/injector.dart';
+import 'package:luxeknox/core/router/app_router.dart';
+import 'package:luxeknox/main.dart';
+import 'package:luxeknox/session/presentation/session_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

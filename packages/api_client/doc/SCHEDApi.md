@@ -9,7 +9,8 @@ All URIs are relative to *http://localhost:3000/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**addScheduleParticipant**](SCHEDApi.md#addscheduleparticipant) | **POST** /schedules/{id}/participants | Book a member onto a schedule
+[**bookSchedule**](SCHEDApi.md#bookschedule) | **POST** /schedules/{id}/book | Book or waitlist a member for a schedule
+[**cancelBooking**](SCHEDApi.md#cancelbooking) | **POST** /schedules/{id}/bookings/{memberId}/cancel | Cancel a member booking
 [**cancelSchedule**](SCHEDApi.md#cancelschedule) | **POST** /schedules/{id}/cancel | Cancel a schedule
 [**completeSchedule**](SCHEDApi.md#completeschedule) | **POST** /schedules/{id}/complete | Mark schedule completed
 [**createFacility**](SCHEDApi.md#createfacility) | **POST** /facilities | Create a facility
@@ -22,15 +23,16 @@ Method | HTTP request | Description
 [**listScheduleTypes**](SCHEDApi.md#listscheduletypes) | **GET** /schedule-types | Schedule types
 [**listSchedules**](SCHEDApi.md#listschedules) | **GET** /schedules | Calendar list
 [**putTrainerAvailability**](SCHEDApi.md#puttraineravailability) | **PUT** /trainers/{id}/availability | Replace trainer availability
-[**removeScheduleParticipant**](SCHEDApi.md#removescheduleparticipant) | **DELETE** /schedules/{id}/participants/{participantId} | Cancel a booking
 [**startSchedule**](SCHEDApi.md#startschedule) | **POST** /schedules/{id}/start | Mark schedule ongoing
+[**updateFacility**](SCHEDApi.md#updatefacility) | **PATCH** /facilities/{id} | Update a facility
 [**updateSchedule**](SCHEDApi.md#updateschedule) | **PATCH** /schedules/{id} | Update a schedule (requires row_version)
+[**updateScheduleType**](SCHEDApi.md#updatescheduletype) | **PATCH** /schedule-types/{id} | Update a schedule type
 
 
-# **addScheduleParticipant**
-> ScheduleParticipant addScheduleParticipant(id, scheduleParticipantWrite, idempotencyKey)
+# **bookSchedule**
+> ScheduleParticipant bookSchedule(id, bookRequest)
 
-Book a member onto a schedule
+Book or waitlist a member for a schedule
 
 ### Example
 ```dart
@@ -38,14 +40,13 @@ import 'package:api_client/api.dart';
 
 final api = ApiClient().getSCHEDApi();
 final int id = 789; // int | 
-final ScheduleParticipantWrite scheduleParticipantWrite = ; // ScheduleParticipantWrite | 
-final String idempotencyKey = idempotencyKey_example; // String | Required in practice on payments, check-in, booking, freeze (FR-API-008).
+final BookRequest bookRequest = ; // BookRequest | 
 
 try {
-    final response = api.addScheduleParticipant(id, scheduleParticipantWrite, idempotencyKey);
+    final response = api.bookSchedule(id, bookRequest);
     print(response);
 } on DioException catch (e) {
-    print('Exception when calling SCHEDApi->addScheduleParticipant: $e\n');
+    print('Exception when calling SCHEDApi->bookSchedule: $e\n');
 }
 ```
 
@@ -54,8 +55,52 @@ try {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **int**|  | 
- **scheduleParticipantWrite** | [**ScheduleParticipantWrite**](ScheduleParticipantWrite.md)|  | 
- **idempotencyKey** | **String**| Required in practice on payments, check-in, booking, freeze (FR-API-008). | [optional] 
+ **bookRequest** | [**BookRequest**](BookRequest.md)|  | 
+
+### Return type
+
+[**ScheduleParticipant**](ScheduleParticipant.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cancelBooking**
+> ScheduleParticipant cancelBooking(id, memberId, cancelBookingRequest)
+
+Cancel a member booking
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getSCHEDApi();
+final int id = 789; // int | 
+final int memberId = 789; // int | 
+final CancelBookingRequest cancelBookingRequest = ; // CancelBookingRequest | 
+
+try {
+    final response = api.cancelBooking(id, memberId, cancelBookingRequest);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling SCHEDApi->cancelBooking: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **memberId** | **int**|  | 
+ **cancelBookingRequest** | [**CancelBookingRequest**](CancelBookingRequest.md)|  | 
 
 ### Return type
 
@@ -574,48 +619,6 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **removeScheduleParticipant**
-> removeScheduleParticipant(id, participantId)
-
-Cancel a booking
-
-### Example
-```dart
-import 'package:api_client/api.dart';
-
-final api = ApiClient().getSCHEDApi();
-final int id = 789; // int | 
-final int participantId = 789; // int | 
-
-try {
-    api.removeScheduleParticipant(id, participantId);
-} on DioException catch (e) {
-    print('Exception when calling SCHEDApi->removeScheduleParticipant: $e\n');
-}
-```
-
-### Parameters
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **id** | **int**|  | 
- **participantId** | **int**|  | 
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[bearerAuth](../README.md#bearerAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
 # **startSchedule**
 > Schedule startSchedule(id)
 
@@ -657,6 +660,49 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **updateFacility**
+> Facility updateFacility(id, facilityWrite)
+
+Update a facility
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getSCHEDApi();
+final int id = 789; // int | 
+final FacilityWrite facilityWrite = ; // FacilityWrite | 
+
+try {
+    final response = api.updateFacility(id, facilityWrite);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling SCHEDApi->updateFacility: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **facilityWrite** | [**FacilityWrite**](FacilityWrite.md)|  | 
+
+### Return type
+
+[**Facility**](Facility.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **updateSchedule**
 > Schedule updateSchedule(id, scheduleWrite)
 
@@ -688,6 +734,49 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**Schedule**](Schedule.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **updateScheduleType**
+> ScheduleType updateScheduleType(id, scheduleTypeWrite)
+
+Update a schedule type
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getSCHEDApi();
+final int id = 789; // int | 
+final ScheduleTypeWrite scheduleTypeWrite = ; // ScheduleTypeWrite | 
+
+try {
+    final response = api.updateScheduleType(id, scheduleTypeWrite);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling SCHEDApi->updateScheduleType: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **scheduleTypeWrite** | [**ScheduleTypeWrite**](ScheduleTypeWrite.md)|  | 
+
+### Return type
+
+[**ScheduleType**](ScheduleType.md)
 
 ### Authorization
 

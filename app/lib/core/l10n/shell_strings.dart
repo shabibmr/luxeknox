@@ -20,6 +20,7 @@ abstract final class ShellStrings {
   static const trainerSchedule = 'Trainer Schedule';
   static const trainerPlans = 'Trainer Plans';
   static const trainerProfile = 'Trainer Profile';
+  static const trainerOwnReport = 'My performance report';
   static const adminDashboard = 'Admin Dashboard';
   static const adminMembers = 'Admin Members';
   static const adminMemberships = 'Admin Memberships';
@@ -43,6 +44,7 @@ abstract final class ShellStrings {
   static const createWorkoutPlan = 'Create Workout Plan';
   static const workoutPlanDetail = 'Workout Plan Details';
   static const workoutPlanHistory = 'Workout History';
+  static const workoutPlans = 'Workout plans';
   static const createDietPlan = 'Create Diet Plan';
   static const dietPlanDetail = 'Diet Plan Details';
   static const dietPlanHistory = 'Diet History';
@@ -74,12 +76,24 @@ abstract final class ShellStrings {
   static const trainers = 'Trainers';
   static const employees = 'Employees';
   static const packages = 'Packages';
+  static const paymentMethods = 'Payment methods';
   static const attendance = 'Attendance';
   static const schedules = 'Schedules';
   static const workoutLibrary = 'Workout Library';
-  static const dietLibrary = 'Diet Library';
+  static const dietLibrary = 'Food Library';
   static const goalMetrics = 'Goal Metrics';
   static const notificationsBroadcast = 'Broadcast Notifications';
   static const reports = 'Reports';
   static const settings = 'Settings';
+  static const systemAlerts = 'System Alerts';
+
+  static const notFoundTitle = 'Page not found';
+  static const notFoundMessage = 'This link does not match any screen.';
+  static const notFoundGoHome = 'Go home';
+
+  static const unsavedTitle = 'Discard changes?';
+  static const unsavedMessage =
+      'You have unsaved changes. Leave without saving?';
+  static const unsavedStay = 'Keep editing';
+  static const unsavedLeave = 'Discard';
 }

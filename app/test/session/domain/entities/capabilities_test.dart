@@ -1,4 +1,4 @@
-import 'package:app/session/domain/entities/capabilities.dart';
+import 'package:luxeknox/session/domain/entities/capabilities.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

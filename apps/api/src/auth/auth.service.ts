@@ -1,24 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { eq } from 'drizzle-orm';
 import { type Session, type NewSession } from '../platform/db/schema/sessions';
-import type { User } from '../platform/db/schema/users';
+import { users, type User } from '../platform/db/schema/users';
 import { SessionRepository } from './session.repository';
 import { SessionCache } from './session.cache';
 import { LoginThrottle } from './login-throttle';
 import { UserRepository } from './user.repository';
-import { issueAccessToken, issueRefreshToken, hashToken } from './token';
-import { verifyPassword } from './password';
-import { UnauthorizedError } from '../platform/errors/app-error';
-import type { AuthResponse } from './auth.dto';
+import { PasswordResetTokenRepository } from './password-reset-token.repository';
+import { issueAccessToken, issueRefreshToken, issuePasswordResetToken, hashToken } from './token';
+import { hashPassword, verifyPassword } from './password';
+import { BadRequestError, UnauthorizedError } from '../platform/errors/app-error';
+import type { AuthenticatedUser } from './auth.guard';
+import type { AuthResponse, ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from './auth.dto';
 import { PermissionCache } from '../rbac/permission-cache';
 import { RoleRepository } from '../rbac/role.repository';
 import { PersonFactory } from '../people/person.factory';
+import { AuditService } from '../platform/audit/audit.service';
 
 /** Access token lifespan in seconds (30 minutes) per ADR-0003 */
 export const ACCESS_TOKEN_EXPIRY_SECONDS = 1800;
 
 /** Refresh token / session lifespan in days (30 days) per ADR-0003 */
 export const REFRESH_TOKEN_EXPIRY_DAYS = 30;
+
+/** Password-reset token lifespan in minutes. */
+export const PASSWORD_RESET_TOKEN_EXPIRY_MINUTES = 60;
 
 @Injectable()
 export class AuthService {
@@ -30,6 +37,8 @@ export class AuthService {
     private readonly roleRepository: RoleRepository,
     private readonly permissionCache: PermissionCache,
     private readonly personFactory: PersonFactory,
+    private readonly passwordResetTokenRepository: PasswordResetTokenRepository,
+    private readonly auditService: AuditService,
   ) {}
 
   /**
@@ -146,6 +155,108 @@ export class AuthService {
       this.sessionCache.dropSession(accessTokenHash);
       this.sessionCache.dropSession(session.refresh_token_hash);
     }
+  }
+
+  /**
+   * Changes the current user's password and invalidates every other active session
+   * (keeping the caller's own session alive) per FR-AUTH password-change contract.
+   */
+  async changePassword(actor: AuthenticatedUser, dto: ChangePasswordDto): Promise<void> {
+    const user = await this.userRepository.findById(actor.id);
+    if (!user) {
+      throw new UnauthorizedError('Account is not active');
+    }
+
+    const isValid = await verifyPassword(user.password_hash, dto.current_password);
+    if (!isValid) {
+      throw new BadRequestError('Current password is incorrect');
+    }
+
+    const newHash = await hashPassword(dto.new_password);
+    const now = new Date();
+    await this.userRepository.update(eq(users.id, user.id), {
+      password_hash: newHash,
+      updated_at: now,
+    });
+
+    await this.sessionRepository.revokeAllForUserExcept(user.id, actor.sessionId, now);
+    this.sessionCache.dropByUser(user.id);
+
+    await this.auditService.recordAudit({
+      actorUserId: user.id,
+      action: 'password_change',
+      entityName: 'users',
+      entityId: user.id,
+    });
+  }
+
+  /**
+   * Issues a single-use password-reset token for the user matching the given
+   * identifier. Always resolves without revealing whether the identifier exists.
+   */
+  async forgotPassword(dto: ForgotPasswordDto): Promise<void> {
+    const identifier = (dto.email || dto.phone_number || '').trim();
+    if (!identifier) {
+      return;
+    }
+
+    const user = await this.userRepository.findByIdentifier(identifier);
+    if (!user || user.status !== 'active') {
+      return;
+    }
+
+    const rawToken = issuePasswordResetToken();
+    const tokenHash = hashToken(rawToken);
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + PASSWORD_RESET_TOKEN_EXPIRY_MINUTES * 60 * 1000);
+
+    await this.passwordResetTokenRepository.create({
+      user_id: user.id,
+      token_hash: tokenHash,
+      expires_at: expiresAt,
+      used_at: null,
+      created_at: now,
+    });
+
+    // NOTE: delivery (email/SMS) is intentionally out of scope here — no outbound
+    // mail/SMS provider is wired into this service yet. The raw token is only ever
+    // held in memory for this request; only its hash is persisted.
+  }
+
+  /**
+   * Consumes a one-time password-reset token, sets a new password, and revokes
+   * every active session for the account (the caller holds no session to preserve).
+   */
+  async resetPassword(dto: ResetPasswordDto): Promise<void> {
+    const tokenHash = hashToken(dto.token);
+    const now = new Date();
+
+    const resetToken = await this.passwordResetTokenRepository.findActiveByTokenHash(tokenHash, now);
+    if (!resetToken) {
+      throw new BadRequestError('Reset token is invalid or has expired');
+    }
+
+    const user = await this.userRepository.findById(resetToken.user_id);
+    if (!user) {
+      throw new BadRequestError('Reset token is invalid or has expired');
+    }
+
+    const newHash = await hashPassword(dto.new_password);
+    await this.userRepository.update(eq(users.id, user.id), {
+      password_hash: newHash,
+      updated_at: now,
+    });
+
+    await this.passwordResetTokenRepository.markUsed(resetToken.id, now);
+    await this.sessionRepository.revokeAllForUser(user.id, now);
+    this.sessionCache.dropByUser(user.id);
+
+    await this.auditService.recordAudit({
+      actorUserId: user.id,
+      action: 'password_reset',
+      entityName: 'users',
+      entityId: user.id,
+    });
   }
 
   /**

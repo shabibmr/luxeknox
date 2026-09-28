@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/features/foods/domain/entities/food.dart';
+import 'package:luxeknox/features/foods/domain/entities/food.dart';
 
 void main() {
   group('Food', () {
@@ -82,11 +82,13 @@ void main() {
         servingUnit: 'g',
         calories: 165,
         isVerified: false,
+        isActive: true,
       );
 
-      final updated = original.copyWith(isVerified: true);
+      final updated = original.copyWith(isVerified: true, isActive: false);
 
       expect(updated.isVerified, isTrue);
+      expect(updated.isActive, isFalse);
       expect(updated.id, original.id);
       expect(updated.name, original.name);
       expect(updated.calories, original.calories);

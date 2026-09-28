@@ -74,6 +74,36 @@ export class LoginDto {
 }
 
 // ==========================================
+// Password Management DTOs & Schemas
+// ==========================================
+
+export const changePasswordSchema = z.object({
+  current_password: z.string().min(1, 'Current password is required'),
+  new_password: z.string().min(8, 'New password must be at least 8 characters').max(255),
+});
+
+export type ChangePasswordDto = z.infer<typeof changePasswordSchema>;
+
+export const forgotPasswordSchema = z
+  .object({
+    email: z.string().trim().email().optional(),
+    phone_number: z.string().trim().min(1).optional(),
+  })
+  .refine((data) => !!(data.email || data.phone_number), {
+    message: 'Email or phone number is required',
+    path: ['email'],
+  });
+
+export type ForgotPasswordDto = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Reset token is required'),
+  new_password: z.string().min(8, 'New password must be at least 8 characters').max(255),
+});
+
+export type ResetPasswordDto = z.infer<typeof resetPasswordSchema>;
+
+// ==========================================
 // Refresh Token DTO & Schema
 // ==========================================
 

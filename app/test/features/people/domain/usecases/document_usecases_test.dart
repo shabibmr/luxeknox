@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 
-import 'package:app/core/media/document_access.dart';
-import 'package:app/features/people/domain/entities/member_document.dart';
-import 'package:app/features/people/domain/repositories/document_repository.dart';
-import 'package:app/features/people/domain/usecases/delete_document_usecase.dart';
-import 'package:app/features/people/domain/usecases/list_documents_usecase.dart';
-import 'package:app/features/people/domain/usecases/upload_document_usecase.dart';
+import 'package:luxeknox/core/media/document_access.dart';
+import 'package:luxeknox/features/people/domain/entities/member_document.dart';
+import 'package:luxeknox/features/people/domain/repositories/document_repository.dart';
+import 'package:luxeknox/features/people/domain/usecases/delete_document_usecase.dart';
+import 'package:luxeknox/features/people/domain/usecases/list_documents_usecase.dart';
+import 'package:luxeknox/features/people/domain/usecases/upload_document_usecase.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';

@@ -1,0 +1,16 @@
+## Reports
+- [x] report navigation
+- [x] filters
+- [x] date ranges
+- [x] report charts (`ReportChartSection` + per-type aggregations; payments/financial charts blocked on B5)
+- [ ] member report
+- [ ] membership report
+- [ ] attendance report
+- [ ] payments report
+- [ ] trainer report
+- [ ] workout report
+- [ ] diet report
+- [ ] progress report
+- [ ] trainer own slice
+- [ ] export handling
+- [ ] large-result pagination

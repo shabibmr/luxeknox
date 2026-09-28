@@ -1,0 +1,13 @@
+## Membership
+- [x] membership card / detail / history
+- [x] packages catalogue + product CRUD
+- [x] memberships directory
+- [x] freeze request / approve / reject / extension
+- [x] renew / upgrade / cancel
+- [x] row-version conflicts
+- [x] role pricing visibility
+- [x] create-membership sales UI
+- [x] shell / router wiring
+- [x] directory cubit refactor
+- [ ] remaining screen cubit refactors (detail/card/form)
+- [ ] broader widget/integration tests

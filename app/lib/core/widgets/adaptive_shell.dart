@@ -13,10 +13,20 @@ class AdaptiveNavigationDestination {
   final String label;
 }
 
+/// Breakpoints for [AdaptiveShell] chrome (dp / logical pixels).
+abstract final class AdaptiveShellBreakpoints {
+  /// Below this width: [NavigationBar] (phone).
+  static const double compact = 600;
+
+  /// At/above this width: extended [NavigationRail] (desktop).
+  /// Between [compact] and this: compact [NavigationRail] (tablet).
+  static const double expanded = 1240;
+}
+
 /// Adaptive shell:
-/// - Bottom navigation bar under 600dp
-/// - NavigationRail (compact) 600dp to 1239dp
-/// - Extended NavigationRail at 1240dp and above
+/// - Bottom navigation bar under [AdaptiveShellBreakpoints.compact]
+/// - NavigationRail (compact) from compact to just under expanded
+/// - Extended NavigationRail at [AdaptiveShellBreakpoints.expanded] and above
 class AdaptiveShell extends StatelessWidget {
   const AdaptiveShell({
     super.key,
@@ -54,7 +64,7 @@ class AdaptiveShell extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
 
-        if (width < 600) {
+        if (width < AdaptiveShellBreakpoints.compact) {
           return Scaffold(
             body: content,
             bottomNavigationBar: NavigationBar(
@@ -73,7 +83,7 @@ class AdaptiveShell extends StatelessWidget {
           );
         }
 
-        final isExtended = width >= 1240;
+        final isExtended = width >= AdaptiveShellBreakpoints.expanded;
 
         return Scaffold(
           body: Row(

@@ -120,7 +120,7 @@ pie title Screen Consolidation Summary
 | **33** | **Diet Plans Catalog & List** | **R** (Assigned)| **E** (Clients) | **F** (Templates)| **Member**: Active meal plan & archived past diets.<br>**Trainer**: Client diet plans + draft diets.<br>**Admin**: Gym master nutrition templates (Keto, Deficit, etc.). |
 | **34** | **Diet Plan Details Screen** | **R** (Self) | **E** (Manage) | **F** (All) | Structured daily meals (Breakfast, Lunch, Dinner, Snacks), calorie & macro breakdown. |
 | **35** | **Diet Plan Builder / Editor** | **—** | **E** | **F** | Calorie target calculator, macro ratio sliders, meal slot builder. |
-| **36** | **Food Library Screen** | **R** (Browse) | **R** (Pick) | **F** (CRUD) | Nutritional database per 100g/serving. Admin can add/edit custom foods. |
+| **36** | **Food Library Screen** | **—** | **R** (Pick) | **F** (CRUD) | Nutritional database per 100g/serving. Admin can add/edit custom foods. **Member**: no dedicated Food Library route — foods appear only via diet plan/log context. |
 | **37** | **Diet History & Food Log** | **E** (Log) | **R** (Review) | **F** (All) | Member logs daily adherence; Trainer monitors compliance. |
 
 ---
@@ -149,7 +149,7 @@ pie title Screen Consolidation Summary
 
 | # | Consolidated Screen Name | Member | Trainer | Admin | Role Variations & Adaptations |
 | :-: | :--- | :---: | :---: | :---: | :--- |
-| **44** | **Staff Directory & Roles** | **—** | **—** | **F** | Combined management for Trainers & Employees (add staff, assign roles, edit shift & status). |
+| **44** | **Employees Directory & Roles** | **—** | **—** | **F** | Employees-only roster (Trainers are separate): search + employment-status filters, ~200px infinite scroll, AppBar `+` create, directory → edit (no read-only profile), full-screen roles route (`roles.update`), 840dp master–detail. |
 | **45** | **Reports & Business Analytics** | **—** | **R** (Own PT) | **F** (Full) | **Trainer**: View own sessions & retention rate.<br>**Admin**: Comprehensive financial, membership, churn, and attendance analytics. |
 | **46** | **Gym & Hardware Settings** | **—** | **—** | **F** | Gym profile, turnstile & biometric gate sync, booking rules, tax settings, metrics config. |
 

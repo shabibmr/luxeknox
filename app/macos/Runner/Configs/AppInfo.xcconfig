@@ -8,7 +8,7 @@
 PRODUCT_NAME = LuxeKnox
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.luxeknox.app
+PRODUCT_BUNDLE_IDENTIFIER = com.algo.luxeknox
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.luxeknox. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.algo. All rights reserved.

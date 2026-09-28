@@ -41,3 +41,55 @@ export function roundMoney(amount: number | string): string {
   const formatted = `${whole}.${frac}`;
   return isNegative && cents > 0n ? `-${formatted}` : formatted;
 }
+
+/** Convert a rounded money string to integer cents (BigInt). */
+export function toCents(amount: number | string): bigint {
+  const rounded = roundMoney(amount);
+  const negative = rounded.startsWith('-');
+  const unsigned = negative ? rounded.slice(1) : rounded;
+  const [whole, frac = '00'] = unsigned.split('.');
+  const cents = BigInt(whole) * 100n + BigInt(frac.padEnd(2, '0').slice(0, 2));
+  return negative ? -cents : cents;
+}
+
+/** Format integer cents as a Money string. */
+export function fromCents(cents: bigint): string {
+  const negative = cents < 0n;
+  const abs = negative ? -cents : cents;
+  const whole = abs / 100n;
+  const frac = (abs % 100n).toString().padStart(2, '0');
+  return `${negative ? '-' : ''}${whole.toString()}.${frac}`;
+}
+
+export function addMoney(a: number | string, b: number | string): string {
+  return fromCents(toCents(a) + toCents(b));
+}
+
+export function subMoney(a: number | string, b: number | string): string {
+  return fromCents(toCents(a) - toCents(b));
+}
+
+/** Compare money amounts: -1 if a<b, 0 if equal, 1 if a>b. */
+export function cmpMoney(a: number | string, b: number | string): -1 | 0 | 1 {
+  const diff = toCents(a) - toCents(b);
+  if (diff < 0n) return -1;
+  if (diff > 0n) return 1;
+  return 0;
+}
+
+/**
+ * Multiply a money amount by a percent (e.g. 18.00 → 18%) with half-up to cents.
+ */
+export function mulMoneyPercent(amount: number | string, percent: number | string): string {
+  const amountCents = toCents(amount);
+  const pct = roundMoney(percent);
+  const [pWhole, pFrac = ''] = pct.replace(/^-/, '').split('.');
+  // percent in basis points of 0.01% → scale by 10000 for two decimal percent
+  const pctBp = BigInt(pWhole) * 100n + BigInt((pFrac + '00').slice(0, 2));
+  // amountCents * pctBp / 10000, half-up
+  const raw = amountCents * pctBp;
+  const denom = 10000n;
+  const half = denom / 2n;
+  const quot = raw >= 0n ? (raw + half) / denom : (raw - half) / denom;
+  return fromCents(quot);
+}

@@ -1,0 +1,14 @@
+## Foundation
+- [x] Architecture audit
+- [x] DI/injectable stabilization
+- [x] Dio/base URL/timeouts
+- [x] 401 refresh concurrency
+- [x] typed error mapping
+- [x] pagination primitives
+- [x] common loading/error/empty widgets
+- [x] Material 3 theme
+- [x] localization infrastructure
+- [x] form validation
+- [x] test fixtures
+- [x] environment configuration
+- [x] architecture CI checks

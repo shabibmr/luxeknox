@@ -88,7 +88,7 @@ class FoodRepositoryImpl implements FoodRepository {
         return const Left(NotFoundFailure());
       }
       final food = await _remoteDataSource.getFood(intId);
-      final write = food.toDomain().copyWith(isVerified: false).toWriteModel();
+      final write = food.toDomain().copyWith(isActive: false).toWriteModel();
       await _remoteDataSource.updateFood(intId, write);
       return const Right(null);
     } catch (e) {

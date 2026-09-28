@@ -13,6 +13,7 @@ import 'package:api_client/src/model/assign_trainer_request.dart';
 import 'package:api_client/src/model/employee.dart';
 import 'package:api_client/src/model/employee_create.dart';
 import 'package:api_client/src/model/employee_page.dart';
+import 'package:api_client/src/model/employee_status.dart';
 import 'package:api_client/src/model/employee_status_request.dart';
 import 'package:api_client/src/model/employee_update.dart';
 import 'package:api_client/src/model/error_body.dart';
@@ -691,6 +692,8 @@ class PEOPLEApi {
   /// * [limit] - Default from gym_settings pagination.default_page_size.
   /// * [offset] - Admin tables that need page numbers.
   /// * [q] - Case-insensitive search (FR-API-014).
+  /// * [status] 
+  /// * [department] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -704,6 +707,8 @@ class PEOPLEApi {
     int? limit,
     int? offset,
     String? q,
+    EmployeeStatus? status,
+    String? department,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -734,6 +739,8 @@ class PEOPLEApi {
       if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
       if (offset != null) r'offset': encodeQueryParameter(_serializers, offset, const FullType(int)),
       if (q != null) r'q': encodeQueryParameter(_serializers, q, const FullType(String)),
+      if (status != null) r'status': encodeQueryParameter(_serializers, status, const FullType(EmployeeStatus)),
+      if (department != null) r'department': encodeQueryParameter(_serializers, department, const FullType(String)),
     };
 
     final _response = await _dio.request<Object>(

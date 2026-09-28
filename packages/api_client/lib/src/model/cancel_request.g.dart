@@ -11,11 +11,14 @@ class _$CancelRequest extends CancelRequest {
   final String? reason;
   @override
   final int? rowVersion;
+  @override
+  final bool? cancelSeries;
 
   factory _$CancelRequest([void Function(CancelRequestBuilder)? updates]) =>
       (CancelRequestBuilder()..update(updates))._build();
 
-  _$CancelRequest._({this.reason, this.rowVersion}) : super._();
+  _$CancelRequest._({this.reason, this.rowVersion, this.cancelSeries})
+      : super._();
   @override
   CancelRequest rebuild(void Function(CancelRequestBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -28,7 +31,8 @@ class _$CancelRequest extends CancelRequest {
     if (identical(other, this)) return true;
     return other is CancelRequest &&
         reason == other.reason &&
-        rowVersion == other.rowVersion;
+        rowVersion == other.rowVersion &&
+        cancelSeries == other.cancelSeries;
   }
 
   @override
@@ -36,6 +40,7 @@ class _$CancelRequest extends CancelRequest {
     var _$hash = 0;
     _$hash = $jc(_$hash, reason.hashCode);
     _$hash = $jc(_$hash, rowVersion.hashCode);
+    _$hash = $jc(_$hash, cancelSeries.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -44,7 +49,8 @@ class _$CancelRequest extends CancelRequest {
   String toString() {
     return (newBuiltValueToStringHelper(r'CancelRequest')
           ..add('reason', reason)
-          ..add('rowVersion', rowVersion))
+          ..add('rowVersion', rowVersion)
+          ..add('cancelSeries', cancelSeries))
         .toString();
   }
 }
@@ -61,6 +67,10 @@ class CancelRequestBuilder
   int? get rowVersion => _$this._rowVersion;
   set rowVersion(int? rowVersion) => _$this._rowVersion = rowVersion;
 
+  bool? _cancelSeries;
+  bool? get cancelSeries => _$this._cancelSeries;
+  set cancelSeries(bool? cancelSeries) => _$this._cancelSeries = cancelSeries;
+
   CancelRequestBuilder() {
     CancelRequest._defaults(this);
   }
@@ -70,6 +80,7 @@ class CancelRequestBuilder
     if ($v != null) {
       _reason = $v.reason;
       _rowVersion = $v.rowVersion;
+      _cancelSeries = $v.cancelSeries;
       _$v = null;
     }
     return this;
@@ -93,6 +104,7 @@ class CancelRequestBuilder
         _$CancelRequest._(
           reason: reason,
           rowVersion: rowVersion,
+          cancelSeries: cancelSeries,
         );
     replace(_$result);
     return _$result;

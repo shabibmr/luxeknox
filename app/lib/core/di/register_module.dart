@@ -55,5 +55,35 @@ abstract class RegisterModule {
   MEDIAApi mediaApi(Dio dio) => MEDIAApi(dio, standardSerializers);
 
   @singleton
+  MEMBApi membApi(Dio dio) => MEMBApi(dio, standardSerializers);
+
+  @singleton
+  DASHApi dashApi(Dio dio) => DASHApi(dio, standardSerializers);
+
+  @singleton
+  SCHEDApi schedApi(Dio dio) => SCHEDApi(dio, standardSerializers);
+
+  @singleton
+  ATTNApi attnApi(Dio dio) => ATTNApi(dio, standardSerializers);
+
+  @singleton
+  PAYApi payApi(Dio dio) => PAYApi(dio, standardSerializers);
+
+  @singleton
+  RPTApi rptApi(Dio dio) => RPTApi(dio, standardSerializers);
+
+  @singleton
+  GOALApi goalApi(Dio dio) => GOALApi(dio, standardSerializers);
+
+  @singleton
+  NOTIFApi notifApi(Dio dio) => NOTIFApi(dio, standardSerializers);
+
+  @singleton
+  SYSApi sysApi(Dio dio) => SYSApi(dio, standardSerializers);
+
+  @singleton
+  RBACApi rbacApi(Dio dio) => RBACApi(dio, standardSerializers);
+
+  @singleton
   GoRouter router(SessionCubit session) => createRouter(session);
 }

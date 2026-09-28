@@ -8,11 +8,13 @@ import { UserRepository } from './user.repository';
 import { SessionCache } from './session.cache';
 import { LoginThrottle } from './login-throttle';
 import { AuthGuard } from './auth.guard';
+import { PasswordResetTokenRepository } from './password-reset-token.repository';
 import { RbacModule } from '../rbac/rbac.module';
 import { PeopleModule } from '../people/people.module';
+import { PlatformModule } from '../platform/platform.module';
 
 @Module({
-  imports: [RbacModule, forwardRef(() => PeopleModule)],
+  imports: [RbacModule, PlatformModule, forwardRef(() => PeopleModule)],
   controllers: [AuthController, MeController],
   providers: [
     AuthService,
@@ -21,6 +23,7 @@ import { PeopleModule } from '../people/people.module';
     SessionCache,
     LoginThrottle,
     AuthGuard,
+    PasswordResetTokenRepository,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,

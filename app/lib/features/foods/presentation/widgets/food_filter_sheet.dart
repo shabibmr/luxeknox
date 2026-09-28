@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/food_filter.dart';
 import '../foods_strings.dart';
 
-/// Bottom sheet for the `isVerified` filter.
-///
-/// KNOWN CONTRACT MISMATCH: see `FoodFilter` — the OpenAPI contract has no
-/// `is_active` field on `Food`; this filters client-side on `isVerified`
-/// until the backend contract adds server-side support.
+/// Bottom sheet that edits the verified filter for the food catalogue list.
 class FoodFilterSheet extends StatefulWidget {
   const FoodFilterSheet({super.key, required this.initialFilter});
 

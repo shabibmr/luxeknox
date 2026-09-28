@@ -1,16 +1,16 @@
-import 'package:app/core/di/injector.dart';
-import 'package:app/core/pagination/cursor_page.dart';
-import 'package:app/features/foods/domain/entities/food.dart';
-import 'package:app/features/foods/domain/usecases/get_food_usecase.dart';
-import 'package:app/features/foods/domain/usecases/get_foods_usecase.dart';
-import 'package:app/features/foods/presentation/bloc/food_list_bloc.dart';
-import 'package:app/features/foods/presentation/cubit/food_detail_cubit.dart';
-import 'package:app/features/foods/presentation/screens/food_detail_screen.dart';
-import 'package:app/features/foods/presentation/screens/food_library_screen.dart';
-import 'package:app/session/domain/entities/capabilities.dart';
-import 'package:app/session/domain/entities/principal.dart';
-import 'package:app/session/domain/entities/user_type.dart';
-import 'package:app/session/presentation/session_cubit.dart';
+import 'package:luxeknox/core/di/injector.dart';
+import 'package:luxeknox/core/pagination/cursor_page.dart';
+import 'package:luxeknox/features/foods/domain/entities/food.dart';
+import 'package:luxeknox/features/foods/domain/usecases/get_food_usecase.dart';
+import 'package:luxeknox/features/foods/domain/usecases/get_foods_usecase.dart';
+import 'package:luxeknox/features/foods/presentation/bloc/food_list_bloc.dart';
+import 'package:luxeknox/features/foods/presentation/cubit/food_detail_cubit.dart';
+import 'package:luxeknox/features/foods/presentation/screens/food_detail_screen.dart';
+import 'package:luxeknox/features/foods/presentation/screens/food_library_screen.dart';
+import 'package:luxeknox/session/domain/entities/capabilities.dart';
+import 'package:luxeknox/session/domain/entities/principal.dart';
+import 'package:luxeknox/session/domain/entities/user_type.dart';
+import 'package:luxeknox/session/presentation/session_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,7 +50,7 @@ void main() {
   );
 
   const adminCapabilities = Capabilities(
-    slugs: ['foods.read', 'foods.create', 'foods.update'],
+    slugs: ['diet.read', 'diet.create', 'diet.update'],
   );
 
   late MockGetFoodsUseCase mockGetFoodsUseCase;

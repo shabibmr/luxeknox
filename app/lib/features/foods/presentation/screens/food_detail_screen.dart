@@ -57,7 +57,7 @@ class _FoodDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canEdit = context.can('foods.update');
+    final canEdit = context.can('diet.update');
 
     return Scaffold(
       appBar: AppBar(

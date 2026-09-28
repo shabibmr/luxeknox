@@ -10,11 +10,14 @@ describe('SettingsController', () => {
     mockSettingsService = {
       getTimezone: vi.fn().mockResolvedValue('Asia/Kolkata'),
       getCurrency: vi.fn().mockResolvedValue('INR'),
-      getAllSettings: vi.fn().mockResolvedValue({
-        timezone: 'Asia/Kolkata',
-        currency: 'INR',
-        default_page_size: '25',
-      }),
+      listSettings: vi.fn().mockResolvedValue([
+        { id: 1, setting_key: 'timezone', setting_value: 'Asia/Kolkata', category: 'GENERAL' },
+        { id: 2, setting_key: 'currency', setting_value: 'INR', category: 'BILLING' },
+      ]),
+      updateSettings: vi.fn().mockResolvedValue([
+        { id: 1, setting_key: 'timezone', setting_value: 'Asia/Kolkata', category: 'GENERAL' },
+        { id: 2, setting_key: 'currency', setting_value: 'USD', category: 'BILLING' },
+      ]),
     };
 
     controller = new SettingsController(mockSettingsService as SettingsService);
@@ -34,15 +37,34 @@ describe('SettingsController', () => {
   });
 
   describe('getAllSettings', () => {
-    it('returns all system settings dictionary', async () => {
-      const result = await controller.getAllSettings();
+    it('returns settings list wrapped in data', async () => {
+      const result = await controller.getAllSettings('GENERAL');
 
       expect(result).toEqual({
-        timezone: 'Asia/Kolkata',
-        currency: 'INR',
-        default_page_size: '25',
+        data: [
+          { id: 1, setting_key: 'timezone', setting_value: 'Asia/Kolkata', category: 'GENERAL' },
+          { id: 2, setting_key: 'currency', setting_value: 'INR', category: 'BILLING' },
+        ],
       });
-      expect(mockSettingsService.getAllSettings).toHaveBeenCalledTimes(1);
+      expect(mockSettingsService.listSettings).toHaveBeenCalledWith('GENERAL');
+    });
+  });
+
+  describe('putSettings', () => {
+    it('updates settings and returns updated list', async () => {
+      const result = await controller.putSettings({
+        items: [{ setting_key: 'currency', setting_value: 'USD' }],
+      });
+
+      expect(result).toEqual({
+        data: [
+          { id: 1, setting_key: 'timezone', setting_value: 'Asia/Kolkata', category: 'GENERAL' },
+          { id: 2, setting_key: 'currency', setting_value: 'USD', category: 'BILLING' },
+        ],
+      });
+      expect(mockSettingsService.updateSettings).toHaveBeenCalledWith([
+        { setting_key: 'currency', setting_value: 'USD' },
+      ]);
     });
   });
 });

@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:app/core/network/auth_interceptor.dart';
-import 'package:app/core/storage/token_storage.dart';
+import 'package:luxeknox/core/network/auth_interceptor.dart';
+import 'package:luxeknox/core/storage/token_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';

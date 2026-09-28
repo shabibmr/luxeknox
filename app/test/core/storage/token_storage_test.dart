@@ -2,7 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:app/core/storage/token_storage.dart';
+import 'package:luxeknox/core/storage/token_storage.dart';
 
 class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
 

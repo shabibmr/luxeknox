@@ -17,6 +17,8 @@ Method | HTTP request | Description
 
 Role-specific home snapshot; unauthorized widgets omitted
 
+No single route-level permission gate; any authenticated user may call this. Each section (member/trainer/admin) is included only when the caller holds the matching dashboard.member/dashboard.trainer/dashboard.admin permission and has a profile of that kind.
+
 ### Example
 ```dart
 import 'package:api_client/api.dart';

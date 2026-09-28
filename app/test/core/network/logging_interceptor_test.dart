@@ -1,4 +1,4 @@
-import 'package:app/core/network/logging_interceptor.dart';
+import 'package:luxeknox/core/network/logging_interceptor.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/core/error/failures.dart';
-import 'package:app/core/error/failure_messages.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/core/error/failure_messages.dart';
 
 void main() {
   group('failureMessage exhaustive mapping', () {

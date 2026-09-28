@@ -1,0 +1,11 @@
+## Dashboard
+- [ ] adaptive shell
+- [x] member widgets
+- [x] trainer widgets
+- [ ] admin widgets
+- [x] section loading
+- [ ] permission omission
+- [ ] skeletons
+- [x] refresh
+- [ ] cache-last-successful where useful
+- [ ] rebuild optimization

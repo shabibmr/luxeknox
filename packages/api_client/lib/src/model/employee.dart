@@ -3,7 +3,6 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:api_client/src/model/user.dart';
 import 'package:api_client/src/model/date.dart';
 import 'package:api_client/src/model/employee_status.dart';
 import 'package:built_value/built_value.dart';
@@ -16,12 +15,13 @@ part 'employee.g.dart';
 /// Properties:
 /// * [id] 
 /// * [userId] 
+/// * [firstName] 
+/// * [lastName] 
 /// * [jobTitle] 
 /// * [department] 
 /// * [hireDate] 
 /// * [status] 
 /// * [roleId] 
-/// * [user] 
 @BuiltValue()
 abstract class Employee implements Built<Employee, EmployeeBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -29,6 +29,12 @@ abstract class Employee implements Built<Employee, EmployeeBuilder> {
 
   @BuiltValueField(wireName: r'user_id')
   int get userId;
+
+  @BuiltValueField(wireName: r'first_name')
+  String get firstName;
+
+  @BuiltValueField(wireName: r'last_name')
+  String get lastName;
 
   @BuiltValueField(wireName: r'job_title')
   String get jobTitle;
@@ -44,10 +50,7 @@ abstract class Employee implements Built<Employee, EmployeeBuilder> {
   // enum statusEnum {  active,  on_probation,  suspended,  terminated,  };
 
   @BuiltValueField(wireName: r'role_id')
-  int? get roleId;
-
-  @BuiltValueField(wireName: r'user')
-  User? get user;
+  int get roleId;
 
   Employee._();
 
@@ -82,6 +85,16 @@ class _$EmployeeSerializer implements PrimitiveSerializer<Employee> {
       object.userId,
       specifiedType: const FullType(int),
     );
+    yield r'first_name';
+    yield serializers.serialize(
+      object.firstName,
+      specifiedType: const FullType(String),
+    );
+    yield r'last_name';
+    yield serializers.serialize(
+      object.lastName,
+      specifiedType: const FullType(String),
+    );
     yield r'job_title';
     yield serializers.serialize(
       object.jobTitle,
@@ -106,20 +119,11 @@ class _$EmployeeSerializer implements PrimitiveSerializer<Employee> {
       object.status,
       specifiedType: const FullType(EmployeeStatus),
     );
-    if (object.roleId != null) {
-      yield r'role_id';
-      yield serializers.serialize(
-        object.roleId,
-        specifiedType: const FullType(int),
-      );
-    }
-    if (object.user != null) {
-      yield r'user';
-      yield serializers.serialize(
-        object.user,
-        specifiedType: const FullType(User),
-      );
-    }
+    yield r'role_id';
+    yield serializers.serialize(
+      object.roleId,
+      specifiedType: const FullType(int),
+    );
   }
 
   @override
@@ -157,6 +161,20 @@ class _$EmployeeSerializer implements PrimitiveSerializer<Employee> {
           ) as int;
           result.userId = valueDes;
           break;
+        case r'first_name':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.firstName = valueDes;
+          break;
+        case r'last_name':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.lastName = valueDes;
+          break;
         case r'job_title':
           final valueDes = serializers.deserialize(
             value,
@@ -190,18 +208,9 @@ class _$EmployeeSerializer implements PrimitiveSerializer<Employee> {
         case r'role_id':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(int),
-          ) as int?;
-          if (valueDes == null) continue;
+            specifiedType: const FullType(int),
+          ) as int;
           result.roleId = valueDes;
-          break;
-        case r'user':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(User),
-          ) as User?;
-          if (valueDes == null) continue;
-          result.user.replace(valueDes);
           break;
         default:
           unhandled.add(key);

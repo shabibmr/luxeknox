@@ -1,0 +1,15 @@
+## Workout
+- [x] plan list/detail
+- [x] plan builder
+- [x] exercise picker
+- [x] ordering
+- [x] publish/archive
+- [x] template copy
+- [x] versions
+- [x] live session
+- [x] set logging
+- [x] rest timer
+- [x] completion
+- [x] history
+- [x] volume/PR
+- [x] role variants

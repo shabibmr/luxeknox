@@ -1,5 +1,6 @@
 import { Pool, type PoolConfig, types } from 'pg';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
+import * as schema from './schema';
 
 // Decision 4 (ADR-0009): node-postgres returns int8 (OID 20) — every PK/FK/count() in this
 // schema — as a string by default, to avoid silent precision loss above Number.MAX_SAFE_INTEGER
@@ -78,7 +79,8 @@ export function createAdminConnectionPool(): Pool {
   });
 }
 
-export type DrizzleDb<TSchema extends Record<string, unknown> = Record<string, never>> = NodePgDatabase<TSchema>;
+export type AppSchema = typeof schema;
+export type DrizzleDb<TSchema extends Record<string, unknown> = AppSchema> = NodePgDatabase<TSchema>;
 
 /**
  * Creates a Drizzle database instance backed by a node-postgres connection pool.
@@ -86,7 +88,7 @@ export type DrizzleDb<TSchema extends Record<string, unknown> = Record<string, n
  * @param pool node-postgres connection pool
  * @param schema Optional Drizzle schema mapping
  */
-export function createDrizzleClient<TSchema extends Record<string, unknown> = Record<string, never>>(
+export function createDrizzleClient<TSchema extends Record<string, unknown> = AppSchema>(
   pool: Pool,
   schema?: TSchema,
 ): DrizzleDb<TSchema> {

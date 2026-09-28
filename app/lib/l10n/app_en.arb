@@ -1,0 +1,23 @@
+{
+  "@@locale": "en",
+  "appTitle": "LuxeKnox",
+  "@appTitle": {
+    "description": "Application title shown in the task switcher"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Generic retry action label"
+  },
+  "loading": "Loading…",
+  "@loading": {
+    "description": "Generic loading caption"
+  },
+  "emptyDefault": "Nothing here yet",
+  "@emptyDefault": {
+    "description": "Fallback empty-state message"
+  },
+  "fieldRequired": "This field is required",
+  "@fieldRequired": {
+    "description": "Generic required-field validation message"
+  }
+}

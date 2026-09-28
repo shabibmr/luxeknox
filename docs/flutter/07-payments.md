@@ -1,0 +1,12 @@
+## Payments & POS
+- [x] member ledger
+- [x] admin ledger
+- [x] outstanding dues
+- [x] payment detail
+- [x] payment methods
+- [ ] POS
+- [ ] discounts
+- [ ] split tender
+- [ ] refund/adjustment
+- [ ] receipt
+- [ ] financial integration tests

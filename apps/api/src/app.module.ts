@@ -9,6 +9,13 @@ import { WorkModule } from './work/work.module';
 import { DietModule } from './diet/diet.module';
 import { PeopleModule } from './people/people.module';
 import { MediaModule } from './media/media.module';
+import { MembModule } from './memb/memb.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { SchedModule } from './sched/sched.module';
+import { AttnModule } from './attn/attn.module';
+import { ReportsModule } from './reports/reports.module';
+import { GoalModule } from './goal/goal.module';
+import { NotifModule } from './notif/notif.module';
 
 @Module({
   imports: [
@@ -22,6 +29,13 @@ import { MediaModule } from './media/media.module';
     DietModule,
     PeopleModule,
     MediaModule,
+    MembModule,
+    SchedModule,
+    AttnModule,
+    GoalModule,
+    NotifModule,
+    DashboardModule,
+    ReportsModule,
   ],
   controllers: [],
   providers: [],

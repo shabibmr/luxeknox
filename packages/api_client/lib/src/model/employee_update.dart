@@ -12,11 +12,19 @@ part 'employee_update.g.dart';
 /// EmployeeUpdate
 ///
 /// Properties:
+/// * [firstName] 
+/// * [lastName] 
 /// * [jobTitle] 
 /// * [department] 
 /// * [hireDate] 
 @BuiltValue()
 abstract class EmployeeUpdate implements Built<EmployeeUpdate, EmployeeUpdateBuilder> {
+  @BuiltValueField(wireName: r'first_name')
+  String? get firstName;
+
+  @BuiltValueField(wireName: r'last_name')
+  String? get lastName;
+
   @BuiltValueField(wireName: r'job_title')
   String? get jobTitle;
 
@@ -49,6 +57,20 @@ class _$EmployeeUpdateSerializer implements PrimitiveSerializer<EmployeeUpdate> 
     EmployeeUpdate object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
+    if (object.firstName != null) {
+      yield r'first_name';
+      yield serializers.serialize(
+        object.firstName,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.lastName != null) {
+      yield r'last_name';
+      yield serializers.serialize(
+        object.lastName,
+        specifiedType: const FullType(String),
+      );
+    }
     if (object.jobTitle != null) {
       yield r'job_title';
       yield serializers.serialize(
@@ -93,6 +115,22 @@ class _$EmployeeUpdateSerializer implements PrimitiveSerializer<EmployeeUpdate> 
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
+        case r'first_name':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.firstName = valueDes;
+          break;
+        case r'last_name':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.lastName = valueDes;
+          break;
         case r'job_title':
           final valueDes = serializers.deserialize(
             value,

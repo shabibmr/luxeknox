@@ -9,14 +9,14 @@ All URIs are relative to *http://localhost:3000/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**createMediaUpload**](MEDIAApi.md#createmediaupload) | **POST** /media/uploads | Signed PUT slot (deferred — ADR-0005)
-[**getMediaUrl**](MEDIAApi.md#getmediaurl) | **GET** /media/{key} | Short-lived signed GET (deferred — ADR-0005)
+[**createMediaUpload**](MEDIAApi.md#createmediaupload) | **POST** /media/uploads | Signed PUT slot (ADR-0008)
+[**getMediaUrl**](MEDIAApi.md#getmediaurl) | **GET** /media/{key} | Short-lived signed GET (ADR-0008)
 
 
 # **createMediaUpload**
 > MediaUpload createMediaUpload(mediaUploadRequest)
 
-Signed PUT slot (deferred — ADR-0005)
+Signed PUT slot (ADR-0008)
 
 ### Example
 ```dart
@@ -57,7 +57,7 @@ Name | Type | Description  | Notes
 # **getMediaUrl**
 > MediaDownload getMediaUrl(key)
 
-Short-lived signed GET (deferred — ADR-0005)
+Short-lived signed GET (ADR-0008)
 
 ### Example
 ```dart

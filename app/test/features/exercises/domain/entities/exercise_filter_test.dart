@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/features/exercises/domain/entities/exercise_filter.dart';
+import 'package:luxeknox/features/exercises/domain/entities/exercise_filter.dart';
 
 void main() {
   group('ExerciseFilter', () {

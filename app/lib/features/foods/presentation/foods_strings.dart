@@ -10,7 +10,7 @@ abstract final class FoodStrings {
   static const noneFound = 'No foods found.';
   static const deactivateTitle = 'Deactivate food';
   static String deactivateConfirm(String name) =>
-      'Deactivate "$name"? It will no longer appear as verified in the library.';
+      'Deactivate "$name"? It will no longer appear in the active library.';
   static const cancel = 'Cancel';
   static const deactivate = 'Deactivate';
   static const noPermission = 'You do not have permission to view this page.';

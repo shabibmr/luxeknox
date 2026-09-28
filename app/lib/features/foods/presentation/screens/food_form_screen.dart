@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/unsaved_changes_scope.dart';
 import '../../domain/entities/food.dart';
-import '../../domain/usecases/create_food_usecase.dart';
-import '../../domain/usecases/deactivate_food_usecase.dart';
-import '../../domain/usecases/update_food_usecase.dart';
+import '../cubit/food_form_cubit.dart';
 import '../foods_strings.dart';
 
 /// Create/edit form, reached only from an admin-gated entry point (the
 /// library's add button, the detail screen's edit button). Also guards
 /// itself in case it's ever reached directly, since a route can be
 /// deep-linked around its caller's check.
-class FoodFormScreen extends StatefulWidget {
+class FoodFormScreen extends StatelessWidget {
   const FoodFormScreen({super.key, this.food});
 
   final Food? food;
@@ -21,15 +22,36 @@ class FoodFormScreen extends StatefulWidget {
   bool get isEditing => food != null;
 
   @override
-  State<FoodFormScreen> createState() => _FoodFormScreenState();
+  Widget build(BuildContext context) {
+    final requiredSlug = isEditing ? 'diet.update' : 'diet.create';
+
+    if (!context.can(requiredSlug)) {
+      return Scaffold(
+        appBar: AppBar(title: const Text(FoodStrings.formTitle)),
+        body: const Center(child: Text(FoodStrings.noPermission)),
+      );
+    }
+
+    return BlocProvider(
+      create: (_) => getIt<FoodFormCubit>(),
+      child: _FoodFormView(food: food),
+    );
+  }
 }
 
-class _FoodFormScreenState extends State<FoodFormScreen> {
-  final _formKey = GlobalKey<FormState>();
+class _FoodFormView extends StatefulWidget {
+  const _FoodFormView({this.food});
 
-  late final _createUseCase = getIt<CreateFoodUseCase>();
-  late final _updateUseCase = getIt<UpdateFoodUseCase>();
-  late final _deactivateUseCase = getIt<DeactivateFoodUseCase>();
+  final Food? food;
+
+  bool get isEditing => food != null;
+
+  @override
+  State<_FoodFormView> createState() => _FoodFormViewState();
+}
+
+class _FoodFormViewState extends State<_FoodFormView> {
+  final _formKey = GlobalKey<FormState>();
 
   late final _nameController = TextEditingController(text: widget.food?.name);
   late final _servingUnitController = TextEditingController(
@@ -54,12 +76,45 @@ class _FoodFormScreenState extends State<FoodFormScreen> {
     text: widget.food?.fiberGrams?.toString(),
   );
   late bool _isVerified = widget.food?.isVerified ?? true;
+  late final bool _initialIsVerified = _isVerified;
 
-  bool _isSubmitting = false;
-  String? _errorMessage;
+  bool _isDirty = false;
+
+  @override
+  void initState() {
+    super.initState();
+    for (final c in [
+      _nameController,
+      _servingUnitController,
+      _servingSizeController,
+      _caloriesController,
+      _proteinController,
+      _carbsController,
+      _fatController,
+      _fiberController,
+    ]) {
+      c.addListener(_markDirty);
+    }
+  }
+
+  void _markDirty() {
+    if (!_isDirty) setState(() => _isDirty = true);
+  }
 
   @override
   void dispose() {
+    for (final c in [
+      _nameController,
+      _servingUnitController,
+      _servingSizeController,
+      _caloriesController,
+      _proteinController,
+      _carbsController,
+      _fatController,
+      _fiberController,
+    ]) {
+      c.removeListener(_markDirty);
+    }
     _nameController.dispose();
     _servingUnitController.dispose();
     _servingSizeController.dispose();
@@ -81,13 +136,8 @@ class _FoodFormScreenState extends State<FoodFormScreen> {
   double? _parseOrNull(String raw) =>
       raw.trim().isEmpty ? null : double.tryParse(raw.trim());
 
-  Future<void> _submit() async {
+  void _submit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-
-    setState(() {
-      _isSubmitting = true;
-      _errorMessage = null;
-    });
 
     final food = Food(
       id: widget.food?.id ?? '',
@@ -100,20 +150,15 @@ class _FoodFormScreenState extends State<FoodFormScreen> {
       fatGrams: _parseOrNull(_fatController.text),
       fiberGrams: _parseOrNull(_fiberController.text),
       isVerified: _isVerified,
+      isActive: widget.food?.isActive ?? true,
     );
 
-    final result = widget.isEditing
-        ? await _updateUseCase(food)
-        : await _createUseCase(food);
-
-    if (!mounted) return;
-    result.fold(
-      (failure) => setState(() {
-        _isSubmitting = false;
-        _errorMessage = failureMessage(failure);
-      }),
-      (_) => Navigator.of(context).pop(true),
-    );
+    final cubit = context.read<FoodFormCubit>();
+    if (widget.isEditing) {
+      cubit.update(food);
+    } else {
+      cubit.create(food);
+    }
   }
 
   Future<void> _confirmDeactivate() async {
@@ -137,182 +182,183 @@ class _FoodFormScreenState extends State<FoodFormScreen> {
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
-    setState(() {
-      _isSubmitting = true;
-      _errorMessage = null;
-    });
-
-    final result = await _deactivateUseCase(food.id);
-    if (!mounted) return;
-    result.fold(
-      (failure) => setState(() {
-        _isSubmitting = false;
-        _errorMessage = failureMessage(failure);
-      }),
-      (_) => Navigator.of(context).pop(true),
-    );
+    await context.read<FoodFormCubit>().deactivate(food.id);
   }
 
   @override
   Widget build(BuildContext context) {
-    final requiredSlug = widget.isEditing ? 'foods.update' : 'foods.create';
+    final dirty = _isDirty || _isVerified != _initialIsVerified;
 
-    if (!context.can(requiredSlug)) {
-      return Scaffold(
-        appBar: AppBar(title: const Text(FoodStrings.formTitle)),
-        body: const Center(child: Text(FoodStrings.noPermission)),
-      );
-    }
+    return BlocConsumer<FoodFormCubit, FoodFormState>(
+      listenWhen: (previous, current) =>
+          previous.status != current.status &&
+          current.status == LoadStatus.success,
+      listener: (context, state) {
+        setState(() => _isDirty = false);
+        Navigator.of(context).pop(true);
+      },
+      builder: (context, state) {
+        final submitting =
+            state.status == LoadStatus.loading ||
+            state.status == LoadStatus.success;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.isEditing ? FoodStrings.editTitle : FoodStrings.addTitle,
-        ),
-        actions: [
-          if (widget.isEditing)
-            IconButton(
-              icon: const Icon(Icons.block),
-              tooltip: FoodStrings.deactivateTooltip,
-              onPressed: _isSubmitting ? null : _confirmDeactivate,
+        return UnsavedChangesScope(
+          hasUnsavedChanges: dirty && !submitting,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(
+                widget.isEditing ? FoodStrings.editTitle : FoodStrings.addTitle,
+              ),
+              actions: [
+                if (widget.isEditing)
+                  IconButton(
+                    icon: const Icon(Icons.block),
+                    tooltip: FoodStrings.deactivateTooltip,
+                    onPressed: submitting ? null : _confirmDeactivate,
+                  ),
+              ],
             ),
-        ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            if (_errorMessage != null) ...[
-              MaterialBanner(
-                content: Text(_errorMessage!),
-                backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                actions: const [SizedBox.shrink()],
-              ),
-              const SizedBox(height: 16),
-            ],
-            TextFormField(
-              controller: _nameController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.nameLabel,
-              ),
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? FoodStrings.nameRequired
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _servingUnitController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.servingUnitLabel,
-              ),
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? FoodStrings.servingUnitRequired
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _servingSizeController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.servingSizeLabel,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              validator: _numericValidator,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _caloriesController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.caloriesLabel,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              validator: _numericValidator,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _proteinController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.proteinLabel,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              validator: _numericValidator,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _carbsController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.carbsLabel,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              validator: _numericValidator,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _fatController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.fatLabel,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              validator: _numericValidator,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _fiberController,
-              enabled: !_isSubmitting,
-              decoration: const InputDecoration(
-                labelText: FoodStrings.fiberLabel,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              validator: _numericValidator,
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile(
-              title: const Text(FoodStrings.verified),
-              subtitle: const Text(FoodStrings.verifiedSubtitle),
-              value: _isVerified,
-              onChanged: _isSubmitting
-                  ? null
-                  : (v) => setState(() => _isVerified = v),
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _isSubmitting ? null : _submit,
-              child: _isSubmitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(
-                      widget.isEditing
-                          ? FoodStrings.saveChanges
-                          : FoodStrings.createFood,
+            body: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  if (state.status == LoadStatus.failure &&
+                      state.failure != null) ...[
+                    MaterialBanner(
+                      content: Text(failureMessage(state.failure!)),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.errorContainer,
+                      actions: const [SizedBox.shrink()],
                     ),
+                    const SizedBox(height: 16),
+                  ],
+                  TextFormField(
+                    controller: _nameController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: FoodStrings.nameLabel,
+                    ),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? FoodStrings.nameRequired
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _servingUnitController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: FoodStrings.servingUnitLabel,
+                    ),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? FoodStrings.servingUnitRequired
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _servingSizeController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: FoodStrings.servingSizeLabel,
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    validator: _numericValidator,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _caloriesController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: FoodStrings.caloriesLabel,
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    validator: _numericValidator,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _proteinController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: FoodStrings.proteinLabel,
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    validator: _numericValidator,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _carbsController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: FoodStrings.carbsLabel,
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    validator: _numericValidator,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _fatController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: FoodStrings.fatLabel,
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    validator: _numericValidator,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _fiberController,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: FoodStrings.fiberLabel,
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    validator: _numericValidator,
+                  ),
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    title: const Text(FoodStrings.verified),
+                    subtitle: const Text(FoodStrings.verifiedSubtitle),
+                    value: _isVerified,
+                    onChanged: submitting
+                        ? null
+                        : (v) => setState(() => _isVerified = v),
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    onPressed: submitting ? null : _submit,
+                    child: submitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            widget.isEditing
+                                ? FoodStrings.saveChanges
+                                : FoodStrings.createFood,
+                          ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

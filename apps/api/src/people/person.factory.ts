@@ -4,8 +4,8 @@ import { hashPassword } from '../auth/password';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
 import { runInTransaction, type AnyTransaction } from '../platform/db/transaction-context';
-import { isUniqueViolation } from '../platform/db/pg-errors';
-import { BadRequestError, ConflictError, NotFoundError } from '../platform/errors/app-error';
+import { BadRequestError, NotFoundError } from '../platform/errors/app-error';
+import { translateDbError } from '../platform/db/db-error';
 import {
   employees,
   members,
@@ -299,10 +299,7 @@ export class PersonFactory {
     try {
       await db.update(users).set(values).where(eq(users.id, userId));
     } catch (err: unknown) {
-      if (isUniqueViolation(err)) {
-        throw new ConflictError('Email or phone_number already in use');
-      }
-      throw err;
+      throw translateDbError(err, { duplicateMessage: 'Email or phone_number already in use' });
     }
   }
 
@@ -318,10 +315,7 @@ export class PersonFactory {
       }
       return insertId;
     } catch (err: unknown) {
-      if (isUniqueViolation(err)) {
-        throw new ConflictError('Email or phone_number already in use');
-      }
-      throw err;
+      throw translateDbError(err, { duplicateMessage: 'Email or phone_number already in use' });
     }
   }
 

@@ -1,0 +1,14 @@
+## Testing & Quality
+- [ ] entity tests
+- [ ] use cases
+- [ ] repositories
+- [ ] Blocs/Cubits
+- [ ] role variants
+- [ ] widget tests
+- [ ] goldens
+- [ ] router tests
+- [ ] integration journeys
+- [ ] accessibility
+- [ ] localization
+- [ ] architecture CI
+- [ ] flaky-test elimination

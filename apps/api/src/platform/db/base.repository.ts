@@ -20,7 +20,7 @@ export abstract class BaseRepository<
 > {
   constructor(
     @Inject(DRIZZLE_DB_TOKEN)
-    protected readonly db: DrizzleDb<any>,
+    protected readonly db: DrizzleDb,
     protected readonly table: TTable,
   ) {}
 
@@ -28,7 +28,7 @@ export abstract class BaseRepository<
    * Returns the ambient transaction if executing within a `runInTransaction` scope,
    * otherwise returns the root Drizzle database instance.
    */
-  public getDb(): DrizzleDb<any> | AnyTransaction {
+  public getDb(): DrizzleDb | AnyTransaction {
     const ambientTx = getAmbientTransaction();
     if (ambientTx) {
       return ambientTx;
@@ -77,9 +77,9 @@ export abstract class BaseRepository<
       }
     }
 
-    const query = (this.getDb() as any)
+    const query = this.getDb()
       .select()
-      .from(this.table)
+      .from(this.table as any)
       .where(conditions.length === 1 ? conditions[0] : and(...conditions))
       .limit(1);
 
@@ -103,9 +103,9 @@ export abstract class BaseRepository<
       }
     }
 
-    const query = (this.getDb() as any)
+    const query = this.getDb()
       .select()
-      .from(this.table)
+      .from(this.table as any)
       .where(conditions.length === 1 ? conditions[0] : and(...conditions))
       .limit(1);
 
@@ -134,7 +134,7 @@ export abstract class BaseRepository<
    * @param values Record data to update
    */
   async update(condition: SQL, values: Partial<TInsert>): Promise<void> {
-    await (this.getDb() as any).update(this.table).set(values).where(condition);
+    await this.getDb().update(this.table as any).set(values as any).where(condition);
   }
 
   /**
@@ -145,6 +145,6 @@ export abstract class BaseRepository<
    * @param condition SQL condition expression
    */
   async delete(condition: SQL): Promise<void> {
-    await (this.getDb() as any).delete(this.table).where(condition);
+    await this.getDb().delete(this.table as any).where(condition);
   }
 }

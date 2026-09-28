@@ -1,11 +1,12 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import type { ExtractTablesWithRelations } from 'drizzle-orm';
 import type { PgTransaction } from 'drizzle-orm/pg-core';
-import type { DrizzleDb } from './client';
+import type { AppSchema, DrizzleDb } from './client';
 
 /**
  * Type alias for any active Drizzle PostgreSQL transaction.
  */
-export type AnyTransaction = PgTransaction<any, any, any>;
+export type AnyTransaction = PgTransaction<any, any, AppSchema, ExtractTablesWithRelations<AppSchema>>;
 
 /**
  * Node.js AsyncLocalStorage store holding the active ambient transaction if within a `runInTransaction` scope,
@@ -39,7 +40,7 @@ export function getAmbientTransaction(): AnyTransaction | null {
  * @param workFn Asynchronous callback receiving the transaction
  */
 export async function runInTransaction<T>(
-  db: DrizzleDb<any>,
+  db: DrizzleDb,
   workFn: (tx: AnyTransaction) => Promise<T>,
 ): Promise<T> {
   const currentTx = getAmbientTransaction();

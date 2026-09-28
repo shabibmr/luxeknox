@@ -1,0 +1,14 @@
+## Scheduling
+- [x] calendar queries
+- [x] schedule detail/roster
+- [x] schedule types
+- [x] facilities
+- [x] trainer availability
+- [x] open slots
+- [x] PT booking
+- [x] class booking
+- [x] recurring series
+- [x] cancel/reschedule
+- [x] waitlist
+- [x] trainer start/complete
+- [x] double-submit protection

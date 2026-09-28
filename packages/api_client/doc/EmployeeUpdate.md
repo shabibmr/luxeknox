@@ -8,6 +8,8 @@ import 'package:api_client/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**firstName** | **String** |  | [optional] 
+**lastName** | **String** |  | [optional] 
 **jobTitle** | **String** |  | [optional] 
 **department** | **String** |  | [optional] 
 **hireDate** | [**Date**](Date.md) |  | [optional] 

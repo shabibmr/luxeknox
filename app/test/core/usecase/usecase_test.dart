@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:app/core/usecase/usecase.dart';
-import 'package:app/core/error/failures.dart';
+import 'package:luxeknox/core/usecase/usecase.dart';
+import 'package:luxeknox/core/error/failures.dart';
 
 // Mock implementation for testing
 class TestParams extends Equatable {

@@ -61,7 +61,7 @@ describe('TrainerService outbound shaping', () => {
       {} as PersonFactory,
       {} as PaginationHelper,
       { recordAudit: vi.fn() } as unknown as AuditService,
-      {} as DrizzleDb<any>,
+      { transaction: vi.fn(async (cb) => cb({})) } as unknown as DrizzleDb<any>,
     );
   });
 
@@ -76,5 +76,51 @@ describe('TrainerService outbound shaping', () => {
     const result = await service.getById(5, actor('member'));
     expect(result.hourly_rate).toBeNull();
     expect(result.specializations).toEqual(['strength', 'yoga']);
+  });
+
+  it('allows trainer to update own profile and strips trainer is_active edits', async () => {
+    const trainerActor: AuthenticatedUser = {
+      id: 50, // matches user_id of trainerRow
+      email: 'pat@example.com',
+      phoneNumber: null,
+      userType: 'trainer',
+      roleId: 2,
+      profileId: 5, // matches id of trainerRow
+      sessionId: 1,
+    };
+
+    const updateMock = vi.fn().mockResolvedValue(undefined);
+    (repository as any).updateTrainer = updateMock;
+    (repository as any).getDb = vi.fn().mockReturnValue({});
+
+    await service.update(
+      5,
+      {
+        bio: 'Updated bio',
+        is_active: false, // trainer attempting to change status
+      },
+      trainerActor,
+    );
+
+    expect(updateMock).toHaveBeenCalledTimes(1);
+    const [, patch] = updateMock.mock.calls[0];
+    expect(patch.bio).toBe('Updated bio');
+    expect(patch.is_active).toBeUndefined(); // ignored for trainer userType
+  });
+
+  it('rejects trainer updating another trainer profile with 404', async () => {
+    const otherTrainerActor: AuthenticatedUser = {
+      id: 999,
+      email: 'other@example.com',
+      phoneNumber: null,
+      userType: 'trainer',
+      roleId: 2,
+      profileId: 999,
+      sessionId: 1,
+    };
+
+    await expect(
+      service.update(5, { bio: 'Hacked bio' }, otherTrainerActor),
+    ).rejects.toThrow('Resource not found');
   });
 });

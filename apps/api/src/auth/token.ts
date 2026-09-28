@@ -2,6 +2,7 @@ import { randomBytes, createHash } from 'crypto';
 
 export const ACCESS_TOKEN_PREFIX = 'gk_at_';
 export const REFRESH_TOKEN_PREFIX = 'gk_rt_';
+export const PASSWORD_RESET_TOKEN_PREFIX = 'gk_pr_';
 
 /**
  * Generates an opaque 256-bit (32 bytes) random token with the specified prefix.
@@ -31,6 +32,16 @@ export function issueAccessToken(): string {
  */
 export function issueRefreshToken(): string {
   return generatePrefixedToken(REFRESH_TOKEN_PREFIX);
+}
+
+/**
+ * Issues a new opaque 256-bit random password-reset token: `gk_pr_<base64url>`.
+ * Single-use, short-lived (see PASSWORD_RESET_TOKEN_EXPIRY_MINUTES in auth.service).
+ *
+ * NOTE: Never log raw tokens.
+ */
+export function issuePasswordResetToken(): string {
+  return generatePrefixedToken(PASSWORD_RESET_TOKEN_PREFIX);
 }
 
 /**

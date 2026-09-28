@@ -9,10 +9,26 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
+import type { AuthenticatedUser } from './auth.guard';
+import { CurrentUser } from './current-user.decorator';
+import { Public } from './public.decorator';
 import { AuthService } from './auth.service';
-import { AuthResponseDto, LoginDto, RefreshTokenDto, loginSchema, refreshTokenSchema } from './auth.dto';
+import {
+  AuthResponseDto,
+  LoginDto,
+  RefreshTokenDto,
+  loginSchema,
+  refreshTokenSchema,
+  changePasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  type ChangePasswordDto,
+  type ForgotPasswordDto,
+  type ResetPasswordDto,
+} from './auth.dto';
 import { UnauthorizedError } from '../platform/errors/app-error';
 import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
+import { RequirePermission } from '../rbac/require-permission.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -106,5 +122,49 @@ export class AuthController {
     }
 
     await this.authService.logout(token);
+  }
+
+  @Post('password/change')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth('bearer')
+  @RequirePermission('users.update')
+  @ApiOperation({
+    summary: 'Change password; invalidates other sessions',
+    description: 'Verifies the current password, sets a new one, and revokes every other active session.',
+  })
+  @ApiResponse({ status: 204, description: 'No content' })
+  async changePassword(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Body(new ZodValidationPipe(changePasswordSchema)) dto: ChangePasswordDto,
+  ): Promise<void> {
+    await this.authService.changePassword(currentUser, dto);
+  }
+
+  @Post('password/forgot')
+  @Public()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Request a password-reset token',
+    description: 'Always returns 204, regardless of whether the identifier matches an account.',
+  })
+  @ApiResponse({ status: 204, description: 'No content' })
+  async forgotPassword(
+    @Body(new ZodValidationPipe(forgotPasswordSchema)) dto: ForgotPasswordDto,
+  ): Promise<void> {
+    await this.authService.forgotPassword(dto);
+  }
+
+  @Post('password/reset')
+  @Public()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Consume a one-time reset token',
+    description: 'Sets a new password from a valid reset token and revokes every active session.',
+  })
+  @ApiResponse({ status: 204, description: 'No content' })
+  async resetPassword(
+    @Body(new ZodValidationPipe(resetPasswordSchema)) dto: ResetPasswordDto,
+  ): Promise<void> {
+    await this.authService.resetPassword(dto);
   }
 }

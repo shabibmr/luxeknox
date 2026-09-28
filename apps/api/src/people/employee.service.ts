@@ -45,6 +45,8 @@ export class EmployeeService {
 
     const { rows, total } = await this.repository.findManyFiltered({
       q: filters.q,
+      status: filters.status,
+      department: filters.department,
       limit: pagination.limit,
       offset,
     });

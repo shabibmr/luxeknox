@@ -61,15 +61,13 @@ The **Admin / Office App** is the central management interface for gym owners, f
 
 | Screen Name | Type | Access / Navigation Path | Purpose & UI Components |
 | :--- | :--- | :--- | :--- |
-| **Trainers** | Directory Screen | `More > Trainers` | Directory of all fitness trainers with status (Active/On-Leave), specialization, and load. |
-| **Add Trainer** | Form Screen | `Trainers > Add Trainer` | Onboard new trainer: bio, qualifications, contact info, shift timings. |
-| **Trainer Profile** | Detail Screen | `Trainers > [Select Trainer]` | Full trainer record: assigned clients, performance metrics, employment terms. |
-| **Edit Trainer** | Form Screen | `Trainer Profile > Edit` | Update trainer contact, certification documents, hourly rates / commissions. |
-| **Trainer Members** | List Screen | `Trainer Profile > Assigned Members` | List of clients assigned to this trainer for personal training. |
-| **Trainer Schedule** | Calendar Screen | `Trainer Profile > Schedule` | Master schedule of all slots booked with this trainer. |
-| **Trainer Availability** | Config Screen | `Trainer Profile > Availability` | Working shifts, off days, break hours, slot capacities. |
-| **Trainer Attendance** | History / Table | `Trainer Profile > Attendance` | Staff clock-in/out records, leave days, monthly working hours. |
-| **Trainer Performance / Progress** | Analytics Screen | `Trainer Profile > Performance` | Client retention, sessions conducted, member ratings, revenue generated. |
+| **Trainers** | Directory Screen | `More > Trainers` | Directory of all fitness trainers with status filter (`All`, `Active`, `Inactive`), search, 200px infinite scroll, and 840dp responsive master–detail split pane. |
+| **Add Trainer** | Form Screen | `Trainers > Add Trainer (FAB)` | Onboard new trainer with 1-TX atomic user + profile creation (bio, specializations, hourly rate, client capacity). |
+| **Edit Trainer Profile** | Form Screen / Detail Pane | `Trainers > [Select Trainer]` (`/admin/trainers/:id/edit`) | Edit profile with `UnsavedChangesScope` discard protection, active status deactivation confirmation dialog, and admin/self-edit role gating. |
+| **Trainer Members** | Domain Module | `More > Members` (filtered by assigned trainer) | Roster of assigned member clients managed via Members vertical dossier. |
+| **Trainer Schedule & Availability** | Domain Module | `More > Schedule / Calendar` | Master calendar of booked sessions and slot availability managed via Scheduling vertical. |
+| **Trainer Attendance** | Domain Module | `More > Attendance` | Staff clock-in/out records and timesheets managed via Attendance vertical. |
+| **Trainer Performance & Reports** | Domain Module | `More > Reports > Trainers` | Trainer session metrics, ratings, and retention reports managed via Reports vertical. |
 
 ---
 
@@ -77,12 +75,10 @@ The **Admin / Office App** is the central management interface for gym owners, f
 
 | Screen Name | Type | Access / Navigation Path | Purpose & UI Components |
 | :--- | :--- | :--- | :--- |
-| **Employees** | Directory Screen | `More > Employees` | Roster of front desk, maintenance, cleaning, and administrative staff. |
-| **Add Employee** | Form Screen | `Employees > Add Employee` | Staff registration: personal details, contact, emergency info, salary terms. |
-| **Employee Profile** | Detail Screen | `Employees > [Select Employee]` | Employment details, role permissions, documents, contact cards. |
-| **Edit Employee** | Form Screen | `Employee Profile > Edit` | Update employee information and credentials. |
-| **Employee Role** | Assignment Modal | `Employee Profile > Manage Role` | Assign system permissions (Admin, Receptionist, Manager, Auditor). |
-| **Employee Status** | Quick Action | `Employee Profile > Change Status` | Toggle status (Active, On Probation, Suspended, Terminated). |
+| **Employees** | Directory Screen | `More > Employees` | Staff roster with search, employment-status chips, infinite scroll, AppBar `+` create (gated by `employees.create`), and ≥840dp master–detail (list + embedded edit). Separate from Trainers. |
+| **Add Employee** | Form Screen | `Employees > +` (or create route) | Hire flow: name, contact, temporary password, job title, department, hire date, role. |
+| **Edit Employee** | Form Screen | `Employees > [Select Employee]` (push on narrow; side pane when wide) | Update job/department/hire date; change employment status with confirm; link to Manage roles. No separate read-only profile. |
+| **Employee Roles** | Full-screen Form | `Edit Employee > Manage roles` (`/admin/employees/:id/roles`, gated by `roles.update`) | Assign exactly one system role. |
 
 ---
 

@@ -1,12 +1,13 @@
-import 'package:app/core/error/failures.dart';
-import 'package:app/features/auth/presentation/cubit/login_cubit.dart';
-import 'package:app/session/domain/entities/capabilities.dart';
-import 'package:app/session/domain/entities/principal.dart';
-import 'package:app/session/domain/entities/user_type.dart';
-import 'package:app/session/domain/usecases/login_usecase.dart';
-import 'package:app/session/domain/usecases/logout_usecase.dart';
-import 'package:app/session/domain/usecases/restore_session_usecase.dart';
-import 'package:app/session/presentation/session_cubit.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/core/presentation/load_status.dart';
+import 'package:luxeknox/features/auth/presentation/cubit/login_cubit.dart';
+import 'package:luxeknox/session/domain/entities/capabilities.dart';
+import 'package:luxeknox/session/domain/entities/principal.dart';
+import 'package:luxeknox/session/domain/entities/user_type.dart';
+import 'package:luxeknox/session/domain/usecases/login_usecase.dart';
+import 'package:luxeknox/session/domain/usecases/logout_usecase.dart';
+import 'package:luxeknox/session/domain/usecases/restore_session_usecase.dart';
+import 'package:luxeknox/session/presentation/session_cubit.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -56,7 +57,7 @@ void main() {
       act: (cubit) => cubit.submit('', 'password123'),
       expect: () => [
         isA<LoginState>()
-            .having((s) => s.status, 'status', LoginStatus.failure)
+            .having((s) => s.status, 'status', LoadStatus.failure)
             .having((s) => s.errorMessage, 'errorMessage', isNotNull),
       ],
       verify: (_) {
@@ -72,7 +73,7 @@ void main() {
         isA<LoginState>().having(
           (s) => s.status,
           'status',
-          LoginStatus.failure,
+          LoadStatus.failure,
         ),
       ],
       verify: (_) {
@@ -95,7 +96,7 @@ void main() {
       },
       act: (cubit) => cubit.submit('user@luxeknox.com', 'password123'),
       expect: () => [
-        const LoginState(status: LoginStatus.submitting),
+        const LoginState(status: LoadStatus.loading),
         const LoginState(),
       ],
       verify: (_) {
@@ -124,9 +125,9 @@ void main() {
       },
       act: (cubit) => cubit.submit('wrong@luxeknox.com', 'bad'),
       expect: () => [
-        const LoginState(status: LoginStatus.submitting),
+        const LoginState(status: LoadStatus.loading),
         isA<LoginState>()
-            .having((s) => s.status, 'status', LoginStatus.failure)
+            .having((s) => s.status, 'status', LoadStatus.failure)
             .having(
               (s) => s.errorMessage,
               'errorMessage',
@@ -150,9 +151,9 @@ void main() {
       },
       act: (cubit) => cubit.submit('suspended@luxeknox.com', 'password123'),
       expect: () => [
-        const LoginState(status: LoginStatus.submitting),
+        const LoginState(status: LoadStatus.loading),
         isA<LoginState>()
-            .having((s) => s.status, 'status', LoginStatus.failure)
+            .having((s) => s.status, 'status', LoadStatus.failure)
             .having(
               (s) => s.errorMessage,
               'errorMessage',
@@ -176,9 +177,9 @@ void main() {
       },
       act: (cubit) => cubit.submit('user@luxeknox.com', 'password123'),
       expect: () => [
-        const LoginState(status: LoginStatus.submitting),
+        const LoginState(status: LoadStatus.loading),
         isA<LoginState>()
-            .having((s) => s.status, 'status', LoginStatus.failure)
+            .having((s) => s.status, 'status', LoadStatus.failure)
             .having(
               (s) => s.errorMessage,
               'errorMessage',

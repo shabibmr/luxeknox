@@ -7,6 +7,15 @@ abstract class SessionRemoteDataSource {
   Future<void> logout(String refreshToken);
   Future<api.SessionResponse> refresh(String refreshToken);
   Future<api.MeResponse> getMe();
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
+  Future<void> forgotPassword(String identifier);
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  });
 }
 
 @LazySingleton(as: SessionRemoteDataSource)
@@ -74,5 +83,46 @@ class SessionRemoteDataSourceImpl implements SessionRemoteDataSource {
       );
     }
     return data;
+  }
+
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _authApi.changePassword(
+      changePasswordRequest: api.ChangePasswordRequest(
+        (b) => b
+          ..currentPassword = currentPassword
+          ..newPassword = newPassword,
+      ),
+    );
+  }
+
+  @override
+  Future<void> forgotPassword(String identifier) async {
+    await _authApi.forgotPassword(
+      forgotPasswordRequest: api.ForgotPasswordRequest((b) {
+        if (identifier.contains('@')) {
+          b.email = identifier;
+        } else {
+          b.phoneNumber = identifier;
+        }
+      }),
+    );
+  }
+
+  @override
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    await _authApi.resetPassword(
+      resetPasswordRequest: api.ResetPasswordRequest(
+        (b) => b
+          ..token = token
+          ..newPassword = newPassword,
+      ),
+    );
   }
 }

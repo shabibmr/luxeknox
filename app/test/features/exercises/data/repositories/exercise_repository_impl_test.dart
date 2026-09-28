@@ -1,8 +1,8 @@
 import 'package:api_client/api_client.dart' as api;
-import 'package:app/core/error/failures.dart';
-import 'package:app/features/exercises/data/datasources/exercise_remote_datasource.dart';
-import 'package:app/features/exercises/data/repositories/exercise_repository_impl.dart';
-import 'package:app/features/exercises/domain/entities/exercise_filter.dart';
+import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/features/exercises/data/datasources/exercise_remote_datasource.dart';
+import 'package:luxeknox/features/exercises/data/repositories/exercise_repository_impl.dart';
+import 'package:luxeknox/features/exercises/domain/entities/exercise_filter.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';

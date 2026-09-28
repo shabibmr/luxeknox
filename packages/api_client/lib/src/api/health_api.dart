@@ -343,7 +343,7 @@ class HEALTHApi {
     );
   }
 
-  /// Attach a document metadata row (deferred)
+  /// Attach a document metadata row
   /// 
   ///
   /// Parameters:
@@ -446,7 +446,7 @@ class HEALTHApi {
     );
   }
 
-  /// Add a gallery photo (deferred)
+  /// Add a gallery photo
   /// 
   ///
   /// Parameters:
@@ -659,7 +659,7 @@ class HEALTHApi {
     return _response;
   }
 
-  /// Delete a document row (deferred)
+  /// Delete a document row
   /// 
   ///
   /// Parameters:
@@ -1056,7 +1056,7 @@ class HEALTHApi {
     );
   }
 
-  /// Member documents (deferred uploads)
+  /// Member documents
   /// 
   ///
   /// Parameters:
@@ -1137,7 +1137,7 @@ class HEALTHApi {
     );
   }
 
-  /// Member gallery (deferred)
+  /// Member gallery
   /// 
   ///
   /// Parameters:
@@ -1321,7 +1321,7 @@ class HEALTHApi {
     );
   }
 
-  /// Set current avatar from a gallery shot (deferred)
+  /// Set current avatar from a gallery shot
   /// 
   ///
   /// Parameters:
@@ -1717,7 +1717,7 @@ class HEALTHApi {
     );
   }
 
-  /// Verify a document (deferred)
+  /// Verify a document
   /// 
   ///
   /// Parameters:

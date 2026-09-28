@@ -1,6 +1,6 @@
 import 'package:api_client/api_client.dart' as api;
-import 'package:app/features/foods/data/models/food_model.dart';
-import 'package:app/features/foods/domain/entities/food.dart';
+import 'package:luxeknox/features/foods/data/models/food_model.dart';
+import 'package:luxeknox/features/foods/domain/entities/food.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -34,6 +34,7 @@ void main() {
       expect(roundTripped.fatGrams, original.fatGrams);
       expect(roundTripped.fiberGrams, original.fiberGrams);
       expect(roundTripped.isVerified, original.isVerified);
+      expect(roundTripped.isActive, original.isActive);
     });
 
     test('toDomain maps every field correctly', () {
@@ -64,6 +65,7 @@ void main() {
       expect(entity.fatGrams, 1.8);
       expect(entity.fiberGrams, 3.5);
       expect(entity.isVerified, false);
+      expect(entity.isActive, true);
     });
 
     test('toDomain maps null nutrition fields and null isVerified', () {
@@ -84,6 +86,7 @@ void main() {
       expect(entity.fatGrams, isNull);
       expect(entity.fiberGrams, isNull);
       expect(entity.isVerified, false);
+      expect(entity.isActive, true);
     });
 
     test('toModel maps every field correctly', () {
@@ -98,6 +101,7 @@ void main() {
         fatGrams: 13,
         fiberGrams: 0,
         isVerified: true,
+        isActive: true,
       );
 
       final model = entity.toModel();
@@ -112,6 +116,7 @@ void main() {
       expect(model.fatGrams, 13);
       expect(model.fiberGrams, 0);
       expect(model.isVerified, true);
+      expect(model.isActive, true);
     });
 
     test('toWriteModel maps every field correctly', () {
@@ -126,6 +131,7 @@ void main() {
         fatGrams: 13,
         fiberGrams: 0,
         isVerified: true,
+        isActive: false,
       );
 
       final write = entity.toWriteModel();
@@ -139,6 +145,7 @@ void main() {
       expect(write.fatGrams, 13);
       expect(write.fiberGrams, 0);
       expect(write.isVerified, true);
+      expect(write.isActive, false);
     });
   });
 }

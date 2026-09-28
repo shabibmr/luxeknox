@@ -1,0 +1,13 @@
+## Goals & Progress
+- [x] metrics
+- [x] goals
+- [x] check-ins
+- [x] measurements
+- [x] charts
+- [x] mandatory metrics
+- [x] progress photos
+- [x] comparison
+- [x] privacy
+- [x] notes
+- [x] trainer assessments
+- [x] server-derived achievement

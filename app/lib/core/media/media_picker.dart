@@ -66,7 +66,10 @@ class MediaPicker {
     final lower = path.toLowerCase();
     if (lower.endsWith('.png')) return 'image/png';
     if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    if (lower.endsWith('.mp4')) return 'video/mp4';
     if (lower.endsWith('.pdf')) return 'application/pdf';
-    return 'image/jpeg';
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+    return 'application/octet-stream';
   }
 }

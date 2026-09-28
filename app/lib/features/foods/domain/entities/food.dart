@@ -11,6 +11,7 @@ class Food extends Equatable {
   final double? fatGrams;
   final double? fiberGrams;
   final bool isVerified;
+  final bool isActive;
 
   const Food({
     required this.id,
@@ -23,6 +24,7 @@ class Food extends Equatable {
     this.fatGrams,
     this.fiberGrams,
     required this.isVerified,
+    this.isActive = true,
   });
 
   Food copyWith({
@@ -36,6 +38,7 @@ class Food extends Equatable {
     double? fatGrams,
     double? fiberGrams,
     bool? isVerified,
+    bool? isActive,
   }) {
     return Food(
       id: id ?? this.id,
@@ -48,6 +51,7 @@ class Food extends Equatable {
       fatGrams: fatGrams ?? this.fatGrams,
       fiberGrams: fiberGrams ?? this.fiberGrams,
       isVerified: isVerified ?? this.isVerified,
+      isActive: isActive ?? this.isActive,
     );
   }
 
@@ -63,5 +67,6 @@ class Food extends Equatable {
     fatGrams,
     fiberGrams,
     isVerified,
+    isActive,
   ];
 }

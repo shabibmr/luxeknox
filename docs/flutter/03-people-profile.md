@@ -1,0 +1,15 @@
+## People & Profile
+- [x] member directory
+- [x] member dossier
+- [x] trainer directory
+- [x] employee directory
+- [x] profile edit
+- [x] trainer assignment
+- [x] health
+- [x] medical history
+- [x] emergency contacts
+- [x] documents
+- [x] photos/avatar
+- [x] role-specific visibility
+- [x] upload retry/cancel
+- [x] role-variant tests

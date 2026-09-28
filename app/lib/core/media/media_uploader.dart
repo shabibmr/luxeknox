@@ -28,10 +28,20 @@ class MediaUploader {
   /// not carry the app's bearer token.
   final Dio _uploadDio;
 
+  CancelToken? _activeToken;
+
+  /// Cancels the in-flight signed PUT, if any.
+  void cancel() {
+    _activeToken?.cancel('upload cancelled');
+    _activeToken = null;
+  }
+
   Future<Either<Failure, String>> upload({
     required Uint8List bytes,
     required String contentType,
     required MediaPurpose purpose,
+    void Function(int sent, int total)? onProgress,
+    CancelToken? cancelToken,
   }) async {
     if (!purpose.allowedMimeTypes.contains(contentType)) {
       return left(
@@ -41,18 +51,19 @@ class MediaUploader {
     if (bytes.lengthInBytes > purpose.maxSizeBytes) {
       return left(
         ValidationFailure([
-          'File exceeds the ${purpose.maxSizeBytes ~/ (1024 * 1024)}MB limit',
+          'File exceeds the ${purpose.maxSizeBytesFormatted} limit',
         ]),
       );
     }
+
+    final token = cancelToken ?? CancelToken();
+    _activeToken = token;
 
     try {
       final slot = await _mediaApi.createMediaUpload(
         mediaUploadRequest: api.MediaUploadRequest(
           (b) => b
-            ..purpose = api.MediaUploadRequestPurposeEnum.valueOf(
-              purpose.wireValue,
-            )
+            ..purpose = _mapPurposeToApi(purpose)
             ..contentType = contentType
             ..sizeBytes = bytes.lengthInBytes,
         ),
@@ -63,6 +74,8 @@ class MediaUploader {
       await _uploadDio.putUri(
         Uri.parse(upload.url),
         data: bytes,
+        cancelToken: token,
+        onSendProgress: onProgress,
         options: Options(
           headers: {
             Headers.contentTypeHeader: contentType,
@@ -72,8 +85,29 @@ class MediaUploader {
       );
 
       return right(upload.objectKey);
+    } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) {
+        return left(const NetworkFailure());
+      }
+      return left(mapThrownToFailure(e));
     } catch (e) {
       return left(mapThrownToFailure(e));
+    } finally {
+      if (identical(_activeToken, token)) {
+        _activeToken = null;
+      }
     }
   }
+}
+
+api.MediaUploadRequestPurposeEnum _mapPurposeToApi(MediaPurpose purpose) {
+  return switch (purpose) {
+    MediaPurpose.exerciseMedia => api.MediaUploadRequestPurposeEnum.exerciseMedia,
+    MediaPurpose.avatar => api.MediaUploadRequestPurposeEnum.avatar,
+    MediaPurpose.progressPhoto => api.MediaUploadRequestPurposeEnum.progressPhoto,
+    MediaPurpose.idProof => api.MediaUploadRequestPurposeEnum.idProof,
+    MediaPurpose.waiver => api.MediaUploadRequestPurposeEnum.waiver,
+    MediaPurpose.medicalCert => api.MediaUploadRequestPurposeEnum.medicalCert,
+    MediaPurpose.receiptPdf => api.MediaUploadRequestPurposeEnum.receiptPdf,
+  };
 }

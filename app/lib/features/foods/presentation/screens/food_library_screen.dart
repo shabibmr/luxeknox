@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/presentation/load_status.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../domain/entities/food_filter.dart';
@@ -14,9 +15,10 @@ import '../widgets/food_list_item.dart';
 import 'food_detail_screen.dart';
 import 'food_form_screen.dart';
 
-/// Food Library screen (screen 36). Member and trainer get browse-only;
-/// admin also sees the add button. At 840dp and above, selecting a food
-/// shows it in a side pane instead of pushing (mirrors exercises K11).
+/// Food Library screen (screen 36). Trainer gets browse/pick; admin also
+/// sees the add button. There is no dedicated member library route. At
+/// 840dp and above, selecting a food shows it in a side pane instead of
+/// pushing (mirrors exercises K11).
 class FoodLibraryScreen extends StatelessWidget {
   const FoodLibraryScreen({super.key});
 
@@ -83,7 +85,7 @@ class _FoodLibraryViewState extends State<_FoodLibraryView> {
 
   @override
   Widget build(BuildContext context) {
-    final canCreate = context.can('foods.create');
+    final canCreate = context.can('diet.create');
 
     return Scaffold(
       appBar: AppBar(
@@ -222,13 +224,11 @@ class _FoodListPane extends StatelessWidget {
         Expanded(
           child: BlocBuilder<FoodListBloc, FoodListState>(
             builder: (context, state) {
-              if (state.status == FoodListStatus.loading &&
-                  state.items.isEmpty) {
+              if (state.status == LoadStatus.loading && state.items.isEmpty) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              if (state.status == FoodListStatus.failure &&
-                  state.items.isEmpty) {
+              if (state.status == LoadStatus.failure && state.items.isEmpty) {
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
@@ -252,8 +252,7 @@ class _FoodListPane extends StatelessWidget {
                 );
               }
 
-              if (state.status == FoodListStatus.success &&
-                  state.items.isEmpty) {
+              if (state.status == LoadStatus.success && state.items.isEmpty) {
                 return const Center(child: Text(FoodStrings.noneFound));
               }
 
@@ -262,7 +261,7 @@ class _FoodListPane extends StatelessWidget {
                   final bloc = context.read<FoodListBloc>();
                   bloc.add(const FoodListRefreshed());
                   await bloc.stream.firstWhere(
-                    (s) => s.status != FoodListStatus.loading,
+                    (s) => s.status != LoadStatus.loading,
                   );
                 },
                 child: ListView.builder(

@@ -54,11 +54,13 @@ class _$HealthStatusEnumSerializer
 class _$Health extends Health {
   @override
   final HealthStatusEnum status;
+  @override
+  final DateTime timestamp;
 
   factory _$Health([void Function(HealthBuilder)? updates]) =>
       (HealthBuilder()..update(updates))._build();
 
-  _$Health._({required this.status}) : super._();
+  _$Health._({required this.status, required this.timestamp}) : super._();
   @override
   Health rebuild(void Function(HealthBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -69,20 +71,25 @@ class _$Health extends Health {
   @override
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
-    return other is Health && status == other.status;
+    return other is Health &&
+        status == other.status &&
+        timestamp == other.timestamp;
   }
 
   @override
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, status.hashCode);
+    _$hash = $jc(_$hash, timestamp.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
 
   @override
   String toString() {
-    return (newBuiltValueToStringHelper(r'Health')..add('status', status))
+    return (newBuiltValueToStringHelper(r'Health')
+          ..add('status', status)
+          ..add('timestamp', timestamp))
         .toString();
   }
 }
@@ -94,6 +101,10 @@ class HealthBuilder implements Builder<Health, HealthBuilder> {
   HealthStatusEnum? get status => _$this._status;
   set status(HealthStatusEnum? status) => _$this._status = status;
 
+  DateTime? _timestamp;
+  DateTime? get timestamp => _$this._timestamp;
+  set timestamp(DateTime? timestamp) => _$this._timestamp = timestamp;
+
   HealthBuilder() {
     Health._defaults(this);
   }
@@ -102,6 +113,7 @@ class HealthBuilder implements Builder<Health, HealthBuilder> {
     final $v = _$v;
     if ($v != null) {
       _status = $v.status;
+      _timestamp = $v.timestamp;
       _$v = null;
     }
     return this;
@@ -125,6 +137,8 @@ class HealthBuilder implements Builder<Health, HealthBuilder> {
         _$Health._(
           status: BuiltValueNullFieldError.checkNotNull(
               status, r'Health', 'status'),
+          timestamp: BuiltValueNullFieldError.checkNotNull(
+              timestamp, r'Health', 'timestamp'),
         );
     replace(_$result);
     return _$result;
