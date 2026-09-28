@@ -36,6 +36,7 @@ export class TrainerResponseDto {
   @ApiProperty({ type: Number }) user_id!: number;
   @ApiProperty({ type: String }) first_name!: string;
   @ApiProperty({ type: String }) last_name!: string;
+  @ApiProperty({ type: String, nullable: true }) gender!: string | null;
   @ApiProperty({ type: String, nullable: true }) bio!: string | null;
   @ApiProperty({ type: [String], nullable: true }) specializations!: string[] | null;
   @ApiProperty({ type: String, nullable: true }) hourly_rate!: string | null;

@@ -35,6 +35,7 @@ class _AddTrainerBodyState extends State<_AddTrainerBody> {
   final _email = TextEditingController();
   final _phone = TextEditingController();
   final _password = TextEditingController();
+  final _gender = TextEditingController();
   final _bio = TextEditingController();
   final _hourlyRate = TextEditingController();
   final _maxClients = TextEditingController();
@@ -47,6 +48,7 @@ class _AddTrainerBodyState extends State<_AddTrainerBody> {
     _email.dispose();
     _phone.dispose();
     _password.dispose();
+    _gender.dispose();
     _bio.dispose();
     _hourlyRate.dispose();
     _maxClients.dispose();
@@ -77,6 +79,7 @@ class _AddTrainerBodyState extends State<_AddTrainerBody> {
         email: _email.text.trim(),
         phoneNumber: _optional(_phone.text),
         password: _optional(_password.text),
+        gender: _optional(_gender.text),
         bio: _optional(_bio.text),
         hourlyRate: _optional(_hourlyRate.text),
         maxClientsCapacity: int.tryParse(_maxClients.text.trim()),
@@ -199,6 +202,19 @@ class _AddTrainerBodyState extends State<_AddTrainerBody> {
                       _password,
                       (v) => context.read<TrainerFormCubit>().updateInput(
                         (i) => i.copyWith(password: _optional(v)),
+                      ),
+                    ),
+                  ),
+                  TextField(
+                    controller: _gender,
+                    enabled: !submitting,
+                    decoration: const InputDecoration(
+                      labelText: PeopleStrings.gender,
+                    ),
+                    onChanged: (_) => _syncField(
+                      _gender,
+                      (v) => context.read<TrainerFormCubit>().updateInput(
+                        (i) => i.copyWith(gender: _optional(v)),
                       ),
                     ),
                   ),

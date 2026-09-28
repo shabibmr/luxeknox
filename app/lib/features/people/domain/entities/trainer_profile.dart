@@ -7,6 +7,7 @@ class TrainerProfile extends Equatable {
     required this.userId,
     required this.firstName,
     required this.lastName,
+    this.gender,
     this.bio,
     this.specializations = const [],
     this.hourlyRate,
@@ -21,6 +22,7 @@ class TrainerProfile extends Equatable {
   final int userId;
   final String firstName;
   final String lastName;
+  final String? gender;
   final String? bio;
   final List<String> specializations;
   final String? hourlyRate;
@@ -37,6 +39,7 @@ class TrainerProfile extends Equatable {
     int? userId,
     String? firstName,
     String? lastName,
+    String? gender,
     String? bio,
     List<String>? specializations,
     String? hourlyRate,
@@ -51,6 +54,7 @@ class TrainerProfile extends Equatable {
       userId: userId ?? this.userId,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
+      gender: gender ?? this.gender,
       bio: bio ?? this.bio,
       specializations: specializations ?? this.specializations,
       hourlyRate: hourlyRate ?? this.hourlyRate,
@@ -68,6 +72,7 @@ class TrainerProfile extends Equatable {
     userId,
     firstName,
     lastName,
+    gender,
     bio,
     specializations,
     hourlyRate,

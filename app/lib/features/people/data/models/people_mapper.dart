@@ -135,6 +135,7 @@ TrainerProfile trainerProfileFromApi(api.Trainer trainer) {
     userId: trainer.userId,
     firstName: trainer.firstName,
     lastName: trainer.lastName,
+    gender: trainer.gender,
     bio: trainer.bio,
     specializations: trainer.specializations?.toList() ?? const [],
     hourlyRate: trainer.hourlyRate,
@@ -151,6 +152,7 @@ api.TrainerUpdate trainerUpdateFromProfile(TrainerProfile trainer) {
       ..phoneNumber = trainer.phoneNumber
       ..firstName = trainer.firstName
       ..lastName = trainer.lastName
+      ..gender = trainer.gender
       ..bio = trainer.bio
       ..specializations = ListBuilder<String>(trainer.specializations)
       ..hourlyRate = trainer.hourlyRate
@@ -167,6 +169,7 @@ api.TrainerCreate trainerCreateFromInput(NewTrainerInput input) {
       ..password = input.password
       ..firstName = input.firstName
       ..lastName = input.lastName
+      ..gender = input.gender
       ..bio = input.bio
       ..specializations = ListBuilder<String>(input.specializations)
       ..hourlyRate = input.hourlyRate

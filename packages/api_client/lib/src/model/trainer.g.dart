@@ -16,6 +16,8 @@ class _$Trainer extends Trainer {
   @override
   final String lastName;
   @override
+  final String? gender;
+  @override
   final String? bio;
   @override
   final BuiltList<String>? specializations;
@@ -38,6 +40,7 @@ class _$Trainer extends Trainer {
       required this.userId,
       required this.firstName,
       required this.lastName,
+      this.gender,
       this.bio,
       this.specializations,
       this.hourlyRate,
@@ -61,6 +64,7 @@ class _$Trainer extends Trainer {
         userId == other.userId &&
         firstName == other.firstName &&
         lastName == other.lastName &&
+        gender == other.gender &&
         bio == other.bio &&
         specializations == other.specializations &&
         hourlyRate == other.hourlyRate &&
@@ -77,6 +81,7 @@ class _$Trainer extends Trainer {
     _$hash = $jc(_$hash, userId.hashCode);
     _$hash = $jc(_$hash, firstName.hashCode);
     _$hash = $jc(_$hash, lastName.hashCode);
+    _$hash = $jc(_$hash, gender.hashCode);
     _$hash = $jc(_$hash, bio.hashCode);
     _$hash = $jc(_$hash, specializations.hashCode);
     _$hash = $jc(_$hash, hourlyRate.hashCode);
@@ -95,6 +100,7 @@ class _$Trainer extends Trainer {
           ..add('userId', userId)
           ..add('firstName', firstName)
           ..add('lastName', lastName)
+          ..add('gender', gender)
           ..add('bio', bio)
           ..add('specializations', specializations)
           ..add('hourlyRate', hourlyRate)
@@ -124,6 +130,10 @@ class TrainerBuilder implements Builder<Trainer, TrainerBuilder> {
   String? _lastName;
   String? get lastName => _$this._lastName;
   set lastName(String? lastName) => _$this._lastName = lastName;
+
+  String? _gender;
+  String? get gender => _$this._gender;
+  set gender(String? gender) => _$this._gender = gender;
 
   String? _bio;
   String? get bio => _$this._bio;
@@ -168,6 +178,7 @@ class TrainerBuilder implements Builder<Trainer, TrainerBuilder> {
       _userId = $v.userId;
       _firstName = $v.firstName;
       _lastName = $v.lastName;
+      _gender = $v.gender;
       _bio = $v.bio;
       _specializations = $v.specializations?.toBuilder();
       _hourlyRate = $v.hourlyRate;
@@ -205,6 +216,7 @@ class TrainerBuilder implements Builder<Trainer, TrainerBuilder> {
                 firstName, r'Trainer', 'firstName'),
             lastName: BuiltValueNullFieldError.checkNotNull(
                 lastName, r'Trainer', 'lastName'),
+            gender: gender,
             bio: bio,
             specializations: _specializations?.build(),
             hourlyRate: hourlyRate,

@@ -6723,6 +6723,9 @@ components:
           type: string
         last_name:
           type: string
+        gender:
+          type: string
+          nullable: true
         bio:
           type: string
           nullable: true
@@ -6757,6 +6760,8 @@ components:
           type: string
         last_name:
           type: string
+        gender:
+          type: string
         bio:
           type: string
         specializations:
@@ -6775,6 +6780,8 @@ components:
         first_name:
           type: string
         last_name:
+          type: string
+        gender:
           type: string
         bio:
           type: string

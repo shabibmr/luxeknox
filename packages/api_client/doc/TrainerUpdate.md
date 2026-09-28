@@ -11,6 +11,7 @@ Name | Type | Description | Notes
 **phoneNumber** | **String** |  | [optional] 
 **firstName** | **String** |  | [optional] 
 **lastName** | **String** |  | [optional] 
+**gender** | **String** |  | [optional] 
 **bio** | **String** |  | [optional] 
 **specializations** | **BuiltList&lt;String&gt;** |  | [optional] 
 **hourlyRate** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | [optional] 

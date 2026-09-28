@@ -21,6 +21,7 @@ export const trainers = mysqlTable(
       .references(() => users.id),
     first_name: varchar('first_name', { length: 100 }).notNull(),
     last_name: varchar('last_name', { length: 100 }).notNull(),
+    gender: varchar('gender', { length: 32 }),
     bio: text('bio'),
     /** JSON array of strings; MariaDB may persist as TEXT — normalize on read like secondary_muscles. */
     specializations: json('specializations').$type<string[]>(),

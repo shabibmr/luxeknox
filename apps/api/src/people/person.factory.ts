@@ -47,6 +47,7 @@ export interface MemberProfileInput {
 export interface TrainerProfileInput {
   first_name: string;
   last_name: string;
+  gender?: string | null;
   bio?: string | null;
   specializations?: string[] | null;
   hourly_rate?: string | null;
@@ -214,6 +215,7 @@ export class PersonFactory {
           user_id: userId,
           first_name: input.profile.first_name,
           last_name: input.profile.last_name,
+          gender: input.profile.gender ?? null,
           bio: input.profile.bio ?? null,
           specializations: input.profile.specializations ?? null,
           hourly_rate: input.profile.hourly_rate ?? null,

@@ -55,6 +55,7 @@ export class TrainerService {
       user_id: row.user_id,
       first_name: row.first_name,
       last_name: row.last_name,
+      gender: row.gender,
       bio: row.bio,
       specializations: normalizeSpecializations(row.specializations),
       hourly_rate: hideRate ? null : this.formatHourlyRate(row.hourly_rate),
@@ -105,6 +106,7 @@ export class TrainerService {
       profile: {
         first_name: dto.first_name,
         last_name: dto.last_name,
+        gender: dto.gender,
         bio: dto.bio,
         specializations: dto.specializations,
         hourly_rate: dto.hourly_rate != null ? roundMoney(dto.hourly_rate) : null,
@@ -171,6 +173,7 @@ export class TrainerService {
       const patch: Partial<Trainer> = { updated_at: now };
       if (dto.first_name !== undefined) patch.first_name = dto.first_name;
       if (dto.last_name !== undefined) patch.last_name = dto.last_name;
+      if (dto.gender !== undefined) patch.gender = dto.gender;
       if (dto.bio !== undefined) patch.bio = dto.bio;
       if (dto.specializations !== undefined) patch.specializations = dto.specializations;
       if (dto.hourly_rate !== undefined) {

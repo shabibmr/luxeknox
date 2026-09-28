@@ -129,6 +129,9 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
   late final _phone = TextEditingController(
     text: widget.profile.phoneNumber ?? '',
   );
+  late final _gender = TextEditingController(
+    text: widget.profile.gender ?? '',
+  );
   late final _bio = TextEditingController(text: widget.profile.bio ?? '');
   late final _specializations = TextEditingController(
     text: widget.profile.specializations.join(', '),
@@ -146,6 +149,7 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
     _firstName.dispose();
     _lastName.dispose();
     _phone.dispose();
+    _gender.dispose();
     _bio.dispose();
     _specializations.dispose();
     _hourlyRate.dispose();
@@ -157,6 +161,7 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
     if (_firstName.text != widget.profile.firstName) return true;
     if (_lastName.text != widget.profile.lastName) return true;
     if (_phone.text != (widget.profile.phoneNumber ?? '')) return true;
+    if (_gender.text != (widget.profile.gender ?? '')) return true;
     if (_bio.text != (widget.profile.bio ?? '')) return true;
     final origSpecs = widget.profile.specializations.join(', ');
     if (_specializations.text != origSpecs) return true;
@@ -222,6 +227,11 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
             onChanged: (_) => setState(() {}),
           ),
           TextField(
+            controller: _gender,
+            decoration: const InputDecoration(labelText: PeopleStrings.gender),
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
             controller: _bio,
             decoration: const InputDecoration(labelText: PeopleStrings.bio),
             maxLines: 3,
@@ -267,6 +277,7 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
                   firstName: _firstName.text.trim(),
                   lastName: _lastName.text.trim(),
                   phoneNumber: _optional(_phone.text),
+                  gender: _optional(_gender.text),
                   bio: _optional(_bio.text),
                   specializations: _parseList(_specializations.text),
                   hourlyRate: _optional(_hourlyRate.text),

@@ -13,6 +13,7 @@ Name | Type | Description | Notes
 **password** | **String** |  | [optional] 
 **firstName** | **String** |  | 
 **lastName** | **String** |  | 
+**gender** | **String** |  | [optional] 
 **bio** | **String** |  | [optional] 
 **specializations** | **BuiltList&lt;String&gt;** |  | [optional] 
 **hourlyRate** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | [optional] 

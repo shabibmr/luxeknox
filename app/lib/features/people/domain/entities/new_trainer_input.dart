@@ -5,6 +5,7 @@ class NewTrainerInput extends Equatable {
   const NewTrainerInput({
     this.firstName = '',
     this.lastName = '',
+    this.gender,
     required this.email,
     this.phoneNumber,
     this.password,
@@ -16,6 +17,7 @@ class NewTrainerInput extends Equatable {
 
   final String firstName;
   final String lastName;
+  final String? gender;
   final String email;
   final String? phoneNumber;
   final String? password;
@@ -32,6 +34,7 @@ class NewTrainerInput extends Equatable {
   NewTrainerInput copyWith({
     String? firstName,
     String? lastName,
+    String? gender,
     String? email,
     String? phoneNumber,
     String? password,
@@ -43,6 +46,7 @@ class NewTrainerInput extends Equatable {
     return NewTrainerInput(
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
+      gender: gender ?? this.gender,
       email: email ?? this.email,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       password: password ?? this.password,
@@ -57,6 +61,7 @@ class NewTrainerInput extends Equatable {
   List<Object?> get props => [
     firstName,
     lastName,
+    gender,
     email,
     phoneNumber,
     password,

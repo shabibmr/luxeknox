@@ -17,6 +17,7 @@ part 'trainer_create.g.dart';
 /// * [password] 
 /// * [firstName] 
 /// * [lastName] 
+/// * [gender] 
 /// * [bio] 
 /// * [specializations] 
 /// * [hourlyRate] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
@@ -37,6 +38,9 @@ abstract class TrainerCreate implements Built<TrainerCreate, TrainerCreateBuilde
 
   @BuiltValueField(wireName: r'last_name')
   String get lastName;
+
+  @BuiltValueField(wireName: r'gender')
+  String? get gender;
 
   @BuiltValueField(wireName: r'bio')
   String? get bio;
@@ -103,6 +107,13 @@ class _$TrainerCreateSerializer implements PrimitiveSerializer<TrainerCreate> {
       object.lastName,
       specifiedType: const FullType(String),
     );
+    if (object.gender != null) {
+      yield r'gender';
+      yield serializers.serialize(
+        object.gender,
+        specifiedType: const FullType(String),
+      );
+    }
     if (object.bio != null) {
       yield r'bio';
       yield serializers.serialize(
@@ -190,6 +201,14 @@ class _$TrainerCreateSerializer implements PrimitiveSerializer<TrainerCreate> {
             specifiedType: const FullType(String),
           ) as String;
           result.lastName = valueDes;
+          break;
+        case r'gender':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.gender = valueDes;
           break;
         case r'bio':
           final valueDes = serializers.deserialize(
