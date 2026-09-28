@@ -5,7 +5,7 @@ Derived from [POSTGRES_MIGRATION_PLAN.md](./POSTGRES_MIGRATION_PLAN.md).
 **Rule:** each task touches at most 7 files (carried over from `archive/todo/README.md`).
 **Status values:** `blocked` · `pending` · `in-progress` · `review` · `completed`
 
-36 tasks across 11 phases. Phases 1–6 leave the tree uncompilable in the middle and must land as
+48 tasks across 13 phases (Phase 12 added after merging `origin/main`). Phases 1–6 leave the tree uncompilable in the middle and must land as
 one reviewable unit.
 
 ---
@@ -37,7 +37,7 @@ one reviewable unit.
 - [x] PG-14 Rewrite `repeatable/grants.sql` <!-- id: 14 -->
 - [x] PG-15 Rewrite `migrate.ts` runner <!-- id: 15 -->
 - [x] PG-16 Regenerate journal + baseline snapshot <!-- id: 16 -->
-- [ ] PG-17 `0006` partial unique indexes (opportunity) <!-- id: 17 -->
+- [ ] PG-17 `0019` partial unique indexes (opportunity) <!-- id: 17 -->
 
 **Phase 5 — Repository layer**
 - [x] PG-18 `BaseRepository` — pg types, boolean, `RETURNING` <!-- id: 18 -->
@@ -51,9 +51,9 @@ one reviewable unit.
 - [x] PG-24 `onDuplicateKeyUpdate` → `onConflictDoUpdate` in 4 seed files <!-- id: 24 -->
 
 **Phase 7 — Tests**
-- [ ] PG-25 Rename + rewrite E2E helper <!-- id: 25 -->
-- [ ] PG-26 Update 5 E2E specs + affected unit specs <!-- id: 26 -->
-- [ ] PG-27 Add PostgreSQL-specific regression tests <!-- id: 27 -->
+- [x] PG-25 Rename + rewrite E2E helper <!-- id: 25 -->
+- [x] PG-26 Update 5 E2E specs + affected unit specs <!-- id: 26 -->
+- [x] PG-27 Add PostgreSQL-specific regression tests <!-- id: 27 -->
 
 **Phase 8 — CI & deployment**
 - [ ] PG-28 GitHub Actions service container <!-- id: 28 -->
@@ -74,6 +74,17 @@ one reviewable unit.
 - [ ] PG-37 `pg_trgm` / `unaccent` search indexes for FR-API-014 <!-- id: 37 -->
 - [ ] PG-38 Remaining four "at most one" partial unique indexes <!-- id: 38 -->
 - [ ] PG-39 NFR-004 PITR restore drill on PostgreSQL <!-- id: 39 -->
+
+**Phase 12 — Post-merge port (verticals landed on `origin/main` as MySQL, merged in `cbcea77`)**
+- [x] PG-40 Port schema files, batch A (6 files) <!-- id: 40 -->
+- [x] PG-41 Port schema files, batch B (6 files) <!-- id: 41 -->
+- [x] PG-42 Rewrite migrations `0006`–`0011` <!-- id: 42 -->
+- [x] PG-43 Rewrite migrations `0012`–`0018` <!-- id: 43 -->
+- [x] PG-44 `insertId` → `RETURNING` in main's repositories (~16 files, 3 batches) <!-- id: 44 -->
+- [x] PG-45 `onDuplicateKeyUpdate` → `onConflictDoUpdate` (5 files) <!-- id: 45 -->
+- [x] PG-46 Raw SQL: `FOR UPDATE` counters, `DATEDIFF`, `like` → `ilike` <!-- id: 46 -->
+- [x] PG-47 Journal + snapshot reconciliation; renumber PG-17 to `0019` <!-- id: 47 -->
+- [x] PG-48 Grants, E2E reset list, and test fixes for new tables <!-- id: 48 -->
 
 ---
 
@@ -107,7 +118,7 @@ PG-02 ─┘                                 │                 ├─ PG-10 �
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | — |
 | **Owner** | Product / Tech lead |
 | **Risk** | **Critical — blocks everything** |
@@ -124,7 +135,7 @@ confirmed against NFR-004 — nightly dumps alone do not satisfy it.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | — |
 | **Risk** | High — each one changes multiple downstream tasks |
 | **Files** | 0 |
@@ -143,7 +154,7 @@ Decide: (1) `TIMESTAMPTZ` vs `TIMESTAMP`; (2) the `utf8mb4_0900_ai_ci` replaceme
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-01) |
+| **Status** | completed |
 | **Files** | 3 |
 
 - `docker-compose.yml` — `postgres:17-alpine`, `luxeknox-postgres`, `POSTGRES_*`, port `5432`,
@@ -159,7 +170,7 @@ Decide: (1) `TIMESTAMPTZ` vs `TIMESTAMP`; (2) the `utf8mb4_0900_ai_ci` replaceme
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-03) |
+| **Status** | completed |
 | **Files** | 2 |
 
 `.env.example` and the local `.env`: `postgres://` URL, port `5432`. Keep the `DB_USER` /
@@ -172,7 +183,7 @@ Decide: (1) `TIMESTAMPTZ` vs `TIMESTAMP`; (2) the `utf8mb4_0900_ai_ci` replaceme
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-04) |
+| **Status** | completed |
 | **Files** | 3 |
 
 Remove `mysql2`; add `pg` + `@types/pg`. `drizzle.config.ts`: `dialect: 'postgresql'`, default port
@@ -189,7 +200,7 @@ runs (it may still report drift until PG-16).
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-05) |
+| **Status** | completed |
 | **Risk** | **High — Decision 4 lands here** |
 | **Files** | 1 |
 
@@ -206,7 +217,7 @@ exact. Preserve `createAdminConnectionPool`'s guarantee that it never falls back
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-06) |
+| **Status** | completed |
 | **Files** | 2 |
 
 Swap the `Pool` import to `pg`; `MySqlTransaction` → `PgTransaction`. No structural change to the
@@ -218,7 +229,7 @@ Swap the `Pool` import to `pg`; `MySqlTransaction` → `PgTransaction`. No struc
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-07) |
+| **Status** | completed |
 | **Risk** | Medium — 40 columns depend on this one helper |
 | **Files** | 2 |
 
@@ -236,7 +247,7 @@ round-trip assertion** — it is the regression test for ADR-0002's highest-risk
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-08) |
+| **Status** | completed |
 | **Files** | 7 |
 
 `schema/roles.ts`, `permissions.ts`, `role-permissions.ts`, `users.ts`, `sessions.ts`,
@@ -253,7 +264,7 @@ round-trip assertion** — it is the regression test for ADR-0002's highest-risk
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-08) |
+| **Status** | completed |
 | **Files** | 2 |
 
 `schema/exercises.ts`, `foods.ts`. `double` → `doublePrecision` (7 columns), `json` → `jsonb`
@@ -264,7 +275,7 @@ builders unchanged.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-08) |
+| **Status** | completed |
 | **Files** | 6 |
 
 `schema/trainers.ts`, `employees.ts`, `members.ts` (also holds `membership_number_counters` and
@@ -285,7 +296,7 @@ a non-identity `BIGINT` PK.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-09, PG-10) |
+| **Status** | completed |
 | **Files** | 3 |
 
 `drizzle/0001_platform.sql`, `0002_exercises.sql`, `0003_foods.sql`. Backticks → unquoted lowercase;
@@ -297,7 +308,7 @@ hoist `CREATE TYPE … AS ENUM` to the top of `0001`; inline `KEY`/`UNIQUE KEY` 
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-11, PG-12) |
+| **Status** | completed |
 | **Files** | 2 |
 
 `drizzle/0004_people.sql`, `0005_health_media_meta.sql`. Same conversions, plus:
@@ -312,7 +323,7 @@ Drizzle schema.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-13) |
+| **Status** | completed |
 | **Risk** | **High — a missing sequence grant breaks every insert** |
 | **Files** | 1 |
 
@@ -329,7 +340,7 @@ and `test/settings.e2e.spec.ts:87–98` passes.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-14) |
+| **Status** | completed |
 | **Risk** | Medium |
 | **Files** | 2 |
 
@@ -351,7 +362,7 @@ migration file leaves the database unchanged.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-15) |
+| **Status** | completed |
 | **Files** | 2 |
 
 `drizzle/meta/_journal.json` (`"dialect": "postgresql"`) and `drizzle/meta/0000_snapshot.json`
@@ -360,11 +371,11 @@ regenerated from the ported schema, reduced to a single `0000_schema_baseline` e
 
 **Done when:** `pnpm --filter api db:check` prints "Schema drift check passed".
 
-### PG-17 — `0006` partial unique indexes (opportunity)
+### PG-17 — `0019` partial unique indexes (opportunity)
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-16, PG-27) |
+| **Status** | pending |
 | **Priority** | Should-have — closes two unenforced correctness rules |
 | **Files** | 2 |
 
@@ -391,7 +402,7 @@ an E2E test asserting a second primary contact is rejected with 409.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-11) |
+| **Status** | completed |
 | **Risk** | Medium — a live bug, not just a port |
 | **Files** | 1 |
 
@@ -406,7 +417,7 @@ a driver-specific result shape.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-18) |
+| **Status** | completed |
 | **Risk** | **High — silent 409 → 500 regression** |
 | **Files** | 2 |
 
@@ -420,7 +431,7 @@ New `src/platform/db/pg-errors.ts` exporting `isUniqueViolation` (23505),
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-18) |
+| **Status** | completed |
 | **Files** | 7 |
 
 `auth/session.repository.ts:65`, `diet/food.repository.ts:80`, `work/exercise.repository.ts:91`,
@@ -436,7 +447,7 @@ Replace `Number(result?.[0]?.insertId ?? 0)` with `.returning({ id: table.id })`
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-19, PG-20) |
+| **Status** | completed |
 | **Risk** | **Critical — the single most failure-prone file** |
 | **Files** | 2 |
 
@@ -459,7 +470,7 @@ consecutive creates increment without gaps.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-21) |
+| **Status** | completed |
 | **Risk** | **High — silent FR-API-014 regression; queries succeed but stop matching** |
 | **Files** | 5 |
 
@@ -473,7 +484,7 @@ consecutive creates increment without gaps.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-22) |
+| **Status** | completed |
 | **Files** | 3 |
 
 `platform/health/health.controller.ts` — reword the MySQL references at lines 91 and 123 (they are
@@ -489,7 +500,7 @@ consecutive creates increment without gaps.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-11) |
+| **Status** | completed |
 | **Risk** | Medium — one genuine semantic change, not just syntax |
 | **Files** | 4 |
 
@@ -513,7 +524,7 @@ consecutive creates increment without gaps.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-24) |
+| **Status** | completed |
 | **Files** | 1 |
 
 `test/helpers/mysql.ts` → `test/helpers/postgres.ts`. Rewrite the five multi-table deletes in
@@ -529,7 +540,7 @@ Update the three `onDuplicateKeyUpdate` calls at lines 146, 166, 186.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-25) |
+| **Status** | completed |
 | **Files** | 6 |
 
 Import path updates in `auth.e2e.spec.ts:9`, `exercises.e2e.spec.ts:10`, `foods.e2e.spec.ts:10`,
@@ -544,7 +555,7 @@ JSON-auto-parse comment and assertion at `exercises.e2e.spec.ts:112`.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-26) |
+| **Status** | completed |
 | **Priority** | Must-have — these cover exactly what `typecheck` cannot |
 | **Files** | 4 |
 
@@ -570,7 +581,7 @@ New or extended assertions for the runtime traps:
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-27) |
+| **Status** | pending |
 | **Files** | 1 |
 
 `.github/workflows/api.yml`: `services.mysql` → `services.postgres` (`postgres:17`, `POSTGRES_*`,
@@ -601,7 +612,7 @@ for hard-coded DB env.
 
 | | |
 | :--- | :--- |
-| **Status** | blocked (PG-01, PG-02) |
+| **Status** | pending |
 | **Files** | 1 |
 
 `docs/adr/0009-postgresql-migration.md`. Must carry PG-01's hosting answer and state plainly what
@@ -738,3 +749,146 @@ workaround — and that these rules are still never implemented in the service l
 ADR-0002 made a restore drill part of the `PAY` vertical's definition of done. The mechanism changed
 from binlog replay to WAL archiving, so the drill must be redesigned and actually executed —
 an untested PITR setup satisfies nothing.
+
+---
+
+## Phase 12 — Post-merge port
+
+`origin/main` landed the MEMB, SCHED, ATTN, WORK, DIET, GOAL, NOTIF, PAY and JOB verticals against
+MySQL while this branch was porting to PostgreSQL. Merge commit `cbcea77` kept the PostgreSQL side of
+every conflict and took main's additions, but the new files arrived **unported**, so the tree does
+not compile until this phase lands. Everything below is mechanical application of Decisions 1–5
+(ADR-0009) and the PG-18/20/22/24 patterns.
+
+Renumbering: main used migration numbers `0006`–`0018`, so PG-17's partial-unique-index migration
+moves from `0006` to `0019` (PG-47).
+
+### PG-40 — Port schema files, batch A
+| | |
+| :--- | :--- |
+| **Status** | completed |
+| **Files** | 6 |
+
+`memberships.ts`, `payments.ts`, `password-reset-tokens.ts`, `medical-histories.ts`, `job-runs.ts`,
+`idempotency.ts`. `mysqlTable` → `pgTable`; `bigint(unsigned).autoincrement()` →
+`.generatedAlwaysAsIdentity()`; `int` → `integer`; `decimal` → `numeric`; `json` → `jsonb`;
+`double` → `doublePrecision`; `mysqlEnum` → module-scope `pgEnum`.
+
+### PG-41 — Port schema files, batch B
+| | |
+| :--- | :--- |
+| **Status** | completed |
+| **Files** | 6 |
+
+`attendance.ts`, `scheduling.ts` (`tinyint` → `smallint` + `CHECK`), `workout.ts`, `diet.ts`,
+`goals.ts`, `notifications.ts` (3 enums). Same conversions as PG-40. Where `unsigned` carried meaning
+(counts, quantities) add a `CHECK (col >= 0)` per Decision 5.
+
+### PG-42 — Rewrite migrations `0006`–`0011`
+| | |
+| :--- | :--- |
+| **Status** | completed |
+| **Files** | 6 |
+
+`0006_memberships`, `0007_job_runs`, `0008_scheduling`, `0009_schedule_calendar_index` (empty),
+`0010_attendance`, `0011_workout`. Same conversion rules as PG-12/13.
+
+### PG-43 — Rewrite migrations `0012`–`0018`
+| | |
+| :--- | :--- |
+| **Status** | completed |
+| **Files** | 8 |
+
+`0012_diet`, `0012_idempotency`, `0013_goals`, `0014_notifications`, `0015_payments`,
+`0016_receipt_counters`, `0017_password_reset_tokens`, `0018_medical_histories`. Note the duplicate
+`0012_` prefix — keep the ordering main established (`diet` before `idempotency`). Counter-table seed
+inserts use `ON CONFLICT (id) DO NOTHING`.
+
+### PG-44 — `insertId` → `RETURNING` in main's repositories
+| | |
+| :--- | :--- |
+| **Status** | completed |
+| **Files** | ~16, in 3 batches |
+
+`notification`, `job-run`, `workout-plan`, `workout-session`, `goal`, `measurement`, `attendance`,
+`device-credential.service`, `diet-plan`, `payment`, `payment-method`, `membership-product`,
+`membership`, `facility`, `schedule`, `schedule-type`, `medical-history`. Note main's
+`Number(result?.[0]?.insertId ?? result?.insertId ?? 0)` variants and the insert-then-reselect
+patterns that key off `insertId`.
+
+### PG-45 — `onDuplicateKeyUpdate` → `onConflictDoUpdate`
+| | |
+| :--- | :--- |
+| **Status** | completed |
+| **Files** | 5 |
+
+`notification.repository.ts:241`, `attendance.repository.ts:284`, `settings.repository.ts:39`,
+`diet-log.repository.ts:77`, `seed/notification-types.ts:70`. Explicit conflict target required;
+`VALUES(col)` → `excluded.col`.
+
+### PG-46 — Raw SQL
+| | |
+| :--- | :--- |
+| **Status** | completed |
+| **Files** | 7 |
+
+`payment.repository.ts` (invoice/receipt counters — backticks, and the `{ rows }` result shape trap
+from PG-21), `schedule.repository.ts:203` (`FOR UPDATE`), `reports.repository.ts:162`
+(`DATEDIFF(a,b)` → `(a - b)`), and `like` → `ilike` in `workout-plan`, `goal-metric`, `diet-plan`,
+`membership-product`, `employee` repositories.
+
+### PG-47 — Journal + snapshot reconciliation
+| | |
+| :--- | :--- |
+| **Status** | completed |
+| **Files** | 4 |
+
+The merged `_journal.json` mixes dialects and main's `0007`–`0010` snapshots are MySQL. Regenerate a
+single PostgreSQL baseline snapshot for the full 30-ish table schema (superseding PG-16's), delete
+main's MySQL snapshots, and reduce the journal accordingly. Rename PG-17's planned file to
+`0019_partial_unique_indexes.sql` and update the comment in `members.ts`.
+
+**Done when:** `pnpm --filter api db:check` passes.
+
+### PG-48 — Grants, E2E reset list, and tests
+| | |
+| :--- | :--- |
+| **Status** | completed |
+| **Files** | 4 |
+
+`resetTestData()` in `test/helpers/postgres.ts` must delete the new tables in FK-safe order. Check
+`grants.sql` covers new tables/sequences and any `audit_logs`-style append-only tables. Fix mysql2
+result-shape assumptions in main's new specs.
+
+**Done when:** `pnpm --filter api test` and `test:e2e` are green.
+
+### Phase 12 outcome
+
+Ported and verified against PostgreSQL 17 (scratch database, since dropped):
+
+- All 13 new migrations apply cleanly; column and index sets match what `drizzle-kit generate`
+  produces from the TypeScript schema (one gap found and fixed: `password_reset_tokens_user_id_idx`
+  existed in SQL but not in the schema).
+- The three MySQL generated-column + `UNIQUE KEY` workarounds (`workout_plans`, `diet_plans`,
+  `workout_sessions`) became **partial unique indexes** — this closes PG-38 for FR-WORK-006,
+  FR-WORK-014 and FR-DIET-004. Only FR-HEALTH-001 remains, plus PG-17's two.
+- Runtime traps beyond `insertId` that `tsc` could not see (`any`-typed): `affectedRows` →
+  `rowCount` in the notification, workout-plan and diet-plan repositories (the optimistic
+  `row_version` check and device delete were broken), and `[rows, fields]` unwrapping in the
+  payment counters and schedule lock.
+- Four goal services used `repository.create()` as if it returned the entity; under MySQL it
+  returned an insert header, so those audit rows would have had `entityId: undefined`. They now
+  read the id from `RETURNING` and re-fetch.
+- `resetTestData()` now walks the catalogue's FK graph instead of a hand-maintained delete list.
+- `booking-concurrency` relied on user ids coinciding with member ids; fixed.
+- `pnpm test`: 528/528. `db:check`: passes. `test:e2e`: 52/52, three consecutive runs.
+
+**Stale e2e specs fixed (they were wrong against main's code, not port bugs):**
+`settings` expected an unwrapped body but `GET /v1/settings` returns `{ data }`;
+`people-onboarding` photo test used a non-existent `member_photo` purpose, the wrong body field
+(`photo_url`, not `file_url`), and `is_current_avatar` via `POST …/avatar`; its terminate test also
+used mysql2's `[rows]` result shape; `notification-delivery` needed a `members` row for `e2e_member`.
+Two controllers returned 201 where their own `@ApiResponse` documents 200 (`POST /notifications/:id/read`,
+`POST /members/:id/photos/:photoId/avatar`); both now have `@HttpCode(200)`. `exercises` e2e now
+deletes its rows in `afterAll` (leftovers pushed new rows off the first page, causing flaky failures).
+Remaining: one pre-existing type error in `memb/membership-integration.spec.ts`.

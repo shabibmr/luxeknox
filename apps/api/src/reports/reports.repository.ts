@@ -159,7 +159,7 @@ export class ReportsRepository {
         totalPurchased: count(),
         activeCount: sql<number>`SUM(CASE WHEN ${memberships.status} = 'active' THEN 1 ELSE 0 END)`,
         frozenCount: sql<number>`SUM(CASE WHEN ${memberships.status} = 'frozen' THEN 1 ELSE 0 END)`,
-        avgDurationDays: sql<number>`AVG(DATEDIFF(${memberships.end_date}, ${memberships.start_date}))`,
+        avgDurationDays: sql<number>`AVG(${memberships.end_date} - ${memberships.start_date})::float8`,
       })
       .from(memberships)
       .innerJoin(membershipProducts, eq(memberships.product_id, membershipProducts.id))

@@ -5,7 +5,7 @@ import {
   seedTestUsers,
   TRAINER_CREDENTIALS,
   type TestAppInstance,
-} from './helpers/mysql';
+} from './helpers/postgres';
 import { DeviceCredentialService } from '../src/attn/device-credential.service';
 import { users } from '../src/platform/db/schema/users';
 import { attendances } from '../src/platform/db/schema/attendance';

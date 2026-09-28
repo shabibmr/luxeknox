@@ -62,7 +62,8 @@ export class GoalMetricService {
       updated_at: now,
     };
 
-    const created = await this.repository.create(newMetric);
+    const [{ id: createdId }] = await this.repository.create(newMetric);
+    const created = (await this.repository.findById(createdId))!;
 
     await this.auditService.recordAudit({
       actorUserId: actor.id,

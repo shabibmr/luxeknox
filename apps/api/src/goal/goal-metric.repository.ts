@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, like, type SQL } from 'drizzle-orm';
+import { and, count, eq, ilike, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import {
   goalMetrics,
@@ -47,7 +47,7 @@ export class GoalMetricRepository extends BaseRepository<
       conditions.push(eq(goalMetrics.category, params.category));
     }
     if (params.q) {
-      conditions.push(like(goalMetrics.name, `%${params.q}%`));
+      conditions.push(ilike(goalMetrics.name, `%${params.q}%`));
     }
 
     if (conditions.length === 0) {

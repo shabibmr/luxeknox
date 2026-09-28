@@ -67,9 +67,10 @@ export async function seedNotificationTypes(db: DrizzleDb<any>): Promise<void> {
         created_at: now,
         updated_at: now,
       })
-      .onDuplicateKeyUpdate({
+      .onConflictDoUpdate({
+        target: notificationTypes.type_code,
         set: {
-          template_text: sql`VALUES(\`template_text\`)`,
+          template_text: sql`excluded.template_text`,
           is_active: true,
           updated_at: now,
         },

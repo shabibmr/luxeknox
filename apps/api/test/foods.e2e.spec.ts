@@ -7,7 +7,7 @@ import {
   MEMBER_CREDENTIALS,
   TRAINER_CREDENTIALS,
   type TestAppInstance,
-} from './helpers/mysql';
+} from './helpers/postgres';
 
 const RUN_ID = Date.now();
 const uniqueName = (label: string) => `e2e_food_${label}_${RUN_ID}`;
@@ -38,6 +38,9 @@ describe('Foods E2E', () => {
   });
 
   afterAll(async () => {
+    if (testApp?.db) {
+      await testApp.db.execute(sql`DELETE FROM foods WHERE name LIKE ${'e2e_food_%'}`);
+    }
     if (testApp?.app) {
       await testApp.app.close();
     }
@@ -115,10 +118,10 @@ describe('Foods E2E', () => {
       expect(body.is_active).toBe(true);
       expect(body.is_verified).toBe(true);
 
-      const [auditRows] = (await testApp.db.execute(
+      const auditResult = await testApp.db.execute(
         sql`SELECT action FROM audit_logs WHERE entity_name = 'foods' AND entity_id = ${body.id} AND action = 'food.created'`,
-      )) as any;
-      expect(auditRows.length).toBeGreaterThan(0);
+      );
+      expect(auditResult.rows.length).toBeGreaterThan(0);
     });
 
     it('rejects creation missing required fields', async () => {
@@ -202,7 +205,7 @@ describe('Foods E2E', () => {
       const visible = (await visibleRes.json()) as any;
 
       for (const token of [trainerToken, memberToken]) {
-        const listRes = await fetch(`${testApp.baseUrl}/foods?q=e2e_food_`, {
+        const listRes = await fetch(`${testApp.baseUrl}/foods?q=${RUN_ID}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         expect(listRes.status).toBe(200);

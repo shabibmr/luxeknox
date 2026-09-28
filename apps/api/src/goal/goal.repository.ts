@@ -126,11 +126,7 @@ export class GoalRepository extends BaseRepository<typeof goals, Goal, NewGoal> 
   }
 
   async addHistory(newHistory: NewGoalHistory): Promise<GoalHistory> {
-    const [idResult] = await this.db.insert(goalHistories).values(newHistory);
-    const [row] = await this.db
-      .select()
-      .from(goalHistories)
-      .where(eq(goalHistories.id, idResult.insertId));
+    const [row] = await this.db.insert(goalHistories).values(newHistory).returning();
     return row;
   }
 

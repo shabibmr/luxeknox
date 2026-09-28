@@ -74,13 +74,14 @@ export class DietLogRepository extends BaseRepository<
         created_at: now,
         updated_at: now,
       })
-      .onDuplicateKeyUpdate({
+      .onConflictDoUpdate({
+        target: [dietHistories.member_id, dietHistories.logged_date],
         set: {
-          diet_plan_id: sql`VALUES(\`diet_plan_id\`)`,
-          total_calories_consumed: sql`VALUES(\`total_calories_consumed\`)`,
-          adherence_score: sql`VALUES(\`adherence_score\`)`,
-          water_intake_ml: sql`VALUES(\`water_intake_ml\`)`,
-          member_notes: sql`VALUES(\`member_notes\`)`,
+          diet_plan_id: sql`excluded.diet_plan_id`,
+          total_calories_consumed: sql`excluded.total_calories_consumed`,
+          adherence_score: sql`excluded.adherence_score`,
+          water_intake_ml: sql`excluded.water_intake_ml`,
+          member_notes: sql`excluded.member_notes`,
           updated_at: now,
         },
       });

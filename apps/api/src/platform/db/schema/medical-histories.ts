@@ -1,15 +1,21 @@
-import { bigint, index, mysqlTable, text, varchar } from 'drizzle-orm/mysql-core';
+import {
+  bigint,
+  index,
+  pgTable,
+  text,
+  varchar,
+} from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
 import { members } from './members';
 
-export const medicalHistories = mysqlTable(
+export const medicalHistories = pgTable(
   'medical_histories',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    member_id: bigint('member_id', { mode: 'number', unsigned: true })
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    member_id: bigint('member_id', { mode: 'number' })
       .notNull()
       .references(() => members.id, { onDelete: 'cascade' }),
-    condition_id: bigint('condition_id', { mode: 'number', unsigned: true }),
+    condition_id: bigint('condition_id', { mode: 'number' }),
     title: varchar('title', { length: 255 }).notNull(),
     description: text('description'),
     diagnosed_date: varchar('diagnosed_date', { length: 10 }),

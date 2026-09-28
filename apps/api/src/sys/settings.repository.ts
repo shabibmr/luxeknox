@@ -36,9 +36,10 @@ export class SettingsRepository extends BaseRepository<typeof gymSettings, GymSe
           created_at: now,
           updated_at: now,
         })
-        .onDuplicateKeyUpdate({
+        .onConflictDoUpdate({
+          target: gymSettings.setting_key,
           set: {
-            setting_value: sql`VALUES(\`setting_value\`)`,
+            setting_value: sql`excluded.setting_value`,
             updated_at: now,
           },
         });

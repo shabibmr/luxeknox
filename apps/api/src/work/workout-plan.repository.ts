@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, like, type SQL } from 'drizzle-orm';
+import { and, desc, eq, ilike, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
@@ -64,7 +64,7 @@ export class WorkoutPlanRepository extends BaseRepository<
       conditions.push(eq(workoutPlans.status, params.status));
     }
     if (params.q) {
-      conditions.push(like(workoutPlans.title, `%${params.q}%`));
+      conditions.push(ilike(workoutPlans.title, `%${params.q}%`));
     }
 
     if (conditions.length === 0) return undefined;
@@ -156,13 +156,7 @@ export class WorkoutPlanRepository extends BaseRepository<
 
   async insertPlan(data: NewWorkoutPlan): Promise<WorkoutPlan> {
     const db = this.getDb() as any;
-    const [result] = await db.insert(workoutPlans).values(data);
-    const insertId = Number((result as any).insertId);
-    const [inserted] = await db
-      .select()
-      .from(workoutPlans)
-      .where(eq(workoutPlans.id, insertId))
-      .limit(1);
+    const [inserted] = await db.insert(workoutPlans).values(data).returning();
     return inserted;
   }
 
@@ -187,12 +181,12 @@ export class WorkoutPlanRepository extends BaseRepository<
       updatePayload.row_version = nextRowVersion;
     }
 
-    const [updateResult] = await db
+    const updateResult = await db
       .update(workoutPlans)
       .set(updatePayload)
       .where(and(...whereConditions));
 
-    const affected = Number((updateResult as any).affectedRows ?? 0);
+    const affected = Number(updateResult.rowCount ?? 0);
     if (expectedRowVersion !== undefined && affected === 0) {
       throw new ConflictError(
         'Workout plan has been modified by another process. Please refresh and try again.',
@@ -209,13 +203,7 @@ export class WorkoutPlanRepository extends BaseRepository<
 
   async insertVersion(data: NewWorkoutPlanVersion): Promise<WorkoutPlanVersion> {
     const db = this.getDb() as any;
-    const [result] = await db.insert(workoutPlanVersions).values(data);
-    const insertId = Number((result as any).insertId);
-    const [inserted] = await db
-      .select()
-      .from(workoutPlanVersions)
-      .where(eq(workoutPlanVersions.id, insertId))
-      .limit(1);
+    const [inserted] = await db.insert(workoutPlanVersions).values(data).returning();
     return inserted;
   }
 

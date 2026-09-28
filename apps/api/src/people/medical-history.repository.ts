@@ -56,7 +56,7 @@ export class MedicalHistoryRepository extends BaseRepository<
 
   async insertHistory(values: NewMedicalHistory): Promise<number> {
     const result = await this.create(values);
-    return Number(result?.[0]?.insertId ?? 0);
+    return result[0]?.id ?? 0;
   }
 
   async updateHistory(id: number, memberId: number, values: Partial<NewMedicalHistory>): Promise<void> {

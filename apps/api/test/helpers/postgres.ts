@@ -35,52 +35,67 @@ export const INACTIVE_USER_CREDENTIALS = {
   password: 'InactiveSecurePassword123!',
 };
 
+interface ForeignKeyEdge {
+  child: string;
+  child_column: string;
+  parent_column: string;
+}
+
+/**
+ * Single-column foreign keys grouped by referenced table, read from the catalogue so the
+ * cleanup below cannot fall behind as new verticals add tables that reference `users`.
+ */
+async function loadForeignKeyGraph(db: DrizzleDb<any>): Promise<Map<string, ForeignKeyEdge[]>> {
+  const result: any = await db.execute(sql`
+    SELECT c.conrelid::regclass::text AS child,
+           ca.attname AS child_column,
+           c.confrelid::regclass::text AS parent,
+           pa.attname AS parent_column
+    FROM pg_constraint c
+    JOIN pg_attribute ca ON ca.attrelid = c.conrelid AND ca.attnum = c.conkey[1]
+    JOIN pg_attribute pa ON pa.attrelid = c.confrelid AND pa.attnum = c.confkey[1]
+    WHERE c.contype = 'f' AND array_length(c.conkey, 1) = 1
+  `);
+  const graph = new Map<string, ForeignKeyEdge[]>();
+  for (const row of result.rows as Array<ForeignKeyEdge & { parent: string }>) {
+    const edges = graph.get(row.parent) ?? [];
+    edges.push({ child: row.child, child_column: row.child_column, parent_column: row.parent_column });
+    graph.set(row.parent, edges);
+  }
+  return graph;
+}
+
+/** Deletes rows matching `where` from `table`, children first, following the FK graph. */
+async function purge(
+  db: DrizzleDb<any>,
+  graph: Map<string, ForeignKeyEdge[]>,
+  table: string,
+  where: string,
+): Promise<void> {
+  for (const edge of graph.get(table) ?? []) {
+    await purge(
+      db,
+      graph,
+      edge.child,
+      `${edge.child_column} IN (SELECT ${edge.parent_column} FROM ${table} WHERE ${where})`,
+    );
+  }
+  await db.execute(sql.raw(`DELETE FROM ${table} WHERE ${where}`));
+}
+
 /**
  * Clears per-test rows. Does not touch seeded roles, permissions or settings.
  * audit_logs is intentionally omitted — the app user has no DELETE on it after F-03.
- * PEOPLE child rows are removed before users to satisfy FK constraints.
+ *
+ * MySQL's multi-table `DELETE alias FROM ... INNER JOIN` has no PostgreSQL equivalent, and a
+ * hand-maintained delete list breaks whenever a vertical adds a table referencing `users`.
+ * Instead every row that transitively references an e2e user is deleted, children first,
+ * by walking the catalogue's foreign-key graph (PG-48).
  */
 export async function resetTestData(db: DrizzleDb<any>): Promise<void> {
-  await db.execute(sql`
-    DELETE md FROM member_documents md
-    INNER JOIN members m ON m.id = md.member_id
-    INNER JOIN users u ON u.id = m.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
-  await db.execute(sql`
-    DELETE mp FROM member_photos mp
-    INNER JOIN members m ON m.id = mp.member_id
-    INNER JOIN users u ON u.id = m.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
-  await db.execute(sql`
-    DELETE mh FROM member_health mh
-    INNER JOIN members m ON m.id = mh.member_id
-    INNER JOIN users u ON u.id = m.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
-  await db.execute(sql`
-    DELETE ec FROM emergency_contacts ec
-    INNER JOIN users u ON u.id = ec.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
-  await db.execute(sql`
-    DELETE m FROM members m
-    INNER JOIN users u ON u.id = m.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
-  await db.execute(sql`
-    DELETE t FROM trainers t
-    INNER JOIN users u ON u.id = t.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
-  await db.execute(sql`
-    DELETE e FROM employees e
-    INNER JOIN users u ON u.id = e.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
+  const graph = await loadForeignKeyGraph(db);
   await db.execute(sql`DELETE FROM sessions`);
-  await db.execute(sql`DELETE FROM users WHERE email LIKE 'e2e_%@luxeknox.test'`);
+  await purge(db, graph, 'users', `email LIKE 'e2e_%@luxeknox.test'`);
 }
 
 /**
@@ -143,7 +158,8 @@ export async function seedTestUsers(
       status: 'active',
       created_at: now,
     })
-    .onDuplicateKeyUpdate({
+    .onConflictDoUpdate({
+      target: users.email,
       set: {
         password_hash: memberPasswordHash,
         status: 'active',
@@ -163,7 +179,8 @@ export async function seedTestUsers(
       status: 'inactive',
       created_at: now,
     })
-    .onDuplicateKeyUpdate({
+    .onConflictDoUpdate({
+      target: users.email,
       set: {
         password_hash: inactivePasswordHash,
         status: 'inactive',
@@ -183,7 +200,8 @@ export async function seedTestUsers(
       status: 'active',
       created_at: now,
     })
-    .onDuplicateKeyUpdate({
+    .onConflictDoUpdate({
+      target: users.email,
       set: {
         password_hash: trainerPasswordHash,
         status: 'active',

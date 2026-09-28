@@ -74,14 +74,14 @@ describe('ProgressService (GOA-010, GOA-011, GOA-012, GOA-014)', () => {
 
     noteRepo = {
       findManyByMemberId: vi.fn().mockResolvedValue({ rows: [sampleNote], total: 1 }),
-      create: vi.fn().mockImplementation(async (data) => ({ id: 1, ...data })),
+      create: vi.fn().mockResolvedValue([{ id: 1 }]),
       findById: vi.fn().mockResolvedValue(sampleNote),
     };
 
     photoRepo = {
       findManyByMemberId: vi.fn().mockResolvedValue({ rows: [samplePhoto], total: 1 }),
       findById: vi.fn().mockResolvedValue(samplePhoto),
-      create: vi.fn().mockImplementation(async (data) => ({ id: 1, ...data })),
+      create: vi.fn().mockResolvedValue([{ id: 1 }]),
       delete: vi.fn().mockResolvedValue(undefined),
       deleteById: vi.fn().mockResolvedValue(undefined),
       findComparisonByDates: vi.fn().mockResolvedValue([

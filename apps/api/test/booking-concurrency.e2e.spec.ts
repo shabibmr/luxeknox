@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { sql } from 'drizzle-orm';
-import { createTestApp, type TestAppInstance } from './helpers/mysql';
+import { createTestApp, type TestAppInstance } from './helpers/postgres';
 import { BookingService } from '../src/sched/booking.service';
 import { users } from '../src/platform/db/schema/users';
 import { roles } from '../src/platform/db/schema/roles';
@@ -23,6 +23,8 @@ const RUN_ID = Date.now();
 describe('Booking concurrency E2E (SCH-019)', () => {
   let testApp: TestAppInstance;
   let bookingService: BookingService;
+  let userAId: number;
+  let userBId: number;
   let memberAId: number;
   let memberBId: number;
   let scheduleId: number;
@@ -39,7 +41,7 @@ describe('Booking concurrency E2E (SCH-019)', () => {
     const passwordHash = await hashPassword('ConcurrentSecurePassword123!');
     const now = new Date();
 
-    async function createMember(email: string, membershipNumber: string): Promise<number> {
+    async function createMember(email: string, membershipNumber: string): Promise<{ userId: number; memberId: number }> {
       const userInsert = await db.insert(users).values({
         email,
         password_hash: passwordHash,
@@ -47,8 +49,8 @@ describe('Booking concurrency E2E (SCH-019)', () => {
         role_id: memberRoleId,
         status: 'active',
         created_at: now,
-      });
-      const userId = Number(userInsert?.[0]?.insertId ?? userInsert?.insertId);
+      }).returning({ id: users.id });
+      const userId = userInsert[0].id;
 
       const memberInsert = await db.insert(members).values({
         user_id: userId,
@@ -57,20 +59,20 @@ describe('Booking concurrency E2E (SCH-019)', () => {
         last_name: 'Tester',
         joined_date: now.toISOString().slice(0, 10),
         created_at: now,
-      });
-      return Number(memberInsert?.[0]?.insertId ?? memberInsert?.insertId);
+      }).returning({ id: members.id });
+      return { userId, memberId: memberInsert[0].id };
     }
 
-    memberAId = await createMember(`e2e_race_a_${RUN_ID}@luxeknox.test`, `RACEA${RUN_ID}`.slice(0, 16));
-    memberBId = await createMember(`e2e_race_b_${RUN_ID}@luxeknox.test`, `RACEB${RUN_ID}`.slice(0, 16));
+    ({ userId: userAId, memberId: memberAId } = await createMember(`e2e_race_a_${RUN_ID}@luxeknox.test`, `RACEA${RUN_ID}`.slice(0, 16)));
+    ({ userId: userBId, memberId: memberBId } = await createMember(`e2e_race_b_${RUN_ID}@luxeknox.test`, `RACEB${RUN_ID}`.slice(0, 16)));
 
     const typeInsert = await db.insert(scheduleTypes).values({
       name: `Race Test Type ${RUN_ID}`,
       default_duration_minutes: 60,
       requires_trainer: false,
       created_at: now,
-    });
-    const scheduleTypeId = Number(typeInsert?.[0]?.insertId ?? typeInsert?.insertId);
+    }).returning({ id: scheduleTypes.id });
+    const scheduleTypeId = typeInsert[0].id;
 
     const start = new Date(Date.now() + 24 * 60 * 60_000);
     const end = new Date(start.getTime() + 60 * 60_000);
@@ -84,15 +86,17 @@ describe('Booking concurrency E2E (SCH-019)', () => {
       status: 'scheduled',
       row_version: 1,
       created_at: now,
-    });
-    scheduleId = Number(scheduleInsert?.[0]?.insertId ?? scheduleInsert?.insertId);
+    }).returning({ id: schedules.id });
+    scheduleId = scheduleInsert[0].id;
   });
 
   afterAll(async () => {
     const db = testApp.db as any;
     await db.execute(sql`DELETE FROM schedule_participants WHERE schedule_id = ${scheduleId}`);
+    await db.execute(sql`DELETE FROM schedule_histories WHERE schedule_id = ${scheduleId}`);
     await db.execute(sql`DELETE FROM schedules WHERE id = ${scheduleId}`);
     await db.execute(sql`DELETE FROM schedule_types WHERE name = ${`Race Test Type ${RUN_ID}`}`);
+    await db.execute(sql`DELETE FROM notification_deliveries WHERE user_id IN (${userAId}, ${userBId})`);
     await db.execute(sql`DELETE FROM members WHERE id IN (${memberAId}, ${memberBId})`);
     await db.execute(
       sql`DELETE FROM users WHERE email IN (${`e2e_race_a_${RUN_ID}@luxeknox.test`}, ${`e2e_race_b_${RUN_ID}@luxeknox.test`})`,
@@ -101,9 +105,9 @@ describe('Booking concurrency E2E (SCH-019)', () => {
   });
 
   it('only books one member when two concurrent requests race for the last seat', async () => {
-    function actorFor(memberId: number): AuthenticatedUser {
+    function actorFor(userId: number, memberId: number): AuthenticatedUser {
       return {
-        id: memberId,
+        id: userId,
         email: `race-${memberId}@luxeknox.test`,
         phoneNumber: null,
         roleId: 2,
@@ -114,8 +118,8 @@ describe('Booking concurrency E2E (SCH-019)', () => {
     }
 
     const [resultA, resultB] = await Promise.allSettled([
-      bookingService.book(scheduleId, {}, actorFor(memberAId)),
-      bookingService.book(scheduleId, {}, actorFor(memberBId)),
+      bookingService.book(scheduleId, {}, actorFor(userAId, memberAId)),
+      bookingService.book(scheduleId, {}, actorFor(userBId, memberBId)),
     ]);
 
     const outcomes = [resultA, resultB]

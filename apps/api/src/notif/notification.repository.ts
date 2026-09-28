@@ -63,7 +63,7 @@ export class NotificationRepository extends BaseRepository<
 
   async insertNotification(data: NewNotification): Promise<number> {
     const result = await this.create(data);
-    return Number(result?.[0]?.insertId ?? 0);
+    return result[0]?.id ?? 0;
   }
 
   async findUserInbox(
@@ -143,7 +143,7 @@ export class NotificationRepository extends BaseRepository<
           eq(notificationDeliveries.notification_id, notificationId),
         ),
       );
-    return Number(result[0]?.affectedRows ?? 0) > 0;
+    return Number(result.rowCount ?? 0) > 0;
   }
 
   async markAllDeliveriesRead(userId: number, readAt: Date): Promise<number> {
@@ -160,7 +160,7 @@ export class NotificationRepository extends BaseRepository<
           eq(notificationDeliveries.is_read, false),
         ),
       );
-    return Number(result[0]?.affectedRows ?? 0);
+    return Number(result.rowCount ?? 0);
   }
 
   // ==================== Deliveries ====================
@@ -238,11 +238,12 @@ export class NotificationRepository extends BaseRepository<
     await db
       .insert(userDevices)
       .values(data)
-      .onDuplicateKeyUpdate({
+      .onConflictDoUpdate({
+        target: userDevices.device_token,
         set: {
-          user_id: sql`VALUES(\`user_id\`)`,
-          device_platform: sql`VALUES(\`device_platform\`)`,
-          last_active_at: sql`VALUES(\`last_active_at\`)`,
+          user_id: sql`excluded.user_id`,
+          device_platform: sql`excluded.device_platform`,
+          last_active_at: sql`excluded.last_active_at`,
           updated_at: new Date(),
         },
       });
@@ -260,7 +261,7 @@ export class NotificationRepository extends BaseRepository<
     const result = await db
       .delete(userDevices)
       .where(and(eq(userDevices.id, id), eq(userDevices.user_id, userId)));
-    return Number(result[0]?.affectedRows ?? 0) > 0;
+    return Number(result.rowCount ?? 0) > 0;
   }
 
   // ==================== Broadcasts ====================

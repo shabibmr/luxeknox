@@ -75,7 +75,7 @@ export const emergencyContacts = pgTable(
   },
   (table) => [index('emergency_contacts_user_id_idx').on(table.user_id)],
   // Partial unique index `one_primary_contact_per_user` (FR-HEALTH-005) added in PG-17,
-  // after the base migration lands and existing rows are audited — see 0006_partial_unique_indexes.sql.
+  // after the base migration lands and existing rows are audited — see 0019_partial_unique_indexes.sql.
 );
 
 export type EmergencyContact = typeof emergencyContacts.$inferSelect;

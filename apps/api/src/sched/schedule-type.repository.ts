@@ -37,7 +37,7 @@ export class ScheduleTypeRepository extends BaseRepository<
 
   async insertType(values: NewScheduleType): Promise<number> {
     const result = await this.create(values);
-    return Number(result?.[0]?.insertId ?? 0);
+    return result[0]?.id ?? 0;
   }
 
   async updateType(id: number, values: Partial<NewScheduleType>): Promise<void> {

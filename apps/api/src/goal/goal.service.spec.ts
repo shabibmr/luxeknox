@@ -66,7 +66,7 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
     metricRepo = {
       findManyFiltered: vi.fn().mockResolvedValue({ rows: [sampleMetric], total: 1 }),
       findById: vi.fn().mockResolvedValue(sampleMetric),
-      create: vi.fn().mockImplementation(async (data) => ({ id: 1, ...data })),
+      create: vi.fn().mockResolvedValue([{ id: 1 }]),
       update: vi.fn().mockImplementation(async (id, data) => ({ ...sampleMetric, ...data })),
       updateById: vi.fn().mockImplementation(async (id, data) => ({ ...sampleMetric, ...data })),
     };
@@ -137,7 +137,7 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
         metric: sampleMetric,
         histories: [],
       }),
-      create: vi.fn().mockImplementation(async (data) => ({ id: 1, ...data })),
+      create: vi.fn().mockResolvedValue([{ id: 1 }]),
       update: vi.fn().mockImplementation(async (id, data) => ({
         id,
         member_id: 100,
@@ -206,6 +206,7 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
     });
 
     it('creates a new goal metric and writes audit trail', async () => {
+      metricRepo.findById.mockResolvedValueOnce({ ...sampleMetric, name: 'Body Weight' });
       const created = await metricService.create(
         {
           name: 'Body Weight',

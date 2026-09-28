@@ -105,7 +105,7 @@ export class ScheduleRepository extends BaseRepository<typeof schedules, Schedul
 
   async insertSchedule(values: NewSchedule): Promise<number> {
     const result = await this.create(values);
-    return Number(result?.[0]?.insertId ?? 0);
+    return result[0]?.id ?? 0;
   }
 
   async updateSchedule(id: number, values: Partial<NewSchedule>): Promise<void> {
@@ -201,9 +201,10 @@ export class ScheduleRepository extends BaseRepository<typeof schedules, Schedul
   async lockScheduleForUpdate(scheduleId: number): Promise<{ id: number; max_capacity: number } | null> {
     const db = this.getDb() as any;
     const result = await db.execute(
-      sql`SELECT \`id\`, \`max_capacity\` FROM \`schedules\` WHERE \`id\` = ${scheduleId} FOR UPDATE`,
+      sql`SELECT id, max_capacity FROM schedules WHERE id = ${scheduleId} FOR UPDATE`,
     );
-    const rows = Array.isArray(result) ? (Array.isArray(result[0]) ? result[0] : result) : [];
+    // node-postgres returns `{ rows }`, not mysql2's `[rows, fields]` tuple (see PG-21).
+    const rows: unknown[] = result?.rows ?? [];
     const row = rows[0] as { id?: unknown; max_capacity?: unknown } | undefined;
     if (!row || row.id == null) {
       return null;
@@ -265,8 +266,8 @@ export class ScheduleRepository extends BaseRepository<typeof schedules, Schedul
   }
 
   async insertParticipant(values: NewScheduleParticipant): Promise<number> {
-    const result = await (this.getDb() as any).insert(scheduleParticipants).values(values);
-    return Number(result?.[0]?.insertId ?? 0);
+    const result = await (this.getDb() as any).insert(scheduleParticipants).values(values).returning({ id: scheduleParticipants.id });
+    return result[0]?.id ?? 0;
   }
 
   async updateParticipant(id: number, values: Partial<NewScheduleParticipant>): Promise<void> {

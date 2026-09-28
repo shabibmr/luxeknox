@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, like, or, type SQL } from 'drizzle-orm';
+import { and, count, eq, ilike, or, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import {
   membershipProducts,
@@ -45,7 +45,7 @@ export class MembershipProductRepository extends BaseRepository<
     if (params.q) {
       const like_ = `%${params.q}%`;
       conditions.push(
-        or(like(membershipProducts.name, like_), like(membershipProducts.code, like_)) as SQL,
+        or(ilike(membershipProducts.name, like_), ilike(membershipProducts.code, like_)) as SQL,
       );
     }
 
@@ -86,7 +86,7 @@ export class MembershipProductRepository extends BaseRepository<
 
   async insertProduct(values: NewMembershipProduct): Promise<number> {
     const result = await this.create(values);
-    return Number(result?.[0]?.insertId ?? 0);
+    return result[0]?.id ?? 0;
   }
 
   async updateProduct(id: number, values: Partial<NewMembershipProduct>): Promise<void> {

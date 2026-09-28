@@ -1,4 +1,12 @@
-import { bigint, index, int, mysqlTable, text, uniqueIndex, varchar } from 'drizzle-orm/mysql-core';
+import {
+  bigint,
+  index,
+  integer,
+  pgTable,
+  text,
+  uniqueIndex,
+  varchar,
+} from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
 import { users } from './users';
 
@@ -7,16 +15,16 @@ import { users } from './users';
  * header) and scoped by HTTP method + path. A stored response is replayed on
  * retry; a key reused with a different request body hash yields 409.
  */
-export const idempotencyKeys = mysqlTable(
+export const idempotencyKeys = pgTable(
   'idempotency_keys',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     idempotency_key: varchar('idempotency_key', { length: 128 }).notNull(),
     method: varchar('method', { length: 16 }).notNull(),
     path: varchar('path', { length: 255 }).notNull(),
-    user_id: bigint('user_id', { mode: 'number', unsigned: true }).references(() => users.id),
+    user_id: bigint('user_id', { mode: 'number' }).references(() => users.id),
     request_hash: varchar('request_hash', { length: 64 }).notNull(),
-    response_status: int('response_status').notNull(),
+    response_status: integer('response_status').notNull(),
     response_body: text('response_body').notNull(),
     created_at: utcDatetime('created_at').notNull(),
     expires_at: utcDatetime('expires_at').notNull(),

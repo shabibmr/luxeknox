@@ -1,19 +1,29 @@
-import { bigint, index, int, mysqlEnum, mysqlTable, text, varchar } from 'drizzle-orm/mysql-core';
+import {
+  bigint,
+  index,
+  integer,
+  pgEnum,
+  pgTable,
+  text,
+  varchar,
+} from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
 
 export const jobRunStatuses = ['success', 'failure', 'running'] as const;
 export type JobRunStatus = (typeof jobRunStatuses)[number];
 
-export const jobRuns = mysqlTable(
+export const jobRunStatusEnum = pgEnum('job_run_status', jobRunStatuses);
+
+export const jobRuns = pgTable(
   'job_runs',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     job_name: varchar('job_name', { length: 150 }).notNull(),
-    status: mysqlEnum('status', jobRunStatuses).notNull(),
+    status: jobRunStatusEnum('status').notNull(),
     started_at: utcDatetime('started_at').notNull(),
     finished_at: utcDatetime('finished_at'),
     error_message: text('error_message'),
-    retry_count: int('retry_count').notNull().default(0),
+    retry_count: integer('retry_count').notNull().default(0),
     created_at: utcDatetime('created_at').notNull(),
   },
   (table) => [

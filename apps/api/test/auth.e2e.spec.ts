@@ -6,7 +6,7 @@ import {
   ADMIN_CREDENTIALS,
   INACTIVE_USER_CREDENTIALS,
   type TestAppInstance,
-} from './helpers/mysql';
+} from './helpers/postgres';
 import { sessions } from '../src/platform/db/schema/sessions';
 import { hashToken } from '../src/auth/token';
 import { SessionCache } from '../src/auth/session.cache';

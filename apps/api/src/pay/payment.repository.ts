@@ -36,9 +36,10 @@ export class PaymentRepository extends BaseRepository<typeof payments, Payment, 
   async allocateInvoiceNumber(): Promise<string> {
     const db = this.getDb() as any;
     const locked = await db.execute(
-      sql`SELECT \`next_value\` AS next_value FROM \`invoice_number_counters\` WHERE \`id\` = 1 FOR UPDATE`,
+      sql`SELECT next_value FROM invoice_number_counters WHERE id = 1 FOR UPDATE`,
     );
-    const rows = Array.isArray(locked) ? (Array.isArray(locked[0]) ? locked[0] : locked) : [];
+    // node-postgres returns `{ rows }`, not mysql2's `[rows, fields]` tuple (see PG-21).
+    const rows: unknown[] = locked?.rows ?? [];
     const next = Number((rows[0] as { next_value?: unknown } | undefined)?.next_value);
     if (!Number.isFinite(next) || next < 1) {
       throw new Error('invoice_number_counters is not initialized');
@@ -57,9 +58,10 @@ export class PaymentRepository extends BaseRepository<typeof payments, Payment, 
   async allocateReceiptNumber(): Promise<string> {
     const db = this.getDb() as any;
     const locked = await db.execute(
-      sql`SELECT \`next_value\` AS next_value FROM \`receipt_number_counters\` WHERE \`id\` = 1 FOR UPDATE`,
+      sql`SELECT next_value FROM receipt_number_counters WHERE id = 1 FOR UPDATE`,
     );
-    const rows = Array.isArray(locked) ? (Array.isArray(locked[0]) ? locked[0] : locked) : [];
+    // node-postgres returns `{ rows }`, not mysql2's `[rows, fields]` tuple (see PG-21).
+    const rows: unknown[] = locked?.rows ?? [];
     const next = Number((rows[0] as { next_value?: unknown } | undefined)?.next_value);
     if (!Number.isFinite(next) || next < 1) {
       throw new Error('receipt_number_counters is not initialized');
@@ -73,8 +75,8 @@ export class PaymentRepository extends BaseRepository<typeof payments, Payment, 
 
   async insertPayment(row: NewPayment): Promise<Payment> {
     const db = this.getDb() as any;
-    const result = await db.insert(payments).values(row);
-    const id = Number(result?.[0]?.insertId ?? result?.insertId ?? 0);
+    const result = await db.insert(payments).values(row).returning({ id: payments.id });
+    const id = result[0]?.id ?? 0;
     const created = await this.findById(id);
     if (!created) throw new Error(`Failed to load payment ${id}`);
     return created;
@@ -93,8 +95,8 @@ export class PaymentRepository extends BaseRepository<typeof payments, Payment, 
 
   async insertHistory(row: NewPaymentHistory): Promise<PaymentHistory> {
     const db = this.getDb() as any;
-    const result = await db.insert(paymentHistories).values(row);
-    const id = Number(result?.[0]?.insertId ?? result?.insertId ?? 0);
+    const result = await db.insert(paymentHistories).values(row).returning({ id: paymentHistories.id });
+    const id = result[0]?.id ?? 0;
     const rows = await db.select().from(paymentHistories).where(eq(paymentHistories.id, id)).limit(1);
     return rows[0];
   }
@@ -110,8 +112,8 @@ export class PaymentRepository extends BaseRepository<typeof payments, Payment, 
 
   async insertReceipt(row: NewPaymentReceipt): Promise<PaymentReceipt> {
     const db = this.getDb() as any;
-    const result = await db.insert(paymentReceipts).values(row);
-    const id = Number(result?.[0]?.insertId ?? result?.insertId ?? 0);
+    const result = await db.insert(paymentReceipts).values(row).returning({ id: paymentReceipts.id });
+    const id = result[0]?.id ?? 0;
     const rows = await db.select().from(paymentReceipts).where(eq(paymentReceipts.id, id)).limit(1);
     return rows[0];
   }

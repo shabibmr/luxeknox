@@ -59,9 +59,9 @@ export class MeasurementRepository extends BaseRepository<
         recorded_at: data.recorded_at,
         notes: data.notes ?? null,
         created_at: new Date(),
-      });
+      }).returning({ id: measurements.id });
 
-      const measurementId = insertResult.insertId;
+      const measurementId = insertResult.id;
 
       if (data.values.length > 0) {
         await tx.insert(measurementValues).values(

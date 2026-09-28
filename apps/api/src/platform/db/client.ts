@@ -28,39 +28,37 @@ function requireEnv(name: string): string {
   return value;
 }
 
+// Sets the session `timezone` to UTC via the libpq startup packet on every new connection, so
+// `now()`-rendered output and any future non-TIMESTAMPTZ column stay UTC (ADR-0009), even
+// though TIMESTAMPTZ storage is offset-correct regardless of session timezone. Deliberately
+// not a `pool.on('connect', client => client.query(...))` handler: that fires an unawaited
+// query concurrently with whatever query the caller runs on the same freshly-connected client,
+// which node-postgres logs as "Calling client.query() when the client is already executing a
+// query" — a real race, not just a cosmetic warning.
+const SESSION_OPTIONS = '-c timezone=UTC';
+
 /**
  * Creates a PostgreSQL connection pool using node-postgres.
- * Sets the session `timezone` to UTC on every new connection so `now()`-rendered output and
- * any future non-TIMESTAMPTZ column stay UTC, in accordance with ADR-0009 (even though
- * TIMESTAMPTZ storage is offset-correct regardless of session timezone).
  */
 export function createConnectionPool(options: DatabaseConfig = {}): Pool {
-  let pool: Pool;
-
   if (process.env.DATABASE_URL && !options.host && !options.user) {
-    pool = new Pool({
+    return new Pool({
       connectionString: process.env.DATABASE_URL,
       max: options.connectionLimit ?? 10,
+      options: SESSION_OPTIONS,
     });
-  } else {
-    const poolOptions: PoolConfig = {
-      host: options.host || process.env.DB_HOST || '127.0.0.1',
-      port: options.port ?? (Number(process.env.DB_PORT) || 5432),
-      user: options.user || requireEnv('DB_USER'),
-      password: options.password || requireEnv('DB_PASSWORD'),
-      database: options.database || process.env.DB_NAME || 'luxeknox',
-      max: options.connectionLimit ?? 10,
-    };
-    pool = new Pool(poolOptions);
   }
 
-  pool.on('connect', (client) => {
-    client.query("SET TIME ZONE 'UTC'").catch((err) => {
-      console.error('[DB] Failed to set session timezone to UTC:', err);
-    });
-  });
-
-  return pool;
+  const poolOptions: PoolConfig = {
+    host: options.host || process.env.DB_HOST || '127.0.0.1',
+    port: options.port ?? (Number(process.env.DB_PORT) || 5432),
+    user: options.user || requireEnv('DB_USER'),
+    password: options.password || requireEnv('DB_PASSWORD'),
+    database: options.database || process.env.DB_NAME || 'luxeknox',
+    max: options.connectionLimit ?? 10,
+    options: SESSION_OPTIONS,
+  };
+  return new Pool(poolOptions);
 }
 
 /**

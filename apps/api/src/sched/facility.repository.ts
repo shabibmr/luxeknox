@@ -29,7 +29,7 @@ export class FacilityRepository extends BaseRepository<typeof facilities, Facili
 
   async insertFacility(values: NewFacility): Promise<number> {
     const result = await this.create(values);
-    return Number(result?.[0]?.insertId ?? 0);
+    return result[0]?.id ?? 0;
   }
 
   async updateFacility(id: number, values: Partial<NewFacility>): Promise<void> {

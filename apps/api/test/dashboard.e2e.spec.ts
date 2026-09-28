@@ -6,7 +6,7 @@ import {
   MEMBER_CREDENTIALS,
   TRAINER_CREDENTIALS,
   type TestAppInstance,
-} from './helpers/mysql';
+} from './helpers/postgres';
 
 async function login(baseUrl: string, identifier: string, password: string): Promise<string> {
   const res = await fetch(`${baseUrl}/auth/login`, {

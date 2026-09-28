@@ -99,7 +99,8 @@ export class ProgressPhotoService {
       created_at: now,
     };
 
-    const created = await this.repository.create(newPhoto);
+    const [{ id: createdId }] = await this.repository.create(newPhoto);
+    const created = (await this.repository.findById(createdId))!;
 
     await this.auditService.recordAudit({
       actorUserId: actor.id,

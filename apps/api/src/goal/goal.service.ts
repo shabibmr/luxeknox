@@ -125,7 +125,8 @@ export class GoalService {
       updated_at: now,
     };
 
-    const created = await this.goalRepo.create(newGoal);
+    const [{ id: createdId }] = await this.goalRepo.create(newGoal);
+    const created = (await this.goalRepo.findById(createdId))!;
 
     await this.auditService.recordAudit({
       actorUserId: actor.id,

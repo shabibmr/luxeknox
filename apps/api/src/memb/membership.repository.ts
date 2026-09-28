@@ -203,7 +203,7 @@ export class MembershipRepository extends BaseRepository<
 
   async insertMembership(values: NewMembership): Promise<number> {
     const result = await this.create(values);
-    return Number(result?.[0]?.insertId ?? 0);
+    return result[0]?.id ?? 0;
   }
 
   async updateMembership(
@@ -239,8 +239,8 @@ export class MembershipRepository extends BaseRepository<
 
   async insertFreeze(values: NewMembershipFreeze): Promise<number> {
     const db = this.getDb() as any;
-    const result = await db.insert(membershipFreezes).values(values);
-    return Number(result?.[0]?.insertId ?? 0);
+    const result = await db.insert(membershipFreezes).values(values).returning({ id: membershipFreezes.id });
+    return result[0]?.id ?? 0;
   }
 
   async updateFreeze(id: number, values: Partial<NewMembershipFreeze>): Promise<void> {
@@ -303,7 +303,7 @@ export class MembershipRepository extends BaseRepository<
 
   async insertExtension(values: NewMembershipExtension): Promise<number> {
     const db = this.getDb() as any;
-    const result = await db.insert(membershipExtensions).values(values);
-    return Number(result?.[0]?.insertId ?? 0);
+    const result = await db.insert(membershipExtensions).values(values).returning({ id: membershipExtensions.id });
+    return result[0]?.id ?? 0;
   }
 }

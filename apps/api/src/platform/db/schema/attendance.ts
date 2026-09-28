@@ -3,12 +3,12 @@ import {
   boolean,
   date,
   index,
-  int,
-  mysqlTable,
+  integer,
+  pgTable,
   text,
   uniqueIndex,
   varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
 import { users } from './users';
 
@@ -23,18 +23,18 @@ export type AttendanceMethod = (typeof ATTENDANCE_METHODS)[number];
  * (`schedule_participants.attended`) — this table models physical facility access,
  * not class/PT session attendance (ADR: V08 Attendance / Hardware Boundary).
  */
-export const attendances = mysqlTable(
+export const attendances = pgTable(
   'attendances',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    user_id: bigint('user_id', { mode: 'number', unsigned: true })
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    user_id: bigint('user_id', { mode: 'number' })
       .notNull()
       .references(() => users.id),
     check_in_time: utcDatetime('check_in_time').notNull(),
     check_out_time: utcDatetime('check_out_time'),
     method: varchar('method', { length: 32 }).notNull(),
     gate_identifier: varchar('gate_identifier', { length: 100 }),
-    verified_by_user_id: bigint('verified_by_user_id', { mode: 'number', unsigned: true }).references(
+    verified_by_user_id: bigint('verified_by_user_id', { mode: 'number' }).references(
       () => users.id,
     ),
     created_at: utcDatetime('created_at').notNull(),
@@ -53,15 +53,15 @@ export type NewAttendance = typeof attendances.$inferInsert;
 /**
  * Daily rollup of attendance activity, populated by the (future) daily-history job (ATT-013).
  */
-export const attendanceHistories = mysqlTable(
+export const attendanceHistories = pgTable(
   'attendance_histories',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     date: date('date', { mode: 'string' }).notNull(),
-    total_member_checkins: int('total_member_checkins').notNull().default(0),
-    total_trainer_checkins: int('total_trainer_checkins').notNull().default(0),
-    peak_hour: int('peak_hour'),
-    peak_count: int('peak_count'),
+    total_member_checkins: integer('total_member_checkins').notNull().default(0),
+    total_trainer_checkins: integer('total_trainer_checkins').notNull().default(0),
+    peak_hour: integer('peak_hour'),
+    peak_count: integer('peak_count'),
     created_at: utcDatetime('created_at').notNull(),
     updated_at: utcDatetime('updated_at'),
   },
@@ -77,10 +77,10 @@ export type NewAttendanceHistory = typeof attendanceHistories.$inferInsert;
  * ingest only. Raw keys are never stored — only an Argon2id hash (`key_hash`),
  * mirroring the password-hashing convention in `src/auth/password.ts`.
  */
-export const deviceCredentials = mysqlTable(
+export const deviceCredentials = pgTable(
   'device_credentials',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     device_name: varchar('device_name', { length: 150 }).notNull(),
     key_hash: varchar('key_hash', { length: 255 }).notNull(),
     is_active: boolean('is_active').notNull().default(true),

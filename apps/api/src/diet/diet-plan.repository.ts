@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, inArray, like, type SQL } from 'drizzle-orm';
+import { and, desc, eq, inArray, ilike, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
@@ -80,7 +80,7 @@ export class DietPlanRepository extends BaseRepository<
       conditions.push(eq(dietPlans.status, params.status));
     }
     if (params.q) {
-      conditions.push(like(dietPlans.title, `%${params.q}%`));
+      conditions.push(ilike(dietPlans.title, `%${params.q}%`));
     }
 
     if (conditions.length === 0) return undefined;
@@ -168,13 +168,7 @@ export class DietPlanRepository extends BaseRepository<
 
   async insertPlan(data: NewDietPlan): Promise<DietPlan> {
     const db = this.getDb() as any;
-    const [result] = await db.insert(dietPlans).values(data);
-    const insertId = Number((result as any).insertId);
-    const [inserted] = await db
-      .select()
-      .from(dietPlans)
-      .where(eq(dietPlans.id, insertId))
-      .limit(1);
+    const [inserted] = await db.insert(dietPlans).values(data).returning();
     return inserted;
   }
 
@@ -199,12 +193,12 @@ export class DietPlanRepository extends BaseRepository<
       updatePayload.row_version = nextRowVersion;
     }
 
-    const [updateResult] = await db
+    const updateResult = await db
       .update(dietPlans)
       .set(updatePayload)
       .where(and(...whereConditions));
 
-    const affected = Number((updateResult as any).affectedRows ?? 0);
+    const affected = Number(updateResult.rowCount ?? 0);
     if (expectedRowVersion !== undefined && affected === 0) {
       throw new ConflictError(
         'Diet plan has been modified by another process. Please refresh and try again.',
@@ -221,13 +215,7 @@ export class DietPlanRepository extends BaseRepository<
 
   async insertVersion(data: NewDietPlanVersion): Promise<DietPlanVersion> {
     const db = this.getDb() as any;
-    const [result] = await db.insert(dietPlanVersions).values(data);
-    const insertId = Number((result as any).insertId);
-    const [inserted] = await db
-      .select()
-      .from(dietPlanVersions)
-      .where(eq(dietPlanVersions.id, insertId))
-      .limit(1);
+    const [inserted] = await db.insert(dietPlanVersions).values(data).returning();
     return inserted;
   }
 
@@ -273,13 +261,7 @@ export class DietPlanRepository extends BaseRepository<
 
   async insertMeal(data: NewDietPlanMeal): Promise<DietPlanMeal> {
     const db = this.getDb() as any;
-    const [result] = await db.insert(dietPlanMeals).values(data);
-    const insertId = Number((result as any).insertId);
-    const [inserted] = await db
-      .select()
-      .from(dietPlanMeals)
-      .where(eq(dietPlanMeals.id, insertId))
-      .limit(1);
+    const [inserted] = await db.insert(dietPlanMeals).values(data).returning();
     return inserted;
   }
 

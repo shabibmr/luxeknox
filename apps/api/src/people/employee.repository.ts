@@ -84,7 +84,7 @@ export class EmployeeRepository extends BaseRepository<
       conditions.push(eq(employees.status, status));
     }
     if (department) {
-      conditions.push(like(employees.department, `%${department}%`));
+      conditions.push(ilike(employees.department, `%${department}%`));
     }
 
     const where =

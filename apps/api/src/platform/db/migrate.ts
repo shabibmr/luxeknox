@@ -117,6 +117,17 @@ export async function runMigrations(options?: { migrationsFolder?: string }): Pr
     if (fs.existsSync(repeatableFolder)) {
       const appUser = requireSafeIdentifier(process.env.DB_USER, 'DB_USER');
       const dbName = requireSafeIdentifier(process.env.DB_NAME || 'luxeknox', 'DB_NAME');
+      const adminUser = process.env.DB_ADMIN_USER;
+
+      if (appUser !== adminUser) {
+        const roleCheck = await client.query('SELECT 1 FROM pg_roles WHERE rolname = $1', [appUser]);
+        if (roleCheck.rows.length === 0) {
+          const appPassword = process.env.DB_PASSWORD || 'luxeknox_secret';
+          console.log(`[Migrate] Creating non-admin app user '${appUser}'...`);
+          await client.query(`CREATE ROLE "${appUser}" WITH LOGIN PASSWORD '${appPassword}'`);
+          await client.query(`GRANT CONNECT ON DATABASE "${dbName}" TO "${appUser}"`);
+        }
+      }
 
       for (const file of fs.readdirSync(repeatableFolder).filter((f) => f.endsWith('.sql')).sort()) {
         console.log(`[Migrate] Applying repeatable ${file}...`);

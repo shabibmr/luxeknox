@@ -38,7 +38,7 @@ describe('MEM-012: Membership Integration with Schedule and Payment Dependencies
   let memberRepo: Record<string, ReturnType<typeof vi.fn>>;
   let membRepo: Record<string, ReturnType<typeof vi.fn>>;
   let membProductRepo: Record<string, ReturnType<typeof vi.fn>>;
-  let membService: Record<string, ReturnType<typeof vi.fn>>;
+  let membService: MembershipService;
   let settingsService: Record<string, ReturnType<typeof vi.fn>>;
   let auditService: { recordAudit: ReturnType<typeof vi.fn> };
   let domainEventBus: { emit: ReturnType<typeof vi.fn> };

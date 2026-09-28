@@ -86,8 +86,8 @@ export class AttendanceRepository extends BaseRepository<
 
   async insertCheckIn(row: NewAttendance): Promise<Attendance> {
     const db = this.getDb() as any;
-    const result = await db.insert(attendances).values(row);
-    const id = Number(result?.[0]?.insertId ?? result?.insertId ?? 0);
+    const result = await db.insert(attendances).values(row).returning({ id: attendances.id });
+    const id = result[0]?.id ?? 0;
     const created = await this.findById(id);
     if (!created) {
       throw new Error(`Failed to load attendance ${id} after insert`);
@@ -281,7 +281,8 @@ export class AttendanceRepository extends BaseRepository<
     await db
       .insert(attendanceHistories)
       .values(row)
-      .onDuplicateKeyUpdate({
+      .onConflictDoUpdate({
+        target: attendanceHistories.date,
         set: {
           total_member_checkins: row.total_member_checkins,
           total_trainer_checkins: row.total_trainer_checkins,

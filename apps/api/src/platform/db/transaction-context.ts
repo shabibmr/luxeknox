@@ -6,7 +6,7 @@ import type { AppSchema, DrizzleDb } from './client';
 /**
  * Type alias for any active Drizzle PostgreSQL transaction.
  */
-export type AnyTransaction = PgTransaction<any, any, AppSchema, ExtractTablesWithRelations<AppSchema>>;
+export type AnyTransaction = PgTransaction<any, AppSchema, ExtractTablesWithRelations<AppSchema>>;
 
 /**
  * Node.js AsyncLocalStorage store holding the active ambient transaction if within a `runInTransaction` scope,

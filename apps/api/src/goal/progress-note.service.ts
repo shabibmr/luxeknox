@@ -89,7 +89,8 @@ export class ProgressNoteService {
       created_at: now,
     };
 
-    const created = await this.repository.create(newNote);
+    const [{ id: createdId }] = await this.repository.create(newNote);
+    const created = (await this.repository.findById(createdId))!;
 
     await this.auditService.recordAudit({
       actorUserId: actor.id,

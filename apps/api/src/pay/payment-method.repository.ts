@@ -58,8 +58,8 @@ export class PaymentMethodRepository extends BaseRepository<
 
   async insertMethod(row: NewPaymentMethod): Promise<PaymentMethod> {
     const db = this.getDb() as any;
-    const result = await db.insert(paymentMethods).values(row);
-    const id = Number(result?.[0]?.insertId ?? result?.insertId ?? 0);
+    const result = await db.insert(paymentMethods).values(row).returning({ id: paymentMethods.id });
+    const id = result[0]?.id ?? 0;
     const created = await this.findById(id);
     if (!created) throw new Error(`Failed to load payment_method ${id}`);
     return created;

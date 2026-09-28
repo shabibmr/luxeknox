@@ -8,7 +8,7 @@ function buildDb(initialRows: DeviceCredential[] = []) {
 
   const db = {
     insert: vi.fn(() => ({
-      values: vi.fn(async (values: any) => {
+      values: vi.fn((values: any) => {
         const row: DeviceCredential = {
           id: nextId++,
           device_name: values.device_name,
@@ -20,7 +20,7 @@ function buildDb(initialRows: DeviceCredential[] = []) {
           updated_at: null,
         } as DeviceCredential;
         rows.push(row);
-        return [{ insertId: row.id }];
+        return { returning: vi.fn(async () => [{ id: row.id }]) };
       }),
     })),
     select: vi.fn(() => ({

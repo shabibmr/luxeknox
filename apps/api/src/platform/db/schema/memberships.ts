@@ -2,32 +2,32 @@ import {
   bigint,
   boolean,
   date,
-  decimal,
   index,
-  int,
-  json,
-  mysqlTable,
+  integer,
+  jsonb,
+  numeric,
+  pgTable,
   text,
   uniqueIndex,
   varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
 import { members } from './members';
 import { users } from './users';
 
-export const membershipProducts = mysqlTable(
+export const membershipProducts = pgTable(
   'membership_products',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     name: varchar('name', { length: 150 }).notNull(),
     code: varchar('code', { length: 32 }).notNull(),
     description: text('description'),
-    duration_days: int('duration_days').notNull(),
-    base_price: decimal('base_price', { precision: 10, scale: 2 }).notNull(),
-    tax_percentage: decimal('tax_percentage', { precision: 5, scale: 2 }).notNull().default('0.00'),
-    max_freeze_days: int('max_freeze_days').notNull().default(0),
-    pt_sessions_included: int('pt_sessions_included').notNull().default(0),
-    access_facilities: json('access_facilities').$type<string[]>(),
+    duration_days: integer('duration_days').notNull(),
+    base_price: numeric('base_price', { precision: 10, scale: 2 }).notNull(),
+    tax_percentage: numeric('tax_percentage', { precision: 5, scale: 2 }).notNull().default('0.00'),
+    max_freeze_days: integer('max_freeze_days').notNull().default(0),
+    pt_sessions_included: integer('pt_sessions_included').notNull().default(0),
+    access_facilities: jsonb('access_facilities').$type<string[]>(),
     is_active: boolean('is_active').notNull().default(true),
     created_at: utcDatetime('created_at').notNull(),
     updated_at: utcDatetime('updated_at'),
@@ -41,23 +41,23 @@ export const membershipProducts = mysqlTable(
 export type MembershipProduct = typeof membershipProducts.$inferSelect;
 export type NewMembershipProduct = typeof membershipProducts.$inferInsert;
 
-export const memberships = mysqlTable(
+export const memberships = pgTable(
   'memberships',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    member_id: bigint('member_id', { mode: 'number', unsigned: true })
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    member_id: bigint('member_id', { mode: 'number' })
       .notNull()
       .references(() => members.id),
-    product_id: bigint('product_id', { mode: 'number', unsigned: true })
+    product_id: bigint('product_id', { mode: 'number' })
       .notNull()
       .references(() => membershipProducts.id),
     start_date: date('start_date', { mode: 'string' }).notNull(),
     end_date: date('end_date', { mode: 'string' }).notNull(),
-    remaining_pt_sessions: int('remaining_pt_sessions').notNull().default(0),
+    remaining_pt_sessions: integer('remaining_pt_sessions').notNull().default(0),
     status: varchar('status', { length: 16 }).notNull().default('active'),
     locker_number: varchar('locker_number', { length: 16 }),
     auto_renew: boolean('auto_renew').notNull().default(false),
-    row_version: int('row_version').notNull().default(1),
+    row_version: integer('row_version').notNull().default(1),
     created_at: utcDatetime('created_at').notNull(),
     updated_at: utcDatetime('updated_at'),
   },
@@ -72,19 +72,19 @@ export const memberships = mysqlTable(
 export type Membership = typeof memberships.$inferSelect;
 export type NewMembership = typeof memberships.$inferInsert;
 
-export const membershipFreezes = mysqlTable(
+export const membershipFreezes = pgTable(
   'membership_freezes',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    membership_id: bigint('membership_id', { mode: 'number', unsigned: true })
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    membership_id: bigint('membership_id', { mode: 'number' })
       .notNull()
       .references(() => memberships.id),
     start_date: date('start_date', { mode: 'string' }).notNull(),
     end_date: date('end_date', { mode: 'string' }).notNull(),
-    total_freeze_days: int('total_freeze_days').notNull(),
+    total_freeze_days: integer('total_freeze_days').notNull(),
     reason: text('reason'),
     status: varchar('status', { length: 16 }).notNull().default('pending'),
-    reviewed_by_user_id: bigint('reviewed_by_user_id', { mode: 'number', unsigned: true }).references(
+    reviewed_by_user_id: bigint('reviewed_by_user_id', { mode: 'number' }).references(
       () => users.id,
     ),
     reviewed_at: utcDatetime('reviewed_at'),
@@ -99,16 +99,16 @@ export const membershipFreezes = mysqlTable(
 export type MembershipFreeze = typeof membershipFreezes.$inferSelect;
 export type NewMembershipFreeze = typeof membershipFreezes.$inferInsert;
 
-export const membershipExtensions = mysqlTable(
+export const membershipExtensions = pgTable(
   'membership_extensions',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    membership_id: bigint('membership_id', { mode: 'number', unsigned: true })
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    membership_id: bigint('membership_id', { mode: 'number' })
       .notNull()
       .references(() => memberships.id),
-    days_extended: int('days_extended').notNull(),
+    days_extended: integer('days_extended').notNull(),
     reason: text('reason'),
-    granted_by_user_id: bigint('granted_by_user_id', { mode: 'number', unsigned: true })
+    granted_by_user_id: bigint('granted_by_user_id', { mode: 'number' })
       .notNull()
       .references(() => users.id),
     created_at: utcDatetime('created_at').notNull(),
@@ -119,17 +119,17 @@ export const membershipExtensions = mysqlTable(
 export type MembershipExtension = typeof membershipExtensions.$inferSelect;
 export type NewMembershipExtension = typeof membershipExtensions.$inferInsert;
 
-export const membershipHistories = mysqlTable(
+export const membershipHistories = pgTable(
   'membership_histories',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    membership_id: bigint('membership_id', { mode: 'number', unsigned: true })
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    membership_id: bigint('membership_id', { mode: 'number' })
       .notNull()
       .references(() => memberships.id),
     action: varchar('action', { length: 16 }).notNull(),
     old_end_date: date('old_end_date', { mode: 'string' }),
     new_end_date: date('new_end_date', { mode: 'string' }),
-    performed_by_user_id: bigint('performed_by_user_id', { mode: 'number', unsigned: true })
+    performed_by_user_id: bigint('performed_by_user_id', { mode: 'number' })
       .notNull()
       .references(() => users.id),
     timestamp: utcDatetime('timestamp').notNull(),

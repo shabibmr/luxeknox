@@ -44,8 +44,8 @@ export class DeviceCredentialService {
       is_active: true,
       location_details: locationDetails ?? null,
       created_at: now,
-    });
-    const id = Number(result?.[0]?.insertId ?? result?.insertId ?? 0);
+    }).returning({ id: deviceCredentials.id });
+    const id = result[0]?.id ?? 0;
 
     return { id, device_name: deviceName, key: rawKey };
   }

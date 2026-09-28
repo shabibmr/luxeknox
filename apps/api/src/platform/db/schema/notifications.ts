@@ -2,13 +2,13 @@ import {
   bigint,
   boolean,
   index,
-  json,
-  mysqlEnum,
-  mysqlTable,
+  jsonb,
+  pgEnum,
+  pgTable,
   text,
   uniqueIndex,
   varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/pg-core';
 import { utcDatetime } from '../utc-datetime';
 import { users } from './users';
 
@@ -35,11 +35,17 @@ export type BroadcastAudience = (typeof BROADCAST_AUDIENCES)[number];
 export const DELIVERY_STATUSES = ['pending', 'sent', 'failed'] as const;
 export type DeliveryStatus = (typeof DELIVERY_STATUSES)[number];
 
+// Decision 3 (ADR-0009): pgEnum for tuple-defined sets. Type names are prefixed where the bare
+// column name would collide in PostgreSQL's single per-schema type namespace.
+export const devicePlatformEnum = pgEnum('device_platform', DEVICE_PLATFORMS);
+export const broadcastAudienceEnum = pgEnum('notification_broadcast_audience', BROADCAST_AUDIENCES);
+export const deliveryStatusEnum = pgEnum('notification_delivery_status', DELIVERY_STATUSES);
+
 // 1. Notification Types Catalog
-export const notificationTypes = mysqlTable(
+export const notificationTypes = pgTable(
   'notification_types',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     type_code: varchar('type_code', { length: 64 }).notNull(),
     template_text: text('template_text').notNull(),
     is_active: boolean('is_active').notNull().default(true),
@@ -55,19 +61,19 @@ export type NotificationType = typeof notificationTypes.$inferSelect;
 export type NewNotificationType = typeof notificationTypes.$inferInsert;
 
 // 2. Notifications Table
-export const notifications = mysqlTable(
+export const notifications = pgTable(
   'notifications',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    notification_type_id: bigint('notification_type_id', { mode: 'number', unsigned: true })
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    notification_type_id: bigint('notification_type_id', { mode: 'number' })
       .references(() => notificationTypes.id),
     title: varchar('title', { length: 255 }).notNull(),
     message: text('message').notNull(),
-    data_payload: json('data_payload').$type<Record<string, unknown> | null>(),
-    sender_user_id: bigint('sender_user_id', { mode: 'number', unsigned: true })
+    data_payload: jsonb('data_payload').$type<Record<string, unknown> | null>(),
+    sender_user_id: bigint('sender_user_id', { mode: 'number' })
       .references(() => users.id),
     is_broadcast: boolean('is_broadcast').notNull().default(false),
-    broadcast_audience: mysqlEnum('broadcast_audience', BROADCAST_AUDIENCES),
+    broadcast_audience: broadcastAudienceEnum('broadcast_audience'),
     created_at: utcDatetime('created_at').notNull(),
   },
   (table) => [
@@ -81,15 +87,15 @@ export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
 
 // 3. User Devices Table
-export const userDevices = mysqlTable(
+export const userDevices = pgTable(
   'user_devices',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    user_id: bigint('user_id', { mode: 'number', unsigned: true })
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    user_id: bigint('user_id', { mode: 'number' })
       .notNull()
       .references(() => users.id),
     device_token: varchar('device_token', { length: 512 }).notNull(),
-    device_platform: mysqlEnum('device_platform', DEVICE_PLATFORMS).notNull(),
+    device_platform: devicePlatformEnum('device_platform').notNull(),
     last_active_at: utcDatetime('last_active_at').notNull(),
     created_at: utcDatetime('created_at').notNull(),
     updated_at: utcDatetime('updated_at'),
@@ -104,17 +110,17 @@ export type UserDevice = typeof userDevices.$inferSelect;
 export type NewUserDevice = typeof userDevices.$inferInsert;
 
 // 4. Notification Deliveries Table
-export const notificationDeliveries = mysqlTable(
+export const notificationDeliveries = pgTable(
   'notification_deliveries',
   {
-    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    notification_id: bigint('notification_id', { mode: 'number', unsigned: true })
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    notification_id: bigint('notification_id', { mode: 'number' })
       .notNull()
       .references(() => notifications.id),
-    user_id: bigint('user_id', { mode: 'number', unsigned: true })
+    user_id: bigint('user_id', { mode: 'number' })
       .notNull()
       .references(() => users.id),
-    status: mysqlEnum('status', DELIVERY_STATUSES).notNull().default('pending'),
+    status: deliveryStatusEnum('status').notNull().default('pending'),
     failure_reason: text('failure_reason'),
     retry_count: bigint('retry_count', { mode: 'number' }).notNull().default(0),
     is_read: boolean('is_read').notNull().default(false),

@@ -110,13 +110,7 @@ export class WorkoutSessionRepository extends BaseRepository<
 
   async insertSession(data: NewWorkoutSession): Promise<WorkoutSession> {
     const db = this.getDb() as any;
-    const [result] = await db.insert(workoutSessions).values(data);
-    const insertId = Number((result as any).insertId);
-    const [inserted] = await db
-      .select()
-      .from(workoutSessions)
-      .where(eq(workoutSessions.id, insertId))
-      .limit(1);
+    const [inserted] = await db.insert(workoutSessions).values(data).returning();
     return inserted;
   }
 
@@ -124,13 +118,7 @@ export class WorkoutSessionRepository extends BaseRepository<
     data: NewWorkoutSessionExercise,
   ): Promise<WorkoutSessionExercise> {
     const db = this.getDb() as any;
-    const [result] = await db.insert(workoutSessionExercises).values(data);
-    const insertId = Number((result as any).insertId);
-    const [inserted] = await db
-      .select()
-      .from(workoutSessionExercises)
-      .where(eq(workoutSessionExercises.id, insertId))
-      .limit(1);
+    const [inserted] = await db.insert(workoutSessionExercises).values(data).returning();
     return inserted;
   }
 
