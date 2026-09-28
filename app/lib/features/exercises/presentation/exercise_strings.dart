@@ -42,7 +42,12 @@ abstract final class ExerciseStrings {
   static const equipmentNeededLabel = 'Equipment needed';
   static const commaSeparatedHelper = 'Comma-separated';
   static const difficultyLabel = 'Difficulty level';
-  static const difficultyRequired = 'Enter a difficulty level.';
+  static const difficultyRequired = 'Select a difficulty level.';
+  static const difficultyAny = 'Any';
+
+  /// Vocabulary used by the seeded exercise library. The API accepts any
+  /// string, so values outside this list still display when editing.
+  static const difficultyLevels = ['Beginner', 'Intermediate', 'Advanced'];
   static const instructionsLabel = 'Instructions';
   static const instructionsRequired = 'Enter instructions.';
   static const videoUrlLabel = 'Video URL (optional)';

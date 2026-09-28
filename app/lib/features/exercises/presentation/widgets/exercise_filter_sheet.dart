@@ -4,8 +4,9 @@ import '../../domain/entities/exercise_filter.dart';
 import '../exercise_strings.dart';
 
 /// Bottom sheet for muscle group, equipment, and difficulty filters.
-/// Fields are free text: the API defines no fixed enum for these values
-/// (FR-WORK-001/002), so this avoids inventing a vocabulary.
+/// Muscle group and equipment are free text: the API defines no fixed enum for
+/// these values (FR-WORK-001/002). Difficulty is a dropdown of the seeded
+/// levels, keeping filter values consistent with the library data.
 class ExerciseFilterSheet extends StatefulWidget {
   const ExerciseFilterSheet({super.key, required this.initialFilter});
 
@@ -35,22 +36,28 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
   late final _equipmentController = TextEditingController(
     text: widget.initialFilter.equipment,
   );
-  late final _difficultyController = TextEditingController(
-    text: widget.initialFilter.difficulty,
-  );
+  late String? _difficulty = widget.initialFilter.difficulty;
+
+  /// Standard levels, plus the current filter value if it is a custom one so
+  /// the dropdown always has a matching item.
+  late final List<String> _difficultyOptions = [
+    ...ExerciseStrings.difficultyLevels,
+    if (_difficulty != null &&
+        !ExerciseStrings.difficultyLevels.contains(_difficulty))
+      _difficulty!,
+  ];
 
   @override
   void dispose() {
     _muscleController.dispose();
     _equipmentController.dispose();
-    _difficultyController.dispose();
     super.dispose();
   }
 
   void _clearAll() {
     _muscleController.clear();
     _equipmentController.clear();
-    _difficultyController.clear();
+    setState(() => _difficulty = null);
   }
 
   void _apply() {
@@ -61,7 +68,7 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
       widget.initialFilter.copyWith(
         muscleGroup: textOrNull(_muscleController),
         equipment: textOrNull(_equipmentController),
-        difficulty: textOrNull(_difficultyController),
+        difficulty: _difficulty,
       ),
     );
   }
@@ -108,11 +115,21 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _difficultyController,
+            DropdownButtonFormField<String?>(
+              // ignore: deprecated_member_use
+              value: _difficulty,
               decoration: const InputDecoration(
                 labelText: ExerciseStrings.difficulty,
               ),
+              items: [
+                const DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text(ExerciseStrings.difficultyAny),
+                ),
+                for (final level in _difficultyOptions)
+                  DropdownMenuItem<String?>(value: level, child: Text(level)),
+              ],
+              onChanged: (v) => setState(() => _difficulty = v),
             ),
             const SizedBox(height: 24),
             FilledButton(
