@@ -6,7 +6,7 @@ import {
   ADMIN_CREDENTIALS,
   TRAINER_CREDENTIALS,
   type TestAppInstance,
-} from './helpers/mysql';
+} from './helpers/postgres';
 
 const RUN_ID = Date.now();
 const onboardEmail = `e2e_onboard_${RUN_ID}@luxeknox.test`;
@@ -79,6 +79,13 @@ describe('People onboarding E2E (V3-14)', () => {
     const member = (await createRes.json()) as any;
     expect(member.id).toBeGreaterThan(0);
     expect(member.user_id).toBeGreaterThan(0);
+    // PG-27 / ADR-0009 Decision 4: node-postgres returns int8 (BIGINT) as a string by
+    // default; the global type parser in client.ts must coerce it back to `number`.
+    expect(typeof member.id).toBe('number');
+    expect(typeof member.user_id).toBe('number');
+    // PG-27: exercises allocateMembershipNumber's `.execute()` result-shape handling
+    // (locked.rows, not mysql2's [rows, fields] tuple) — the highest-risk line in the
+    // migration (ADR-0009). A wrong shape throws before a membership_number is ever formed.
     expect(member.membership_number).toMatch(/^M\d{8}$/);
     expect(member.first_name).toBe('Onboard');
 
@@ -238,10 +245,10 @@ describe('People onboarding E2E (V3-14)', () => {
     });
     expect(rolesRes.status).toBe(200);
 
-    const [roleRows] = (await testApp.db.execute(
+    const { rows: roleRows } = (await testApp.db.execute(
       sql`SELECT id FROM roles WHERE slug = 'employee' LIMIT 1`,
     )) as any;
-    const employeeRoleId = Number(roleRows?.[0]?.id ?? roleRows?.[0]?.ID);
+    const employeeRoleId = Number(roleRows?.[0]?.id);
     expect(employeeRoleId).toBeGreaterThan(0);
 
     const empEmail = `e2e_emp_${RUN_ID}@luxeknox.test`;
@@ -305,7 +312,7 @@ describe('People onboarding E2E (V3-14)', () => {
         Authorization: `Bearer ${adminToken}`,
       },
       body: JSON.stringify({
-        purpose: 'member_photo',
+        purpose: 'avatar',
         content_type: 'image/jpeg',
         size_bytes: 4096,
       }),
@@ -328,14 +335,19 @@ describe('People onboarding E2E (V3-14)', () => {
         Authorization: `Bearer ${adminToken}`,
       },
       body: JSON.stringify({
-        file_url: slot.object_key,
-        file_size: 4096,
-        is_avatar: true,
+        photo_url: slot.object_key,
       }),
     });
     expect(photoRes.status).toBe(201);
-    const photo = (await photoRes.json()) as any;
-    expect(photo.is_avatar).toBe(true);
+    const created = (await photoRes.json()) as any;
+
+    const avatarRes = await fetch(`${testApp.baseUrl}/members/${member.id}/photos/${created.id}/avatar`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(avatarRes.status).toBe(200);
+    const photo = (await avatarRes.json()) as any;
+    expect(photo.is_current_avatar).toBe(true);
 
     const getPhotoRes = await fetch(`${testApp.baseUrl}/members/${member.id}/photos`, {
       headers: { Authorization: `Bearer ${adminToken}` },
@@ -343,7 +355,7 @@ describe('People onboarding E2E (V3-14)', () => {
     expect(getPhotoRes.status).toBe(200);
     const photos = (await getPhotoRes.json()) as any;
     expect(Array.isArray(photos.data)).toBe(true);
-    expect(photos.data.some((p: any) => p.is_avatar)).toBe(true);
+    expect(photos.data.some((p: any) => p.is_current_avatar)).toBe(true);
   });
 
   it('assign-trainer returns 422 at capacity and allows admin override', async () => {

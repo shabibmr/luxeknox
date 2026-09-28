@@ -57,6 +57,7 @@ export class MemberPhotoController {
   }
 
   @Post(':photoId/avatar')
+  @HttpCode(200)
   @RequirePermission('health.update')
   @ApiOperation({
     operationId: 'setMemberAvatar',

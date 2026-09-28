@@ -6,7 +6,7 @@ import {
   ADMIN_CREDENTIALS,
   MEMBER_CREDENTIALS,
   type TestAppInstance,
-} from './helpers/mysql';
+} from './helpers/postgres';
 
 describe('Settings & RBAC E2E', () => {
   let testApp: TestAppInstance;
@@ -63,10 +63,11 @@ describe('Settings & RBAC E2E', () => {
     });
 
     expect(res.status).toBe(200);
-    const settings = (await res.json()) as any;
-    expect(typeof settings).toBe('object');
-    expect(settings.timezone).toBeDefined();
-    expect(settings.currency).toBeDefined();
+    const body = (await res.json()) as { data: Array<{ setting_key: string }> };
+    expect(Array.isArray(body.data)).toBe(true);
+    const keys = body.data.map((s) => s.setting_key);
+    expect(keys).toContain('timezone');
+    expect(keys).toContain('currency');
   });
 
   it('GET /v1/settings returns 403 Forbidden for Member role lacking settings.read', async () => {
@@ -85,13 +86,13 @@ describe('Settings & RBAC E2E', () => {
   it('rejects audit log UPDATE mutations at the database level', async () => {
     await expect(
       testApp.db.execute(sql`UPDATE audit_logs SET action = 'tampered' WHERE id = 1`),
-    ).rejects.toThrow(/command denied/i);
+    ).rejects.toThrow(/permission denied/i);
   });
 
   it('rejects audit log DELETE mutations at the database level', async () => {
     await expect(
       testApp.db.execute(sql`DELETE FROM audit_logs WHERE id = 1`),
-    ).rejects.toThrow(/command denied/i);
+    ).rejects.toThrow(/permission denied/i);
   });
 
   it('still allows audit log INSERT and SELECT', async () => {

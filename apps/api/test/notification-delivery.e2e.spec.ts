@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   createTestApp,
@@ -6,7 +7,7 @@ import {
   MEMBER_CREDENTIALS,
   TRAINER_CREDENTIALS,
   type TestAppInstance,
-} from './helpers/mysql';
+} from './helpers/postgres';
 
 async function login(baseUrl: string, identifier: string, password: string): Promise<string> {
   const res = await fetch(`${baseUrl}/auth/login`, {
@@ -28,6 +29,15 @@ describe('Notification & Device Delivery E2E (NOT-016)', () => {
   beforeAll(async () => {
     testApp = await createTestApp();
     await seedTestUsers(testApp.db);
+
+    // 'all_members' audience resolves through the members table, which seedTestUsers does not populate.
+    await testApp.db.execute(sql`
+      INSERT INTO members (user_id, membership_number, first_name, last_name, joined_date, created_at)
+      SELECT u.id, 'MNOTIF001', 'E2E', 'Member', CURRENT_DATE, now()
+      FROM users u
+      WHERE u.email = ${MEMBER_CREDENTIALS.email}
+        AND NOT EXISTS (SELECT 1 FROM members m WHERE m.user_id = u.id)
+    `);
 
     adminToken = await login(testApp.baseUrl, ADMIN_CREDENTIALS.email, ADMIN_CREDENTIALS.password);
     memberToken = await login(testApp.baseUrl, MEMBER_CREDENTIALS.email, MEMBER_CREDENTIALS.password);

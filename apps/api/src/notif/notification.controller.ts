@@ -70,6 +70,7 @@ export class NotificationController {
   }
 
   @Post(':id/read')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ operationId: 'markNotificationRead', summary: 'Mark one notification read' })
   @ApiResponse({ status: 200, description: 'OK' })
   @RequirePermission('notifications.update')

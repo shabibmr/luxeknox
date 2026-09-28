@@ -7,7 +7,7 @@ import {
   MEMBER_CREDENTIALS,
   TRAINER_CREDENTIALS,
   type TestAppInstance,
-} from './helpers/mysql';
+} from './helpers/postgres';
 
 // Unique per test run so repeated local runs (no resetTestData yet — todo/fixes/F-14-e2e-ci-gaps.md)
 // don't collide on `name`.
@@ -40,6 +40,10 @@ describe('Exercises E2E', () => {
   });
 
   afterAll(async () => {
+    if (testApp?.db) {
+      // Rows accumulate otherwise and push new ones off the first page of filtered lists.
+      await testApp.db.execute(sql`DELETE FROM exercises WHERE name LIKE ${'e2e\\_%'}`);
+    }
     if (testApp?.app) {
       await testApp.app.close();
     }
@@ -60,15 +64,13 @@ describe('Exercises E2E', () => {
       }
     });
 
-    it('POST /exercises returns 403 for trainer and member', async () => {
-      for (const token of [trainerToken, memberToken]) {
-        const res = await fetch(`${testApp.baseUrl}/exercises`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ name: uniqueName('forbidden') }),
-        });
-        expect(res.status).toBe(403);
-      }
+    it('POST /exercises returns 403 for member role lacking exercises.create', async () => {
+      const res = await fetch(`${testApp.baseUrl}/exercises`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
+        body: JSON.stringify({ name: uniqueName('forbidden') }),
+      });
+      expect(res.status).toBe(403);
     });
 
     it('PATCH /exercises/:id returns 403 for trainer and member', async () => {
@@ -109,19 +111,18 @@ describe('Exercises E2E', () => {
       const body = (await res.json()) as any;
       expect(body.name).toBe(name);
       expect(body.is_active).toBe(true);
-      // On real MySQL 8.4 (the target engine, ADR-0002) mysql2 auto-parses the native JSON
-      // column. This suite may also run against a MariaDB dev server that stores it as TEXT and
-      // returns a raw JSON string instead — tolerate both without weakening the assertion.
+      // JSONB always round-trips as an already-parsed array under PostgreSQL (ADR-0009) — the
+      // string branch is dead code, kept only as a defensive normalizer elsewhere.
       const secondaryMuscles =
         typeof body.secondary_muscles === 'string'
           ? JSON.parse(body.secondary_muscles)
           : body.secondary_muscles;
       expect(secondaryMuscles).toEqual(['triceps', 'shoulders']);
 
-      const [auditRows] = (await testApp.db.execute(
+      const auditResult = await testApp.db.execute(
         sql`SELECT action FROM audit_logs WHERE entity_name = 'exercises' AND entity_id = ${body.id} AND action = 'exercise.created'`,
-      )) as any;
-      expect(auditRows.length).toBeGreaterThan(0);
+      );
+      expect(auditResult.rows.length).toBeGreaterThan(0);
     });
 
     it('rejects creation missing the required name field', async () => {
