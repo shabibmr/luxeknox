@@ -67,7 +67,7 @@ export class EmployeeService {
         phone_number: dto.phone_number,
         password: dto.password,
       },
-      roleId: dto.role_id,
+      roleId: dto.role_id ?? undefined,
       profile: {
         first_name: dto.first_name,
         last_name: dto.last_name,

@@ -6833,7 +6833,7 @@ components:
           $ref: "#/components/schemas/Id"
     EmployeeCreate:
       type: object
-      required: [email, first_name, last_name, job_title, role_id]
+      required: [email, first_name, last_name, job_title]
       properties:
         email:
           type: string

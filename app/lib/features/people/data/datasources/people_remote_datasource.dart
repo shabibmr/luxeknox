@@ -47,6 +47,9 @@ abstract class PeopleRemoteDataSource {
 
   Future<api.Employee> createEmployee(api.EmployeeCreate employeeCreate);
 
+  /// Raw POST so omitted `role_id` lets the API default the employee role.
+  Future<Map<String, dynamic>> createEmployeeRaw(Map<String, dynamic> body);
+
   /// Raw PATCH so null `department` / `hire_date` clear (typed client omits nulls).
   Future<Map<String, dynamic>> updateEmployeeRaw(
     int id,
@@ -219,6 +222,14 @@ class PeopleRemoteDataSourceImpl implements PeopleRemoteDataSource {
     return _unwrap(
       await _peopleApi.createEmployee(employeeCreate: employeeCreate),
     );
+  }
+
+  @override
+  Future<Map<String, dynamic>> createEmployeeRaw(
+    Map<String, dynamic> body,
+  ) async {
+    final response = await _dio.post<dynamic>('/employees', data: body);
+    return _asJsonMap(response);
   }
 
   @override

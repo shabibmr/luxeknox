@@ -138,7 +138,6 @@ abstract final class PeopleStrings {
   static const role = 'Role';
   static const selectRole = 'Select a role';
   static const jobTitleRequired = 'Job title is required.';
-  static const roleRequired = 'Role is required.';
   static const employmentStatus = 'Employment status';
   static const statusActive = 'Active';
   static const statusOnProbation = 'On probation';

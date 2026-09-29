@@ -216,10 +216,10 @@ class PeopleRepositoryImpl implements PeopleRepository {
     NewEmployeeInput input,
   ) async {
     try {
-      final created = await _remote.createEmployee(
-        employeeCreateFromInput(input),
+      final created = await _remote.createEmployeeRaw(
+        employeeCreateBodyFromInput(input),
       );
-      return Right(employeeSummaryFromApi(created));
+      return Right(employeeSummaryFromJson(created));
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

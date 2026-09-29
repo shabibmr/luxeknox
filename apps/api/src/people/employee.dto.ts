@@ -10,7 +10,8 @@ export const employeeCreateSchema = z.object({
   job_title: z.string().trim().min(1).max(150),
   department: z.string().trim().max(150).optional().nullable(),
   hire_date: z.string().trim().min(1).optional().nullable(),
-  role_id: z.number().int().positive(),
+  /** Optional; defaults to the seeded `employee` role when omitted. */
+  role_id: z.number().int().positive().optional().nullable(),
 });
 
 export type EmployeeCreateDto = z.infer<typeof employeeCreateSchema>;

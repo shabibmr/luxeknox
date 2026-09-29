@@ -219,14 +219,37 @@ describe('PersonFactory', () => {
     };
   }
 
-  it('rejects employee create without role_id', async () => {
-    await expect(
-      factory.createPerson({
-        userType: 'employee',
-        credentials: { email: 'desk@example.com', password: 'Secret123!' },
-        profile: { first_name: 'Front', last_name: 'Desk', job_title: 'Reception' },
-      } as CreatePersonInput),
-    ).rejects.toThrow(BadRequestError);
+  it('defaults employee create to the employee role slug when role_id is omitted', async () => {
+    const originalSelect = mockTx.select;
+    mockTx.select = (projection?: Record<string, unknown>) => {
+      const builder = originalSelect(projection);
+      const originalFrom = builder.from;
+      builder.from = (table: any) => {
+        const name = tableName(table);
+        const fromBuilder = originalFrom(table);
+        const originalWhere = fromBuilder.where;
+        fromBuilder.where = (_condition: any) => {
+          const predicate = (row: any) => {
+            if (name === 'roles') return row.slug === 'employee' || row.id === 4;
+            if (name === 'users') return true;
+            if (name === 'employees') return true;
+            return true;
+          };
+          return originalWhere({ __mockPredicate: predicate });
+        };
+        return fromBuilder;
+      };
+      return builder;
+    };
+
+    const result = await factory.createPerson({
+      userType: 'employee',
+      credentials: { email: 'desk@example.com', password: 'Secret123!' },
+      profile: { first_name: 'Front', last_name: 'Desk', job_title: 'Reception' },
+    });
+
+    expect(result.userType).toBe('employee');
+    expect(result.user.role_id).toBe(4);
   });
 
   it('rejects credentials with neither email nor phone', async () => {

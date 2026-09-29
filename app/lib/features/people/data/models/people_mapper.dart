@@ -264,7 +264,8 @@ Map<String, dynamic> employeeCreateBodyFromInput(NewEmployeeInput input) {
     'job_title': input.jobTitle,
     'department': input.department,
     'hire_date': _dateTimeToWireDate(input.hireDate),
-    'role_id': input.roleId,
+    // Omit when unset so API defaults to the seeded employee role.
+    if (input.roleId > 0) 'role_id': input.roleId,
   };
 }
 

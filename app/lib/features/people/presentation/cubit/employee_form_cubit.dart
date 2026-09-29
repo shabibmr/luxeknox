@@ -392,9 +392,6 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
     if (input.jobTitle.trim().isEmpty) {
       return PeopleStrings.jobTitleRequired;
     }
-    if (input.roleId <= 0) {
-      return PeopleStrings.roleRequired;
-    }
     return null;
   }
 

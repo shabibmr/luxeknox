@@ -80,8 +80,8 @@ export type CreatePersonInput =
       userType: 'employee';
       credentials: PersonCredentials;
       profile: EmployeeProfileInput;
-      /** RBAC role assigned on the users row (OpenAPI EmployeeCreate.role_id). */
-      roleId: number;
+      /** RBAC role on users row; defaults to seeded `employee` slug when omitted. */
+      roleId?: number;
     };
 
 export type CreatePersonResult =
@@ -258,13 +258,10 @@ export class PersonFactory {
     if (!allowed.has(input.userType)) {
       throw new BadRequestError(`Unsupported user_type for person create: ${input.userType}`);
     }
-    if (input.userType === 'employee' && (input.roleId == null || !Number.isInteger(input.roleId))) {
-      throw new BadRequestError('role_id is required when creating an employee');
-    }
   }
 
   private async resolveRoleId(tx: AnyTransaction, input: CreatePersonInput): Promise<number> {
-    if (input.userType === 'employee') {
+    if (input.userType === 'employee' && input.roleId != null) {
       const rows = await (tx as any)
         .select({ id: roles.id })
         .from(roles)
@@ -276,7 +273,12 @@ export class PersonFactory {
       return input.roleId;
     }
 
-    const slug = input.userType === 'member' ? 'member' : 'trainer';
+    const slug =
+      input.userType === 'member'
+        ? 'member'
+        : input.userType === 'trainer'
+          ? 'trainer'
+          : 'employee';
     const rows = await (tx as any)
       .select({ id: roles.id })
       .from(roles)
