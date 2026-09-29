@@ -1,0 +1,24 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "luxe-knox-app",
+          "appId": "1:27985362758:android:564da5bc6a105afe202f47",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "luxe-knox-app",
+          "configurations": {
+            "android": "1:27985362758:android:564da5bc6a105afe202f47",
+            "ios": "1:27985362758:ios:34f42685e7e64a78202f47",
+            "web": "1:27985362758:web:fca5ce8055ad07ac202f47",
+            "windows": "1:27985362758:web:7b66c77202365047202f47"
+          }
+        }
+      }
+    }
+  }
+}

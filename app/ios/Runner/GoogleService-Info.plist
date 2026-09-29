@@ -3,28 +3,28 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>REPLACE_ME_IOS_API_KEY</string>
+	<string>AIzaSyA8JmwphfE9825IVco7-0D7GWCG9bap9k4</string>
 	<key>GCM_SENDER_ID</key>
-	<string>000000000000</string>
+	<string>27985362758</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.luxeknox.app</string>
 	<key>PROJECT_ID</key>
-	<string>luxeknox-placeholder</string>
+	<string>luxe-knox-app</string>
 	<key>STORAGE_BUCKET</key>
-	<string>luxeknox-placeholder.appspot.com</string>
+	<string>luxe-knox-app.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
 	<false></false>
 	<key>IS_APPINVITE_ENABLED</key>
-	<false></false>
+	<true></true>
 	<key>IS_GCM_ENABLED</key>
 	<true></true>
 	<key>IS_SIGNIN_ENABLED</key>
-	<false></false>
+	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:000000000000:ios:0000000000000000000000</string>
+	<string>1:27985362758:ios:34f42685e7e64a78202f47</string>
 </dict>
 </plist>
