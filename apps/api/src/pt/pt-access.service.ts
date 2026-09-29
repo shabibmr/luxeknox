@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
-import { ForbiddenError } from '../platform/errors/app-error';
+import { BusinessRuleError, ForbiddenError } from '../platform/errors/app-error';
 import { PtSubscriptionRepository } from './pt-subscription.repository';
 
 export type TrainerAccess = 'full' | 'read_only';
@@ -29,7 +29,11 @@ export class PtAccessService {
       throw new ForbiddenError('Trainer profile required');
     }
     if ((await this.trainerAccess(actor.profileId, memberId)) !== 'full') {
-      throw new ForbiddenError(
+      // BusinessRuleError (not ForbiddenError): this is a recoverable, PT-renewal-dependent
+      // state rather than a hard authorization denial, and its message must reach the client
+      // verbatim (ADR-0006 §3) so trainers see *why* they're read-only instead of a generic
+      // "no permission" error.
+      throw new BusinessRuleError(
         'Read-only: an active Personal Training subscription is required to modify this member',
       );
     }

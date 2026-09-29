@@ -18,6 +18,7 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
   let memberRepo: any;
   let auditService: any;
   let paginationHelper: PaginationHelper;
+  let ptAccess: any;
 
   const mockAdminUser: AuthenticatedUser = {
     id: 1,
@@ -185,6 +186,10 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
       recordAudit: vi.fn().mockResolvedValue(undefined),
     };
 
+    ptAccess = {
+      assertTrainerCanWrite: vi.fn().mockResolvedValue(undefined),
+    };
+
     metricService = new GoalMetricService(metricRepo, paginationHelper, auditService);
     goalService = new GoalService(
       goalRepo,
@@ -192,6 +197,7 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
       memberRepo,
       paginationHelper,
       auditService,
+      ptAccess,
     );
   });
 
@@ -296,6 +302,53 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
           unassignedTrainer,
         ),
       ).rejects.toThrow(ForbiddenError);
+    });
+
+    it('blocks an assigned trainer from creating a goal once PT access lapses', async () => {
+      ptAccess.assertTrainerCanWrite.mockRejectedValueOnce(new BusinessRuleError('Read-only'));
+
+      await expect(
+        goalService.createGoal(
+          100,
+          {
+            metric_id: 1,
+            baseline_value: 80,
+            target_value: 100,
+            start_date: '2026-02-01',
+          },
+          mockTrainerUser,
+        ),
+      ).rejects.toThrow(BusinessRuleError);
+
+      expect(ptAccess.assertTrainerCanWrite).toHaveBeenCalledWith(mockTrainerUser, 100);
+      expect(goalRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('blocks an assigned trainer from updating a goal once PT access lapses', async () => {
+      ptAccess.assertTrainerCanWrite.mockRejectedValueOnce(new BusinessRuleError('Read-only'));
+
+      await expect(
+        goalService.updateGoal(1, { target_value: 110 }, mockTrainerUser),
+      ).rejects.toThrow(BusinessRuleError);
+
+      expect(ptAccess.assertTrainerCanWrite).toHaveBeenCalledWith(mockTrainerUser, 100);
+      expect(goalRepo.updateById).not.toHaveBeenCalled();
+    });
+
+    it('allows an assigned trainer to write once PT access is restored', async () => {
+      await goalService.createGoal(
+        100,
+        {
+          metric_id: 1,
+          baseline_value: 80,
+          target_value: 100,
+          start_date: '2026-02-01',
+        },
+        mockTrainerUser,
+      );
+
+      expect(ptAccess.assertTrainerCanWrite).toHaveBeenCalledWith(mockTrainerUser, 100);
+      expect(goalRepo.create).toHaveBeenCalled();
     });
 
     it('allows member to list their own goals with joined metrics', async () => {

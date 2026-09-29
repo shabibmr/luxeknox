@@ -43,26 +43,102 @@ void main() {
   group('ptDossierStatus', () {
     test('active / scheduled come from the current subscription', () {
       expect(
-        ptDossierStatus(MemberPtSummary(current: sub(PtSubscriptionStatus.active))),
+        ptDossierStatus(
+          MemberPtSummary(current: sub(PtSubscriptionStatus.active)),
+        ),
         PtDossierStatus.active,
       );
       expect(
-        ptDossierStatus(MemberPtSummary(current: sub(PtSubscriptionStatus.scheduled))),
+        ptDossierStatus(
+          MemberPtSummary(current: sub(PtSubscriptionStatus.scheduled)),
+        ),
         PtDossierStatus.scheduled,
       );
     });
 
     test('expired when only a completed PT exists', () {
       expect(
-        ptDossierStatus(MemberPtSummary(history: [sub(PtSubscriptionStatus.completed)])),
+        ptDossierStatus(
+          MemberPtSummary(history: [sub(PtSubscriptionStatus.completed)]),
+        ),
+        PtDossierStatus.expired,
+      );
+    });
+
+    test('expired when only a cancelled PT exists', () {
+      expect(
+        ptDossierStatus(
+          MemberPtSummary(history: [sub(PtSubscriptionStatus.cancelled)]),
+        ),
         PtDossierStatus.expired,
       );
     });
 
     test('not purchased when there is no PT history', () {
-      expect(ptDossierStatus(const MemberPtSummary()), PtDossierStatus.notPurchased);
+      expect(
+        ptDossierStatus(const MemberPtSummary()),
+        PtDossierStatus.notPurchased,
+      );
       expect(ptDossierStatus(null), PtDossierStatus.notPurchased);
     });
+  });
+
+  group('MemberPtSummary.lastEnded', () {
+    test('returns null when current subscription is present', () {
+      final summary = MemberPtSummary(
+        current: sub(PtSubscriptionStatus.active),
+        history: [sub(PtSubscriptionStatus.completed)],
+      );
+      expect(summary.lastEnded, isNull);
+    });
+
+    test(
+      'returns more recent cancelled subscription over older completed subscription',
+      () {
+        final olderCompleted = PtSubscription(
+          id: 1,
+          memberId: 42,
+          ptProductId: 3,
+          trainerId: 7,
+          startDate: DateTime(2026, 8, 1),
+          endDate: DateTime(2026, 8, 31),
+          weekdays: const [1, 3, 5],
+          slotStart: '17:00:00',
+          status: PtSubscriptionStatus.completed,
+          rowVersion: 1,
+          productName: 'Old PT',
+          sessionsPerWeek: 3,
+          trainerName: 'Bob',
+          slotLabel: '17:00-18:00',
+        );
+        final recentCancelled = PtSubscription(
+          id: 2,
+          memberId: 42,
+          ptProductId: 3,
+          trainerId: 8,
+          startDate: DateTime(2026, 9, 1),
+          endDate: DateTime(2026, 9, 30),
+          weekdays: const [1, 3, 5],
+          slotStart: '18:00:00',
+          status: PtSubscriptionStatus.cancelled,
+          rowVersion: 1,
+          productName: 'Recent PT',
+          sessionsPerWeek: 3,
+          trainerName: 'Alice',
+          slotLabel: '18:00-19:00',
+        );
+
+        final summary = MemberPtSummary(
+          history: [recentCancelled, olderCompleted],
+        );
+        expect(summary.lastEnded, equals(recentCancelled));
+
+        final summaryReversed = MemberPtSummary(
+          history: [olderCompleted, recentCancelled],
+        );
+        expect(summaryReversed.lastEnded, equals(recentCancelled));
+      },
+    );
   });
 
   group('canSellPt', () {
@@ -89,7 +165,15 @@ void main() {
 
     test('blocked when membership has expired or is missing', () {
       expect(sell(m: membership(endDate: DateTime(2026, 9, 30))), isFalse);
-      expect(sell(m: membership(status: MembershipStatus.frozen, endDate: DateTime(2026, 12, 31))), isFalse);
+      expect(
+        sell(
+          m: membership(
+            status: MembershipStatus.frozen,
+            endDate: DateTime(2026, 12, 31),
+          ),
+        ),
+        isFalse,
+      );
       expect(sell(m: null), isFalse);
     });
 
@@ -111,14 +195,27 @@ void main() {
   });
 
   test('trainerHubReadOnly follows trainer access', () {
-    expect(trainerHubReadOnly(const MemberPtSummary(trainerAccess: TrainerAccess.readOnly)), isTrue);
-    expect(trainerHubReadOnly(const MemberPtSummary(trainerAccess: TrainerAccess.full)), isFalse);
+    expect(
+      trainerHubReadOnly(
+        const MemberPtSummary(trainerAccess: TrainerAccess.readOnly),
+      ),
+      isTrue,
+    );
+    expect(
+      trainerHubReadOnly(
+        const MemberPtSummary(trainerAccess: TrainerAccess.full),
+      ),
+      isFalse,
+    );
     expect(trainerHubReadOnly(null), isFalse);
   });
 
   group('formatDaysRelative', () {
     test('formats days left', () {
-      expect(formatDaysRelative(DateTime(2026, 10, 11), now: now), '(10 days left)');
+      expect(
+        formatDaysRelative(DateTime(2026, 10, 11), now: now),
+        '(10 days left)',
+      );
     });
 
     test('formats expires today', () {
@@ -126,7 +223,10 @@ void main() {
     });
 
     test('formats expired days ago', () {
-      expect(formatDaysRelative(DateTime(2026, 9, 28), now: now), '(expired 3 days ago)');
+      expect(
+        formatDaysRelative(DateTime(2026, 9, 28), now: now),
+        '(expired 3 days ago)',
+      );
     });
   });
 }

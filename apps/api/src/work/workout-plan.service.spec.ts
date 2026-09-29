@@ -53,6 +53,7 @@ function buildService(overrides: {
   planRepo?: Partial<Record<string, unknown>>;
   memberRepo?: Partial<Record<string, unknown>>;
   eventBus?: Partial<Record<string, unknown>>;
+  ptAccess?: Partial<Record<string, unknown>> | null;
 } = {}) {
   const db = {
     transaction: vi.fn(async (cb: (tx: any) => Promise<any>) => cb({})),
@@ -95,15 +96,24 @@ function buildService(overrides: {
     normalizeParams: vi.fn().mockResolvedValue({ limit: 20, offset: 0 }),
   };
 
+  const ptAccess =
+    overrides.ptAccess === null
+      ? undefined
+      : {
+          assertTrainerCanWrite: vi.fn().mockResolvedValue(undefined),
+          ...overrides.ptAccess,
+        };
+
   const service = new WorkoutPlanService(
     db as any,
     planRepo as any,
     memberRepo as any,
     eventBus as any,
     paginationHelper as any,
+    ptAccess as any,
   );
 
-  return { service, planRepo, memberRepo, eventBus };
+  return { service, planRepo, memberRepo, eventBus, ptAccess };
 }
 
 describe('WorkoutPlanService', () => {
@@ -596,6 +606,113 @@ describe('WorkoutPlanService', () => {
       await expect(
         service.update(20, { title: 'Unauthorized' }, memberActor),
       ).rejects.toThrow(ForbiddenError);
+    });
+  });
+
+  describe('PT-gated write access (lapsed PT drops trainer to read-only)', () => {
+    it('blocks create for a member when the trainer PT access check fails', async () => {
+      const { service, planRepo, ptAccess } = buildService({
+        ptAccess: {
+          assertTrainerCanWrite: vi.fn().mockRejectedValue(new BusinessRuleError('Read-only')),
+        },
+      });
+
+      await expect(
+        service.create({ title: 'New Plan', member_id: 30 }, trainerActor),
+      ).rejects.toThrow(BusinessRuleError);
+
+      expect(ptAccess!.assertTrainerCanWrite).toHaveBeenCalledWith(trainerActor, 30);
+      expect(planRepo.insertPlan).not.toHaveBeenCalled();
+    });
+
+    it('blocks update for a member plan when the trainer PT access check fails', async () => {
+      const { service, planRepo, ptAccess } = buildService({
+        ptAccess: {
+          assertTrainerCanWrite: vi.fn().mockRejectedValue(new BusinessRuleError('Read-only')),
+        },
+      });
+
+      planRepo.findPlanById.mockResolvedValue({
+        id: 20,
+        member_id: 30,
+        trainer_id: 20,
+        is_template: false,
+        status: 'draft',
+      });
+
+      await expect(
+        service.update(20, { member_id: 30, title: 'Edit' }, trainerActor),
+      ).rejects.toThrow(BusinessRuleError);
+
+      expect(ptAccess!.assertTrainerCanWrite).toHaveBeenCalledWith(trainerActor, 30);
+      expect(planRepo.updatePlan).not.toHaveBeenCalled();
+    });
+
+    it('blocks assign to a member when the trainer PT access check fails', async () => {
+      const { service, planRepo, ptAccess } = buildService({
+        ptAccess: {
+          assertTrainerCanWrite: vi.fn().mockRejectedValue(new BusinessRuleError('Read-only')),
+        },
+      });
+
+      planRepo.findPlanById.mockResolvedValue({
+        id: 5,
+        title: 'Template',
+        is_template: true,
+      });
+
+      await expect(
+        service.assign(5, { member_id: 30 }, trainerActor),
+      ).rejects.toThrow(BusinessRuleError);
+
+      expect(ptAccess!.assertTrainerCanWrite).toHaveBeenCalledWith(trainerActor, 30);
+    });
+
+    it('blocks managing (e.g. publish) an existing member plan when the trainer PT access check fails', async () => {
+      const { service, planRepo, ptAccess } = buildService({
+        ptAccess: {
+          assertTrainerCanWrite: vi.fn().mockRejectedValue(new BusinessRuleError('Read-only')),
+        },
+      });
+
+      planRepo.findPlanById.mockResolvedValue({
+        id: 20,
+        member_id: 30,
+        trainer_id: 20,
+        is_template: false,
+        status: 'draft',
+      });
+
+      await expect(service.publish(20, trainerActor)).rejects.toThrow(BusinessRuleError);
+
+      expect(ptAccess!.assertTrainerCanWrite).toHaveBeenCalledWith(trainerActor, 30);
+    });
+
+    it('allows the write once PT access is restored (active subscription)', async () => {
+      const { service, planRepo, ptAccess } = buildService();
+
+      planRepo.insertPlan.mockResolvedValue({
+        id: 10,
+        title: 'Renewed Plan',
+        member_id: 30,
+        trainer_id: 20,
+        is_template: false,
+        status: 'draft',
+        row_version: 1,
+        created_at: new Date(),
+      });
+      planRepo.insertVersion.mockResolvedValue({
+        id: 101,
+        workout_plan_id: 10,
+        version_number: 1,
+        changelog: 'Initial draft version',
+        created_at: new Date(),
+      });
+
+      await service.create({ title: 'Renewed Plan', member_id: 30 }, trainerActor);
+
+      expect(ptAccess!.assertTrainerCanWrite).toHaveBeenCalledWith(trainerActor, 30);
+      expect(planRepo.insertPlan).toHaveBeenCalled();
     });
   });
 });

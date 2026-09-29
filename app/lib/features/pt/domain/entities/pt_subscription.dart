@@ -85,10 +85,22 @@ class MemberPtSummary extends Equatable {
   /// Most recent ended PT (for "expired" display) when there is no current one.
   PtSubscription? get lastEnded {
     if (current != null) return null;
+    PtSubscription? latest;
     for (final s in history) {
-      if (s.status == PtSubscriptionStatus.completed) return s;
+      if (s.status == PtSubscriptionStatus.completed ||
+          s.status == PtSubscriptionStatus.cancelled) {
+        if (latest == null ||
+            s.startDate.isAfter(latest.startDate) ||
+            (s.startDate.isAtSameMomentAs(latest.startDate) &&
+                s.endDate.isAfter(latest.endDate)) ||
+            (s.startDate.isAtSameMomentAs(latest.startDate) &&
+                s.endDate.isAtSameMomentAs(latest.endDate) &&
+                s.id > latest.id)) {
+          latest = s;
+        }
+      }
     }
-    return null;
+    return latest;
   }
 
   @override

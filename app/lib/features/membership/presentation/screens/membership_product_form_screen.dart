@@ -99,11 +99,28 @@ class _MembershipProductFormBodyState
     super.dispose();
   }
 
+  /// Membership product `code` is a required, unique identifier server-side
+  /// (`membership-product.dto.ts`), but the create form no longer collects it
+  /// from staff. Derive one from the name plus a short uniqueness suffix so
+  /// creation doesn't fail on an empty/duplicate code.
+  String _generateCode(String name) {
+    final slug = name
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
+    final suffix = DateTime.now().millisecondsSinceEpoch
+        .toRadixString(36)
+        .substring(0, 6);
+    return slug.isEmpty ? suffix : '$slug-$suffix';
+  }
+
   MembershipProduct _productFromFields() {
+    final name = _nameController.text.trim();
     return MembershipProduct(
       id: widget.product?.id ?? '',
-      name: _nameController.text.trim(),
-      code: widget.product?.code ?? '',
+      name: name,
+      code: widget.product?.code ?? _generateCode(name),
       description: _descriptionController.text.trim().isEmpty
           ? null
           : _descriptionController.text.trim(),
@@ -112,9 +129,9 @@ class _MembershipProductFormBodyState
       taxPercentage: _taxController.text.trim().isEmpty
           ? null
           : _taxController.text.trim(),
-      maxFreezeDays: null,
-      ptSessionsIncluded: null,
-      accessFacilities: const [],
+      maxFreezeDays: widget.product?.maxFreezeDays,
+      ptSessionsIncluded: widget.product?.ptSessionsIncluded,
+      accessFacilities: widget.product?.accessFacilities ?? const [],
       isActive: _isActive,
     );
   }

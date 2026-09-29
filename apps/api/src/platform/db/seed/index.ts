@@ -7,6 +7,8 @@ import { seedUsers } from './admin';
 import { seedSettings } from './settings';
 import { seedNotificationTypes } from './notification-types';
 import { seedExercises } from './exercises';
+import { seedMembershipProducts } from './membership-products';
+import { seedPtProducts } from './pt-products';
 
 export async function runSeeds(): Promise<void> {
   console.log('[Seed] Starting database seed process...');
@@ -32,6 +34,14 @@ export async function runSeeds(): Promise<void> {
     console.log('[Seed] Seeding exercise library...');
     const ex = await seedExercises(db);
     console.log(`[Seed] Exercises: ${ex.inserted} inserted, ${ex.skipped} already present.`);
+
+    console.log('[Seed] Seeding membership products...');
+    const memb = await seedMembershipProducts(db);
+    console.log(`[Seed] Membership products: ${memb.inserted} inserted, ${memb.skipped} already present.`);
+
+    console.log('[Seed] Seeding PT products...');
+    const pt = await seedPtProducts(db);
+    console.log(`[Seed] PT products: ${pt.inserted} inserted, ${pt.skipped} already present.`);
 
     console.log('[Seed] Seed completed successfully.');
   } finally {

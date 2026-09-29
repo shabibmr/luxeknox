@@ -207,6 +207,9 @@ export class PtScheduleService {
     const rangeStart = wallClockToUtcDate(query.start_date, '00:00:00', 0, tz);
     const rangeEnd = wallClockToUtcDate(endDate, '23:59:59', 999, tz);
 
+    const memberBusy = await this.loadMemberBusy(query.member_id, rangeStart, rangeEnd, query.exclude_subscription_id);
+    const memberNames = await this.occupantNames(memberBusy);
+
     const cells: PtGridCell[] = [];
     for (const t of trainers) {
       const availability = availabilityByTrainer.get(t.id) ?? [];
@@ -226,9 +229,10 @@ export class PtScheduleService {
           const start = wallClockToUtcDate(date, slot, 0, tz);
           const end = new Date(start.getTime() + PT_SLOT_MINUTES * 60_000);
           const clash = busy.find((s) => intervalsOverlap(s.start_time, s.end_time, start, end));
-          if (clash) {
+          const memberClash = memberBusy.find((s) => intervalsOverlap(s.start_time, s.end_time, start, end));
+          if (clash || memberClash) {
             conflictDates.push(date);
-            occupiedBy ??= names(clash);
+            occupiedBy ??= clash ? names(clash) : memberNames(memberClash!);
           }
         }
         const status: PtGridCellStatus =
@@ -262,6 +266,18 @@ export class PtScheduleService {
     excludeSubscriptionId?: number,
   ): Promise<Schedule[]> {
     const rows = await this.scheduleRepository.findBusyForTrainer(trainerId, from, to);
+    return excludeSubscriptionId
+      ? rows.filter((s) => s.pt_subscription_id !== excludeSubscriptionId)
+      : rows;
+  }
+
+  private async loadMemberBusy(
+    memberId: number,
+    from: Date,
+    to: Date,
+    excludeSubscriptionId?: number,
+  ): Promise<Schedule[]> {
+    const rows = await this.scheduleRepository.findOverlappingBookedForMember(memberId, from, to);
     return excludeSubscriptionId
       ? rows.filter((s) => s.pt_subscription_id !== excludeSubscriptionId)
       : rows;

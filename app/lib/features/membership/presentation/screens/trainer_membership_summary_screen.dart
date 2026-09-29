@@ -78,11 +78,6 @@ class _TrainerMembershipSummaryBody extends StatelessWidget {
                     MembershipStrings.endDateLabel,
                     membership.endDate.toString().split(' ').first,
                   ),
-                  if (membership.remainingPtSessions != null)
-                    _infoRow(
-                      MembershipStrings.remainingPtSessions,
-                      membership.remainingPtSessions.toString(),
-                    ),
                 ],
               );
             },

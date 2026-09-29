@@ -12,6 +12,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:mocktail/mocktail.dart';
+
+class FakeMembershipProduct extends Fake implements MembershipProduct {}
+
 class MockMembershipProductFormCubit
     extends MockCubit<MembershipProductFormState>
     implements MembershipProductFormCubit {}
@@ -22,6 +26,7 @@ class MockSessionCubit extends MockCubit<SessionState>
 /// ADR-0006 §11 — the product form follows `memberships.create` when adding
 /// and `memberships.update` when editing, for member, trainer, and admin.
 void main() {
+  late MockMembershipProductFormCubit cubit;
   const product = MembershipProduct(
     id: '10',
     name: 'Gold',
@@ -50,13 +55,20 @@ void main() {
     profileId: 'p3',
   );
 
+  setUpAll(() {
+    registerFallbackValue(FakeMembershipProduct());
+  });
+
   setUp(() {
-    final cubit = MockMembershipProductFormCubit();
+    cubit = MockMembershipProductFormCubit();
     whenListen(
       cubit,
       const Stream<MembershipProductFormState>.empty(),
       initialState: const MembershipProductFormState(),
     );
+    when(() => cubit.update(any())).thenAnswer((_) async {});
+    when(() => cubit.create(any())).thenAnswer((_) async {});
+    when(() => cubit.deactivate(any())).thenAnswer((_) async {});
     getIt.registerFactory<MembershipProductFormCubit>(() => cubit);
   });
 
@@ -198,4 +210,44 @@ void main() {
 
     expectForm(tester, allowed: false);
   });
+
+  testWidgets(
+    'editing preserves facilities, max freeze days, and pt sessions',
+    (tester) async {
+      const productWithFacilities = MembershipProduct(
+        id: '10',
+        name: 'Gold',
+        code: 'GOLD',
+        durationDays: 30,
+        basePrice: '99.00',
+        maxFreezeDays: 14,
+        ptSessionsIncluded: 3,
+        accessFacilities: ['pool', 'sauna'],
+        isActive: true,
+      );
+
+      MembershipProduct? capturedProduct;
+      when(() => cubit.update(any())).thenAnswer((invocation) async {
+        capturedProduct =
+            invocation.positionalArguments.first as MembershipProduct;
+      });
+
+      await tester.pumpWidget(
+        wrap(
+          adminPrincipal,
+          const Capabilities(slugs: ['memberships.update']),
+          product: productWithFacilities,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(MembershipStrings.save));
+      await tester.pumpAndSettle();
+
+      expect(capturedProduct, isNotNull);
+      expect(capturedProduct!.accessFacilities, equals(['pool', 'sauna']));
+      expect(capturedProduct!.maxFreezeDays, equals(14));
+      expect(capturedProduct!.ptSessionsIncluded, equals(3));
+    },
+  );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ForbiddenError } from '../platform/errors/app-error';
+import { BusinessRuleError, ForbiddenError } from '../platform/errors/app-error';
 import { PtAccessService } from './pt-access.service';
 
 const trainer = {
@@ -24,7 +24,17 @@ describe('PtAccessService', () => {
     const repo = { hasActiveForMemberAndTrainer: vi.fn().mockResolvedValue(false) };
     const service = new PtAccessService(repo as any);
     expect(await service.trainerAccess(7, 42)).toBe('read_only');
-    await expect(service.assertTrainerCanWrite(trainer, 42)).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(service.assertTrainerCanWrite(trainer, 42)).rejects.toBeInstanceOf(
+      BusinessRuleError,
+    );
+  });
+
+  it('throws ForbiddenError (not the PT-lapse BusinessRuleError) when the trainer has no profile', async () => {
+    const repo = { hasActiveForMemberAndTrainer: vi.fn() };
+    const service = new PtAccessService(repo as any);
+    await expect(
+      service.assertTrainerCanWrite({ ...trainer, profileId: null }, 42),
+    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it('never restricts staff', async () => {
