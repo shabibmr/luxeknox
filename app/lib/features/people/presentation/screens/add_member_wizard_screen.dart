@@ -72,10 +72,9 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
             onStepCancel: state.step == 0 ? null : cubit.previousStep,
             controlsBuilder: (context, details) {
               final isLast = state.step == AddMemberWizardState.stepCount - 1;
-              // Stepper's AnimatedCrossFade can pass tight infinite width into
-              // controls. Align.loosen() + widthFactor shrink-wrap so
-              // FilledButton's internal ConstrainedBox never sees
-              // minWidth: Infinity (BoxConstraints forces an infinite width).
+              // The app theme gives FilledButton minimumSize Size.fromHeight(48)
+              // (infinite min width), which breaks inside this shrink-wrapped
+              // Row, so the button overrides it with a finite minimum.
               return Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: Align(
@@ -86,6 +85,9 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       FilledButton(
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(64, 48),
+                        ),
                         onPressed: state.submitting
                             ? null
                             : details.onStepContinue,
