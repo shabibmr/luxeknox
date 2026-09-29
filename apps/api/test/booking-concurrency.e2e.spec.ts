@@ -118,6 +118,11 @@ describe('Booking concurrency E2E (SCH-019)', () => {
       bookingService.book(scheduleId, {}, actorFor(memberBId)),
     ]);
 
+    const rejections = [resultA, resultB]
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .map((r) => String(r.reason?.stack ?? r.reason));
+    expect(rejections).toEqual([]);
+
     const outcomes = [resultA, resultB]
       .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof bookingService.book>>> => r.status === 'fulfilled')
       .map((r) => r.value.booking_status);
