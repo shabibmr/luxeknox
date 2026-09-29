@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/config/resolve_remote_app_config.dart';
 import 'core/di/injector.dart';
 import 'core/l10n/app_locale_config.dart';
 import 'core/theme/app_theme.dart';
@@ -12,6 +13,7 @@ import 'session/presentation/session_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await resolveRemoteAppConfig();
   configureDependencies();
   await getIt<FcmMessagingService>().start();
   runApp(const LuxeKnoxApp());

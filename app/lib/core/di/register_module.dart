@@ -8,6 +8,7 @@ import 'package:injectable/injectable.dart';
 import '../../session/domain/usecases/refresh_session_usecase.dart';
 import '../../session/presentation/session_cubit.dart';
 import '../config/app_config.dart';
+import '../config/app_config_bootstrap.dart';
 import '../network/dio_client.dart';
 import '../router/app_router.dart';
 import '../storage/token_storage.dart';
@@ -16,7 +17,8 @@ import '../usecase/usecase.dart';
 @module
 abstract class RegisterModule {
   @singleton
-  AppConfig get appConfig => AppConfig.fromEnv();
+  AppConfig get appConfig =>
+      AppConfigBootstrap.resolved ?? AppConfig.fromEnv();
 
   @singleton
   FlutterSecureStorage get secureStorage => const FlutterSecureStorage();

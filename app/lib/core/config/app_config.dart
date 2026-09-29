@@ -52,6 +52,16 @@ class AppConfig {
     );
   }
 
+  /// Compile-time / dart-define API base URL (Firestore fallback).
+  static String get envApiBaseUrl => _apiBaseUrlDefine;
+
+  AppConfig copyWith({String? apiBaseUrl, AppEnvironment? environment}) {
+    return AppConfig(
+      apiBaseUrl: apiBaseUrl ?? this.apiBaseUrl,
+      environment: environment ?? this.environment,
+    );
+  }
+
   bool get isDev => environment == AppEnvironment.dev;
   bool get isStaging => environment == AppEnvironment.staging;
   bool get isProduction => environment == AppEnvironment.production;

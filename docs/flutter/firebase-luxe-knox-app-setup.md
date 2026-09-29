@@ -17,6 +17,14 @@
 - Providers: **Google enabled**; email / phone / anonymous disabled
 - For Android Google Sign-In, add debug/release **SHA-1** under Project settings → Android app (OAuth clients appear after SHA-1 is added)
 
+## Remote app config (`API_BASE_URL`)
+
+- Document: `config/app`
+- Field: `API_BASE_URL` (string), seeded to `https://api.dev.luxeknox.com`
+- Rules: public **read** on `config/app` only; writes denied; all other docs deny
+- App flow: SharedPreferences cache → Firestore fetch (refresh cache) → `--dart-define=API_BASE_URL` / default fallback
+- Code: `app/lib/core/config/resolve_remote_app_config.dart` (runs in `main` before DI)
+
 ## Console
 
 https://console.firebase.google.com/project/luxe-knox-app/overview
