@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -246,20 +247,28 @@ class _QrScanCheckInScreenState extends State<QrScanCheckInScreen> {
   final _payloadController = TextEditingController();
   String? _cameraError;
   bool _handledScan = false;
-  late final MobileScannerController _scanner;
+  MobileScannerController? _scanner;
   late final CheckInBloc _cubit;
+
+  /// mobile_scanner has no Windows/Linux implementation.
+  static final _cameraSupported =
+      kIsWeb ||
+      switch (defaultTargetPlatform) {
+        TargetPlatform.windows || TargetPlatform.linux => false,
+        _ => true,
+      };
 
   @override
   void initState() {
     super.initState();
-    _scanner = MobileScannerController();
+    if (_cameraSupported) _scanner = MobileScannerController();
     _cubit = getIt<CheckInBloc>();
   }
 
   @override
   void dispose() {
     _payloadController.dispose();
-    _scanner.dispose();
+    _scanner?.dispose();
     _cubit.close();
     super.dispose();
   }
@@ -310,16 +319,20 @@ class _QrScanCheckInScreenState extends State<QrScanCheckInScreen> {
               children: [
                 Expanded(
                   flex: 2,
-                  child: _cameraError != null
+                  child: !_cameraSupported
+                      ? const Center(
+                          child: Text(AttendanceStrings.cameraUnsupported),
+                        )
+                      : _cameraError != null
                       ? AppErrorView(
                           message: _cameraError!,
                           onRetry: () {
                             setState(() => _cameraError = null);
-                            _scanner.start();
+                            _scanner?.start();
                           },
                         )
                       : MobileScanner(
-                          controller: _scanner,
+                          controller: _scanner!,
                           onDetect: _onDetect,
                           errorBuilder: (context, error) {
                             final msg =

@@ -30,6 +30,10 @@ class DeviceTokenService implements DeviceTokenRegistrar {
     try {
       if (Platform.isIOS) return DevicePlatform.ios;
       if (Platform.isAndroid) return DevicePlatform.android;
+      // Desktop targets have no dedicated backend enum value; report as web.
+      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+        return DevicePlatform.web;
+      }
     } catch (_) {
       // Platform may throw on unsupported targets.
     }

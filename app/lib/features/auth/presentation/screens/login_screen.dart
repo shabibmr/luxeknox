@@ -68,6 +68,12 @@ class _LoginFormState extends State<_LoginForm> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      Image.asset(
+                        'assets/logo/luxeknox_logo.png',
+                        height: 80,
+                        semanticLabel: 'LuxeKnox',
+                      ),
+                      const SizedBox(height: 32),
                       if (state.status == LoadStatus.failure &&
                           state.errorMessage != null) ...[
                         MaterialBanner(

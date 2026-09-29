@@ -26,6 +26,10 @@ class FcmPushTokenProvider implements PushTokenProvider {
       debugPrint('FCM: Firebase options not configured — stub tokens only.');
       return;
     }
+    if (!_fcmSupported) {
+      debugPrint('FCM: not supported on this platform — stub tokens only.');
+      return;
+    }
 
     try {
       if (Firebase.apps.isEmpty) {
@@ -75,9 +79,15 @@ class FcmPushTokenProvider implements PushTokenProvider {
 
   @override
   Stream<String> get onTokenRefresh {
-    if (!DefaultFirebaseOptions.isConfigured) {
+    if (!DefaultFirebaseOptions.isConfigured || !_fcmSupported) {
       return const Stream<String>.empty();
     }
     return FirebaseMessaging.instance.onTokenRefresh;
   }
 }
+
+/// firebase_messaging has no Windows/Linux implementation.
+bool get _fcmSupported => switch (defaultTargetPlatform) {
+  TargetPlatform.windows || TargetPlatform.linux => false,
+  _ => true,
+};

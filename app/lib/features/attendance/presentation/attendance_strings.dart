@@ -28,6 +28,8 @@ abstract final class AttendanceStrings {
   static const markNoShow = 'No-show';
   static const cameraPermissionDenied =
       'Camera permission denied. Enable camera access to scan member passes, or enter the payload manually.';
+  static const cameraUnsupported =
+      'QR scanning is not available on this platform. Enter the payload manually.';
   static const cameraUnavailable =
       'Camera unavailable. Enter the pass payload manually to check in.';
   static const openSession = 'Currently checked in';
