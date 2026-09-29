@@ -41,9 +41,9 @@ class _FacilitiesBody extends StatelessWidget {
         listener: (context, state) {
           final failure = state.failure;
           if (failure == null) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(failureMessage(failure))),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(failureMessage(failure))));
         },
         builder: (context, state) {
           final items = state.items;
@@ -64,22 +64,21 @@ class _FacilitiesBody extends StatelessWidget {
             );
           }
           return ListView.builder(
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final facility = items[index];
-                      return ListTile(
-                        title: Text(facility.name),
-                        subtitle: Text(
-                          [
-                            if (facility.capacity != null)
-                              'Cap ${facility.capacity}',
-                            if (facility.locationDetails != null)
-                              facility.locationDetails!,
-                            facility.isActive ? 'Active' : 'Inactive',
-                          ].join(' · '),
-                        ),
-                      );
-                    },
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final facility = items[index];
+              return ListTile(
+                title: Text(facility.name),
+                subtitle: Text(
+                  [
+                    if (facility.capacity != null) 'Cap ${facility.capacity}',
+                    if (facility.locationDetails != null)
+                      facility.locationDetails!,
+                    facility.isActive ? 'Active' : 'Inactive',
+                  ].join(' · '),
+                ),
+              );
+            },
           );
         },
       ),

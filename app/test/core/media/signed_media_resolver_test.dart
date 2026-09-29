@@ -35,50 +35,66 @@ void main() {
 
       final result1 = await resolver.resolve('avatar/1.jpg');
       expect(result1.isRight(), isTrue);
-      expect(result1.getOrElse((_) => ''), equals('https://media.example.com/avatar1.jpg'));
+      expect(
+        result1.getOrElse((_) => ''),
+        equals('https://media.example.com/avatar1.jpg'),
+      );
 
       // Second call should return cached URL without calling API again
       final result2 = await resolver.resolve('avatar/1.jpg');
       expect(result2.isRight(), isTrue);
-      expect(result2.getOrElse((_) => ''), equals('https://media.example.com/avatar1.jpg'));
+      expect(
+        result2.getOrElse((_) => ''),
+        equals('https://media.example.com/avatar1.jpg'),
+      );
 
       verify(() => mockApi.getMediaUrl(key: 'avatar/1.jpg')).called(1);
     });
 
-    test('automatically re-fetches URL when cached entry has expired', () async {
-      final firstDownload = api.MediaDownload(
-        (b) => b
-          ..url = 'https://media.example.com/avatar1_old.jpg'
-          ..expiresAt = fixedNow.add(const Duration(seconds: 10)), // Will expire within 30s buffer
-      );
+    test(
+      'automatically re-fetches URL when cached entry has expired',
+      () async {
+        final firstDownload = api.MediaDownload(
+          (b) => b
+            ..url = 'https://media.example.com/avatar1_old.jpg'
+            ..expiresAt = fixedNow.add(
+              const Duration(seconds: 10),
+            ), // Will expire within 30s buffer
+        );
 
-      final secondDownload = api.MediaDownload(
-        (b) => b
-          ..url = 'https://media.example.com/avatar1_new.jpg'
-          ..expiresAt = fixedNow.add(const Duration(minutes: 10)),
-      );
+        final secondDownload = api.MediaDownload(
+          (b) => b
+            ..url = 'https://media.example.com/avatar1_new.jpg'
+            ..expiresAt = fixedNow.add(const Duration(minutes: 10)),
+        );
 
-      when(() => mockApi.getMediaUrl(key: 'avatar/1.jpg'))
-          .thenAnswer((_) async => Response(
-                requestOptions: RequestOptions(path: ''),
-                data: firstDownload,
-              ));
+        when(() => mockApi.getMediaUrl(key: 'avatar/1.jpg')).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(path: ''),
+            data: firstDownload,
+          ),
+        );
 
-      await resolver.resolve('avatar/1.jpg');
+        await resolver.resolve('avatar/1.jpg');
 
-      // Now time advances by 15 seconds, making the URL expired
-      fixedNow = fixedNow.add(const Duration(seconds: 15));
+        // Now time advances by 15 seconds, making the URL expired
+        fixedNow = fixedNow.add(const Duration(seconds: 15));
 
-      when(() => mockApi.getMediaUrl(key: 'avatar/1.jpg'))
-          .thenAnswer((_) async => Response(
-                requestOptions: RequestOptions(path: ''),
-                data: secondDownload,
-              ));
+        when(() => mockApi.getMediaUrl(key: 'avatar/1.jpg')).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(path: ''),
+            data: secondDownload,
+          ),
+        );
 
-      final result = await resolver.resolve('avatar/1.jpg');
-      expect(result.getOrElse((_) => ''), equals('https://media.example.com/avatar1_new.jpg'));
-      verify(() => mockApi.getMediaUrl(key: 'avatar/1.jpg')).called(2);
-    });
+        final result = await resolver.resolve('avatar/1.jpg');
+        expect(
+          result.getOrElse((_) => ''),
+          equals('https://media.example.com/avatar1_new.jpg'),
+        );
+        verify(() => mockApi.getMediaUrl(key: 'avatar/1.jpg')).called(2);
+      },
+    );
 
     test('recoverExpiredUrl explicitly forces refresh', () async {
       final firstDownload = api.MediaDownload(
@@ -110,7 +126,10 @@ void main() {
       );
 
       final result = await resolver.recoverExpiredUrl('doc/sample.pdf');
-      expect(result.getOrElse((_) => ''), equals('https://media.example.com/doc_fresh.pdf'));
+      expect(
+        result.getOrElse((_) => ''),
+        equals('https://media.example.com/doc_fresh.pdf'),
+      );
       verify(() => mockApi.getMediaUrl(key: 'doc/sample.pdf')).called(2);
     });
 

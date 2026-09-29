@@ -12,10 +12,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class MockMembershipProductFormCubit extends MockCubit<MembershipProductFormState>
+class MockMembershipProductFormCubit
+    extends MockCubit<MembershipProductFormState>
     implements MembershipProductFormCubit {}
 
-class MockSessionCubit extends MockCubit<SessionState> implements SessionCubit {}
+class MockSessionCubit extends MockCubit<SessionState>
+    implements SessionCubit {}
 
 /// ADR-0006 §11 — the product form follows `memberships.create` when adding
 /// and `memberships.update` when editing, for member, trainer, and admin.
@@ -121,10 +123,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      wrap(
-        adminPrincipal,
-        const Capabilities(slugs: ['memberships.create']),
-      ),
+      wrap(adminPrincipal, const Capabilities(slugs: ['memberships.create'])),
     );
     await tester.pumpAndSettle();
 

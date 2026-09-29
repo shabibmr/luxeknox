@@ -71,7 +71,11 @@ void main() {
       ),
       isA<MembershipsDirectoryState>()
           .having((s) => s.status, 'status', LoadStatus.success)
-          .having((s) => s.filter, 'filter', MembershipDirectoryFilter.expiringSoon)
+          .having(
+            (s) => s.filter,
+            'filter',
+            MembershipDirectoryFilter.expiringSoon,
+          )
           .having((s) => s.failure, 'failure', isNull)
           .having((s) => s.items.map((m) => m.id).toList(), 'ids', ['a']),
     ],

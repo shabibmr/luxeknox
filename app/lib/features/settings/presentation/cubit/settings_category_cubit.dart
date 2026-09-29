@@ -46,9 +46,8 @@ class SettingsCategoryCubit extends Cubit<SettingsCategoryState> {
     );
     final result = await _getSettings(GetSettingsParams(category: category));
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (items) => emit(
         state.copyWith(
           status: LoadStatus.success,
@@ -109,9 +108,8 @@ class SettingsCategoryCubit extends Cubit<SettingsCategoryState> {
     emit(current.copyWith(saving: true, saved: false, failure: null));
     final result = await _updateSettings(current.items);
     result.fold(
-      (failure) => emit(
-        current.copyWith(saving: false, saved: false, failure: failure),
-      ),
+      (failure) =>
+          emit(current.copyWith(saving: false, saved: false, failure: failure)),
       (items) => emit(
         current.copyWith(
           status: LoadStatus.success,

@@ -60,7 +60,9 @@ class WorkoutSessionRemoteDataSourceImpl
   }
 
   @override
-  Future<api.WorkoutSession> startSession(api.WorkoutSessionCreate create) async {
+  Future<api.WorkoutSession> startSession(
+    api.WorkoutSessionCreate create,
+  ) async {
     return _unwrap(
       await _workApi.startWorkoutSession(workoutSessionCreate: create),
     );
@@ -93,9 +95,9 @@ class WorkoutSessionRemoteDataSourceImpl
     }
 
     final body = <String, dynamic>{
-      if (trimmedNotes != null && trimmedNotes.isNotEmpty) 'notes': trimmedNotes,
-      if (clientFeedbackRating != null)
-        'client_feedback_rating': clientFeedbackRating,
+      if (trimmedNotes != null && trimmedNotes.isNotEmpty)
+        'notes': trimmedNotes,
+      'client_feedback_rating': ?clientFeedbackRating,
     };
     final response = await _dio.post<Object>(
       '/workout-sessions/$sessionId/complete',
@@ -111,9 +113,10 @@ class WorkoutSessionRemoteDataSourceImpl
         );
       }
       return api.standardSerializers.deserialize(
-        raw,
-        specifiedType: const FullType(api.WorkoutSession),
-      ) as api.WorkoutSession;
+            raw,
+            specifiedType: const FullType(api.WorkoutSession),
+          )
+          as api.WorkoutSession;
     } catch (error, stackTrace) {
       if (error is DioException) rethrow;
       throw DioException(

@@ -14,10 +14,7 @@ class DietPlanStatusChip extends StatelessWidget {
     final (label, color) = switch (status) {
       DietPlanStatus.draft => (DietStrings.statusDraft, Colors.orange),
       DietPlanStatus.active => (DietStrings.statusActive, Colors.green),
-      DietPlanStatus.archived => (
-        DietStrings.statusArchived,
-        scheme.outline,
-      ),
+      DietPlanStatus.archived => (DietStrings.statusArchived, scheme.outline),
     };
     return Chip(
       label: Text(label),

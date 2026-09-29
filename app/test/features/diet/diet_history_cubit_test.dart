@@ -15,9 +15,7 @@ void main() {
   late _MockListDietLogs listDietLogs;
 
   setUpAll(() {
-    registerFallbackValue(
-      const ListDietLogsParams(memberId: '1'),
-    );
+    registerFallbackValue(const ListDietLogsParams(memberId: '1'));
   });
 
   setUp(() {

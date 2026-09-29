@@ -17,6 +17,7 @@ abstract class WorkoutPlanListState with _$WorkoutPlanListState {
   const factory WorkoutPlanListState({
     @Default(LoadStatus.initial) LoadStatus status,
     @Default(<WorkoutPlan>[]) List<WorkoutPlan> items,
+
     /// True after a successful fetch, so an empty filter result is still data.
     @Default(false) bool hasLoaded,
     @Default(WorkoutPlanListFilter.all) WorkoutPlanListFilter filter,
@@ -32,18 +33,11 @@ class WorkoutPlanListCubit extends Cubit<WorkoutPlanListState> {
   bool? _isTemplate;
   List<WorkoutPlan> _allItems = const [];
 
-  Future<void> load({
-    bool? isTemplate,
-    WorkoutPlanListFilter? filter,
-  }) async {
+  Future<void> load({bool? isTemplate, WorkoutPlanListFilter? filter}) async {
     if (isTemplate != null) _isTemplate = isTemplate;
     final next = filter ?? state.filter;
     emit(
-      state.copyWith(
-        status: LoadStatus.loading,
-        failure: null,
-        filter: next,
-      ),
+      state.copyWith(status: LoadStatus.loading, failure: null, filter: next),
     );
     final result = await _listPlans(
       ListWorkoutPlansParams(isTemplate: _isTemplate),

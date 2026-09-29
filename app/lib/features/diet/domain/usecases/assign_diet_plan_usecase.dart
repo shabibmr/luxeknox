@@ -8,10 +8,7 @@ import '../entities/diet_plan.dart';
 import '../repositories/diet_plan_repository.dart';
 
 class AssignDietPlanParams extends Equatable {
-  const AssignDietPlanParams({
-    required this.planId,
-    required this.memberId,
-  });
+  const AssignDietPlanParams({required this.planId, required this.memberId});
 
   final String planId;
   final String memberId;

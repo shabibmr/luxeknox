@@ -6,7 +6,11 @@ void main() {
   group('buildReportChartBlocks', () {
     test('payments returns no blocks (blocked pending financial charts)', () {
       final blocks = buildReportChartBlocks(AppReportType.payments, [
-        {'category': 'collections', 'metric': 'gross_collections', 'amount': '10.00'},
+        {
+          'category': 'collections',
+          'metric': 'gross_collections',
+          'amount': '10.00',
+        },
       ]);
       expect(blocks, isEmpty);
     });
@@ -19,7 +23,11 @@ void main() {
       final rows = [
         {'category': 'summary', 'metric': 'total_footfall', 'value': 12},
         for (var h = 0; h < 24; h++)
-          {'category': 'peak_hour_heatmap', 'hour': h, 'checkin_count': h == 9 ? 5 : 0},
+          {
+            'category': 'peak_hour_heatmap',
+            'hour': h,
+            'checkin_count': h == 9 ? 5 : 0,
+          },
       ];
 
       final blocks = buildReportChartBlocks(AppReportType.attendance, rows);
@@ -38,7 +46,11 @@ void main() {
 
     test('members builds a status distribution bar', () {
       final rows = [
-        {'category': 'summary', 'metric': 'acquisition_new_members', 'count': 3},
+        {
+          'category': 'summary',
+          'metric': 'acquisition_new_members',
+          'count': 3,
+        },
         {'category': 'summary', 'metric': 'active_members', 'count': 40},
         {'category': 'summary', 'metric': 'inactive_members', 'count': 2},
         {'category': 'summary', 'metric': 'suspended_members', 'count': 1},
@@ -49,7 +61,13 @@ void main() {
 
       expect(blocks, hasLength(1));
       final bars = (blocks.single as BarChartBlock).points;
-      expect(bars.map((p) => p.label), ['New', 'Active', 'Inactive', 'Suspended', 'Churned']);
+      expect(bars.map((p) => p.label), [
+        'New',
+        'Active',
+        'Inactive',
+        'Suspended',
+        'Churned',
+      ]);
       expect(bars.map((p) => p.value), [3, 40, 2, 1, 4]);
     });
 
@@ -101,7 +119,11 @@ void main() {
 
     test('workouts builds top-plans and top-exercises bars', () {
       final rows = [
-        {'category': 'summary', 'metric': 'total_sessions_started', 'value': 20},
+        {
+          'category': 'summary',
+          'metric': 'total_sessions_started',
+          'value': 20,
+        },
         {
           'category': 'top_workout_plans',
           'plan_id': 1,
@@ -119,13 +141,20 @@ void main() {
       final blocks = buildReportChartBlocks(AppReportType.workouts, rows);
 
       expect(blocks, hasLength(2));
-      expect((blocks[0] as BarChartBlock).points.single.label, 'Push Pull Legs');
+      expect(
+        (blocks[0] as BarChartBlock).points.single.label,
+        'Push Pull Legs',
+      );
       expect((blocks[1] as BarChartBlock).points.single.label, 'Bench Press');
     });
 
     test('diets and progress build summary bars', () {
       final dietRows = [
-        {'category': 'summary', 'metric': 'active_foods_in_library', 'count': 100},
+        {
+          'category': 'summary',
+          'metric': 'active_foods_in_library',
+          'count': 100,
+        },
         {'category': 'summary', 'metric': 'verified_foods', 'count': 80},
       ];
       final dietBlocks = buildReportChartBlocks(AppReportType.diets, dietRows);
@@ -134,9 +163,16 @@ void main() {
       final progressRows = [
         {'category': 'summary', 'metric': 'goals_achieved', 'count': 5},
         {'category': 'summary', 'metric': 'measurement_sessions', 'count': 12},
-        {'category': 'summary', 'metric': 'progress_photos_uploaded', 'count': 3},
+        {
+          'category': 'summary',
+          'metric': 'progress_photos_uploaded',
+          'count': 3,
+        },
       ];
-      final progressBlocks = buildReportChartBlocks(AppReportType.progress, progressRows);
+      final progressBlocks = buildReportChartBlocks(
+        AppReportType.progress,
+        progressRows,
+      );
       expect(progressBlocks, hasLength(1));
     });
   });

@@ -95,9 +95,7 @@ class _BuilderFormState extends State<_BuilderForm> {
     _calories = TextEditingController(
       text: s.dailyCalorieTarget?.toString() ?? '',
     );
-    _protein = TextEditingController(
-      text: s.proteinTargetG?.toString() ?? '',
-    );
+    _protein = TextEditingController(text: s.proteinTargetG?.toString() ?? '');
     _carbs = TextEditingController(text: s.carbsTargetG?.toString() ?? '');
     _fat = TextEditingController(text: s.fatTargetG?.toString() ?? '');
   }
@@ -143,14 +141,16 @@ class _BuilderFormState extends State<_BuilderForm> {
       final message = err.failure != null
           ? failureMessage(err.failure!)
           : (err.validationMessage ?? DietStrings.saveFailed);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
       return;
     }
     final ready = cubit.state;
     if (ready.planId != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(DietStrings.saved)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(DietStrings.saved)));
       context.go(Routes.trainerPlansDietById(ready.planId!));
     }
   }
@@ -190,8 +190,9 @@ class _BuilderFormState extends State<_BuilderForm> {
                 labelText: DietStrings.titleLabel,
                 border: OutlineInputBorder(),
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? DietStrings.titleRequired : null,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? DietStrings.titleRequired
+                  : null,
               onChanged: cubit.setTitle,
             ),
             const SizedBox(height: 12),
@@ -234,7 +235,9 @@ class _BuilderFormState extends State<_BuilderForm> {
                 labelText: DietStrings.proteinTargetLabel,
                 border: OutlineInputBorder(),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               onChanged: (v) => cubit.setProteinTargetG(
                 v.trim().isEmpty ? null : num.tryParse(v.trim()),
               ),
@@ -246,7 +249,9 @@ class _BuilderFormState extends State<_BuilderForm> {
                 labelText: DietStrings.carbsTargetLabel,
                 border: OutlineInputBorder(),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               onChanged: (v) => cubit.setCarbsTargetG(
                 v.trim().isEmpty ? null : num.tryParse(v.trim()),
               ),
@@ -258,7 +263,9 @@ class _BuilderFormState extends State<_BuilderForm> {
                 labelText: DietStrings.fatTargetLabel,
                 border: OutlineInputBorder(),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               onChanged: (v) => cubit.setFatTargetG(
                 v.trim().isEmpty ? null : num.tryParse(v.trim()),
               ),
@@ -310,10 +317,8 @@ class _BuilderFormState extends State<_BuilderForm> {
                                   labelText: DietStrings.mealNameLabel,
                                   border: OutlineInputBorder(),
                                 ),
-                                onChanged: (v) => cubit.updateMeal(
-                                  meal.key,
-                                  mealName: v,
-                                ),
+                                onChanged: (v) =>
+                                    cubit.updateMeal(meal.key, mealName: v),
                               ),
                             ),
                             IconButton(

@@ -41,16 +41,14 @@ class AttendanceRepositoryImpl implements AttendanceRepository {
       if (input.userId != null && userId == null) {
         return const Left(ValidationFailure(['Invalid user id']));
       }
-      final request = api.CheckInRequest(
-        (b) {
-          if (userId != null) b.userId = userId;
-          if (input.method != null) b.method = input.method!.toApi();
-          if (input.gateIdentifier != null) {
-            b.gateIdentifier = input.gateIdentifier;
-          }
-          if (input.payload != null) b.payload = input.payload;
-        },
-      );
+      final request = api.CheckInRequest((b) {
+        if (userId != null) b.userId = userId;
+        if (input.method != null) b.method = input.method!.toApi();
+        if (input.gateIdentifier != null) {
+          b.gateIdentifier = input.gateIdentifier;
+        }
+        if (input.payload != null) b.payload = input.payload;
+      });
       final attendance = await _remote.checkIn(
         request: request,
         idempotencyKey: input.idempotencyKey,

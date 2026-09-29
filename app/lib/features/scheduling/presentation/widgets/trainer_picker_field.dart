@@ -128,9 +128,7 @@ class _TrainerSearchSheetState extends State<_TrainerSearchSheet> {
       _error = null;
       _query = query;
     });
-    final result = await widget.listTrainers(
-      ListTrainersParams(query: query),
-    );
+    final result = await widget.listTrainers(ListTrainersParams(query: query));
     if (!mounted) return;
     result.fold(
       (failure) => setState(() {
@@ -209,9 +207,7 @@ class _TrainerSearchSheetState extends State<_TrainerSearchSheet> {
       );
     }
     if (_trainers.isEmpty) {
-      return const Center(
-        child: Text(SchedulingStrings.trainerFieldEmpty),
-      );
+      return const Center(child: Text(SchedulingStrings.trainerFieldEmpty));
     }
     return ListView.builder(
       controller: _scrollController,

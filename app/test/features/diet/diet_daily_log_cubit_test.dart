@@ -12,7 +12,9 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockRecordDietLog extends Mock implements RecordDietLogUseCase {}
+
 class _MockListDietLogs extends Mock implements ListDietLogsUseCase {}
+
 class _MockListDietPlans extends Mock implements ListDietPlansUseCase {}
 
 void main() {
@@ -23,18 +25,9 @@ void main() {
   final testDate = DateTime(2026, 9, 21);
 
   setUpAll(() {
-    registerFallbackValue(
-      RecordDietLogParams(
-        memberId: '1',
-        date: testDate,
-      ),
-    );
-    registerFallbackValue(
-      const ListDietLogsParams(memberId: '1'),
-    );
-    registerFallbackValue(
-      const ListDietPlansParams(memberId: '1'),
-    );
+    registerFallbackValue(RecordDietLogParams(memberId: '1', date: testDate));
+    registerFallbackValue(const ListDietLogsParams(memberId: '1'));
+    registerFallbackValue(const ListDietPlansParams(memberId: '1'));
   });
 
   setUp(() {
@@ -98,7 +91,11 @@ void main() {
       },
       act: (cubit) => cubit.init('42', date: testDate),
       expect: () => [
-        isA<DietDailyLogState>().having((s) => s.status, 'status', DietDailyLogStatus.loading),
+        isA<DietDailyLogState>().having(
+          (s) => s.status,
+          'status',
+          DietDailyLogStatus.loading,
+        ),
         isA<DietDailyLogState>()
             .having((s) => s.status, 'status', DietDailyLogStatus.ready)
             .having((s) => s.caloriesConsumed, 'calories', 1900)
@@ -131,11 +128,8 @@ void main() {
       build: () {
         return buildCubit();
       },
-      seed: () => DietDailyLogState(
-        memberId: '42',
-        date: testDate,
-        waterIntakeMl: 500,
-      ),
+      seed: () =>
+          DietDailyLogState(memberId: '42', date: testDate, waterIntakeMl: 500),
       act: (cubit) {
         cubit.addWater(250);
         cubit.updateWater(0);
@@ -174,7 +168,11 @@ void main() {
       ),
       act: (cubit) => cubit.save(),
       expect: () => [
-        isA<DietDailyLogState>().having((s) => s.status, 'status', DietDailyLogStatus.saving),
+        isA<DietDailyLogState>().having(
+          (s) => s.status,
+          'status',
+          DietDailyLogStatus.saving,
+        ),
         isA<DietDailyLogState>()
             .having((s) => s.status, 'status', DietDailyLogStatus.saved)
             .having((s) => s.savedLog?.id, 'savedLog.id', 'l1'),

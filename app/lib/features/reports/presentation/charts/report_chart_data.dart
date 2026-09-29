@@ -76,8 +76,7 @@ List<ReportChartBlock> buildReportChartBlocks(
     AppReportType.attendance => _attendanceBlocks(rows),
     AppReportType.members => _membersBlocks(rows),
     AppReportType.memberships => _membershipsBlocks(rows),
-    AppReportType.trainers ||
-    AppReportType.trainerOwn => _trainersBlocks(rows),
+    AppReportType.trainers || AppReportType.trainerOwn => _trainersBlocks(rows),
     AppReportType.workouts => _workoutsBlocks(rows),
     AppReportType.diets => _dietsBlocks(rows),
     AppReportType.progress => _progressBlocks(rows),
@@ -117,10 +116,19 @@ List<ReportChartBlock> _membersBlocks(List<Map<String, dynamic>> rows) {
   if (summary.isEmpty) return const [];
 
   final bars = [
-    AppChartPoint(label: 'New', value: _metric(summary, 'acquisition_new_members')),
+    AppChartPoint(
+      label: 'New',
+      value: _metric(summary, 'acquisition_new_members'),
+    ),
     AppChartPoint(label: 'Active', value: _metric(summary, 'active_members')),
-    AppChartPoint(label: 'Inactive', value: _metric(summary, 'inactive_members')),
-    AppChartPoint(label: 'Suspended', value: _metric(summary, 'suspended_members')),
+    AppChartPoint(
+      label: 'Inactive',
+      value: _metric(summary, 'inactive_members'),
+    ),
+    AppChartPoint(
+      label: 'Suspended',
+      value: _metric(summary, 'suspended_members'),
+    ),
     AppChartPoint(label: 'Churned', value: _metric(summary, 'churned_members')),
   ];
 
@@ -148,8 +156,14 @@ List<ReportChartBlock> _membershipsBlocks(List<Map<String, dynamic>> rows) {
   if (summary.isNotEmpty) {
     blocks.add(
       BarChartBlock('Renewals vs freezes', [
-        AppChartPoint(label: 'Renewals', value: _metric(summary, 'total_renewals')),
-        AppChartPoint(label: 'Freezes', value: _metric(summary, 'total_freezes')),
+        AppChartPoint(
+          label: 'Renewals',
+          value: _metric(summary, 'total_renewals'),
+        ),
+        AppChartPoint(
+          label: 'Freezes',
+          value: _metric(summary, 'total_freezes'),
+        ),
       ]),
     );
   }
@@ -214,8 +228,14 @@ List<ReportChartBlock> _dietsBlocks(List<Map<String, dynamic>> rows) {
 
   return [
     BarChartBlock('Food library', [
-      AppChartPoint(label: 'Active foods', value: _metric(summary, 'active_foods_in_library')),
-      AppChartPoint(label: 'Verified foods', value: _metric(summary, 'verified_foods')),
+      AppChartPoint(
+        label: 'Active foods',
+        value: _metric(summary, 'active_foods_in_library'),
+      ),
+      AppChartPoint(
+        label: 'Verified foods',
+        value: _metric(summary, 'verified_foods'),
+      ),
     ]),
   ];
 }
@@ -226,9 +246,18 @@ List<ReportChartBlock> _progressBlocks(List<Map<String, dynamic>> rows) {
 
   return [
     BarChartBlock('Progress activity', [
-      AppChartPoint(label: 'Goals achieved', value: _metric(summary, 'goals_achieved')),
-      AppChartPoint(label: 'Measurements logged', value: _metric(summary, 'measurement_sessions')),
-      AppChartPoint(label: 'Photos uploaded', value: _metric(summary, 'progress_photos_uploaded')),
+      AppChartPoint(
+        label: 'Goals achieved',
+        value: _metric(summary, 'goals_achieved'),
+      ),
+      AppChartPoint(
+        label: 'Measurements logged',
+        value: _metric(summary, 'measurement_sessions'),
+      ),
+      AppChartPoint(
+        label: 'Photos uploaded',
+        value: _metric(summary, 'progress_photos_uploaded'),
+      ),
     ]),
   ];
 }

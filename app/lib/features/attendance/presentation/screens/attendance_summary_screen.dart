@@ -17,8 +17,7 @@ class AttendanceSummaryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          getIt<AttendanceSummaryCubit>()..load(memberId: memberId),
+      create: (_) => getIt<AttendanceSummaryCubit>()..load(memberId: memberId),
       child: _AttendanceSummaryBody(memberId: memberId),
     );
   }
@@ -52,29 +51,29 @@ class _AttendanceSummaryBody extends StatelessWidget {
           if (summary == null) return const AppLoading();
           final heatmapDays = state.heatmapDays;
           return ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _StatTile(
-                    label: AttendanceStrings.streak,
-                    value: '${summary.streakDays ?? 0}',
-                  ),
-                  _StatTile(
-                    label: AttendanceStrings.visitsMonth,
-                    value: '${summary.visitsThisMonth ?? 0}',
-                  ),
-                  _StatTile(
-                    label: AttendanceStrings.lastCheckIn,
-                    value: summary.lastCheckIn?.toString() ?? '—',
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    AttendanceStrings.heatmap,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  _HeatmapGrid(days: heatmapDays),
-                ],
-              );
+            padding: const EdgeInsets.all(16),
+            children: [
+              _StatTile(
+                label: AttendanceStrings.streak,
+                value: '${summary.streakDays ?? 0}',
+              ),
+              _StatTile(
+                label: AttendanceStrings.visitsMonth,
+                value: '${summary.visitsThisMonth ?? 0}',
+              ),
+              _StatTile(
+                label: AttendanceStrings.lastCheckIn,
+                value: summary.lastCheckIn?.toString() ?? '—',
+              ),
+              const SizedBox(height: 24),
+              Text(
+                AttendanceStrings.heatmap,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              _HeatmapGrid(days: heatmapDays),
+            ],
+          );
         },
       ),
     );
@@ -92,10 +91,7 @@ class _StatTile extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(label),
-      trailing: Text(
-        value,
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
+      trailing: Text(value, style: Theme.of(context).textTheme.titleMedium),
     );
   }
 }
@@ -108,8 +104,11 @@ class _HeatmapGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final start = DateTime(now.year, now.month, now.day)
-        .subtract(const Duration(days: 55));
+    final start = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(const Duration(days: 55));
     final cells = <Widget>[];
     for (var i = 0; i < 56; i++) {
       final day = start.add(Duration(days: i));

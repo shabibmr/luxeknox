@@ -17,11 +17,7 @@ import '../diet_history_role.dart';
 import '../diet_strings.dart';
 
 class DietHistoryScreen extends StatelessWidget {
-  const DietHistoryScreen({
-    super.key,
-    required this.role,
-    this.memberId,
-  });
+  const DietHistoryScreen({super.key, required this.role, this.memberId});
 
   final DietHistoryRole role;
   final String? memberId;
@@ -82,110 +78,118 @@ class _DietHistoryBody extends StatelessWidget {
           final averageWaterIntakeMl = state.averageWaterIntakeMl;
           final totalLoggedDays = state.totalLoggedDays;
           return Column(
-                children: [
-                  // Range filters
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                    child: Row(
-                      children: [
-                        _RangeChip(
-                          label: DietStrings.rangeAll,
-                          selected: selectedRange == DietDateRange.all,
-                          onSelected: () => context
-                              .read<DietHistoryCubit>()
-                              .setRange(DietDateRange.all),
-                        ),
-                        const SizedBox(width: 8),
-                        _RangeChip(
-                          label: DietStrings.range7Days,
-                          selected: selectedRange == DietDateRange.last7Days,
-                          onSelected: () => context
-                              .read<DietHistoryCubit>()
-                              .setRange(DietDateRange.last7Days),
-                        ),
-                        const SizedBox(width: 8),
-                        _RangeChip(
-                          label: DietStrings.range30Days,
-                          selected: selectedRange == DietDateRange.last30Days,
-                          onSelected: () => context
-                              .read<DietHistoryCubit>()
-                              .setRange(DietDateRange.last30Days),
-                        ),
-                      ],
+            children: [
+              // Range filters
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Row(
+                  children: [
+                    _RangeChip(
+                      label: DietStrings.rangeAll,
+                      selected: selectedRange == DietDateRange.all,
+                      onSelected: () => context
+                          .read<DietHistoryCubit>()
+                          .setRange(DietDateRange.all),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    _RangeChip(
+                      label: DietStrings.range7Days,
+                      selected: selectedRange == DietDateRange.last7Days,
+                      onSelected: () => context
+                          .read<DietHistoryCubit>()
+                          .setRange(DietDateRange.last7Days),
+                    ),
+                    const SizedBox(width: 8),
+                    _RangeChip(
+                      label: DietStrings.range30Days,
+                      selected: selectedRange == DietDateRange.last30Days,
+                      onSelected: () => context
+                          .read<DietHistoryCubit>()
+                          .setRange(DietDateRange.last30Days),
+                    ),
+                  ],
+                ),
+              ),
 
-                  // Compliance / Metric summary card
-                  if (logs.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              _SummaryMetric(
-                                label: DietStrings.averageAdherenceLabel,
-                                value: averageAdherenceScore != null
-                                    ? DietStrings.adherencePercent(averageAdherenceScore)
-                                    : '—',
-                                color: averageAdherenceScore != null
-                                    ? (averageAdherenceScore >= 85
-                                        ? Colors.green
-                                        : averageAdherenceScore >= 70
-                                            ? Colors.orange
-                                            : Colors.red)
-                                    : null,
-                              ),
-                              _SummaryMetric(
-                                label: DietStrings.averageCaloriesLabel,
-                                value: averageCaloriesConsumed != null
-                                    ? DietStrings.caloriesKcal(averageCaloriesConsumed)
-                                    : '—',
-                              ),
-                              _SummaryMetric(
-                                label: DietStrings.averageWaterLabel,
-                                value: averageWaterIntakeMl != null
-                                    ? DietStrings.waterMl(averageWaterIntakeMl)
-                                    : '—',
-                                color: Colors.blue,
-                              ),
-                              _SummaryMetric(
-                                label: DietStrings.daysLoggedLabel,
-                                value: '$totalLoggedDays',
-                              ),
-                            ],
+              // Compliance / Metric summary card
+              if (logs.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _SummaryMetric(
+                            label: DietStrings.averageAdherenceLabel,
+                            value: averageAdherenceScore != null
+                                ? DietStrings.adherencePercent(
+                                    averageAdherenceScore,
+                                  )
+                                : '—',
+                            color: averageAdherenceScore != null
+                                ? (averageAdherenceScore >= 85
+                                      ? Colors.green
+                                      : averageAdherenceScore >= 70
+                                      ? Colors.orange
+                                      : Colors.red)
+                                : null,
                           ),
-                        ),
+                          _SummaryMetric(
+                            label: DietStrings.averageCaloriesLabel,
+                            value: averageCaloriesConsumed != null
+                                ? DietStrings.caloriesKcal(
+                                    averageCaloriesConsumed,
+                                  )
+                                : '—',
+                          ),
+                          _SummaryMetric(
+                            label: DietStrings.averageWaterLabel,
+                            value: averageWaterIntakeMl != null
+                                ? DietStrings.waterMl(averageWaterIntakeMl)
+                                : '—',
+                            color: Colors.blue,
+                          ),
+                          _SummaryMetric(
+                            label: DietStrings.daysLoggedLabel,
+                            value: '$totalLoggedDays',
+                          ),
+                        ],
                       ),
                     ),
-
-                  // Logs list
-                  Expanded(
-                    child: logs.isEmpty
-                        ? const AppEmptyView(message: DietStrings.historyEmpty)
-                        : RefreshIndicator(
-                            onRefresh: () => context
-                                .read<DietHistoryCubit>()
-                                .load(memberId: memberId, range: selectedRange),
-                            child: ListView.builder(
-                              itemCount: logs.length,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              itemBuilder: (context, index) {
-                                return _DailyLogTile(
-                                  log: logs[index],
-                                  isReviewMode: role != DietHistoryRole.member,
-                                );
-                              },
-                            ),
-                          ),
                   ),
-                ],
-              );
+                ),
+
+              // Logs list
+              Expanded(
+                child: logs.isEmpty
+                    ? const AppEmptyView(message: DietStrings.historyEmpty)
+                    : RefreshIndicator(
+                        onRefresh: () => context.read<DietHistoryCubit>().load(
+                          memberId: memberId,
+                          range: selectedRange,
+                        ),
+                        child: ListView.builder(
+                          itemCount: logs.length,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          itemBuilder: (context, index) {
+                            return _DailyLogTile(
+                              log: logs[index],
+                              isReviewMode: role != DietHistoryRole.member,
+                            );
+                          },
+                        ),
+                      ),
+              ),
+            ],
+          );
         },
       ),
     );
@@ -214,11 +218,7 @@ class _RangeChip extends StatelessWidget {
 }
 
 class _SummaryMetric extends StatelessWidget {
-  const _SummaryMetric({
-    required this.label,
-    required this.value,
-    this.color,
-  });
+  const _SummaryMetric({required this.label, required this.value, this.color});
 
   final String label;
   final String value;
@@ -245,10 +245,7 @@ class _SummaryMetric extends StatelessWidget {
 }
 
 class _DailyLogTile extends StatelessWidget {
-  const _DailyLogTile({
-    required this.log,
-    required this.isReviewMode,
-  });
+  const _DailyLogTile({required this.log, required this.isReviewMode});
 
   final DietLog log;
   final bool isReviewMode;
@@ -283,7 +280,11 @@ class _DailyLogTile extends StatelessWidget {
             Row(
               children: [
                 if (log.totalCaloriesConsumed != null) ...[
-                  const Icon(Icons.local_fire_department, size: 16, color: Colors.orange),
+                  const Icon(
+                    Icons.local_fire_department,
+                    size: 16,
+                    color: Colors.orange,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     DietStrings.caloriesKcal(log.totalCaloriesConsumed!),
@@ -339,9 +340,18 @@ class _AdherenceRatingChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final rating = DietAdherenceRating.fromScore(score);
     final (color, label) = switch (rating) {
-      DietAdherenceRating.onTarget => (Colors.green, DietStrings.complianceOnTarget),
-      DietAdherenceRating.moderate => (Colors.orange, DietStrings.complianceModerate),
-      DietAdherenceRating.offTarget => (Colors.red, DietStrings.complianceOffTarget),
+      DietAdherenceRating.onTarget => (
+        Colors.green,
+        DietStrings.complianceOnTarget,
+      ),
+      DietAdherenceRating.moderate => (
+        Colors.orange,
+        DietStrings.complianceModerate,
+      ),
+      DietAdherenceRating.offTarget => (
+        Colors.red,
+        DietStrings.complianceOffTarget,
+      ),
     };
 
     return Container(

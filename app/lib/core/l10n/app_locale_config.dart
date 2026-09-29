@@ -4,7 +4,5 @@ import 'package:flutter/material.dart';
 abstract final class AppLocaleConfig {
   static const Locale fallback = Locale('en');
 
-  static const List<Locale> supportedLocales = [
-    Locale('en'),
-  ];
+  static const List<Locale> supportedLocales = [Locale('en')];
 }

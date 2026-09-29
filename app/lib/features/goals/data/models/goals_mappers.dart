@@ -152,8 +152,7 @@ api.ProgressPhotoWritePoseEnum toApiPhotoPose(PhotoPose pose) {
 
 api.ProgressNoteWriteNoteTypeEnum toApiNoteType(ProgressNoteType type) {
   return switch (type) {
-    ProgressNoteType.memberNote =>
-      api.ProgressNoteWriteNoteTypeEnum.memberNote,
+    ProgressNoteType.memberNote => api.ProgressNoteWriteNoteTypeEnum.memberNote,
     ProgressNoteType.trainerAssessment =>
       api.ProgressNoteWriteNoteTypeEnum.trainerAssessment,
   };
@@ -222,8 +221,9 @@ api.MeasurementWrite toMeasurementWrite({
               ..metricId = int.parse(v.metricId)
               ..value = v.value
               ..id = v.id == null ? null : int.tryParse(v.id!)
-              ..measurementId =
-                  v.measurementId == null ? null : int.tryParse(v.measurementId!),
+              ..measurementId = v.measurementId == null
+                  ? null
+                  : int.tryParse(v.measurementId!),
           ),
         ),
       ),

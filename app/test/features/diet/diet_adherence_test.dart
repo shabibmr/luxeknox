@@ -4,8 +4,14 @@ import 'package:luxeknox/features/diet/domain/entities/diet_adherence.dart';
 void main() {
   group('computeDietAdherence', () {
     test('returns 100 when target is 0 or negative', () {
-      expect(computeDietAdherence(caloriesConsumed: 2000, targetCalories: 0), 100.0);
-      expect(computeDietAdherence(caloriesConsumed: 2000, targetCalories: -100), 100.0);
+      expect(
+        computeDietAdherence(caloriesConsumed: 2000, targetCalories: 0),
+        100.0,
+      );
+      expect(
+        computeDietAdherence(caloriesConsumed: 2000, targetCalories: -100),
+        100.0,
+      );
     });
 
     test('returns 100 when consumed equals target', () {
@@ -46,7 +52,10 @@ void main() {
     });
 
     test('maps score < 70 to offTarget', () {
-      expect(DietAdherenceRating.fromScore(69.9), DietAdherenceRating.offTarget);
+      expect(
+        DietAdherenceRating.fromScore(69.9),
+        DietAdherenceRating.offTarget,
+      );
       expect(DietAdherenceRating.fromScore(0), DietAdherenceRating.offTarget);
     });
   });

@@ -62,9 +62,8 @@ class GoalFormCubit extends Cubit<GoalFormState> {
       existing = goalResult.fold((_) => null, (g) => g);
     }
     metricsResult.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) {
         _formReady = true;
         emit(

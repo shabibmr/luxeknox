@@ -130,7 +130,11 @@ void main() {
     test('clear flags null out optional fields', () {
       final draft = ScheduleFormDraft(
         scheduleType: scheduleType,
-        facility: const FacilityInfo(id: 'f1', name: 'Main hall', isActive: true),
+        facility: const FacilityInfo(
+          id: 'f1',
+          name: 'Main hall',
+          isActive: true,
+        ),
         trainer: trainer,
         maxCapacity: 5,
         notes: 'note',

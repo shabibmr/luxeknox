@@ -134,7 +134,8 @@ class ListAttendanceHistoriesParams {
 
 @lazySingleton
 class ListAttendanceHistoriesUseCase
-    implements UseCase<List<AttendanceHistoryDay>, ListAttendanceHistoriesParams> {
+    implements
+        UseCase<List<AttendanceHistoryDay>, ListAttendanceHistoriesParams> {
   const ListAttendanceHistoriesUseCase(this._repository);
 
   final AttendanceRepository _repository;

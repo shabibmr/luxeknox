@@ -121,9 +121,7 @@ void main() {
 
     test('ListTrainersUseCase calls repository.listTrainers', () async {
       const page = CursorPage<TrainerSummary>(
-        items: [
-          TrainerSummary(id: 1, userId: 2, fullName: 'T One'),
-        ],
+        items: [TrainerSummary(id: 1, userId: 2, fullName: 'T One')],
         nextCursor: null,
         hasMore: false,
       );
@@ -172,7 +170,12 @@ void main() {
         lastName: 'Doe',
         email: 'jane@example.com',
       );
-      const trainer = TrainerProfile(id: 1, userId: 2, firstName: 'Jane', lastName: 'Doe');
+      const trainer = TrainerProfile(
+        id: 1,
+        userId: 2,
+        firstName: 'Jane',
+        lastName: 'Doe',
+      );
       when(
         () => mockRepository.createTrainer(input),
       ).thenAnswer((_) async => const Right(trainer));
@@ -242,10 +245,7 @@ void main() {
           status: 'onProbation',
         );
         when(
-          () => mockRepository.setEmployeeStatus(
-            5,
-            EmployeeStatus.onProbation,
-          ),
+          () => mockRepository.setEmployeeStatus(5, EmployeeStatus.onProbation),
         ).thenAnswer((_) async => const Right(employee));
 
         final useCase = SetEmployeeStatusUseCase(mockRepository);
@@ -258,10 +258,7 @@ void main() {
 
         expect(result, const Right(employee));
         verify(
-          () => mockRepository.setEmployeeStatus(
-            5,
-            EmployeeStatus.onProbation,
-          ),
+          () => mockRepository.setEmployeeStatus(5, EmployeeStatus.onProbation),
         ).called(1);
       },
     );

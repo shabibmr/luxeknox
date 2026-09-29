@@ -20,9 +20,7 @@ class MembershipRenewScreen extends StatelessWidget {
     if (!canApprove) {
       return Scaffold(
         appBar: AppBar(title: const Text(MembershipStrings.renewTitle)),
-        body: const Center(
-          child: Text(MembershipStrings.noPermission),
-        ),
+        body: const Center(child: Text(MembershipStrings.noPermission)),
       );
     }
 
@@ -76,9 +74,9 @@ class _MembershipRenewViewState extends State<_MembershipRenewView> {
       final message = state.isConflict
           ? MembershipStrings.rowVersionConflict('renew')
           : failureMessage(state.failure!);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -105,9 +103,9 @@ class _MembershipRenewViewState extends State<_MembershipRenewView> {
                   ),
                   const SizedBox(height: 16),
                   FilledButton(
-                    onPressed: () => context
-                        .read<MembershipRenewCubit>()
-                        .load(widget.membershipId),
+                    onPressed: () => context.read<MembershipRenewCubit>().load(
+                      widget.membershipId,
+                    ),
                     child: const Text(MembershipStrings.retry),
                   ),
                 ],
@@ -134,7 +132,7 @@ class _MembershipRenewViewState extends State<_MembershipRenewView> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   key: const Key('renew_product_dropdown'),
-                  value: state.selectedProductId,
+                  initialValue: state.selectedProductId,
                   decoration: const InputDecoration(
                     labelText: MembershipStrings.packageLabel,
                     hintText: MembershipStrings.selectProduct,
@@ -146,9 +144,9 @@ class _MembershipRenewViewState extends State<_MembershipRenewView> {
                     );
                   }).toList(),
                   onChanged: (value) {
-                    context
-                        .read<MembershipRenewCubit>()
-                        .onProductChanged(value);
+                    context.read<MembershipRenewCubit>().onProductChanged(
+                      value,
+                    );
                   },
                 ),
                 const SizedBox(height: 16),

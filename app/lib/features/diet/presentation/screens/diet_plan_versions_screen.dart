@@ -43,8 +43,7 @@ class _VersionsBody extends StatelessWidget {
           if (state.status == LoadStatus.failure && !showData) {
             return AppErrorView(
               message: failureMessage(state.failure!),
-              onRetry: () =>
-                  context.read<DietPlanVersionsCubit>().load(planId),
+              onRetry: () => context.read<DietPlanVersionsCubit>().load(planId),
             );
           }
           final versions = state.versions;

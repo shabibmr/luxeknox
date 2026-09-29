@@ -17,7 +17,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockSessionCubit extends MockCubit<SessionState> implements SessionCubit {}
+class MockSessionCubit extends MockCubit<SessionState>
+    implements SessionCubit {}
 
 class MockGetAttendanceOccupancyUseCase extends Mock
     implements GetAttendanceOccupancyUseCase {}
@@ -43,12 +44,17 @@ void main() {
         ),
       ),
     );
-    getIt.registerFactory<GetAttendanceOccupancyUseCase>(() => occupancyUseCase);
+    getIt.registerFactory<GetAttendanceOccupancyUseCase>(
+      () => occupancyUseCase,
+    );
   });
 
   tearDown(() => getIt.reset());
 
-  Widget wrap(Widget child, {Capabilities capabilities = const Capabilities(slugs: [])}) {
+  Widget wrap(
+    Widget child, {
+    Capabilities capabilities = const Capabilities(slugs: []),
+  }) {
     final sessionCubit = MockSessionCubit();
     whenListen(
       sessionCubit,
@@ -68,9 +74,7 @@ void main() {
 
   testWidgets('renders nothing for payments (blocked)', (tester) async {
     await tester.pumpWidget(
-      wrap(
-        const ReportChartSection(type: AppReportType.payments, rows: []),
-      ),
+      wrap(const ReportChartSection(type: AppReportType.payments, rows: [])),
     );
     await tester.pumpAndSettle();
 
@@ -82,9 +86,9 @@ void main() {
   ) async {
     await tester.pumpWidget(
       wrap(
-        ReportChartSection(
+        const ReportChartSection(
           type: AppReportType.members,
-          rows: const [
+          rows: [
             {'category': 'summary', 'metric': 'active_members', 'count': 10},
           ],
         ),

@@ -35,17 +35,15 @@ void main() {
     getMethods = _MockGetMethods();
     createMethod = _MockCreateMethod();
     registerFallbackValue(const NoParams());
-    registerFallbackValue(
-      const CreatePaymentMethodParams(methodName: 'x'),
-    );
+    registerFallbackValue(const CreatePaymentMethodParams(methodName: 'x'));
   });
 
   blocTest<PaymentMethodsCubit, PaymentMethodsState>(
     'loads payment methods',
     build: () {
-      when(() => getMethods(any())).thenAnswer(
-        (_) async => const Right([cash]),
-      );
+      when(
+        () => getMethods(any()),
+      ).thenAnswer((_) async => const Right([cash]));
       return PaymentMethodsCubit(getMethods, createMethod);
     },
     act: (cubit) => cubit.load(),
@@ -57,11 +55,7 @@ void main() {
       ),
       isA<PaymentMethodsState>()
           .having((s) => s.status, 'status', LoadStatus.success)
-          .having(
-            (s) => s.items.map((m) => m.id).toList(),
-            'ids',
-            ['1'],
-          ),
+          .having((s) => s.items.map((m) => m.id).toList(), 'ids', ['1']),
     ],
   );
 
@@ -74,7 +68,9 @@ void main() {
         if (loadCount == 1) return const Right([cash]);
         return const Right([cash, card]);
       });
-      when(() => createMethod(any())).thenAnswer((_) async => const Right(card));
+      when(
+        () => createMethod(any()),
+      ).thenAnswer((_) async => const Right(card));
       return PaymentMethodsCubit(getMethods, createMethod);
     },
     act: (cubit) async {
@@ -96,11 +92,10 @@ void main() {
           .having((s) => s.items.length, 'len', 1),
       isA<PaymentMethodsState>()
           .having((s) => s.status, 'status', LoadStatus.success)
-          .having(
-            (s) => s.items.map((m) => m.methodName).toList(),
-            'names',
-            ['Cash', 'Card'],
-          ),
+          .having((s) => s.items.map((m) => m.methodName).toList(), 'names', [
+            'Cash',
+            'Card',
+          ]),
     ],
     verify: (_) {
       final captured = verify(() => createMethod(captureAny())).captured;
@@ -115,12 +110,12 @@ void main() {
   blocTest<PaymentMethodsCubit, PaymentMethodsState>(
     'createMethod failure keeps list and surfaces message',
     build: () {
-      when(() => getMethods(any())).thenAnswer(
-        (_) async => const Right([cash]),
-      );
-      when(() => createMethod(any())).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(
+        () => getMethods(any()),
+      ).thenAnswer((_) async => const Right([cash]));
+      when(
+        () => createMethod(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return PaymentMethodsCubit(getMethods, createMethod);
     },
     act: (cubit) async {

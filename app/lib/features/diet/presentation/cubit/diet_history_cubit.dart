@@ -54,16 +54,12 @@ class DietHistoryCubit extends Cubit<DietHistoryState> {
     emit(state.copyWith(status: LoadStatus.loading, failure: null));
 
     final result = await _listDietLogs(
-      ListDietLogsParams(
-        memberId: memberId,
-        limit: 100,
-      ),
+      ListDietLogsParams(memberId: memberId, limit: 100),
     );
 
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) {
         _allLogs = page.items;
         _emitFiltered(_allLogs, _range);

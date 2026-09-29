@@ -27,13 +27,10 @@ class OutstandingDuesCubit extends Cubit<OutstandingDuesState> {
 
   Future<void> load() async {
     emit(state.copyWith(status: LoadStatus.loading, failure: null));
-    final result = await _getOutstanding(
-      const GetOutstandingPaymentsParams(),
-    );
+    final result = await _getOutstanding(const GetOutstandingPaymentsParams());
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
         state.copyWith(
           status: LoadStatus.success,

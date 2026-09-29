@@ -33,56 +33,60 @@ class _TrainerMembershipSummaryBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(MembershipStrings.trainerSummaryTitle)),
-      body: BlocBuilder<TrainerMembershipSummaryCubit, TrainerMembershipSummaryState>(
-        builder: (context, state) {
-          final membership = state.membership;
-          if (membership == null &&
-              (state.status == LoadStatus.initial ||
-                  state.status == LoadStatus.loading)) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (membership == null) {
-            return Center(
-              child: Text(
-                state.failure == null
-                    ? MembershipStrings.noActiveMembership
-                    : failureMessage(state.failure!),
-              ),
-            );
-          }
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Membership #${membership.productId}',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
+      body:
+          BlocBuilder<
+            TrainerMembershipSummaryCubit,
+            TrainerMembershipSummaryState
+          >(
+            builder: (context, state) {
+              final membership = state.membership;
+              if (membership == null &&
+                  (state.status == LoadStatus.initial ||
+                      state.status == LoadStatus.loading)) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (membership == null) {
+                return Center(
+                  child: Text(
+                    state.failure == null
+                        ? MembershipStrings.noActiveMembership
+                        : failureMessage(state.failure!),
                   ),
-                  MembershipStatusChip(status: membership.status),
+                );
+              }
+              return ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Membership #${membership.productId}',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
+                      MembershipStatusChip(status: membership.status),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _infoRow(
+                    MembershipStrings.startDateLabel,
+                    membership.startDate.toString().split(' ').first,
+                  ),
+                  _infoRow(
+                    MembershipStrings.endDateLabel,
+                    membership.endDate.toString().split(' ').first,
+                  ),
+                  if (membership.remainingPtSessions != null)
+                    _infoRow(
+                      MembershipStrings.remainingPtSessions,
+                      membership.remainingPtSessions.toString(),
+                    ),
                 ],
-              ),
-              const SizedBox(height: 16),
-              _infoRow(
-                MembershipStrings.startDateLabel,
-                membership.startDate.toString().split(' ').first,
-              ),
-              _infoRow(
-                MembershipStrings.endDateLabel,
-                membership.endDate.toString().split(' ').first,
-              ),
-              if (membership.remainingPtSessions != null)
-                _infoRow(
-                  MembershipStrings.remainingPtSessions,
-                  membership.remainingPtSessions.toString(),
-                ),
-            ],
-          );
-        },
-      ),
+              );
+            },
+          ),
     );
   }
 

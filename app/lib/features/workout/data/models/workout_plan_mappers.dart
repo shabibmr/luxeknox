@@ -156,9 +156,7 @@ extension WorkoutSessionExerciseModelMapper on api.WorkoutSessionExercise {
 }
 
 api.AssignPlanRequest toAssignPlanRequest(String memberId) {
-  return api.AssignPlanRequest(
-    (b) => b..memberId = int.parse(memberId),
-  );
+  return api.AssignPlanRequest((b) => b..memberId = int.parse(memberId));
 }
 
 api.WorkoutSessionCreate toWorkoutSessionCreate({
@@ -169,8 +167,9 @@ api.WorkoutSessionCreate toWorkoutSessionCreate({
   return api.WorkoutSessionCreate(
     (b) => b
       ..memberId = int.parse(memberId)
-      ..workoutPlanId =
-          workoutPlanId == null ? null : int.tryParse(workoutPlanId)
+      ..workoutPlanId = workoutPlanId == null
+          ? null
+          : int.tryParse(workoutPlanId)
       ..workoutPlanVersionId = workoutPlanVersionId == null
           ? null
           : int.tryParse(workoutPlanVersionId),

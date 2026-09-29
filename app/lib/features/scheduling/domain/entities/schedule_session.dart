@@ -68,8 +68,7 @@ class ScheduleSession extends Equatable {
       .where((p) => p.bookingStatus == BookingStatus.waitlisted)
       .length;
 
-  bool get isFull =>
-      maxCapacity != null && bookedCount >= maxCapacity!;
+  bool get isFull => maxCapacity != null && bookedCount >= maxCapacity!;
 
   bool get isRecurring => seriesId != null && seriesId!.isNotEmpty;
 

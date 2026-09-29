@@ -77,10 +77,7 @@ class CreateScheduleUseCase
 }
 
 class UpdateScheduleParams extends Equatable {
-  const UpdateScheduleParams({
-    required this.id,
-    required this.input,
-  });
+  const UpdateScheduleParams({required this.id, required this.input});
 
   final String id;
   final CreateScheduleInput input;
@@ -225,4 +222,3 @@ class CompleteScheduleUseCase implements UseCase<ScheduleSession, String> {
     return _repository.completeSchedule(id);
   }
 }
-

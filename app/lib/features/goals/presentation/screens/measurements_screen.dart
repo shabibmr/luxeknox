@@ -43,8 +43,9 @@ class MeasurementsScreen extends StatelessWidget {
     }
 
     return BlocProvider(
-      create: (_) => getIt<MeasurementsCubit>()
-        ..load(id, mandatoryMetricIds: mandatoryMetricIds),
+      create: (_) =>
+          getIt<MeasurementsCubit>()
+            ..load(id, mandatoryMetricIds: mandatoryMetricIds),
       child: _MeasurementsBody(
         memberId: id,
         mandatoryMetricIds: mandatoryMetricIds,
@@ -62,7 +63,10 @@ class _MeasurementsBody extends StatelessWidget {
   final String memberId;
   final List<String> mandatoryMetricIds;
 
-  Future<void> _openCreate(BuildContext context, MeasurementsState state) async {
+  Future<void> _openCreate(
+    BuildContext context,
+    MeasurementsState state,
+  ) async {
     final controllers = <String, TextEditingController>{
       for (final m in state.metrics) m.id: TextEditingController(),
     };
@@ -213,47 +217,45 @@ class _MeasurementsBody extends StatelessWidget {
           final sessions = state.sessions;
           final metrics = state.metrics;
           return sessions.isEmpty && metrics.isEmpty
-                  ? const AppEmptyView(message: GoalsStrings.measurementsEmpty)
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        Text(
-                          GoalsStrings.chartsSection,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        for (final m in metrics.take(3)) ...[
-                          Text('${m.name} (${m.unitOfMeasure})'),
-                          MetricChart(points: _chartPoints(state, m.id)),
-                          const SizedBox(height: 12),
-                        ],
-                        const Divider(),
-                        Text(
-                          GoalsStrings.measurementsTitle,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        if (sessions.isEmpty)
-                          const Text(GoalsStrings.measurementsEmpty)
-                        else
-                          for (final s in sessions)
-                            Card(
-                              child: ListTile(
-                                title: Text(
-                                  s.recordedAt.toIso8601String(),
-                                ),
-                                subtitle: Text(
-                                  [
-                                    if (s.notes != null && s.notes!.isNotEmpty)
-                                      s.notes!,
-                                    for (final v in s.values)
-                                      '${v.metricId}: ${v.value}',
-                                  ].join(' · '),
-                                ),
-                              ),
+              ? const AppEmptyView(message: GoalsStrings.measurementsEmpty)
+              : ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    Text(
+                      GoalsStrings.chartsSection,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    for (final m in metrics.take(3)) ...[
+                      Text('${m.name} (${m.unitOfMeasure})'),
+                      MetricChart(points: _chartPoints(state, m.id)),
+                      const SizedBox(height: 12),
+                    ],
+                    const Divider(),
+                    Text(
+                      GoalsStrings.measurementsTitle,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    if (sessions.isEmpty)
+                      const Text(GoalsStrings.measurementsEmpty)
+                    else
+                      for (final s in sessions)
+                        Card(
+                          child: ListTile(
+                            title: Text(s.recordedAt.toIso8601String()),
+                            subtitle: Text(
+                              [
+                                if (s.notes != null && s.notes!.isNotEmpty)
+                                  s.notes!,
+                                for (final v in s.values)
+                                  '${v.metricId}: ${v.value}',
+                              ].join(' · '),
                             ),
-                      ],
-                    );
+                          ),
+                        ),
+                  ],
+                );
         },
       ),
     );

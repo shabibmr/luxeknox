@@ -49,11 +49,7 @@ void main() {
 
     when(() => listTrainers(any())).thenAnswer(
       (_) async => const Right(
-        CursorPage<TrainerSummary>(
-          items: [],
-          nextCursor: null,
-          hasMore: false,
-        ),
+        CursorPage<TrainerSummary>(items: [], nextCursor: null, hasMore: false),
       ),
     );
 
@@ -78,10 +74,7 @@ void main() {
       ),
     );
     return MaterialApp(
-      home: BlocProvider<SessionCubit>.value(
-        value: sessionCubit,
-        child: child,
-      ),
+      home: BlocProvider<SessionCubit>.value(value: sessionCubit, child: child),
     );
   }
 

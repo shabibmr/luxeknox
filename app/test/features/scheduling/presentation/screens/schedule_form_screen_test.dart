@@ -20,11 +20,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockCreateScheduleUseCase extends Mock
-    implements CreateScheduleUseCase {}
+class MockCreateScheduleUseCase extends Mock implements CreateScheduleUseCase {}
 
-class MockUpdateScheduleUseCase extends Mock
-    implements UpdateScheduleUseCase {}
+class MockUpdateScheduleUseCase extends Mock implements UpdateScheduleUseCase {}
 
 class MockGetScheduleUseCase extends Mock implements GetScheduleUseCase {}
 
@@ -114,17 +112,29 @@ void main() {
     getTrainer = MockGetTrainerUseCase();
     timezoneProvider = MockGymTimezoneProvider();
 
-    when(() => listScheduleTypes(any()))
-        .thenAnswer((_) async => const Right(sampleTypes));
-    when(() => listFacilities(any()))
-        .thenAnswer((_) async => const Right(sampleFacilities));
-    when(() => listTrainers(any()))
-        .thenAnswer((_) async => const Right(CursorPage(items: [sampleTrainerSummary], nextCursor: null, hasMore: false)));
-    when(() => getTrainer(any()))
-        .thenAnswer((_) async => const Right(sampleTrainer));
+    when(
+      () => listScheduleTypes(any()),
+    ).thenAnswer((_) async => const Right(sampleTypes));
+    when(
+      () => listFacilities(any()),
+    ).thenAnswer((_) async => const Right(sampleFacilities));
+    when(() => listTrainers(any())).thenAnswer(
+      (_) async => const Right(
+        CursorPage(
+          items: [sampleTrainerSummary],
+          nextCursor: null,
+          hasMore: false,
+        ),
+      ),
+    );
+    when(
+      () => getTrainer(any()),
+    ).thenAnswer((_) async => const Right(sampleTrainer));
     when(() => timezoneProvider.timezone()).thenAnswer((_) async => 'UTC');
 
-    getIt.registerLazySingleton<ListScheduleTypesUseCase>(() => listScheduleTypes);
+    getIt.registerLazySingleton<ListScheduleTypesUseCase>(
+      () => listScheduleTypes,
+    );
     getIt.registerLazySingleton<ListFacilitiesUseCase>(() => listFacilities);
     getIt.registerLazySingleton<ListTrainersUseCase>(() => listTrainers);
     getIt.registerLazySingleton<GymTimezoneProvider>(() => timezoneProvider);
@@ -145,9 +155,7 @@ void main() {
   });
 
   Widget buildWidget(ScheduleFormScreen screen) {
-    return MaterialApp(
-      home: screen,
-    );
+    return MaterialApp(home: screen);
   }
 
   testWidgets('renders create mode title and form inputs', (tester) async {
@@ -165,9 +173,12 @@ void main() {
     expect(find.byKey(const Key('schedule_notes_field')), findsOneWidget);
   });
 
-  testWidgets('submits create mode form successfully with recurUntil', (tester) async {
-    when(() => createSchedule(any()))
-        .thenAnswer((_) async => Right(sampleSession));
+  testWidgets('submits create mode form successfully with recurUntil', (
+    tester,
+  ) async {
+    when(
+      () => createSchedule(any()),
+    ).thenAnswer((_) async => Right(sampleSession));
 
     await tester.pumpWidget(
       buildWidget(ScheduleFormScreen.create(cubit: cubit)),
@@ -191,7 +202,10 @@ void main() {
     cubit.updateDraft((d) => d.copyWith(recurUntil: DateTime(2026, 12, 31)));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('schedule_recur_until_clear_button')), findsOneWidget);
+    expect(
+      find.byKey(const Key('schedule_recur_until_clear_button')),
+      findsOneWidget,
+    );
 
     // Submit
     await tester.drag(find.byType(ListView), const Offset(0, -500));
@@ -199,8 +213,9 @@ void main() {
     await tester.tap(find.byKey(const Key('schedule_form_submit_button')));
     await tester.pumpAndSettle();
 
-    final captured = verify(() => createSchedule(captureAny())).captured.single
-        as CreateScheduleInput;
+    final captured =
+        verify(() => createSchedule(captureAny())).captured.single
+            as CreateScheduleInput;
     expect(captured.recurUntil, DateTime(2026, 12, 31));
   });
 
@@ -213,15 +228,25 @@ void main() {
     cubit.updateDraft((d) => d.copyWith(recurUntil: DateTime(2026, 12, 31)));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('schedule_recur_until_clear_button')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('schedule_recur_until_clear_button')));
+    expect(
+      find.byKey(const Key('schedule_recur_until_clear_button')),
+      findsOneWidget,
+    );
+    await tester.tap(
+      find.byKey(const Key('schedule_recur_until_clear_button')),
+    );
     await tester.pumpAndSettle();
 
     expect(cubit.state.draft.recurUntil, isNull);
-    expect(find.byKey(const Key('schedule_recur_until_clear_button')), findsNothing);
+    expect(
+      find.byKey(const Key('schedule_recur_until_clear_button')),
+      findsNothing,
+    );
   });
 
-  testWidgets('renders edit mode with prefilled values and recurring banner', (tester) async {
+  testWidgets('renders edit mode with prefilled values and recurring banner', (
+    tester,
+  ) async {
     final recurringSession = ScheduleSession(
       id: 's1',
       seriesId: 'series-123',
@@ -237,8 +262,9 @@ void main() {
       rowVersion: 1,
     );
 
-    when(() => getSchedule('s1'))
-        .thenAnswer((_) async => Right(recurringSession));
+    when(
+      () => getSchedule('s1'),
+    ).thenAnswer((_) async => Right(recurringSession));
 
     await tester.pumpWidget(
       buildWidget(ScheduleFormScreen.edit(scheduleId: 's1', cubit: cubit)),
@@ -247,7 +273,10 @@ void main() {
 
     expect(find.text('Edit schedule'), findsOneWidget);
     expect(find.text('Morning Yoga'), findsOneWidget);
-    expect(find.byKey(const Key('recurring_session_edit_banner')), findsOneWidget);
+    expect(
+      find.byKey(const Key('recurring_session_edit_banner')),
+      findsOneWidget,
+    );
     expect(find.byKey(const Key('schedule_recur_until_field')), findsNothing);
     await tester.drag(find.byType(ListView), const Offset(0, -300));
     await tester.pumpAndSettle();
@@ -256,10 +285,10 @@ void main() {
   });
 
   testWidgets('handles rowVersion conflict on edit submit', (tester) async {
-    when(() => getSchedule('s1'))
-        .thenAnswer((_) async => Right(sampleSession));
-    when(() => updateSchedule(any()))
-        .thenAnswer((_) async => const Left(ConflictFailure()));
+    when(() => getSchedule('s1')).thenAnswer((_) async => Right(sampleSession));
+    when(
+      () => updateSchedule(any()),
+    ).thenAnswer((_) async => const Left(ConflictFailure()));
 
     await tester.pumpWidget(
       buildWidget(ScheduleFormScreen.edit(scheduleId: 's1', cubit: cubit)),

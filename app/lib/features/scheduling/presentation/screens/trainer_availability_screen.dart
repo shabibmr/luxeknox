@@ -19,7 +19,8 @@ class TrainerAvailabilityScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final session = context.read<SessionCubit>().state;
-    final id = trainerId ??
+    final id =
+        trainerId ??
         (session is SessionAuthenticated ? session.principal.profileId : null);
     if (id == null) {
       return const Scaffold(
@@ -67,22 +68,25 @@ class _TrainerAvailabilityBody extends StatelessWidget {
             );
           }
           return ListView.builder(
-                    itemCount: slots.length,
-                    itemBuilder: (context, index) {
-                      final slot = slots[index];
-                      return ListTile(
-                        title: Text(
-                          slot.dayOfWeek == null
-                              ? (slot.overrideDate?.toIso8601String().split('T').first ??
-                                  'Slot')
-                              : 'Day ${slot.dayOfWeek}',
-                        ),
-                        subtitle: Text(
-                          '${slot.startTime ?? '?'} – ${slot.endTime ?? '?'}'
-                          '${slot.isAvailable ? '' : ' (blocked)'}',
-                        ),
-                      );
-                    },
+            itemCount: slots.length,
+            itemBuilder: (context, index) {
+              final slot = slots[index];
+              return ListTile(
+                title: Text(
+                  slot.dayOfWeek == null
+                      ? (slot.overrideDate
+                                ?.toIso8601String()
+                                .split('T')
+                                .first ??
+                            'Slot')
+                      : 'Day ${slot.dayOfWeek}',
+                ),
+                subtitle: Text(
+                  '${slot.startTime ?? '?'} – ${slot.endTime ?? '?'}'
+                  '${slot.isAvailable ? '' : ' (blocked)'}',
+                ),
+              );
+            },
           );
         },
       ),

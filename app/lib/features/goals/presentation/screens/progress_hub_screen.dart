@@ -60,10 +60,7 @@ class ProgressHubScreen extends StatelessWidget {
 
     return BlocProvider(
       create: (_) => getIt<GoalsListCubit>()..load(id),
-      child: _ProgressHubBody(
-        memberId: id,
-        canCreateGoals: _canMutateGoals(),
-      ),
+      child: _ProgressHubBody(memberId: id, canCreateGoals: _canMutateGoals()),
     );
   }
 }
@@ -171,7 +168,8 @@ class _ProgressHubBody extends StatelessWidget {
             child: BlocBuilder<GoalsListCubit, GoalsListState>(
               builder: (context, state) {
                 final showData =
-                    state.status == LoadStatus.success || state.items.isNotEmpty;
+                    state.status == LoadStatus.success ||
+                    state.items.isNotEmpty;
                 if (state.status == LoadStatus.loading && !showData) {
                   return const AppLoading();
                 }
@@ -184,78 +182,78 @@ class _ProgressHubBody extends StatelessWidget {
                 }
                 final items = state.items;
                 return items.isEmpty
-                      ? const AppEmptyView(message: GoalsStrings.noneGoals)
-                      : RefreshIndicator(
-                          onRefresh: () =>
-                              context.read<GoalsListCubit>().load(memberId),
-                          child: ListView.separated(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: items.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final goal = items[index];
-                              return Card(
-                                child: InkWell(
-                                  onTap: () async {
-                                    if (isTrainerContext) {
-                                      await Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => GoalDetailScreen(
-                                            goalId: goal.id,
-                                          ),
-                                        ),
-                                      );
-                                      if (context.mounted) {
-                                        context
-                                            .read<GoalsListCubit>()
-                                            .load(memberId);
-                                      }
-                                    } else {
-                                      context.go(
-                                        Routes.memberProgressGoalById(goal.id),
+                    ? const AppEmptyView(message: GoalsStrings.noneGoals)
+                    : RefreshIndicator(
+                        onRefresh: () =>
+                            context.read<GoalsListCubit>().load(memberId),
+                        child: ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: items.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final goal = items[index];
+                            return Card(
+                              child: InkWell(
+                                onTap: () async {
+                                  if (isTrainerContext) {
+                                    await Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            GoalDetailScreen(goalId: goal.id),
+                                      ),
+                                    );
+                                    if (context.mounted) {
+                                      context.read<GoalsListCubit>().load(
+                                        memberId,
                                       );
                                     }
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: GoalProgressBar(goal: goal),
-                                        ),
-                                        if (canCreateGoals)
-                                          IconButton(
-                                            tooltip: GoalsStrings.edit,
-                                            icon: const Icon(Icons.edit_outlined),
-                                            onPressed: () async {
-                                              final saved =
-                                                  await Navigator.of(context)
-                                                      .push<bool>(
-                                                MaterialPageRoute(
-                                                  builder: (_) =>
-                                                      GoalFormScreen(
-                                                    memberId: memberId,
-                                                    goalId: goal.id,
+                                  } else {
+                                    context.go(
+                                      Routes.memberProgressGoalById(goal.id),
+                                    );
+                                  }
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: GoalProgressBar(goal: goal),
+                                      ),
+                                      if (canCreateGoals)
+                                        IconButton(
+                                          tooltip: GoalsStrings.edit,
+                                          icon: const Icon(Icons.edit_outlined),
+                                          onPressed: () async {
+                                            final saved =
+                                                await Navigator.of(
+                                                  context,
+                                                ).push<bool>(
+                                                  MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        GoalFormScreen(
+                                                          memberId: memberId,
+                                                          goalId: goal.id,
+                                                        ),
                                                   ),
-                                                ),
-                                              );
-                                              if (saved == true &&
-                                                  context.mounted) {
-                                                context
-                                                    .read<GoalsListCubit>()
-                                                    .load(memberId);
-                                              }
-                                            },
-                                          ),
-                                      ],
-                                    ),
+                                                );
+                                            if (saved == true &&
+                                                context.mounted) {
+                                              context
+                                                  .read<GoalsListCubit>()
+                                                  .load(memberId);
+                                            }
+                                          },
+                                        ),
+                                    ],
                                   ),
                                 ),
-                              );
-                            },
-                          ),
-                        );
+                              ),
+                            );
+                          },
+                        ),
+                      );
               },
             ),
           ),

@@ -9,11 +9,7 @@ import '../entities/diet_log.dart';
 import '../repositories/diet_log_repository.dart';
 
 class ListDietLogsParams extends Equatable {
-  const ListDietLogsParams({
-    required this.memberId,
-    this.limit,
-    this.cursor,
-  });
+  const ListDietLogsParams({required this.memberId, this.limit, this.cursor});
 
   final String memberId;
   final int? limit;

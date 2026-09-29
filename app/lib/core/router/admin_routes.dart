@@ -252,10 +252,7 @@ StatefulShellRoute createAdminBranchRoute() {
                       title: ShellStrings.trainers,
                     );
                   }
-                  return EditTrainerProfileScreen(
-                    trainerId: id,
-                    isAdmin: true,
-                  );
+                  return EditTrainerProfileScreen(trainerId: id, isAdmin: true);
                 },
               ),
             ],
@@ -266,8 +263,7 @@ StatefulShellRoute createAdminBranchRoute() {
             routes: [
               GoRoute(
                 path: 'create',
-                builder: (context, state) =>
-                    const EmployeeFormScreen.create(),
+                builder: (context, state) => const EmployeeFormScreen.create(),
               ),
               GoRoute(
                 path: ':id/edit',
@@ -325,8 +321,7 @@ StatefulShellRoute createAdminBranchRoute() {
             routes: [
               GoRoute(
                 path: 'create',
-                builder: (context, state) =>
-                    const ScheduleFormScreen.create(),
+                builder: (context, state) => const ScheduleFormScreen.create(),
               ),
               GoRoute(
                 path: 'facilities',

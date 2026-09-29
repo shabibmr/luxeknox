@@ -138,6 +138,5 @@ abstract final class GoalsStrings {
     ProgressNoteType.trainerAssessment => noteTypeTrainer,
   };
 
-  static String percentLabel(double fraction) =>
-      '${(fraction * 100).round()}%';
+  static String percentLabel(double fraction) => '${(fraction * 100).round()}%';
 }

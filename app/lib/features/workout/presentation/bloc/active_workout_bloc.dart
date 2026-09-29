@@ -103,6 +103,7 @@ abstract class ActiveWorkoutState with _$ActiveWorkoutState {
     WorkoutPlan? plan,
     String? selectedExerciseId,
     String? initialPlanId,
+
     /// Non-failure text such as a missing member id. API errors use [failure].
     String? message,
     Failure? failure,

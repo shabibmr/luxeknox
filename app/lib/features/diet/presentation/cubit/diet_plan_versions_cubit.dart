@@ -21,22 +21,17 @@ abstract class DietPlanVersionsState with _$DietPlanVersionsState {
 
 @injectable
 class DietPlanVersionsCubit extends Cubit<DietPlanVersionsState> {
-  DietPlanVersionsCubit(this._listVersions) : super(const DietPlanVersionsState());
+  DietPlanVersionsCubit(this._listVersions)
+    : super(const DietPlanVersionsState());
 
   final ListDietPlanVersionsUseCase _listVersions;
 
   Future<void> load(String planId) async {
-    emit(
-      state.copyWith(
-        status: LoadStatus.loading,
-        failure: null,
-      ),
-    );
+    emit(state.copyWith(status: LoadStatus.loading, failure: null));
     final result = await _listVersions(planId);
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (versions) => emit(
         state.copyWith(
           status: LoadStatus.success,

@@ -55,20 +55,16 @@ void main() {
       ),
       isA<GoalsListState>()
           .having((s) => s.status, 'status', LoadStatus.success)
-          .having(
-            (s) => s.items.map((g) => g.id).toList(),
-            'ids',
-            ['1', '2'],
-          ),
+          .having((s) => s.items.map((g) => g.id).toList(), 'ids', ['1', '2']),
     ],
   );
 
   blocTest<GoalsListCubit, GoalsListState>(
     'emits failure on error',
     build: () {
-      when(() => listGoals(any())).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(
+        () => listGoals(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return GoalsListCubit(listGoals);
     },
     act: (cubit) => cubit.load('10'),

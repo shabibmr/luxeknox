@@ -15,6 +15,7 @@ abstract class FacilitiesState with _$FacilitiesState {
   const factory FacilitiesState({
     @Default(LoadStatus.initial) LoadStatus status,
     @Default(<FacilityInfo>[]) List<FacilityInfo> items,
+
     /// True after a successful list, so an empty catalog is still data.
     @Default(false) bool hasLoaded,
     @Default(false) bool creating,
@@ -39,9 +40,8 @@ class FacilitiesCubit extends Cubit<FacilitiesState> {
     );
     final result = await _list(const NoParams());
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (items) => emit(
         state.copyWith(
           status: LoadStatus.success,
@@ -62,11 +62,7 @@ class FacilitiesCubit extends Cubit<FacilitiesState> {
     if (!state.hasLoaded || state.creating) return;
     final items = state.items;
     emit(
-      state.copyWith(
-        creating: true,
-        failure: null,
-        status: LoadStatus.success,
-      ),
+      state.copyWith(creating: true, failure: null, status: LoadStatus.success),
     );
     final result = await _create(
       CreateFacilityParams(

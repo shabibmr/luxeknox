@@ -4,8 +4,8 @@ enum ProgressNoteType {
 
   static ProgressNoteType fromWire(String? value) {
     return switch (value) {
-      'trainer_assessment' || 'trainerAssessment' =>
-        ProgressNoteType.trainerAssessment,
+      'trainer_assessment' ||
+      'trainerAssessment' => ProgressNoteType.trainerAssessment,
       'member_note' || 'memberNote' => ProgressNoteType.memberNote,
       _ => ProgressNoteType.memberNote,
     };

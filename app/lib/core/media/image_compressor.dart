@@ -22,7 +22,8 @@ class ImageCompressor {
     Uint8List bytes, {
     int? targetWidth,
     int? targetHeight,
-  }) _codecLoader;
+  })
+  _codecLoader;
 
   static Future<ui.Codec> _defaultCodecLoader(
     Uint8List bytes, {
@@ -49,11 +50,7 @@ class ImageCompressor {
       return bytes;
     }
 
-    return resizeAndCompress(
-      bytes,
-      maxWidth: maxWidth,
-      maxHeight: maxHeight,
-    );
+    return resizeAndCompress(bytes, maxWidth: maxWidth, maxHeight: maxHeight);
   }
 
   /// Resizes and encodes the image bytes to PNG format with specified bounds.

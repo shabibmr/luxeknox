@@ -39,9 +39,8 @@ class PaymentMethodsCubit extends Cubit<PaymentMethodsState> {
     );
     final result = await _getMethods(const NoParams());
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (items) => emit(
         state.copyWith(
           status: LoadStatus.success,
@@ -68,9 +67,7 @@ class PaymentMethodsCubit extends Cubit<PaymentMethodsState> {
       ),
     );
     result.fold(
-      (failure) => emit(
-        state.copyWith(creating: false, failure: failure),
-      ),
+      (failure) => emit(state.copyWith(creating: false, failure: failure)),
       (_) => load(),
     );
   }

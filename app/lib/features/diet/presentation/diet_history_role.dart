@@ -1,5 +1,1 @@
-enum DietHistoryRole {
-  member,
-  trainer,
-  admin,
-}
+enum DietHistoryRole { member, trainer, admin }

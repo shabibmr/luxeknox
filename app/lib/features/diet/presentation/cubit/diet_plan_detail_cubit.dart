@@ -51,9 +51,8 @@ class DietPlanDetailCubit extends Cubit<DietPlanDetailState> {
     );
     final result = await _getPlan(planId);
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (plan) => emit(
         state.copyWith(
           status: LoadStatus.success,
@@ -77,11 +76,7 @@ class DietPlanDetailCubit extends Cubit<DietPlanDetailState> {
     if (planId == null || state.plan == null) return;
 
     emit(
-      state.copyWith(
-        actionInFlight: true,
-        failure: null,
-        assignedPlan: null,
-      ),
+      state.copyWith(actionInFlight: true, failure: null, assignedPlan: null),
     );
     final result = await _publishPlan(planId);
     result.fold(
@@ -110,11 +105,7 @@ class DietPlanDetailCubit extends Cubit<DietPlanDetailState> {
     if (planId == null || state.plan == null) return;
 
     emit(
-      state.copyWith(
-        actionInFlight: true,
-        failure: null,
-        assignedPlan: null,
-      ),
+      state.copyWith(actionInFlight: true, failure: null, assignedPlan: null),
     );
     final result = await _archivePlan(planId);
     result.fold(
@@ -144,11 +135,7 @@ class DietPlanDetailCubit extends Cubit<DietPlanDetailState> {
     if (planId == null || plan == null) return;
 
     emit(
-      state.copyWith(
-        actionInFlight: true,
-        failure: null,
-        assignedPlan: null,
-      ),
+      state.copyWith(actionInFlight: true, failure: null, assignedPlan: null),
     );
     final result = await _assignPlan(
       AssignDietPlanParams(planId: planId, memberId: memberId),

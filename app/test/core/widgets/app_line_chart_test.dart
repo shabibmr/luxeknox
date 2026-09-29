@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:luxeknox/core/widgets/app_chart_types.dart';
 import 'package:luxeknox/core/widgets/app_empty_view.dart';
 import 'package:luxeknox/core/widgets/app_line_chart.dart';
@@ -15,7 +13,9 @@ void main() {
   ) async {
     await pumpApp(
       tester,
-      const AppLineChart(series: [AppLineSeries(name: 'Visits', points: [])]),
+      const AppLineChart(
+        series: [AppLineSeries(name: 'Visits', points: [])],
+      ),
     );
 
     expect(find.byType(AppEmptyView), findsOneWidget);

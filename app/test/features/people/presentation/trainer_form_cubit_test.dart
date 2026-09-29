@@ -40,7 +40,9 @@ void main() {
   });
 
   test('submit succeeds and stores created trainer', () async {
-    when(() => createTrainer(any())).thenAnswer((_) async => const Right(created));
+    when(
+      () => createTrainer(any()),
+    ).thenAnswer((_) async => const Right(created));
 
     cubit.updateInput(
       (i) => i.copyWith(
@@ -81,9 +83,9 @@ void main() {
   });
 
   test('maps failure message on create error', () async {
-    when(() => createTrainer(any())).thenAnswer(
-      (_) async => const Left(ConflictFailure()),
-    );
+    when(
+      () => createTrainer(any()),
+    ).thenAnswer((_) async => const Left(ConflictFailure()));
 
     cubit.updateInput(
       (i) => i.copyWith(

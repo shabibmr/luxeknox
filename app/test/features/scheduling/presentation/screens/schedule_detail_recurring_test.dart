@@ -18,7 +18,8 @@ import 'package:mocktail/mocktail.dart';
 class MockScheduleDetailCubit extends MockCubit<ScheduleDetailState>
     implements ScheduleDetailCubit {}
 
-class MockSessionCubit extends MockCubit<SessionState> implements SessionCubit {}
+class MockSessionCubit extends MockCubit<SessionState>
+    implements SessionCubit {}
 
 void main() {
   late MockScheduleDetailCubit detailCubit;
@@ -67,19 +68,19 @@ void main() {
       const Stream<SessionState>.empty(),
       initialState: const SessionAuthenticated(
         principal: adminPrincipal,
-        capabilities: Capabilities(slugs: [
-          'schedules.read',
-          'schedules.write',
-          'schedules.cancel',
-        ]),
+        capabilities: Capabilities(
+          slugs: ['schedules.read', 'schedules.write', 'schedules.cancel'],
+        ),
       ),
     );
 
     when(() => detailCubit.load(any())).thenAnswer((_) async {});
-    when(() => detailCubit.cancel(
-          reason: any(named: 'reason'),
-          cancelSeries: any(named: 'cancelSeries'),
-        )).thenAnswer((_) async {});
+    when(
+      () => detailCubit.cancel(
+        reason: any(named: 'reason'),
+        cancelSeries: any(named: 'cancelSeries'),
+      ),
+    ).thenAnswer((_) async {});
     when(() => detailCubit.close()).thenAnswer((_) async {});
     when(() => detailCubit.isClosed).thenReturn(false);
 
@@ -123,30 +124,31 @@ void main() {
     expect(find.text('Recurring series'), findsOneWidget);
   });
 
-  testWidgets('does not render recurring series indicator on non-recurring session', (
-    tester,
-  ) async {
-    whenListen(
-      detailCubit,
-      const Stream<ScheduleDetailState>.empty(),
-      initialState: ScheduleDetailState(
-        status: LoadStatus.success,
-        session: nonRecurringSession,
-      ),
-    );
-
-    await tester.pumpWidget(
-      buildWidget(
-        const ScheduleDetailScreen(
-          scheduleId: 's1',
-          role: ScheduleCalendarRole.admin,
+  testWidgets(
+    'does not render recurring series indicator on non-recurring session',
+    (tester) async {
+      whenListen(
+        detailCubit,
+        const Stream<ScheduleDetailState>.empty(),
+        initialState: ScheduleDetailState(
+          status: LoadStatus.success,
+          session: nonRecurringSession,
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
 
-    expect(find.byKey(const Key('recurring_series_indicator')), findsNothing);
-  });
+      await tester.pumpWidget(
+        buildWidget(
+          const ScheduleDetailScreen(
+            scheduleId: 's1',
+            role: ScheduleCalendarRole.admin,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('recurring_series_indicator')), findsNothing);
+    },
+  );
 
   testWidgets('admin edit action prompts scope dialog for recurring session', (
     tester,
@@ -189,38 +191,42 @@ void main() {
     );
   });
 
-  testWidgets('cancel action prompts recurring dialog and calls cancelSeries when chosen', (
-    tester,
-  ) async {
-    whenListen(
-      detailCubit,
-      const Stream<ScheduleDetailState>.empty(),
-      initialState: ScheduleDetailState(
-        status: LoadStatus.success,
-        session: recurringSession,
-      ),
-    );
-
-    await tester.pumpWidget(
-      buildWidget(
-        const ScheduleDetailScreen(
-          scheduleId: 's2',
-          role: ScheduleCalendarRole.admin,
+  testWidgets(
+    'cancel action prompts recurring dialog and calls cancelSeries when chosen',
+    (tester) async {
+      whenListen(
+        detailCubit,
+        const Stream<ScheduleDetailState>.empty(),
+        initialState: ScheduleDetailState(
+          status: LoadStatus.success,
+          session: recurringSession,
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
 
-    await tester.tap(find.byKey(const Key('cancel_session_button')));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        buildWidget(
+          const ScheduleDetailScreen(
+            scheduleId: 's2',
+            role: ScheduleCalendarRole.admin,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Cancel recurring session'), findsOneWidget);
-    expect(find.byKey(const Key('cancel_this_session_button')), findsOneWidget);
-    expect(find.byKey(const Key('cancel_all_series_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('cancel_session_button')));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('cancel_all_series_button')));
-    await tester.pumpAndSettle();
+      expect(find.text('Cancel recurring session'), findsOneWidget);
+      expect(
+        find.byKey(const Key('cancel_this_session_button')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('cancel_all_series_button')), findsOneWidget);
 
-    verify(() => detailCubit.cancel(cancelSeries: true)).called(1);
-  });
+      await tester.tap(find.byKey(const Key('cancel_all_series_button')));
+      await tester.pumpAndSettle();
+
+      verify(() => detailCubit.cancel(cancelSeries: true)).called(1);
+    },
+  );
 }

@@ -14,10 +14,7 @@ class _MockListVersions extends Mock
 void main() {
   late _MockListVersions listVersions;
 
-  WorkoutPlanVersion version({
-    required String id,
-    int number = 1,
-  }) {
+  WorkoutPlanVersion version({required String id, int number = 1}) {
     return WorkoutPlanVersion(
       id: id,
       planId: '1',
@@ -34,10 +31,8 @@ void main() {
     'loads versions',
     build: () {
       when(() => listVersions('1')).thenAnswer(
-        (_) async => Right([
-          version(id: 'v1', number: 1),
-          version(id: 'v2', number: 2),
-        ]),
+        (_) async =>
+            Right([version(id: 'v1', number: 1), version(id: 'v2', number: 2)]),
       );
       return WorkoutPlanVersionsCubit(listVersions);
     },
@@ -57,9 +52,9 @@ void main() {
   blocTest<WorkoutPlanVersionsCubit, WorkoutPlanVersionsState>(
     'toggles expanded version',
     build: () {
-      when(() => listVersions('1')).thenAnswer(
-        (_) async => Right([version(id: 'v1')]),
-      );
+      when(
+        () => listVersions('1'),
+      ).thenAnswer((_) async => Right([version(id: 'v1')]));
       return WorkoutPlanVersionsCubit(listVersions);
     },
     act: (cubit) async {
@@ -88,9 +83,9 @@ void main() {
   blocTest<WorkoutPlanVersionsCubit, WorkoutPlanVersionsState>(
     'load failure',
     build: () {
-      when(() => listVersions('1')).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(
+        () => listVersions('1'),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return WorkoutPlanVersionsCubit(listVersions);
     },
     act: (cubit) => cubit.load('1'),

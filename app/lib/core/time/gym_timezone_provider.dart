@@ -46,7 +46,10 @@ class GymTimezoneProvider {
 /// Parses an offset Duration from an IANA timezone name or offset string (+HH:MM, -HH:MM, Z).
 Duration? parseTimezoneOffset(String tz) {
   final trimmed = tz.trim();
-  if (trimmed.isEmpty || trimmed == 'UTC' || trimmed == 'GMT' || trimmed == 'Z') {
+  if (trimmed.isEmpty ||
+      trimmed == 'UTC' ||
+      trimmed == 'GMT' ||
+      trimmed == 'Z') {
     return Duration.zero;
   }
   final regex = RegExp(r'^(?:UTC|GMT)?\s*([+-])(\d{1,2})(?::?(\d{2}))?$');

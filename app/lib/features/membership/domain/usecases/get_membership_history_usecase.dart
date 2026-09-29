@@ -26,7 +26,10 @@ class GetMembershipHistoryParams extends Equatable {
 @lazySingleton
 class GetMembershipHistoryUseCase
     implements
-        UseCase<CursorPage<MembershipHistoryEntry>, GetMembershipHistoryParams> {
+        UseCase<
+          CursorPage<MembershipHistoryEntry>,
+          GetMembershipHistoryParams
+        > {
   const GetMembershipHistoryUseCase(this._repository);
 
   final MembershipRepository _repository;

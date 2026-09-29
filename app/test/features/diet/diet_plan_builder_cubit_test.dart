@@ -27,12 +27,8 @@ void main() {
   late _MockReplace replaceMeals;
 
   setUpAll(() {
-    registerFallbackValue(
-      const CreateDietPlanParams(title: 'x'),
-    );
-    registerFallbackValue(
-      const UpdateDietPlanParams(id: '1', rowVersion: 1),
-    );
+    registerFallbackValue(const CreateDietPlanParams(title: 'x'));
+    registerFallbackValue(const UpdateDietPlanParams(id: '1', rowVersion: 1));
     registerFallbackValue(
       const ReplaceDietPlanMealsParams(id: '1', rowVersion: 1, meals: []),
     );
@@ -45,12 +41,8 @@ void main() {
     replaceMeals = _MockReplace();
   });
 
-  DietPlanBuilderCubit buildCubit() => DietPlanBuilderCubit(
-        getPlan,
-        createPlan,
-        updatePlan,
-        replaceMeals,
-      );
+  DietPlanBuilderCubit buildCubit() =>
+      DietPlanBuilderCubit(getPlan, createPlan, updatePlan, replaceMeals);
 
   blocTest<DietPlanBuilderCubit, DietPlanBuilderState>(
     'init without planId emits empty ready state',
@@ -121,8 +113,7 @@ void main() {
       isA<DietPlanBuilderState>()
           .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.title, 'title', 'Cut'),
-      isA<DietPlanBuilderState>()
-          .having((s) => s.meals.length, 'meals', 1),
+      isA<DietPlanBuilderState>().having((s) => s.meals.length, 'meals', 1),
       isA<DietPlanBuilderState>().having(
         (s) => s.meals.first.foods.length,
         'foods',

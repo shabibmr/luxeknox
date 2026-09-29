@@ -20,9 +20,7 @@ abstract final class AppTheme {
         border: OutlineInputBorder(),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(48),
-        ),
+        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
       ),
       appBarTheme: AppBarTheme(
         centerTitle: false,
@@ -47,9 +45,7 @@ abstract final class AppTheme {
         border: OutlineInputBorder(),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(48),
-        ),
+        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
       ),
       appBarTheme: AppBarTheme(
         centerTitle: false,

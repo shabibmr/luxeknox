@@ -77,12 +77,14 @@ class ScheduleFormState extends Equatable {
       mode: mode ?? this.mode,
       scheduleId: clearScheduleId ? null : (scheduleId ?? this.scheduleId),
       draft: draft ?? this.draft,
-      loadedSession:
-          clearLoadedSession ? null : (loadedSession ?? this.loadedSession),
+      loadedSession: clearLoadedSession
+          ? null
+          : (loadedSession ?? this.loadedSession),
       initialLoading: initialLoading ?? this.initialLoading,
       submitting: submitting ?? this.submitting,
-      savedSession:
-          clearSavedSession ? null : (savedSession ?? this.savedSession),
+      savedSession: clearSavedSession
+          ? null
+          : (savedSession ?? this.savedSession),
       error: clearError ? null : (error ?? this.error),
       isConflict: isConflict ?? this.isConflict,
     );
@@ -90,16 +92,16 @@ class ScheduleFormState extends Equatable {
 
   @override
   List<Object?> get props => [
-        mode,
-        scheduleId,
-        draft,
-        loadedSession,
-        initialLoading,
-        submitting,
-        savedSession,
-        error,
-        isConflict,
-      ];
+    mode,
+    scheduleId,
+    draft,
+    loadedSession,
+    initialLoading,
+    submitting,
+    savedSession,
+    error,
+    isConflict,
+  ];
 }
 
 @injectable
@@ -155,10 +157,7 @@ class ScheduleFormCubit extends Cubit<ScheduleFormState> {
     await sessionResult.fold(
       (failure) async {
         emit(
-          state.copyWith(
-            initialLoading: false,
-            error: failureMessage(failure),
-          ),
+          state.copyWith(initialLoading: false, error: failureMessage(failure)),
         );
       },
       (session) async {
@@ -168,8 +167,9 @@ class ScheduleFormCubit extends Cubit<ScheduleFormState> {
         ScheduleTypeInfo? selectedType;
         typesResult.fold((_) {}, (types) {
           try {
-            selectedType =
-                types.firstWhere((t) => t.id == session.scheduleTypeId);
+            selectedType = types.firstWhere(
+              (t) => t.id == session.scheduleTypeId,
+            );
           } catch (_) {
             selectedType = ScheduleTypeInfo(
               id: session.scheduleTypeId,
@@ -182,8 +182,9 @@ class ScheduleFormCubit extends Cubit<ScheduleFormState> {
         if (session.facilityId != null) {
           facilitiesResult.fold((_) {}, (facilities) {
             try {
-              selectedFacility =
-                  facilities.firstWhere((f) => f.id == session.facilityId);
+              selectedFacility = facilities.firstWhere(
+                (f) => f.id == session.facilityId,
+              );
             } catch (_) {
               selectedFacility = FacilityInfo(
                 id: session.facilityId!,
@@ -282,12 +283,7 @@ class ScheduleFormCubit extends Cubit<ScheduleFormState> {
 
     return result.fold(
       (failure) {
-        emit(
-          state.copyWith(
-            submitting: false,
-            error: failureMessage(failure),
-          ),
-        );
+        emit(state.copyWith(submitting: false, error: failureMessage(failure)));
         return false;
       },
       (session) {

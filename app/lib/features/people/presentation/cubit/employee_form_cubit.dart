@@ -179,12 +179,7 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
     if (isClosed) return;
     await employeeResult.fold(
       (failure) async {
-        emit(
-          state.copyWith(
-            initialLoading: false,
-            error: _message(failure),
-          ),
-        );
+        emit(state.copyWith(initialLoading: false, error: _message(failure)));
       },
       (employee) async {
         emit(
@@ -204,19 +199,15 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
 
   void updateCreateInput(NewEmployeeInput Function(NewEmployeeInput) update) {
     emit(
-      state.copyWith(
-        createInput: update(state.createInput),
-        clearError: true,
-      ),
+      state.copyWith(createInput: update(state.createInput), clearError: true),
     );
   }
 
-  void updateEditInput(EmployeeUpdateInput Function(EmployeeUpdateInput) update) {
+  void updateEditInput(
+    EmployeeUpdateInput Function(EmployeeUpdateInput) update,
+  ) {
     emit(
-      state.copyWith(
-        updateInput: update(state.updateInput),
-        clearError: true,
-      ),
+      state.copyWith(updateInput: update(state.updateInput), clearError: true),
     );
   }
 
@@ -349,12 +340,12 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
     final result = await _listRoles(const NoParams());
     if (isClosed) return;
     result.fold(
-      (failure) => emit(
-        state.copyWith(rolesLoading: false, error: _message(failure)),
-      ),
+      (failure) =>
+          emit(state.copyWith(rolesLoading: false, error: _message(failure))),
       (roles) {
         final defaultRole = _findEmployeeRole(roles);
-        final nextCreateInput = defaultRole != null && state.createInput.roleId <= 0
+        final nextCreateInput =
+            defaultRole != null && state.createInput.roleId <= 0
             ? state.createInput.copyWith(roleId: defaultRole.id)
             : state.createInput;
         emit(

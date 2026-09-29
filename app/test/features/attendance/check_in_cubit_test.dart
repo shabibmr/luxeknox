@@ -72,11 +72,7 @@ void main() {
       await bloc.stream.firstWhere((s) => s.status == LoadStatus.success);
     },
     expect: () => [
-      isA<CheckInState>().having(
-        (s) => s.status,
-        'status',
-        LoadStatus.loading,
-      ),
+      isA<CheckInState>().having((s) => s.status, 'status', LoadStatus.loading),
       isA<CheckInState>()
           .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.record?.id, 'id', '10')
@@ -95,11 +91,7 @@ void main() {
     },
     act: (bloc) => bloc.add(submit),
     expect: () => [
-      isA<CheckInState>().having(
-        (s) => s.status,
-        'status',
-        LoadStatus.loading,
-      ),
+      isA<CheckInState>().having((s) => s.status, 'status', LoadStatus.loading),
       isA<CheckInState>()
           .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.record?.id, 'id', '10'),
@@ -109,10 +101,7 @@ void main() {
   blocTest<CheckInBloc, CheckInState>(
     'reset returns to initial',
     build: () => CheckInBloc(checkIn),
-    seed: () => const CheckInState(
-      status: LoadStatus.failure,
-      message: 'nope',
-    ),
+    seed: () => const CheckInState(status: LoadStatus.failure, message: 'nope'),
     act: (bloc) => bloc.reset(),
     expect: () => const [CheckInState()],
   );

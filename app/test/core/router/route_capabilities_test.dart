@@ -35,10 +35,7 @@ void main() {
         RouteCapabilities.requiredSlug(Routes.adminEmployeeRolesById('9')),
         'roles.update',
       );
-      expect(
-        RouteCapabilities.requiredSlug(Routes.adminEmployees),
-        isNull,
-      );
+      expect(RouteCapabilities.requiredSlug(Routes.adminEmployees), isNull);
       expect(
         RouteCapabilities.requiredSlug(Routes.adminNotificationsBroadcast),
         'notifications.send',
@@ -72,9 +69,7 @@ void main() {
         'workouts.write',
       );
       expect(
-        RouteCapabilities.requiredSlug(
-          Routes.trainerPlansWorkoutEditById('9'),
-        ),
+        RouteCapabilities.requiredSlug(Routes.trainerPlansWorkoutEditById('9')),
         'workouts.write',
       );
       expect(

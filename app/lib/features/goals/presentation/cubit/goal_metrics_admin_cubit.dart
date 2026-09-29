@@ -74,7 +74,9 @@ class GoalMetricsAdminCubit extends Cubit<GoalMetricsAdminState> {
     bool isActive = true,
   }) async {
     final current = state;
-    if (!_loaded || current.status == LoadStatus.loading || current.submitting) {
+    if (!_loaded ||
+        current.status == LoadStatus.loading ||
+        current.submitting) {
       return false;
     }
     emit(

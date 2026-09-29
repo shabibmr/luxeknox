@@ -21,7 +21,10 @@ class RestTimerWidget extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(WorkoutStrings.restTimer, style: theme.textTheme.titleMedium),
+                Text(
+                  WorkoutStrings.restTimer,
+                  style: theme.textTheme.titleMedium,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   WorkoutStrings.restRemaining(state.remainingSeconds),

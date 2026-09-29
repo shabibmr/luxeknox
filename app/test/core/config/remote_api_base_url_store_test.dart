@@ -23,9 +23,7 @@ void main() {
   });
 
   test('read treats blank stored value as null', () async {
-    SharedPreferences.setMockInitialValues({
-      RemoteApiBaseUrlStore.key: '   ',
-    });
+    SharedPreferences.setMockInitialValues({RemoteApiBaseUrlStore.key: '   '});
     final prefs = await SharedPreferences.getInstance();
     final store = RemoteApiBaseUrlStore(prefs);
     expect(store.read(), isNull);

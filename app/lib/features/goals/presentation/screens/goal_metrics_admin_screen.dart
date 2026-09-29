@@ -129,9 +129,9 @@ class _GoalMetricsAdminBody extends StatelessWidget {
     );
     nameController.dispose();
     if (saved == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(GoalsStrings.metricSaved)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(GoalsStrings.metricSaved)));
     }
   }
 
@@ -168,23 +168,23 @@ class _GoalMetricsAdminBody extends StatelessWidget {
           }
           final items = state.items;
           return items.isEmpty
-                ? const AppEmptyView(message: GoalsStrings.metricsEmpty)
-                : ListView.separated(
-                    itemCount: items.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final m = items[index];
-                      return ListTile(
-                        title: Text(m.name),
-                        subtitle: Text(
-                          '${m.unitOfMeasure} · ${GoalsStrings.categoryLabelFor(m.category)}'
-                          '${m.isActive ? '' : ' · inactive'}',
-                        ),
-                        trailing: const Icon(Icons.edit_outlined),
-                        onTap: () => _openForm(context, existing: m),
-                      );
-                    },
-                  );
+              ? const AppEmptyView(message: GoalsStrings.metricsEmpty)
+              : ListView.separated(
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final m = items[index];
+                    return ListTile(
+                      title: Text(m.name),
+                      subtitle: Text(
+                        '${m.unitOfMeasure} · ${GoalsStrings.categoryLabelFor(m.category)}'
+                        '${m.isActive ? '' : ' · inactive'}',
+                      ),
+                      trailing: const Icon(Icons.edit_outlined),
+                      onTap: () => _openForm(context, existing: m),
+                    );
+                  },
+                );
         },
       ),
     );

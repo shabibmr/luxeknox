@@ -26,6 +26,7 @@ abstract class OpenSlotsState with _$OpenSlotsState {
     DateTime? selectedDay,
     @Default(<DateTime>[]) List<DateTime> days,
     Failure? failure,
+
     /// Set when a book attempt hit 409 so the UI can show a stale-slot message.
     @Default(false) bool staleSlot,
   }) = _OpenSlotsState;
@@ -171,12 +172,7 @@ class OpenSlotsCubit extends Cubit<OpenSlotsState> {
     if (availFailed) return;
 
     final schedulesResult = await _listSchedules(
-      ListSchedulesParams(
-        from: from,
-        to: to,
-        trainerId: trainerId,
-        limit: 100,
-      ),
+      ListSchedulesParams(from: from, to: to, trainerId: trainerId, limit: 100),
     );
     List<ScheduleSession>? sessions;
     final schedulesFailed = schedulesResult.fold(
@@ -208,7 +204,8 @@ class OpenSlotsCubit extends Cubit<OpenSlotsState> {
     ];
 
     final preferredDay = state.selectedDay;
-    final selected = preferredDay != null &&
+    final selected =
+        preferredDay != null &&
             days.any(
               (d) =>
                   d.year == preferredDay.year &&

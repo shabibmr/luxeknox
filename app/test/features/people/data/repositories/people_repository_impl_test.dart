@@ -21,10 +21,7 @@ DioException _dioError(int statusCode, {String? code, List<String>? details}) {
     response: Response(
       requestOptions: req,
       statusCode: statusCode,
-      data: {
-        'code': ?code,
-        'details': ?details,
-      },
+      data: {'code': ?code, 'details': ?details},
     ),
     type: DioExceptionType.badResponse,
   );
@@ -86,13 +83,9 @@ void main() {
       ),
     );
     registerFallbackValue(
-      api.EmployeeStatusRequest(
-        (b) => b..status = api.EmployeeStatus.active,
-      ),
+      api.EmployeeStatusRequest((b) => b..status = api.EmployeeStatus.active),
     );
-    registerFallbackValue(
-      api.AssignRoleRequest((b) => b..roleId = 1),
-    );
+    registerFallbackValue(api.AssignRoleRequest((b) => b..roleId = 1));
     registerFallbackValue(<String, dynamic>{});
   });
 
@@ -116,13 +109,10 @@ void main() {
       final result = await repository.createTrainer(tInput);
 
       expect(result.isRight(), isTrue);
-      result.fold(
-        (failure) => fail('expected right, got $failure'),
-        (trainer) {
-          expect(trainer.id, 1);
-          expect(trainer.firstName, 'Jane');
-        },
-      );
+      result.fold((failure) => fail('expected right, got $failure'), (trainer) {
+        expect(trainer.id, 1);
+        expect(trainer.firstName, 'Jane');
+      });
     });
 
     test('returns ValidationFailure on 422', () async {
@@ -159,30 +149,32 @@ void main() {
       roleId: 3,
     );
 
-    test('returns Right(EmployeeSummary) on success and sends int roleId', () async {
-      when(
-        () => mockDataSource.createEmployee(any()),
-      ).thenAnswer((_) async => tApiEmployee);
+    test(
+      'returns Right(EmployeeSummary) on success and sends int roleId',
+      () async {
+        when(
+          () => mockDataSource.createEmployee(any()),
+        ).thenAnswer((_) async => tApiEmployee);
 
-      final result = await repository.createEmployee(tInput);
+        final result = await repository.createEmployee(tInput);
 
-      expect(result.isRight(), isTrue);
-      result.fold(
-        (failure) => fail('expected right, got $failure'),
-        (employee) {
+        expect(result.isRight(), isTrue);
+        result.fold((failure) => fail('expected right, got $failure'), (
+          employee,
+        ) {
           expect(employee.id, 5);
           expect(employee.roleId, 3);
           expect(employee.fullName, 'Ed Ford');
-        },
-      );
+        });
 
-      final captured = verify(
-        () => mockDataSource.createEmployee(captureAny()),
-      ).captured;
-      final body = captured.single as api.EmployeeCreate;
-      expect(body.roleId, 3);
-      expect(body.firstName, 'Ed');
-    });
+        final captured = verify(
+          () => mockDataSource.createEmployee(captureAny()),
+        ).captured;
+        final body = captured.single as api.EmployeeCreate;
+        expect(body.roleId, 3);
+        expect(body.firstName, 'Ed');
+      },
+    );
 
     test('returns ValidationFailure on 422', () async {
       when(() => mockDataSource.createEmployee(any())).thenThrow(
@@ -211,31 +203,36 @@ void main() {
   group('PeopleRepositoryImpl.updateEmployee', () {
     const tInput = EmployeeUpdateInput(jobTitle: 'Manager');
 
-    test('returns Right(EmployeeSummary) on success and can clear optionals', () async {
-      when(
-        () => mockDataSource.updateEmployeeRaw(5, any()),
-      ).thenAnswer((_) async => tEmployeeJson);
+    test(
+      'returns Right(EmployeeSummary) on success and can clear optionals',
+      () async {
+        when(
+          () => mockDataSource.updateEmployeeRaw(5, any()),
+        ).thenAnswer((_) async => tEmployeeJson);
 
-      final cleared = const EmployeeUpdateInput(
-        jobTitle: 'Manager',
-      ).copyWith(department: null, hireDate: null);
+        final cleared = const EmployeeUpdateInput(
+          jobTitle: 'Manager',
+        ).copyWith(department: null, hireDate: null);
 
-      final result = await repository.updateEmployee(5, cleared);
+        final result = await repository.updateEmployee(5, cleared);
 
-      expect(result.isRight(), isTrue);
-      result.fold(
-        (failure) => fail('expected right, got $failure'),
-        (employee) => expect(employee.id, 5),
-      );
+        expect(result.isRight(), isTrue);
+        result.fold(
+          (failure) => fail('expected right, got $failure'),
+          (employee) => expect(employee.id, 5),
+        );
 
-      final body = verify(
-        () => mockDataSource.updateEmployeeRaw(5, captureAny()),
-      ).captured.single as Map<String, dynamic>;
-      expect(body.containsKey('department'), isTrue);
-      expect(body['department'], isNull);
-      expect(body.containsKey('hire_date'), isTrue);
-      expect(body['hire_date'], isNull);
-    });
+        final body =
+            verify(
+                  () => mockDataSource.updateEmployeeRaw(5, captureAny()),
+                ).captured.single
+                as Map<String, dynamic>;
+        expect(body.containsKey('department'), isTrue);
+        expect(body['department'], isNull);
+        expect(body.containsKey('hire_date'), isTrue);
+        expect(body['hire_date'], isNull);
+      },
+    );
 
     test('returns ValidationFailure on 422', () async {
       when(() => mockDataSource.updateEmployeeRaw(5, any())).thenThrow(
@@ -265,9 +262,7 @@ void main() {
     test(
       'returns Right(EmployeeSummary) on success and sends wire status',
       () async {
-        when(
-          () => mockDataSource.setEmployeeStatus(5, any()),
-        ).thenAnswer(
+        when(() => mockDataSource.setEmployeeStatus(5, any())).thenAnswer(
           (_) async => api.Employee(
             (b) => b
               ..id = 5
@@ -286,13 +281,12 @@ void main() {
         );
 
         expect(result.isRight(), isTrue);
-        result.fold(
-          (failure) => fail('expected right, got $failure'),
-          (employee) {
-            expect(employee.id, 5);
-            expect(employee.status, 'on_probation');
-          },
-        );
+        result.fold((failure) => fail('expected right, got $failure'), (
+          employee,
+        ) {
+          expect(employee.id, 5);
+          expect(employee.status, 'on_probation');
+        });
 
         final captured = verify(
           () => mockDataSource.setEmployeeStatus(5, captureAny()),

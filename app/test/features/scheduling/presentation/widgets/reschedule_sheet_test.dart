@@ -60,13 +60,12 @@ void main() {
     );
   }
 
-  testWidgets('shows title and submit; submit calls reschedule', (tester) async {
+  testWidgets('shows title and submit; submit calls reschedule', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       wrap(
-        RescheduleSheet(
-          session: session,
-          timezoneProvider: timezoneProvider,
-        ),
+        RescheduleSheet(session: session, timezoneProvider: timezoneProvider),
       ),
     );
     await tester.pumpAndSettle();
@@ -78,10 +77,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(
-      () => cubit.reschedule(
-        start: session.startTime,
-        end: session.endTime,
-      ),
+      () => cubit.reschedule(start: session.startTime, end: session.endTime),
     ).called(1);
   });
 }

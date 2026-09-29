@@ -21,8 +21,9 @@ class CreateMembershipScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<CreateMembershipBloc>()
-        ..add(CreateMembershipStarted(memberId: memberId)),
+      create: (_) =>
+          getIt<CreateMembershipBloc>()
+            ..add(CreateMembershipStarted(memberId: memberId)),
       child: _CreateMembershipBody(memberId: memberId),
     );
   }
@@ -36,8 +37,7 @@ class _CreateMembershipBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<CreateMembershipBloc, CreateMembershipState>(
-      listenWhen: (prev, next) =>
-          prev.created == null && next.created != null,
+      listenWhen: (prev, next) => prev.created == null && next.created != null,
       listener: (context, state) {
         final id = state.created?.id;
         if (id != null) {
@@ -48,7 +48,8 @@ class _CreateMembershipBody extends StatelessWidget {
         final noProducts = state.products.isEmpty;
         return Scaffold(
           appBar: AppBar(title: const Text(MembershipStrings.createTitle)),
-          body: noProducts &&
+          body:
+              noProducts &&
                   (state.status == LoadStatus.initial ||
                       state.status == LoadStatus.loading)
               ? const AppLoading()

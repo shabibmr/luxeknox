@@ -72,9 +72,8 @@ class NotificationsInboxCubit extends Cubit<NotificationsInboxState> {
       const ListNotificationsParams(limit: _pageSize),
     );
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
         state.copyWith(
           status: LoadStatus.success,
@@ -105,19 +104,13 @@ class NotificationsInboxCubit extends Cubit<NotificationsInboxState> {
       return;
     }
     emit(
-      current.copyWith(
-        loadingMore: true,
-        failure: null,
-        actionMessage: null,
-      ),
+      current.copyWith(loadingMore: true, failure: null, actionMessage: null),
     );
     final result = await _listNotifications(
       ListNotificationsParams(limit: _pageSize, cursor: current.nextCursor),
     );
     result.fold(
-      (failure) => emit(
-        current.copyWith(loadingMore: false, failure: failure),
-      ),
+      (failure) => emit(current.copyWith(loadingMore: false, failure: failure)),
       (page) => emit(
         current.copyWith(
           items: [...current.items, ...page.items],
@@ -135,9 +128,8 @@ class NotificationsInboxCubit extends Cubit<NotificationsInboxState> {
     if (!_loaded(current)) return;
     final result = await _markRead(id);
     result.fold(
-      (failure) => emit(
-        current.copyWith(failure: failure, actionMessage: null),
-      ),
+      (failure) =>
+          emit(current.copyWith(failure: failure, actionMessage: null)),
       (updated) {
         final items = current.items
             .map((n) => n.id == updated.id ? updated : n)
@@ -154,15 +146,12 @@ class NotificationsInboxCubit extends Cubit<NotificationsInboxState> {
     if (!_loaded(current)) return;
     final result = await _markAllRead(const NoParams());
     result.fold(
-      (failure) => emit(
-        current.copyWith(failure: failure, actionMessage: null),
-      ),
+      (failure) =>
+          emit(current.copyWith(failure: failure, actionMessage: null)),
       (_) {
         final now = DateTime.now().toUtc();
         final items = current.items
-            .map(
-              (n) => n.unread ? n.copyWith(isRead: true, readAt: now) : n,
-            )
+            .map((n) => n.unread ? n.copyWith(isRead: true, readAt: now) : n)
             .toList();
         emit(
           current.copyWith(
@@ -182,9 +171,8 @@ class NotificationsInboxCubit extends Cubit<NotificationsInboxState> {
       forceNewToken: rotate,
     );
     result.fold(
-      (failure) => emit(
-        current.copyWith(failure: failure, actionMessage: null),
-      ),
+      (failure) =>
+          emit(current.copyWith(failure: failure, actionMessage: null)),
       (_) => emit(
         current.copyWith(
           failure: null,

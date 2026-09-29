@@ -28,7 +28,8 @@ class MockMembershipFreezeCubit extends MockCubit<MembershipFreezeState>
 class MockMembershipHistoryCubit extends MockCubit<MembershipHistoryState>
     implements MembershipHistoryCubit {}
 
-class MockSessionCubit extends MockCubit<SessionState> implements SessionCubit {}
+class MockSessionCubit extends MockCubit<SessionState>
+    implements SessionCubit {}
 
 /// ADR-0006 §11 — memberships.approve actions render only when that slug
 /// is on the principal, for member, trainer, and admin.
@@ -41,7 +42,7 @@ void main() {
     endDate: DateTime.utc(2026, 12, 1),
     status: MembershipStatus.active,
     rowVersion: 1,
-    product: MembershipProduct(
+    product: const MembershipProduct(
       id: '10',
       name: 'Gold',
       code: 'GOLD',
@@ -89,12 +90,8 @@ void main() {
     final historyCubit = MockMembershipHistoryCubit();
 
     when(() => detailCubit.load('m-1')).thenAnswer((_) async {});
-    when(
-      () => freezeCubit.load(membershipId: 'm-1'),
-    ).thenAnswer((_) async {});
-    when(
-      () => historyCubit.load(membershipId: 'm-1'),
-    ).thenAnswer((_) async {});
+    when(() => freezeCubit.load(membershipId: 'm-1')).thenAnswer((_) async {});
+    when(() => historyCubit.load(membershipId: 'm-1')).thenAnswer((_) async {});
 
     whenListen(
       detailCubit,

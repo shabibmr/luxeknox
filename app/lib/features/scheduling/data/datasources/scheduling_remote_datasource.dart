@@ -145,10 +145,7 @@ class SchedulingRemoteDataSourceImpl implements SchedulingRemoteDataSource {
     String? idempotencyKey,
   }) async {
     return _unwrap(
-      await _schedApi.bookSchedule(
-        id: scheduleId,
-        bookRequest: write,
-      ),
+      await _schedApi.bookSchedule(id: scheduleId, bookRequest: write),
     );
   }
 
@@ -181,7 +178,9 @@ class SchedulingRemoteDataSourceImpl implements SchedulingRemoteDataSource {
   }
 
   @override
-  Future<api.ScheduleType> createScheduleType(api.ScheduleTypeWrite write) async {
+  Future<api.ScheduleType> createScheduleType(
+    api.ScheduleTypeWrite write,
+  ) async {
     return _unwrap(
       await _schedApi.createScheduleType(scheduleTypeWrite: write),
     );

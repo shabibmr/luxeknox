@@ -38,7 +38,8 @@ class _MembershipProductFormBody extends StatefulWidget {
       _MembershipProductFormBodyState();
 }
 
-class _MembershipProductFormBodyState extends State<_MembershipProductFormBody> {
+class _MembershipProductFormBodyState
+    extends State<_MembershipProductFormBody> {
   final _formKey = GlobalKey<FormState>();
 
   late final _nameController = TextEditingController(
@@ -122,11 +123,8 @@ class _MembershipProductFormBodyState extends State<_MembershipProductFormBody> 
     super.dispose();
   }
 
-  List<String> _splitList(String raw) => raw
-      .split(',')
-      .map((s) => s.trim())
-      .where((s) => s.isNotEmpty)
-      .toList();
+  List<String> _splitList(String raw) =>
+      raw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
 
   MembershipProduct _productFromFields() {
     return MembershipProduct(
@@ -164,187 +162,187 @@ class _MembershipProductFormBodyState extends State<_MembershipProductFormBody> 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<MembershipProductFormCubit, MembershipProductFormState>(
-        listenWhen: (previous, next) =>
-            previous.status != LoadStatus.success &&
-            next.status == LoadStatus.success,
-        listener: (context, state) {
-          setState(() => _isDirty = false);
-          Navigator.of(context).pop(true);
-        },
-        builder: (context, state) {
-          final requiredSlug = widget.isEditing
-              ? 'memberships.update'
-              : 'memberships.create';
+      listenWhen: (previous, next) =>
+          previous.status != LoadStatus.success &&
+          next.status == LoadStatus.success,
+      listener: (context, state) {
+        setState(() => _isDirty = false);
+        Navigator.of(context).pop(true);
+      },
+      builder: (context, state) {
+        final requiredSlug = widget.isEditing
+            ? 'memberships.update'
+            : 'memberships.create';
 
-          if (!context.can(requiredSlug)) {
-            return Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  widget.isEditing
-                      ? MembershipStrings.editTitle
-                      : MembershipStrings.addTitle,
-                ),
+        if (!context.can(requiredSlug)) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(
+                widget.isEditing
+                    ? MembershipStrings.editTitle
+                    : MembershipStrings.addTitle,
               ),
-              body: const Center(child: Text(MembershipStrings.noPermission)),
-            );
-          }
+            ),
+            body: const Center(child: Text(MembershipStrings.noPermission)),
+          );
+        }
 
-          final submitting = state.status == LoadStatus.loading;
-          final dirty = _isDirty || _isActive != _initialIsActive;
-          final errorMessage = state.failure == null
-              ? null
-              : failureMessage(state.failure!);
+        final submitting = state.status == LoadStatus.loading;
+        final dirty = _isDirty || _isActive != _initialIsActive;
+        final errorMessage = state.failure == null
+            ? null
+            : failureMessage(state.failure!);
 
-          return UnsavedChangesScope(
-            hasUnsavedChanges: dirty && !submitting,
-            child: Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  widget.isEditing
-                      ? MembershipStrings.editTitle
-                      : MembershipStrings.addTitle,
-                ),
+        return UnsavedChangesScope(
+          hasUnsavedChanges: dirty && !submitting,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(
+                widget.isEditing
+                    ? MembershipStrings.editTitle
+                    : MembershipStrings.addTitle,
               ),
-              body: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (errorMessage != null) ...[
-                        MaterialBanner(
-                          content: Text(errorMessage),
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.errorContainer,
-                          actions: const [SizedBox.shrink()],
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      TextFormField(
-                        controller: _nameController,
-                        enabled: !submitting,
-                        decoration: const InputDecoration(
-                          labelText: MembershipStrings.nameLabel,
-                        ),
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? MembershipStrings.nameRequired
-                            : null,
+            ),
+            body: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (errorMessage != null) ...[
+                      MaterialBanner(
+                        content: Text(errorMessage),
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.errorContainer,
+                        actions: const [SizedBox.shrink()],
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _codeController,
-                        enabled: !submitting,
-                        decoration: const InputDecoration(
-                          labelText: MembershipStrings.codeLabel,
-                        ),
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? MembershipStrings.codeRequired
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _descriptionController,
-                        enabled: !submitting,
-                        minLines: 2,
-                        maxLines: 4,
-                        decoration: const InputDecoration(
-                          labelText: MembershipStrings.descriptionLabel,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _durationController,
-                        enabled: !submitting,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: MembershipStrings.durationDaysLabel,
-                        ),
-                        validator: (v) => (int.tryParse(v?.trim() ?? '') == null)
-                            ? MembershipStrings.durationDaysRequired
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _priceController,
-                        enabled: !submitting,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: MembershipStrings.basePriceLabel,
-                          helperText: 'Two-decimal amount, e.g. 49.99',
-                        ),
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? MembershipStrings.basePriceRequired
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _taxController,
-                        enabled: !submitting,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: MembershipStrings.taxPercentageLabel,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _maxFreezeController,
-                        enabled: !submitting,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: MembershipStrings.maxFreezeDaysLabel,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _ptSessionsController,
-                        enabled: !submitting,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: MembershipStrings.ptSessionsIncludedLabel,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _facilitiesController,
-                        enabled: !submitting,
-                        decoration: const InputDecoration(
-                          labelText: MembershipStrings.accessFacilitiesLabel,
-                          helperText: MembershipStrings.commaSeparatedHelper,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SwitchListTile(
-                        title: const Text(MembershipStrings.active),
-                        subtitle: const Text(MembershipStrings.activeSubtitle),
-                        value: _isActive,
-                        onChanged: submitting
-                            ? null
-                            : (v) => setState(() => _isActive = v),
-                      ),
-                      const SizedBox(height: 24),
-                      FilledButton(
-                        onPressed: submitting ? null : () => _submit(context),
-                        child: submitting
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Text(MembershipStrings.save),
-                      ),
                     ],
-                  ),
+                    TextFormField(
+                      controller: _nameController,
+                      enabled: !submitting,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.nameLabel,
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? MembershipStrings.nameRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _codeController,
+                      enabled: !submitting,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.codeLabel,
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? MembershipStrings.codeRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _descriptionController,
+                      enabled: !submitting,
+                      minLines: 2,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.descriptionLabel,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _durationController,
+                      enabled: !submitting,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.durationDaysLabel,
+                      ),
+                      validator: (v) => (int.tryParse(v?.trim() ?? '') == null)
+                          ? MembershipStrings.durationDaysRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _priceController,
+                      enabled: !submitting,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.basePriceLabel,
+                        helperText: 'Two-decimal amount, e.g. 49.99',
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? MembershipStrings.basePriceRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _taxController,
+                      enabled: !submitting,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.taxPercentageLabel,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _maxFreezeController,
+                      enabled: !submitting,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.maxFreezeDaysLabel,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _ptSessionsController,
+                      enabled: !submitting,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.ptSessionsIncludedLabel,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _facilitiesController,
+                      enabled: !submitting,
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.accessFacilitiesLabel,
+                        helperText: MembershipStrings.commaSeparatedHelper,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      title: const Text(MembershipStrings.active),
+                      subtitle: const Text(MembershipStrings.activeSubtitle),
+                      value: _isActive,
+                      onChanged: submitting
+                          ? null
+                          : (v) => setState(() => _isActive = v),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: submitting ? null : () => _submit(context),
+                      child: submitting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text(MembershipStrings.save),
+                    ),
+                  ],
                 ),
               ),
             ),
-          );
-        },
+          ),
+        );
+      },
     );
   }
 }

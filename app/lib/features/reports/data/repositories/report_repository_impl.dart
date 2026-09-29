@@ -23,8 +23,12 @@ class ReportRepositoryImpl implements ReportRepository {
         type: toApiReportType(query.type),
         from: toApiDate(query.from),
         to: toApiDate(query.to),
-        productId: query.productId == null ? null : int.tryParse(query.productId!),
-        trainerId: query.trainerId == null ? null : int.tryParse(query.trainerId!),
+        productId: query.productId == null
+            ? null
+            : int.tryParse(query.productId!),
+        trainerId: query.trainerId == null
+            ? null
+            : int.tryParse(query.trainerId!),
       );
       return Right(model.toDomain());
     } catch (e) {
@@ -39,8 +43,12 @@ class ReportRepositoryImpl implements ReportRepository {
         typeWire: query.type.wireName,
         from: toApiDate(query.from),
         to: toApiDate(query.to),
-        productId: query.productId == null ? null : int.tryParse(query.productId!),
-        trainerId: query.trainerId == null ? null : int.tryParse(query.trainerId!),
+        productId: query.productId == null
+            ? null
+            : int.tryParse(query.productId!),
+        trainerId: query.trainerId == null
+            ? null
+            : int.tryParse(query.trainerId!),
       );
       return Right(csv);
     } catch (e) {

@@ -17,7 +17,8 @@ import 'package:mocktail/mocktail.dart';
 class MockNotificationsInboxCubit extends MockCubit<NotificationsInboxState>
     implements NotificationsInboxCubit {}
 
-class MockSessionCubit extends MockCubit<SessionState> implements SessionCubit {}
+class MockSessionCubit extends MockCubit<SessionState>
+    implements SessionCubit {}
 
 String _detailPath(String id) => '/notifications/$id';
 
@@ -52,7 +53,11 @@ void main() {
 
   const readOnly = Capabilities(slugs: ['notifications.read']);
   const canBroadcast = Capabilities(
-    slugs: ['notifications.read', 'notifications.send', 'notifications.broadcast'],
+    slugs: [
+      'notifications.read',
+      'notifications.send',
+      'notifications.broadcast',
+    ],
   );
 
   late MockNotificationsInboxCubit inbox;

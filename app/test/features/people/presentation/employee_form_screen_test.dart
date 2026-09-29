@@ -59,9 +59,7 @@ void main() {
     profileId: 'p3',
   );
 
-  const roles = [
-    Role(id: 3, name: 'Staff', isSystemRole: false),
-  ];
+  const roles = [Role(id: 3, name: 'Staff', isSystemRole: false)];
 
   const loaded = EmployeeSummary(
     id: 11,
@@ -138,10 +136,7 @@ void main() {
         useMaterial3: true,
         splashFactory: NoSplash.splashFactory,
       ),
-      home: BlocProvider<SessionCubit>.value(
-        value: sessionCubit,
-        child: child,
-      ),
+      home: BlocProvider<SessionCubit>.value(value: sessionCubit, child: child),
     );
   }
 

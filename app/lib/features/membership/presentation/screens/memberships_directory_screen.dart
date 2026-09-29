@@ -76,60 +76,56 @@ class _MembershipsDirectoryBody extends StatelessWidget {
                 ),
           ),
           Expanded(
-            child:
-                BlocBuilder<
-                  MembershipsDirectoryCubit,
-                  MembershipsDirectoryState
-                >(
-                  builder: (context, state) {
-                    final noItems = state.items.isEmpty;
-                    if (noItems &&
-                        (state.status == LoadStatus.initial ||
-                            state.status == LoadStatus.loading)) {
-                      return const AppLoading();
-                    }
-                    if (noItems && state.status == LoadStatus.failure) {
-                      return AppErrorView(
-                        message: state.failure == null
-                            ? MembershipStrings.noneFound
-                            : failureMessage(state.failure!),
-                        onRetry: () =>
-                            context.read<MembershipsDirectoryCubit>().load(),
+            child: BlocBuilder<MembershipsDirectoryCubit, MembershipsDirectoryState>(
+              builder: (context, state) {
+                final noItems = state.items.isEmpty;
+                if (noItems &&
+                    (state.status == LoadStatus.initial ||
+                        state.status == LoadStatus.loading)) {
+                  return const AppLoading();
+                }
+                if (noItems && state.status == LoadStatus.failure) {
+                  return AppErrorView(
+                    message: state.failure == null
+                        ? MembershipStrings.noneFound
+                        : failureMessage(state.failure!),
+                    onRetry: () =>
+                        context.read<MembershipsDirectoryCubit>().load(),
+                  );
+                }
+                if (noItems) {
+                  return const AppEmptyView(
+                    message: MembershipStrings.noneFound,
+                  );
+                }
+                return RefreshIndicator(
+                  onRefresh: () =>
+                      context.read<MembershipsDirectoryCubit>().load(),
+                  child: ListView.builder(
+                    itemCount: state.items.length,
+                    itemBuilder: (context, index) {
+                      final membership = state.items[index];
+                      return ListTile(
+                        title: Text(
+                          membership.product?.name ??
+                              'Member #${membership.memberId}',
+                        ),
+                        subtitle: Text(
+                          '${membership.startDate.toString().split(' ').first} → '
+                          '${membership.endDate.toString().split(' ').first}',
+                        ),
+                        trailing: MembershipStatusChip(
+                          status: membership.status,
+                        ),
+                        onTap: () => context.go(
+                          '${Routes.adminMemberships}/${membership.id}',
+                        ),
                       );
-                    }
-                    if (noItems) {
-                      return const AppEmptyView(
-                        message: MembershipStrings.noneFound,
-                      );
-                    }
-                    return RefreshIndicator(
-                      onRefresh: () =>
-                          context.read<MembershipsDirectoryCubit>().load(),
-                      child: ListView.builder(
-                        itemCount: state.items.length,
-                        itemBuilder: (context, index) {
-                          final membership = state.items[index];
-                          return ListTile(
-                            title: Text(
-                              membership.product?.name ??
-                                  'Member #${membership.memberId}',
-                            ),
-                            subtitle: Text(
-                              '${membership.startDate.toString().split(' ').first} → '
-                              '${membership.endDate.toString().split(' ').first}',
-                            ),
-                            trailing: MembershipStatusChip(
-                              status: membership.status,
-                            ),
-                            onTap: () => context.go(
-                              '${Routes.adminMemberships}/${membership.id}',
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),

@@ -102,56 +102,56 @@ class _GoalDetailBodyState extends State<_GoalDetailBody> {
           }
           if (goal == null) return const SizedBox.shrink();
           return ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  GoalProgressBar(goal: goal),
-                  const SizedBox(height: 24),
-                  Text(
-                    GoalsStrings.checkInTitle,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _valueController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: GoalsStrings.checkInValueLabel,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text(GoalsStrings.checkInDateLabel),
-                    subtitle: Text(
-                      '${_date.year}-${_date.month.toString().padLeft(2, '0')}-${_date.day.toString().padLeft(2, '0')}',
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.calendar_today),
-                      onPressed: _pickDate,
-                    ),
-                  ),
-                  TextField(
-                    controller: _notesController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: GoalsStrings.checkInNotesLabel,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: submitting ? null : _submit,
-                    child: submitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text(GoalsStrings.checkInSubmit),
-                  ),
-                ],
-              );
+            padding: const EdgeInsets.all(16),
+            children: [
+              GoalProgressBar(goal: goal),
+              const SizedBox(height: 24),
+              Text(
+                GoalsStrings.checkInTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _valueController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: GoalsStrings.checkInValueLabel,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text(GoalsStrings.checkInDateLabel),
+                subtitle: Text(
+                  '${_date.year}-${_date.month.toString().padLeft(2, '0')}-${_date.day.toString().padLeft(2, '0')}',
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: _pickDate,
+                ),
+              ),
+              TextField(
+                controller: _notesController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: GoalsStrings.checkInNotesLabel,
+                ),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: submitting ? null : _submit,
+                child: submitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text(GoalsStrings.checkInSubmit),
+              ),
+            ],
+          );
         },
       ),
     );

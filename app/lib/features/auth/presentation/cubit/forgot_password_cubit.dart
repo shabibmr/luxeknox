@@ -19,7 +19,8 @@ abstract class ForgotPasswordState with _$ForgotPasswordState {
 
 @injectable
 class ForgotPasswordCubit extends Cubit<ForgotPasswordState> {
-  ForgotPasswordCubit(this._forgotPassword) : super(const ForgotPasswordState());
+  ForgotPasswordCubit(this._forgotPassword)
+    : super(const ForgotPasswordState());
 
   final ForgotPasswordUseCase _forgotPassword;
 

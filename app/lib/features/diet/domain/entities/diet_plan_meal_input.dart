@@ -94,10 +94,12 @@ class DietPlanMealInput extends Equatable {
     return DietPlanMealInput(
       key: key ?? this.key,
       mealName: mealName ?? this.mealName,
-      scheduledTime:
-          clearScheduledTime ? null : (scheduledTime ?? this.scheduledTime),
-      targetCalories:
-          clearTargetCalories ? null : (targetCalories ?? this.targetCalories),
+      scheduledTime: clearScheduledTime
+          ? null
+          : (scheduledTime ?? this.scheduledTime),
+      targetCalories: clearTargetCalories
+          ? null
+          : (targetCalories ?? this.targetCalories),
       notes: clearNotes ? null : (notes ?? this.notes),
       foods: foods ?? this.foods,
     );

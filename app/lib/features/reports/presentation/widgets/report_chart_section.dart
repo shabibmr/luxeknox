@@ -14,11 +14,7 @@ import '../report_strings.dart';
 /// chartable rows (e.g. payments, blocked pending the financial-charts
 /// vertical).
 class ReportChartSection extends StatefulWidget {
-  const ReportChartSection({
-    super.key,
-    required this.type,
-    required this.rows,
-  });
+  const ReportChartSection({super.key, required this.type, required this.rows});
 
   final AppReportType type;
   final List<Map<String, dynamic>> rows;
@@ -92,10 +88,10 @@ class _ChartBlockView extends StatelessWidget {
       BarChartBlock() => AppBarChart(data: b.points),
       LineChartBlock() => AppLineChart(series: b.series),
       HeatmapChartBlock() => AppHeatmap(
-          values: b.values,
-          rowLabels: b.rowLabels,
-          colLabels: b.colLabels,
-        ),
+        values: b.values,
+        rowLabels: b.rowLabels,
+        colLabels: b.colLabels,
+      ),
     };
   }
 }

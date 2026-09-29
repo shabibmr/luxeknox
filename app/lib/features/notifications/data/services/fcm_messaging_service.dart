@@ -82,7 +82,8 @@ class FcmMessagingService {
 
     final androidPlugin = _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.createNotificationChannel(_androidChannel);
     await androidPlugin?.requestNotificationsPermission();
   }

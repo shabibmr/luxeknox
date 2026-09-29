@@ -42,9 +42,9 @@ void main() {
     'loads sessions and metrics',
     build: () {
       when(() => listMetrics(any())).thenAnswer(
-        (_) async => Right(
+        (_) async => const Right(
           CursorPage(
-            items: const [
+            items: [
               GoalMetric(
                 id: '1',
                 name: 'Weight',
@@ -66,9 +66,7 @@ void main() {
                 id: '9',
                 memberId: '10',
                 recordedAt: DateTime.utc(2026, 1, 1),
-                values: const [
-                  MeasurementValueEntry(metricId: '1', value: 80),
-                ],
+                values: const [MeasurementValueEntry(metricId: '1', value: 80)],
               ),
             ],
             nextCursor: null,
@@ -100,17 +98,13 @@ void main() {
     'emits failure when list fails',
     build: () {
       when(() => listMetrics(any())).thenAnswer(
-        (_) async => Right(
-          CursorPage<GoalMetric>(
-            items: const [],
-            nextCursor: null,
-            hasMore: false,
-          ),
+        (_) async => const Right(
+          CursorPage<GoalMetric>(items: [], nextCursor: null, hasMore: false),
         ),
       );
-      when(() => listMeasurements(any())).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(
+        () => listMeasurements(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return MeasurementsCubit(
         listMeasurements,
         createMeasurement,

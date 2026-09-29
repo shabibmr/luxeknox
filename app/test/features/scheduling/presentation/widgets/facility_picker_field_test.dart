@@ -52,7 +52,9 @@ void main() {
   });
 
   testWidgets('renders facilities and reports selection', (tester) async {
-    when(() => listFacilities(any())).thenAnswer((_) async => const Right(facilities));
+    when(
+      () => listFacilities(any()),
+    ).thenAnswer((_) async => const Right(facilities));
     FacilityInfo? selected;
 
     await tester.pumpWidget(

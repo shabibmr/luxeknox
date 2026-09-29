@@ -29,18 +29,11 @@ class PaymentsLedgerCubit extends Cubit<PaymentsLedgerState> {
   final GetPaymentsUseCase _getPayments;
   String? _memberId;
 
-  Future<void> load({
-    String? memberId,
-    PaymentsLedgerFilter? filter,
-  }) async {
+  Future<void> load({String? memberId, PaymentsLedgerFilter? filter}) async {
     if (memberId != null) _memberId = memberId;
     final next = filter ?? state.filter;
     emit(
-      state.copyWith(
-        status: LoadStatus.loading,
-        filter: next,
-        failure: null,
-      ),
+      state.copyWith(status: LoadStatus.loading, filter: next, failure: null),
     );
     final apiStatus = switch (next) {
       PaymentsLedgerFilter.all => null,

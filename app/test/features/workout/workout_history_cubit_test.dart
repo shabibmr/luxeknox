@@ -98,23 +98,19 @@ void main() {
           .having((s) => s.hasMore, 'hasMore', true)
           .having((s) => s.nextCursor, 'cursor', 'c2')
           .having((s) => s.totalVolumeKg, 'volume', 180)
-          .having(
-            (s) => s.personalRecords,
-            'prs',
-            [
-              const WorkoutPersonalRecord(exerciseId: '10', maxWeightKg: 60),
-              const WorkoutPersonalRecord(exerciseId: '20', maxWeightKg: 40),
-            ],
-          ),
+          .having((s) => s.personalRecords, 'prs', [
+            const WorkoutPersonalRecord(exerciseId: '10', maxWeightKg: 60),
+            const WorkoutPersonalRecord(exerciseId: '20', maxWeightKg: 40),
+          ]),
     ],
   );
 
   blocTest<WorkoutHistoryCubit, WorkoutHistoryState>(
     'emits failure on repository error',
     build: () {
-      when(() => listSessions(any())).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(
+        () => listSessions(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return WorkoutHistoryCubit(listSessions);
     },
     act: (cubit) => cubit.load(memberId: '7'),
@@ -180,11 +176,7 @@ void main() {
       isA<WorkoutHistoryState>()
           .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.items.length, 'len', 1)
-          .having(
-            (s) => s.personalRecords.single.maxWeightKg,
-            'pr',
-            50,
-          ),
+          .having((s) => s.personalRecords.single.maxWeightKg, 'pr', 50),
       isA<WorkoutHistoryState>()
           .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.loadingMore, 'loading', true),
@@ -193,11 +185,7 @@ void main() {
           .having((s) => s.items.map((e) => e.id).toList(), 'ids', ['1', '2'])
           .having((s) => s.hasMore, 'hasMore', false)
           .having((s) => s.totalVolumeKg, 'volume', 150)
-          .having(
-            (s) => s.personalRecords.single.maxWeightKg,
-            'pr',
-            80,
-          ),
+          .having((s) => s.personalRecords.single.maxWeightKg, 'pr', 80),
     ],
   );
 
@@ -212,9 +200,8 @@ void main() {
         ],
       ),
     ]);
-    expect(
-      records,
-      [const WorkoutPersonalRecord(exerciseId: '3', maxWeightKg: 100)],
-    );
+    expect(records, [
+      const WorkoutPersonalRecord(exerciseId: '3', maxWeightKg: 100),
+    ]);
   });
 }

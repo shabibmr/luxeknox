@@ -87,8 +87,7 @@ class _ChangePasswordFormState extends State<_ChangePasswordForm> {
                         decoration: const InputDecoration(
                           labelText: AuthStrings.currentPassword,
                         ),
-                        validator: (value) =>
-                            (value == null || value.isEmpty)
+                        validator: (value) => (value == null || value.isEmpty)
                             ? AuthStrings.enterPassword
                             : null,
                       ),

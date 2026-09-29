@@ -36,10 +36,7 @@ class AppEmptyView extends StatelessWidget {
             ),
             if (action != null && label != null && label.isNotEmpty) ...[
               const SizedBox(height: 16),
-              OutlinedButton(
-                onPressed: action,
-                child: Text(label),
-              ),
+              OutlinedButton(onPressed: action, child: Text(label)),
             ],
           ],
         ),

@@ -7,9 +7,7 @@ void main() {
     testWidgets('renders nothing when idle and no error', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: UploadProgressWidget(isUploading: false),
-          ),
+          home: Scaffold(body: UploadProgressWidget(isUploading: false)),
         ),
       );
 
@@ -17,31 +15,34 @@ void main() {
       expect(find.text('Uploading…'), findsNothing);
     });
 
-    testWidgets('renders progress indicator, formatted bytes, and triggers cancel', (tester) async {
-      var canceled = false;
+    testWidgets(
+      'renders progress indicator, formatted bytes, and triggers cancel',
+      (tester) async {
+        var canceled = false;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: UploadProgressWidget(
-              isUploading: true,
-              progress: 0.5,
-              sentBytes: 2 * 1024 * 1024,
-              totalBytes: 4 * 1024 * 1024,
-              onCancel: () => canceled = true,
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: UploadProgressWidget(
+                isUploading: true,
+                progress: 0.5,
+                sentBytes: 2 * 1024 * 1024,
+                totalBytes: 4 * 1024 * 1024,
+                onCancel: () => canceled = true,
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Uploading…'), findsOneWidget);
-      expect(find.text('50%'), findsOneWidget);
-      expect(find.text('2.0 MB / 4.0 MB'), findsOneWidget);
-      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+        expect(find.text('Uploading…'), findsOneWidget);
+        expect(find.text('50%'), findsOneWidget);
+        expect(find.text('2.0 MB / 4.0 MB'), findsOneWidget);
+        expect(find.byType(LinearProgressIndicator), findsOneWidget);
 
-      await tester.tap(find.text('Cancel'));
-      expect(canceled, isTrue);
-    });
+        await tester.tap(find.text('Cancel'));
+        expect(canceled, isTrue);
+      },
+    );
 
     testWidgets('renders error banner and triggers retry', (tester) async {
       var retried = false;

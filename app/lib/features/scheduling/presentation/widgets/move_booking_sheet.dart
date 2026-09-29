@@ -82,16 +82,17 @@ class _MoveBookingSheetState extends State<MoveBookingSheet> {
         _error = failureMessage(failure);
       }),
       (page) {
-        final filtered = page.items
-            .where(
-              (s) =>
-                  s.id != widget.session.id &&
-                  s.scheduleTypeId == widget.session.scheduleTypeId &&
-                  s.status == ScheduleSessionStatus.scheduled &&
-                  !s.isFull,
-            )
-            .toList()
-          ..sort((a, b) => a.startTime.compareTo(b.startTime));
+        final filtered =
+            page.items
+                .where(
+                  (s) =>
+                      s.id != widget.session.id &&
+                      s.scheduleTypeId == widget.session.scheduleTypeId &&
+                      s.status == ScheduleSessionStatus.scheduled &&
+                      !s.isFull,
+                )
+                .toList()
+              ..sort((a, b) => a.startTime.compareTo(b.startTime));
         setState(() {
           _loading = false;
           _alternatives = filtered;

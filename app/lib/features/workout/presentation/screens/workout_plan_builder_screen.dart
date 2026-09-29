@@ -46,26 +46,25 @@ class _BuilderBody extends StatelessWidget {
                     state.exercises.isNotEmpty));
         if (state.status == LoadStatus.loading && !showForm) {
           return Scaffold(
-            appBar: AppBar(title: Text(WorkoutStrings.createTitle)),
+            appBar: AppBar(title: const Text(WorkoutStrings.createTitle)),
             body: const AppLoading(),
           );
         }
         if (state.status == LoadStatus.failure && !showForm) {
           return Scaffold(
-            appBar: AppBar(title: Text(WorkoutStrings.editTitle)),
+            appBar: AppBar(title: const Text(WorkoutStrings.editTitle)),
             body: AppErrorView(
               message: state.failure == null
                   ? 'Something went wrong'
                   : failureMessage(state.failure!),
-              onRetry: () => context
-                  .read<WorkoutPlanBuilderCubit>()
-                  .init(planId: planId),
+              onRetry: () =>
+                  context.read<WorkoutPlanBuilderCubit>().init(planId: planId),
             ),
           );
         }
         if (!showForm) {
           return Scaffold(
-            appBar: AppBar(title: Text(WorkoutStrings.createTitle)),
+            appBar: AppBar(title: const Text(WorkoutStrings.createTitle)),
             body: const SizedBox.shrink(),
           );
         }
@@ -104,9 +103,7 @@ class _BuilderFormState extends State<_BuilderForm> {
     _description = TextEditingController(text: s.description);
     _targetGoal = TextEditingController(text: s.targetGoal);
     _difficulty = TextEditingController(text: s.difficulty);
-    _duration = TextEditingController(
-      text: s.durationWeeks?.toString() ?? '',
-    );
+    _duration = TextEditingController(text: s.durationWeeks?.toString() ?? '');
     _memberId = TextEditingController(text: s.memberId);
   }
 
@@ -154,9 +151,7 @@ class _BuilderFormState extends State<_BuilderForm> {
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: WorkoutStrings.dayLabel,
-          ),
+          decoration: const InputDecoration(labelText: WorkoutStrings.dayLabel),
         ),
         actions: [
           TextButton(
@@ -194,7 +189,9 @@ class _BuilderFormState extends State<_BuilderForm> {
           (err.failure == null
               ? WorkoutStrings.saveFailed
               : failureMessage(err.failure!));
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
       return;
     }
     if (andPublish) {
@@ -276,8 +273,7 @@ class _BuilderFormState extends State<_BuilderForm> {
                 labelText: WorkoutStrings.titleLabel,
                 border: OutlineInputBorder(),
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty)
+              validator: (v) => (v == null || v.trim().isEmpty)
                   ? WorkoutStrings.titleRequired
                   : null,
               onChanged: context.read<WorkoutPlanBuilderCubit>().setTitle,
@@ -358,9 +354,7 @@ class _BuilderFormState extends State<_BuilderForm> {
                     ),
                   ),
                   TextButton.icon(
-                    onPressed: state.saving
-                        ? null
-                        : () => _pickExercise(day),
+                    onPressed: state.saving ? null : () => _pickExercise(day),
                     icon: const Icon(Icons.add),
                     label: const Text(WorkoutStrings.addExercise),
                   ),
@@ -391,12 +385,14 @@ class _BuilderFormState extends State<_BuilderForm> {
                   ? null
                   : () {
                       final nextDay =
-                          (days.isEmpty ? 0 : days.reduce((a, b) => a > b ? a : b)) +
+                          (days.isEmpty
+                              ? 0
+                              : days.reduce((a, b) => a > b ? a : b)) +
                           1;
                       _pickExercise(nextDay);
                     },
               icon: const Icon(Icons.calendar_today_outlined),
-              label: Text(
+              label: const Text(
                 '${WorkoutStrings.addExercise} (${WorkoutStrings.dayLabel} +)',
               ),
             ),

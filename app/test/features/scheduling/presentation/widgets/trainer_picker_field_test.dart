@@ -39,7 +39,10 @@ void main() {
 
   testWidgets('shows placeholder when nothing selected', (tester) async {
     await tester.pumpWidget(buildApp());
-    expect(find.text(SchedulingStrings.trainerFieldPlaceholder), findsOneWidget);
+    expect(
+      find.text(SchedulingStrings.trainerFieldPlaceholder),
+      findsOneWidget,
+    );
   });
 
   testWidgets('shows selected trainer name', (tester) async {
@@ -130,7 +133,9 @@ void main() {
   });
 
   testWidgets('shows failure message on load error', (tester) async {
-    when(() => listTrainers(any())).thenAnswer((_) async => const Left(NetworkFailure()));
+    when(
+      () => listTrainers(any()),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
 
     await tester.pumpWidget(buildApp());
     await tester.tap(find.byKey(const Key('trainer_picker_field')));

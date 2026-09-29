@@ -10,18 +10,13 @@ abstract class PaymentsRemoteDataSource {
     String? status,
   });
 
-  Future<api.PaymentPage> listOutstandingPayments({
-    int? limit,
-    int? offset,
-  });
+  Future<api.PaymentPage> listOutstandingPayments({int? limit, int? offset});
 
   Future<api.Payment> getPayment(int id);
 
   Future<api.PaymentMethodPage> listPaymentMethods();
 
-  Future<api.PaymentMethod> createPaymentMethod(
-    api.PaymentMethodWrite write,
-  );
+  Future<api.PaymentMethod> createPaymentMethod(api.PaymentMethodWrite write);
 }
 
 @LazySingleton(as: PaymentsRemoteDataSource)

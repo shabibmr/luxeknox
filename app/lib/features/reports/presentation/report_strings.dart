@@ -53,6 +53,5 @@ abstract final class ReportStrings {
     required int page,
     required int pageCount,
     required int totalRows,
-  }) =>
-      'Page $page of $pageCount · $totalRows $rowsSummary';
+  }) => 'Page $page of $pageCount · $totalRows $rowsSummary';
 }

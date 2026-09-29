@@ -20,9 +20,7 @@ void main() {
   late MockListSchedulesUseCase listSchedules;
 
   setUpAll(() {
-    registerFallbackValue(
-      const ListSchedulesParams(),
-    );
+    registerFallbackValue(const ListSchedulesParams());
   });
 
   setUp(() {
@@ -112,9 +110,9 @@ void main() {
             .having((s) => s.upcomingItems.map((e) => e.id), 'upcoming', ['2']),
       ],
       verify: (_) {
-        final captured = verify(
-          () => listSchedules(captureAny()),
-        ).captured.single as ListSchedulesParams;
+        final captured =
+            verify(() => listSchedules(captureAny())).captured.single
+                as ListSchedulesParams;
         expect(captured.memberId, '42');
         expect(captured.trainerId, isNull);
         expect(captured.limit, 100);
@@ -132,11 +130,7 @@ void main() {
       build: () {
         when(() => listSchedules(any())).thenAnswer(
           (_) async => const Right(
-            CursorPage(
-              items: [],
-              nextCursor: null,
-              hasMore: false,
-            ),
+            CursorPage(items: [], nextCursor: null, hasMore: false),
           ),
         );
         return DashboardAgendaCubit(listSchedules);
@@ -154,9 +148,9 @@ void main() {
             .having((s) => s.hasLoaded, 'hasLoaded', true),
       ],
       verify: (_) {
-        final captured = verify(
-          () => listSchedules(captureAny()),
-        ).captured.single as ListSchedulesParams;
+        final captured =
+            verify(() => listSchedules(captureAny())).captured.single
+                as ListSchedulesParams;
         expect(captured.trainerId, '7');
         expect(captured.memberId, isNull);
       },
@@ -207,14 +201,21 @@ void main() {
       'respects GymTimezoneProvider when partitioning today vs upcoming sessions',
       build: () {
         final mockTzProvider = MockGymTimezoneProvider();
-        when(() => mockTzProvider.timezone()).thenAnswer((_) async => 'Asia/Kolkata');
-        when(() => mockTzProvider.getOffset('Asia/Kolkata'))
-            .thenReturn(const Duration(hours: 5, minutes: 30));
+        when(
+          () => mockTzProvider.timezone(),
+        ).thenAnswer((_) async => 'Asia/Kolkata');
+        when(
+          () => mockTzProvider.getOffset('Asia/Kolkata'),
+        ).thenReturn(const Duration(hours: 5, minutes: 30));
 
         final offset = const Duration(hours: 5, minutes: 30);
         final utcNow = DateTime.now().toUtc();
         final gymNow = utcNow.add(offset);
-        final gymTodayMidnightUtc = DateTime.utc(gymNow.year, gymNow.month, gymNow.day).subtract(offset);
+        final gymTodayMidnightUtc = DateTime.utc(
+          gymNow.year,
+          gymNow.month,
+          gymNow.day,
+        ).subtract(offset);
 
         when(() => listSchedules(any())).thenAnswer(
           (_) async => Right(
@@ -226,7 +227,9 @@ void main() {
                 ),
                 session(
                   id: 'tomorrow-session',
-                  start: gymTodayMidnightUtc.add(const Duration(days: 1, hours: 9)),
+                  start: gymTodayMidnightUtc.add(
+                    const Duration(days: 1, hours: 9),
+                  ),
                 ),
               ],
               nextCursor: null,
@@ -238,11 +241,19 @@ void main() {
       },
       act: (cubit) => cubit.load(role: UserType.member, profileId: '100'),
       expect: () => [
-        isA<DashboardAgendaState>().having((s) => s.status, 'status', LoadStatus.loading),
+        isA<DashboardAgendaState>().having(
+          (s) => s.status,
+          'status',
+          LoadStatus.loading,
+        ),
         isA<DashboardAgendaState>()
             .having((s) => s.status, 'status', LoadStatus.success)
-            .having((s) => s.todayItems.map((e) => e.id), 'today', ['today-session'])
-            .having((s) => s.upcomingItems.map((e) => e.id), 'upcoming', ['tomorrow-session']),
+            .having((s) => s.todayItems.map((e) => e.id), 'today', [
+              'today-session',
+            ])
+            .having((s) => s.upcomingItems.map((e) => e.id), 'upcoming', [
+              'tomorrow-session',
+            ]),
       ],
     );
   });

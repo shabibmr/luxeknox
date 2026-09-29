@@ -17,6 +17,7 @@ abstract class WorkoutHistoryState with _$WorkoutHistoryState {
     @Default(<WorkoutSession>[]) List<WorkoutSession> items,
     @Default(<WorkoutPersonalRecord>[])
     List<WorkoutPersonalRecord> personalRecords,
+
     /// True after a successful fetch, so an empty history is still data.
     @Default(false) bool hasLoaded,
     @Default(0) num totalVolumeKg,
@@ -46,15 +47,11 @@ class WorkoutHistoryCubit extends Cubit<WorkoutHistoryState> {
       ),
     );
     final result = await _listSessions(
-      ListWorkoutSessionsParams(
-        memberId: memberId,
-        limit: _pageSize,
-      ),
+      ListWorkoutSessionsParams(memberId: memberId, limit: _pageSize),
     );
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) {
         final items = page.items;
         emit(

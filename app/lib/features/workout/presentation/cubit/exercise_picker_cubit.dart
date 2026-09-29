@@ -40,9 +40,8 @@ class ExercisePickerCubit extends Cubit<ExercisePickerState> {
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
         state.copyWith(
           status: LoadStatus.success,

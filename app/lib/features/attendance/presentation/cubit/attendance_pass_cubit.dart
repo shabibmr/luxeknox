@@ -26,11 +26,8 @@ abstract class AttendancePassState with _$AttendancePassState {
 
 @injectable
 class AttendancePassCubit extends Cubit<AttendancePassState> {
-  AttendancePassCubit(
-    this._getPass,
-    this._listAttendances,
-    this._checkOut,
-  ) : super(const AttendancePassState());
+  AttendancePassCubit(this._getPass, this._listAttendances, this._checkOut)
+    : super(const AttendancePassState());
 
   final GetAttendancePassUseCase _getPass;
   final ListAttendancesUseCase _listAttendances;
@@ -47,9 +44,8 @@ class AttendancePassCubit extends Cubit<AttendancePassState> {
     );
     final passResult = await _getPass(const NoParams());
     await passResult.fold(
-      (failure) async => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) async =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (pass) async {
         AttendanceRecord? open;
         final log = await _listAttendances(
@@ -83,18 +79,10 @@ class AttendancePassCubit extends Cubit<AttendancePassState> {
     final open = current.openAttendance;
     if (current.pass == null || open == null) return;
     if (current.actionInFlight) {
-      emit(
-        current.copyWith(message: AttendanceStrings.doubleSubmitBlocked),
-      );
+      emit(current.copyWith(message: AttendanceStrings.doubleSubmitBlocked));
       return;
     }
-    emit(
-      current.copyWith(
-        actionInFlight: true,
-        message: null,
-        failure: null,
-      ),
-    );
+    emit(current.copyWith(actionInFlight: true, message: null, failure: null));
     final result = await _checkOut(CheckOutParams(open.id));
     result.fold(
       (failure) => emit(

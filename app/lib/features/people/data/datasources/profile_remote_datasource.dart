@@ -5,10 +5,7 @@ import 'package:injectable/injectable.dart';
 abstract class ProfileRemoteDataSource {
   Future<api.MemberHealth> getHealth(int memberId);
 
-  Future<api.MemberHealth> putHealth(
-    int memberId,
-    api.MemberHealthWrite write,
-  );
+  Future<api.MemberHealth> putHealth(int memberId, api.MemberHealthWrite write);
 
   Future<api.MedicalHistoryPage> listMedicalHistories(int memberId);
 
@@ -51,10 +48,7 @@ abstract class ProfileRemoteDataSource {
 
   Future<api.MemberPhotoPage> listPhotos(int memberId);
 
-  Future<api.MemberPhoto> createPhoto(
-    int memberId,
-    api.MemberPhotoWrite write,
-  );
+  Future<api.MemberPhoto> createPhoto(int memberId, api.MemberPhotoWrite write);
 
   Future<api.MemberPhoto> setAvatar({
     required int memberId,
@@ -91,10 +85,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     api.MemberHealthWrite write,
   ) async {
     return _unwrap(
-      await _healthApi.putMemberHealth(
-        id: memberId,
-        memberHealthWrite: write,
-      ),
+      await _healthApi.putMemberHealth(id: memberId, memberHealthWrite: write),
     );
   }
 
@@ -208,10 +199,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     api.MemberPhotoWrite write,
   ) async {
     return _unwrap(
-      await _healthApi.createMemberPhoto(
-        id: memberId,
-        memberPhotoWrite: write,
-      ),
+      await _healthApi.createMemberPhoto(id: memberId, memberPhotoWrite: write),
     );
   }
 

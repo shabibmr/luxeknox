@@ -32,9 +32,8 @@ class MembershipPackagesCatalogCubit
     final result = await _getProducts(const GetMembershipProductsParams());
     if (isClosed) return;
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
         state.copyWith(
           status: LoadStatus.success,

@@ -11,22 +11,20 @@ String? resolveDeepLinkPath(DeepLinkTarget target) {
     'schedule' ||
     'schedules' ||
     'booking' ||
-    'session' =>
-      Routes.memberScheduleById(id),
+    'session' => Routes.memberScheduleById(id),
     'payment' || 'payments' => Routes.memberProfilePaymentById(id),
     'goal' || 'goals' || 'progress_goal' => Routes.memberProgressGoalById(id),
     'progress' => Routes.memberProgress,
     'measurement' || 'measurements' => Routes.memberProgressMeasurements,
-    'progress_photo' || 'progress_photos' || 'photo' =>
-      Routes.memberProgressPhotos,
-    'progress_note' || 'progress_notes' || 'note' =>
-      Routes.memberProgressNotes,
+    'progress_photo' ||
+    'progress_photos' ||
+    'photo' => Routes.memberProgressPhotos,
+    'progress_note' || 'progress_notes' || 'note' => Routes.memberProgressNotes,
     'attendance' => Routes.memberProfileAttendance,
     'workout' || 'workouts' => Routes.memberHomeWorkoutHistory,
     'diet' || 'diets' || 'diet_plan' => Routes.memberHomeDietHistory,
     'notification' || 'notifications' => Routes.memberNotificationById(id),
-    'member' || 'members' || 'person' || 'people' =>
-      Routes.adminMemberById(id),
+    'member' || 'members' || 'person' || 'people' => Routes.adminMemberById(id),
     _ => null,
   };
 }

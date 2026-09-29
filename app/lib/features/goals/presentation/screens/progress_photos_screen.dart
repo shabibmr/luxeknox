@@ -38,9 +38,9 @@ class ProgressPhotosScreen extends StatelessWidget {
     final session = getIt<SessionCubit>().state;
     final isOwner =
         memberId == null ||
-        (session is SessionAuthenticated &&
-            session.principal.profileId == id);
-    final canModerate = session is SessionAuthenticated &&
+        (session is SessionAuthenticated && session.principal.profileId == id);
+    final canModerate =
+        session is SessionAuthenticated &&
         session.capabilities.can('progress_photos.moderate');
 
     if (id == null || id.isEmpty) {
@@ -363,7 +363,9 @@ class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
         DropdownButtonFormField<PhotoPose>(
           // ignore: deprecated_member_use
           value: _comparePose,
-          decoration: const InputDecoration(labelText: GoalsStrings.comparePose),
+          decoration: const InputDecoration(
+            labelText: GoalsStrings.comparePose,
+          ),
           items: [
             for (final p in PhotoPose.values)
               DropdownMenuItem(
@@ -378,9 +380,7 @@ class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text(GoalsStrings.compareDateA),
-          subtitle: Text(
-            _dateA?.toIso8601String().split('T').first ?? '—',
-          ),
+          subtitle: Text(_dateA?.toIso8601String().split('T').first ?? '—'),
           trailing: IconButton(
             icon: const Icon(Icons.calendar_today),
             onPressed: () => pick(true),
@@ -389,9 +389,7 @@ class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text(GoalsStrings.compareDateB),
-          subtitle: Text(
-            _dateB?.toIso8601String().split('T').first ?? '—',
-          ),
+          subtitle: Text(_dateB?.toIso8601String().split('T').first ?? '—'),
           trailing: IconButton(
             icon: const Icon(Icons.calendar_today),
             onPressed: () => pick(false),
@@ -426,9 +424,7 @@ class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
             ),
           ),
         ),
-        Text(
-          photo.takenDate?.toIso8601String().split('T').first ?? '—',
-        ),
+        Text(photo.takenDate?.toIso8601String().split('T').first ?? '—'),
       ],
     );
   }

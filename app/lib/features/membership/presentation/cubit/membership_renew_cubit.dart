@@ -29,11 +29,8 @@ abstract class MembershipRenewState with _$MembershipRenewState {
 
 @injectable
 class MembershipRenewCubit extends Cubit<MembershipRenewState> {
-  MembershipRenewCubit(
-    this._getMembership,
-    this._getProducts,
-    this._renew,
-  ) : super(const MembershipRenewState());
+  MembershipRenewCubit(this._getMembership, this._getProducts, this._renew)
+    : super(const MembershipRenewState());
 
   final GetMembershipUseCase _getMembership;
   final GetMembershipProductsUseCase _getProducts;
@@ -45,11 +42,12 @@ class MembershipRenewCubit extends Cubit<MembershipRenewState> {
     if (isClosed) return;
 
     await result.fold(
-      (failure) async => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) async =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (membership) async {
-        final productsResult = await _getProducts(const GetMembershipProductsParams());
+        final productsResult = await _getProducts(
+          const GetMembershipProductsParams(),
+        );
         if (isClosed) return;
         productsResult.fold(
           (failure) => emit(

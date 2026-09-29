@@ -62,9 +62,7 @@ void main() {
   blocTest<WorkoutPlanDetailCubit, WorkoutPlanDetailState>(
     'loads plan then publishes',
     build: () {
-      when(() => getPlan('1')).thenAnswer(
-        (_) async => Right(plan(id: '1')),
-      );
+      when(() => getPlan('1')).thenAnswer((_) async => Right(plan(id: '1')));
       when(() => publishPlan('1')).thenAnswer(
         (_) async => Right(
           plan(id: '1', status: WorkoutPlanStatus.active, rowVersion: 2),
@@ -137,12 +135,10 @@ void main() {
   blocTest<WorkoutPlanDetailCubit, WorkoutPlanDetailState>(
     'publish failure emits failure state',
     build: () {
-      when(() => getPlan('1')).thenAnswer(
-        (_) async => Right(plan(id: '1')),
-      );
-      when(() => publishPlan('1')).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(() => getPlan('1')).thenAnswer((_) async => Right(plan(id: '1')));
+      when(
+        () => publishPlan('1'),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return buildCubit();
     },
     act: (cubit) async {
@@ -176,13 +172,11 @@ void main() {
   blocTest<WorkoutPlanDetailCubit, WorkoutPlanDetailState>(
     'assigns template to member',
     build: () {
-      when(() => getPlan('10')).thenAnswer(
-        (_) async => Right(plan(id: '10', isTemplate: true)),
-      );
+      when(
+        () => getPlan('10'),
+      ).thenAnswer((_) async => Right(plan(id: '10', isTemplate: true)));
       when(() => assignPlan(any())).thenAnswer(
-        (_) async => Right(
-          plan(id: '99', memberId: '5', isTemplate: false),
-        ),
+        (_) async => Right(plan(id: '99', memberId: '5', isTemplate: false)),
       );
       return buildCubit();
     },

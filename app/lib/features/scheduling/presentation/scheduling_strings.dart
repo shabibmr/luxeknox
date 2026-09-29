@@ -45,7 +45,8 @@ class SchedulingStrings {
   static const String startTimeLabel = 'Starts';
   static const String endTimeLabel = 'Ends';
   static const String dateTimePlaceholder = 'Select date & time';
-  static const String endBeforeStartError = 'End time must be after start time.';
+  static const String endBeforeStartError =
+      'End time must be after start time.';
   static const String requiredFieldError = 'Required';
   static const String capacityInvalidError = 'Capacity must be greater than 0.';
   static const String loadFailedRetry = 'Couldn\'t load. Tap to retry.';
@@ -118,4 +119,3 @@ class SchedulingStrings {
   static const String openSlotsBook = 'Book this slot';
   static const String openSlotsSelectPrompt = 'Pick a day and time slot.';
 }
-

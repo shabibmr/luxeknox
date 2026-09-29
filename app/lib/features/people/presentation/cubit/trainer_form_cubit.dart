@@ -59,9 +59,8 @@ class TrainerFormCubit extends Cubit<TrainerFormState> {
     if (trimmed.isEmpty) return;
     if (state.input.specializations.contains(trimmed)) return;
     updateInput(
-      (input) => input.copyWith(
-        specializations: [...input.specializations, trimmed],
-      ),
+      (input) =>
+          input.copyWith(specializations: [...input.specializations, trimmed]),
     );
   }
 
@@ -85,7 +84,9 @@ class TrainerFormCubit extends Cubit<TrainerFormState> {
       return false;
     }
 
-    emit(state.copyWith(submitting: true, clearError: true, clearCreated: true));
+    emit(
+      state.copyWith(submitting: true, clearError: true, clearCreated: true),
+    );
     final result = await _createTrainer(state.input);
     if (isClosed) return false;
     return result.fold(

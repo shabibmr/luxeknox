@@ -88,9 +88,7 @@ class _ForgotPasswordFormState extends State<_ForgotPasswordForm> {
                       FilledButton(
                         onPressed: submitting ? null : _submit,
                         child: Text(
-                          submitting
-                              ? '…'
-                              : AuthStrings.sendResetLink,
+                          submitting ? '…' : AuthStrings.sendResetLink,
                         ),
                       ),
                       TextButton(

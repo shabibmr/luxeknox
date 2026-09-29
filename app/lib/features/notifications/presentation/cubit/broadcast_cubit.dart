@@ -142,22 +142,14 @@ class BroadcastCubit extends Cubit<BroadcastState> {
   Future<void> loadHistory({bool refresh = true}) async {
     final current = state;
     final offset = refresh ? 0 : (current.historyOffset ?? 0);
-    emit(
-      current.copyWith(
-        status: LoadStatus.loading,
-        historyFailure: null,
-      ),
-    );
+    emit(current.copyWith(status: LoadStatus.loading, historyFailure: null));
 
     final result = await _listBroadcasts(
       ListBroadcastsParams(limit: _pageSize, offset: offset),
     );
     result.fold(
       (failure) => emit(
-        current.copyWith(
-          status: LoadStatus.failure,
-          historyFailure: failure,
-        ),
+        current.copyWith(status: LoadStatus.failure, historyFailure: failure),
       ),
       (page) {
         final nextOffset = page.nextCursor != null

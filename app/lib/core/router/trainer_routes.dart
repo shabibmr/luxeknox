@@ -237,7 +237,6 @@ StatefulShellRoute createTrainerBranchRoute() {
                       );
                     },
                   ),
-
                 ],
               ),
             ],
@@ -378,9 +377,8 @@ StatefulShellRoute createTrainerBranchRoute() {
               ),
               GoRoute(
                 path: 'diets/:id',
-                builder: (context, state) => DietPlanDetailScreen(
-                  planId: state.pathParameters['id']!,
-                ),
+                builder: (context, state) =>
+                    DietPlanDetailScreen(planId: state.pathParameters['id']!),
                 routes: [
                   GoRoute(
                     path: 'edit',
@@ -396,7 +394,6 @@ StatefulShellRoute createTrainerBranchRoute() {
                   ),
                 ],
               ),
-
             ],
           ),
         ],

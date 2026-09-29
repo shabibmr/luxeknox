@@ -32,11 +32,7 @@ void main() {
   late _MockBookBloc bookBloc;
   late _MockSessionCubit sessionCubit;
 
-  const trainer = TrainerSummary(
-    id: 3,
-    userId: 30,
-    fullName: 'Alex Trainer',
-  );
+  const trainer = TrainerSummary(id: 3, userId: 30, fullName: 'Alex Trainer');
 
   final day = DateTime(2026, 9, 25);
   final slot = BookableOpenSlot(

@@ -43,25 +43,25 @@ class OpenSlotsPicker extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final day = days[index];
-              final selected = selectedDay != null &&
+              final selected =
+                  selectedDay != null &&
                   day.year == selectedDay!.year &&
                   day.month == selectedDay!.month &&
                   day.day == selectedDay!.day;
               return FilterChip(
-                key: Key(
-                  'open_slots_day_${day.year}_${day.month}_${day.day}',
-                ),
+                key: Key('open_slots_day_${day.year}_${day.month}_${day.day}'),
                 selected: selected,
                 label: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(dayFmt.format(day), style: theme.textTheme.labelSmall),
-                    Text(dateFmt.format(day), style: theme.textTheme.titleSmall),
+                    Text(
+                      dateFmt.format(day),
+                      style: theme.textTheme.titleSmall,
+                    ),
                   ],
                 ),
-                onSelected: enabled
-                    ? (_) => onDaySelected(day)
-                    : null,
+                onSelected: enabled ? (_) => onDaySelected(day) : null,
               );
             },
           ),
@@ -86,9 +86,7 @@ class OpenSlotsPicker extends StatelessWidget {
                   key: Key('open_slot_chip_${slot.scheduleId}'),
                   label: Text(timeFmt.format(slot.start)),
                   selected: selectedScheduleId == slot.scheduleId,
-                  onSelected: enabled
-                      ? (_) => onSlotSelected(slot)
-                      : null,
+                  onSelected: enabled ? (_) => onSlotSelected(slot) : null,
                 ),
             ],
           ),

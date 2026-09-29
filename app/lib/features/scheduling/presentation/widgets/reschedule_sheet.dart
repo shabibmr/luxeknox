@@ -48,8 +48,7 @@ class _RescheduleSheetState extends State<RescheduleSheet> {
   @override
   Widget build(BuildContext context) {
     final rangeError = DateTimeRangeField.validateRange(_start, _end);
-    final canSubmit =
-        _start != null && _end != null && rangeError == null;
+    final canSubmit = _start != null && _end != null && rangeError == null;
 
     return Padding(
       padding: EdgeInsets.only(

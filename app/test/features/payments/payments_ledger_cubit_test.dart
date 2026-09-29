@@ -101,9 +101,9 @@ void main() {
   blocTest<PaymentsLedgerCubit, PaymentsLedgerState>(
     'emits failure on repository error',
     build: () {
-      when(() => getPayments(any())).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(
+        () => getPayments(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return PaymentsLedgerCubit(getPayments);
     },
     act: (cubit) => cubit.load(),

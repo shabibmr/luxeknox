@@ -5,8 +5,8 @@ enum GoalMetricCategory {
 
   static GoalMetricCategory fromWire(String? value) {
     return switch (value) {
-      'body_composition' || 'bodyComposition' =>
-        GoalMetricCategory.bodyComposition,
+      'body_composition' ||
+      'bodyComposition' => GoalMetricCategory.bodyComposition,
       'circumference' => GoalMetricCategory.circumference,
       'strength' => GoalMetricCategory.strength,
       _ => GoalMetricCategory.bodyComposition,

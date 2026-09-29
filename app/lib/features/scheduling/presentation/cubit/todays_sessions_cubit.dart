@@ -14,6 +14,7 @@ abstract class TodaysSessionsState with _$TodaysSessionsState {
   const factory TodaysSessionsState({
     @Default(LoadStatus.initial) LoadStatus status,
     @Default(<ScheduleSession>[]) List<ScheduleSession> items,
+
     /// True after a successful fetch, so an empty day is still data.
     @Default(false) bool hasLoaded,
     Failure? failure,
@@ -35,16 +36,11 @@ class TodaysSessionsCubit extends Cubit<TodaysSessionsState> {
     final from = DateTime(now.year, now.month, now.day);
     final to = from.add(const Duration(days: 1));
     final result = await _listSchedules(
-      ListSchedulesParams(
-        from: from,
-        to: to,
-        trainerId: _trainerId,
-      ),
+      ListSchedulesParams(from: from, to: to, trainerId: _trainerId),
     );
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) {
         final items = [...page.items]
           ..sort((a, b) => a.startTime.compareTo(b.startTime));

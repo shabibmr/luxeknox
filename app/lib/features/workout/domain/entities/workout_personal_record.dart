@@ -33,10 +33,7 @@ List<WorkoutPersonalRecord> computePersonalRecords(
   }
   final records = maxByExercise.entries
       .map(
-        (e) => WorkoutPersonalRecord(
-          exerciseId: e.key,
-          maxWeightKg: e.value,
-        ),
+        (e) => WorkoutPersonalRecord(exerciseId: e.key, maxWeightKg: e.value),
       )
       .toList();
   records.sort((a, b) => a.exerciseId.compareTo(b.exerciseId));

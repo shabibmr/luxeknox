@@ -40,9 +40,9 @@ class _OutstandingDuesBody extends StatelessWidget {
         listener: (context, state) {
           final failure = state.failure;
           if (failure == null) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(failureMessage(failure))),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(failureMessage(failure))));
         },
         builder: (context, state) {
           if (state.status == LoadStatus.loading && state.items.isEmpty) {
@@ -61,30 +61,25 @@ class _OutstandingDuesBody extends StatelessWidget {
             return const AppEmptyView(message: PaymentStrings.noneFound);
           }
           return RefreshIndicator(
-                    onRefresh: () =>
-                        context.read<OutstandingDuesCubit>().load(),
-                    child: ListView.builder(
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final payment = items[index];
-                        return ListTile(
-                          title: Text(
-                            PaymentStrings.invoiceSubtitle(
-                              payment.invoiceNumber,
-                            ),
-                          ),
-                          subtitle: Text(
-                            '${PaymentStrings.memberIdLabel(payment.memberId)} · '
-                            '${PaymentStrings.formatMoney(payment.totalAmount)}',
-                          ),
-                          trailing: PaymentStatusChip(status: payment.status),
-                          onTap: () => context.go(
-                            Routes.adminPaymentById(payment.id),
-                          ),
-                        );
-                      },
-                    ),
-                  );
+            onRefresh: () => context.read<OutstandingDuesCubit>().load(),
+            child: ListView.builder(
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final payment = items[index];
+                return ListTile(
+                  title: Text(
+                    PaymentStrings.invoiceSubtitle(payment.invoiceNumber),
+                  ),
+                  subtitle: Text(
+                    '${PaymentStrings.memberIdLabel(payment.memberId)} · '
+                    '${PaymentStrings.formatMoney(payment.totalAmount)}',
+                  ),
+                  trailing: PaymentStatusChip(status: payment.status),
+                  onTap: () => context.go(Routes.adminPaymentById(payment.id)),
+                );
+              },
+            ),
+          );
         },
       ),
     );

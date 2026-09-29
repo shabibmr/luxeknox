@@ -33,8 +33,9 @@ class ProgressNotesScreen extends StatelessWidget {
       return ProgressNoteType.memberNote;
     }
     return switch (session.principal.userType) {
-      UserType.trainer || UserType.employee || UserType.admin =>
-        ProgressNoteType.trainerAssessment,
+      UserType.trainer ||
+      UserType.employee ||
+      UserType.admin => ProgressNoteType.trainerAssessment,
       UserType.member => ProgressNoteType.memberNote,
     };
   }
@@ -51,19 +52,13 @@ class ProgressNotesScreen extends StatelessWidget {
 
     return BlocProvider(
       create: (_) => getIt<ProgressNotesCubit>()..load(id),
-      child: _ProgressNotesBody(
-        memberId: id,
-        defaultType: _defaultNoteType(),
-      ),
+      child: _ProgressNotesBody(memberId: id, defaultType: _defaultNoteType()),
     );
   }
 }
 
 class _ProgressNotesBody extends StatelessWidget {
-  const _ProgressNotesBody({
-    required this.memberId,
-    required this.defaultType,
-  });
+  const _ProgressNotesBody({required this.memberId, required this.defaultType});
 
   final String memberId;
   final ProgressNoteType defaultType;
@@ -137,9 +132,9 @@ class _ProgressNotesBody extends StatelessWidget {
     );
     controller.dispose();
     if (saved == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(GoalsStrings.noteSaved)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(GoalsStrings.noteSaved)));
     }
   }
 
@@ -176,24 +171,24 @@ class _ProgressNotesBody extends StatelessWidget {
           }
           final notes = state.notes;
           return notes.isEmpty
-                ? const AppEmptyView(message: GoalsStrings.notesEmpty)
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: notes.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final n = notes[index];
-                      return Card(
-                        child: ListTile(
-                          title: Text(n.noteText),
-                          subtitle: Text(
-                            '${GoalsStrings.noteTypeLabelFor(n.noteType)} · '
-                            '${n.createdAt.toIso8601String()}',
-                          ),
+              ? const AppEmptyView(message: GoalsStrings.notesEmpty)
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: notes.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final n = notes[index];
+                    return Card(
+                      child: ListTile(
+                        title: Text(n.noteText),
+                        subtitle: Text(
+                          '${GoalsStrings.noteTypeLabelFor(n.noteType)} · '
+                          '${n.createdAt.toIso8601String()}',
                         ),
-                      );
-                    },
-                  );
+                      ),
+                    );
+                  },
+                );
         },
       ),
     );

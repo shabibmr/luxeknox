@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-export 'package:bloc_concurrency/bloc_concurrency.dart' show droppable, sequential;
+export 'package:bloc_concurrency/bloc_concurrency.dart'
+    show droppable, sequential;
 
 /// Debounce an event stream, then restart the previous handler.
 ///

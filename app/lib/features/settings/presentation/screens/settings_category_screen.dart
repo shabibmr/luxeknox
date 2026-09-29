@@ -129,43 +129,35 @@ class _SettingsCategoryBody extends StatelessWidget {
             return const AppEmptyView(message: SettingsStrings.emptyCategory);
           }
           return Column(
-                      children: [
-                        Expanded(
-                          child: ListView.separated(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: items.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: 8),
-                            itemBuilder: (context, index) {
-                              final item = items[index];
-                              return _SettingRow(
-                                settingKey: item.key,
-                                value: item.value,
-                              );
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: FilledButton(
-                            onPressed: saving
-                                ? null
-                                : () => context
-                                      .read<SettingsCategoryCubit>()
-                                      .save(),
-                            child: saving
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text(SettingsStrings.save),
-                          ),
-                        ),
-                      ],
-                    );
+            children: [
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+                    return _SettingRow(settingKey: item.key, value: item.value);
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: FilledButton(
+                  onPressed: saving
+                      ? null
+                      : () => context.read<SettingsCategoryCubit>().save(),
+                  child: saving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text(SettingsStrings.save),
+                ),
+              ),
+            ],
+          );
         },
       ),
     );

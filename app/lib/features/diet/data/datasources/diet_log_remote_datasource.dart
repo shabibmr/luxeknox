@@ -41,11 +41,7 @@ class DietLogRemoteDataSourceImpl implements DietLogRemoteDataSource {
     required api.DietLogWrite write,
   }) async {
     return _unwrap(
-      await _dietApi.putDietLog(
-        id: memberId,
-        date: date,
-        dietLogWrite: write,
-      ),
+      await _dietApi.putDietLog(id: memberId, date: date, dietLogWrite: write),
     );
   }
 
@@ -56,11 +52,7 @@ class DietLogRemoteDataSourceImpl implements DietLogRemoteDataSource {
     String? cursor,
   }) async {
     return _unwrap(
-      await _dietApi.listDietLogs(
-        id: memberId,
-        limit: limit,
-        cursor: cursor,
-      ),
+      await _dietApi.listDietLogs(id: memberId, limit: limit, cursor: cursor),
     );
   }
 }

@@ -154,9 +154,7 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
     }
     final metrics = ready.metrics;
     final submitting = ready.submitting;
-    final error = ready.failure == null
-        ? null
-        : failureMessage(ready.failure!);
+    final error = ready.failure == null ? null : failureMessage(ready.failure!);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [

@@ -21,14 +21,11 @@ void main() {
 
   group('PageRequest', () {
     test('toQueryParameters omits empty cursor', () {
-      expect(
-        const PageRequest(limit: 10).toQueryParameters(),
-        {'limit': 10},
-      );
-      expect(
-        const PageRequest(cursor: 'abc', limit: 5).toQueryParameters(),
-        {'cursor': 'abc', 'limit': 5},
-      );
+      expect(const PageRequest(limit: 10).toQueryParameters(), {'limit': 10});
+      expect(const PageRequest(cursor: 'abc', limit: 5).toQueryParameters(), {
+        'cursor': 'abc',
+        'limit': 5,
+      });
     });
 
     test('copyWith clearCursor resets cursor', () {

@@ -49,12 +49,7 @@ void main() {
       basePrice: '99.00',
     );
 
-    await pumpApp(
-      tester,
-      Scaffold(
-        body: ListTile(subtitle: Text(subtitle)),
-      ),
-    );
+    await pumpApp(tester, Scaffold(body: ListTile(subtitle: Text(subtitle))));
 
     expect(find.text('GOLD · 30d · 99.00'), findsOneWidget);
   });

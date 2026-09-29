@@ -7,7 +7,8 @@ import '../entities/membership_product.dart';
 import '../repositories/membership_repository.dart';
 
 @lazySingleton
-class GetMembershipProductUseCase implements UseCase<MembershipProduct, String> {
+class GetMembershipProductUseCase
+    implements UseCase<MembershipProduct, String> {
   const GetMembershipProductUseCase(this._repository);
 
   final MembershipRepository _repository;

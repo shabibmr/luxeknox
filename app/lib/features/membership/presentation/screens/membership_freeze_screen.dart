@@ -20,9 +20,7 @@ class MembershipFreezeScreen extends StatelessWidget {
     if (!canUpdate) {
       return Scaffold(
         appBar: AppBar(title: const Text(MembershipStrings.freezeTitle)),
-        body: const Center(
-          child: Text(MembershipStrings.noPermission),
-        ),
+        body: const Center(child: Text(MembershipStrings.noPermission)),
       );
     }
 
@@ -89,13 +87,13 @@ class _MembershipFreezeViewState extends State<_MembershipFreezeView> {
 
     final state = cubit.state;
     if (state.validationError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.validationError!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(state.validationError!)));
     } else if (state.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(failureMessage(state.failure!))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(failureMessage(state.failure!))));
     }
   }
 
@@ -189,9 +187,9 @@ class _MembershipFreezeViewState extends State<_MembershipFreezeView> {
                     labelText: MembershipStrings.reasonLabel,
                   ),
                   onChanged: (val) {
-                    context
-                        .read<MembershipFreezeFormCubit>()
-                        .onReasonChanged(val);
+                    context.read<MembershipFreezeFormCubit>().onReasonChanged(
+                      val,
+                    );
                   },
                 ),
                 const SizedBox(height: 24),

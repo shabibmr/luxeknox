@@ -40,11 +40,7 @@ class MembershipsDirectoryCubit extends Cubit<MembershipsDirectoryState> {
   Future<void> load({MembershipDirectoryFilter? filter}) async {
     final next = filter ?? state.filter;
     emit(
-      state.copyWith(
-        status: LoadStatus.loading,
-        failure: null,
-        filter: next,
-      ),
+      state.copyWith(status: LoadStatus.loading, failure: null, filter: next),
     );
     final apiStatus = switch (next) {
       MembershipDirectoryFilter.all => null,
@@ -59,9 +55,8 @@ class MembershipsDirectoryCubit extends Cubit<MembershipsDirectoryState> {
     );
     if (isClosed) return;
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) {
         final items = next == MembershipDirectoryFilter.expiringSoon
             ? page.items

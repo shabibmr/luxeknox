@@ -15,10 +15,7 @@ void main() {
     });
 
     test('accepts type / id aliases', () {
-      final target = parseNotificationDeepLink({
-        'type': 'Payment',
-        'id': '9',
-      });
+      final target = parseNotificationDeepLink({'type': 'Payment', 'id': '9'});
       expect(target?.entityType, 'payment');
       expect(target?.entityId, '9');
     });
@@ -38,10 +35,7 @@ void main() {
       })!;
       expect(resolveDeepLinkPath(schedule), '/schedule/7');
 
-      final goal = parseNotificationDeepLink({
-        'type': 'goal',
-        'id': '3',
-      })!;
+      final goal = parseNotificationDeepLink({'type': 'goal', 'id': '3'})!;
       expect(resolveDeepLinkPath(goal), '/progress/goal/3');
     });
 

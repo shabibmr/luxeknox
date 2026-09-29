@@ -43,11 +43,7 @@ class MembershipProductFormCubit extends Cubit<MembershipProductFormState> {
     required bool creating,
   }) async {
     emit(
-      state.copyWith(
-        status: LoadStatus.loading,
-        failure: null,
-        saved: null,
-      ),
+      state.copyWith(status: LoadStatus.loading, failure: null, saved: null),
     );
     final result = creating ? await _create(product) : await _update(product);
     if (isClosed) return;
@@ -60,11 +56,7 @@ class MembershipProductFormCubit extends Cubit<MembershipProductFormState> {
         ),
       ),
       (saved) => emit(
-        state.copyWith(
-          status: LoadStatus.success,
-          failure: null,
-          saved: saved,
-        ),
+        state.copyWith(status: LoadStatus.success, failure: null, saved: saved),
       ),
     );
   }

@@ -46,8 +46,7 @@ class _PaymentDetailBody extends StatelessWidget {
               message: state.failure == null
                   ? ''
                   : failureMessage(state.failure!),
-              onRetry: () =>
-                  context.read<PaymentDetailCubit>().load(paymentId),
+              onRetry: () => context.read<PaymentDetailCubit>().load(paymentId),
             );
           }
           if (payment == null) return const AppLoading();

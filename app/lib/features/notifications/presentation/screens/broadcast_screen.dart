@@ -13,10 +13,7 @@ import '../notification_strings.dart';
 import '../widgets/notification_list_tile.dart';
 
 class BroadcastScreen extends StatelessWidget {
-  const BroadcastScreen({
-    super.key,
-    this.trainerOnlyAssigned = false,
-  });
+  const BroadcastScreen({super.key, this.trainerOnlyAssigned = false});
 
   /// Trainer compose locks audience to assigned_clients.
   final bool trainerOnlyAssigned;
@@ -285,10 +282,7 @@ class _HistoryTab extends StatelessWidget {
             );
           }
           final n = form.history[index];
-          return NotificationListTile(
-            notification: n,
-            onTap: () {},
-          );
+          return NotificationListTile(notification: n, onTap: () {});
         },
       ),
     );

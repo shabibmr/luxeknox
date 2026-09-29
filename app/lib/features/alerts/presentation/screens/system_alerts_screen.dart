@@ -38,9 +38,9 @@ class _SystemAlertsBody extends StatelessWidget {
         listener: (context, state) {
           final failure = state.failure;
           if (failure == null) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(failureMessage(failure))),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(failureMessage(failure))));
         },
         builder: (context, state) {
           if (state.status == LoadStatus.loading && state.items.isEmpty) {
@@ -82,9 +82,8 @@ class _SystemAlertsBody extends StatelessWidget {
                       child: loadingMore
                           ? const CircularProgressIndicator()
                           : TextButton(
-                              onPressed: () => context
-                                  .read<SystemAlertsCubit>()
-                                  .loadMore(),
+                              onPressed: () =>
+                                  context.read<SystemAlertsCubit>().loadMore(),
                               child: const Text(AlertsStrings.loadMore),
                             ),
                     ),

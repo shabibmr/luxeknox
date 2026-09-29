@@ -28,9 +28,8 @@ class PaymentDetailCubit extends Cubit<PaymentDetailState> {
     emit(state.copyWith(status: LoadStatus.loading, failure: null));
     final result = await _getPayment(paymentId);
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (payment) => emit(
         state.copyWith(
           status: LoadStatus.success,

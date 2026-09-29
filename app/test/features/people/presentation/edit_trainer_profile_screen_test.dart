@@ -55,9 +55,9 @@ void main() {
     getTrainer = MockGetTrainerUseCase();
     updateTrainer = MockUpdateTrainerUseCase();
 
-    when(() => getTrainer(42)).thenAnswer(
-      (_) async => const Right(testProfile),
-    );
+    when(
+      () => getTrainer(42),
+    ).thenAnswer((_) async => const Right(testProfile));
 
     getIt.registerFactory<EditTrainerProfileCubit>(
       () => EditTrainerProfileCubit(getTrainer, updateTrainer),
@@ -77,26 +77,24 @@ void main() {
       ),
     );
     return MaterialApp(
-      home: BlocProvider<SessionCubit>.value(
-        value: sessionCubit,
-        child: child,
-      ),
+      home: BlocProvider<SessionCubit>.value(value: sessionCubit, child: child),
     );
   }
 
-  testWidgets('shows noPermission when isAdmin is true and capability missing', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      wrap(
-        const EditTrainerProfileScreen(trainerId: 42, isAdmin: true),
-        capabilities: const Capabilities(slugs: []),
-      ),
-    );
+  testWidgets(
+    'shows noPermission when isAdmin is true and capability missing',
+    (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          const EditTrainerProfileScreen(trainerId: 42, isAdmin: true),
+          capabilities: const Capabilities(slugs: []),
+        ),
+      );
 
-    expect(find.text(PeopleStrings.noPermission), findsOneWidget);
-    verifyNever(() => getTrainer(any()));
-  });
+      expect(find.text(PeopleStrings.noPermission), findsOneWidget);
+      verifyNever(() => getTrainer(any()));
+    },
+  );
 
   testWidgets('renders admin-only fields in admin mode with permission', (
     tester,
@@ -134,47 +132,53 @@ void main() {
     expect(find.text(PeopleStrings.statusActive), findsNothing);
   });
 
-  testWidgets('submits updated profile in admin mode after confirming deactivation', (tester) async {
-    tester.view.physicalSize = const Size(800, 2000);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
+  testWidgets(
+    'submits updated profile in admin mode after confirming deactivation',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
 
-    when(() => updateTrainer(any())).thenAnswer(
-      (invocation) async => Right(invocation.positionalArguments.first as TrainerProfile),
-    );
+      when(() => updateTrainer(any())).thenAnswer(
+        (invocation) async =>
+            Right(invocation.positionalArguments.first as TrainerProfile),
+      );
 
-    await tester.pumpWidget(
-      wrap(
-        const EditTrainerProfileScreen(trainerId: 42, isAdmin: true),
-        capabilities: const Capabilities(slugs: ['trainers.update']),
-      ),
-    );
+      await tester.pumpWidget(
+        wrap(
+          const EditTrainerProfileScreen(trainerId: 42, isAdmin: true),
+          capabilities: const Capabilities(slugs: ['trainers.update']),
+        ),
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    // Toggle active switch off
-    await tester.tap(find.byType(SwitchListTile));
-    await tester.pumpAndSettle();
+      // Toggle active switch off
+      await tester.tap(find.byType(SwitchListTile));
+      await tester.pumpAndSettle();
 
-    // Deactivation confirmation dialog should appear
-    expect(find.text(PeopleStrings.deactivateTrainerConfirm), findsOneWidget);
-    await tester.tap(find.text(PeopleStrings.confirmStatusChange));
-    await tester.pumpAndSettle();
+      // Deactivation confirmation dialog should appear
+      expect(find.text(PeopleStrings.deactivateTrainerConfirm), findsOneWidget);
+      await tester.tap(find.text(PeopleStrings.confirmStatusChange));
+      await tester.pumpAndSettle();
 
-    // Ensure save button is visible and tap it
-    final saveButton = find.text(PeopleStrings.save);
-    await tester.ensureVisible(saveButton);
-    await tester.tap(saveButton);
-    await tester.pumpAndSettle();
+      // Ensure save button is visible and tap it
+      final saveButton = find.text(PeopleStrings.save);
+      await tester.ensureVisible(saveButton);
+      await tester.tap(saveButton);
+      await tester.pumpAndSettle();
 
-    final captured = verify(() => updateTrainer(captureAny())).captured;
-    expect(captured.length, 1);
-    final savedProfile = captured.first as TrainerProfile;
-    expect(savedProfile.id, 42);
-    expect(savedProfile.isActive, false);
-  });
+      final captured = verify(() => updateTrainer(captureAny())).captured;
+      expect(captured.length, 1);
+      final savedProfile = captured.first as TrainerProfile;
+      expect(savedProfile.id, 42);
+      expect(savedProfile.isActive, false);
+    },
+  );
 
-  testWidgets('canceling deactivation dialog keeps trainer active', (tester) async {
+  testWidgets('canceling deactivation dialog keeps trainer active', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(800, 2000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -197,34 +201,39 @@ void main() {
     await tester.pumpAndSettle();
 
     // Switch should still be checked (true)
-    final switchTile = tester.widget<SwitchListTile>(find.byType(SwitchListTile));
+    final switchTile = tester.widget<SwitchListTile>(
+      find.byType(SwitchListTile),
+    );
     expect(switchTile.value, true);
   });
 
-  testWidgets('shows unsaved changes dialog when attempting to pop dirty form', (tester) async {
-    tester.view.physicalSize = const Size(800, 2000);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
+  testWidgets(
+    'shows unsaved changes dialog when attempting to pop dirty form',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(
-      wrap(
-        const EditTrainerProfileScreen(trainerId: 42, isAdmin: true),
-        capabilities: const Capabilities(slugs: ['trainers.update']),
-      ),
-    );
+      await tester.pumpWidget(
+        wrap(
+          const EditTrainerProfileScreen(trainerId: 42, isAdmin: true),
+          capabilities: const Capabilities(slugs: ['trainers.update']),
+        ),
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    // Modify a text field to make form dirty
-    await tester.enterText(find.widgetWithText(TextField, 'John'), 'Johnny');
-    await tester.pumpAndSettle();
+      // Modify a text field to make form dirty
+      await tester.enterText(find.widgetWithText(TextField, 'John'), 'Johnny');
+      await tester.pumpAndSettle();
 
-    // Simulate system pop
-    final dynamic widgetsAppState = tester.state(find.byType(WidgetsApp));
-    await widgetsAppState.didPopRoute();
-    await tester.pumpAndSettle();
+      // Simulate system pop
+      final dynamic widgetsAppState = tester.state(find.byType(WidgetsApp));
+      await widgetsAppState.didPopRoute();
+      await tester.pumpAndSettle();
 
-    // Unsaved changes dialog should be visible
-    expect(find.byType(AlertDialog), findsOneWidget);
-  });
+      // Unsaved changes dialog should be visible
+      expect(find.byType(AlertDialog), findsOneWidget);
+    },
+  );
 }

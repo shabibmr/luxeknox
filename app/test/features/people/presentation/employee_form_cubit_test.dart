@@ -79,24 +79,32 @@ void main() {
 
   tearDown(() => cubit.close());
 
-  test('initCreate loads roles and defaults roleId to Employee / Front Desk role', () async {
-    await cubit.initCreate();
-    expect(cubit.state.mode, EmployeeFormMode.create);
-    expect(cubit.state.roles, roles);
-    expect(cubit.state.createInput.roleId, 3);
-    expect(cubit.state.rolesLoading, isFalse);
-  });
+  test(
+    'initCreate loads roles and defaults roleId to Employee / Front Desk role',
+    () async {
+      await cubit.initCreate();
+      expect(cubit.state.mode, EmployeeFormMode.create);
+      expect(cubit.state.roles, roles);
+      expect(cubit.state.createInput.roleId, 3);
+      expect(cubit.state.rolesLoading, isFalse);
+    },
+  );
 
-  test('submit validates required create fields before calling use case', () async {
-    await cubit.initCreate();
-    final ok = await cubit.submit();
-    expect(ok, isFalse);
-    expect(cubit.state.error, PeopleStrings.firstNameRequired);
-    verifyNever(() => createEmployee(any()));
-  });
+  test(
+    'submit validates required create fields before calling use case',
+    () async {
+      await cubit.initCreate();
+      final ok = await cubit.submit();
+      expect(ok, isFalse);
+      expect(cubit.state.error, PeopleStrings.firstNameRequired);
+      verifyNever(() => createEmployee(any()));
+    },
+  );
 
   test('submit succeeds and stores created employee', () async {
-    when(() => createEmployee(any())).thenAnswer((_) async => const Right(created));
+    when(
+      () => createEmployee(any()),
+    ).thenAnswer((_) async => const Right(created));
     await cubit.initCreate();
 
     cubit.updateCreateInput(
@@ -143,9 +151,9 @@ void main() {
   });
 
   test('maps failure message on create error', () async {
-    when(() => createEmployee(any())).thenAnswer(
-      (_) async => const Left(ConflictFailure()),
-    );
+    when(
+      () => createEmployee(any()),
+    ).thenAnswer((_) async => const Left(ConflictFailure()));
     await cubit.initCreate();
 
     cubit.updateCreateInput(
@@ -165,32 +173,37 @@ void main() {
     expect(cubit.state.error, isNotNull);
   });
 
-  test('initEdit prefills update input from employee including hireDate', () async {
-    final loaded = EmployeeSummary(
-      id: 11,
-      userId: 22,
-      fullName: 'Ada Lovelace',
-      jobTitle: 'Front desk',
-      department: 'Ops',
-      roleId: 3,
-      email: 'ada@example.com',
-      status: 'active',
-      hireDate: DateTime(2024, 1, 15),
-    );
-    when(() => getEmployee(11)).thenAnswer((_) async => Right(loaded));
-    await cubit.initEdit(11);
-    expect(cubit.state.mode, EmployeeFormMode.edit);
-    expect(cubit.state.employeeId, 11);
-    expect(cubit.state.loadedEmployee, loaded);
-    expect(cubit.state.updateInput.jobTitle, 'Front desk');
-    expect(cubit.state.updateInput.department, 'Ops');
-    expect(cubit.state.updateInput.hireDate, DateTime(2024, 1, 15));
-    expect(cubit.state.isDirty, isFalse);
-  });
+  test(
+    'initEdit prefills update input from employee including hireDate',
+    () async {
+      final loaded = EmployeeSummary(
+        id: 11,
+        userId: 22,
+        fullName: 'Ada Lovelace',
+        jobTitle: 'Front desk',
+        department: 'Ops',
+        roleId: 3,
+        email: 'ada@example.com',
+        status: 'active',
+        hireDate: DateTime(2024, 1, 15),
+      );
+      when(() => getEmployee(11)).thenAnswer((_) async => Right(loaded));
+      await cubit.initEdit(11);
+      expect(cubit.state.mode, EmployeeFormMode.edit);
+      expect(cubit.state.employeeId, 11);
+      expect(cubit.state.loadedEmployee, loaded);
+      expect(cubit.state.updateInput.jobTitle, 'Front desk');
+      expect(cubit.state.updateInput.department, 'Ops');
+      expect(cubit.state.updateInput.hireDate, DateTime(2024, 1, 15));
+      expect(cubit.state.isDirty, isFalse);
+    },
+  );
 
   test('edit submit updates employee', () async {
     when(() => getEmployee(11)).thenAnswer((_) async => const Right(created));
-    when(() => updateEmployee(any())).thenAnswer((_) async => const Right(created));
+    when(
+      () => updateEmployee(any()),
+    ).thenAnswer((_) async => const Right(created));
     await cubit.initEdit(11);
     cubit.updateEditInput((i) => i.copyWith(jobTitle: 'Manager'));
 
@@ -205,32 +218,33 @@ void main() {
       jobTitle: 'Desk',
       department: 'Ops',
       hireDate: DateTime(2024, 1, 1),
-    ).copyWith(
-      department: null,
-      hireDate: null,
-    );
+    ).copyWith(department: null, hireDate: null);
     expect(input.department, isNull);
     expect(input.hireDate, isNull);
     expect(input.jobTitle, 'Desk');
   });
 
-  test('changeStatus calls setEmployeeStatus and updates loaded employee', () async {
-    when(() => getEmployee(11)).thenAnswer((_) async => const Right(created));
-    when(() => setEmployeeStatus(any())).thenAnswer(
-      (_) async => Right(
-        created.copyWithStatus('suspended'),
-      ),
-    );
-    await cubit.initEdit(11);
+  test(
+    'changeStatus calls setEmployeeStatus and updates loaded employee',
+    () async {
+      when(() => getEmployee(11)).thenAnswer((_) async => const Right(created));
+      when(
+        () => setEmployeeStatus(any()),
+      ).thenAnswer((_) async => Right(created.copyWithStatus('suspended')));
+      await cubit.initEdit(11);
 
-    final ok = await cubit.changeStatus(EmployeeStatus.suspended);
-    expect(ok, isTrue);
-    expect(cubit.state.loadedEmployee?.status, 'suspended');
-    verify(() => setEmployeeStatus(any())).called(1);
-  });
+      final ok = await cubit.changeStatus(EmployeeStatus.suspended);
+      expect(ok, isTrue);
+      expect(cubit.state.loadedEmployee?.status, 'suspended');
+      verify(() => setEmployeeStatus(any())).called(1);
+    },
+  );
 
   test('statusRequiresConfirm only for suspend and terminate', () {
-    expect(EmployeeFormCubit.statusRequiresConfirm(EmployeeStatus.active), isFalse);
+    expect(
+      EmployeeFormCubit.statusRequiresConfirm(EmployeeStatus.active),
+      isFalse,
+    );
     expect(
       EmployeeFormCubit.statusRequiresConfirm(EmployeeStatus.onProbation),
       isFalse,

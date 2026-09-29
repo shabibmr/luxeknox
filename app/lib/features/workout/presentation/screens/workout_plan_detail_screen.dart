@@ -75,9 +75,9 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
     if (!context.mounted) return;
     final next = cubit.state;
     if (next.status == LoadStatus.success && next.assignedPlan != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(WorkoutStrings.assigned)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(WorkoutStrings.assigned)));
       final assignedId = next.assignedPlan!.id;
       cubit.clearAssignedPlan();
       context.push(Routes.trainerPlansWorkoutById(assignedId));
@@ -94,9 +94,9 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
       listener: (context, state) {
         final failure = state.failure;
         if (failure == null) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failureMessage(failure))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failureMessage(failure))));
       },
       builder: (context, state) {
         final plan = state.plan;
@@ -138,8 +138,8 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
                     onPressed: inFlight
                         ? null
                         : () async {
-                            final cubit =
-                                context.read<WorkoutPlanDetailCubit>();
+                            final cubit = context
+                                .read<WorkoutPlanDetailCubit>();
                             await cubit.publish();
                             if (!context.mounted) return;
                             final next = cubit.state;
@@ -159,8 +159,8 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
                     onPressed: inFlight
                         ? null
                         : () async {
-                            final cubit =
-                                context.read<WorkoutPlanDetailCubit>();
+                            final cubit = context
+                                .read<WorkoutPlanDetailCubit>();
                             await cubit.archive();
                             if (!context.mounted) return;
                             final next = cubit.state;
@@ -182,9 +182,8 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
                         message: state.failure == null
                             ? 'Something went wrong'
                             : failureMessage(state.failure!),
-                        onRetry: () => context
-                            .read<WorkoutPlanDetailCubit>()
-                            .load(planId),
+                        onRetry: () =>
+                            context.read<WorkoutPlanDetailCubit>().load(planId),
                       )
                     : state.status == LoadStatus.loading
                     ? const AppLoading()
@@ -270,7 +269,10 @@ class _DetailContent extends StatelessWidget {
             subtitle: Text('#${plan.memberId}'),
           ),
         const Divider(height: 32),
-        Text(WorkoutStrings.exercisesSection, style: theme.textTheme.titleMedium),
+        Text(
+          WorkoutStrings.exercisesSection,
+          style: theme.textTheme.titleMedium,
+        ),
         const SizedBox(height: 8),
         if (days.isEmpty)
           const Text(WorkoutStrings.emptyDay)

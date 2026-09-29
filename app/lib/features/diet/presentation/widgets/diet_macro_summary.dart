@@ -54,21 +54,30 @@ class DietMacroSummary extends StatelessWidget {
               value: DietStrings.macroValue(macros.proteinGrams, suffix: ' g'),
               target: proteinTargetG == null
                   ? null
-                  : DietStrings.macroValue(proteinTargetG!.toDouble(), suffix: ' g'),
+                  : DietStrings.macroValue(
+                      proteinTargetG!.toDouble(),
+                      suffix: ' g',
+                    ),
             ),
             _MacroChip(
               label: DietStrings.carbsLabel,
               value: DietStrings.macroValue(macros.carbsGrams, suffix: ' g'),
               target: carbsTargetG == null
                   ? null
-                  : DietStrings.macroValue(carbsTargetG!.toDouble(), suffix: ' g'),
+                  : DietStrings.macroValue(
+                      carbsTargetG!.toDouble(),
+                      suffix: ' g',
+                    ),
             ),
             _MacroChip(
               label: DietStrings.fatLabel,
               value: DietStrings.macroValue(macros.fatGrams, suffix: ' g'),
               target: fatTargetG == null
                   ? null
-                  : DietStrings.macroValue(fatTargetG!.toDouble(), suffix: ' g'),
+                  : DietStrings.macroValue(
+                      fatTargetG!.toDouble(),
+                      suffix: ' g',
+                    ),
             ),
           ],
         ),
@@ -78,11 +87,7 @@ class DietMacroSummary extends StatelessWidget {
 }
 
 class _MacroChip extends StatelessWidget {
-  const _MacroChip({
-    required this.label,
-    required this.value,
-    this.target,
-  });
+  const _MacroChip({required this.label, required this.value, this.target});
 
   final String label;
   final String value;
@@ -91,8 +96,6 @@ class _MacroChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = target == null ? value : '$value / $target';
-    return Chip(
-      label: Text('$label: $text'),
-    );
+    return Chip(label: Text('$label: $text'));
   }
 }

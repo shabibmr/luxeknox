@@ -114,10 +114,7 @@ class CreateMembershipBloc
     on<CreateMembershipStartDateChanged>(_onStartDateChanged);
     on<CreateMembershipLockerChanged>(_onLockerChanged);
     on<CreateMembershipAutoRenewChanged>(_onAutoRenewChanged);
-    on<CreateMembershipSubmitted>(
-      _onSubmitted,
-      transformer: droppable(),
-    );
+    on<CreateMembershipSubmitted>(_onSubmitted, transformer: droppable());
   }
 
   final CreateMembershipUseCase _createMembership;
@@ -129,11 +126,7 @@ class CreateMembershipBloc
     Emitter<CreateMembershipState> emit,
   ) async {
     emit(
-      state.copyWith(
-        status: LoadStatus.loading,
-        failure: null,
-        created: null,
-      ),
+      state.copyWith(status: LoadStatus.loading, failure: null, created: null),
     );
 
     final productsResult = await _getProducts(
@@ -266,10 +259,7 @@ class CreateMembershipBloc
     if (isClosed) return;
     result.fold(
       (failure) => emit(
-        state.copyWith(
-          submitting: false,
-          submitError: failureMessage(failure),
-        ),
+        state.copyWith(submitting: false, submitError: failureMessage(failure)),
       ),
       (membership) => emit(
         state.copyWith(

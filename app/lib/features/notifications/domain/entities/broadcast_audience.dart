@@ -13,8 +13,8 @@ enum BroadcastAudience {
     final normalized = raw.trim().toLowerCase();
     return switch (normalized) {
       'all_members' || 'allmembers' => BroadcastAudience.allMembers,
-      'assigned_clients' || 'assignedclients' =>
-        BroadcastAudience.assignedClients,
+      'assigned_clients' ||
+      'assignedclients' => BroadcastAudience.assignedClients,
       'role' => BroadcastAudience.role,
       _ => BroadcastAudience.allMembers,
     };
