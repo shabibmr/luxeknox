@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/config/app_config.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
@@ -133,6 +135,15 @@ class _LoginFormState extends State<_LoginForm> {
                             : () => context.go(Routes.forgotPassword),
                         child: const Text(AuthStrings.forgotPassword),
                       ),
+                      if (!kReleaseMode) ...[
+                        const SizedBox(height: 16),
+                        // Debug aid: shows which API the app is talking to.
+                        SelectableText(
+                          'API: ${getIt<AppConfig>().apiBaseUrl}',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
                     ],
                   ),
                 ),

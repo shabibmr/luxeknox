@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:luxeknox/core/config/app_config.dart';
 import 'package:luxeknox/core/di/injector.dart';
 import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/features/auth/presentation/cubit/login_cubit.dart';
@@ -28,6 +29,12 @@ void main() {
 
   setUp(() {
     mockSessionCubit = MockSessionCubit();
+    getIt.registerSingleton<AppConfig>(
+      const AppConfig(
+        apiBaseUrl: 'https://api.test',
+        environment: AppEnvironment.dev,
+      ),
+    );
     getIt.registerFactory<LoginCubit>(() => LoginCubit(mockSessionCubit));
   });
 
