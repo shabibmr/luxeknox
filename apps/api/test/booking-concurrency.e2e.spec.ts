@@ -25,6 +25,8 @@ describe('Booking concurrency E2E (SCH-019)', () => {
   let bookingService: BookingService;
   let memberAId: number;
   let memberBId: number;
+  let memberAUserId: number;
+  let memberBUserId: number;
   let scheduleId: number;
 
   beforeAll(async () => {
@@ -39,7 +41,10 @@ describe('Booking concurrency E2E (SCH-019)', () => {
     const passwordHash = await hashPassword('ConcurrentSecurePassword123!');
     const now = new Date();
 
-    async function createMember(email: string, membershipNumber: string): Promise<number> {
+    async function createMember(
+      email: string,
+      membershipNumber: string,
+    ): Promise<{ userId: number; memberId: number }> {
       const userInsert = await db.insert(users).values({
         email,
         password_hash: passwordHash,
@@ -58,11 +63,15 @@ describe('Booking concurrency E2E (SCH-019)', () => {
         joined_date: now.toISOString().slice(0, 10),
         created_at: now,
       });
-      return Number(memberInsert?.[0]?.insertId ?? memberInsert?.insertId);
+      return { userId, memberId: Number(memberInsert?.[0]?.insertId ?? memberInsert?.insertId) };
     }
 
-    memberAId = await createMember(`e2e_race_a_${RUN_ID}@luxeknox.test`, `RACEA${RUN_ID}`.slice(0, 16));
-    memberBId = await createMember(`e2e_race_b_${RUN_ID}@luxeknox.test`, `RACEB${RUN_ID}`.slice(0, 16));
+    const memberA = await createMember(`e2e_race_a_${RUN_ID}@luxeknox.test`, `RACEA${RUN_ID}`.slice(0, 16));
+    const memberB = await createMember(`e2e_race_b_${RUN_ID}@luxeknox.test`, `RACEB${RUN_ID}`.slice(0, 16));
+    memberAId = memberA.memberId;
+    memberBId = memberB.memberId;
+    memberAUserId = memberA.userId;
+    memberBUserId = memberB.userId;
 
     const typeInsert = await db.insert(scheduleTypes).values({
       name: `Race Test Type ${RUN_ID}`,
@@ -101,9 +110,11 @@ describe('Booking concurrency E2E (SCH-019)', () => {
   });
 
   it('only books one member when two concurrent requests race for the last seat', async () => {
-    function actorFor(memberId: number): AuthenticatedUser {
+    // actor.id is a users.id (written to schedule_histories.changed_by_user_id);
+    // profileId is the members.id.
+    function actorFor(userId: number, memberId: number): AuthenticatedUser {
       return {
-        id: memberId,
+        id: userId,
         email: `race-${memberId}@luxeknox.test`,
         phoneNumber: null,
         roleId: 2,
@@ -114,8 +125,8 @@ describe('Booking concurrency E2E (SCH-019)', () => {
     }
 
     const [resultA, resultB] = await Promise.allSettled([
-      bookingService.book(scheduleId, {}, actorFor(memberAId)),
-      bookingService.book(scheduleId, {}, actorFor(memberBId)),
+      bookingService.book(scheduleId, {}, actorFor(memberAUserId, memberAId)),
+      bookingService.book(scheduleId, {}, actorFor(memberBUserId, memberBId)),
     ]);
 
     const rejections = [resultA, resultB]
