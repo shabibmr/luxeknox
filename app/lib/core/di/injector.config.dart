@@ -1603,13 +1603,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i69.LoginCubit>(
       () => _i69.LoginCubit(gh<_i893.SessionCubit>()),
     );
-    gh.factory<_i149.MemberDossierCubit>(
-      () => _i149.MemberDossierCubit(
-        gh<_i562.GetMemberUseCase>(),
-        gh<_i862.UpdateMemberUseCase>(),
-        gh<_i829.AssignTrainerUseCase>(),
-      ),
-    );
     gh.factory<_i369.EmployeesDirectoryCubit>(
       () => _i369.EmployeesDirectoryCubit(gh<_i1004.ListEmployeesUseCase>()),
     );
@@ -1624,6 +1617,17 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i467.ExercisePickerCubit>(
       () => _i467.ExercisePickerCubit(gh<_i871.GetExercisesUseCase>()),
+    );
+    gh.factory<_i149.MemberDossierCubit>(
+      () => _i149.MemberDossierCubit(
+        gh<_i562.GetMemberUseCase>(),
+        gh<_i862.UpdateMemberUseCase>(),
+        gh<_i829.AssignTrainerUseCase>(),
+        gh<_i370.GetMembershipsUseCase>(),
+        gh<_i841.GetAttendanceSummaryUseCase>(),
+        gh<_i1033.GetTrainerUseCase>(),
+        gh<_i777.ListSchedulesUseCase>(),
+      ),
     );
     gh.factory<_i115.FacilitiesCubit>(
       () => _i115.FacilitiesCubit(
