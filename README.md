@@ -6,35 +6,15 @@ LuxeKnox backend spine and core platform services.
 
 - Node.js >= 20.x
 - pnpm >= 9.x
-- Docker & Docker Compose
+- MySQL 8.4 LTS installed and running locally
 
 ## Database (MySQL 8.4 LTS)
 
-The backend uses MySQL 8.4 LTS configured with UTC datetime (`time_zone = '+00:00'`), `READ-COMMITTED` transaction isolation, and `utf8mb4_0900_ai_ci` collation.
-
-### Starting MySQL via Docker Compose
-
-To start the database container in detached mode:
-
-```bash
-docker compose up -d
-```
-
-To view logs:
-
-```bash
-docker compose logs -f mysql
-```
-
-To stop the database:
-
-```bash
-docker compose down
-```
+The backend uses a MySQL 8.4 LTS instance hosted directly on the local machine (not Docker), configured with UTC datetime (`time_zone = '+00:00'`), `READ-COMMITTED` transaction isolation, and `utf8mb4_0900_ai_ci` collation.
 
 ### Database Credentials
 
-Default credentials for local development (as configured in `docker-compose.yml` and `.env.example`):
+Default credentials for local development (as configured in `.env.example`):
 
 - **Host**: `localhost` (or `127.0.0.1`)
 - **Port**: `3306`
@@ -46,10 +26,10 @@ Default credentials for local development (as configured in `docker-compose.yml`
 
 ### Verifying Timezone and Isolation
 
-You can verify that the custom configuration was applied by connecting via the MySQL CLI inside the container:
+You can verify that the custom configuration was applied by connecting via the MySQL CLI:
 
 ```bash
-docker compose exec mysql mysql -u luxeknox -pluxeknox_secret luxeknox -e "SELECT @@global.time_zone, @@session.time_zone, @@global.transaction_isolation, @@session.transaction_isolation;"
+mysql -u luxeknox -pluxeknox_secret luxeknox -e "SELECT @@global.time_zone, @@session.time_zone, @@global.transaction_isolation, @@session.transaction_isolation;"
 ```
 
 Expected output:
