@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_status_chip.dart';
 import '../../domain/entities/membership_status.dart';
 import '../membership_strings.dart';
 
@@ -26,11 +27,6 @@ class MembershipStatusChip extends StatelessWidget {
         scheme.error,
       ),
     };
-    return Chip(
-      label: Text(label),
-      backgroundColor: color.withValues(alpha: 0.15),
-      labelStyle: TextStyle(color: color, fontWeight: FontWeight.w600),
-      side: BorderSide.none,
-    );
+    return AppStatusChip(label: label, color: color);
   }
 }

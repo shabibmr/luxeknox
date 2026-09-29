@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_status_chip.dart';
 import '../../domain/entities/workout_plan_status.dart';
 import '../workout_strings.dart';
 
@@ -19,11 +20,6 @@ class PlanStatusChip extends StatelessWidget {
         scheme.outline,
       ),
     };
-    return Chip(
-      label: Text(label),
-      backgroundColor: color.withValues(alpha: 0.15),
-      labelStyle: TextStyle(color: color, fontWeight: FontWeight.w600),
-      side: BorderSide.none,
-    );
+    return AppStatusChip(label: label, color: color);
   }
 }

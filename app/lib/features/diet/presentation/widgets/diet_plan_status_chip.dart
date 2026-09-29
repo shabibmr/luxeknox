@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_status_chip.dart';
 import '../../domain/entities/diet_plan_status.dart';
 import '../diet_strings.dart';
 
@@ -16,11 +17,6 @@ class DietPlanStatusChip extends StatelessWidget {
       DietPlanStatus.active => (DietStrings.statusActive, Colors.green),
       DietPlanStatus.archived => (DietStrings.statusArchived, scheme.outline),
     };
-    return Chip(
-      label: Text(label),
-      backgroundColor: color.withValues(alpha: 0.15),
-      labelStyle: TextStyle(color: color, fontWeight: FontWeight.w600),
-      side: BorderSide.none,
-    );
+    return AppStatusChip(label: label, color: color);
   }
 }
