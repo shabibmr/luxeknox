@@ -9,6 +9,7 @@ import '../../../../session/domain/entities/user_type.dart';
 import '../../../scheduling/domain/entities/schedule_session.dart';
 import '../cubit/dashboard_agenda_cubit.dart';
 import '../dashboard_strings.dart';
+import 'dashboard_skeleton.dart';
 import 'today_agenda_card.dart';
 import 'upcoming_agenda_list.dart';
 
@@ -36,12 +37,9 @@ class DashboardAgendaSection extends StatelessWidget {
         if (state.status == LoadStatus.loading && !state.hasLoaded) {
           return const Padding(
             padding: EdgeInsets.only(bottom: 16),
-            child: Card(
+            child: DashboardSkeletonCard(
               key: Key('agenda_section_loading'),
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: CircularProgressIndicator()),
-              ),
+              height: 168,
             ),
           );
         }

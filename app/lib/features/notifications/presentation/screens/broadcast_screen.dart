@@ -8,6 +8,9 @@ import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/broadcast_audience.dart';
+import '../../../../core/usecase/usecase.dart';
+import '../../../people/domain/entities/role.dart';
+import '../../../people/domain/usecases/list_roles_usecase.dart';
 import '../cubit/broadcast_cubit.dart';
 import '../notification_strings.dart';
 import '../widgets/notification_list_tile.dart';
@@ -103,6 +106,7 @@ class _ComposeTabState extends State<_ComposeTab> {
   late final TextEditingController _titleController;
   late final TextEditingController _messageController;
   late final TextEditingController _roleIdController;
+  List<Role> _roles = [];
 
   @override
   void initState() {
@@ -110,6 +114,18 @@ class _ComposeTabState extends State<_ComposeTab> {
     _titleController = TextEditingController(text: widget.form.title);
     _messageController = TextEditingController(text: widget.form.message);
     _roleIdController = TextEditingController(text: widget.form.roleId);
+    _fetchRoles();
+  }
+
+  void _fetchRoles() {
+    if (getIt.isRegistered<ListRolesUseCase>()) {
+      getIt<ListRolesUseCase>()(const NoParams()).then((result) {
+        if (!mounted) return;
+        result.fold((_) {}, (roles) {
+          setState(() => _roles = roles);
+        });
+      });
+    }
   }
 
   @override
@@ -119,6 +135,7 @@ class _ComposeTabState extends State<_ComposeTab> {
     if (oldWidget.form.submitted == null && widget.form.submitted != null) {
       _titleController.clear();
       _messageController.clear();
+      _roleIdController.clear();
     }
   }
 
@@ -194,15 +211,51 @@ class _ComposeTabState extends State<_ComposeTab> {
           ),
         if (form.effectiveAudience == BroadcastAudience.role) ...[
           const SizedBox(height: 12),
-          TextField(
-            controller: _roleIdController,
-            decoration: const InputDecoration(
-              labelText: NotificationStrings.roleIdLabel,
-              border: OutlineInputBorder(),
+          if (_roles.isNotEmpty)
+            DropdownButtonFormField<String>(
+              initialValue: form.roleId.isNotEmpty &&
+                      _roles.any((r) => r.id.toString() == form.roleId)
+                  ? form.roleId
+                  : null,
+              decoration: const InputDecoration(
+                labelText: NotificationStrings.roleIdLabel,
+                border: OutlineInputBorder(),
+              ),
+              items: _roles
+                  .map(
+                    (r) => DropdownMenuItem(
+                      value: r.id.toString(),
+                      child: Text(r.name),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) {
+                if (v != null) {
+                  _roleIdController.text = v;
+                  cubit.setRoleId(v);
+                }
+              },
+            )
+          else
+            DropdownButtonFormField<String>(
+              initialValue: form.roleId.isNotEmpty ? form.roleId : null,
+              decoration: const InputDecoration(
+                labelText: NotificationStrings.roleIdLabel,
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: '1', child: Text('Admin')),
+                DropdownMenuItem(value: '2', child: Text('Trainer')),
+                DropdownMenuItem(value: '3', child: Text('Employee / Staff')),
+                DropdownMenuItem(value: '4', child: Text('Member')),
+              ],
+              onChanged: (v) {
+                if (v != null) {
+                  _roleIdController.text = v;
+                  cubit.setRoleId(v);
+                }
+              },
             ),
-            keyboardType: TextInputType.number,
-            onChanged: cubit.setRoleId,
-          ),
         ],
         const SizedBox(height: 24),
         FilledButton(

@@ -8,11 +8,15 @@ class DestinationHubScreen extends StatelessWidget {
     required this.title,
     required this.items,
     this.footer,
+    this.onSelected,
   });
 
   final String title;
   final List<DestinationHubItem> items;
   final Widget? footer;
+
+  /// Called with the tapped item's path, after navigation.
+  final ValueChanged<String>? onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +35,10 @@ class DestinationHubScreen extends StatelessWidget {
             leading: item.icon == null ? null : Icon(item.icon),
             title: Text(item.title),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.go(item.path),
+            onTap: () {
+              context.go(item.path);
+              onSelected?.call(item.path);
+            },
           );
         },
       ),

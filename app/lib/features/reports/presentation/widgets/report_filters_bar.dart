@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/di/injector.dart';
+import '../../../membership/domain/entities/membership_product.dart';
+import '../../../membership/domain/usecases/get_membership_products_usecase.dart';
+import '../../../people/domain/entities/trainer_summary.dart';
+import '../../../scheduling/presentation/widgets/trainer_picker_field.dart';
 import '../../domain/entities/app_report_type.dart';
 import '../report_strings.dart';
 
@@ -26,12 +31,28 @@ class ReportFiltersBar extends StatefulWidget {
 class _ReportFiltersBarState extends State<ReportFiltersBar> {
   late final TextEditingController _product;
   late final TextEditingController _trainer;
+  List<MembershipProduct> _products = [];
+  TrainerSummary? _selectedTrainer;
 
   @override
   void initState() {
     super.initState();
     _product = TextEditingController(text: widget.productId ?? '');
     _trainer = TextEditingController(text: widget.trainerId ?? '');
+    _loadProducts();
+  }
+
+  void _loadProducts() {
+    if (getIt.isRegistered<GetMembershipProductsUseCase>()) {
+      getIt<GetMembershipProductsUseCase>()(
+        const GetMembershipProductsParams(),
+      ).then((res) {
+        if (!mounted) return;
+        res.fold((_) {}, (page) {
+          setState(() => _products = page.items);
+        });
+      });
+    }
   }
 
   @override
@@ -68,26 +89,42 @@ class _ReportFiltersBarState extends State<ReportFiltersBar> {
           style: Theme.of(context).textTheme.titleSmall,
         ),
         const SizedBox(height: 8),
-        if (showProduct)
-          TextField(
-            controller: _product,
-            decoration: const InputDecoration(
-              labelText: ReportStrings.productIdLabel,
-              border: OutlineInputBorder(),
+        if (showProduct) ...[
+          if (_products.isNotEmpty)
+            DropdownButtonFormField<String>(
+              initialValue: _product.text.isNotEmpty &&
+                      _products.any((p) => p.id == _product.text)
+                  ? _product.text
+                  : null,
+              decoration: const InputDecoration(
+                labelText: ReportStrings.productIdLabel,
+                border: OutlineInputBorder(),
+              ),
+              items: [
+                const DropdownMenuItem(value: '', child: Text('All Packages')),
+                ..._products.map(
+                  (p) => DropdownMenuItem(
+                    value: p.id,
+                    child: Text(p.name),
+                  ),
+                ),
+              ],
+              onChanged: (v) => setState(() => _product.text = v ?? ''),
             ),
-            keyboardType: TextInputType.number,
+          const SizedBox(height: 8),
+        ],
+        if (showTrainer) ...[
+          TrainerPickerField(
+            value: _selectedTrainer,
+            onChanged: (t) {
+              setState(() {
+                _selectedTrainer = t;
+                _trainer.text = t?.id.toString() ?? '';
+              });
+            },
           ),
-        if (showProduct && showTrainer) const SizedBox(height: 8),
-        if (showTrainer)
-          TextField(
-            controller: _trainer,
-            decoration: const InputDecoration(
-              labelText: ReportStrings.trainerIdLabel,
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-          ),
-        const SizedBox(height: 8),
+          const SizedBox(height: 8),
+        ],
         Align(
           alignment: Alignment.centerRight,
           child: FilledButton(

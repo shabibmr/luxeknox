@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_picker_form_field.dart';
 import '../../../../core/widgets/app_picker_sheet.dart';
 import '../../../../session/domain/entities/user_type.dart';
 import '../../../../session/presentation/session_cubit.dart';
@@ -48,6 +51,7 @@ class _FoodPickerView extends StatefulWidget {
 
 class _FoodPickerViewState extends State<_FoodPickerView> {
   final _searchController = TextEditingController();
+  Timer? _debounce;
 
   late bool _verifiedOnly;
   bool _isMember = false;
@@ -65,12 +69,24 @@ class _FoodPickerViewState extends State<_FoodPickerView> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  void _load() {
-    context.read<FoodPickerCubit>().load(search: _searchController.text);
+  void _load([String? text]) {
+    context
+        .read<FoodPickerCubit>()
+        .load(search: text ?? _searchController.text);
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        _load(value);
+      }
+    });
   }
 
   List<Food> _visibleItems(List<Food> items) {
@@ -91,6 +107,7 @@ class _FoodPickerViewState extends State<_FoodPickerView> {
         return AppPickerSheet<Food>(
           searchController: _searchController,
           searchLabel: DietStrings.searchFoods,
+          onSearchChanged: _onSearchChanged,
           onSearchSubmitted: (_) => _load(),
           isLoading: state.status == LoadStatus.loading,
           items: visible,
@@ -162,6 +179,35 @@ class _FoodPickerViewState extends State<_FoodPickerView> {
           },
         );
       },
+    );
+  }
+}
+
+/// A form field widget for selecting a food item.
+class FoodPickerField extends StatelessWidget {
+  const FoodPickerField({
+    super.key,
+    this.selectedFood,
+    this.onChanged,
+    this.verifiedOnly,
+    this.enabled = true,
+  });
+
+  final Food? selectedFood;
+  final ValueChanged<Food?>? onChanged;
+  final bool? verifiedOnly;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppPickerFormField<Food>(
+      value: selectedFood,
+      labelText: 'Food',
+      hintText: 'Select food',
+      labelBuilder: (food) => food.name,
+      enabled: enabled,
+      onPick: (ctx) => showFoodPickerSheet(ctx, verifiedOnly: verifiedOnly),
+      onChanged: onChanged ?? (_) {},
     );
   }
 }

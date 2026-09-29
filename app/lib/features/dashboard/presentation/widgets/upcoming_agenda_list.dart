@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../scheduling/domain/entities/schedule_session.dart';
 import '../dashboard_strings.dart';
+import 'agenda_session_list.dart';
 
 /// List of sessions in the next 7 days (after today), tapping opens detail.
 class UpcomingAgendaList extends StatelessWidget {
@@ -20,43 +21,14 @@ class UpcomingAgendaList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      key: const Key('upcoming_agenda_list'),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              DashboardStrings.upcomingAgendaTitle,
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            if (items.isEmpty)
-              Text(
-                DashboardStrings.upcomingAgendaEmpty,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              )
-            else
-              ...items.map((session) {
-                final start = session.startTime.toLocal();
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: Text(session.title),
-                  subtitle: Text(
-                    '${_dayFormat.format(start)} · ${_timeFormat.format(start)}',
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => onTapSession(session),
-                );
-              }),
-          ],
-        ),
-      ),
+    return AgendaSessionList(
+      cardKey: const Key('upcoming_agenda_list'),
+      items: items,
+      title: DashboardStrings.upcomingAgendaTitle,
+      emptyMessage: DashboardStrings.upcomingAgendaEmpty,
+      onTapSession: onTapSession,
+      subtitleFormatter: (start, session) =>
+          '${_dayFormat.format(start)} · ${_timeFormat.format(start)}',
     );
   }
 }

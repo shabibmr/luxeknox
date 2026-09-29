@@ -1,3 +1,4 @@
+import '../../../core/presentation/macro_format.dart';
 import '../domain/entities/diet_plan_status.dart';
 
 abstract final class DietStrings {
@@ -127,12 +128,8 @@ abstract final class DietStrings {
     return '$quantity$unit';
   }
 
-  static String macroValue(double value, {String suffix = ''}) {
-    final rounded = value == value.roundToDouble()
-        ? value.toStringAsFixed(0)
-        : value.toStringAsFixed(1);
-    return '$rounded$suffix';
-  }
+  static String macroValue(double value, {String suffix = ''}) =>
+      MacroFormat.grams(value, suffix: suffix);
 
   static String adherencePercent(num score) =>
       '${score.clamp(0, 100).toStringAsFixed(0)}%';

@@ -13,6 +13,7 @@ import '../cubit/diet_plan_builder_cubit.dart';
 import '../diet_strings.dart';
 import '../widgets/diet_macro_summary.dart';
 import '../widgets/food_picker_sheet.dart';
+import '../../../people/presentation/widgets/member_picker_sheet.dart';
 
 class DietPlanBuilderScreen extends StatelessWidget {
   const DietPlanBuilderScreen({super.key, this.planId});
@@ -202,15 +203,18 @@ class _BuilderFormState extends State<_BuilderForm> {
               value: state.isTemplate,
               onChanged: cubit.setIsTemplate,
             ),
-            TextFormField(
-              controller: _memberId,
-              decoration: const InputDecoration(
-                labelText: DietStrings.memberIdLabel,
-                border: OutlineInputBorder(),
+            if (!state.isTemplate) ...[
+              const SizedBox(height: 12),
+              MemberPickerField(
+                selectedMemberId:
+                    state.memberId.isEmpty ? null : state.memberId,
+                onChanged: (member) {
+                  final id = member?.id.toString() ?? '';
+                  _memberId.text = id;
+                  cubit.setMemberId(id);
+                },
               ),
-              keyboardType: TextInputType.number,
-              onChanged: cubit.setMemberId,
-            ),
+            ],
             const SizedBox(height: 12),
             Text(
               DietStrings.targetsSection,

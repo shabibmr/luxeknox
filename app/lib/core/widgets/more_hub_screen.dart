@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../l10n/shell_strings.dart';
 import '../router/routes.dart';
+import 'destination_hub_screen.dart';
 
 /// Admin More-tab chrome: lists every nav-§4 More destination.
 /// Tiles navigate with [GoRouter.go] to the documented paths.
@@ -18,50 +18,72 @@ class MoreHubScreen extends StatelessWidget {
   /// Optional trailing content below the destination list.
   final Widget? footer;
 
-  List<({String title, String path})> get _items => [
-    (title: ShellStrings.trainers, path: Routes.adminTrainers),
-    (title: ShellStrings.employees, path: Routes.adminEmployees),
-    (title: ShellStrings.packages, path: Routes.adminPackages),
-    (title: ShellStrings.ptPackages, path: Routes.adminPtPackages),
-    (title: ShellStrings.paymentMethods, path: Routes.adminPaymentsMethods),
-    (title: ShellStrings.attendance, path: Routes.adminAttendance),
-    (title: ShellStrings.schedules, path: Routes.adminSchedules),
-    (title: ShellStrings.workoutLibrary, path: Routes.adminWorkoutLibrary),
-    (title: ShellStrings.dietLibrary, path: Routes.adminDietLibrary),
-    (title: ShellStrings.goalMetrics, path: Routes.adminGoalMetrics),
-    (
+  static const _items = [
+    DestinationHubItem(
+      title: ShellStrings.trainers,
+      path: Routes.adminTrainers,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.employees,
+      path: Routes.adminEmployees,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.packages,
+      path: Routes.adminPackages,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.ptPackages,
+      path: Routes.adminPtPackages,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.paymentMethods,
+      path: Routes.adminPaymentsMethods,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.attendance,
+      path: Routes.adminAttendance,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.schedules,
+      path: Routes.adminSchedules,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.workoutLibrary,
+      path: Routes.adminWorkoutLibrary,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.dietLibrary,
+      path: Routes.adminDietLibrary,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.goalMetrics,
+      path: Routes.adminGoalMetrics,
+    ),
+    DestinationHubItem(
       title: ShellStrings.notificationsBroadcast,
       path: Routes.adminNotificationsBroadcast,
     ),
-    (title: ShellStrings.reports, path: Routes.adminReportsHub),
-    (title: ShellStrings.settings, path: Routes.adminSettingsHub),
-    (title: ShellStrings.systemAlerts, path: Routes.adminAlerts),
+    DestinationHubItem(
+      title: ShellStrings.reports,
+      path: Routes.adminReportsHub,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.settings,
+      path: Routes.adminSettingsHub,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.systemAlerts,
+      path: Routes.adminAlerts,
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final items = _items;
-    final footer = this.footer;
-    return Scaffold(
-      appBar: AppBar(title: const Text(ShellStrings.moreHubTitle)),
-      body: ListView.separated(
-        itemCount: items.length + (footer != null ? 1 : 0),
-        separatorBuilder: (_, _) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          if (footer != null && index == items.length) {
-            return footer;
-          }
-          final item = items[index];
-          return ListTile(
-            title: Text(item.title),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              context.go(item.path);
-              onOpenPath(item.path);
-            },
-          );
-        },
-      ),
+    return DestinationHubScreen(
+      title: ShellStrings.moreHubTitle,
+      items: _items,
+      footer: footer,
+      onSelected: onOpenPath,
     );
   }
 }

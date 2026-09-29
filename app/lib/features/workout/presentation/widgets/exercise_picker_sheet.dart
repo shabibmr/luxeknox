@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_picker_form_field.dart';
 import '../../../../core/widgets/app_picker_sheet.dart';
 import '../../../exercises/domain/entities/exercise.dart';
 import '../cubit/exercise_picker_cubit.dart';
@@ -40,15 +43,28 @@ class _ExercisePickerView extends StatefulWidget {
 
 class _ExercisePickerViewState extends State<_ExercisePickerView> {
   final _searchController = TextEditingController();
+  Timer? _debounce;
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  void _load() {
-    context.read<ExercisePickerCubit>().load(search: _searchController.text);
+  void _load([String? text]) {
+    context
+        .read<ExercisePickerCubit>()
+        .load(search: text ?? _searchController.text);
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        _load(value);
+      }
+    });
   }
 
   @override
@@ -58,6 +74,7 @@ class _ExercisePickerViewState extends State<_ExercisePickerView> {
         return AppPickerSheet<Exercise>(
           searchController: _searchController,
           searchLabel: WorkoutStrings.searchExercises,
+          onSearchChanged: _onSearchChanged,
           onSearchSubmitted: (_) => _load(),
           isLoading: state.status == LoadStatus.loading,
           items: state.items,
@@ -75,6 +92,33 @@ class _ExercisePickerViewState extends State<_ExercisePickerView> {
           ),
         );
       },
+    );
+  }
+}
+
+/// A form field widget for selecting an exercise.
+class ExercisePickerField extends StatelessWidget {
+  const ExercisePickerField({
+    super.key,
+    this.selectedExercise,
+    this.onChanged,
+    this.enabled = true,
+  });
+
+  final Exercise? selectedExercise;
+  final ValueChanged<Exercise?>? onChanged;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppPickerFormField<Exercise>(
+      value: selectedExercise,
+      labelText: 'Exercise',
+      hintText: 'Select an exercise',
+      labelBuilder: (exercise) => exercise.name,
+      enabled: enabled,
+      onPick: (ctx) => showExercisePickerSheet(ctx),
+      onChanged: onChanged ?? (_) {},
     );
   }
 }

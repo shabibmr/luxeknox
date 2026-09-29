@@ -13,6 +13,7 @@ import '../cubit/workout_plan_builder_cubit.dart';
 import '../widgets/exercise_picker_sheet.dart';
 import '../widgets/plan_exercise_reorder_list.dart';
 import '../workout_strings.dart';
+import '../../../people/presentation/widgets/member_picker_sheet.dart';
 
 class WorkoutPlanBuilderScreen extends StatelessWidget {
   const WorkoutPlanBuilderScreen({super.key, this.planId});
@@ -321,16 +322,18 @@ class _BuilderFormState extends State<_BuilderForm> {
                 );
               },
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _memberId,
-              decoration: const InputDecoration(
-                labelText: WorkoutStrings.memberIdLabel,
-                border: OutlineInputBorder(),
+            if (!state.isTemplate) ...[
+              const SizedBox(height: 12),
+              MemberPickerField(
+                selectedMemberId:
+                    state.memberId.isEmpty ? null : state.memberId,
+                onChanged: (member) {
+                  final id = member?.id.toString() ?? '';
+                  _memberId.text = id;
+                  context.read<WorkoutPlanBuilderCubit>().setMemberId(id);
+                },
               ),
-              keyboardType: TextInputType.number,
-              onChanged: context.read<WorkoutPlanBuilderCubit>().setMemberId,
-            ),
+            ],
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text(WorkoutStrings.isTemplateLabel),

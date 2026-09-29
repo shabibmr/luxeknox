@@ -3,6 +3,7 @@ import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/features/dashboard/presentation/cubit/dashboard_agenda_cubit.dart';
 import 'package:luxeknox/features/dashboard/presentation/dashboard_strings.dart';
 import 'package:luxeknox/features/dashboard/presentation/widgets/dashboard_agenda_section.dart';
+import 'package:luxeknox/features/dashboard/presentation/widgets/dashboard_skeleton.dart';
 import 'package:luxeknox/features/dashboard/presentation/widgets/today_agenda_card.dart';
 import 'package:luxeknox/features/dashboard/presentation/widgets/upcoming_agenda_list.dart';
 import 'package:luxeknox/features/scheduling/domain/entities/schedule_enums.dart';
@@ -164,7 +165,7 @@ void main() {
 
       await tester.pumpWidget(wrap(const DashboardAgendaSection()));
       expect(find.byKey(const Key('agenda_section_loading')), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(DashboardSkeletonCard), findsOneWidget);
     });
 
     testWidgets('shows error with retry that calls refresh', (tester) async {

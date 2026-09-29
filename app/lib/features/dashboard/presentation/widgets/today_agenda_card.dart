@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../scheduling/domain/entities/schedule_session.dart';
 import '../dashboard_strings.dart';
+import 'agenda_session_list.dart';
 
 /// Compact card of sessions scheduled for the current calendar day.
 class TodayAgendaCard extends StatelessWidget {
@@ -23,50 +24,17 @@ class TodayAgendaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      key: const Key('today_agenda_card'),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            if (items.isEmpty)
-              Text(
-                emptyMessage,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              )
-            else
-              ...items.map((session) {
-                final start = session.startTime.toLocal();
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: Text(session.title),
-                  subtitle: Text(
-                    '${_timeFormat.format(start)} · ${session.status.name}',
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => onTapSession(session),
-                );
-              }),
-            if (items.isNotEmpty)
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  DashboardStrings.agendaItemCount(items.length),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
+    return AgendaSessionList(
+      cardKey: const Key('today_agenda_card'),
+      items: items,
+      title: title,
+      emptyMessage: emptyMessage,
+      onTapSession: onTapSession,
+      subtitleFormatter: (start, session) =>
+          '${_timeFormat.format(start)} · ${session.status.name}',
+      trailingSummary: items.isEmpty
+          ? null
+          : DashboardStrings.agendaItemCount(items.length),
     );
   }
 }

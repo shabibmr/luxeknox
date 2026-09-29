@@ -11,18 +11,20 @@ class DashboardSkeleton extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: const [
-        _SkeletonCard(height: 96),
+        DashboardSkeletonCard(height: 96),
         SizedBox(height: 16),
-        _SkeletonCard(height: 140),
+        DashboardSkeletonCard(height: 140),
         SizedBox(height: 16),
-        _SkeletonCard(height: 140),
+        DashboardSkeletonCard(height: 140),
       ],
     );
   }
 }
 
-class _SkeletonCard extends StatelessWidget {
-  const _SkeletonCard({required this.height});
+/// A single skeleton placeholder block, shared by [DashboardSkeleton] and
+/// any dashboard sub-section that loads independently (e.g. the agenda).
+class DashboardSkeletonCard extends StatelessWidget {
+  const DashboardSkeletonCard({super.key, required this.height});
 
   final double height;
 

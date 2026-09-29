@@ -15,6 +15,7 @@ import '../../domain/entities/attendance_enums.dart';
 import '../attendance_strings.dart';
 import '../bloc/check_in_bloc.dart';
 import '../cubit/attendance_history_cubit.dart';
+import '../../../people/presentation/widgets/member_picker_sheet.dart';
 
 class AdminAttendanceScreen extends StatelessWidget {
   const AdminAttendanceScreen({super.key});
@@ -155,6 +156,7 @@ class ManualCheckInScreen extends StatefulWidget {
 class _ManualCheckInScreenState extends State<ManualCheckInScreen> {
   final _userIdController = TextEditingController();
   final _gateController = TextEditingController();
+  String? _selectedMemberId;
 
   @override
   void dispose() {
@@ -189,12 +191,16 @@ class _ManualCheckInScreenState extends State<ManualCheckInScreen> {
             body: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                TextField(
-                  controller: _userIdController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: AttendanceStrings.userIdLabel,
-                  ),
+                MemberPickerField(
+                  selectedMemberId: _selectedMemberId,
+                  labelText: AttendanceStrings.userIdLabel,
+                  hintText: 'Select member for check-in',
+                  onChanged: (member) {
+                    setState(() {
+                      _selectedMemberId = member?.id.toString();
+                      _userIdController.text = _selectedMemberId ?? '';
+                    });
+                  },
                 ),
                 const SizedBox(height: 12),
                 TextField(

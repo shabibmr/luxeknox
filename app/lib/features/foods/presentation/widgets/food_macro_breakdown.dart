@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/presentation/macro_format.dart';
 import '../../domain/entities/food.dart';
 import '../foods_strings.dart';
 
@@ -68,7 +69,7 @@ class _MacroRow extends StatelessWidget {
           SizedBox(
             width: 44,
             child: Text(
-              '${percent.toStringAsFixed(0)}%',
+              MacroFormat.percent(percent),
               textAlign: TextAlign.end,
             ),
           ),

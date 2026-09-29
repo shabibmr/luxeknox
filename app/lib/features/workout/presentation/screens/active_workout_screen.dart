@@ -8,11 +8,15 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/router/session_route_ids.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../domain/entities/workout_plan.dart';
 import '../../domain/entities/workout_plan_exercise.dart';
 import '../../domain/entities/workout_session.dart';
+import '../../../exercises/domain/entities/exercise.dart';
 import '../bloc/active_workout_bloc.dart';
 import '../cubit/rest_timer_cubit.dart';
+import '../widgets/exercise_picker_sheet.dart';
 import '../widgets/rest_timer_widget.dart';
+import '../widgets/workout_plan_picker_sheet.dart';
 import '../workout_strings.dart';
 
 String? _errorText(ActiveWorkoutState state) {
@@ -121,20 +125,13 @@ class _StartPanel extends StatefulWidget {
 }
 
 class _StartPanelState extends State<_StartPanel> {
-  late final TextEditingController _planIdController;
+  String? _selectedPlanId;
+  WorkoutPlan? _selectedPlan;
 
   @override
   void initState() {
     super.initState();
-    _planIdController = TextEditingController(
-      text: widget.state.initialPlanId ?? '',
-    );
-  }
-
-  @override
-  void dispose() {
-    _planIdController.dispose();
-    super.dispose();
+    _selectedPlanId = widget.state.initialPlanId;
   }
 
   @override
@@ -155,23 +152,46 @@ class _StartPanelState extends State<_StartPanel> {
           if (memberId == null)
             const Text(WorkoutStrings.missingMember)
           else ...[
-            TextField(
-              controller: _planIdController,
-              decoration: const InputDecoration(
-                labelText: WorkoutStrings.planIdLabel,
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
+            WorkoutPlanPickerField(
+              selectedPlan: _selectedPlan,
+              memberId: memberId.toString(),
+              onChanged: (plan) {
+                setState(() {
+                  _selectedPlan = plan;
+                  _selectedPlanId = plan?.id;
+                });
+              },
             ),
             const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () {
-                final raw = _planIdController.text.trim();
-                context.read<ActiveWorkoutBloc>().add(
-                  ActiveWorkoutStarted(workoutPlanId: raw.isEmpty ? null : raw),
-                );
+            FilledButton.icon(
+              icon: const Icon(Icons.playlist_play),
+              label: Text(
+                (_selectedPlan != null || (_selectedPlanId != null && _selectedPlanId!.isNotEmpty))
+                    ? WorkoutStrings.startSession
+                    : 'Choose a Workout Plan to Start',
+              ),
+              onPressed: () async {
+                final planId = _selectedPlan?.id ?? _selectedPlanId;
+                if (planId != null && planId.isNotEmpty) {
+                  context.read<ActiveWorkoutBloc>().add(
+                    ActiveWorkoutStarted(workoutPlanId: planId),
+                  );
+                } else {
+                  final plan = await showWorkoutPlanPickerSheet(
+                    context,
+                    memberId: memberId.toString(),
+                  );
+                  if (plan != null && context.mounted) {
+                    setState(() {
+                      _selectedPlan = plan;
+                      _selectedPlanId = plan.id;
+                    });
+                    context.read<ActiveWorkoutBloc>().add(
+                      ActiveWorkoutStarted(workoutPlanId: plan.id),
+                    );
+                  }
+                }
               },
-              child: const Text(WorkoutStrings.startSession),
             ),
             const SizedBox(height: 8),
             OutlinedButton(
@@ -200,22 +220,20 @@ class _InProgressPanelState extends State<_InProgressPanel> {
   final _repsController = TextEditingController();
   final _weightController = TextEditingController();
   final _rpeController = TextEditingController();
-  final _freeExerciseController = TextEditingController();
+  Exercise? _selectedFreeExercise;
 
   @override
   void dispose() {
     _repsController.dispose();
     _weightController.dispose();
     _rpeController.dispose();
-    _freeExerciseController.dispose();
     super.dispose();
   }
 
   String? get _selectedExerciseId {
     final fromPlan = widget.state.selectedExerciseId;
     if (fromPlan != null && fromPlan.isNotEmpty) return fromPlan;
-    final free = _freeExerciseController.text.trim();
-    return free.isEmpty ? null : free;
+    return _selectedFreeExercise?.id;
   }
 
   void _submit() {
@@ -260,15 +278,11 @@ class _InProgressPanelState extends State<_InProgressPanel> {
           const SizedBox(height: 8),
           for (final e in exercises) _ExerciseChoice(exercise: e, state: state),
         ] else ...[
-          TextField(
-            controller: _freeExerciseController,
-            decoration: const InputDecoration(
-              labelText: WorkoutStrings.exerciseIdLabel,
-              hintText: WorkoutStrings.freeFormHint,
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            onChanged: (_) => setState(() {}),
+          ExercisePickerField(
+            selectedExercise: _selectedFreeExercise,
+            onChanged: (picked) {
+              setState(() => _selectedFreeExercise = picked);
+            },
           ),
         ],
         const SizedBox(height: 16),

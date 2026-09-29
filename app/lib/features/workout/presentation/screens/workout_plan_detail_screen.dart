@@ -14,6 +14,7 @@ import '../../domain/entities/workout_plan_status.dart';
 import '../cubit/workout_plan_detail_cubit.dart';
 import '../widgets/plan_status_chip.dart';
 import '../workout_strings.dart';
+import '../../../people/presentation/widgets/member_picker_sheet.dart';
 
 class WorkoutPlanDetailScreen extends StatelessWidget {
   const WorkoutPlanDetailScreen({super.key, required this.planId});
@@ -35,43 +36,11 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
   final String planId;
 
   Future<void> _assign(BuildContext context) async {
-    final controller = TextEditingController();
-    final memberId = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text(WorkoutStrings.assignDialogTitle),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: WorkoutStrings.assignDialogHint,
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            autofocus: true,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text(WorkoutStrings.assignCancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                final raw = controller.text.trim();
-                if (raw.isEmpty) return;
-                Navigator.of(dialogContext).pop(raw);
-              },
-              child: const Text(WorkoutStrings.assignConfirm),
-            ),
-          ],
-        );
-      },
-    );
-    controller.dispose();
-    if (memberId == null || !context.mounted) return;
+    final member = await showMemberPickerSheet(context);
+    if (member == null || !context.mounted) return;
 
     final cubit = context.read<WorkoutPlanDetailCubit>();
-    await cubit.assignToMember(memberId);
+    await cubit.assignToMember(member.id.toString());
     if (!context.mounted) return;
     final next = cubit.state;
     if (next.status == LoadStatus.success && next.assignedPlan != null) {
