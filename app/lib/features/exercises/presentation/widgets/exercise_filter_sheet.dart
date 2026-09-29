@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_filter_sheet_shell.dart';
 import '../../domain/entities/exercise_filter.dart';
 import '../exercise_strings.dart';
 
@@ -75,70 +76,42 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 24,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+    return AppFilterSheetShell(
+      title: ExerciseStrings.filterTitle,
+      clearAllLabel: ExerciseStrings.clearAll,
+      applyLabel: ExerciseStrings.applyFilters,
+      onClearAll: _clearAll,
+      onApply: _apply,
+      children: [
+        TextField(
+          controller: _muscleController,
+          decoration: const InputDecoration(
+            labelText: ExerciseStrings.muscleGroup,
+          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  ExerciseStrings.filterTitle,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                TextButton(
-                  onPressed: _clearAll,
-                  child: const Text(ExerciseStrings.clearAll),
-                ),
-              ],
+        TextField(
+          controller: _equipmentController,
+          decoration: const InputDecoration(
+            labelText: ExerciseStrings.equipment,
+          ),
+        ),
+        DropdownButtonFormField<String?>(
+          // ignore: deprecated_member_use
+          value: _difficulty,
+          decoration: const InputDecoration(
+            labelText: ExerciseStrings.difficulty,
+          ),
+          items: [
+            const DropdownMenuItem<String?>(
+              value: null,
+              child: Text(ExerciseStrings.difficultyAny),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _muscleController,
-              decoration: const InputDecoration(
-                labelText: ExerciseStrings.muscleGroup,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _equipmentController,
-              decoration: const InputDecoration(
-                labelText: ExerciseStrings.equipment,
-              ),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String?>(
-              // ignore: deprecated_member_use
-              value: _difficulty,
-              decoration: const InputDecoration(
-                labelText: ExerciseStrings.difficulty,
-              ),
-              items: [
-                const DropdownMenuItem<String?>(
-                  value: null,
-                  child: Text(ExerciseStrings.difficultyAny),
-                ),
-                for (final level in _difficultyOptions)
-                  DropdownMenuItem<String?>(value: level, child: Text(level)),
-              ],
-              onChanged: (v) => setState(() => _difficulty = v),
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _apply,
-              child: const Text(ExerciseStrings.applyFilters),
-            ),
+            for (final level in _difficultyOptions)
+              DropdownMenuItem<String?>(value: level, child: Text(level)),
           ],
+          onChanged: (v) => setState(() => _difficulty = v),
         ),
-      ),
+      ],
     );
   }
 }

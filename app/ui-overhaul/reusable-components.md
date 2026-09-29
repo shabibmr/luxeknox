@@ -1,6 +1,6 @@
 # Reusable Components Catalog
 
-All widgets actually read from source (not guessed from filenames). 15 shared `core/widgets` + `core/presentation`, 44 feature-local widgets.
+All widgets actually read from source (not guessed from filenames). 18 shared `core/widgets` + `core/presentation`, 44 feature-local widgets.
 
 ## Core widgets (`lib/core/widgets/`, `lib/core/presentation/`) — already shared
 
@@ -13,6 +13,9 @@ All widgets actually read from source (not guessed from filenames). 15 shared `c
 | `LoadStatus` (enum) | `core/presentation/load_status.dart` | `initial/loading/success/failure` lifecycle enum used by nearly every Cubit state | n/a |
 | `PickerFieldSkeleton` | `core/widgets/picker_field_states.dart` | Loading placeholder for an async dropdown field | `label` |
 | `PickerFieldRetry` | `core/widgets/picker_field_states.dart` | Inline error + tap-to-retry for an async dropdown field | `label`, `message`, `onRetry` |
+| `AppCatalogDropdownField<T>` | `core/widgets/app_catalog_dropdown_field.dart` | Generic unpaged-catalog dropdown: owns the load/error/empty/loaded state machine on top of `PickerFieldSkeleton`/`PickerFieldRetry` | `label`, `load`, `itemId`, `itemLabel`, `value`, `onChanged` |
+| `AppPickerSheet<T>` | `core/widgets/app_picker_sheet.dart` | Generic "search and pick from a list" bottom-sheet chrome (search field + optional header + loading/error/empty/list body); caller owns the search state/cubit | `searchController`, `searchLabel`, `isLoading`, `items`, `itemBuilder`, `errorMessage`, `onRetry`, `header` |
+| `AppFilterSheetShell` | `core/widgets/app_filter_sheet_shell.dart` | Generic filter-sheet chrome (title + "Clear all" + spaced field list + full-width "Apply filters") | `title`, `onClearAll`, `onApply`, `children` |
 
 ### Charts
 | Component | File | Purpose | Key params |
@@ -63,18 +66,18 @@ All widgets actually read from source (not guessed from filenames). 15 shared `c
 ### Bottom sheets / pickers
 | Component | File | Purpose | Params |
 |---|---|---|---|
-| `FoodPickerSheet` (+ `showFoodPickerSheet`) | `diet/.../food_picker_sheet.dart` | Modal search sheet to pick a `Food`, verified-only toggle for staff | `verifiedOnly` |
-| `ExercisePickerSheet` (+ `showExercisePickerSheet`) | `workout/.../exercise_picker_sheet.dart` | Modal search sheet to pick an `Exercise` — structurally identical to `FoodPickerSheet` (search field, BlocBuilder load/error/empty, tap-to-pop) | none |
-| `ExerciseFilterSheet` | `exercises/.../exercise_filter_sheet.dart` | Bottom sheet: muscle group/equipment text filters + difficulty dropdown | `initialFilter`, static `.show()` |
-| `FoodFilterSheet` | `foods/.../food_filter_sheet.dart` | Bottom sheet: verified-only switch filter — same shell as `ExerciseFilterSheet` (title row + clear-all + apply button), much simpler content | `initialFilter`, static `.show()` |
+| `FoodPickerSheet` (+ `showFoodPickerSheet`) | `diet/.../food_picker_sheet.dart` | Modal search sheet to pick a `Food`, verified-only toggle for staff — now renders via shared `AppPickerSheet<Food>` | `verifiedOnly` |
+| `ExercisePickerSheet` (+ `showExercisePickerSheet`) | `workout/.../exercise_picker_sheet.dart` | Modal search sheet to pick an `Exercise` — now renders via shared `AppPickerSheet<Exercise>` | none |
+| `ExerciseFilterSheet` | `exercises/.../exercise_filter_sheet.dart` | Bottom sheet: muscle group/equipment text filters + difficulty dropdown — now renders via shared `AppFilterSheetShell` | `initialFilter`, static `.show()` |
+| `FoodFilterSheet` | `foods/.../food_filter_sheet.dart` | Bottom sheet: verified-only switch filter — now renders via shared `AppFilterSheetShell` | `initialFilter`, static `.show()` |
 | `MoveBookingSheet` (+ `showMoveBookingSheet`) | `scheduling/.../move_booking_sheet.dart` | Sheet to move a booking to an alternative session slot | `session`, `memberId`, `listSchedules` |
 | `RescheduleSheet` (+ `showRescheduleSheet`) | `scheduling/.../reschedule_sheet.dart` | Sheet to change a session's start/end via `DateTimeRangeField` | `session`, `timezoneProvider` |
 
 ### Form fields / pickers
 | Component | File | Purpose | Params |
 |---|---|---|---|
-| `FacilityPickerField` | `scheduling/.../facility_picker_field.dart` | Dropdown backed by unpaged `GET /facilities`, uses `PickerFieldSkeleton`/`PickerFieldRetry` | `value`, `onChanged`, `errorText`, `enabled`, `listFacilities` |
-| `ScheduleTypePickerField` | `scheduling/.../schedule_type_picker_field.dart` | Dropdown backed by unpaged `GET /schedule-types` — near-identical structure to `FacilityPickerField` (same load/error/dropdown shape, different entity) | same shape as above |
+| `FacilityPickerField` | `scheduling/.../facility_picker_field.dart` | Dropdown backed by unpaged `GET /facilities` — now a thin wrapper over shared `AppCatalogDropdownField<FacilityInfo>` | `value`, `onChanged`, `errorText`, `enabled`, `listFacilities` |
+| `ScheduleTypePickerField` | `scheduling/.../schedule_type_picker_field.dart` | Dropdown backed by unpaged `GET /schedule-types` — now a thin wrapper over shared `AppCatalogDropdownField<ScheduleTypeInfo>` | same shape as above |
 | `TrainerPickerField` | `scheduling/.../trainer_picker_field.dart` | Tap-to-open paged/searchable trainer picker sheet (debounced search, infinite scroll) — different pattern from the two dropdown fields since trainers are server-paged | `value`, `onChanged`, `errorText`, `enabled`, `listTrainers` |
 | `DateTimeRangeField` | `scheduling/.../date_time_range_field.dart` | Start/end date+time picker pair with range validation and gym-timezone caption | `start`, `end`, `onStartChanged`, `onEndChanged`, `timezoneProvider`, static `validateRange` |
 | `GenderRadioGroup` | `people/.../gender_radio_group.dart` | Male/Female radio group for member/trainer forms | `value`, `onChanged`, `enabled` |
@@ -97,7 +100,7 @@ All widgets actually read from source (not guessed from filenames). 15 shared `c
 | `RestTimerWidget` | `workout/.../rest_timer_widget.dart` | Countdown timer card during active workout |
 
 ## Promotion candidates (feature-scoped today, generic enough for `core/widgets/`)
-1. **Status chip** (`MembershipStatusChip`, `PaymentStatusChip`, `DietPlanStatusChip`, `PlanStatusChip`, `AchievementChip`) → generic `AppStatusChip<T>({required T status, required (String,Color) Function(T) resolve})`.
-2. **Search-and-pick bottom sheet** (`FoodPickerSheet`, `ExercisePickerSheet`) → generic `AppPickerSheet<T>` driven by a search callback + item builder.
-3. **Simple catalog dropdown field** (`FacilityPickerField`, `ScheduleTypePickerField`) → generic `AppCatalogDropdownField<T>` parameterized by a `Future<List<T>> Function()` loader + label extractor.
-4. **Filter bottom sheet shell** (`ExerciseFilterSheet`, `FoodFilterSheet`) → generic `AppFilterSheetShell` (title row + clear-all + apply button chrome), with per-feature filter content slotted in.
+1. ~~**Status chip**~~ **DONE** (`MembershipStatusChip`, `PaymentStatusChip`, `DietPlanStatusChip`, `PlanStatusChip`, `AchievementChip`) → `core/widgets/app_status_chip.dart` (`AppStatusChip`).
+2. ~~**Search-and-pick bottom sheet**~~ **DONE** (`FoodPickerSheet`, `ExercisePickerSheet`) → `core/widgets/app_picker_sheet.dart` (`AppPickerSheet<T>`).
+3. ~~**Simple catalog dropdown field**~~ **DONE** (`FacilityPickerField`, `ScheduleTypePickerField`) → `core/widgets/app_catalog_dropdown_field.dart` (`AppCatalogDropdownField<T>`).
+4. ~~**Filter bottom sheet shell**~~ **DONE** (`ExerciseFilterSheet`, `FoodFilterSheet`) → `core/widgets/app_filter_sheet_shell.dart` (`AppFilterSheetShell`).

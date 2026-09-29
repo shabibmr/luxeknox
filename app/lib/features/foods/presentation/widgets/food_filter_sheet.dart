@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_filter_sheet_shell.dart';
 import '../../domain/entities/food_filter.dart';
 import '../foods_strings.dart';
 
@@ -38,46 +39,20 @@ class _FoodFilterSheetState extends State<FoodFilterSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 24,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+    return AppFilterSheetShell(
+      title: FoodStrings.filterTitle,
+      clearAllLabel: FoodStrings.clearAll,
+      applyLabel: FoodStrings.applyFilters,
+      onClearAll: _clearAll,
+      onApply: _apply,
+      children: [
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text(FoodStrings.verifiedOnly),
+          value: _isVerified ?? false,
+          onChanged: (v) => setState(() => _isVerified = v),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  FoodStrings.filterTitle,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                TextButton(
-                  onPressed: _clearAll,
-                  child: const Text(FoodStrings.clearAll),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text(FoodStrings.verifiedOnly),
-              value: _isVerified ?? false,
-              onChanged: (v) => setState(() => _isVerified = v),
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _apply,
-              child: const Text(FoodStrings.applyFilters),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_picker_sheet.dart';
 import '../../../exercises/domain/entities/exercise.dart';
 import '../cubit/exercise_picker_cubit.dart';
 import '../workout_strings.dart';
@@ -52,88 +53,28 @@ class _ExercisePickerViewState extends State<_ExercisePickerView> {
 
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.sizeOf(context).height * 0.7;
-    return SizedBox(
-      height: height,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: WorkoutStrings.searchExercises,
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _load(),
-            ),
+    return BlocBuilder<ExercisePickerCubit, ExercisePickerState>(
+      builder: (context, state) {
+        return AppPickerSheet<Exercise>(
+          searchController: _searchController,
+          searchLabel: WorkoutStrings.searchExercises,
+          onSearchSubmitted: (_) => _load(),
+          isLoading: state.status == LoadStatus.loading,
+          items: state.items,
+          errorMessage: state.status == LoadStatus.failure
+              ? failureMessage(state.failure!)
+              : null,
+          onRetry: _load,
+          emptyMessage: WorkoutStrings.noExercises,
+          retryLabel: WorkoutStrings.retry,
+          heightFactor: 0.7,
+          itemBuilder: (context, exercise) => ListTile(
+            title: Text(exercise.name),
+            subtitle: Text(exercise.primaryMuscleGroup),
+            onTap: () => Navigator.of(context).pop(exercise),
           ),
-          Expanded(
-            child: BlocBuilder<ExercisePickerCubit, ExercisePickerState>(
-              builder: (context, state) {
-                if (state.status == LoadStatus.loading && state.items.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (state.status == LoadStatus.failure && state.items.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(failureMessage(state.failure!)),
-                        TextButton(
-                          onPressed: _load,
-                          child: const Text(WorkoutStrings.retry),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (state.items.isEmpty) {
-                  return const Center(child: Text(WorkoutStrings.noExercises));
-                }
-
-                return Column(
-                  children: [
-                    if (state.status == LoadStatus.failure &&
-                        state.failure != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(failureMessage(state.failure!)),
-                            ),
-                            TextButton(
-                              onPressed: _load,
-                              child: const Text(WorkoutStrings.retry),
-                            ),
-                          ],
-                        ),
-                      ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: state.items.length,
-                        itemBuilder: (context, index) {
-                          final exercise = state.items[index];
-                          return ListTile(
-                            title: Text(exercise.name),
-                            subtitle: Text(exercise.primaryMuscleGroup),
-                            onTap: () => Navigator.of(context).pop(exercise),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

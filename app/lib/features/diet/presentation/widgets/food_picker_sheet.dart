@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_picker_sheet.dart';
 import '../../../../session/domain/entities/user_type.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../../foods/domain/entities/food.dart';
@@ -81,161 +82,86 @@ class _FoodPickerViewState extends State<_FoodPickerView> {
 
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.sizeOf(context).height * 0.75;
     final theme = Theme.of(context);
 
-    return SizedBox(
-      height: height,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _searchController,
-                  decoration: const InputDecoration(
-                    labelText: DietStrings.searchFoods,
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
-                  ),
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: (_) => _load(),
-                ),
-                if (!_isMember) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      FilterChip(
-                        avatar: Icon(
-                          _verifiedOnly
-                              ? Icons.verified
-                              : Icons.verified_outlined,
-                          size: 16,
-                          color: _verifiedOnly ? Colors.blue : null,
-                        ),
-                        label: const Text(DietStrings.verifiedOnlyToggle),
-                        selected: _verifiedOnly,
-                        onSelected: (val) {
-                          setState(() {
-                            _verifiedOnly = val;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-          Expanded(
-            child: BlocBuilder<FoodPickerCubit, FoodPickerState>(
-              builder: (context, state) {
-                final visible = _visibleItems(state.items);
+    return BlocBuilder<FoodPickerCubit, FoodPickerState>(
+      builder: (context, state) {
+        final visible = _visibleItems(state.items);
 
-                if (state.status == LoadStatus.loading && state.items.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (state.status == LoadStatus.failure && state.items.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(failureMessage(state.failure!)),
-                        TextButton(
-                          onPressed: _load,
-                          child: const Text(DietStrings.retry),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (visible.isEmpty) {
-                  return const Center(child: Text(DietStrings.noFoods));
-                }
-
-                return Column(
+        return AppPickerSheet<Food>(
+          searchController: _searchController,
+          searchLabel: DietStrings.searchFoods,
+          onSearchSubmitted: (_) => _load(),
+          isLoading: state.status == LoadStatus.loading,
+          items: visible,
+          errorMessage: state.status == LoadStatus.failure
+              ? failureMessage(state.failure!)
+              : null,
+          onRetry: _load,
+          emptyMessage: DietStrings.noFoods,
+          retryLabel: DietStrings.retry,
+          header: _isMember
+              ? null
+              : Row(
                   children: [
-                    if (state.status == LoadStatus.failure &&
-                        state.failure != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(failureMessage(state.failure!)),
-                            ),
-                            TextButton(
-                              onPressed: _load,
-                              child: const Text(DietStrings.retry),
-                            ),
-                          ],
-                        ),
+                    FilterChip(
+                      avatar: Icon(
+                        _verifiedOnly ? Icons.verified : Icons.verified_outlined,
+                        size: 16,
+                        color: _verifiedOnly ? Colors.blue : null,
                       ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: visible.length,
-                        itemBuilder: (context, index) {
-                          final food = visible[index];
-                          final subtitle = [
-                            if (food.calories != null)
-                              '${food.calories!.toStringAsFixed(0)} kcal',
-                            food.servingUnit,
-                          ].where((s) => s.isNotEmpty).join(' · ');
-
-                          return ListTile(
-                            title: Row(
-                              children: [
-                                Expanded(child: Text(food.name)),
-                                if (food.isVerified)
-                                  const Padding(
-                                    padding: EdgeInsets.only(left: 6),
-                                    child: Icon(
-                                      Icons.verified,
-                                      size: 16,
-                                      color: Colors.blue,
-                                    ),
-                                  )
-                                else
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    margin: const EdgeInsets.only(left: 6),
-                                    decoration: BoxDecoration(
-                                      color: theme
-                                          .colorScheme
-                                          .surfaceContainerHighest,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      DietStrings.unverifiedBadge,
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                            color: theme
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                          ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            subtitle: subtitle.isEmpty ? null : Text(subtitle),
-                            onTap: () => Navigator.of(context).pop(food),
-                          );
-                        },
-                      ),
+                      label: const Text(DietStrings.verifiedOnlyToggle),
+                      selected: _verifiedOnly,
+                      onSelected: (val) {
+                        setState(() {
+                          _verifiedOnly = val;
+                        });
+                      },
                     ),
                   ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+                ),
+          itemBuilder: (context, food) {
+            final subtitle = [
+              if (food.calories != null)
+                '${food.calories!.toStringAsFixed(0)} kcal',
+              food.servingUnit,
+            ].where((s) => s.isNotEmpty).join(' · ');
+
+            return ListTile(
+              title: Row(
+                children: [
+                  Expanded(child: Text(food.name)),
+                  if (food.isVerified)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 6),
+                      child: Icon(Icons.verified, size: 16, color: Colors.blue),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      margin: const EdgeInsets.only(left: 6),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        DietStrings.unverifiedBadge,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              subtitle: subtitle.isEmpty ? null : Text(subtitle),
+              onTap: () => Navigator.of(context).pop(food),
+            );
+          },
+        );
+      },
     );
   }
 }
