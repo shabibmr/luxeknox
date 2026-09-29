@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { sql } from 'drizzle-orm';
-import { createTestApp, type TestAppInstance } from './helpers/mysql';
+import { createTestApp, resetTestData, type TestAppInstance } from './helpers/mysql';
 import { BookingService } from '../src/sched/booking.service';
 import { users } from '../src/platform/db/schema/users';
 import { roles } from '../src/platform/db/schema/roles';
@@ -99,14 +99,13 @@ describe('Booking concurrency E2E (SCH-019)', () => {
 
   afterAll(async () => {
     const db = testApp.db as any;
+    // Removes the race users and everything referencing them (bookings, histories,
+    // notification deliveries, ...).
+    await resetTestData(db);
     await db.execute(sql`DELETE FROM schedule_histories WHERE schedule_id = ${scheduleId}`);
     await db.execute(sql`DELETE FROM schedule_participants WHERE schedule_id = ${scheduleId}`);
     await db.execute(sql`DELETE FROM schedules WHERE id = ${scheduleId}`);
     await db.execute(sql`DELETE FROM schedule_types WHERE name = ${`Race Test Type ${RUN_ID}`}`);
-    await db.execute(sql`DELETE FROM members WHERE id IN (${memberAId}, ${memberBId})`);
-    await db.execute(
-      sql`DELETE FROM users WHERE email IN (${`e2e_race_a_${RUN_ID}@luxeknox.test`}, ${`e2e_race_b_${RUN_ID}@luxeknox.test`})`,
-    );
     await testApp.app.close();
   });
 
