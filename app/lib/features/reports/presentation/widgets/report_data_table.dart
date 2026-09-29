@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_empty_view.dart';
 import '../report_strings.dart';
 
 class ReportDataTable extends StatelessWidget {
@@ -11,10 +12,7 @@ class ReportDataTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (rows.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Center(child: Text(ReportStrings.emptyRows)),
-      );
+      return const AppEmptyView(message: ReportStrings.emptyRows);
     }
 
     final cols = columns.isEmpty ? rows.first.keys.toList() : columns;

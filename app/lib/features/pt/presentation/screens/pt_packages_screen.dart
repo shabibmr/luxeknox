@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/pt_product.dart';
@@ -32,9 +33,14 @@ class _PtPackagesView extends StatelessWidget {
       listener: (context, state) {
         final messenger = ScaffoldMessenger.of(context);
         if (state.message == 'saved') {
-          messenger.showSnackBar(const SnackBar(content: Text(PtStrings.saved)));
-        } else if (state.failure != null && state.status == LoadStatus.success) {
-          messenger.showSnackBar(SnackBar(content: Text(failureMessage(state.failure!))));
+          messenger.showSnackBar(
+            const SnackBar(content: Text(PtStrings.saved)),
+          );
+        } else if (state.failure != null &&
+            state.status == LoadStatus.success) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(failureMessage(state.failure!))),
+          );
         }
       },
       builder: (context, state) {
@@ -46,12 +52,15 @@ class _PtPackagesView extends StatelessWidget {
             label: const Text(PtStrings.newPackage),
           ),
           body: switch (state.status) {
-            LoadStatus.initial || LoadStatus.loading when state.items.isEmpty => const AppLoading(),
+            LoadStatus.initial ||
+            LoadStatus.loading when state.items.isEmpty => const AppLoading(),
             LoadStatus.failure when state.items.isEmpty => AppErrorView(
               message: failureMessage(state.failure!),
               onRetry: context.read<PtPackagesCubit>().load,
             ),
-            _ when state.items.isEmpty => const Center(child: Text(PtStrings.noPackages)),
+            _ when state.items.isEmpty => const AppEmptyView(
+              message: PtStrings.noPackages,
+            ),
             _ => ListView.separated(
               padding: const EdgeInsets.only(bottom: 96),
               itemCount: state.items.length,
@@ -66,7 +75,8 @@ class _PtPackagesView extends StatelessWidget {
                   ),
                   trailing: Switch(
                     value: p.isActive,
-                    onChanged: (v) => context.read<PtPackagesCubit>().setActive(p, v),
+                    onChanged: (v) =>
+                        context.read<PtPackagesCubit>().setActive(p, v),
                   ),
                   onTap: () => _openForm(context, p),
                 );
@@ -82,7 +92,10 @@ class _PtPackagesView extends StatelessWidget {
     final cubit = context.read<PtPackagesCubit>();
     await showDialog<void>(
       context: context,
-      builder: (_) => BlocProvider.value(value: cubit, child: _PtPackageForm(product: product)),
+      builder: (_) => BlocProvider.value(
+        value: cubit,
+        child: _PtPackageForm(product: product),
+      ),
     );
   }
 }
@@ -100,9 +113,15 @@ class _PtPackageFormState extends State<_PtPackageForm> {
   final _formKey = GlobalKey<FormState>();
   late final _name = TextEditingController(text: widget.product?.name);
   late final _code = TextEditingController(text: widget.product?.code);
-  late final _description = TextEditingController(text: widget.product?.description);
-  late final _duration = TextEditingController(text: widget.product?.durationDays.toString());
-  late final _sessions = TextEditingController(text: widget.product?.sessionsPerWeek.toString());
+  late final _description = TextEditingController(
+    text: widget.product?.description,
+  );
+  late final _duration = TextEditingController(
+    text: widget.product?.durationDays.toString(),
+  );
+  late final _sessions = TextEditingController(
+    text: widget.product?.sessionsPerWeek.toString(),
+  );
   late final _price = TextEditingController(text: widget.product?.basePrice);
   late final _tax = TextEditingController(text: widget.product?.taxPercentage);
 
@@ -110,18 +129,28 @@ class _PtPackageFormState extends State<_PtPackageForm> {
 
   @override
   void dispose() {
-    for (final c in [_name, _code, _description, _duration, _sessions, _price, _tax]) {
+    for (final c in [
+      _name,
+      _code,
+      _description,
+      _duration,
+      _sessions,
+      _price,
+      _tax,
+    ]) {
       c.dispose();
     }
     super.dispose();
   }
 
-  String? _required(String? v) => (v == null || v.trim().isEmpty) ? PtStrings.required : null;
+  String? _required(String? v) =>
+      (v == null || v.trim().isEmpty) ? PtStrings.required : null;
 
   String? _int(String? v, {int min = 1, int? max}) {
     final n = int.tryParse(v?.trim() ?? '');
     if (n == null) return PtStrings.invalidNumber;
-    if (n < min || (max != null && n > max)) return max != null ? PtStrings.sessionsRange : PtStrings.invalidNumber;
+    if (n < min || (max != null && n > max))
+      return max != null ? PtStrings.sessionsRange : PtStrings.invalidNumber;
     return null;
   }
 
@@ -131,7 +160,9 @@ class _PtPackageFormState extends State<_PtPackageForm> {
       id: widget.product?.id ?? 0,
       name: _name.text.trim(),
       code: _code.text.trim(),
-      description: _description.text.trim().isEmpty ? null : _description.text.trim(),
+      description: _description.text.trim().isEmpty
+          ? null
+          : _description.text.trim(),
       durationDays: int.parse(_duration.text.trim()),
       sessionsPerWeek: int.parse(_sessions.text.trim()),
       basePrice: _price.text.trim(),
@@ -146,7 +177,9 @@ class _PtPackageFormState extends State<_PtPackageForm> {
   Widget build(BuildContext context) {
     final saving = context.select<PtPackagesCubit, bool>((c) => c.state.saving);
     return AlertDialog(
-      title: Text(widget.product == null ? PtStrings.newPackage : PtStrings.editPackage),
+      title: Text(
+        widget.product == null ? PtStrings.newPackage : PtStrings.editPackage,
+      ),
       content: SizedBox(
         width: 420,
         child: Form(
@@ -167,33 +200,51 @@ class _PtPackageFormState extends State<_PtPackageForm> {
                 ),
                 TextFormField(
                   controller: _description,
-                  decoration: const InputDecoration(labelText: PtStrings.description),
+                  decoration: const InputDecoration(
+                    labelText: PtStrings.description,
+                  ),
                   maxLines: 2,
                 ),
                 TextFormField(
                   controller: _duration,
-                  decoration: const InputDecoration(labelText: PtStrings.durationDays),
+                  decoration: const InputDecoration(
+                    labelText: PtStrings.durationDays,
+                  ),
                   keyboardType: TextInputType.number,
                   validator: (v) => _int(v),
                 ),
                 TextFormField(
                   controller: _sessions,
-                  decoration: const InputDecoration(labelText: PtStrings.sessionsPerWeek),
+                  decoration: const InputDecoration(
+                    labelText: PtStrings.sessionsPerWeek,
+                  ),
                   keyboardType: TextInputType.number,
                   validator: (v) => _int(v, max: 7),
                 ),
                 TextFormField(
                   controller: _price,
                   decoration: const InputDecoration(labelText: PtStrings.price),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  validator: (v) => _money.hasMatch(v?.trim() ?? '') ? null : PtStrings.invalidMoney,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  validator: (v) => _money.hasMatch(v?.trim() ?? '')
+                      ? null
+                      : PtStrings.invalidMoney,
                 ),
                 TextFormField(
                   controller: _tax,
-                  decoration: const InputDecoration(labelText: PtStrings.taxPercentage),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: PtStrings.taxPercentage,
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   validator: (v) =>
-                      (v == null || v.trim().isEmpty || _money.hasMatch(v.trim())) ? null : PtStrings.invalidMoney,
+                      (v == null ||
+                          v.trim().isEmpty ||
+                          _money.hasMatch(v.trim()))
+                      ? null
+                      : PtStrings.invalidMoney,
                 ),
               ],
             ),
@@ -201,8 +252,14 @@ class _PtPackageFormState extends State<_PtPackageForm> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text(PtStrings.cancel)),
-        FilledButton(onPressed: saving ? null : _submit, child: const Text(PtStrings.save)),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text(PtStrings.cancel),
+        ),
+        FilledButton(
+          onPressed: saving ? null : _submit,
+          child: const Text(PtStrings.save),
+        ),
       ],
     );
   }

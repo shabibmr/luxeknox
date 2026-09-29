@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/diet_plan_version.dart';
@@ -49,7 +50,7 @@ class _VersionsBody extends StatelessWidget {
           final versions = state.versions;
           final expandedId = state.expandedId;
           return versions.isEmpty
-              ? const Center(child: Text(DietStrings.noVersions))
+              ? const AppEmptyView(message: DietStrings.noVersions)
               : ListView.builder(
                   itemCount: versions.length,
                   itemBuilder: (context, index) {

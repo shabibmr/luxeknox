@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/widgets/app_error_view.dart';
+import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/food.dart';
 import '../bloc/food_list_bloc.dart';
 import '../bloc/food_list_event.dart';
@@ -82,9 +84,9 @@ class _FoodDetailView extends StatelessWidget {
       body: BlocBuilder<FoodDetailCubit, FoodDetailState>(
         builder: (context, state) {
           return switch (state.status) {
-            FoodDetailStatus.initial || FoodDetailStatus.loading =>
-              const Center(child: CircularProgressIndicator()),
-            FoodDetailStatus.failure => _ErrorView(
+            FoodDetailStatus.initial ||
+            FoodDetailStatus.loading => const AppLoading(),
+            FoodDetailStatus.failure => AppErrorView(
               message: failureMessage(state.failure!),
               onRetry: () => context.read<FoodDetailCubit>().loadFood(foodId),
             ),
@@ -155,33 +157,6 @@ class _NutritionRow extends StatelessWidget {
           Text(label),
           Text(value == null ? '-' : value!.toStringAsFixed(1)),
         ],
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: onRetry,
-              child: const Text(FoodStrings.retry),
-            ),
-          ],
-        ),
       ),
     );
   }

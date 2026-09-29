@@ -6,6 +6,9 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_empty_view.dart';
+import '../../../../core/widgets/app_error_view.dart';
+import '../../../../core/widgets/app_loading.dart';
 import '../cubit/membership_freeze_form_cubit.dart';
 import '../membership_strings.dart';
 
@@ -105,28 +108,24 @@ class _MembershipFreezeViewState extends State<_MembershipFreezeView> {
         builder: (context, state) {
           if (state.status == LoadStatus.initial ||
               state.status == LoadStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
+            return const AppLoading();
           }
 
           if (state.status == LoadStatus.failure && state.membership == null) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    state.failure != null
-                        ? failureMessage(state.failure!)
-                        : MembershipStrings.noneFound,
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () => context
-                        .read<MembershipFreezeFormCubit>()
-                        .load(widget.membershipId),
-                    child: const Text(MembershipStrings.retry),
-                  ),
-                ],
-              ),
+            void reload() => context.read<MembershipFreezeFormCubit>().load(
+              widget.membershipId,
+            );
+
+            if (state.failure != null) {
+              return AppErrorView(
+                message: failureMessage(state.failure!),
+                onRetry: reload,
+              );
+            }
+            return AppEmptyView(
+              message: MembershipStrings.noneFound,
+              action: reload,
+              actionLabel: MembershipStrings.retry,
             );
           }
 

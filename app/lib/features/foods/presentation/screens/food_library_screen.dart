@@ -5,6 +5,9 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/widgets/app_empty_view.dart';
+import '../../../../core/widgets/app_error_view.dart';
+import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/food_filter.dart';
 import '../bloc/food_list_bloc.dart';
 import '../bloc/food_list_event.dart';
@@ -225,35 +228,20 @@ class _FoodListPane extends StatelessWidget {
           child: BlocBuilder<FoodListBloc, FoodListState>(
             builder: (context, state) {
               if (state.status == LoadStatus.loading && state.items.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
+                return const AppLoading();
               }
 
               if (state.status == LoadStatus.failure && state.items.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          failureMessage(state.failure!),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        FilledButton(
-                          onPressed: () => context.read<FoodListBloc>().add(
-                            const FoodListRefreshed(),
-                          ),
-                          child: const Text(FoodStrings.retry),
-                        ),
-                      ],
-                    ),
+                return AppErrorView(
+                  message: failureMessage(state.failure!),
+                  onRetry: () => context.read<FoodListBloc>().add(
+                    const FoodListRefreshed(),
                   ),
                 );
               }
 
               if (state.status == LoadStatus.success && state.items.isEmpty) {
-                return const Center(child: Text(FoodStrings.noneFound));
+                return const AppEmptyView(message: FoodStrings.noneFound);
               }
 
               return RefreshIndicator(

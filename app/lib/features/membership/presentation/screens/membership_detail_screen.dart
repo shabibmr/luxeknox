@@ -8,6 +8,9 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
+import '../../../../core/widgets/app_empty_view.dart';
+import '../../../../core/widgets/app_error_view.dart';
+import '../../../../core/widgets/app_loading.dart';
 import '../../../../session/domain/entities/user_type.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../cubit/membership_detail_cubit.dart';
@@ -15,6 +18,8 @@ import '../membership_strings.dart';
 import '../widgets/membership_freeze_list.dart';
 import '../widgets/membership_history_list.dart';
 import '../widgets/membership_status_chip.dart';
+import '../../domain/entities/membership_product.dart';
+import '../../domain/usecases/get_membership_products_usecase.dart';
 
 /// Screen 5.2 — Membership Details & Status. Admin/manager
 /// (`memberships.approve`) get renew/upgrade/cancel and freeze
@@ -172,48 +177,78 @@ class _MembershipDetailView extends StatelessWidget {
   }
 
   Future<void> _handleUpgrade(BuildContext context) async {
-    final productController = TextEditingController();
+    List<MembershipProduct> products = [];
+    if (getIt.isRegistered<GetMembershipProductsUseCase>()) {
+      final res = await getIt<GetMembershipProductsUseCase>()(
+        const GetMembershipProductsParams(),
+      );
+      res.fold((_) {}, (page) => products = page.items);
+    }
+
+    String? selectedProductId = products.isNotEmpty ? products.first.id : null;
     final reasonController = TextEditingController();
+
+    if (!context.mounted) return;
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(MembershipStrings.upgrade),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: productController,
-              decoration: const InputDecoration(labelText: 'Product ID'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: MembershipStrings.reasonLabel,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text(MembershipStrings.upgrade),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (products.isNotEmpty)
+                DropdownButtonFormField<String>(
+                  initialValue: selectedProductId,
+                  decoration: const InputDecoration(
+                    labelText: 'Target Package',
+                  ),
+                  items: products
+                      .map(
+                        (p) => DropdownMenuItem(
+                          value: p.id,
+                          child: Text('${p.name} (${p.durationDays}d)'),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setDialogState(() => selectedProductId = v);
+                  },
+                )
+              else
+                const Text('Loading packages...'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(
+                  labelText: MembershipStrings.reasonLabel,
+                ),
               ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text(MembershipStrings.cancel),
+            ),
+            FilledButton(
+              onPressed: selectedProductId == null
+                  ? null
+                  : () => Navigator.of(dialogContext).pop(true),
+              child: const Text(MembershipStrings.confirm),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text(MembershipStrings.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text(MembershipStrings.confirm),
-          ),
-        ],
       ),
     );
-    final productId = productController.text.trim();
     final reason = reasonController.text.trim();
-    productController.dispose();
     reasonController.dispose();
-    if (confirmed != true || productId.isEmpty || !context.mounted) return;
+    if (confirmed != true || selectedProductId == null || !context.mounted)
+      return;
 
     final failure = await context.read<MembershipDetailCubit>().upgrade(
-      productId: productId,
+      productId: selectedProductId!,
       reason: reason.isEmpty ? null : reason,
     );
     if (!context.mounted || failure == null) return;
@@ -256,30 +291,21 @@ class _MembershipDetailView extends StatelessWidget {
     if (membership == null &&
         (state.status == LoadStatus.initial ||
             state.status == LoadStatus.loading)) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoading();
     }
     if (membership == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                state.failure == null
-                    ? MembershipStrings.noneFound
-                    : failureMessage(state.failure!),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () =>
-                    context.read<MembershipDetailCubit>().load(membershipId),
-                child: const Text(MembershipStrings.retry),
-              ),
-            ],
-          ),
-        ),
+      void reload() => context.read<MembershipDetailCubit>().load(membershipId);
+
+      if (state.failure != null) {
+        return AppErrorView(
+          message: failureMessage(state.failure!),
+          onRetry: reload,
+        );
+      }
+      return AppEmptyView(
+        message: MembershipStrings.noneFound,
+        action: reload,
+        actionLabel: MembershipStrings.retry,
       );
     }
 

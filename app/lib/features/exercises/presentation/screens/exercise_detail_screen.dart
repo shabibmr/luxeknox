@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/widgets/app_error_view.dart';
+import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/exercise.dart';
 import '../bloc/exercise_list_bloc.dart';
 import '../bloc/exercise_list_event.dart';
@@ -85,9 +87,9 @@ class _ExerciseDetailView extends StatelessWidget {
       body: BlocBuilder<ExerciseDetailCubit, ExerciseDetailState>(
         builder: (context, state) {
           return switch (state.status) {
-            ExerciseDetailStatus.initial || ExerciseDetailStatus.loading =>
-              const Center(child: CircularProgressIndicator()),
-            ExerciseDetailStatus.failure => _ErrorView(
+            ExerciseDetailStatus.initial ||
+            ExerciseDetailStatus.loading => const AppLoading(),
+            ExerciseDetailStatus.failure => AppErrorView(
               message: failureMessage(state.failure!),
               onRetry: () =>
                   context.read<ExerciseDetailCubit>().loadExercise(exerciseId),
@@ -152,33 +154,6 @@ class _ExerciseDetailBody extends StatelessWidget {
                     .toList(),
               ),
       ],
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: onRetry,
-              child: const Text(ExerciseStrings.retry),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

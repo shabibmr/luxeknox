@@ -5,6 +5,9 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_empty_view.dart';
+import '../../../../core/widgets/app_error_view.dart';
+import '../../../../core/widgets/app_loading.dart';
 import '../../../../session/domain/entities/user_type.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/entities/membership_product.dart';
@@ -93,34 +96,18 @@ class _CatalogBody extends StatelessWidget {
     if (noItems &&
         (state.status == LoadStatus.initial ||
             state.status == LoadStatus.loading)) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoading();
     }
     if (noItems && state.status == LoadStatus.failure) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                state.failure == null
-                    ? MembershipStrings.noneFound
-                    : failureMessage(state.failure!),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () =>
-                    context.read<MembershipPackagesCatalogCubit>().load(),
-                child: const Text(MembershipStrings.retry),
-              ),
-            ],
-          ),
-        ),
+      return AppErrorView(
+        message: state.failure == null
+            ? MembershipStrings.noneFound
+            : failureMessage(state.failure!),
+        onRetry: () => context.read<MembershipPackagesCatalogCubit>().load(),
       );
     }
     if (noItems) {
-      return const Center(child: Text(MembershipStrings.noneFound));
+      return const AppEmptyView(message: MembershipStrings.noneFound);
     }
     return RefreshIndicator(
       onRefresh: () => context.read<MembershipPackagesCatalogCubit>().load(),

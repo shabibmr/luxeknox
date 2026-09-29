@@ -4,6 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_empty_view.dart';
+import '../../../../core/widgets/app_error_view.dart';
+import '../../../../core/widgets/app_loading.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/usecases/request_membership_freeze_usecase.dart';
 import '../cubit/membership_card_cubit.dart';
@@ -143,36 +146,28 @@ class _MembershipCardBody extends StatelessWidget {
     if (membership == null &&
         (state.status == LoadStatus.initial ||
             state.status == LoadStatus.loading)) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoading();
     }
 
     if (membership == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                state.failure == null
-                    ? MembershipStrings.noActiveMembership
-                    : failureMessage(state.failure!),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () {
-                  final session = context.read<SessionCubit>().state;
-                  final memberId = session is SessionAuthenticated
-                      ? session.principal.profileId
-                      : null;
-                  context.read<MembershipCardCubit>().load(memberId);
-                },
-                child: const Text(MembershipStrings.retry),
-              ),
-            ],
-          ),
-        ),
+      void reload() {
+        final session = context.read<SessionCubit>().state;
+        final memberId = session is SessionAuthenticated
+            ? session.principal.profileId
+            : null;
+        context.read<MembershipCardCubit>().load(memberId);
+      }
+
+      if (state.failure != null) {
+        return AppErrorView(
+          message: failureMessage(state.failure!),
+          onRetry: reload,
+        );
+      }
+      return AppEmptyView(
+        message: MembershipStrings.noActiveMembership,
+        action: reload,
+        actionLabel: MembershipStrings.retry,
       );
     }
 

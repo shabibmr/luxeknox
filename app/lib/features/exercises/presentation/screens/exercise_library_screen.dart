@@ -5,6 +5,9 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/widgets/app_empty_view.dart';
+import '../../../../core/widgets/app_error_view.dart';
+import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/exercise_filter.dart';
 import '../bloc/exercise_list_bloc.dart';
 import '../bloc/exercise_list_event.dart';
@@ -250,35 +253,20 @@ class _ExerciseListPane extends StatelessWidget {
           child: BlocBuilder<ExerciseListBloc, ExerciseListState>(
             builder: (context, state) {
               if (state.status == LoadStatus.loading && state.items.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
+                return const AppLoading();
               }
 
               if (state.status == LoadStatus.failure && state.items.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          failureMessage(state.failure!),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        FilledButton(
-                          onPressed: () => context.read<ExerciseListBloc>().add(
-                            const ExerciseListRefreshed(),
-                          ),
-                          child: const Text(ExerciseStrings.retry),
-                        ),
-                      ],
-                    ),
+                return AppErrorView(
+                  message: failureMessage(state.failure!),
+                  onRetry: () => context.read<ExerciseListBloc>().add(
+                    const ExerciseListRefreshed(),
                   ),
                 );
               }
 
               if (state.status == LoadStatus.success && state.items.isEmpty) {
-                return const Center(child: Text(ExerciseStrings.noneFound));
+                return const AppEmptyView(message: ExerciseStrings.noneFound);
               }
 
               return RefreshIndicator(
