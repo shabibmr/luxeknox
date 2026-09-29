@@ -1,4 +1,4 @@
-package com.algo.luxeknox
+package com.luxeknox.app
 
 import io.flutter.embedding.android.FlutterActivity
 
