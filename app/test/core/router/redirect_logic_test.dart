@@ -106,5 +106,36 @@ void main() {
         isNull,
       );
     });
+
+    test('trainer cannot open admin assign-membership', () {
+      expect(
+        appRedirectLogic(
+          sessionState: const SessionAuthenticated(
+            principal: Principal(
+              userId: '2',
+              userType: UserType.trainer,
+              displayName: 'Trainer',
+              profileId: 't1',
+            ),
+            capabilities: Capabilities(slugs: ['memberships.read']),
+          ),
+          currentPath: '/admin/members/42/assign-membership',
+        ),
+        Routes.trainerHome,
+      );
+    });
+
+    test('admin without memberships.create cannot assign membership', () {
+      expect(
+        appRedirectLogic(
+          sessionState: const SessionAuthenticated(
+            principal: principal,
+            capabilities: Capabilities(slugs: ['memberships.read']),
+          ),
+          currentPath: '/admin/members/42/assign-membership',
+        ),
+        Routes.adminDashboard,
+      );
+    });
   });
 }

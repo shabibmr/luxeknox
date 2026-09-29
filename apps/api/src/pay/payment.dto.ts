@@ -89,6 +89,7 @@ export interface PaymentDto {
   invoice_number: string;
   member_id: number;
   membership_id: number | null;
+  pt_subscription_id: number | null;
   payment_method_id: number | null;
   subtotal: string;
   tax_amount: string;

@@ -12,6 +12,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { utcDatetime } from '../utc-datetime';
 import { members } from './members';
+import { ptSubscriptions } from './personal-training';
 import { trainers } from './trainers';
 import { users } from './users';
 
@@ -57,6 +58,10 @@ export const schedules = mysqlTable(
   {
     id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
     series_id: bigint('series_id', { mode: 'number', unsigned: true }),
+    /** Set when the row is a generated occurrence of a PT subscription. */
+    pt_subscription_id: bigint('pt_subscription_id', { mode: 'number', unsigned: true }).references(
+      () => ptSubscriptions.id,
+    ),
     schedule_type_id: bigint('schedule_type_id', { mode: 'number', unsigned: true })
       .notNull()
       .references(() => scheduleTypes.id),
@@ -85,6 +90,7 @@ export const schedules = mysqlTable(
     index('schedules_trainer_id_start_idx').on(table.trainer_id, table.start_time),
     index('schedules_facility_id_start_idx').on(table.facility_id, table.start_time),
     index('schedules_series_id_idx').on(table.series_id),
+    index('schedules_pt_subscription_id_idx').on(table.pt_subscription_id),
     index('schedules_status_idx').on(table.status),
     index('schedules_type_id_idx').on(table.schedule_type_id),
   ],

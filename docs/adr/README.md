@@ -13,7 +13,7 @@ Each record: Status · Context · Decision · Consequences · Alternatives consi
 Statuses: `Proposed` → `Accepted` → (`Superseded by ADR-XXXX` | `Deprecated`).
 `Deferred` marks a question deliberately left open with no decision made — a placeholder, not a choice.
 
-ADR-0001–0004, 0007, and 0008 are `Accepted`. ADR-0005 is `Superseded by ADR-0008`. ADR-0006 is `Proposed`.
+ADR-0001–0004, 0007, 0008, and 0009 are `Accepted`. ADR-0005 is `Superseded by ADR-0008`. ADR-0006 is `Proposed`.
 
 ## Index
 
@@ -27,6 +27,7 @@ ADR-0001–0004, 0007, and 0008 are `Accepted`. ADR-0005 is `Superseded by ADR-0
 | [0006](./0006-flutter-state-management-and-routing.md) | Flutter architecture, state & routing — **Clean Architecture + flutter_bloc + go_router** | Proposed | project-context §10.2 |
 | [0007](./0007-first-delivery-vertical.md) | First delivery vertical — **Exercise Library** | Accepted | delivery sequencing |
 | [0008](./0008-object-storage-and-media.md) | Object storage & MEDIA — **S3-compatible + local disk; signed PUT/GET** | Accepted | FRD §21, Vertical 3 |
+| [0009](./0009-personal-training-subscriptions.md) | Personal Training — **separate PT package, same-gender trainer, fixed weekly slot** | Accepted | PT packages, trainer scheduling |
 
 ## Deliberately not decided yet
 

@@ -112,6 +112,7 @@ import 'package:api_client/src/model/member_page.dart';
 import 'package:api_client/src/model/member_photo.dart';
 import 'package:api_client/src/model/member_photo_page.dart';
 import 'package:api_client/src/model/member_photo_write.dart';
+import 'package:api_client/src/model/member_pt_summary.dart';
 import 'package:api_client/src/model/member_update.dart';
 import 'package:api_client/src/model/membership.dart';
 import 'package:api_client/src/model/membership_action_request.dart';
@@ -157,6 +158,20 @@ import 'package:api_client/src/model/progress_photo_comparison_comparison_by_pos
 import 'package:api_client/src/model/progress_photo_comparison_pose_pair.dart';
 import 'package:api_client/src/model/progress_photo_page.dart';
 import 'package:api_client/src/model/progress_photo_write.dart';
+import 'package:api_client/src/model/pt_change_slot_request.dart';
+import 'package:api_client/src/model/pt_grid_cell.dart';
+import 'package:api_client/src/model/pt_grid_trainer.dart';
+import 'package:api_client/src/model/pt_payment_fields.dart';
+import 'package:api_client/src/model/pt_product.dart';
+import 'package:api_client/src/model/pt_product_page.dart';
+import 'package:api_client/src/model/pt_product_write.dart';
+import 'package:api_client/src/model/pt_purchase_request.dart';
+import 'package:api_client/src/model/pt_purchase_result.dart';
+import 'package:api_client/src/model/pt_reassign_trainer_request.dart';
+import 'package:api_client/src/model/pt_renew_request.dart';
+import 'package:api_client/src/model/pt_schedule_grid.dart';
+import 'package:api_client/src/model/pt_subscription.dart';
+import 'package:api_client/src/model/pt_subscription_status.dart';
 import 'package:api_client/src/model/public_settings.dart';
 import 'package:api_client/src/model/ready.dart';
 import 'package:api_client/src/model/ready_jobs.dart';
@@ -311,6 +326,7 @@ part 'serializers.g.dart';
   MemberPhoto,
   MemberPhotoPage,
   MemberPhotoWrite,
+  MemberPtSummary,
   MemberUpdate,
   Membership,
   MembershipActionRequest,
@@ -356,6 +372,20 @@ part 'serializers.g.dart';
   ProgressPhotoComparisonPosePair,
   ProgressPhotoPage,
   ProgressPhotoWrite,
+  PtChangeSlotRequest,
+  PtGridCell,
+  PtGridTrainer,
+  PtPaymentFields,$PtPaymentFields,
+  PtProduct,
+  PtProductPage,
+  PtProductWrite,
+  PtPurchaseRequest,
+  PtPurchaseResult,
+  PtReassignTrainerRequest,
+  PtRenewRequest,
+  PtScheduleGrid,
+  PtSubscription,
+  PtSubscriptionStatus,
   PublicSettings,
   Ready,
   ReadyJobs,
@@ -443,6 +473,10 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<MedicalHistory>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(PtGridCell)]),
+        () => ListBuilder<PtGridCell>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(TrainerAvailability)]),
         () => ListBuilder<TrainerAvailability>(),
       )
@@ -489,6 +523,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(AttendanceHistory)]),
         () => ListBuilder<AttendanceHistory>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(PtSubscription)]),
+        () => ListBuilder<PtSubscription>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(MembershipHistory)]),
@@ -539,6 +577,10 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<Goal>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(PtGridTrainer)]),
+        () => ListBuilder<PtGridTrainer>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(MeasurementValue)]),
         () => ListBuilder<MeasurementValue>(),
       )
@@ -581,6 +623,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(DietPlanVersion)]),
         () => ListBuilder<DietPlanVersion>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(PtProduct)]),
+        () => ListBuilder<PtProduct>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(DietPlan)]),
@@ -635,6 +681,10 @@ Serializers serializers = (_$serializers.toBuilder()
         () => MapBuilder<String, JsonObject?>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(Date)]),
+        () => ListBuilder<Date>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(MembershipFreeze)]),
         () => ListBuilder<MembershipFreeze>(),
       )
@@ -651,6 +701,7 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<String>(),
       )
       ..add(Member.serializer)
+      ..add(PtPaymentFields.serializer)
       ..add(const OneOfSerializer())
       ..add(const AnyOfSerializer())
       ..add(const DateSerializer())

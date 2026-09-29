@@ -191,7 +191,6 @@ describe('MEM-012: Membership Integration with Schedule and Payment Dependencies
 
     sessionAttendanceService = new SessionAttendanceService(
       scheduleRepo as any,
-      membRepo as any,
       auditService as any,
       domainEventBus as any,
       mockScheduleDb as any,
@@ -253,9 +252,9 @@ describe('MEM-012: Membership Integration with Schedule and Payment Dependencies
           member_id: 42,
           product_id: 3,
           status: 'active',
-          remaining_pt_sessions: 10,
         }),
       );
+      expect(membRepo.insertMembership.mock.calls[0][0]).not.toHaveProperty('remaining_pt_sessions');
 
       // Verify payment was calculated with 18% tax on 1000.00 = 1180.00
       expect(paymentRepo.insertPayment).toHaveBeenCalledWith(
@@ -374,14 +373,8 @@ describe('MEM-012: Membership Integration with Schedule and Payment Dependencies
     });
   });
 
-  describe('3. Scheduling PT Session Consumption & Restoral (ATT-016)', () => {
-    it('decrements membership remaining_pt_sessions on attended 1:1 PT session', async () => {
-      membRepo.findActiveOrFrozenForMember.mockResolvedValueOnce({
-        id: 101,
-        status: 'active',
-        remaining_pt_sessions: 10,
-      });
-
+  describe('3. PT session attendance (ATT-016)', () => {
+    it('records attendance on a 1:1 PT session without touching the membership', async () => {
       const updated = await sessionAttendanceService.mark(
         201,
         301,
@@ -390,70 +383,11 @@ describe('MEM-012: Membership Integration with Schedule and Payment Dependencies
       );
 
       expect(updated.attended).toBe(true);
-      expect(membRepo.adjustRemainingPtSessions).toHaveBeenCalledWith(42, -1);
+      expect(membRepo.adjustRemainingPtSessions).not.toHaveBeenCalled();
+      expect(membRepo.updateMembership).not.toHaveBeenCalled();
       expect(domainEventBus.emit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          eventName: 'schedule.attendance_marked',
-          payload: expect.objectContaining({ pt_delta: -1 }),
-        }),
+        expect.objectContaining({ eventName: 'schedule.attendance_marked' }),
       );
-    });
-
-    it('restores remaining_pt_sessions when attended state is unset', async () => {
-      // Participant previously attended
-      scheduleRepo.findParticipantById.mockResolvedValueOnce({
-        id: 301,
-        schedule_id: 201,
-        member_id: 42,
-        booking_status: 'booked',
-        attended: true,
-      });
-
-      const updated = await sessionAttendanceService.mark(
-        201,
-        301,
-        { attended: false },
-        adminActor,
-      );
-
-      expect(updated.attended).toBe(false);
-      expect(membRepo.adjustRemainingPtSessions).toHaveBeenCalledWith(42, 1);
-      expect(domainEventBus.emit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          eventName: 'schedule.attendance_marked',
-          payload: expect.objectContaining({ pt_delta: 1 }),
-        }),
-      );
-    });
-
-    it('rejects PT attendance marking when membership has no remaining PT sessions', async () => {
-      membRepo.findActiveOrFrozenForMember.mockResolvedValueOnce({
-        id: 101,
-        status: 'active',
-        remaining_pt_sessions: 0, // No sessions left
-      });
-
-      await expect(
-        sessionAttendanceService.mark(
-          201,
-          301,
-          { attended: true },
-          adminActor,
-        ),
-      ).rejects.toBeInstanceOf(BusinessRuleError);
-    });
-
-    it('rejects PT attendance marking when member has no membership contract', async () => {
-      membRepo.findActiveOrFrozenForMember.mockResolvedValueOnce(null);
-
-      await expect(
-        sessionAttendanceService.mark(
-          201,
-          301,
-          { attended: true },
-          adminActor,
-        ),
-      ).rejects.toBeInstanceOf(BusinessRuleError);
     });
   });
 

@@ -69,6 +69,13 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'MEMB', action: 'freeze', slug: 'memberships.freeze', description: 'Freeze or unfreeze memberships' },
   { module: 'MEMB', action: 'extend', slug: 'memberships.extend', description: 'Extend membership duration' },
 
+  // PT — Personal Training packages and subscriptions
+  { module: 'PT', action: 'read', slug: 'pt_products.read', description: 'View Personal Training packages' },
+  { module: 'PT', action: 'write', slug: 'pt_products.write', description: 'Create, edit and archive Personal Training packages' },
+  { module: 'PT', action: 'read', slug: 'pt_subscriptions.read', description: 'View Personal Training subscriptions' },
+  { module: 'PT', action: 'create', slug: 'pt_subscriptions.create', description: 'Sell or renew Personal Training (assign trainer and slot)' },
+  { module: 'PT', action: 'manage', slug: 'pt_subscriptions.manage', description: 'Reassign PT trainer or change PT slot mid-subscription' },
+
   // SCHED
   { module: 'SCHED', action: 'read', slug: 'schedules.read', description: 'View class schedules and availability' },
   { module: 'SCHED', action: 'write', slug: 'schedules.write', description: 'Create and update schedule events' },

@@ -111,8 +111,8 @@ Class | Method | HTTP request | Description
 [*GOALApi*](doc/GOALApi.md) | [**createMeasurement**](doc/GOALApi.md#createmeasurement) | **POST** /members/{id}/measurements | Record a measurement session
 [*GOALApi*](doc/GOALApi.md) | [**createMemberGoal**](doc/GOALApi.md#createmembergoal) | **POST** /members/{id}/goals | Create a goal
 [*GOALApi*](doc/GOALApi.md) | [**createProgressNote**](doc/GOALApi.md#createprogressnote) | **POST** /members/{id}/progress-notes | Add a progress note
-[*GOALApi*](doc/GOALApi.md) | [**createProgressPhoto**](doc/GOALApi.md#createprogressphoto) | **POST** /members/{id}/progress-photos | Add a progress photo (deferred)
-[*GOALApi*](doc/GOALApi.md) | [**deleteProgressPhoto**](doc/GOALApi.md#deleteprogressphoto) | **DELETE** /progress-photos/{id} | Delete a progress photo (deferred)
+[*GOALApi*](doc/GOALApi.md) | [**createProgressPhoto**](doc/GOALApi.md#createprogressphoto) | **POST** /members/{id}/progress-photos | Add a progress photo
+[*GOALApi*](doc/GOALApi.md) | [**deleteProgressPhoto**](doc/GOALApi.md#deleteprogressphoto) | **DELETE** /progress-photos/{id} | Delete a progress photo
 [*GOALApi*](doc/GOALApi.md) | [**getGoal**](doc/GOALApi.md#getgoal) | **GET** /goals/{id} | Goal detail
 [*GOALApi*](doc/GOALApi.md) | [**getMeasurement**](doc/GOALApi.md#getmeasurement) | **GET** /measurements/{id} | Measurement session with values
 [*GOALApi*](doc/GOALApi.md) | [**getMeasurementChart**](doc/GOALApi.md#getmeasurementchart) | **GET** /members/{id}/measurements/chart | Longitudinal metric chart series
@@ -120,7 +120,7 @@ Class | Method | HTTP request | Description
 [*GOALApi*](doc/GOALApi.md) | [**listMeasurements**](doc/GOALApi.md#listmeasurements) | **GET** /members/{id}/measurements | Measurement sessions
 [*GOALApi*](doc/GOALApi.md) | [**listMemberGoals**](doc/GOALApi.md#listmembergoals) | **GET** /members/{id}/goals | Member goals
 [*GOALApi*](doc/GOALApi.md) | [**listProgressNotes**](doc/GOALApi.md#listprogressnotes) | **GET** /members/{id}/progress-notes | Coach / member notes
-[*GOALApi*](doc/GOALApi.md) | [**listProgressPhotos**](doc/GOALApi.md#listprogressphotos) | **GET** /members/{id}/progress-photos | Progress photos (deferred)
+[*GOALApi*](doc/GOALApi.md) | [**listProgressPhotos**](doc/GOALApi.md#listprogressphotos) | **GET** /members/{id}/progress-photos | Progress photos
 [*GOALApi*](doc/GOALApi.md) | [**updateGoal**](doc/GOALApi.md#updategoal) | **PATCH** /goals/{id} | Update a goal
 [*GOALApi*](doc/GOALApi.md) | [**updateGoalMetric**](doc/GOALApi.md#updategoalmetric) | **PATCH** /goal-metrics/{id} | Update a metric
 [*HEALTHApi*](doc/HEALTHApi.md) | [**createEmergencyContact**](doc/HEALTHApi.md#createemergencycontact) | **POST** /users/{id}/emergency-contacts | Add an emergency contact
@@ -144,7 +144,9 @@ Class | Method | HTTP request | Description
 [*HEALTHApi*](doc/HEALTHApi.md) | [**updateMedicalHistory**](doc/HEALTHApi.md#updatemedicalhistory) | **PATCH** /members/{id}/medical-histories/{historyId} | Update a medical history row
 [*HEALTHApi*](doc/HEALTHApi.md) | [**verifyMemberDocument**](doc/HEALTHApi.md#verifymemberdocument) | **POST** /members/{id}/documents/{documentId}/verify | Verify a document
 [*MEDIAApi*](doc/MEDIAApi.md) | [**createMediaUpload**](doc/MEDIAApi.md#createmediaupload) | **POST** /media/uploads | Signed PUT slot (ADR-0008)
+[*MEDIAApi*](doc/MEDIAApi.md) | [**getMediaObject**](doc/MEDIAApi.md#getmediaobject) | **GET** /media/objects | Local adapter signed GET (ADR-0008 HMAC query auth)
 [*MEDIAApi*](doc/MEDIAApi.md) | [**getMediaUrl**](doc/MEDIAApi.md#getmediaurl) | **GET** /media/{key} | Short-lived signed GET (ADR-0008)
+[*MEDIAApi*](doc/MEDIAApi.md) | [**putMediaObject**](doc/MEDIAApi.md#putmediaobject) | **PUT** /media/objects | Local adapter signed PUT (ADR-0008 HMAC query auth)
 [*MEMBApi*](doc/MEMBApi.md) | [**approveFreeze**](doc/MEMBApi.md#approvefreeze) | **POST** /freezes/{id}/approve | Approve a freeze
 [*MEMBApi*](doc/MEMBApi.md) | [**cancelMembership**](doc/MEMBApi.md#cancelmembership) | **POST** /memberships/{id}/cancel | Cancel a membership
 [*MEMBApi*](doc/MEMBApi.md) | [**createMembership**](doc/MEMBApi.md#createmembership) | **POST** /memberships | Assign a membership
@@ -194,6 +196,17 @@ Class | Method | HTTP request | Description
 [*PEOPLEApi*](doc/PEOPLEApi.md) | [**updateEmployee**](doc/PEOPLEApi.md#updateemployee) | **PATCH** /employees/{id} | Update employee
 [*PEOPLEApi*](doc/PEOPLEApi.md) | [**updateMember**](doc/PEOPLEApi.md#updatemember) | **PATCH** /members/{id} | Update member profile
 [*PEOPLEApi*](doc/PEOPLEApi.md) | [**updateTrainer**](doc/PEOPLEApi.md#updatetrainer) | **PATCH** /trainers/{id} | Update trainer
+[*PTApi*](doc/PTApi.md) | [**changePtSlot**](doc/PTApi.md#changeptslot) | **POST** /pt-subscriptions/{id}/change-slot | Move remaining PT sessions to other weekdays/hour
+[*PTApi*](doc/PTApi.md) | [**createPtProduct**](doc/PTApi.md#createptproduct) | **POST** /pt-products | Create a PT package
+[*PTApi*](doc/PTApi.md) | [**getMemberPtSummary**](doc/PTApi.md#getmemberptsummary) | **GET** /members/{id}/pt-subscriptions | Member&#39;s current PT, PT history, and the calling trainer&#39;s access level
+[*PTApi*](doc/PTApi.md) | [**getPtProduct**](doc/PTApi.md#getptproduct) | **GET** /pt-products/{id} | PT package detail
+[*PTApi*](doc/PTApi.md) | [**getPtScheduleGrid**](doc/PTApi.md#getptschedulegrid) | **GET** /pt/schedule-grid | Hours × same-gender trainers occupancy for a PT package, start date and weekdays
+[*PTApi*](doc/PTApi.md) | [**getPtSubscription**](doc/PTApi.md#getptsubscription) | **GET** /pt-subscriptions/{id} | PT subscription detail
+[*PTApi*](doc/PTApi.md) | [**listPtProducts**](doc/PTApi.md#listptproducts) | **GET** /pt-products | Personal Training package catalog
+[*PTApi*](doc/PTApi.md) | [**purchasePtSubscription**](doc/PTApi.md#purchaseptsubscription) | **POST** /pt-subscriptions | Sell PT — assign trainer + fixed weekly slot, take payment, generate sessions
+[*PTApi*](doc/PTApi.md) | [**reassignPtTrainer**](doc/PTApi.md#reassignpttrainer) | **POST** /pt-subscriptions/{id}/reassign-trainer | Move remaining PT sessions to another same-gender trainer
+[*PTApi*](doc/PTApi.md) | [**renewPtSubscription**](doc/PTApi.md#renewptsubscription) | **POST** /pt-subscriptions/{id}/renew | Renew PT with the same trainer and slot
+[*PTApi*](doc/PTApi.md) | [**updatePtProduct**](doc/PTApi.md#updateptproduct) | **PATCH** /pt-products/{id} | Update or archive a PT package
 [*RBACApi*](doc/RBACApi.md) | [**assignEmployeeRole**](doc/RBACApi.md#assignemployeerole) | **PUT** /employees/{id}/role | Assign exactly one role
 [*RBACApi*](doc/RBACApi.md) | [**createRole**](doc/RBACApi.md#createrole) | **POST** /roles | Create a custom role
 [*RBACApi*](doc/RBACApi.md) | [**getRole**](doc/RBACApi.md#getrole) | **GET** /roles/{id} | Get a role and its permissions
@@ -345,6 +358,7 @@ Class | Method | HTTP request | Description
  - [MemberPhoto](doc/MemberPhoto.md)
  - [MemberPhotoPage](doc/MemberPhotoPage.md)
  - [MemberPhotoWrite](doc/MemberPhotoWrite.md)
+ - [MemberPtSummary](doc/MemberPtSummary.md)
  - [MemberUpdate](doc/MemberUpdate.md)
  - [Membership](doc/Membership.md)
  - [MembershipActionRequest](doc/MembershipActionRequest.md)
@@ -390,6 +404,20 @@ Class | Method | HTTP request | Description
  - [ProgressPhotoComparisonPosePair](doc/ProgressPhotoComparisonPosePair.md)
  - [ProgressPhotoPage](doc/ProgressPhotoPage.md)
  - [ProgressPhotoWrite](doc/ProgressPhotoWrite.md)
+ - [PtChangeSlotRequest](doc/PtChangeSlotRequest.md)
+ - [PtGridCell](doc/PtGridCell.md)
+ - [PtGridTrainer](doc/PtGridTrainer.md)
+ - [PtPaymentFields](doc/PtPaymentFields.md)
+ - [PtProduct](doc/PtProduct.md)
+ - [PtProductPage](doc/PtProductPage.md)
+ - [PtProductWrite](doc/PtProductWrite.md)
+ - [PtPurchaseRequest](doc/PtPurchaseRequest.md)
+ - [PtPurchaseResult](doc/PtPurchaseResult.md)
+ - [PtReassignTrainerRequest](doc/PtReassignTrainerRequest.md)
+ - [PtRenewRequest](doc/PtRenewRequest.md)
+ - [PtScheduleGrid](doc/PtScheduleGrid.md)
+ - [PtSubscription](doc/PtSubscription.md)
+ - [PtSubscriptionStatus](doc/PtSubscriptionStatus.md)
  - [PublicSettings](doc/PublicSettings.md)
  - [Ready](doc/Ready.md)
  - [ReadyJobs](doc/ReadyJobs.md)

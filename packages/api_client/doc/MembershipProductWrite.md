@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 **basePrice** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | 
 **taxPercentage** | **String** |  | [optional] 
 **maxFreezeDays** | **int** |  | [optional] 
-**ptSessionsIncluded** | **int** |  | [optional] 
+**ptSessionsIncluded** | **int** | Retired — ignored by the server. PT is sold as a PtProduct. | [optional] 
 **accessFacilities** | **BuiltList&lt;String&gt;** |  | [optional] 
 **isActive** | **bool** |  | [optional] 
 

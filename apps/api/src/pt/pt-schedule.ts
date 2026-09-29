@@ -1,0 +1,104 @@
+/**
+ * Pure PT scheduling helpers — no DB, no Nest. Dates are gym-local `YYYY-MM-DD` strings,
+ * times are gym wall-clock `HH:MM[:SS]`; conversion to UTC instants happens in the service
+ * via the gym timezone.
+ */
+import { parseTimeToMinutes } from '../sched/slot-calculation';
+
+export const PT_SLOT_MINUTES = 60;
+
+export type Gender = 'male' | 'female';
+
+/**
+ * Member/trainer gender is free text (VARCHAR) — normalise before comparing so
+ * "Male", " male ", "M" all match. Anything unrecognised returns null, which the
+ * hard same-gender rule treats as "cannot assign".
+ */
+export function normalizeGender(value: string | null | undefined): Gender | null {
+  if (value == null) return null;
+  const v = value.trim().toLowerCase();
+  if (v === 'male' || v === 'm' || v === 'man') return 'male';
+  if (v === 'female' || v === 'f' || v === 'woman') return 'female';
+  return null;
+}
+
+export function addDays(isoDate: string, days: number): string {
+  const d = new Date(`${isoDate}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+export function dayOfWeek(isoDate: string): number {
+  return new Date(`${isoDate}T00:00:00.000Z`).getUTCDay();
+}
+
+/** Every date in [startDate, endDate] (inclusive) whose weekday is in `weekdays`. */
+export function enumerateOccurrenceDates(
+  startDate: string,
+  endDate: string,
+  weekdays: readonly number[],
+): string[] {
+  const wanted = new Set(weekdays);
+  const dates: string[] = [];
+  for (let d = startDate; d <= endDate; d = addDays(d, 1)) {
+    if (wanted.has(dayOfWeek(d))) dates.push(d);
+  }
+  return dates;
+}
+
+/** Normalises "HH:MM" / "HH:MM:SS" to "HH:MM:SS"; rejects anything not on the hour. */
+export function normalizeSlotStart(slot: string): string {
+  const minutes = parseTimeToMinutes(slot);
+  if (minutes % 60 !== 0 || minutes < 0 || minutes >= 24 * 60) {
+    throw new Error(`Slot must start on the hour: ${slot}`);
+  }
+  return `${String(minutes / 60).padStart(2, '0')}:00:00`;
+}
+
+export function slotLabel(slotStart: string): string {
+  const startH = parseTimeToMinutes(slotStart) / 60;
+  return `${String(startH).padStart(2, '0')}:00-${String(startH + 1).padStart(2, '0')}:00`;
+}
+
+export type AvailabilityRow = {
+  day_of_week: number | null;
+  start_time: string;
+  end_time: string;
+  is_recurring: boolean;
+  override_date: string | null;
+  is_available: boolean;
+};
+
+/**
+ * Whether the trainer's availability covers the whole hour starting at `hourMinutes`
+ * on `dateIso`. Recurring windows for the weekday apply first; date overrides then
+ * block (is_available=false) or add (is_available=true) time — same precedence as
+ * `buildDayAvailabilityWindows` in sched/slot-calculation.ts, but in wall-clock minutes.
+ */
+export function coversHour(rows: readonly AvailabilityRow[], dateIso: string, hourMinutes: number): boolean {
+  const from = hourMinutes;
+  const to = hourMinutes + PT_SLOT_MINUTES;
+  const within = (r: AvailabilityRow) =>
+    parseTimeToMinutes(r.start_time) <= from && parseTimeToMinutes(r.end_time) >= to;
+  const overlaps = (r: AvailabilityRow) =>
+    parseTimeToMinutes(r.start_time) < to && parseTimeToMinutes(r.end_time) > from;
+
+  const overrides = rows.filter((r) => !r.is_recurring && r.override_date === dateIso);
+  if (overrides.some((r) => !r.is_available && overlaps(r))) return false;
+  if (overrides.some((r) => r.is_available && within(r))) return true;
+
+  const dow = dayOfWeek(dateIso);
+  return rows.some((r) => r.is_recurring && r.is_available && r.day_of_week === dow && within(r));
+}
+
+/** Candidate hours (minutes since midnight) a trainer could offer on a given weekday. */
+export function recurringHoursForWeekday(rows: readonly AvailabilityRow[], weekday: number): number[] {
+  const hours = new Set<number>();
+  for (const r of rows) {
+    if (!r.is_recurring || !r.is_available || r.day_of_week !== weekday) continue;
+    const start = Math.ceil(parseTimeToMinutes(r.start_time) / 60) * 60;
+    const end = parseTimeToMinutes(r.end_time);
+    for (let m = start; m + PT_SLOT_MINUTES <= end; m += 60) hours.add(m);
+  }
+  return [...hours].sort((a, b) => a - b);
+}

@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { PeopleModule } from '../people/people.module';
 import { PlatformModule } from '../platform/platform.module';
+import { PtAccessModule } from '../pt/pt-access.module';
 import { RbacModule } from '../rbac/rbac.module';
 import { ExerciseController } from './exercise.controller';
 import { ExerciseRepository } from './exercise.repository';
@@ -13,7 +14,7 @@ import { WorkoutSessionRepository } from './workout-session.repository';
 import { WorkoutSessionService } from './workout-session.service';
 
 @Module({
-  imports: [PlatformModule, RbacModule, forwardRef(() => PeopleModule)],
+  imports: [PlatformModule, RbacModule, forwardRef(() => PeopleModule), PtAccessModule],
   controllers: [
     ExerciseController,
     WorkoutPlanController,

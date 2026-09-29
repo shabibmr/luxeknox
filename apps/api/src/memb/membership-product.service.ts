@@ -85,7 +85,6 @@ export class MembershipProductService {
       base_price: roundMoney(dto.base_price),
       tax_percentage: dto.tax_percentage ? roundMoney(dto.tax_percentage) : '0.00',
       max_freeze_days: dto.max_freeze_days ?? 0,
-      pt_sessions_included: dto.pt_sessions_included ?? 0,
       access_facilities: dto.access_facilities ?? null,
       is_active: dto.is_active ?? true,
       created_at: new Date(),
@@ -137,9 +136,6 @@ export class MembershipProductService {
     if (dto.base_price !== undefined) values.base_price = roundMoney(dto.base_price);
     if (dto.tax_percentage !== undefined) values.tax_percentage = roundMoney(dto.tax_percentage);
     if (dto.max_freeze_days !== undefined) values.max_freeze_days = dto.max_freeze_days;
-    if (dto.pt_sessions_included !== undefined) {
-      values.pt_sessions_included = dto.pt_sessions_included;
-    }
     if (dto.access_facilities !== undefined) values.access_facilities = dto.access_facilities;
     if (dto.is_active !== undefined) values.is_active = dto.is_active;
 

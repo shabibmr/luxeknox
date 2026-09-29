@@ -5,6 +5,7 @@
 abstract final class RouteCapabilities {
   static const List<(String prefix, String slug)> requirements = [
     ('/admin/memberships/create', 'memberships.create'),
+    ('/admin/pt-packages', 'pt_products.write'),
     ('/admin/members/add', 'members.create'),
     ('/admin/trainers/create', 'trainers.create'),
     ('/admin/employees/create', 'employees.create'),
@@ -35,6 +36,13 @@ abstract final class RouteCapabilities {
     }
     if (path.startsWith('/admin/schedules/') && path.endsWith('/edit')) {
       return 'schedules.write';
+    }
+    if (path.startsWith('/admin/members/') &&
+        path.endsWith('/assign-membership')) {
+      return 'memberships.create';
+    }
+    if (path.startsWith('/admin/members/') && path.endsWith('/add-pt')) {
+      return 'pt_subscriptions.create';
     }
     if (path.startsWith('/admin/memberships/') && path.endsWith('/renew')) {
       return 'memberships.approve';

@@ -1,18 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
-import { MembershipRepository } from '../memb/membership.repository';
 import { AuditService } from '../platform/audit/audit.service';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { ScheduleParticipant } from '../platform/db/schema/scheduling';
 import { scheduleTypes } from '../platform/db/schema/scheduling';
 import { runInTransaction } from '../platform/db/transaction-context';
-import {
-  BadRequestError,
-  BusinessRuleError,
-  ForbiddenError,
-  NotFoundError,
-} from '../platform/errors/app-error';
+import { BadRequestError, ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import { DomainEventBus } from '../platform/events/domain-events';
 import { ScheduleRepository } from '../sched/schedule.repository';
 import { eq } from 'drizzle-orm';
@@ -23,14 +17,13 @@ export interface MarkAttendanceDto {
 
 /**
  * ATT-015 / ATT-016: class/PT session attendance is distinct from gate attendance.
- * PT consumption: 1:1 trainer sessions (`requires_trainer && max_capacity === 1`)
- * decrement `remaining_pt_sessions` only when marking attended for the first time.
+ * PT sessions are pre-generated from a PT subscription (pt/), so marking attendance
+ * only records it — there is no per-membership PT session counter to consume.
  */
 @Injectable()
 export class SessionAttendanceService {
   constructor(
     private readonly scheduleRepository: ScheduleRepository,
-    private readonly membershipRepository: MembershipRepository,
     private readonly auditService: AuditService,
     private readonly domainEventBus: DomainEventBus,
     @Inject(DRIZZLE_DB_TOKEN)
@@ -73,8 +66,6 @@ export class SessionAttendanceService {
         }
       }
 
-      const wasAttended = participant.attended === true;
-      const nowAttended = dto.attended === true;
       const now = new Date();
 
       await this.scheduleRepository.updateParticipant(participant.id, {
@@ -82,29 +73,13 @@ export class SessionAttendanceService {
         marked_at: now,
       });
 
-      const isPt = await this.isPersonalTrainingSession(schedule);
-      let ptDelta = 0;
-      if (isPt && !wasAttended && nowAttended) {
-        const membership = await this.membershipRepository.findActiveOrFrozenForMember(
-          participant.member_id,
-        );
-        if (!membership || membership.remaining_pt_sessions <= 0) {
-          throw new BusinessRuleError('No remaining PT sessions to consume');
-        }
-        await this.membershipRepository.adjustRemainingPtSessions(participant.member_id, -1);
-        ptDelta = -1;
-      } else if (isPt && wasAttended && !nowAttended) {
-        await this.membershipRepository.adjustRemainingPtSessions(participant.member_id, 1);
-        ptDelta = 1;
-      }
-
       await this.auditService.recordAudit({
         actorUserId: actor.id,
         action: 'schedule.attendance_marked',
         entityName: 'schedule_participants',
         entityId: participant.id,
         beforeState: { attended: participant.attended, marked_at: participant.marked_at },
-        afterState: { attended: dto.attended, marked_at: now.toISOString(), pt_delta: ptDelta },
+        afterState: { attended: dto.attended, marked_at: now.toISOString() },
       });
 
       await this.domainEventBus.emit({
@@ -115,7 +90,6 @@ export class SessionAttendanceService {
           participant_id: participant.id,
           member_id: participant.member_id,
           attended: dto.attended,
-          pt_delta: ptDelta,
         },
       });
 

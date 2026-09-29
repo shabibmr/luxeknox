@@ -104,6 +104,7 @@ export class PaymentService {
       invoice_number: row.invoice_number,
       member_id: row.member_id,
       membership_id: row.membership_id,
+      pt_subscription_id: row.pt_subscription_id ?? null,
       payment_method_id: row.payment_method_id,
       subtotal: roundMoney(String(row.subtotal)),
       tax_amount: roundMoney(String(row.tax_amount)),
@@ -183,7 +184,15 @@ export class PaymentService {
     });
   }
 
-  async create(dto: PaymentCreateDto, actor: AuthenticatedUser): Promise<PaymentDto> {
+  /**
+   * `options.ptSubscriptionId` links the invoice to a PT subscription; only the PT module
+   * sets it (inside its own transaction), so it is not part of the public POST /payments body.
+   */
+  async create(
+    dto: PaymentCreateDto,
+    actor: AuthenticatedUser,
+    options: { ptSubscriptionId?: number } = {},
+  ): Promise<PaymentDto> {
     const member = await this.memberRepository.findById(dto.member_id);
     if (!member) {
       throw new NotFoundError('Member not found');
@@ -256,6 +265,7 @@ export class PaymentService {
         invoice_number: invoiceNumber,
         member_id: dto.member_id,
         membership_id: membershipId,
+        pt_subscription_id: options.ptSubscriptionId ?? null,
         payment_method_id: headerMethodId,
         subtotal: totals.subtotal,
         tax_amount: totals.tax,

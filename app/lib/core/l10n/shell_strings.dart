@@ -76,6 +76,7 @@ abstract final class ShellStrings {
   static const trainers = 'Trainers';
   static const employees = 'Employees';
   static const packages = 'Packages';
+  static const ptPackages = 'PT Packages';
   static const paymentMethods = 'Payment methods';
   static const attendance = 'Attendance';
   static const schedules = 'Schedules';

@@ -4,16 +4,26 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../session/presentation/session_cubit.dart';
 import '../../../goals/presentation/screens/progress_hub_screen.dart';
+import '../../../../core/usecase/usecase.dart';
+import '../../../../session/domain/entities/user_type.dart';
 import '../../../membership/domain/entities/membership.dart';
+import '../../../payments/domain/entities/payment_method.dart';
+import '../../../payments/domain/usecases/get_payment_methods_usecase.dart';
+import '../../../pt/domain/entities/pt_product.dart';
+import '../../../pt/domain/entities/pt_schedule_grid.dart';
+import '../../../pt/domain/entities/pt_subscription.dart';
+import '../../../pt/domain/repositories/pt_repository.dart';
+import '../../../pt/domain/usecases/pt_usecases.dart';
+import '../../../pt/presentation/pt_strings.dart';
+import '../../../pt/presentation/screens/sell_pt_screen.dart';
 import '../../../scheduling/domain/entities/schedule_session.dart';
-import '../../../scheduling/presentation/widgets/trainer_picker_field.dart';
-import '../../domain/entities/trainer_profile.dart';
-import '../../domain/entities/trainer_summary.dart';
 import '../cubit/member_dossier_cubit.dart';
 import '../member_dossier_pt.dart';
 import '../people_strings.dart';
@@ -45,10 +55,13 @@ class _MemberDossierBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<MemberDossierCubit, MemberDossierState>(
+      // Only react to a new message/failure, not to every state change that still carries one.
+      listenWhen: (previous, current) =>
+          previous.message != current.message || previous.failure != current.failure,
       listener: (context, state) {
         if (state.message != null) {
-          final text = state.message == 'assigned'
-              ? PeopleStrings.trainerAssigned
+          final text = state.message == 'pt_renewed'
+              ? PtStrings.renewed
               : PeopleStrings.profileSaved;
           ScaffoldMessenger.of(
             context,
@@ -166,6 +179,23 @@ class _DossierContentState extends State<_DossierContent> {
     final state = widget.state;
     final person = state.person!;
     final membership = state.membership;
+    final session = context.watch<SessionCubit>().state;
+    final userType = session is SessionAuthenticated ? session.principal.userType : null;
+    final canAddPt =
+        userType != null &&
+        canSellPt(
+          userType: userType,
+          canCreatePt: context.can('pt_subscriptions.create'),
+          membership: membership,
+          pt: state.pt,
+        );
+    final canChangePt =
+        userType != null &&
+        canManagePt(userType: userType, canManage: context.can('pt_subscriptions.manage'));
+    final canRenewPt =
+        userType != null &&
+        userType == UserType.admin &&
+        context.can('pt_subscriptions.create');
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -251,15 +281,16 @@ class _DossierContentState extends State<_DossierContent> {
         _PersonalTrainingSection(
           state: state,
           isAdminShell: _isAdminShell,
-          onAddPt: () {
-            context.go(
-              addPersonalTrainingLocation(
-                memberId: person.id,
-                membership: membership,
-              ),
-            );
+          canAddPt: canAddPt,
+          canChangePt: canChangePt,
+          canRenewPt: canRenewPt,
+          onAddPt: () async {
+            final cubit = context.read<MemberDossierCubit>();
+            await context.push<bool>(Routes.adminMembersAddPtById(person.id));
+            if (mounted) await cubit.reloadPt(person.id);
           },
-          onReassign: () => _reassignTrainer(person.id),
+          onChangePt: (sub) => _changePt(sub),
+          onRenewPt: (sub) => _renewPt(sub),
         ),
         const Divider(),
         ListTile(
@@ -311,50 +342,88 @@ class _DossierContentState extends State<_DossierContent> {
     );
   }
 
-  Future<void> _reassignTrainer(int memberId) async {
-    final selected = await showDialog<TrainerSummary>(
+  /// Reassign trainer and/or move weekdays+hour from an effective date.
+  Future<void> _changePt(PtSubscription sub) async {
+    final cubit = context.read<MemberDossierCubit>();
+    final products = (await getIt<GetPtProductsUseCase>()(const NoParams())).fold(
+      (_) => <PtProduct>[],
+      (items) => items,
+    );
+    if (!mounted) return;
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => SellPtScreen(memberId: sub.memberId, replanning: sub, products: products),
+      ),
+    );
+    if (mounted) await cubit.reloadPt(sub.memberId);
+  }
+
+  Future<void> _renewPt(PtSubscription sub) async {
+    final cubit = context.read<MemberDossierCubit>();
+    final methods = (await getIt<GetPaymentMethodsUseCase>()(const NoParams())).fold(
+      (_) => <PaymentMethod>[],
+      (items) => items.where((m) => m.isActive).toList(),
+    );
+    if (!mounted) return;
+    final payment = await showDialog<PtPayment>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text(PeopleStrings.reassignTrainer),
-          content: TrainerPickerField(
-            value: _trainerSummary(widget.state.assignedTrainer),
-            onChanged: (trainer) {
-              if (trainer != null) {
-                Navigator.of(dialogContext).pop(trainer);
-              }
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text(PeopleStrings.cancel),
-            ),
-          ],
-        );
-      },
+      builder: (_) => _RenewPtDialog(subscription: sub, paymentMethods: methods),
     );
-    if (selected == null || !mounted) return;
-    await context.read<MemberDossierCubit>().assignTrainer(
-      memberId: memberId,
-      trainerId: selected.id,
-    );
+    if (payment == null || !mounted) return;
+    await cubit.renewPt(subscriptionId: sub.id, payment: payment);
   }
 }
 
-TrainerSummary? _trainerSummary(TrainerProfile? profile) {
-  if (profile == null) return null;
-  return TrainerSummary(
-    id: profile.id,
-    userId: profile.userId,
-    fullName: profile.fullName,
-    specializations: profile.specializations,
-    hourlyRate: profile.hourlyRate,
-    rating: profile.rating,
-    maxClientsCapacity: profile.maxClientsCapacity,
-    assignedActiveCount: profile.assignedActiveCount,
-    isActive: profile.isActive,
-  );
+class _RenewPtDialog extends StatefulWidget {
+  const _RenewPtDialog({required this.subscription, required this.paymentMethods});
+
+  final PtSubscription subscription;
+  final List<PaymentMethod> paymentMethods;
+
+  @override
+  State<_RenewPtDialog> createState() => _RenewPtDialogState();
+}
+
+class _RenewPtDialogState extends State<_RenewPtDialog> {
+  late String? _methodId =
+      widget.paymentMethods.length == 1 ? widget.paymentMethods.first.id : null;
+
+  @override
+  Widget build(BuildContext context) {
+    final sub = widget.subscription;
+    return AlertDialog(
+      title: const Text(PtStrings.renewTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(PtStrings.renewBody(sub.trainerName, ptWeekdaysLabel(sub.weekdays), sub.slotLabel)),
+          const SizedBox(height: 12),
+          if (widget.paymentMethods.isEmpty)
+            const Text(PtStrings.noPaymentMethods)
+          else
+            DropdownButtonFormField<String>(
+              initialValue: _methodId,
+              decoration: const InputDecoration(labelText: PtStrings.paymentMethod),
+              items: [
+                for (final m in widget.paymentMethods)
+                  DropdownMenuItem(value: m.id, child: Text(m.methodName)),
+              ],
+              onChanged: (v) => setState(() => _methodId = v),
+            ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text(PtStrings.cancel)),
+        FilledButton(
+          onPressed: _methodId == null
+              ? null
+              : () => Navigator.of(context).pop(PtPayment(paymentMethodId: int.parse(_methodId!))),
+          child: const Text(PtStrings.renew),
+        ),
+      ],
+    );
+  }
 }
 
 class _MembershipSection extends StatelessWidget {
@@ -417,30 +486,43 @@ class _PersonalTrainingSection extends StatelessWidget {
   const _PersonalTrainingSection({
     required this.state,
     required this.isAdminShell,
+    required this.canAddPt,
+    required this.canChangePt,
+    required this.canRenewPt,
     required this.onAddPt,
-    required this.onReassign,
+    required this.onChangePt,
+    required this.onRenewPt,
   });
 
   final MemberDossierState state;
   final bool isAdminShell;
+  final bool canAddPt;
+  final bool canChangePt;
+  final bool canRenewPt;
   final VoidCallback onAddPt;
-  final VoidCallback onReassign;
+  final ValueChanged<PtSubscription> onChangePt;
+  final ValueChanged<PtSubscription> onRenewPt;
 
   @override
   Widget build(BuildContext context) {
     final person = state.person!;
-    final membership = state.membership;
-    final hasPt = state.hasPtPackage;
-    final expired = state.ptExpired;
-    final membershipsUnavailable = state.membershipsUnavailable;
+    final pt = state.pt;
+    final current = pt?.current;
+    final ended = pt?.lastEnded;
+    final shown = current ?? ended;
+    final status = ptDossierStatus(pt);
+    final readOnly = trainerHubReadOnly(pt);
 
-    final statusLabel = membershipsUnavailable
+    final statusLabel = state.ptUnavailable
         ? PeopleStrings.unavailable
-        : hasPt
-        ? PeopleStrings.ptActive
-        : expired
-        ? PeopleStrings.ptExpired
-        : PeopleStrings.ptNotPurchased;
+        : switch (status) {
+            PtDossierStatus.active => PeopleStrings.ptActive,
+            PtDossierStatus.scheduled => PeopleStrings.ptScheduled,
+            PtDossierStatus.expired => PeopleStrings.ptExpired,
+            PtDossierStatus.notPurchased => PeopleStrings.ptNotPurchased,
+          };
+    // Coaching modules are relevant once the member has (or had) PT.
+    final showCoaching = shown != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -449,45 +531,57 @@ class _PersonalTrainingSection extends StatelessWidget {
           PeopleStrings.personalTraining,
           style: Theme.of(context).textTheme.titleMedium,
         ),
+        if (readOnly)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              PtStrings.readOnlyBanner,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text(PeopleStrings.ptStatus),
           subtitle: Text(statusLabel),
         ),
-        if (!membershipsUnavailable &&
-            membership != null &&
-            (hasPt || expired || membershipIncludesPt(membership)))
+        if (shown != null) ...[
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text(PeopleStrings.ptExpiry),
+            title: Text(shown.productName),
             subtitle: Text(
-              '${formatCalendarDate(membership.endDate)} '
-              '${formatDaysRelative(membership.endDate)}',
+              '${ptWeekdaysLabel(shown.weekdays)} · ${shown.slotLabel}\n'
+              '${formatCalendarDate(shown.startDate)} → ${formatCalendarDate(shown.endDate)} '
+              '${formatDaysRelative(shown.endDate)}',
             ),
+            isThreeLine: true,
           ),
-        if (!membershipsUnavailable && !hasPt) ...[
-          if (isAdminShell)
-            FilledButton.tonal(
-              onPressed: onAddPt,
-              child: const Text(PeopleStrings.addPersonalTraining),
-            ),
-        ] else if (!membershipsUnavailable && hasPt) ...[
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text(PeopleStrings.assignedTrainer),
-            subtitle: Text(
-              state.assignedTrainer?.fullName ?? PeopleStrings.unassignedTrainer,
-            ),
-            trailing: TextButton(
-              onPressed: onReassign,
-              child: Text(
-                state.assignedTrainer == null
-                    ? PeopleStrings.assignTrainer
-                    : PeopleStrings.reassignTrainer,
+            subtitle: Text(shown.trainerName),
+            trailing: current != null && canChangePt
+                ? TextButton(
+                    onPressed: () => onChangePt(current),
+                    child: const Text(PtStrings.changeTrainerSlot),
+                  )
+                : null,
+          ),
+          if (canRenewPt)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton(
+                onPressed: state.renewingPt ? null : () => onRenewPt(shown),
+                child: const Text(PtStrings.renew),
               ),
             ),
+        ],
+        if (canAddPt && !state.ptUnavailable)
+          FilledButton.tonal(
+            onPressed: onAddPt,
+            child: const Text(PeopleStrings.addPersonalTraining),
           ),
-          if (state.assignedTrainer != null)
+        if (showCoaching) ...[
+          if (current != null)
             ListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text(PeopleStrings.nextSchedule),
@@ -500,7 +594,7 @@ class _PersonalTrainingSection extends StatelessWidget {
               MaterialPageRoute<void>(
                 builder: (_) => ProgressHubScreen(
                   memberId: person.id.toString(),
-                  canCreateGoals: true,
+                  canCreateGoals: !readOnly,
                 ),
               ),
             ),

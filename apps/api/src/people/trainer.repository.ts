@@ -76,6 +76,16 @@ export class TrainerRepository extends BaseRepository<typeof trainers, Trainer, 
     await this.update(eq(trainers.id, id), values);
   }
 
+  async findAllActive(): Promise<Trainer[]> {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select()
+      .from(trainers)
+      .where(eq(trainers.is_active, true))
+      .orderBy(trainers.first_name, trainers.last_name);
+    return rows as Trainer[];
+  }
+
   async countTotal(): Promise<number> {
     const db = this.getDb() as any;
     const rows = await db.select({ value: count() }).from(trainers);

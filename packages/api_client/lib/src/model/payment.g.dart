@@ -16,6 +16,8 @@ class _$Payment extends Payment {
   @override
   final int? membershipId;
   @override
+  final int? ptSubscriptionId;
+  @override
   final int? paymentMethodId;
   @override
   final String subtotal;
@@ -48,6 +50,7 @@ class _$Payment extends Payment {
       required this.invoiceNumber,
       required this.memberId,
       this.membershipId,
+      this.ptSubscriptionId,
       this.paymentMethodId,
       required this.subtotal,
       required this.taxAmount,
@@ -76,6 +79,7 @@ class _$Payment extends Payment {
         invoiceNumber == other.invoiceNumber &&
         memberId == other.memberId &&
         membershipId == other.membershipId &&
+        ptSubscriptionId == other.ptSubscriptionId &&
         paymentMethodId == other.paymentMethodId &&
         subtotal == other.subtotal &&
         taxAmount == other.taxAmount &&
@@ -97,6 +101,7 @@ class _$Payment extends Payment {
     _$hash = $jc(_$hash, invoiceNumber.hashCode);
     _$hash = $jc(_$hash, memberId.hashCode);
     _$hash = $jc(_$hash, membershipId.hashCode);
+    _$hash = $jc(_$hash, ptSubscriptionId.hashCode);
     _$hash = $jc(_$hash, paymentMethodId.hashCode);
     _$hash = $jc(_$hash, subtotal.hashCode);
     _$hash = $jc(_$hash, taxAmount.hashCode);
@@ -120,6 +125,7 @@ class _$Payment extends Payment {
           ..add('invoiceNumber', invoiceNumber)
           ..add('memberId', memberId)
           ..add('membershipId', membershipId)
+          ..add('ptSubscriptionId', ptSubscriptionId)
           ..add('paymentMethodId', paymentMethodId)
           ..add('subtotal', subtotal)
           ..add('taxAmount', taxAmount)
@@ -155,6 +161,11 @@ class PaymentBuilder implements Builder<Payment, PaymentBuilder> {
   int? _membershipId;
   int? get membershipId => _$this._membershipId;
   set membershipId(int? membershipId) => _$this._membershipId = membershipId;
+
+  int? _ptSubscriptionId;
+  int? get ptSubscriptionId => _$this._ptSubscriptionId;
+  set ptSubscriptionId(int? ptSubscriptionId) =>
+      _$this._ptSubscriptionId = ptSubscriptionId;
 
   int? _paymentMethodId;
   int? get paymentMethodId => _$this._paymentMethodId;
@@ -221,6 +232,7 @@ class PaymentBuilder implements Builder<Payment, PaymentBuilder> {
       _invoiceNumber = $v.invoiceNumber;
       _memberId = $v.memberId;
       _membershipId = $v.membershipId;
+      _ptSubscriptionId = $v.ptSubscriptionId;
       _paymentMethodId = $v.paymentMethodId;
       _subtotal = $v.subtotal;
       _taxAmount = $v.taxAmount;
@@ -262,6 +274,7 @@ class PaymentBuilder implements Builder<Payment, PaymentBuilder> {
             memberId: BuiltValueNullFieldError.checkNotNull(
                 memberId, r'Payment', 'memberId'),
             membershipId: membershipId,
+            ptSubscriptionId: ptSubscriptionId,
             paymentMethodId: paymentMethodId,
             subtotal: BuiltValueNullFieldError.checkNotNull(
                 subtotal, r'Payment', 'subtotal'),

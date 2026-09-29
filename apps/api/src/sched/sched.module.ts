@@ -40,6 +40,13 @@ import { TrainerAvailabilityService } from './trainer-availability.service';
     SlotCalculationService,
     BookingService,
   ],
-  exports: [ScheduleRepository, ScheduleService, SlotCalculationService, BookingService],
+  exports: [
+    ScheduleRepository,
+    ScheduleService,
+    ScheduleTypeRepository,
+    SlotCalculationService,
+    BookingService,
+    TrainerAvailabilityRepository,
+  ],
 })
 export class SchedModule {}

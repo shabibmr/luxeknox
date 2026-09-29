@@ -1,29 +1,20 @@
-import '../../../core/router/routes.dart';
+import '../../../session/domain/entities/user_type.dart';
 import '../../membership/domain/entities/membership.dart';
+import '../../pt/domain/entities/pt_subscription.dart';
 
-/// Whether [membership] is (or was) a personal-training package.
-///
-/// Prefers nested [Membership.product.ptSessionsIncluded]; when the product is
-/// omitted (trainer-scoped MEMB reads), falls back to [Membership.remainingPtSessions].
-bool membershipIncludesPt(Membership membership) {
-  final included = membership.product?.ptSessionsIncluded;
-  if (included != null) return included > 0;
-  final remaining = membership.remainingPtSessions;
-  return remaining != null && remaining > 0;
-}
+/// PT status shown on the member dossier, derived from the member's PT
+/// subscriptions (PT is its own package, not part of the gym membership).
+enum PtDossierStatus { active, scheduled, expired, notPurchased }
 
-/// Active/frozen membership that includes PT sessions.
-bool isPtPurchased(Membership? membership) {
-  if (membership == null || !membership.isActiveOrFrozen) return false;
-  return membershipIncludesPt(membership);
-}
-
-/// PT package present but expired (or end date in the past).
-bool isPtExpired(Membership? membership) {
-  if (membership == null) return false;
-  if (!membershipIncludesPt(membership)) return false;
-  if (membership.status.name == 'expired') return true;
-  return membership.daysUntilExpiry < 0;
+PtDossierStatus ptDossierStatus(MemberPtSummary? summary) {
+  final current = summary?.current;
+  if (current != null) {
+    return current.status == PtSubscriptionStatus.active
+        ? PtDossierStatus.active
+        : PtDossierStatus.scheduled;
+  }
+  if (summary?.lastEnded != null) return PtDossierStatus.expired;
+  return PtDossierStatus.notPurchased;
 }
 
 Membership? preferActiveMembership(List<Membership> items) {
@@ -31,19 +22,29 @@ Membership? preferActiveMembership(List<Membership> items) {
   return items.firstWhere((m) => m.isActiveOrFrozen, orElse: () => items.first);
 }
 
-/// Create is rejected when an active/frozen contract already exists (FR-MEMB-006).
-String addPersonalTrainingLocation({
-  required int memberId,
-  Membership? membership,
+/// PT can be added only while the gym membership is active and unexpired, and
+/// only one PT runs at a time (renew instead). Selling is admin/staff only.
+bool canSellPt({
+  required UserType userType,
+  required bool canCreatePt,
+  required Membership? membership,
+  required MemberPtSummary? pt,
+  DateTime? now,
 }) {
-  if (membership != null && membership.isActiveOrFrozen) {
-    return Routes.adminMembershipById(membership.id);
-  }
-  return Routes.adminMembersAssignMembership.replaceFirst(
-    ':id',
-    memberId.toString(),
-  );
+  if (userType != UserType.admin || !canCreatePt) return false;
+  if (pt?.current != null) return false;
+  if (membership == null || membership.status.name != 'active') return false;
+  final today = now ?? DateTime.now();
+  final end = DateTime(membership.endDate.year, membership.endDate.month, membership.endDate.day);
+  return !end.isBefore(DateTime(today.year, today.month, today.day));
 }
+
+/// Mid-PT trainer/slot change and renewal are admin actions.
+bool canManagePt({required UserType userType, required bool canManage}) =>
+    userType == UserType.admin && canManage;
+
+/// Trainers see goals/plans read-only once their PT with the member has ended.
+bool trainerHubReadOnly(MemberPtSummary? pt) => pt?.trainerAccess == TrainerAccess.readOnly;
 
 String formatCalendarDate(DateTime date) {
   final y = date.year.toString().padLeft(4, '0');

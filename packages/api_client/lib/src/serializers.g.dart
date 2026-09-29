@@ -8,6 +8,7 @@ part of 'serializers.dart';
 
 Serializers _$serializers = (Serializers().toBuilder()
       ..add($Member.serializer)
+      ..add($PtPaymentFields.serializer)
       ..add(AssignPlanRequest.serializer)
       ..add(AssignRoleRequest.serializer)
       ..add(AssignTrainerRequest.serializer)
@@ -117,6 +118,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(MemberPhoto.serializer)
       ..add(MemberPhotoPage.serializer)
       ..add(MemberPhotoWrite.serializer)
+      ..add(MemberPtSummary.serializer)
+      ..add(MemberPtSummaryTrainerAccessEnum.serializer)
       ..add(MemberUpdate.serializer)
       ..add(Membership.serializer)
       ..add(MembershipActionRequest.serializer)
@@ -169,6 +172,21 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ProgressPhotoPoseEnum.serializer)
       ..add(ProgressPhotoWrite.serializer)
       ..add(ProgressPhotoWritePoseEnum.serializer)
+      ..add(PtChangeSlotRequest.serializer)
+      ..add(PtGridCell.serializer)
+      ..add(PtGridCellStatusEnum.serializer)
+      ..add(PtGridTrainer.serializer)
+      ..add(PtProduct.serializer)
+      ..add(PtProductPage.serializer)
+      ..add(PtProductWrite.serializer)
+      ..add(PtPurchaseRequest.serializer)
+      ..add(PtPurchaseResult.serializer)
+      ..add(PtReassignTrainerRequest.serializer)
+      ..add(PtRenewRequest.serializer)
+      ..add(PtScheduleGrid.serializer)
+      ..add(PtScheduleGridGenderEnum.serializer)
+      ..add(PtSubscription.serializer)
+      ..add(PtSubscriptionStatus.serializer)
       ..add(PublicSettings.serializer)
       ..add(Ready.serializer)
       ..add(ReadyDatabaseEnum.serializer)
@@ -242,6 +260,9 @@ Serializers _$serializers = (Serializers().toBuilder()
             ])
           ]),
           () => ListBuilder<BuiltMap<String, JsonObject?>>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(Date)]),
+          () => ListBuilder<Date>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Device)]),
           () => ListBuilder<Device>())
@@ -363,6 +384,12 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(ProgressPhoto)]),
           () => ListBuilder<ProgressPhoto>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(PtProduct)]),
+          () => ListBuilder<PtProduct>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(PtSubscription)]),
+          () => ListBuilder<PtSubscription>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Role)]),
           () => ListBuilder<Role>())
       ..addBuilderFactory(
@@ -413,6 +440,12 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(TenderLine)]),
           () => ListBuilder<TenderLine>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(TenderLine)]),
+          () => ListBuilder<TenderLine>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(TenderLine)]),
+          () => ListBuilder<TenderLine>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Trainer)]),
           () => ListBuilder<Trainer>())
       ..addBuilderFactory(
@@ -447,6 +480,30 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(int)]),
           () => ListBuilder<int>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(int)]),
+          () => ListBuilder<int>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(int)]),
+          () => ListBuilder<int>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(int)]),
+          () => ListBuilder<int>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(PtGridTrainer)]),
+          () => ListBuilder<PtGridTrainer>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(PtGridCell)]),
+          () => ListBuilder<PtGridCell>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(int)]),
+          () => ListBuilder<int>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(TenderLine)]),
+          () => ListBuilder<TenderLine>())
       ..addBuilderFactory(
           const FullType(BuiltMap, const [
             const FullType(String),

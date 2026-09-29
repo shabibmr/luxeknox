@@ -34,6 +34,8 @@ import '../../features/reports/presentation/screens/reports_hub_screen.dart';
 import '../../features/people/presentation/screens/member_dossier_screen.dart';
 import '../../features/people/presentation/screens/members_directory_screen.dart';
 import '../../features/people/presentation/screens/trainers_directory_screen.dart';
+import '../../features/pt/presentation/screens/pt_packages_screen.dart';
+import '../../features/pt/presentation/screens/sell_pt_screen.dart';
 import '../../features/scheduling/presentation/screens/facilities_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_detail_screen.dart';
@@ -108,6 +110,18 @@ StatefulShellRoute createAdminBranchRoute() {
                     builder: (context, state) {
                       final id = state.pathParameters['id']!;
                       return CreateMembershipScreen(memberId: id);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'add-pt',
+                    builder: (context, state) {
+                      final id = int.tryParse(state.pathParameters['id'] ?? '');
+                      if (id == null) {
+                        return const PlaceholderScreen(
+                          title: ShellStrings.adminMembers,
+                        );
+                      }
+                      return SellPtScreen(memberId: id);
                     },
                   ),
                   GoRoute(
@@ -299,6 +313,10 @@ StatefulShellRoute createAdminBranchRoute() {
             path: Routes.adminPackages,
             builder: (context, state) =>
                 const MembershipPackagesCatalogScreen(),
+          ),
+          GoRoute(
+            path: Routes.adminPtPackages,
+            builder: (context, state) => const PtPackagesScreen(),
           ),
           GoRoute(
             path: Routes.adminAttendance,

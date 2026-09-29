@@ -30,6 +30,7 @@ abstract final class PeopleStrings {
   static const personalTraining = 'Personal Training';
   static const ptStatus = 'PT status';
   static const ptActive = 'Active';
+  static const ptScheduled = 'Starts soon';
   static const ptExpired = 'Expired';
   static const ptNotPurchased = 'Not purchased';
   static const ptExpiry = 'PT expiry';

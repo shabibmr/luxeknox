@@ -178,7 +178,6 @@ export class MembershipService {
         product_id: dto.product_id,
         start_date: dto.start_date,
         end_date: endDate,
-        remaining_pt_sessions: product.pt_sessions_included,
         status: 'active',
         locker_number: dto.locker_number ?? null,
         auto_renew: dto.auto_renew ?? false,
@@ -252,7 +251,6 @@ export class MembershipService {
           product_id: targetProductId,
           end_date: newEndDate,
           status: 'active',
-          remaining_pt_sessions: before.remaining_pt_sessions + product.pt_sessions_included,
           row_version: before.row_version + 1,
           updated_at: now,
         },
@@ -291,7 +289,7 @@ export class MembershipService {
     return this.present(after, actor);
   }
 
-  /** FR-MEMB-010: upgrade — switches product, resets PT sessions to the new plan's included amount. */
+  /** FR-MEMB-010: upgrade — switches product and recomputes the end date from the original start. */
   async upgrade(
     id: number,
     dto: MembershipUpgradeRequestDto,
@@ -315,7 +313,6 @@ export class MembershipService {
       await this.repository.updateMembership(id, {
         product_id: dto.product_id,
         end_date: newEndDate,
-        remaining_pt_sessions: newProduct.pt_sessions_included,
         row_version: before.row_version + 1,
         updated_at: now,
       });
@@ -740,7 +737,6 @@ export class MembershipService {
           product_id: params.productId,
           start_date: startDate,
           end_date: endDate,
-          remaining_pt_sessions: product.pt_sessions_included,
           status: 'active',
           locker_number: null,
           auto_renew: false,
@@ -795,7 +791,6 @@ export class MembershipService {
           product_id: params.productId,
           end_date: newEndDate,
           status: 'active',
-          remaining_pt_sessions: existing.remaining_pt_sessions + product.pt_sessions_included,
           row_version: existing.row_version + 1,
           updated_at: now,
         },

@@ -317,7 +317,7 @@ Health data is **sensitive**. Extra audit on Admin reads of medical rows is requ
 | FR-MEMB-006 | A member may have **at most one** `active` or `frozen` membership. Assigning another requires the current one to be expired/cancelled, or an explicit upgrade/renew flow. |
 | FR-MEMB-007 | Member and assigned trainer may read the current contract (plan name, dates, remaining days, remaining PT, access facilities, locker for member/admin only). Trainer does not see pricing. |
 | FR-MEMB-008 | Admin directory: filter Active / Expiring (7/15/30 days) / Expired / Frozen / Cancelled. |
-| FR-MEMB-009 | Renew: Admin (or member self-pay success) creates a continuation. If current is still active, new start is day after current end (or configurable overlap). History `renewed`. PT sessions add or reset per product rule (default: **add** remaining + new included). |
+| FR-MEMB-009 | Renew: Admin (or member self-pay success) creates a continuation. If current is still active, new start is day after current end (or configurable overlap). History `renewed`. PT is **not** part of the membership any more — see PT packages (ADR-0009). |
 | FR-MEMB-010 | Upgrade: Admin switches product; writes history `upgraded` with old/new end dates and product ids in notes/payload. |
 | FR-MEMB-011 | Cancel: Admin only. Status `cancelled`. History `cancelled`. Does not auto-refund (refund is PAY). |
 | FR-MEMB-012 | Expiry job: when `end_date < today` (gym TZ) and status `active`, set `expired`, history `expired`, emit `membership_expiry`. Frozen memberships do not expire until freeze ends and remaining days elapse. |
@@ -368,7 +368,7 @@ Health data is **sensitive**. Extra audit on Admin reads of medical rows is requ
 | :--- | :--- |
 | FR-SCHED-003 | Trainer sets recurring weekly windows (`day_of_week` 0–6, start/end, `is_recurring=true`) and date-specific overrides (`override_date`, `is_available` true/false for block-outs). |
 | FR-SCHED-004 | Admin may edit any trainer’s availability. |
-| FR-SCHED-005 | Member slot picker returns **open** intervals: trainer available, no overlapping booked schedule, within booking lead-time, membership allows PT. |
+| FR-SCHED-005 | Member slot picker returns **open** intervals: trainer available, no overlapping booked schedule, within booking lead-time. PT hours come from the PT schedule grid (`GET /pt/schedule-grid`, ADR-0009): same-gender trainers, free on every PT day of the period. |
 | FR-SCHED-006 | Availability matrix (Admin): all trainers × day, booked vs free. |
 
 ### 11.3 Schedules
@@ -402,7 +402,7 @@ Health data is **sensitive**. Extra audit on Admin reads of medical rows is requ
 | FR-SCHED-013 | Book: if booked_count < max_capacity → `booked`; else if waitlist enabled → `waitlisted`; else 422 `class_full`. |
 | FR-SCHED-014 | Member cancel own booking if now < start − `cancellation_cutoff`. After cutoff: 422 unless Admin overrides. |
 | FR-SCHED-015 | On booked cancel, promote first waitlisted to `booked` and notify. |
-| FR-SCHED-016 | PT booking requires remaining_pt_sessions > 0 (or Admin override). Decrement happens on **session attendance complete**, not on book (BR-SCHED-003). |
+| FR-SCHED-016 | PT sessions are generated from a PT subscription (fixed trainer, weekdays and hour for the package period, ADR-0009); there is no per-session PT counter. |
 | FR-SCHED-017 | Double-book same member overlapping time → 409. Double-book same trainer overlapping → 409. Facility overlap when capacity is 1 (or exclusive rooms) → 409. |
 | FR-SCHED-018 | Member max concurrent future bookings: `gym_settings.schedule.max_booking_slots_per_member`. |
 | FR-SCHED-019 | Booking lead time: cannot book closer than `min_lead_minutes` or further than `max_lead_days`. |
@@ -415,7 +415,7 @@ Health data is **sensitive**. Extra audit on Admin reads of medical rows is requ
 | :--- | :--- |
 | BR-SCHED-001 | Frozen or expired members cannot book. |
 | BR-SCHED-002 | Inactive trainers cannot be assigned to new schedules. |
-| BR-SCHED-003 | `remaining_pt_sessions` decrements when a PT participant is marked `attended=true` on a completed/ongoing PT schedule; increment back if attendance is cleared by Admin. |
+| BR-SCHED-003 | Retired (ADR-0009): marking PT attendance only records attendance; `remaining_pt_sessions` is no longer read or written. |
 | BR-SCHED-004 | Waitlist order is FIFO by `booked_at`. |
 
 ---
@@ -445,7 +445,7 @@ Session attendance also updates `schedule_participants.attended` (SCHED). Keep g
 | ID | Requirement |
 | :--- | :--- |
 | FR-ATTN-011 | Trainer/Admin sets `schedule_participants.attended` and `marked_at` (present / no-show). Does **not** by itself create a gate `attendances` row. |
-| FR-ATTN-012 | Marking present on PT applies BR-SCHED-003. |
+| FR-ATTN-012 | Marking present on PT records attendance only (BR-SCHED-003 retired). |
 
 ### 12.3 Business rules
 

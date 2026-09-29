@@ -27,6 +27,7 @@ tags:
   - name: PEOPLE
   - name: HEALTH
   - name: MEMB
+  - name: PT
   - name: SCHED
   - name: ATTN
   - name: PAY
@@ -1795,6 +1796,295 @@ paths:
           $ref: "#/components/responses/Error422"
         "429":
           $ref: "#/components/responses/Error429"
+  /pt-products:
+    get:
+      operationId: listPtProducts
+      summary: Personal Training package catalog
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_products.read
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Q"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtProductPage"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+    post:
+      operationId: createPtProduct
+      summary: Create a PT package
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_products.write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PtProductWrite"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtProduct"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "409":
+          $ref: "#/components/responses/Error409"
+  /pt-products/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      operationId: getPtProduct
+      summary: PT package detail
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_products.read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtProduct"
+        "404":
+          $ref: "#/components/responses/Error404"
+    patch:
+      operationId: updatePtProduct
+      summary: Update or archive a PT package
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_products.write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PtProductWrite"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtProduct"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+  /pt/schedule-grid:
+    get:
+      operationId: getPtScheduleGrid
+      summary: Hours × same-gender trainers occupancy for a PT package, start date and weekdays
+      description: >
+        A cell is `free` only when the hour is inside the trainer's availability and clash-free on
+        every occurrence date of the PT period. Only trainers of the member's gender are listed.
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_subscriptions.create
+      parameters:
+        - name: member_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: pt_product_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: weekdays
+          in: query
+          required: true
+          description: Comma-separated 0=Sunday … 6=Saturday, e.g. "1,3,5"
+          schema:
+            type: string
+        - name: exclude_subscription_id
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtScheduleGrid"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "422":
+          $ref: "#/components/responses/Error422"
+  /pt-subscriptions:
+    post:
+      operationId: purchasePtSubscription
+      summary: Sell PT — assign trainer + fixed weekly slot, take payment, generate sessions
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_subscriptions.create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PtPurchaseRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtPurchaseResult"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+  /pt-subscriptions/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      operationId: getPtSubscription
+      summary: PT subscription detail
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_subscriptions.read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtSubscription"
+        "404":
+          $ref: "#/components/responses/Error404"
+  /pt-subscriptions/{id}/renew:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      operationId: renewPtSubscription
+      summary: Renew PT with the same trainer and slot
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_subscriptions.create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PtRenewRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtPurchaseResult"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+  /pt-subscriptions/{id}/reassign-trainer:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      operationId: reassignPtTrainer
+      summary: Move remaining PT sessions to another same-gender trainer
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_subscriptions.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PtReassignTrainerRequest"
+      responses:
+        "201":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtSubscription"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+  /pt-subscriptions/{id}/change-slot:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      operationId: changePtSlot
+      summary: Move remaining PT sessions to other weekdays/hour
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_subscriptions.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PtChangeSlotRequest"
+      responses:
+        "201":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtSubscription"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+  /members/{id}/pt-subscriptions:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      operationId: getMemberPtSummary
+      summary: Member's current PT, PT history, and the calling trainer's access level
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_subscriptions.read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberPtSummary"
+        "404":
+          $ref: "#/components/responses/Error404"
   /membership-products:
     get:
       operationId: listMembershipProducts
@@ -7193,6 +7483,8 @@ components:
           type: integer
         pt_sessions_included:
           type: integer
+          deprecated: true
+          description: Retired — ignored by the server. PT is sold as a PtProduct.
         access_facilities:
           type: array
           items:
@@ -7209,6 +7501,272 @@ components:
             $ref: "#/components/schemas/MembershipProduct"
         meta:
           $ref: "#/components/schemas/PageMeta"
+    PtProduct:
+      type: object
+      required: [id, name, code, duration_days, sessions_per_week, base_price, is_active]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+          nullable: true
+        duration_days:
+          type: integer
+        sessions_per_week:
+          type: integer
+          minimum: 1
+          maximum: 7
+        base_price:
+          $ref: "#/components/schemas/Money"
+        tax_percentage:
+          type: string
+        is_active:
+          type: boolean
+    PtProductWrite:
+      type: object
+      required: [name, code, duration_days, sessions_per_week, base_price]
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+        duration_days:
+          type: integer
+        sessions_per_week:
+          type: integer
+          minimum: 1
+          maximum: 7
+        base_price:
+          $ref: "#/components/schemas/Money"
+        tax_percentage:
+          type: string
+        is_active:
+          type: boolean
+    PtProductPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PtProduct"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+    PtSubscriptionStatus:
+      type: string
+      enum: [scheduled, active, completed, cancelled]
+    PtSubscription:
+      type: object
+      required:
+        [id, member_id, pt_product_id, trainer_id, start_date, end_date, weekdays, slot_start, status, row_version,
+         product_name, sessions_per_week, trainer_name, slot_label]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        member_id:
+          $ref: "#/components/schemas/Id"
+        pt_product_id:
+          $ref: "#/components/schemas/Id"
+        trainer_id:
+          $ref: "#/components/schemas/Id"
+        membership_id:
+          type: integer
+          format: int64
+          nullable: true
+        renewed_from_id:
+          type: integer
+          format: int64
+          nullable: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        weekdays:
+          type: array
+          description: 0=Sunday … 6=Saturday
+          items:
+            type: integer
+        slot_start:
+          type: string
+          description: Gym wall-clock "HH:00:00"; the slot is one hour.
+        status:
+          $ref: "#/components/schemas/PtSubscriptionStatus"
+        row_version:
+          type: integer
+        product_name:
+          type: string
+        sessions_per_week:
+          type: integer
+        trainer_name:
+          type: string
+        slot_label:
+          type: string
+          description: e.g. "17:00-18:00"
+    MemberPtSummary:
+      type: object
+      required: [history]
+      properties:
+        current:
+          allOf:
+            - $ref: "#/components/schemas/PtSubscription"
+          nullable: true
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/PtSubscription"
+        trainer_access:
+          type: string
+          enum: [full, read_only]
+          nullable: true
+          description: Set only when the caller is a trainer. read_only once the caller's PT with the member has ended.
+    PtPaymentFields:
+      type: object
+      properties:
+        discount_amount:
+          $ref: "#/components/schemas/Money"
+        payment_method_id:
+          type: integer
+          format: int64
+        tenders:
+          type: array
+          items:
+            $ref: "#/components/schemas/TenderLine"
+        transaction_reference:
+          type: string
+    PtPurchaseRequest:
+      allOf:
+        - $ref: "#/components/schemas/PtPaymentFields"
+        - type: object
+          required: [member_id, pt_product_id, trainer_id, start_date, weekdays, slot_start]
+          properties:
+            member_id:
+              $ref: "#/components/schemas/Id"
+            pt_product_id:
+              $ref: "#/components/schemas/Id"
+            trainer_id:
+              $ref: "#/components/schemas/Id"
+            start_date:
+              type: string
+              format: date
+            weekdays:
+              type: array
+              items:
+                type: integer
+            slot_start:
+              type: string
+              example: "17:00"
+    PtRenewRequest:
+      allOf:
+        - $ref: "#/components/schemas/PtPaymentFields"
+        - type: object
+          properties:
+            pt_product_id:
+              $ref: "#/components/schemas/Id"
+    PtPurchaseResult:
+      type: object
+      required: [subscription, payment]
+      properties:
+        subscription:
+          $ref: "#/components/schemas/PtSubscription"
+        payment:
+          $ref: "#/components/schemas/Payment"
+    PtReassignTrainerRequest:
+      type: object
+      required: [trainer_id, effective_date]
+      properties:
+        trainer_id:
+          $ref: "#/components/schemas/Id"
+        effective_date:
+          type: string
+          format: date
+        reason:
+          type: string
+    PtChangeSlotRequest:
+      type: object
+      required: [weekdays, slot_start, effective_date]
+      properties:
+        weekdays:
+          type: array
+          items:
+            type: integer
+        slot_start:
+          type: string
+          example: "18:00"
+        trainer_id:
+          type: integer
+          format: int64
+          description: Optionally move to another same-gender trainer in the same re-plan.
+        effective_date:
+          type: string
+          format: date
+        reason:
+          type: string
+    PtGridCell:
+      type: object
+      required: [trainer_id, slot_start, status, conflict_dates]
+      properties:
+        trainer_id:
+          $ref: "#/components/schemas/Id"
+        slot_start:
+          type: string
+        status:
+          type: string
+          enum: [free, occupied, unavailable]
+        occupied_by:
+          type: string
+          nullable: true
+        conflict_dates:
+          type: array
+          items:
+            type: string
+            format: date
+    PtGridTrainer:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+    PtScheduleGrid:
+      type: object
+      required: [member_id, gender, start_date, end_date, weekdays, hours, trainers, cells]
+      properties:
+        member_id:
+          $ref: "#/components/schemas/Id"
+        gender:
+          type: string
+          enum: [male, female]
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        weekdays:
+          type: array
+          items:
+            type: integer
+        hours:
+          type: array
+          items:
+            type: string
+        trainers:
+          type: array
+          items:
+            $ref: "#/components/schemas/PtGridTrainer"
+        cells:
+          type: array
+          items:
+            $ref: "#/components/schemas/PtGridCell"
     MembershipStatus:
       type: string
       enum: [active, expired, frozen, cancelled]
@@ -7849,6 +8407,10 @@ components:
         member_id:
           $ref: "#/components/schemas/Id"
         membership_id:
+          type: integer
+          format: int64
+          nullable: true
+        pt_subscription_id:
           type: integer
           format: int64
           nullable: true

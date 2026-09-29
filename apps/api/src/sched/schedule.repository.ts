@@ -332,6 +332,7 @@ export class ScheduleRepository extends BaseRepository<typeof schedules, Schedul
       .select({
         id: schedules.id,
         series_id: schedules.series_id,
+        pt_subscription_id: schedules.pt_subscription_id,
         schedule_type_id: schedules.schedule_type_id,
         facility_id: schedules.facility_id,
         trainer_id: schedules.trainer_id,

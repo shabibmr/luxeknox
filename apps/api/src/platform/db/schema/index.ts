@@ -16,6 +16,7 @@ export * from './medical-histories';
 export * from './member-documents';
 export * from './member-photos';
 export * from './memberships';
+export * from './personal-training';
 export * from './scheduling';
 export * from './job-runs';
 export * from './attendance';

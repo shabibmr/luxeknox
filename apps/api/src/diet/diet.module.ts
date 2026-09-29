@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { PeopleModule } from '../people/people.module';
 import { PlatformModule } from '../platform/platform.module';
+import { PtAccessModule } from '../pt/pt-access.module';
 import { RbacModule } from '../rbac/rbac.module';
 import { SysModule } from '../sys/sys.module';
 import { DietLogController } from './diet-log.controller';
@@ -14,7 +15,7 @@ import { FoodRepository } from './food.repository';
 import { FoodService } from './food.service';
 
 @Module({
-  imports: [PlatformModule, RbacModule, forwardRef(() => PeopleModule), SysModule],
+  imports: [PlatformModule, RbacModule, forwardRef(() => PeopleModule), SysModule, PtAccessModule],
   controllers: [FoodController, DietPlanController, DietLogController],
   providers: [
     FoodRepository,

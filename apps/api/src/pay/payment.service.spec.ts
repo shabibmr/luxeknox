@@ -346,7 +346,6 @@ describe('PaymentService', () => {
       expect(membershipRepository.updateMembership).toHaveBeenCalledWith(
         50,
         expect.objectContaining({
-          remaining_pt_sessions: 6,
           status: 'active',
         }),
         1,

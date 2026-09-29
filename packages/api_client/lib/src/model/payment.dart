@@ -18,6 +18,7 @@ part 'payment.g.dart';
 /// * [invoiceNumber] 
 /// * [memberId] 
 /// * [membershipId] 
+/// * [ptSubscriptionId] 
 /// * [paymentMethodId] 
 /// * [subtotal] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
 /// * [taxAmount] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
@@ -43,6 +44,9 @@ abstract class Payment implements Built<Payment, PaymentBuilder> {
 
   @BuiltValueField(wireName: r'membership_id')
   int? get membershipId;
+
+  @BuiltValueField(wireName: r'pt_subscription_id')
+  int? get ptSubscriptionId;
 
   @BuiltValueField(wireName: r'payment_method_id')
   int? get paymentMethodId;
@@ -129,6 +133,13 @@ class _$PaymentSerializer implements PrimitiveSerializer<Payment> {
       yield r'membership_id';
       yield serializers.serialize(
         object.membershipId,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.ptSubscriptionId != null) {
+      yield r'pt_subscription_id';
+      yield serializers.serialize(
+        object.ptSubscriptionId,
         specifiedType: const FullType(int),
       );
     }
@@ -253,6 +264,14 @@ class _$PaymentSerializer implements PrimitiveSerializer<Payment> {
           ) as int?;
           if (valueDes == null) continue;
           result.membershipId = valueDes;
+          break;
+        case r'pt_subscription_id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.ptSubscriptionId = valueDes;
           break;
         case r'payment_method_id':
           final valueDes = serializers.deserialize(

@@ -1,0 +1,229 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:injectable/injectable.dart';
+
+import '../../../../core/error/failures.dart';
+import '../../../../core/presentation/load_status.dart';
+import '../../../../core/usecase/usecase.dart';
+import '../../../payments/domain/entities/payment_method.dart';
+import '../../../payments/domain/usecases/get_payment_methods_usecase.dart';
+import '../../domain/entities/pt_product.dart';
+import '../../domain/entities/pt_schedule_grid.dart';
+import '../../domain/entities/pt_subscription.dart';
+import '../../domain/repositories/pt_repository.dart';
+import '../../domain/usecases/pt_usecases.dart';
+
+part 'sell_pt_cubit.freezed.dart';
+
+@freezed
+abstract class SellPtState with _$SellPtState {
+  const factory SellPtState({
+    @Default(LoadStatus.initial) LoadStatus status,
+    required int memberId,
+
+    /// Set when re-planning (reassign trainer / change slot) an existing PT.
+    PtSubscription? replanning,
+    @Default(<PtProduct>[]) List<PtProduct> products,
+    @Default(<PaymentMethod>[]) List<PaymentMethod> paymentMethods,
+    PtProduct? product,
+    DateTime? startDate,
+    @Default(<int>[]) List<int> weekdays,
+    @Default(LoadStatus.initial) LoadStatus gridStatus,
+    PtScheduleGrid? grid,
+    int? trainerId,
+    String? slotStart,
+    String? paymentMethodId,
+    String? discount,
+    String? reason,
+    @Default(false) bool submitting,
+    PtSubscription? result,
+    Failure? failure,
+  }) = _SellPtState;
+
+  const SellPtState._();
+
+  bool get isReplan => replanning != null;
+
+  /// A re-plan keeps the subscription's own weekday count; the package may have been edited since.
+  int? get sessionsPerWeek => replanning?.weekdays.length ?? product?.sessionsPerWeek;
+
+  bool get weekdaysComplete => product != null && weekdays.length == sessionsPerWeek;
+
+  bool get canLoadGrid => product != null && startDate != null && weekdaysComplete;
+
+  bool get slotChosen => trainerId != null && slotStart != null;
+
+  bool get canSubmit =>
+      !submitting && canLoadGrid && slotChosen && (isReplan || paymentMethodId != null);
+}
+
+/// Drives the "Add Personal Training" flow (package → weekdays → grid → pay)
+/// and, with [SellPtCubit.initReplan], the mid-PT trainer/slot change.
+@injectable
+class SellPtCubit extends Cubit<SellPtState> {
+  SellPtCubit(
+    this._getProducts,
+    this._getPaymentMethods,
+    this._getGrid,
+    this._purchase,
+    this._replan,
+  ) : super(const SellPtState(memberId: 0));
+
+  final GetPtProductsUseCase _getProducts;
+  final GetPaymentMethodsUseCase _getPaymentMethods;
+  final GetPtScheduleGridUseCase _getGrid;
+  final PurchasePtUseCase _purchase;
+  final ReplanPtUseCase _replan;
+
+  Future<void> init(int memberId) async {
+    emit(SellPtState(memberId: memberId, status: LoadStatus.loading, startDate: _today()));
+    final products = await _getProducts(const NoParams());
+    final methods = await _getPaymentMethods(const NoParams());
+    if (isClosed) return;
+    products.fold(
+      (failure) => emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
+      (items) {
+        final active = items.where((p) => p.isActive).toList();
+        final paymentMethods = methods.fold(
+          (_) => <PaymentMethod>[],
+          (m) => m.where((x) => x.isActive).toList(),
+        );
+        emit(
+          state.copyWith(
+            status: LoadStatus.success,
+            products: active,
+            paymentMethods: paymentMethods,
+            paymentMethodId: paymentMethods.length == 1 ? paymentMethods.first.id : null,
+          ),
+        );
+      },
+    );
+  }
+
+  /// Re-plan an existing PT from [effectiveDate]; package and period are fixed,
+  /// trainer / weekdays / hour can change.
+  Future<void> initReplan(PtSubscription subscription, List<PtProduct> products) async {
+    final product = products.where((p) => p.id == subscription.ptProductId).firstOrNull;
+    final today = _today();
+    final effective = subscription.startDate.isAfter(today) ? subscription.startDate : today;
+    emit(
+      SellPtState(
+        memberId: subscription.memberId,
+        status: LoadStatus.success,
+        replanning: subscription,
+        products: products,
+        product: product,
+        startDate: effective,
+        weekdays: [...subscription.weekdays],
+        trainerId: subscription.trainerId,
+        slotStart: subscription.slotStart,
+      ),
+    );
+    await loadGrid();
+  }
+
+  void selectProduct(PtProduct product) {
+    final keep = state.weekdays.length <= product.sessionsPerWeek ? state.weekdays : <int>[];
+    emit(state.copyWith(product: product, weekdays: keep, grid: null, trainerId: null, slotStart: null));
+    _maybeLoadGrid();
+  }
+
+  void setStartDate(DateTime date) {
+    emit(state.copyWith(startDate: DateTime(date.year, date.month, date.day), grid: null, trainerId: null, slotStart: null));
+    _maybeLoadGrid();
+  }
+
+  void toggleWeekday(int day) {
+    final perWeek = state.sessionsPerWeek;
+    if (state.product == null || perWeek == null) return;
+    final days = [...state.weekdays];
+    if (days.contains(day)) {
+      days.remove(day);
+    } else if (days.length < perWeek) {
+      days.add(day);
+    } else {
+      return;
+    }
+    days.sort();
+    emit(state.copyWith(weekdays: days, grid: null, trainerId: null, slotStart: null));
+    _maybeLoadGrid();
+  }
+
+  void _maybeLoadGrid() {
+    if (state.canLoadGrid) loadGrid();
+  }
+
+  Future<void> loadGrid() async {
+    if (!state.canLoadGrid) return;
+    emit(state.copyWith(gridStatus: LoadStatus.loading, failure: null));
+    final result = await _getGrid(
+      GetPtScheduleGridParams(
+        memberId: state.memberId,
+        ptProductId: state.product!.id,
+        startDate: state.startDate!,
+        weekdays: state.weekdays,
+        excludeSubscriptionId: state.replanning?.id,
+      ),
+    );
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(state.copyWith(gridStatus: LoadStatus.failure, failure: failure)),
+      (grid) => emit(state.copyWith(gridStatus: LoadStatus.success, grid: grid)),
+    );
+  }
+
+  void selectSlot(int trainerId, String slotStart) {
+    final cell = state.grid?.cell(trainerId, slotStart);
+    if (cell == null || cell.status != PtGridCellStatus.free) return;
+    emit(state.copyWith(trainerId: trainerId, slotStart: slotStart));
+  }
+
+  void setPaymentMethod(String? id) => emit(state.copyWith(paymentMethodId: id));
+
+  void setDiscount(String? value) =>
+      emit(state.copyWith(discount: (value == null || value.trim().isEmpty) ? null : value.trim()));
+
+  void setReason(String? value) =>
+      emit(state.copyWith(reason: (value == null || value.trim().isEmpty) ? null : value.trim()));
+
+  Future<void> submit() async {
+    if (!state.canSubmit) return;
+    emit(state.copyWith(submitting: true, failure: null));
+    final replanning = state.replanning;
+    final result = replanning != null
+        ? await _replan(
+            ReplanPtParams(
+              subscription: replanning,
+              trainerId: state.trainerId!,
+              weekdays: state.weekdays,
+              slotStart: state.slotStart!,
+              effectiveDate: state.startDate!,
+              reason: state.reason,
+            ),
+          )
+        : await _purchase(
+            PurchasePtParams(
+              memberId: state.memberId,
+              ptProductId: state.product!.id,
+              trainerId: state.trainerId!,
+              startDate: state.startDate!,
+              weekdays: state.weekdays,
+              slotStart: state.slotStart!,
+              payment: PtPayment(
+                paymentMethodId: int.parse(state.paymentMethodId!),
+                discountAmount: state.discount,
+              ),
+            ),
+          );
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(state.copyWith(submitting: false, failure: failure)),
+      (sub) => emit(state.copyWith(submitting: false, result: sub)),
+    );
+  }
+
+  static DateTime _today() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+}

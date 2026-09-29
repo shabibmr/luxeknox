@@ -1,160 +1,132 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:luxeknox/core/router/routes.dart';
 import 'package:luxeknox/features/membership/domain/entities/membership.dart';
-import 'package:luxeknox/features/membership/domain/entities/membership_product.dart';
 import 'package:luxeknox/features/membership/domain/entities/membership_status.dart';
 import 'package:luxeknox/features/people/presentation/member_dossier_pt.dart';
+import 'package:luxeknox/features/pt/domain/entities/pt_subscription.dart';
+import 'package:luxeknox/session/domain/entities/user_type.dart';
 
 void main() {
+  final now = DateTime(2026, 10, 1);
+
   Membership membership({
     MembershipStatus status = MembershipStatus.active,
-    int daysUntilExpiry = 30,
-    int? remainingPtSessions,
-    int? ptSessionsIncluded,
-    bool includeProduct = true,
+    required DateTime endDate,
   }) {
-    final end = DateTime.now().add(Duration(days: daysUntilExpiry));
     return Membership(
       id: 'm1',
       memberId: '42',
       productId: 'p1',
-      startDate: DateTime.now().subtract(const Duration(days: 10)),
-      endDate: end,
-      remainingPtSessions: remainingPtSessions,
+      startDate: DateTime(2026, 9, 1),
+      endDate: endDate,
       status: status,
       rowVersion: 1,
-      product: includeProduct
-          ? MembershipProduct(
-              id: 'p1',
-              name: 'PT Pack',
-              code: 'PT',
-              durationDays: 30,
-              basePrice: '100.00',
-              ptSessionsIncluded: ptSessionsIncluded,
-              isActive: true,
-            )
-          : null,
     );
   }
 
-  group('isPtPurchased', () {
-    test('true for active membership with product PT sessions', () {
+  PtSubscription sub(PtSubscriptionStatus status) => PtSubscription(
+    id: 1,
+    memberId: 42,
+    ptProductId: 3,
+    trainerId: 7,
+    startDate: DateTime(2026, 9, 1),
+    endDate: DateTime(2026, 9, 29),
+    weekdays: const [1, 3, 5],
+    slotStart: '17:00:00',
+    status: status,
+    rowVersion: 1,
+    productName: 'PT',
+    sessionsPerWeek: 3,
+    trainerName: 'Alex',
+    slotLabel: '17:00-18:00',
+  );
+
+  group('ptDossierStatus', () {
+    test('active / scheduled come from the current subscription', () {
       expect(
-        isPtPurchased(membership(ptSessionsIncluded: 8)),
-        isTrue,
+        ptDossierStatus(MemberPtSummary(current: sub(PtSubscriptionStatus.active))),
+        PtDossierStatus.active,
+      );
+      expect(
+        ptDossierStatus(MemberPtSummary(current: sub(PtSubscriptionStatus.scheduled))),
+        PtDossierStatus.scheduled,
       );
     });
 
-    test('true when product omitted but remaining PT sessions > 0', () {
+    test('expired when only a completed PT exists', () {
       expect(
-        isPtPurchased(
-          membership(
-            includeProduct: false,
-            remainingPtSessions: 3,
-          ),
-        ),
-        isTrue,
+        ptDossierStatus(MemberPtSummary(history: [sub(PtSubscriptionStatus.completed)])),
+        PtDossierStatus.expired,
       );
     });
 
-    test('false when expired even with PT product', () {
-      expect(
-        isPtPurchased(
-          membership(
-            status: MembershipStatus.expired,
-            daysUntilExpiry: -5,
-            ptSessionsIncluded: 8,
-          ),
-        ),
-        isFalse,
-      );
-    });
-
-    test('false when no PT sessions', () {
-      expect(
-        isPtPurchased(membership(ptSessionsIncluded: 0, remainingPtSessions: 0)),
-        isFalse,
-      );
+    test('not purchased when there is no PT history', () {
+      expect(ptDossierStatus(const MemberPtSummary()), PtDossierStatus.notPurchased);
+      expect(ptDossierStatus(null), PtDossierStatus.notPurchased);
     });
   });
 
-  group('isPtExpired', () {
-    test('true for expired status with PT product', () {
-      expect(
-        isPtExpired(
-          membership(
-            status: MembershipStatus.expired,
-            daysUntilExpiry: -2,
-            ptSessionsIncluded: 8,
-          ),
-        ),
-        isTrue,
-      );
+  group('canSellPt', () {
+    bool sell({
+      UserType userType = UserType.admin,
+      bool canCreatePt = true,
+      Membership? m,
+      MemberPtSummary? pt = const MemberPtSummary(),
+    }) => canSellPt(
+      userType: userType,
+      canCreatePt: canCreatePt,
+      membership: m,
+      pt: pt,
+      now: now,
+    );
+
+    test('admin with permission, active unexpired membership, no PT', () {
+      expect(sell(m: membership(endDate: DateTime(2026, 12, 31))), isTrue);
     });
 
-    test('false when membership has no PT', () {
+    test('membership ending today still counts as not expired', () {
+      expect(sell(m: membership(endDate: now)), isTrue);
+    });
+
+    test('blocked when membership has expired or is missing', () {
+      expect(sell(m: membership(endDate: DateTime(2026, 9, 30))), isFalse);
+      expect(sell(m: membership(status: MembershipStatus.frozen, endDate: DateTime(2026, 12, 31))), isFalse);
+      expect(sell(m: null), isFalse);
+    });
+
+    test('blocked while another PT is scheduled or active (one at a time)', () {
       expect(
-        isPtExpired(
-          membership(
-            status: MembershipStatus.expired,
-            daysUntilExpiry: -2,
-            ptSessionsIncluded: 0,
-          ),
+        sell(
+          m: membership(endDate: DateTime(2026, 12, 31)),
+          pt: MemberPtSummary(current: sub(PtSubscriptionStatus.active)),
         ),
         isFalse,
       );
     });
+
+    test('blocked for trainers and without the capability', () {
+      final m = membership(endDate: DateTime(2026, 12, 31));
+      expect(sell(userType: UserType.trainer, m: m), isFalse);
+      expect(sell(canCreatePt: false, m: m), isFalse);
+    });
+  });
+
+  test('trainerHubReadOnly follows trainer access', () {
+    expect(trainerHubReadOnly(const MemberPtSummary(trainerAccess: TrainerAccess.readOnly)), isTrue);
+    expect(trainerHubReadOnly(const MemberPtSummary(trainerAccess: TrainerAccess.full)), isFalse);
+    expect(trainerHubReadOnly(null), isFalse);
   });
 
   group('formatDaysRelative', () {
     test('formats days left', () {
-      final end = DateTime(2026, 4, 10);
-      final now = DateTime(2026, 4, 1);
-      expect(formatDaysRelative(end, now: now), '(9 days left)');
+      expect(formatDaysRelative(DateTime(2026, 10, 11), now: now), '(10 days left)');
     });
 
     test('formats expires today', () {
-      final day = DateTime(2026, 4, 1);
-      expect(formatDaysRelative(day, now: day), '(expires today)');
+      expect(formatDaysRelative(now, now: now), '(expires today)');
     });
 
     test('formats expired days ago', () {
-      final end = DateTime(2026, 3, 25);
-      final now = DateTime(2026, 4, 1);
-      expect(formatDaysRelative(end, now: now), '(expired 7 days ago)');
-    });
-  });
-
-  group('addPersonalTrainingLocation', () {
-    test('sends active gym-only membership to membership detail', () {
-      expect(
-        addPersonalTrainingLocation(
-          memberId: 42,
-          membership: membership(ptSessionsIncluded: 0, remainingPtSessions: 0),
-        ),
-        Routes.adminMembershipById('m1'),
-      );
-    });
-
-    test('sends no membership to assign-membership create', () {
-      expect(
-        addPersonalTrainingLocation(memberId: 42),
-        '/admin/members/42/assign-membership',
-      );
-    });
-
-    test('sends expired membership to assign-membership create', () {
-      expect(
-        addPersonalTrainingLocation(
-          memberId: 42,
-          membership: membership(
-            status: MembershipStatus.expired,
-            daysUntilExpiry: -2,
-            ptSessionsIncluded: 0,
-          ),
-        ),
-        '/admin/members/42/assign-membership',
-      );
+      expect(formatDaysRelative(DateTime(2026, 9, 28), now: now), '(expired 3 days ago)');
     });
   });
 }

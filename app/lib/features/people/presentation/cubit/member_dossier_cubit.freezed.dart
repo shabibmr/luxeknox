@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MemberDossierState {
 
- LoadStatus get status; Person? get person; Membership? get membership; bool get hasPtPackage; bool get ptExpired; int? get visitsThisMonth; bool get membershipsUnavailable; TrainerProfile? get assignedTrainer; ScheduleSession? get nextSchedule; bool get editingProfile; String? get message; Failure? get failure;
+ LoadStatus get status; Person? get person; Membership? get membership; MemberPtSummary? get pt; bool get ptUnavailable; bool get renewingPt; int? get visitsThisMonth; bool get membershipsUnavailable; TrainerProfile? get assignedTrainer; ScheduleSession? get nextSchedule; bool get editingProfile; String? get message; Failure? get failure;
 /// Create a copy of MemberDossierState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $MemberDossierStateCopyWith<MemberDossierState> get copyWith => _$MemberDossierS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MemberDossierState&&(identical(other.status, status) || other.status == status)&&(identical(other.person, person) || other.person == person)&&(identical(other.membership, membership) || other.membership == membership)&&(identical(other.hasPtPackage, hasPtPackage) || other.hasPtPackage == hasPtPackage)&&(identical(other.ptExpired, ptExpired) || other.ptExpired == ptExpired)&&(identical(other.visitsThisMonth, visitsThisMonth) || other.visitsThisMonth == visitsThisMonth)&&(identical(other.membershipsUnavailable, membershipsUnavailable) || other.membershipsUnavailable == membershipsUnavailable)&&(identical(other.assignedTrainer, assignedTrainer) || other.assignedTrainer == assignedTrainer)&&(identical(other.nextSchedule, nextSchedule) || other.nextSchedule == nextSchedule)&&(identical(other.editingProfile, editingProfile) || other.editingProfile == editingProfile)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MemberDossierState&&(identical(other.status, status) || other.status == status)&&(identical(other.person, person) || other.person == person)&&(identical(other.membership, membership) || other.membership == membership)&&(identical(other.pt, pt) || other.pt == pt)&&(identical(other.ptUnavailable, ptUnavailable) || other.ptUnavailable == ptUnavailable)&&(identical(other.renewingPt, renewingPt) || other.renewingPt == renewingPt)&&(identical(other.visitsThisMonth, visitsThisMonth) || other.visitsThisMonth == visitsThisMonth)&&(identical(other.membershipsUnavailable, membershipsUnavailable) || other.membershipsUnavailable == membershipsUnavailable)&&(identical(other.assignedTrainer, assignedTrainer) || other.assignedTrainer == assignedTrainer)&&(identical(other.nextSchedule, nextSchedule) || other.nextSchedule == nextSchedule)&&(identical(other.editingProfile, editingProfile) || other.editingProfile == editingProfile)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,person,membership,hasPtPackage,ptExpired,visitsThisMonth,membershipsUnavailable,assignedTrainer,nextSchedule,editingProfile,message,failure);
+int get hashCode => Object.hash(runtimeType,status,person,membership,pt,ptUnavailable,renewingPt,visitsThisMonth,membershipsUnavailable,assignedTrainer,nextSchedule,editingProfile,message,failure);
 
 @override
 String toString() {
-  return 'MemberDossierState(status: $status, person: $person, membership: $membership, hasPtPackage: $hasPtPackage, ptExpired: $ptExpired, visitsThisMonth: $visitsThisMonth, membershipsUnavailable: $membershipsUnavailable, assignedTrainer: $assignedTrainer, nextSchedule: $nextSchedule, editingProfile: $editingProfile, message: $message, failure: $failure)';
+  return 'MemberDossierState(status: $status, person: $person, membership: $membership, pt: $pt, ptUnavailable: $ptUnavailable, renewingPt: $renewingPt, visitsThisMonth: $visitsThisMonth, membershipsUnavailable: $membershipsUnavailable, assignedTrainer: $assignedTrainer, nextSchedule: $nextSchedule, editingProfile: $editingProfile, message: $message, failure: $failure)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $MemberDossierStateCopyWith<$Res>  {
   factory $MemberDossierStateCopyWith(MemberDossierState value, $Res Function(MemberDossierState) _then) = _$MemberDossierStateCopyWithImpl;
 @useResult
 $Res call({
- LoadStatus status, Person? person, Membership? membership, bool hasPtPackage, bool ptExpired, int? visitsThisMonth, bool membershipsUnavailable, TrainerProfile? assignedTrainer, ScheduleSession? nextSchedule, bool editingProfile, String? message, Failure? failure
+ LoadStatus status, Person? person, Membership? membership, MemberPtSummary? pt, bool ptUnavailable, bool renewingPt, int? visitsThisMonth, bool membershipsUnavailable, TrainerProfile? assignedTrainer, ScheduleSession? nextSchedule, bool editingProfile, String? message, Failure? failure
 });
 
 
@@ -62,13 +62,14 @@ class _$MemberDossierStateCopyWithImpl<$Res>
 
 /// Create a copy of MemberDossierState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? person = freezed,Object? membership = freezed,Object? hasPtPackage = null,Object? ptExpired = null,Object? visitsThisMonth = freezed,Object? membershipsUnavailable = null,Object? assignedTrainer = freezed,Object? nextSchedule = freezed,Object? editingProfile = null,Object? message = freezed,Object? failure = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? person = freezed,Object? membership = freezed,Object? pt = freezed,Object? ptUnavailable = null,Object? renewingPt = null,Object? visitsThisMonth = freezed,Object? membershipsUnavailable = null,Object? assignedTrainer = freezed,Object? nextSchedule = freezed,Object? editingProfile = null,Object? message = freezed,Object? failure = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,person: freezed == person ? _self.person : person // ignore: cast_nullable_to_non_nullable
 as Person?,membership: freezed == membership ? _self.membership : membership // ignore: cast_nullable_to_non_nullable
-as Membership?,hasPtPackage: null == hasPtPackage ? _self.hasPtPackage : hasPtPackage // ignore: cast_nullable_to_non_nullable
-as bool,ptExpired: null == ptExpired ? _self.ptExpired : ptExpired // ignore: cast_nullable_to_non_nullable
+as Membership?,pt: freezed == pt ? _self.pt : pt // ignore: cast_nullable_to_non_nullable
+as MemberPtSummary?,ptUnavailable: null == ptUnavailable ? _self.ptUnavailable : ptUnavailable // ignore: cast_nullable_to_non_nullable
+as bool,renewingPt: null == renewingPt ? _self.renewingPt : renewingPt // ignore: cast_nullable_to_non_nullable
 as bool,visitsThisMonth: freezed == visitsThisMonth ? _self.visitsThisMonth : visitsThisMonth // ignore: cast_nullable_to_non_nullable
 as int?,membershipsUnavailable: null == membershipsUnavailable ? _self.membershipsUnavailable : membershipsUnavailable // ignore: cast_nullable_to_non_nullable
 as bool,assignedTrainer: freezed == assignedTrainer ? _self.assignedTrainer : assignedTrainer // ignore: cast_nullable_to_non_nullable
@@ -161,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  Person? person,  Membership? membership,  bool hasPtPackage,  bool ptExpired,  int? visitsThisMonth,  bool membershipsUnavailable,  TrainerProfile? assignedTrainer,  ScheduleSession? nextSchedule,  bool editingProfile,  String? message,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  Person? person,  Membership? membership,  MemberPtSummary? pt,  bool ptUnavailable,  bool renewingPt,  int? visitsThisMonth,  bool membershipsUnavailable,  TrainerProfile? assignedTrainer,  ScheduleSession? nextSchedule,  bool editingProfile,  String? message,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MemberDossierState() when $default != null:
-return $default(_that.status,_that.person,_that.membership,_that.hasPtPackage,_that.ptExpired,_that.visitsThisMonth,_that.membershipsUnavailable,_that.assignedTrainer,_that.nextSchedule,_that.editingProfile,_that.message,_that.failure);case _:
+return $default(_that.status,_that.person,_that.membership,_that.pt,_that.ptUnavailable,_that.renewingPt,_that.visitsThisMonth,_that.membershipsUnavailable,_that.assignedTrainer,_that.nextSchedule,_that.editingProfile,_that.message,_that.failure);case _:
   return orElse();
 
 }
@@ -182,10 +183,10 @@ return $default(_that.status,_that.person,_that.membership,_that.hasPtPackage,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  Person? person,  Membership? membership,  bool hasPtPackage,  bool ptExpired,  int? visitsThisMonth,  bool membershipsUnavailable,  TrainerProfile? assignedTrainer,  ScheduleSession? nextSchedule,  bool editingProfile,  String? message,  Failure? failure)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  Person? person,  Membership? membership,  MemberPtSummary? pt,  bool ptUnavailable,  bool renewingPt,  int? visitsThisMonth,  bool membershipsUnavailable,  TrainerProfile? assignedTrainer,  ScheduleSession? nextSchedule,  bool editingProfile,  String? message,  Failure? failure)  $default,) {final _that = this;
 switch (_that) {
 case _MemberDossierState():
-return $default(_that.status,_that.person,_that.membership,_that.hasPtPackage,_that.ptExpired,_that.visitsThisMonth,_that.membershipsUnavailable,_that.assignedTrainer,_that.nextSchedule,_that.editingProfile,_that.message,_that.failure);case _:
+return $default(_that.status,_that.person,_that.membership,_that.pt,_that.ptUnavailable,_that.renewingPt,_that.visitsThisMonth,_that.membershipsUnavailable,_that.assignedTrainer,_that.nextSchedule,_that.editingProfile,_that.message,_that.failure);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +203,10 @@ return $default(_that.status,_that.person,_that.membership,_that.hasPtPackage,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  Person? person,  Membership? membership,  bool hasPtPackage,  bool ptExpired,  int? visitsThisMonth,  bool membershipsUnavailable,  TrainerProfile? assignedTrainer,  ScheduleSession? nextSchedule,  bool editingProfile,  String? message,  Failure? failure)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  Person? person,  Membership? membership,  MemberPtSummary? pt,  bool ptUnavailable,  bool renewingPt,  int? visitsThisMonth,  bool membershipsUnavailable,  TrainerProfile? assignedTrainer,  ScheduleSession? nextSchedule,  bool editingProfile,  String? message,  Failure? failure)?  $default,) {final _that = this;
 switch (_that) {
 case _MemberDossierState() when $default != null:
-return $default(_that.status,_that.person,_that.membership,_that.hasPtPackage,_that.ptExpired,_that.visitsThisMonth,_that.membershipsUnavailable,_that.assignedTrainer,_that.nextSchedule,_that.editingProfile,_that.message,_that.failure);case _:
+return $default(_that.status,_that.person,_that.membership,_that.pt,_that.ptUnavailable,_that.renewingPt,_that.visitsThisMonth,_that.membershipsUnavailable,_that.assignedTrainer,_that.nextSchedule,_that.editingProfile,_that.message,_that.failure);case _:
   return null;
 
 }
@@ -217,14 +218,15 @@ return $default(_that.status,_that.person,_that.membership,_that.hasPtPackage,_t
 
 
 class _MemberDossierState implements MemberDossierState {
-  const _MemberDossierState({this.status = LoadStatus.initial, this.person, this.membership, this.hasPtPackage = false, this.ptExpired = false, this.visitsThisMonth, this.membershipsUnavailable = false, this.assignedTrainer, this.nextSchedule, this.editingProfile = false, this.message, this.failure});
+  const _MemberDossierState({this.status = LoadStatus.initial, this.person, this.membership, this.pt, this.ptUnavailable = false, this.renewingPt = false, this.visitsThisMonth, this.membershipsUnavailable = false, this.assignedTrainer, this.nextSchedule, this.editingProfile = false, this.message, this.failure});
   
 
 @override@JsonKey() final  LoadStatus status;
 @override final  Person? person;
 @override final  Membership? membership;
-@override@JsonKey() final  bool hasPtPackage;
-@override@JsonKey() final  bool ptExpired;
+@override final  MemberPtSummary? pt;
+@override@JsonKey() final  bool ptUnavailable;
+@override@JsonKey() final  bool renewingPt;
 @override final  int? visitsThisMonth;
 @override@JsonKey() final  bool membershipsUnavailable;
 @override final  TrainerProfile? assignedTrainer;
@@ -243,16 +245,16 @@ _$MemberDossierStateCopyWith<_MemberDossierState> get copyWith => __$MemberDossi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MemberDossierState&&(identical(other.status, status) || other.status == status)&&(identical(other.person, person) || other.person == person)&&(identical(other.membership, membership) || other.membership == membership)&&(identical(other.hasPtPackage, hasPtPackage) || other.hasPtPackage == hasPtPackage)&&(identical(other.ptExpired, ptExpired) || other.ptExpired == ptExpired)&&(identical(other.visitsThisMonth, visitsThisMonth) || other.visitsThisMonth == visitsThisMonth)&&(identical(other.membershipsUnavailable, membershipsUnavailable) || other.membershipsUnavailable == membershipsUnavailable)&&(identical(other.assignedTrainer, assignedTrainer) || other.assignedTrainer == assignedTrainer)&&(identical(other.nextSchedule, nextSchedule) || other.nextSchedule == nextSchedule)&&(identical(other.editingProfile, editingProfile) || other.editingProfile == editingProfile)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MemberDossierState&&(identical(other.status, status) || other.status == status)&&(identical(other.person, person) || other.person == person)&&(identical(other.membership, membership) || other.membership == membership)&&(identical(other.pt, pt) || other.pt == pt)&&(identical(other.ptUnavailable, ptUnavailable) || other.ptUnavailable == ptUnavailable)&&(identical(other.renewingPt, renewingPt) || other.renewingPt == renewingPt)&&(identical(other.visitsThisMonth, visitsThisMonth) || other.visitsThisMonth == visitsThisMonth)&&(identical(other.membershipsUnavailable, membershipsUnavailable) || other.membershipsUnavailable == membershipsUnavailable)&&(identical(other.assignedTrainer, assignedTrainer) || other.assignedTrainer == assignedTrainer)&&(identical(other.nextSchedule, nextSchedule) || other.nextSchedule == nextSchedule)&&(identical(other.editingProfile, editingProfile) || other.editingProfile == editingProfile)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,person,membership,hasPtPackage,ptExpired,visitsThisMonth,membershipsUnavailable,assignedTrainer,nextSchedule,editingProfile,message,failure);
+int get hashCode => Object.hash(runtimeType,status,person,membership,pt,ptUnavailable,renewingPt,visitsThisMonth,membershipsUnavailable,assignedTrainer,nextSchedule,editingProfile,message,failure);
 
 @override
 String toString() {
-  return 'MemberDossierState(status: $status, person: $person, membership: $membership, hasPtPackage: $hasPtPackage, ptExpired: $ptExpired, visitsThisMonth: $visitsThisMonth, membershipsUnavailable: $membershipsUnavailable, assignedTrainer: $assignedTrainer, nextSchedule: $nextSchedule, editingProfile: $editingProfile, message: $message, failure: $failure)';
+  return 'MemberDossierState(status: $status, person: $person, membership: $membership, pt: $pt, ptUnavailable: $ptUnavailable, renewingPt: $renewingPt, visitsThisMonth: $visitsThisMonth, membershipsUnavailable: $membershipsUnavailable, assignedTrainer: $assignedTrainer, nextSchedule: $nextSchedule, editingProfile: $editingProfile, message: $message, failure: $failure)';
 }
 
 
@@ -263,7 +265,7 @@ abstract mixin class _$MemberDossierStateCopyWith<$Res> implements $MemberDossie
   factory _$MemberDossierStateCopyWith(_MemberDossierState value, $Res Function(_MemberDossierState) _then) = __$MemberDossierStateCopyWithImpl;
 @override @useResult
 $Res call({
- LoadStatus status, Person? person, Membership? membership, bool hasPtPackage, bool ptExpired, int? visitsThisMonth, bool membershipsUnavailable, TrainerProfile? assignedTrainer, ScheduleSession? nextSchedule, bool editingProfile, String? message, Failure? failure
+ LoadStatus status, Person? person, Membership? membership, MemberPtSummary? pt, bool ptUnavailable, bool renewingPt, int? visitsThisMonth, bool membershipsUnavailable, TrainerProfile? assignedTrainer, ScheduleSession? nextSchedule, bool editingProfile, String? message, Failure? failure
 });
 
 
@@ -280,13 +282,14 @@ class __$MemberDossierStateCopyWithImpl<$Res>
 
 /// Create a copy of MemberDossierState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? person = freezed,Object? membership = freezed,Object? hasPtPackage = null,Object? ptExpired = null,Object? visitsThisMonth = freezed,Object? membershipsUnavailable = null,Object? assignedTrainer = freezed,Object? nextSchedule = freezed,Object? editingProfile = null,Object? message = freezed,Object? failure = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? person = freezed,Object? membership = freezed,Object? pt = freezed,Object? ptUnavailable = null,Object? renewingPt = null,Object? visitsThisMonth = freezed,Object? membershipsUnavailable = null,Object? assignedTrainer = freezed,Object? nextSchedule = freezed,Object? editingProfile = null,Object? message = freezed,Object? failure = freezed,}) {
   return _then(_MemberDossierState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,person: freezed == person ? _self.person : person // ignore: cast_nullable_to_non_nullable
 as Person?,membership: freezed == membership ? _self.membership : membership // ignore: cast_nullable_to_non_nullable
-as Membership?,hasPtPackage: null == hasPtPackage ? _self.hasPtPackage : hasPtPackage // ignore: cast_nullable_to_non_nullable
-as bool,ptExpired: null == ptExpired ? _self.ptExpired : ptExpired // ignore: cast_nullable_to_non_nullable
+as Membership?,pt: freezed == pt ? _self.pt : pt // ignore: cast_nullable_to_non_nullable
+as MemberPtSummary?,ptUnavailable: null == ptUnavailable ? _self.ptUnavailable : ptUnavailable // ignore: cast_nullable_to_non_nullable
+as bool,renewingPt: null == renewingPt ? _self.renewingPt : renewingPt // ignore: cast_nullable_to_non_nullable
 as bool,visitsThisMonth: freezed == visitsThisMonth ? _self.visitsThisMonth : visitsThisMonth // ignore: cast_nullable_to_non_nullable
 as int?,membershipsUnavailable: null == membershipsUnavailable ? _self.membershipsUnavailable : membershipsUnavailable // ignore: cast_nullable_to_non_nullable
 as bool,assignedTrainer: freezed == assignedTrainer ? _self.assignedTrainer : assignedTrainer // ignore: cast_nullable_to_non_nullable

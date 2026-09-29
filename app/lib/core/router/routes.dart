@@ -145,6 +145,8 @@ class Routes {
   static const String adminMembersEdit = '/admin/members/:id/edit';
   static const String adminMembersAssignMembership =
       '/admin/members/:id/assign-membership';
+  static const String adminMembersAddPt = '/admin/members/:id/add-pt';
+  static String adminMembersAddPtById(int id) => '/admin/members/$id/add-pt';
   static const String adminMembersWorkoutHistory =
       '/admin/members/:id/workout-history';
   static const String adminMembersDietHistory =
@@ -177,6 +179,7 @@ class Routes {
   static const String adminEmployeesEdit = '/admin/employees/:id/edit';
   static const String adminEmployeesRoles = '/admin/employees/:id/roles';
   static const String adminPackages = '/admin/packages';
+  static const String adminPtPackages = '/admin/pt-packages';
   static const String adminAttendance = '/admin/attendance';
   static const String adminAttendanceScan = '/admin/attendance/scan';
   static const String adminAttendanceManual = '/admin/attendance/manual';

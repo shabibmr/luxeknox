@@ -16,6 +16,7 @@ import { AttnModule } from './attn/attn.module';
 import { ReportsModule } from './reports/reports.module';
 import { GoalModule } from './goal/goal.module';
 import { NotifModule } from './notif/notif.module';
+import { PtModule } from './pt/pt.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { NotifModule } from './notif/notif.module';
     AttnModule,
     GoalModule,
     NotifModule,
+    PtModule,
     DashboardModule,
     ReportsModule,
   ],

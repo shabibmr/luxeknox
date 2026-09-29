@@ -15,6 +15,7 @@ import { PaginationHelper, createPaginatedResponse } from '../platform/http/pagi
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { MemberRepository } from '../people/member.repository';
 import { assertMemberAccess } from '../people/row-scope';
+import { PtAccessService } from '../pt/pt-access.service';
 import {
   WorkoutPlanRepository,
   type WorkoutPlanWithDetails,
@@ -38,6 +39,7 @@ export class WorkoutPlanService {
     private readonly memberRepo: MemberRepository,
     private readonly eventBus: DomainEventBus,
     private readonly paginationHelper: PaginationHelper,
+    private readonly ptAccess?: PtAccessService,
   ) {}
 
   private async assertCanManagePlan(plan: WorkoutPlan, actor: AuthenticatedUser): Promise<void> {
@@ -45,14 +47,15 @@ export class WorkoutPlanService {
       return;
     }
     if (actor.userType === 'trainer') {
-      if (plan.trainer_id === actor.profileId) {
-        return;
-      }
       if (plan.member_id) {
-        await assertMemberAccess(this.memberRepo, actor, plan.member_id);
+        if (plan.trainer_id !== actor.profileId) {
+          await assertMemberAccess(this.memberRepo, actor, plan.member_id);
+        }
+        // Member plans are writable only while the trainer's PT with the member is active.
+        await this.ptAccess?.assertTrainerCanWrite(actor, plan.member_id);
         return;
       }
-      if (plan.is_template) {
+      if (plan.trainer_id === actor.profileId || plan.is_template) {
         return;
       }
     }
@@ -135,6 +138,7 @@ export class WorkoutPlanService {
       }
     } else if (dto.member_id) {
       await assertMemberAccess(this.memberRepo, actor, dto.member_id);
+      await this.ptAccess?.assertTrainerCanWrite(actor, dto.member_id);
     }
 
     const trainerId =
@@ -201,6 +205,7 @@ export class WorkoutPlanService {
 
     if (dto.member_id && !existing.is_template) {
       await assertMemberAccess(this.memberRepo, actor, dto.member_id);
+      await this.ptAccess?.assertTrainerCanWrite(actor, dto.member_id);
     }
 
     await this.planRepo.updatePlan(
@@ -302,6 +307,7 @@ export class WorkoutPlanService {
     }
 
     await assertMemberAccess(this.memberRepo, actor, dto.member_id);
+    await this.ptAccess?.assertTrainerCanWrite(actor, dto.member_id);
 
     const activePlan = await this.planRepo.findActivePlanForMember(dto.member_id);
     if (activePlan) {

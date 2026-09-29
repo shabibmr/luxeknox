@@ -21,6 +21,7 @@ import 'package:api_client/src/api/memb_api.dart';
 import 'package:api_client/src/api/notif_api.dart';
 import 'package:api_client/src/api/pay_api.dart';
 import 'package:api_client/src/api/people_api.dart';
+import 'package:api_client/src/api/pt_api.dart';
 import 'package:api_client/src/api/rbac_api.dart';
 import 'package:api_client/src/api/rpt_api.dart';
 import 'package:api_client/src/api/sched_api.dart';
@@ -191,6 +192,12 @@ class ApiClient {
   /// by doing that all interceptors will not be executed
   PEOPLEApi getPEOPLEApi() {
     return PEOPLEApi(dio, serializers);
+  }
+
+  /// Get PTApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  PTApi getPTApi() {
+    return PTApi(dio, serializers);
   }
 
   /// Get RBACApi instance, base route and serializer can be overridden by a given but be careful,

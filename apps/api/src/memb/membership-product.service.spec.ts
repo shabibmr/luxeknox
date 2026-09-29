@@ -104,7 +104,6 @@ describe('MembershipProductService', () => {
           base_price: '1299.00',
           tax_percentage: '0.00',
           max_freeze_days: 0,
-          pt_sessions_included: 0,
           is_active: true,
         }),
       );

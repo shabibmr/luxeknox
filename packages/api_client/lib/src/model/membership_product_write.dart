@@ -19,7 +19,7 @@ part 'membership_product_write.g.dart';
 /// * [basePrice] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
 /// * [taxPercentage] 
 /// * [maxFreezeDays] 
-/// * [ptSessionsIncluded] 
+/// * [ptSessionsIncluded] - Retired — ignored by the server. PT is sold as a PtProduct.
 /// * [accessFacilities] 
 /// * [isActive] 
 @BuiltValue()
@@ -46,6 +46,8 @@ abstract class MembershipProductWrite implements Built<MembershipProductWrite, M
   @BuiltValueField(wireName: r'max_freeze_days')
   int? get maxFreezeDays;
 
+  /// Retired — ignored by the server. PT is sold as a PtProduct.
+  @Deprecated('ptSessionsIncluded has been deprecated')
   @BuiltValueField(wireName: r'pt_sessions_included')
   int? get ptSessionsIncluded;
 

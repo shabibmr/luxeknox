@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { BusinessRuleError, ForbiddenError, NotFoundError } from '../platform/errors/app-error';
+import { ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import { SessionAttendanceService } from './session-attendance.service';
 
 vi.mock('../platform/db/transaction-context', () => ({
@@ -9,7 +9,6 @@ vi.mock('../platform/db/transaction-context', () => ({
 describe('SessionAttendanceService', () => {
   let service: SessionAttendanceService;
   let scheduleRepository: Record<string, ReturnType<typeof vi.fn>>;
-  let membershipRepository: Record<string, ReturnType<typeof vi.fn>>;
   let auditService: { recordAudit: ReturnType<typeof vi.fn> };
   let domainEventBus: { emit: ReturnType<typeof vi.fn> };
   let db: { select: ReturnType<typeof vi.fn> };
@@ -48,15 +47,6 @@ describe('SessionAttendanceService', () => {
       findParticipantById: vi.fn().mockResolvedValue(participant),
       updateParticipant: vi.fn().mockResolvedValue(undefined),
     };
-    membershipRepository = {
-      findActiveOrFrozenForMember: vi.fn().mockResolvedValue({
-        id: 1,
-        member_id: 5,
-        remaining_pt_sessions: 3,
-        status: 'active',
-      }),
-      adjustRemainingPtSessions: vi.fn().mockResolvedValue({ remaining_pt_sessions: 2 }),
-    };
     auditService = { recordAudit: vi.fn().mockResolvedValue(undefined) };
     domainEventBus = { emit: vi.fn().mockResolvedValue([]) };
 
@@ -69,55 +59,43 @@ describe('SessionAttendanceService', () => {
 
     service = new SessionAttendanceService(
       scheduleRepository as any,
-      membershipRepository as any,
       auditService as any,
       domainEventBus as any,
       db as any,
     );
   });
 
-  it('marks attended and consumes one PT session for 1:1 trainer schedules', async () => {
+  it('marks a PT session attended without consuming any session counter', async () => {
     scheduleRepository.findParticipantById
       .mockResolvedValueOnce(participant)
       .mockResolvedValueOnce({ ...participant, attended: true, marked_at: new Date() });
 
     const result = await service.mark(10, 55, { attended: true }, staff);
     expect(result.attended).toBe(true);
-    expect(membershipRepository.adjustRemainingPtSessions).toHaveBeenCalledWith(5, -1);
+    expect(scheduleRepository.updateParticipant).toHaveBeenCalledWith(
+      55,
+      expect.objectContaining({ attended: true }),
+    );
     expect(auditService.recordAudit).toHaveBeenCalled();
   });
 
-  it('rejects PT mark when no remaining sessions', async () => {
-    membershipRepository.findActiveOrFrozenForMember.mockResolvedValue({
-      id: 1,
-      remaining_pt_sessions: 0,
-      status: 'active',
-    });
-    await expect(service.mark(10, 55, { attended: true }, staff)).rejects.toBeInstanceOf(
-      BusinessRuleError,
-    );
-  });
-
-  it('restores a PT session when un-marking attended', async () => {
+  it('can un-mark attendance', async () => {
     scheduleRepository.findParticipantById
       .mockResolvedValueOnce({ ...participant, attended: true })
       .mockResolvedValueOnce({ ...participant, attended: false });
-    await service.mark(10, 55, { attended: false }, staff);
-    expect(membershipRepository.adjustRemainingPtSessions).toHaveBeenCalledWith(5, 1);
-  });
-
-  it('does not consume PT for group classes (capacity > 1)', async () => {
-    scheduleRepository.findById.mockResolvedValue({ ...ptSchedule, max_capacity: 12 });
-    scheduleRepository.findParticipantById
-      .mockResolvedValueOnce(participant)
-      .mockResolvedValueOnce({ ...participant, attended: true });
-    await service.mark(10, 55, { attended: true }, staff);
-    expect(membershipRepository.adjustRemainingPtSessions).not.toHaveBeenCalled();
+    const result = await service.mark(10, 55, { attended: false }, staff);
+    expect(result.attended).toBe(false);
   });
 
   it('forbids members from marking', async () => {
     await expect(
       service.mark(10, 55, { attended: true }, { ...staff, userType: 'member' }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it('forbids trainers from marking other trainers’ sessions', async () => {
+    await expect(
+      service.mark(10, 55, { attended: true }, { ...staff, userType: 'trainer', profileId: 99 }),
     ).rejects.toBeInstanceOf(ForbiddenError);
   });
 

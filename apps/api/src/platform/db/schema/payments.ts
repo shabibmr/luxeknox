@@ -12,6 +12,7 @@ import {
 import { utcDatetime } from '../utc-datetime';
 import { members } from './members';
 import { memberships } from './memberships';
+import { ptSubscriptions } from './personal-training';
 import { users } from './users';
 
 export const PAYMENT_STATUSES = ['pending', 'partial', 'paid', 'refunded'] as const;
@@ -62,6 +63,9 @@ export const payments = mysqlTable(
     membership_id: bigint('membership_id', { mode: 'number', unsigned: true }).references(
       () => memberships.id,
     ),
+    pt_subscription_id: bigint('pt_subscription_id', { mode: 'number', unsigned: true }).references(
+      () => ptSubscriptions.id,
+    ),
     payment_method_id: bigint('payment_method_id', { mode: 'number', unsigned: true }).references(
       () => paymentMethods.id,
     ),
@@ -85,6 +89,7 @@ export const payments = mysqlTable(
     index('payments_member_id_idx').on(table.member_id),
     index('payments_status_idx').on(table.status),
     index('payments_payment_date_idx').on(table.payment_date),
+    index('payments_pt_subscription_id_idx').on(table.pt_subscription_id),
   ],
 );
 

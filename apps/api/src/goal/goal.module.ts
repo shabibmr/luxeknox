@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { PeopleModule } from '../people/people.module';
 import { PlatformModule } from '../platform/platform.module';
+import { PtAccessModule } from '../pt/pt-access.module';
 import { RbacModule } from '../rbac/rbac.module';
 import { SysModule } from '../sys/sys.module';
 import { GoalMetricController } from './goal-metric.controller';
@@ -20,7 +21,7 @@ import { ProgressPhotoRepository } from './progress-photo.repository';
 import { ProgressPhotoService } from './progress-photo.service';
 
 @Module({
-  imports: [PlatformModule, RbacModule, forwardRef(() => PeopleModule), SysModule],
+  imports: [PlatformModule, RbacModule, forwardRef(() => PeopleModule), SysModule, PtAccessModule],
   controllers: [
     GoalMetricController,
     GoalController,

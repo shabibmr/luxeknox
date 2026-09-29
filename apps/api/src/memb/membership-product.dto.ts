@@ -16,6 +16,7 @@ export const membershipProductWriteSchema = z.object({
   base_price: moneyString,
   tax_percentage: moneyString.optional(),
   max_freeze_days: z.number().int().min(0).optional(),
+  /** Retired — PT is sold as a separate PT package (pt/). Accepted for old clients, ignored. */
   pt_sessions_included: z.number().int().min(0).optional(),
   access_facilities: z.array(z.string()).optional(),
   is_active: z.boolean().optional(),

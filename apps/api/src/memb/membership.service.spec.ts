@@ -166,7 +166,7 @@ describe('MembershipService', () => {
       expect(repository.updateMembership).not.toHaveBeenCalled();
     });
 
-    it('continues from the day after the current end_date and adds PT sessions', async () => {
+    it('continues from the day after the current end_date and leaves the retired PT counter alone', async () => {
       repository.findById.mockResolvedValue(
         makeMembership({ end_date: '2099-01-31', remaining_pt_sessions: 2, row_version: 1 }),
       );
@@ -179,11 +179,11 @@ describe('MembershipService', () => {
         1,
         expect.objectContaining({
           end_date: '2099-03-03',
-          remaining_pt_sessions: 6,
           row_version: 2,
         }),
         1,
       );
+      expect(repository.updateMembership.mock.calls[0][1]).not.toHaveProperty('remaining_pt_sessions');
     });
   });
 
@@ -341,7 +341,6 @@ describe('MembershipService', () => {
           product_id: 2,
           start_date: '2026-03-01',
           end_date: '2026-04-30',
-          remaining_pt_sessions: 8,
           status: 'active',
         }),
       );
@@ -381,7 +380,6 @@ describe('MembershipService', () => {
         expect.objectContaining({
           product_id: 2,
           end_date: '2026-03-03',
-          remaining_pt_sessions: 8,
           status: 'active',
           row_version: 4,
         }),

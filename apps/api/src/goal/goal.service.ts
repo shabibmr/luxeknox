@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { MemberRepository } from '../people/member.repository';
 import { assertMemberAccess } from '../people/row-scope';
+import { PtAccessService } from '../pt/pt-access.service';
 import { AuditService } from '../platform/audit/audit.service';
 import type {
   Goal,
@@ -29,6 +30,7 @@ export class GoalService {
     private readonly memberRepo: MemberRepository,
     private readonly paginationHelper: PaginationHelper,
     private readonly auditService: AuditService,
+    private readonly ptAccess?: PtAccessService,
   ) {}
 
   async assertCanManageMemberGoal(actor: AuthenticatedUser, memberId: number): Promise<void> {
@@ -40,6 +42,8 @@ export class GoalService {
       if (!member || member.assigned_trainer_id !== actor.profileId) {
         throw new ForbiddenError('Trainer may only manage goals for assigned members');
       }
+      // Assigned but PT ended ⇒ read-only.
+      await this.ptAccess?.assertTrainerCanWrite(actor, memberId);
       return;
     }
     // Per FR-GOAL-003: Member reads own goals; may not create in MVP

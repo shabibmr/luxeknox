@@ -16,6 +16,10 @@ void main() {
         'memberships.create',
       );
       expect(
+        RouteCapabilities.requiredSlug('/admin/members/42/assign-membership'),
+        'memberships.create',
+      );
+      expect(
         RouteCapabilities.requiredSlug(Routes.adminMembersAdd),
         'members.create',
       );

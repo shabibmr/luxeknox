@@ -12,6 +12,7 @@ Name | Type | Description | Notes
 **invoiceNumber** | **String** |  | 
 **memberId** | **int** |  | 
 **membershipId** | **int** |  | [optional] 
+**ptSubscriptionId** | **int** |  | [optional] 
 **paymentMethodId** | **int** |  | [optional] 
 **subtotal** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | 
 **taxAmount** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | 
