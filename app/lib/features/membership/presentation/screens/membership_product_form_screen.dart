@@ -45,9 +45,6 @@ class _MembershipProductFormBodyState
   late final _nameController = TextEditingController(
     text: widget.product?.name,
   );
-  late final _codeController = TextEditingController(
-    text: widget.product?.code,
-  );
   late final _descriptionController = TextEditingController(
     text: widget.product?.description,
   );
@@ -60,15 +57,6 @@ class _MembershipProductFormBodyState
   late final _taxController = TextEditingController(
     text: widget.product?.taxPercentage,
   );
-  late final _maxFreezeController = TextEditingController(
-    text: widget.product?.maxFreezeDays?.toString(),
-  );
-  late final _ptSessionsController = TextEditingController(
-    text: widget.product?.ptSessionsIncluded?.toString(),
-  );
-  late final _facilitiesController = TextEditingController(
-    text: widget.product?.accessFacilities.join(', '),
-  );
   late bool _isActive = widget.product?.isActive ?? true;
   late final bool _initialIsActive = _isActive;
 
@@ -79,14 +67,10 @@ class _MembershipProductFormBodyState
     super.initState();
     for (final c in [
       _nameController,
-      _codeController,
       _descriptionController,
       _durationController,
       _priceController,
       _taxController,
-      _maxFreezeController,
-      _ptSessionsController,
-      _facilitiesController,
     ]) {
       c.addListener(_markDirty);
     }
@@ -100,37 +84,26 @@ class _MembershipProductFormBodyState
   void dispose() {
     for (final c in [
       _nameController,
-      _codeController,
       _descriptionController,
       _durationController,
       _priceController,
       _taxController,
-      _maxFreezeController,
-      _ptSessionsController,
-      _facilitiesController,
     ]) {
       c.removeListener(_markDirty);
     }
     _nameController.dispose();
-    _codeController.dispose();
     _descriptionController.dispose();
     _durationController.dispose();
     _priceController.dispose();
     _taxController.dispose();
-    _maxFreezeController.dispose();
-    _ptSessionsController.dispose();
-    _facilitiesController.dispose();
     super.dispose();
   }
-
-  List<String> _splitList(String raw) =>
-      raw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
 
   MembershipProduct _productFromFields() {
     return MembershipProduct(
       id: widget.product?.id ?? '',
       name: _nameController.text.trim(),
-      code: _codeController.text.trim(),
+      code: widget.product?.code ?? '',
       description: _descriptionController.text.trim().isEmpty
           ? null
           : _descriptionController.text.trim(),
@@ -139,9 +112,9 @@ class _MembershipProductFormBodyState
       taxPercentage: _taxController.text.trim().isEmpty
           ? null
           : _taxController.text.trim(),
-      maxFreezeDays: int.tryParse(_maxFreezeController.text.trim()),
-      ptSessionsIncluded: int.tryParse(_ptSessionsController.text.trim()),
-      accessFacilities: _splitList(_facilitiesController.text),
+      maxFreezeDays: null,
+      ptSessionsIncluded: null,
+      accessFacilities: const [],
       isActive: _isActive,
     );
   }
@@ -232,17 +205,6 @@ class _MembershipProductFormBodyState
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
-                      controller: _codeController,
-                      enabled: !submitting,
-                      decoration: const InputDecoration(
-                        labelText: MembershipStrings.codeLabel,
-                      ),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? MembershipStrings.codeRequired
-                          : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
                       controller: _descriptionController,
                       enabled: !submitting,
                       minLines: 2,
@@ -287,33 +249,6 @@ class _MembershipProductFormBodyState
                       ),
                       decoration: const InputDecoration(
                         labelText: MembershipStrings.taxPercentageLabel,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _maxFreezeController,
-                      enabled: !submitting,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: MembershipStrings.maxFreezeDaysLabel,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _ptSessionsController,
-                      enabled: !submitting,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: MembershipStrings.ptSessionsIncludedLabel,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _facilitiesController,
-                      enabled: !submitting,
-                      decoration: const InputDecoration(
-                        labelText: MembershipStrings.accessFacilitiesLabel,
-                        helperText: MembershipStrings.commaSeparatedHelper,
                       ),
                     ),
                     const SizedBox(height: 8),
