@@ -61,6 +61,10 @@ When spawning subagents (Agent/Task tool), the routing block is automatically in
 | `ctx doctor` | Call the `ctx_doctor` MCP tool, run the returned shell command, display as checklist |
 | `ctx upgrade` | Call the `ctx_upgrade` MCP tool, run the returned shell command, display as checklist |
 
+## Database
+
+Local development uses a MySQL 8.4 instance hosted directly on the local machine at `localhost:3306` — not Docker. Do not suggest `docker compose` commands for the database. (`POSTGRES_MIGRATION_PLAN.md` / `POSTGRES_MIGRATION_TASKS.md` describe a future Postgres migration; that has not landed and does not apply to current local setup.)
+
 ## Agent skills
 
 ### Issue tracker

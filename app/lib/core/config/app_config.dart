@@ -30,7 +30,7 @@ class AppConfig {
   final String apiBaseUrl;
   final AppEnvironment environment;
 
-  static const String _defaultApiBaseUrl = 'https://api.dev.luxeknox.com';
+  static const String _defaultApiBaseUrl = 'http://192.168.1.88:3000/v1';
   static const String _defaultEnv = 'dev';
 
   static const String _apiBaseUrlDefine = String.fromEnvironment(

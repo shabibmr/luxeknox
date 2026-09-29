@@ -14,7 +14,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_DIR="$ROOT_DIR/app"
 
 WEB_PORT=8080
-API_BASE_URL="http://localhost:3000/v1"
+API_BASE_URL="http://192.168.1.88:3000/v1"
 DETACH=0
 LOG_FILE=""
 

@@ -11,6 +11,7 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -33,6 +34,31 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.map { it as? com.android.build.gradle.internal.api.BaseVariantOutputImpl }
+            .forEach { output ->
+                output?.outputFileName = "luxeknox-${variant.buildType.name}-${variant.versionName}+${variant.versionCode}.apk"
+            }
+
+        assembleProvider.configure {
+            doLast {
+                val flutterApkDir = layout.buildDirectory.dir("outputs/flutter-apk").get().asFile
+                flutterApkDir.mkdirs()
+                variant.outputs.forEach { output ->
+                    val file = output.outputFile
+                    if (file != null && file.exists()) {
+                        file.copyTo(File(flutterApkDir, file.name), overwrite = true)
+                    }
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 kotlin {
