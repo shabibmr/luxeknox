@@ -48,7 +48,7 @@ export class AttendanceRepository extends BaseRepository<
       .select()
       .from(attendances)
       .where(and(eq(attendances.user_id, userId), isNull(attendances.check_out_time)))
-      .orderBy(sql`${attendances.check_in_time} desc`)
+      .orderBy(desc(attendances.check_in_time), desc(attendances.id))
       .limit(1)
       .for('update');
     return rows[0] ?? null;
@@ -60,7 +60,7 @@ export class AttendanceRepository extends BaseRepository<
       .select()
       .from(attendances)
       .where(and(eq(attendances.user_id, userId), isNull(attendances.check_out_time)))
-      .orderBy(sql`${attendances.check_in_time} desc`)
+      .orderBy(desc(attendances.check_in_time), desc(attendances.id))
       .limit(1);
     return rows[0] ?? null;
   }
@@ -182,7 +182,7 @@ export class AttendanceRepository extends BaseRepository<
       .select()
       .from(attendances)
       .where(eq(attendances.user_id, userId))
-      .orderBy(desc(attendances.check_in_time))
+      .orderBy(desc(attendances.check_in_time), desc(attendances.id))
       .limit(1);
     return rows[0] ?? null;
   }
@@ -192,7 +192,8 @@ export class AttendanceRepository extends BaseRepository<
     return db
       .select()
       .from(attendances)
-      .where(and(isNull(attendances.check_out_time), lt(attendances.check_in_time, cutoff)));
+      .where(and(isNull(attendances.check_out_time), lt(attendances.check_in_time, cutoff)))
+      .orderBy(desc(attendances.check_in_time), desc(attendances.id));
   }
 
   /** ATT-017: currently checked-in (open) gate visits, optionally grouped by gate. */

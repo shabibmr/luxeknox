@@ -62,7 +62,7 @@ jobs:
         run: pnpm --filter api lint
 
       - name: Typecheck
-        run: pnpm --filter api typecheck
+        run: pnpm run typecheck
 
       - name: Schema check
         run: pnpm --filter api db:check

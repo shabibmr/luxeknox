@@ -4,6 +4,8 @@ import type { PgTable, TableConfig } from 'drizzle-orm/pg-core';
 import { DRIZZLE_DB_TOKEN } from './drizzle.module';
 import { getAmbientTransaction, type AnyTransaction } from './transaction-context';
 import type { DrizzleDb } from './client';
+import { translateDbError } from './db-error';
+
 
 /**
  * Abstract BaseRepository providing standard CRUD operations and ambient transaction
@@ -57,6 +59,14 @@ export abstract class BaseRepository<
   }
 
   /**
+   * Translates database-level errors to application errors (e.g. ConflictError, BadRequestError).
+   * Subclasses can override this method to customize translation options.
+   */
+  protected translateError(err: unknown): Error {
+    return translateDbError(err);
+  }
+
+  /**
    * Finds a single entity by its primary key ID.
    *
    * @param id Primary key ID
@@ -77,14 +87,18 @@ export abstract class BaseRepository<
       }
     }
 
-    const query = this.getDb()
-      .select()
-      .from(this.table as any)
-      .where(conditions.length === 1 ? conditions[0] : and(...conditions))
-      .limit(1);
+    try {
+      const query = this.getDb()
+        .select()
+        .from(this.table as any)
+        .where(conditions.length === 1 ? conditions[0] : and(...conditions))
+        .limit(1);
 
-    const rows = await query;
-    return (rows[0] as TSelect) ?? null;
+      const rows = await query;
+      return (rows[0] as TSelect) ?? null;
+    } catch (err) {
+      throw this.translateError(err);
+    }
   }
 
   /**
@@ -103,14 +117,18 @@ export abstract class BaseRepository<
       }
     }
 
-    const query = this.getDb()
-      .select()
-      .from(this.table as any)
-      .where(conditions.length === 1 ? conditions[0] : and(...conditions))
-      .limit(1);
+    try {
+      const query = this.getDb()
+        .select()
+        .from(this.table as any)
+        .where(conditions.length === 1 ? conditions[0] : and(...conditions))
+        .limit(1);
 
-    const rows = await query;
-    return (rows[0] as TSelect) ?? null;
+      const rows = await query;
+      return (rows[0] as TSelect) ?? null;
+    } catch (err) {
+      throw this.translateError(err);
+    }
   }
 
   /**
@@ -121,10 +139,14 @@ export abstract class BaseRepository<
    */
   async create(values: TInsert): Promise<{ id: number }[]> {
     const tableColumns = this.table as Record<string, any>;
-    return (this.getDb() as any)
-      .insert(this.table)
-      .values(values)
-      .returning({ id: tableColumns.id });
+    try {
+      return await (this.getDb() as any)
+        .insert(this.table)
+        .values(values)
+        .returning({ id: tableColumns.id });
+    } catch (err) {
+      throw this.translateError(err);
+    }
   }
 
   /**
@@ -134,7 +156,11 @@ export abstract class BaseRepository<
    * @param values Record data to update
    */
   async update(condition: SQL, values: Partial<TInsert>): Promise<void> {
-    await this.getDb().update(this.table as any).set(values as any).where(condition);
+    try {
+      await this.getDb().update(this.table as any).set(values as any).where(condition);
+    } catch (err) {
+      throw this.translateError(err);
+    }
   }
 
   /**
@@ -145,6 +171,11 @@ export abstract class BaseRepository<
    * @param condition SQL condition expression
    */
   async delete(condition: SQL): Promise<void> {
-    await this.getDb().delete(this.table as any).where(condition);
+    try {
+      await this.getDb().delete(this.table as any).where(condition);
+    } catch (err) {
+      throw this.translateError(err);
+    }
   }
 }
+

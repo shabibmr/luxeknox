@@ -87,5 +87,87 @@ describe('HealthController', () => {
       expect(result.timestamp).toBeDefined();
       expect(new Date(result.timestamp).toISOString()).toBe(result.timestamp);
     });
+
+    it('returns role in response when current_user is returned by ping', async () => {
+      const mockDb = {
+        execute: vi.fn().mockResolvedValue({
+          rows: [{ current_user: 'luxeknox_app', is_superuser: 'off' }],
+        }),
+      } as unknown as DrizzleDb;
+
+      const res = createMockResponse();
+      const controller = new HealthController(mockDb, createMockJobRunRepository());
+
+      const result: ReadyResponseDto = await controller.getReady(res);
+      expect(result.status).toBe('ok');
+      expect(result.database).toBe('connected');
+      expect(result.role).toBe('luxeknox_app');
+    });
+
+    it('successfully verifies role when verifyRole=true and role matches DB_USER', async () => {
+      const originalDbUser = process.env.DB_USER;
+      process.env.DB_USER = 'luxeknox_app';
+      try {
+        const mockDb = {
+          execute: vi.fn().mockResolvedValue({
+            rows: [{ current_user: 'luxeknox_app', is_superuser: 'off' }],
+          }),
+        } as unknown as DrizzleDb;
+
+        const res = createMockResponse();
+        const controller = new HealthController(mockDb, createMockJobRunRepository());
+
+        const result: ReadyResponseDto = await controller.getReady(res, 'true');
+        expect(res.status).toHaveBeenCalledWith(HttpStatus.OK);
+        expect(result.status).toBe('ok');
+        expect(result.role).toBe('luxeknox_app');
+      } finally {
+        process.env.DB_USER = originalDbUser;
+      }
+    });
+
+    it('returns 503 when verifyRole=true and connected role is a superuser', async () => {
+      const originalDbUser = process.env.DB_USER;
+      process.env.DB_USER = 'luxeknox_admin';
+      try {
+        const mockDb = {
+          execute: vi.fn().mockResolvedValue({
+            rows: [{ current_user: 'luxeknox_admin', is_superuser: 'on' }],
+          }),
+        } as unknown as DrizzleDb;
+
+        const res = createMockResponse();
+        const controller = new HealthController(mockDb, createMockJobRunRepository());
+
+        const result: ReadyResponseDto = await controller.getReady(res, 'true');
+        expect(res.status).toHaveBeenCalledWith(HttpStatus.SERVICE_UNAVAILABLE);
+        expect(result.status).toBe('error');
+        expect(result.database).toBe('disconnected');
+      } finally {
+        process.env.DB_USER = originalDbUser;
+      }
+    });
+
+    it('returns 503 when verifyRole=true and connected role does not match expected DB_USER', async () => {
+      const originalDbUser = process.env.DB_USER;
+      process.env.DB_USER = 'luxeknox_app';
+      try {
+        const mockDb = {
+          execute: vi.fn().mockResolvedValue({
+            rows: [{ current_user: 'unexpected_role', is_superuser: 'off' }],
+          }),
+        } as unknown as DrizzleDb;
+
+        const res = createMockResponse();
+        const controller = new HealthController(mockDb, createMockJobRunRepository());
+
+        const result: ReadyResponseDto = await controller.getReady(res, 'true');
+        expect(res.status).toHaveBeenCalledWith(HttpStatus.SERVICE_UNAVAILABLE);
+        expect(result.status).toBe('error');
+        expect(result.database).toBe('disconnected');
+      } finally {
+        process.env.DB_USER = originalDbUser;
+      }
+    });
   });
 });

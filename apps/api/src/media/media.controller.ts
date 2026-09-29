@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiProperty,
   ApiResponse,
@@ -24,7 +25,7 @@ import { Public } from '../auth/public.decorator';
 import { RequirePermission } from '../rbac/require-permission.decorator';
 import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
 import { BadRequestError } from '../platform/errors/app-error';
-import { mediaUploadRequestSchema, type MediaUploadRequestDto } from './media.dto';
+import { mediaUploadRequestSchema, MediaUploadRequestDto } from './media.dto';
 import { StorageService } from './storage.service';
 
 export class MediaUploadResponseDto {
@@ -107,6 +108,7 @@ export class MediaController {
     operationId: 'createMediaUpload',
     summary: 'Signed PUT slot (ADR-0008)',
   })
+  @ApiBody({ type: MediaUploadRequestDto })
   @ApiResponse({ status: 201, type: MediaUploadResponseDto })
   async createUpload(
     @Body(new ZodValidationPipe(mediaUploadRequestSchema)) dto: MediaUploadRequestDto,

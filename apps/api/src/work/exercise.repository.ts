@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, ilike, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { exercises, type Exercise, type NewExercise } from '../platform/db/schema/exercises';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
@@ -73,7 +73,7 @@ export class ExerciseRepository extends BaseRepository<typeof exercises, Exercis
     }
 
     const [rows, countRows] = await Promise.all([
-      rowsQuery.limit(limit).offset(offset),
+      rowsQuery.orderBy(desc(exercises.id)).limit(limit).offset(offset),
       countQuery,
     ]);
 

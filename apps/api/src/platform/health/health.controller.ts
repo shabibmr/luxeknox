@@ -1,5 +1,5 @@
-import { Controller, Get, Res, HttpStatus, Inject } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags, ApiProperty } from '@nestjs/swagger';
+import { Controller, Get, Res, HttpStatus, Inject, Query } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags, ApiProperty, ApiQuery } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { sql } from 'drizzle-orm';
 import type { DrizzleDb } from '../db/client';
@@ -31,6 +31,9 @@ export class ReadyResponseDto {
 
   @ApiProperty({ type: String, example: 'connected', enum: ['connected', 'disconnected'], description: 'PostgreSQL database connectivity status' })
   database!: 'connected' | 'disconnected';
+
+  @ApiProperty({ type: String, required: false, example: 'luxeknox_app', description: 'Current PostgreSQL connected role' })
+  role?: string;
 
   @ApiProperty({ type: String, example: '2026-09-16T12:00:00.000Z', description: 'Current UTC ISO-8601 timestamp' })
   timestamp!: string;
@@ -66,8 +69,14 @@ export class HealthController {
 
   @Get('ready')
   @ApiOperation({
-    summary: 'Readiness check with database ping',
-    description: 'Pings PostgreSQL using Drizzle / connection pool (SELECT 1). Returns 200 if connected, or 503 if disconnected.',
+    summary: 'Readiness check with database ping and role verification',
+    description: 'Pings PostgreSQL using Drizzle / connection pool (SELECT current_user). Returns 200 if connected, or 503 if disconnected. Optionally verifies connection role with ?verifyRole=true.',
+  })
+  @ApiQuery({
+    name: 'verifyRole',
+    required: false,
+    type: Boolean,
+    description: 'When true, asserts that connected DB role matches non-admin app user (DB_USER) and is not superuser',
   })
   @ApiResponse({
     status: 200,
@@ -79,14 +88,34 @@ export class HealthController {
     description: 'Database is disconnected or unreachable',
     type: ReadyResponseDto,
   })
-  async getReady(@Res({ passthrough: true }) res: Response): Promise<ReadyResponseDto> {
+  async getReady(
+    @Res({ passthrough: true }) res: Response,
+    @Query('verifyRole') verifyRole?: string,
+  ): Promise<ReadyResponseDto> {
     try {
-      await this.db.execute(sql`SELECT 1`);
+      const pingResult: any = await this.db.execute(
+        sql`SELECT current_user, current_setting('is_superuser') AS is_superuser`,
+      );
+      const row = pingResult?.rows?.[0] ?? pingResult?.[0];
+      const role = row?.current_user;
+      const isSuperuser = row?.is_superuser === 'on';
+
+      if (verifyRole === 'true' || verifyRole === '1') {
+        const expectedUser = process.env.DB_USER;
+        if (expectedUser && role && role !== expectedUser) {
+          throw new Error(`DB connected role '${role}' does not match expected DB_USER '${expectedUser}'`);
+        }
+        if (isSuperuser) {
+          throw new Error(`DB connected role '${role}' has superuser privilege`);
+        }
+      }
+
       const metrics = await this.jobRunRepository.getMetrics();
       res.status(HttpStatus.OK);
       return {
         status: 'ok',
         database: 'connected',
+        ...(role ? { role: String(role) } : {}),
         timestamp: new Date().toISOString(),
         jobs: {
           failure_count: metrics.failureCount,

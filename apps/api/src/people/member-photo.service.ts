@@ -5,12 +5,13 @@ import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
 import { runInTransaction } from '../platform/db/transaction-context';
 import type { MemberPhoto } from '../platform/db/schema/member-photos';
-import { NotFoundError } from '../platform/errors/app-error';
+import { BusinessRuleError, NotFoundError } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
+import { purposeFromObjectKey } from '../media/storage.service';
 import { MemberRepository } from './member.repository';
 import { MemberPhotoRepository } from './member-photo.repository';
-import type { MemberPhotoWriteDto } from './member-photo.dto';
+import { ALLOWED_MEMBER_PHOTO_PURPOSES, type MemberPhotoWriteDto } from './member-photo.dto';
 import { requireScopedMember } from './require-scoped-member';
 
 @Injectable()
@@ -53,6 +54,12 @@ export class MemberPhotoService {
     actor: AuthenticatedUser,
   ): Promise<MemberPhoto> {
     await requireScopedMember(this.memberRepository, memberId, actor);
+    const purpose = purposeFromObjectKey(dto.photo_url);
+    if (purpose && !ALLOWED_MEMBER_PHOTO_PURPOSES.includes(purpose as any)) {
+      throw new BusinessRuleError(
+        `Photo media key purpose must be one of [${ALLOWED_MEMBER_PHOTO_PURPOSES.join(', ')}], got '${purpose}'`,
+      );
+    }
     const now = new Date();
     const id = await this.photoRepository.insertPhoto({
       member_id: memberId,

@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm';
 import {
   createTestApp,
   seedTestUsers,
+  resetTestData,
   ADMIN_CREDENTIALS,
   TRAINER_CREDENTIALS,
   type TestAppInstance,
@@ -56,6 +57,9 @@ describe('People onboarding E2E (V3-14)', () => {
   });
 
   afterAll(async () => {
+    if (testApp?.db) {
+      await resetTestData(testApp.db);
+    }
     if (testApp?.app) {
       await testApp.app.close();
     }
@@ -356,6 +360,72 @@ describe('People onboarding E2E (V3-14)', () => {
     const photos = (await getPhotoRes.json()) as any;
     expect(Array.isArray(photos.data)).toBe(true);
     expect(photos.data.some((p: any) => p.is_current_avatar)).toBe(true);
+  });
+
+  it('rejects media upload slot requests with invalid or legacy purpose (HARDEN-04)', async () => {
+    const res = await fetch(`${testApp.baseUrl}/media/uploads`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        purpose: 'member_photo',
+        content_type: 'image/jpeg',
+        size_bytes: 4096,
+      }),
+    });
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as any;
+    expect(body.message).toBe('Validation failed');
+    expect(JSON.stringify(body.details)).toContain('Allowed purposes are:');
+  });
+
+  it('rejects attaching member photo with non-photo purpose media key (HARDEN-04)', async () => {
+    const memberRes = await fetch(`${testApp.baseUrl}/members`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        email: `e2e_invalid_photo_${RUN_ID}@luxeknox.test`,
+        password: onboardPassword,
+        first_name: 'Mismatch',
+        last_name: 'Photo',
+      }),
+    });
+    expect(memberRes.status).toBe(201);
+    const member = (await memberRes.json()) as any;
+
+    const waiverUploadRes = await fetch(`${testApp.baseUrl}/media/uploads`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        purpose: 'waiver',
+        content_type: 'application/pdf',
+        size_bytes: 2048,
+      }),
+    });
+    expect(waiverUploadRes.status).toBe(201);
+    const waiverSlot = (await waiverUploadRes.json()) as any;
+
+    const photoRes = await fetch(`${testApp.baseUrl}/members/${member.id}/photos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        photo_url: waiverSlot.object_key,
+      }),
+    });
+    expect(photoRes.status).toBe(422);
+    const errorBody = (await photoRes.json()) as any;
+    expect(errorBody.message).toContain('Photo media key purpose must be one of');
   });
 
   it('assign-trainer returns 422 at capacity and allows admin override', async () => {

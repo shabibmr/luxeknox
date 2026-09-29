@@ -3,6 +3,7 @@ import { eq, sql } from 'drizzle-orm';
 import {
   createTestApp,
   seedTestUsers,
+  resetTestData,
   TRAINER_CREDENTIALS,
   type TestAppInstance,
 } from './helpers/postgres';
@@ -47,6 +48,9 @@ describe('Attendance hardware duplicate-event E2E (ATT-018)', () => {
   }, 120_000);
 
   afterAll(async () => {
+    if (testApp?.db) {
+      await resetTestData(testApp.db);
+    }
     if (testApp?.app) {
       await testApp.app.close();
     }

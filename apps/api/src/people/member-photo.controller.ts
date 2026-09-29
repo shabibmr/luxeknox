@@ -8,12 +8,12 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { RequirePermission } from '../rbac/require-permission.decorator';
 import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
-import { memberPhotoWriteSchema, type MemberPhotoWriteDto } from './member-photo.dto';
+import { memberPhotoWriteSchema, MemberPhotoWriteDto } from './member-photo.dto';
 import { MemberPhotoService } from './member-photo.service';
 import type { MemberPhoto } from '../platform/db/schema/member-photos';
 
@@ -47,6 +47,7 @@ export class MemberPhotoController {
   @HttpCode(201)
   @ApiOperation({ operationId: 'createMemberPhoto', summary: 'Add a gallery photo' })
   @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: MemberPhotoWriteDto })
   @ApiResponse({ status: 201, type: MemberPhotoResponseDto })
   async create(
     @Param('id', ParseIntPipe) memberId: number,

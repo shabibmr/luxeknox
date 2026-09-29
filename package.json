@@ -13,6 +13,7 @@
     "api:test:e2e": "pnpm --filter api test:e2e",
     "api:lint": "pnpm --filter api lint",
     "api:typecheck": "pnpm --filter api typecheck",
+    "typecheck": "pnpm --filter api run typecheck",
     "api:migrate": "pnpm --filter api db:migrate",
     "api:seed": "pnpm --filter api db:seed",
     "app:web": "bash tool/run_frontend_web.sh",

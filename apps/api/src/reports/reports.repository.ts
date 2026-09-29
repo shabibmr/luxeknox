@@ -164,7 +164,8 @@ export class ReportsRepository {
       .from(memberships)
       .innerJoin(membershipProducts, eq(memberships.product_id, membershipProducts.id))
       .where(and(...conditions))
-      .groupBy(memberships.product_id, membershipProducts.name);
+      .groupBy(memberships.product_id, membershipProducts.name)
+      .orderBy(desc(count()), asc(memberships.product_id));
 
     const [renewalsResult] = await this.db
       .select({ count: count() })
@@ -223,7 +224,8 @@ export class ReportsRepository {
       })
       .from(attendances)
       .innerJoin(users, eq(attendances.user_id, users.id))
-      .where(between(attendances.check_in_time, startUtc, endUtc));
+      .where(between(attendances.check_in_time, startUtc, endUtc))
+      .orderBy(asc(attendances.check_in_time), asc(attendances.id));
 
     const footfall = attendancesInRange.length;
 
@@ -297,7 +299,8 @@ export class ReportsRepository {
         status: payments.status,
       })
       .from(payments)
-      .where(between(payments.payment_date, startUtc, endUtc));
+      .where(between(payments.payment_date, startUtc, endUtc))
+      .orderBy(asc(payments.payment_date), asc(payments.id));
 
     let gross = '0.00';
     let totalTax = '0.00';
@@ -323,7 +326,8 @@ export class ReportsRepository {
           eq(paymentHistories.action, 'payment_received'),
           between(paymentHistories.timestamp, startUtc, endUtc),
         ),
-      );
+      )
+      .orderBy(asc(paymentHistories.timestamp), asc(paymentHistories.id));
 
     const tenderByMethod: Record<string, string> = {
       cash: '0.00',
@@ -378,7 +382,8 @@ export class ReportsRepository {
         isActive: trainers.is_active,
       })
       .from(trainers)
-      .where(trainerId != null ? eq(trainers.id, trainerId) : undefined);
+      .where(trainerId != null ? eq(trainers.id, trainerId) : undefined)
+      .orderBy(asc(trainers.id));
 
     const rows: Array<Record<string, any>> = [];
 
@@ -468,7 +473,7 @@ export class ReportsRepository {
         ),
       )
       .groupBy(workoutPlans.id, workoutPlans.title)
-      .orderBy(desc(count()))
+      .orderBy(desc(count()), asc(workoutPlans.id))
       .limit(5);
 
     const [startedSessions] = await this.db
@@ -503,7 +508,7 @@ export class ReportsRepository {
       )
       .where(between(workoutSessions.started_at, startUtc, endUtc))
       .groupBy(workoutSessionExercises.exercise_id, exercises.name)
-      .orderBy(desc(count()))
+      .orderBy(desc(count()), asc(workoutSessionExercises.exercise_id))
       .limit(5);
 
     const started = startedSessions.count;

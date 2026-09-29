@@ -18,7 +18,7 @@ export const MEDIA_PURPOSES = [
 
 export type MediaPurpose = (typeof MEDIA_PURPOSES)[number];
 
-const PURPOSE_LIMITS: Record<MediaPurpose, { maxBytes: number; mimeTypes: readonly string[] }> = {
+export const PURPOSE_LIMITS: Record<MediaPurpose, { maxBytes: number; mimeTypes: readonly string[] }> = {
   avatar: { maxBytes: 5 * 1024 * 1024, mimeTypes: ['image/jpeg', 'image/png', 'image/webp'] },
   id_proof: {
     maxBytes: 10 * 1024 * 1024,
@@ -143,7 +143,9 @@ export class StorageService {
   ): Promise<{ url: string; object_key: string; expires_at: string }> {
     const limits = PURPOSE_LIMITS[input.purpose];
     if (!limits) {
-      throw new BadRequestError(`Unknown media purpose: ${input.purpose}`);
+      throw new BadRequestError(
+        `Unknown media purpose: ${input.purpose}. Allowed purposes are: ${MEDIA_PURPOSES.join(', ')}`,
+      );
     }
     if (input.size_bytes < 1 || input.size_bytes > limits.maxBytes) {
       throw new BusinessRuleError(
@@ -152,7 +154,7 @@ export class StorageService {
     }
     if (!limits.mimeTypes.includes(input.content_type)) {
       throw new BusinessRuleError(
-        `content_type ${input.content_type} is not allowed for purpose ${input.purpose}`,
+        `content_type ${input.content_type} is not allowed for purpose ${input.purpose}. Allowed types: ${limits.mimeTypes.join(', ')}`,
       );
     }
 
@@ -227,10 +229,14 @@ export class StorageService {
     }
     const limits = PURPOSE_LIMITS[purpose];
     if (body.length > limits.maxBytes) {
-      throw new BusinessRuleError('Uploaded body exceeds purpose max size');
+      throw new BusinessRuleError(
+        `Uploaded body exceeds purpose max size (${limits.maxBytes} bytes)`,
+      );
     }
     if (!limits.mimeTypes.includes(contentType)) {
-      throw new BusinessRuleError('Uploaded content_type not allowed for purpose');
+      throw new BusinessRuleError(
+        `Uploaded content_type '${contentType}' not allowed for purpose '${purpose}'. Allowed types: ${limits.mimeTypes.join(', ')}`,
+      );
     }
 
     const abs = this.resolveSafePath(objectKey);

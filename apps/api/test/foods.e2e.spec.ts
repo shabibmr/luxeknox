@@ -232,4 +232,61 @@ describe('Foods E2E', () => {
       expect(adminGet.status).toBe(200);
     });
   });
+
+  describe('pagination (PageMeta contract)', () => {
+    it('returns limit/offset/has_more/total in the response envelope', async () => {
+      const res = await fetch(`${testApp.baseUrl}/foods?limit=2&offset=0`, {
+        headers: { Authorization: `Bearer ${memberToken}` },
+      });
+      const body = (await res.json()) as any;
+
+      expect(body.meta).toHaveProperty('limit', 2);
+      expect(body.meta).toHaveProperty('offset', 0);
+      expect(body.meta).toHaveProperty('has_more');
+      expect(body.meta).toHaveProperty('total');
+      expect(body.data.length).toBeLessThanOrEqual(2);
+    });
+
+    it('offset advances past the first page without repeating rows and orders deterministically', async () => {
+      const nameA = uniqueName('page_a');
+      const nameB = uniqueName('page_b');
+      const nameC = uniqueName('page_c');
+      for (const name of [nameA, nameB, nameC]) {
+        await fetch(`${testApp.baseUrl}/foods`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+          body: JSON.stringify({
+            name,
+            serving_unit: 'g',
+            is_verified: true,
+            is_active: true,
+          }),
+        });
+      }
+
+      const page1Res = await fetch(`${testApp.baseUrl}/foods?q=${RUN_ID}&limit=2&offset=0`, {
+        headers: { Authorization: `Bearer ${memberToken}` },
+      });
+      const page1 = (await page1Res.json()) as any;
+      expect(page1.data).toHaveLength(2);
+
+      const page2Res = await fetch(`${testApp.baseUrl}/foods?q=${RUN_ID}&limit=2&offset=2`, {
+        headers: { Authorization: `Bearer ${memberToken}` },
+      });
+      const page2 = (await page2Res.json()) as any;
+      expect(page2.data.length).toBeGreaterThanOrEqual(1);
+
+      const page1Ids = page1.data.map((r: any) => r.id);
+      const page2Ids = page2.data.map((r: any) => r.id);
+
+      // Verify no duplicate IDs across pages
+      for (const id of page1Ids) {
+        expect(page2Ids).not.toContain(id);
+      }
+
+      // Verify descending order by ID
+      expect(page1.data[0].id).toBeGreaterThan(page1.data[1].id);
+      expect(page1.data[1].id).toBeGreaterThan(page2.data[0].id);
+    });
+  });
 });

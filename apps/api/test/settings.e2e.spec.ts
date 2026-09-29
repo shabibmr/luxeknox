@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { sql } from 'drizzle-orm';
+import type { Pool } from 'pg';
+import { DRIZZLE_POOL_TOKEN } from '../src/platform/db/drizzle.module';
+import { verifyLeastPrivilege, checkLeastPrivilege } from '../src/platform/db/client';
 import {
   createTestApp,
   seedTestUsers,
@@ -95,7 +98,60 @@ describe('Settings & RBAC E2E', () => {
     ).rejects.toThrow(/permission denied/i);
   });
 
+  it('rejects audit log TRUNCATE mutations at the database level', async () => {
+    await expect(
+      testApp.db.execute(sql`TRUNCATE TABLE audit_logs`),
+    ).rejects.toThrow(/permission denied/i);
+  });
+
   it('still allows audit log INSERT and SELECT', async () => {
     await expect(testApp.db.execute(sql`SELECT COUNT(*) FROM audit_logs`)).resolves.toBeDefined();
+  });
+
+  it('rejects DDL mutations (CREATE, DROP, ALTER) at the database level', async () => {
+    // Attempting CREATE TABLE violates schema USAGE-only grant
+    await expect(
+      testApp.db.execute(sql`CREATE TABLE ddl_boundary_probe (id int)`),
+    ).rejects.toThrow(/permission denied/i);
+
+    // Attempting DROP TABLE or ALTER TABLE violates table ownership
+    await expect(
+      testApp.db.execute(sql`DROP TABLE audit_logs`),
+    ).rejects.toThrow(/must be owner/i);
+
+    await expect(
+      testApp.db.execute(sql`ALTER TABLE audit_logs ADD COLUMN probe text`),
+    ).rejects.toThrow(/must be owner/i);
+  });
+
+  it('verifies the application runs under least privilege via verifyLeastPrivilege()', async () => {
+    const pool = testApp.app.get<Pool>(DRIZZLE_POOL_TOKEN);
+    await expect(verifyLeastPrivilege(pool)).resolves.toBeUndefined();
+
+    const report = await checkLeastPrivilege(pool);
+    expect(report.currentUser).toBe('luxeknox_app');
+    expect(report.isSuperuser).toBe(false);
+    expect(report.hasSchemaCreate).toBe(false);
+    expect(report.ownedTablesCount).toBe(0);
+    expect(report.auditHasUpdate).toBe(false);
+    expect(report.auditHasDelete).toBe(false);
+    expect(report.auditHasTruncate).toBe(false);
+    expect(report.violations).toHaveLength(0);
+  });
+
+  it('verifies GET /v1/ready confirms DB connection and reports least-privileged role', async () => {
+    const res = await fetch(`${testApp.baseUrl}/ready`);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.status).toBe('ok');
+    expect(body.database).toBe('connected');
+    expect(body.role).toBe('luxeknox_app');
+
+    const verifyRes = await fetch(`${testApp.baseUrl}/ready?verifyRole=true`);
+    expect(verifyRes.status).toBe(200);
+    const verifyBody = (await verifyRes.json()) as any;
+    expect(verifyBody.status).toBe('ok');
+    expect(verifyBody.database).toBe('connected');
+    expect(verifyBody.role).toBe('luxeknox_app');
   });
 });
