@@ -16,7 +16,9 @@ function requireSafeIdentifier(value: string | undefined, name: string): string 
  * custom DELIMITER declarations often used for stored procedures or triggers.
  */
 export function splitSqlStatements(sqlContent: string): string[] {
-  const lines = sqlContent.split(/\r?\n/);
+  // drizzle-kit appends `--> statement-breakpoint` to the same line as a statement's
+  // terminator; strip it so the line still ends with the delimiter.
+  const lines = sqlContent.replace(/[ \t]*-->\s*statement-breakpoint/g, '').split(/\r?\n/);
   const statements: string[] = [];
   let currentDelimiter = ';';
   let currentBuffer: string[] = [];
