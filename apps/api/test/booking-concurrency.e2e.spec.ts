@@ -99,6 +99,7 @@ describe('Booking concurrency E2E (SCH-019)', () => {
 
   afterAll(async () => {
     const db = testApp.db as any;
+    await db.execute(sql`DELETE FROM schedule_histories WHERE schedule_id = ${scheduleId}`);
     await db.execute(sql`DELETE FROM schedule_participants WHERE schedule_id = ${scheduleId}`);
     await db.execute(sql`DELETE FROM schedules WHERE id = ${scheduleId}`);
     await db.execute(sql`DELETE FROM schedule_types WHERE name = ${`Race Test Type ${RUN_ID}`}`);
