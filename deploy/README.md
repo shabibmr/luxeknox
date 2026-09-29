@@ -40,8 +40,10 @@ deploy/deploy.sh
 
 Pulls latest `main`, builds, runs `pnpm --filter api db:migrate`, syncs `app/build/web/` to
 `/var/www/html/luxeknox-app`, and (re)starts the API under pm2.
+The API is synced (dist + production deps via `pnpm deploy`) to `/var/www/luxeknox-api` and pm2 runs it
+from there. Its production `.env` lives at `/var/www/luxeknox-api/.env` and is never overwritten.
 
-Env overrides: `API_PORT` (default `3010`), `APP_DEPLOY_DIR` (default `/var/www/html/luxeknox-app`),
+Env overrides: `API_PORT` (default `3010`), `API_DEPLOY_DIR` (default `/var/www/luxeknox-api`), `APP_DEPLOY_DIR` (default `/var/www/html/luxeknox-app`),
 `PM2_APP_NAME` (default `luxeknox-api`), `SKIP_MIGRATE=1`, `SKIP_APP=1` (API-only deploy, e.g. for a
 backend-only hotfix).
 

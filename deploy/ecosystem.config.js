@@ -3,13 +3,13 @@
 // Reload:  pm2 reload luxeknox-api --update-env
 'use strict';
 
-const path = require('path');
+const API_DEPLOY_DIR = process.env.API_DEPLOY_DIR || '/var/www/luxeknox-api';
 
 module.exports = {
   apps: [
     {
       name: 'luxeknox-api',
-      cwd: path.join(__dirname, '..', 'apps', 'api'),
+      cwd: API_DEPLOY_DIR,
       script: 'dist/main.js',
       instances: 1,
       exec_mode: 'fork',
