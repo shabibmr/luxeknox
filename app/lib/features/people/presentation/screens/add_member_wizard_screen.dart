@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
 import '../people_strings.dart';
+import '../widgets/gender_radio_group.dart';
 import '../cubit/add_member_wizard_cubit.dart';
 
 /// Multi-step onboarding wizard for creating a new member.
@@ -125,8 +126,7 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
                 content: Column(
                   children: [
                     TextField(
-                      controller: _firstNameController
-                        ..text = state.input.firstName,
+                      controller: _firstNameController,
                       decoration: const InputDecoration(
                         labelText: PeopleStrings.firstName,
                       ),
@@ -135,18 +135,15 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
                       ),
                     ),
                     TextField(
-                      controller: _lastNameController
-                        ..text = state.input.lastName,
+                      controller: _lastNameController,
                       decoration: const InputDecoration(
                         labelText: PeopleStrings.lastName,
                       ),
                       onChanged: (value) =>
                           cubit.updateInput((i) => i.copyWith(lastName: value)),
                     ),
-                    TextField(
-                      decoration: const InputDecoration(
-                        labelText: PeopleStrings.gender,
-                      ),
+                    GenderRadioGroup(
+                      value: state.input.gender,
                       onChanged: (value) =>
                           cubit.updateInput((i) => i.copyWith(gender: value)),
                     ),
@@ -160,8 +157,7 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
                 content: Column(
                   children: [
                     TextField(
-                      controller: _emailController
-                        ..text = state.input.email ?? '',
+                      controller: _emailController,
                       decoration: const InputDecoration(
                         labelText: PeopleStrings.email,
                       ),
@@ -169,8 +165,7 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
                           cubit.updateInput((i) => i.copyWith(email: value)),
                     ),
                     TextField(
-                      controller: _phoneController
-                        ..text = state.input.phoneNumber ?? '',
+                      controller: _phoneController,
                       decoration: const InputDecoration(
                         labelText: PeopleStrings.phoneNumber,
                       ),
@@ -179,8 +174,7 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
                       ),
                     ),
                     TextField(
-                      controller: _passwordController
-                        ..text = state.input.password ?? '',
+                      controller: _passwordController,
                       decoration: const InputDecoration(
                         labelText: PeopleStrings.password,
                       ),
@@ -189,8 +183,7 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
                           cubit.updateInput((i) => i.copyWith(password: value)),
                     ),
                     TextField(
-                      controller: _addressController
-                        ..text = state.input.address ?? '',
+                      controller: _addressController,
                       decoration: const InputDecoration(
                         labelText: PeopleStrings.address,
                       ),

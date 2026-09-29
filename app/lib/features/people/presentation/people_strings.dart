@@ -71,6 +71,8 @@ abstract final class PeopleStrings {
   static const email = 'Email';
   static const phone = 'Phone';
   static const gender = 'Gender';
+  static const genderMale = 'Male';
+  static const genderFemale = 'Female';
   static const dateOfBirth = 'Date of birth';
   static const address = 'Address';
   static const changeAvatar = 'Change avatar';
