@@ -1,0 +1,16 @@
+1. Create Employee "Role" Validation must be removed. Role is by default "Office/Desk".
+
+
+2. Memberships Remove Code, PT Sessions included, Access Facilities, Max Freeze Days.
+
+3. Similar to 'Membership Package' add 
+a. Personal Training with name, description, duration, base price, tax percent , active?,
+
+4. Add Membership/Personal Training data Seed.
+
+5. For Create Page of members + trainer + employee Need to add biometric_id. [Access Control Device ID].
+ - How do we Register new person
+ - How to read attendance from ACcess Control Device (ESSL IP based)  
+
+
+
