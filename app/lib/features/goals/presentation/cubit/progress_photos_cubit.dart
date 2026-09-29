@@ -23,11 +23,8 @@ abstract class ProgressPhotosState with _$ProgressPhotosState {
 
 @injectable
 class ProgressPhotosCubit extends Cubit<ProgressPhotosState> {
-  ProgressPhotosCubit(
-    this._listPhotos,
-    this._createPhoto,
-    this._deletePhoto,
-  ) : super(const ProgressPhotosState());
+  ProgressPhotosCubit(this._listPhotos, this._createPhoto, this._deletePhoto)
+    : super(const ProgressPhotosState());
 
   final ListProgressPhotosUseCase _listPhotos;
   final CreateProgressPhotoUseCase _createPhoto;

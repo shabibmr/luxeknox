@@ -97,11 +97,7 @@ class ReportCubit extends Cubit<ReportState> {
       clearTrainerId: clearTrainerId,
     );
     emit(
-      state.copyWith(
-        status: LoadStatus.loading,
-        query: next,
-        failure: null,
-      ),
+      state.copyWith(status: LoadStatus.loading, query: next, failure: null),
     );
     await _fetch(next);
   }
@@ -126,13 +122,7 @@ class ReportCubit extends Cubit<ReportState> {
   Future<String?> exportCsv() async {
     final query = state.query;
     if (state.result != null) {
-      emit(
-        state.copyWith(
-          exporting: true,
-          failure: null,
-          exportedCsv: null,
-        ),
-      );
+      emit(state.copyWith(exporting: true, failure: null, exportedCsv: null));
     }
     final result = await _exportCsv(query);
     return result.fold(
@@ -145,11 +135,7 @@ class ReportCubit extends Cubit<ReportState> {
       (csv) {
         if (state.result != null) {
           emit(
-            state.copyWith(
-              exporting: false,
-              exportedCsv: csv,
-              failure: null,
-            ),
+            state.copyWith(exporting: false, exportedCsv: csv, failure: null),
           );
         }
         return csv;

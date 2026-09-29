@@ -74,9 +74,7 @@ class WorkoutPlanRemoteDataSourceImpl implements WorkoutPlanRemoteDataSource {
 
   @override
   Future<api.WorkoutPlan> createPlan(api.WorkoutPlanWrite write) async {
-    return _unwrap(
-      await _workApi.createWorkoutPlan(workoutPlanWrite: write),
-    );
+    return _unwrap(await _workApi.createWorkoutPlan(workoutPlanWrite: write));
   }
 
   @override
@@ -118,9 +116,10 @@ class WorkoutPlanRemoteDataSourceImpl implements WorkoutPlanRemoteDataSource {
         );
       }
       return api.standardSerializers.deserialize(
-        raw,
-        specifiedType: const FullType(api.WorkoutPlan),
-      ) as api.WorkoutPlan;
+            raw,
+            specifiedType: const FullType(api.WorkoutPlan),
+          )
+          as api.WorkoutPlan;
     } catch (error, stackTrace) {
       if (error is DioException) rethrow;
       throw DioException(

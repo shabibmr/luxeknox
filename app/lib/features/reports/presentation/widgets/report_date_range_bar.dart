@@ -14,10 +14,7 @@ class ReportDateRangeBar extends StatelessWidget {
   final DateTime? to;
   final void Function(DateTime? from, DateTime? to) onChanged;
 
-  Future<void> _pick(
-    BuildContext context, {
-    required bool isFrom,
-  }) async {
+  Future<void> _pick(BuildContext context, {required bool isFrom}) async {
     final initial = (isFrom ? from : to) ?? DateTime.now();
     final picked = await showDatePicker(
       context: context,

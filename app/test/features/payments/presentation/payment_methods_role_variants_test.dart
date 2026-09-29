@@ -17,7 +17,8 @@ import 'package:mocktail/mocktail.dart';
 class MockPaymentMethodsCubit extends MockCubit<PaymentMethodsState>
     implements PaymentMethodsCubit {}
 
-class MockSessionCubit extends MockCubit<SessionState> implements SessionCubit {}
+class MockSessionCubit extends MockCubit<SessionState>
+    implements SessionCubit {}
 
 /// Create is shown only with `payments.create` (ADR-0006 §11).
 void main() {

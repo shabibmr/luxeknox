@@ -12,11 +12,7 @@ DeepLinkTarget? parseNotificationDeepLink(Map<String, String?>? payload) {
     'entityType',
     'type',
   ]);
-  final id = _firstNonEmpty(payload, const [
-    'entity_id',
-    'entityId',
-    'id',
-  ]);
+  final id = _firstNonEmpty(payload, const ['entity_id', 'entityId', 'id']);
 
   if (type == null || id == null) return null;
   return DeepLinkTarget(entityType: type.toLowerCase(), entityId: id);
@@ -28,9 +24,7 @@ String? _firstNonEmpty(Map<String, String?> payload, List<String> keys) {
     if (value != null && value.isNotEmpty) return value;
   }
   // Case-insensitive fallback.
-  final lower = {
-    for (final e in payload.entries) e.key.toLowerCase(): e.value,
-  };
+  final lower = {for (final e in payload.entries) e.key.toLowerCase(): e.value};
   for (final key in keys) {
     final value = lower[key.toLowerCase()]?.trim();
     if (value != null && value.isNotEmpty) return value;

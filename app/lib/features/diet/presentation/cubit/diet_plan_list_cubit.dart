@@ -30,18 +30,11 @@ class DietPlanListCubit extends Cubit<DietPlanListState> {
   bool? _isTemplate;
   List<DietPlan> _allItems = const [];
 
-  Future<void> load({
-    bool? isTemplate,
-    DietPlanListFilter? filter,
-  }) async {
+  Future<void> load({bool? isTemplate, DietPlanListFilter? filter}) async {
     if (isTemplate != null) _isTemplate = isTemplate;
     final next = filter ?? state.filter;
     emit(
-      state.copyWith(
-        status: LoadStatus.loading,
-        failure: null,
-        filter: next,
-      ),
+      state.copyWith(status: LoadStatus.loading, failure: null, filter: next),
     );
     final result = await _listPlans(
       ListDietPlansParams(isTemplate: _isTemplate),
@@ -84,10 +77,7 @@ class DietPlanListCubit extends Cubit<DietPlanListState> {
     await load(filter: filter);
   }
 
-  List<DietPlan> _applyFilter(
-    List<DietPlan> items,
-    DietPlanListFilter filter,
-  ) {
+  List<DietPlan> _applyFilter(List<DietPlan> items, DietPlanListFilter filter) {
     return switch (filter) {
       DietPlanListFilter.all => items,
       DietPlanListFilter.draft =>
@@ -96,8 +86,7 @@ class DietPlanListCubit extends Cubit<DietPlanListState> {
         items.where((p) => p.status == DietPlanStatus.active).toList(),
       DietPlanListFilter.archived =>
         items.where((p) => p.status == DietPlanStatus.archived).toList(),
-      DietPlanListFilter.templates =>
-        items.where((p) => p.isTemplate).toList(),
+      DietPlanListFilter.templates => items.where((p) => p.isTemplate).toList(),
     };
   }
 }

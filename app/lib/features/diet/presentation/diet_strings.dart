@@ -86,7 +86,8 @@ abstract final class DietStrings {
   static const adherenceScoreLabel = 'Adherence score';
   static const waterIntakeLabel = 'Water intake (ml)';
   static const memberNotesLabel = 'Notes / Reflections';
-  static const memberNotesHint = 'E.g. feeling energized, skipped afternoon snack...';
+  static const memberNotesHint =
+      'E.g. feeling energized, skipped afternoon snack...';
   static const saveLog = 'Save log';
   static const logSaved = 'Daily log saved';
   static const historyEmpty = 'No diet logs recorded yet.';
@@ -119,10 +120,7 @@ abstract final class DietStrings {
     DietPlanStatus.archived => statusArchived,
   };
 
-  static String foodLineSubtitle({
-    required num quantity,
-    String? servingUnit,
-  }) {
+  static String foodLineSubtitle({required num quantity, String? servingUnit}) {
     final unit = (servingUnit == null || servingUnit.isEmpty)
         ? ''
         : ' $servingUnit';
@@ -136,7 +134,9 @@ abstract final class DietStrings {
     return '$rounded$suffix';
   }
 
-  static String adherencePercent(num score) => '${score.clamp(0, 100).toStringAsFixed(0)}%';
+  static String adherencePercent(num score) =>
+      '${score.clamp(0, 100).toStringAsFixed(0)}%';
   static String waterMl(int ml) => '$ml ml';
-  static String caloriesKcal(num calories) => '${calories.toStringAsFixed(0)} kcal';
+  static String caloriesKcal(num calories) =>
+      '${calories.toStringAsFixed(0)} kcal';
 }

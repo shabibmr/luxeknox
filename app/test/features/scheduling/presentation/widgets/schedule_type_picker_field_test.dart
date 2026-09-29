@@ -16,7 +16,11 @@ void main() {
 
   const scheduleTypes = [
     ScheduleTypeInfo(id: 't1', name: 'Yoga'),
-    ScheduleTypeInfo(id: 't2', name: 'Personal training', requiresTrainer: true),
+    ScheduleTypeInfo(
+      id: 't2',
+      name: 'Personal training',
+      requiresTrainer: true,
+    ),
   ];
 
   setUpAll(() {
@@ -28,7 +32,9 @@ void main() {
   });
 
   testWidgets('renders empty state when catalog is empty', (tester) async {
-    when(() => listScheduleTypes(any())).thenAnswer((_) async => const Right([]));
+    when(
+      () => listScheduleTypes(any()),
+    ).thenAnswer((_) async => const Right([]));
 
     await tester.pumpWidget(
       MaterialApp(
@@ -46,7 +52,9 @@ void main() {
   });
 
   testWidgets('renders schedule types and reports selection', (tester) async {
-    when(() => listScheduleTypes(any())).thenAnswer((_) async => const Right(scheduleTypes));
+    when(
+      () => listScheduleTypes(any()),
+    ).thenAnswer((_) async => const Right(scheduleTypes));
     ScheduleTypeInfo? selected;
 
     await tester.pumpWidget(
@@ -70,8 +78,9 @@ void main() {
   });
 
   testWidgets('surfaces load failure', (tester) async {
-    when(() => listScheduleTypes(any()))
-        .thenAnswer((_) async => const Left(NetworkFailure()));
+    when(
+      () => listScheduleTypes(any()),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
 
     await tester.pumpWidget(
       MaterialApp(

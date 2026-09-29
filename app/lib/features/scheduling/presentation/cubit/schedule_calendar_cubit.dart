@@ -14,6 +14,7 @@ abstract class ScheduleCalendarState with _$ScheduleCalendarState {
   const factory ScheduleCalendarState({
     @Default(LoadStatus.initial) LoadStatus status,
     @Default(<ScheduleSession>[]) List<ScheduleSession> items,
+
     /// True after a successful fetch, so an empty range is still data.
     @Default(false) bool hasLoaded,
     DateTime? from,
@@ -62,9 +63,8 @@ class ScheduleCalendarCubit extends Cubit<ScheduleCalendarState> {
       ),
     );
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
         state.copyWith(
           status: LoadStatus.success,

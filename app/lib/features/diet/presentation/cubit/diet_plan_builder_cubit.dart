@@ -76,9 +76,8 @@ class DietPlanBuilderCubit extends Cubit<DietPlanBuilderState> {
     emit(state.copyWith(status: LoadStatus.loading, failure: null));
     final result = await _getPlan(planId);
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (plan) {
         final meals = [
           for (final m in plan.meals)
@@ -155,9 +154,7 @@ class DietPlanBuilderCubit extends Cubit<DietPlanBuilderState> {
   void setDailyCalorieTarget(int? value) {
     final ready = _editor;
     if (ready == null) return;
-    emit(
-      _cleared(ready).copyWith(dailyCalorieTarget: value, dirty: true),
-    );
+    emit(_cleared(ready).copyWith(dailyCalorieTarget: value, dirty: true));
   }
 
   void setProteinTargetG(num? value) {
@@ -302,10 +299,7 @@ class DietPlanBuilderCubit extends Cubit<DietPlanBuilderState> {
     final title = ready.title.trim();
     if (title.isEmpty) {
       emit(
-        ready.copyWith(
-          validationMessage: 'Title is required',
-          failure: null,
-        ),
+        ready.copyWith(validationMessage: 'Title is required', failure: null),
       );
       return false;
     }
@@ -335,8 +329,9 @@ class DietPlanBuilderCubit extends Cubit<DietPlanBuilderState> {
       final created = await _createPlan(
         CreateDietPlanParams(
           title: title,
-          memberId:
-              ready.memberId.trim().isEmpty ? null : ready.memberId.trim(),
+          memberId: ready.memberId.trim().isEmpty
+              ? null
+              : ready.memberId.trim(),
           dailyCalorieTarget: ready.dailyCalorieTarget,
           proteinTargetG: ready.proteinTargetG,
           carbsTargetG: ready.carbsTargetG,
@@ -345,20 +340,17 @@ class DietPlanBuilderCubit extends Cubit<DietPlanBuilderState> {
         ),
       );
       var failed = false;
-      created.fold(
-        (failure) {
-          failed = true;
-          emit(
-            ready.copyWith(
-              saving: false,
-              status: LoadStatus.failure,
-              failure: failure,
-              validationMessage: null,
-            ),
-          );
-        },
-        (p) => plan = p,
-      );
+      created.fold((failure) {
+        failed = true;
+        emit(
+          ready.copyWith(
+            saving: false,
+            status: LoadStatus.failure,
+            failure: failure,
+            validationMessage: null,
+          ),
+        );
+      }, (p) => plan = p);
       if (failed) return false;
     } else {
       final updated = await _updatePlan(
@@ -366,8 +358,9 @@ class DietPlanBuilderCubit extends Cubit<DietPlanBuilderState> {
           id: ready.planId!,
           rowVersion: ready.rowVersion ?? 0,
           title: title,
-          memberId:
-              ready.memberId.trim().isEmpty ? null : ready.memberId.trim(),
+          memberId: ready.memberId.trim().isEmpty
+              ? null
+              : ready.memberId.trim(),
           dailyCalorieTarget: ready.dailyCalorieTarget,
           proteinTargetG: ready.proteinTargetG,
           carbsTargetG: ready.carbsTargetG,
@@ -376,20 +369,17 @@ class DietPlanBuilderCubit extends Cubit<DietPlanBuilderState> {
         ),
       );
       var failed = false;
-      updated.fold(
-        (failure) {
-          failed = true;
-          emit(
-            ready.copyWith(
-              saving: false,
-              status: LoadStatus.failure,
-              failure: failure,
-              validationMessage: null,
-            ),
-          );
-        },
-        (p) => plan = p,
-      );
+      updated.fold((failure) {
+        failed = true;
+        emit(
+          ready.copyWith(
+            saving: false,
+            status: LoadStatus.failure,
+            failure: failure,
+            validationMessage: null,
+          ),
+        );
+      }, (p) => plan = p);
       if (failed) return false;
     }
 

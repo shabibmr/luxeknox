@@ -17,7 +17,8 @@ class MockMembershipPackagesCatalogCubit
     extends MockCubit<MembershipPackagesCatalogState>
     implements MembershipPackagesCatalogCubit {}
 
-class MockSessionCubit extends MockCubit<SessionState> implements SessionCubit {}
+class MockSessionCubit extends MockCubit<SessionState>
+    implements SessionCubit {}
 
 /// ADR-0006 §11 — catalog create follows `memberships.create` and row
 /// update follows `memberships.update`, for member, trainer, and admin.

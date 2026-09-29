@@ -95,10 +95,8 @@ class AppBarChart extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            getDrawingHorizontalLine: (value) => FlLine(
-              color: theme.colorScheme.outlineVariant,
-              strokeWidth: 1,
-            ),
+            getDrawingHorizontalLine: (value) =>
+                FlLine(color: theme.colorScheme.outlineVariant, strokeWidth: 1),
           ),
         ),
       ),

@@ -105,20 +105,17 @@ class DocumentPreviewDialog extends StatelessWidget {
                 child: !hasAccess
                     ? _AccessDeniedView()
                     : _isImage
-                        ? _ImagePreview(
-                            objectKey: objectKey,
-                            resolver: resolver,
-                          )
-                        : _DocumentInfoView(
-                            title: title,
-                            purpose: purpose,
-                            fileSize: fileSize != null
-                                ? _formatBytes(fileSize!)
-                                : null,
-                            objectKey: objectKey,
-                            resolver: resolver,
-                            downloader: downloader,
-                          ),
+                    ? _ImagePreview(objectKey: objectKey, resolver: resolver)
+                    : _DocumentInfoView(
+                        title: title,
+                        purpose: purpose,
+                        fileSize: fileSize != null
+                            ? _formatBytes(fileSize!)
+                            : null,
+                        objectKey: objectKey,
+                        resolver: resolver,
+                        downloader: downloader,
+                      ),
               ),
             ),
           ],
@@ -136,11 +133,7 @@ class _AccessDeniedView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.lock_outline,
-            size: 48,
-            color: theme.colorScheme.error,
-          ),
+          Icon(Icons.lock_outline, size: 48, color: theme.colorScheme.error),
           const SizedBox(height: 16),
           Text(
             'Access Restricted',
@@ -213,7 +206,8 @@ class _DocumentInfoViewState extends State<_DocumentInfoView> {
 
   Future<void> _handleDownload() async {
     final downloader =
-        widget.downloader ?? (GetIt.instance.isRegistered<MediaDownloader>()
+        widget.downloader ??
+        (GetIt.instance.isRegistered<MediaDownloader>()
             ? GetIt.instance<MediaDownloader>()
             : null);
     if (downloader == null) return;
@@ -223,9 +217,7 @@ class _DocumentInfoViewState extends State<_DocumentInfoView> {
       _downloadStatus = null;
     });
 
-    final result = await downloader.downloadBytes(
-      objectKey: widget.objectKey,
-    );
+    final result = await downloader.downloadBytes(objectKey: widget.objectKey);
 
     if (!mounted) return;
 

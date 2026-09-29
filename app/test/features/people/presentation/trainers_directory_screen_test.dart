@@ -85,17 +85,13 @@ void main() {
 
     when(() => listTrainers(any())).thenAnswer(
       (_) async => const Right(
-        CursorPage(
-          items: testTrainers,
-          hasMore: false,
-          nextCursor: null,
-        ),
+        CursorPage(items: testTrainers, hasMore: false, nextCursor: null),
       ),
     );
 
-    when(() => getTrainer(any())).thenAnswer(
-      (_) async => const Right(testProfile),
-    );
+    when(
+      () => getTrainer(any()),
+    ).thenAnswer((_) async => const Right(testProfile));
 
     getIt.registerFactory<TrainersDirectoryCubit>(
       () => TrainersDirectoryCubit(listTrainers),
@@ -123,10 +119,7 @@ void main() {
       ),
     );
     return MaterialApp(
-      home: BlocProvider<SessionCubit>.value(
-        value: sessionCubit,
-        child: child,
-      ),
+      home: BlocProvider<SessionCubit>.value(value: sessionCubit, child: child),
     );
   }
 
@@ -136,27 +129,41 @@ void main() {
 
     expect(find.text('Alice Smith'), findsOneWidget);
     expect(find.text('Bob Jones'), findsOneWidget);
-    expect(find.widgetWithText(ChoiceChip, PeopleStrings.filterAll), findsOneWidget);
-    expect(find.widgetWithText(ChoiceChip, PeopleStrings.filterActive), findsOneWidget);
-    expect(find.widgetWithText(ChoiceChip, PeopleStrings.filterInactive), findsOneWidget);
+    expect(
+      find.widgetWithText(ChoiceChip, PeopleStrings.filterAll),
+      findsOneWidget,
+    );
+    expect(
+      find.widgetWithText(ChoiceChip, PeopleStrings.filterActive),
+      findsOneWidget,
+    );
+    expect(
+      find.widgetWithText(ChoiceChip, PeopleStrings.filterInactive),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('tapping filter chips queries with status filter', (tester) async {
+  testWidgets('tapping filter chips queries with status filter', (
+    tester,
+  ) async {
     await tester.pumpWidget(wrap(const TrainersDirectoryScreen()));
     await tester.pumpAndSettle();
 
     // Tap Active chip
-    await tester.tap(find.widgetWithText(ChoiceChip, PeopleStrings.filterActive));
+    await tester.tap(
+      find.widgetWithText(ChoiceChip, PeopleStrings.filterActive),
+    );
     await tester.pumpAndSettle();
 
     verify(
-      () => listTrainers(
-        const ListTrainersParams(query: null, status: 'active'),
-      ),
+      () =>
+          listTrainers(const ListTrainersParams(query: null, status: 'active')),
     ).called(1);
 
     // Tap Inactive chip
-    await tester.tap(find.widgetWithText(ChoiceChip, PeopleStrings.filterInactive));
+    await tester.tap(
+      find.widgetWithText(ChoiceChip, PeopleStrings.filterInactive),
+    );
     await tester.pumpAndSettle();
 
     verify(
@@ -182,17 +189,11 @@ void main() {
 
     when(() => listTrainers(const ListTrainersParams())).thenAnswer(
       (_) async => Right(
-        CursorPage(
-          items: manyTrainers,
-          hasMore: true,
-          nextCursor: '20',
-        ),
+        CursorPage(items: manyTrainers, hasMore: true, nextCursor: '20'),
       ),
     );
 
-    when(
-      () => listTrainers(const ListTrainersParams(cursor: '20')),
-    ).thenAnswer(
+    when(() => listTrainers(const ListTrainersParams(cursor: '20'))).thenAnswer(
       (_) async => const Right(
         CursorPage(
           items: [

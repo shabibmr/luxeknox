@@ -76,9 +76,7 @@ class DietPlanRemoteDataSourceImpl implements DietPlanRemoteDataSource {
 
   @override
   Future<api.DietPlan> updatePlan(int id, api.DietPlanWrite write) async {
-    return _unwrap(
-      await _dietApi.updateDietPlan(id: id, dietPlanWrite: write),
-    );
+    return _unwrap(await _dietApi.updateDietPlan(id: id, dietPlanWrite: write));
   }
 
   @override
@@ -87,10 +85,7 @@ class DietPlanRemoteDataSourceImpl implements DietPlanRemoteDataSource {
     api.DietPlanMealsWrite write,
   ) async {
     return _unwrap(
-      await _dietApi.replaceDietPlanMeals(
-        id: id,
-        dietPlanMealsWrite: write,
-      ),
+      await _dietApi.replaceDietPlanMeals(id: id, dietPlanMealsWrite: write),
     );
   }
 
@@ -112,9 +107,10 @@ class DietPlanRemoteDataSourceImpl implements DietPlanRemoteDataSource {
         );
       }
       return api.standardSerializers.deserialize(
-        raw,
-        specifiedType: const FullType(api.DietPlan),
-      ) as api.DietPlan;
+            raw,
+            specifiedType: const FullType(api.DietPlan),
+          )
+          as api.DietPlan;
     } catch (error, stackTrace) {
       if (error is DioException) rethrow;
       throw DioException(

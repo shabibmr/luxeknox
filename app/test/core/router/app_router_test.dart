@@ -8,10 +8,21 @@ import 'package:luxeknox/core/widgets/adaptive_shell.dart';
 import 'package:luxeknox/core/widgets/destination_hub_screen.dart';
 import 'package:luxeknox/core/widgets/more_hub_screen.dart';
 import 'package:luxeknox/core/widgets/not_found_screen.dart';
-import 'package:luxeknox/core/widgets/placeholder_screen.dart';
 import 'package:luxeknox/features/auth/presentation/cubit/login_cubit.dart';
 import 'package:luxeknox/features/dashboard/domain/usecases/get_dashboard_usecase.dart';
 import 'package:luxeknox/features/dashboard/presentation/cubit/dashboard_cubit.dart';
+import 'package:luxeknox/core/presentation/load_status.dart';
+import 'package:luxeknox/features/diet/presentation/cubit/diet_plan_builder_cubit.dart';
+import 'package:luxeknox/features/diet/presentation/cubit/diet_plan_detail_cubit.dart';
+import 'package:luxeknox/features/diet/presentation/cubit/diet_plan_list_cubit.dart';
+import 'package:luxeknox/features/goals/presentation/cubit/goal_detail_cubit.dart';
+import 'package:luxeknox/features/goals/presentation/cubit/goals_list_cubit.dart';
+import 'package:luxeknox/features/goals/presentation/goals_strings.dart';
+import 'package:luxeknox/features/goals/presentation/screens/goal_detail_screen.dart';
+import 'package:luxeknox/features/notifications/presentation/cubit/notifications_inbox_cubit.dart';
+import 'package:luxeknox/features/reports/domain/entities/app_report_type.dart';
+import 'package:luxeknox/features/reports/domain/entities/report_query.dart';
+import 'package:luxeknox/features/reports/presentation/cubit/report_cubit.dart';
 import 'package:luxeknox/features/scheduling/domain/usecases/schedule_usecases.dart';
 import 'package:luxeknox/features/scheduling/presentation/cubit/todays_sessions_cubit.dart';
 import 'package:luxeknox/session/domain/entities/capabilities.dart';
@@ -32,6 +43,26 @@ class MockSessionCubit extends MockCubit<SessionState>
 class MockGetDashboardUseCase extends Mock implements GetDashboardUseCase {}
 
 class MockListSchedulesUseCase extends Mock implements ListSchedulesUseCase {}
+
+class MockGoalDetailCubit extends MockCubit<GoalDetailState>
+    implements GoalDetailCubit {}
+
+class MockDietPlanListCubit extends MockCubit<DietPlanListState>
+    implements DietPlanListCubit {}
+
+class MockDietPlanDetailCubit extends MockCubit<DietPlanDetailState>
+    implements DietPlanDetailCubit {}
+
+class MockNotificationsInboxCubit extends MockCubit<NotificationsInboxState>
+    implements NotificationsInboxCubit {}
+
+class MockReportCubit extends MockCubit<ReportState> implements ReportCubit {}
+
+class MockGoalsListCubit extends MockCubit<GoalsListState>
+    implements GoalsListCubit {}
+
+class MockDietPlanBuilderCubit extends MockCubit<DietPlanBuilderState>
+    implements DietPlanBuilderCubit {}
 
 void main() {
   const memberPrincipal = Principal(
@@ -155,7 +186,118 @@ void main() {
   group('GoRouter redirect + loop guard (L5)', () {
     setUpAll(() {
       registerFallbackValue(const ListSchedulesParams());
+      registerFallbackValue(AppReportType.members);
+      registerFallbackValue(InboxFilter.all);
+      registerFallbackValue(DietPlanListFilter.all);
     });
+
+    /// Screens behind these routes resolve feature cubits (and the session)
+    /// from getIt. Router tests only care that the route builds, so each is
+    /// an idle mock whose load calls complete immediately.
+    void registerScreenCubits(SessionCubit sessionCubit) {
+      getIt.registerSingleton<SessionCubit>(sessionCubit);
+
+      getIt.registerFactory<GoalDetailCubit>(() {
+        final cubit = MockGoalDetailCubit();
+        whenListen(
+          cubit,
+          const Stream<GoalDetailState>.empty(),
+          initialState: const GoalDetailState(),
+        );
+        when(() => cubit.load(any())).thenAnswer((_) async {});
+        return cubit;
+      });
+
+      getIt.registerFactory<DietPlanListCubit>(() {
+        final cubit = MockDietPlanListCubit();
+        whenListen(
+          cubit,
+          const Stream<DietPlanListState>.empty(),
+          initialState: const DietPlanListState(),
+        );
+        when(
+          () => cubit.load(
+            isTemplate: any(named: 'isTemplate'),
+            filter: any(named: 'filter'),
+          ),
+        ).thenAnswer((_) async {});
+        return cubit;
+      });
+
+      getIt.registerFactory<DietPlanDetailCubit>(() {
+        final cubit = MockDietPlanDetailCubit();
+        whenListen(
+          cubit,
+          const Stream<DietPlanDetailState>.empty(),
+          initialState: const DietPlanDetailState(),
+        );
+        when(() => cubit.load(any())).thenAnswer((_) async {});
+        return cubit;
+      });
+
+      getIt.registerFactory<NotificationsInboxCubit>(() {
+        final cubit = MockNotificationsInboxCubit();
+        whenListen(
+          cubit,
+          const Stream<NotificationsInboxState>.empty(),
+          initialState: const NotificationsInboxState(),
+        );
+        when(
+          () => cubit.load(filter: any(named: 'filter')),
+        ).thenAnswer((_) async {});
+        return cubit;
+      });
+
+      getIt.registerFactory<ReportCubit>(() {
+        final cubit = MockReportCubit();
+        whenListen(
+          cubit,
+          const Stream<ReportState>.empty(),
+          // Settled failure state: the loading spinner would never let
+          // pumpAndSettle finish.
+          initialState: ReportState(
+            status: LoadStatus.failure,
+            failure: const NetworkFailure(),
+            query: ReportQuery(
+              type: AppReportType.payments,
+              from: DateTime(2026),
+              to: DateTime(2026, 2),
+            ),
+          ),
+        );
+        when(
+          () => cubit.load(
+            any(),
+            trainerOwnLocked: any(named: 'trainerOwnLocked'),
+          ),
+        ).thenAnswer((_) async {});
+        return cubit;
+      });
+
+      getIt.registerFactory<GoalsListCubit>(() {
+        final cubit = MockGoalsListCubit();
+        whenListen(
+          cubit,
+          const Stream<GoalsListState>.empty(),
+          initialState: const GoalsListState(),
+        );
+        when(() => cubit.load(any())).thenAnswer((_) async {});
+        return cubit;
+      });
+
+      getIt.registerFactory<DietPlanBuilderCubit>(() {
+        final cubit = MockDietPlanBuilderCubit();
+        whenListen(
+          cubit,
+          const Stream<DietPlanBuilderState>.empty(),
+          initialState: const DietPlanBuilderState(),
+        );
+        when(
+          () => cubit.init(planId: any(named: 'planId')),
+        ).thenAnswer((_) async {});
+        return cubit;
+      });
+    }
 
     setUp(() {
       getIt.registerFactory<LoginCubit>(() => LoginCubit(MockSessionCubit()));
@@ -194,6 +336,7 @@ void main() {
         const Stream<SessionState>.empty(),
         initialState: initial,
       );
+      registerScreenCubits(sessionCubit);
       final router = createRouter(sessionCubit);
       await tester.pumpWidget(
         MaterialApp.router(
@@ -273,7 +416,8 @@ void main() {
         tester,
         const SessionAuthenticated(
           principal: trainerPrincipal,
-          capabilities: emptyCaps,
+          // /trainer/plans/diets/create is gated on diets.write.
+          capabilities: Capabilities(slugs: ['diets.write']),
         ),
       );
 
@@ -313,6 +457,7 @@ void main() {
           const Stream<SessionState>.empty(),
           initialState: session,
         );
+        registerScreenCubits(sessionCubit);
         final router = createRouter(sessionCubit);
         await tester.pumpWidget(
           MaterialApp.router(
@@ -466,7 +611,7 @@ void main() {
         router.go(path);
         await tester.pumpAndSettle();
         expect(router.routeInformationProvider.value.uri.path, path);
-        expect(find.text(ShellStrings.memberProgressGoalDetail), findsWidgets);
+        expect(find.byType(GoalDetailScreen), findsOneWidget);
       });
 
       testWidgets('unauthenticated deep link preserves redirect query', (
@@ -565,6 +710,7 @@ void main() {
             capabilities: emptyCaps,
           ),
         );
+        registerScreenCubits(sessionCubit);
         final router = createRouter(sessionCubit);
         await tester.pumpWidget(
           MaterialApp.router(
@@ -581,7 +727,7 @@ void main() {
         final nested = Routes.memberProgressGoalById('3');
         router.go(nested);
         await tester.pumpAndSettle();
-        expect(find.text(ShellStrings.memberProgressGoalDetail), findsWidgets);
+        expect(find.byType(GoalDetailScreen), findsOneWidget);
 
         await tester.tap(find.text(ShellStrings.home).last);
         await tester.pumpAndSettle();
@@ -593,8 +739,8 @@ void main() {
         await tester.tap(find.text(ShellStrings.progress).last);
         await tester.pumpAndSettle();
         expect(router.routeInformationProvider.value.uri.path, nested);
-        expect(find.byType(PlaceholderScreen), findsWidgets);
-        expect(find.text(ShellStrings.memberProgressGoalDetail), findsWidgets);
+        expect(find.byType(GoalDetailScreen), findsOneWidget);
+        expect(find.text(GoalsStrings.goalDetailTitle), findsWidgets);
       });
     });
 

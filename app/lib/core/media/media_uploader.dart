@@ -102,9 +102,11 @@ class MediaUploader {
 
 api.MediaUploadRequestPurposeEnum _mapPurposeToApi(MediaPurpose purpose) {
   return switch (purpose) {
-    MediaPurpose.exerciseMedia => api.MediaUploadRequestPurposeEnum.exerciseMedia,
+    MediaPurpose.exerciseMedia =>
+      api.MediaUploadRequestPurposeEnum.exerciseMedia,
     MediaPurpose.avatar => api.MediaUploadRequestPurposeEnum.avatar,
-    MediaPurpose.progressPhoto => api.MediaUploadRequestPurposeEnum.progressPhoto,
+    MediaPurpose.progressPhoto =>
+      api.MediaUploadRequestPurposeEnum.progressPhoto,
     MediaPurpose.idProof => api.MediaUploadRequestPurposeEnum.idProof,
     MediaPurpose.waiver => api.MediaUploadRequestPurposeEnum.waiver,
     MediaPurpose.medicalCert => api.MediaUploadRequestPurposeEnum.medicalCert,

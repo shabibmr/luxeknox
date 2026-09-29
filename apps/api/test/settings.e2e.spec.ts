@@ -63,10 +63,11 @@ describe('Settings & RBAC E2E', () => {
     });
 
     expect(res.status).toBe(200);
-    const settings = (await res.json()) as any;
-    expect(typeof settings).toBe('object');
-    expect(settings.timezone).toBeDefined();
-    expect(settings.currency).toBeDefined();
+    const body = (await res.json()) as any;
+    expect(Array.isArray(body.data)).toBe(true);
+    const keys = body.data.map((s: any) => s.setting_key);
+    expect(keys).toContain('timezone');
+    expect(keys).toContain('currency');
   });
 
   it('GET /v1/settings returns 403 Forbidden for Member role lacking settings.read', async () => {

@@ -70,11 +70,7 @@ void main() {
       build: () => LoginCubit(sessionCubit),
       act: (cubit) => cubit.submit('user@luxeknox.com', ''),
       expect: () => [
-        isA<LoginState>().having(
-          (s) => s.status,
-          'status',
-          LoadStatus.failure,
-        ),
+        isA<LoginState>().having((s) => s.status, 'status', LoadStatus.failure),
       ],
       verify: (_) {
         verifyNever(() => mockLoginUseCase(any()));

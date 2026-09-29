@@ -76,9 +76,9 @@ class _DietPlanDetailBody extends StatelessWidget {
     if (!context.mounted) return;
     final next = cubit.state;
     if (next.status == LoadStatus.success && next.assignedPlan != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(DietStrings.assigned)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(DietStrings.assigned)));
       final assignedId = next.assignedPlan!.id;
       cubit.clearAssignedPlan();
       context.push(Routes.trainerPlansDietById(assignedId));
@@ -266,10 +266,7 @@ class _DetailContent extends StatelessWidget {
           for (final meal in plan.meals) ...[
             Text(meal.mealName, style: theme.textTheme.titleSmall),
             if (meal.scheduledTime != null)
-              Text(
-                meal.scheduledTime!,
-                style: theme.textTheme.bodySmall,
-              ),
+              Text(meal.scheduledTime!, style: theme.textTheme.bodySmall),
             for (final food in meal.foods)
               ListTile(
                 contentPadding: EdgeInsets.zero,

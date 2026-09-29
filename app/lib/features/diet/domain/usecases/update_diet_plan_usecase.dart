@@ -48,8 +48,7 @@ class UpdateDietPlanParams extends Equatable {
 }
 
 @lazySingleton
-class UpdateDietPlanUseCase
-    implements UseCase<DietPlan, UpdateDietPlanParams> {
+class UpdateDietPlanUseCase implements UseCase<DietPlan, UpdateDietPlanParams> {
   const UpdateDietPlanUseCase(this._repository);
 
   final DietPlanRepository _repository;

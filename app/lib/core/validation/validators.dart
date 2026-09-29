@@ -4,14 +4,10 @@
 /// rules remain authoritative and surface via [ValidationFailure] /
 /// [BusinessRuleFailure].
 abstract final class Validators {
-  static final RegExp _email = RegExp(
-    r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
-  );
+  static final RegExp _email = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
   /// Digits with optional leading `+` and 8–15 digits total (E.164-ish).
-  static final RegExp _phone = RegExp(
-    r'^\+?[0-9]{8,15}$',
-  );
+  static final RegExp _phone = RegExp(r'^\+?[0-9]{8,15}$');
 
   static String? required(
     String? value, {
@@ -58,11 +54,7 @@ abstract final class Validators {
     return null;
   }
 
-  static String? minLength(
-    String? value,
-    int min, {
-    String? message,
-  }) {
+  static String? minLength(String? value, int min, {String? message}) {
     final text = value ?? '';
     if (text.length < min) {
       return message ?? 'Must be at least $min characters';
@@ -78,7 +70,8 @@ abstract final class Validators {
   }) {
     if (value == null || value.isEmpty) return emptyMessage;
     if (value.length < minLength) {
-      return tooShortMessage ?? 'Password must be at least $minLength characters';
+      return tooShortMessage ??
+          'Password must be at least $minLength characters';
     }
     return null;
   }

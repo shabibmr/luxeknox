@@ -75,9 +75,7 @@ void main() {
   const canApprove = Capabilities(
     slugs: ['memberships.read', 'memberships.approve'],
   );
-  const noApprove = Capabilities(
-    slugs: ['memberships.read'],
-  );
+  const noApprove = Capabilities(slugs: ['memberships.read']);
 
   setUp(() {
     renewCubit = MockMembershipRenewCubit();
@@ -93,10 +91,7 @@ void main() {
 
   tearDown(() => getIt.reset());
 
-  Widget wrapScreen(
-    Widget child, {
-    Capabilities capabilities = canApprove,
-  }) {
+  Widget wrapScreen(Widget child, {Capabilities capabilities = canApprove}) {
     whenListen(
       sessionCubit,
       const Stream<SessionState>.empty(),
@@ -117,23 +112,22 @@ void main() {
         ),
       ],
     );
-    return MaterialApp.router(
-      routerConfig: router,
-    );
+    return MaterialApp.router(routerConfig: router);
   }
 
-  testWidgets('renders no permission message when memberships.approve is missing', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      wrapScreen(
-        const MembershipRenewScreen(membershipId: 'm-1'),
-        capabilities: noApprove,
-      ),
-    );
+  testWidgets(
+    'renders no permission message when memberships.approve is missing',
+    (tester) async {
+      await tester.pumpWidget(
+        wrapScreen(
+          const MembershipRenewScreen(membershipId: 'm-1'),
+          capabilities: noApprove,
+        ),
+      );
 
-    expect(find.text(MembershipStrings.noPermission), findsOneWidget);
-  });
+      expect(find.text(MembershipStrings.noPermission), findsOneWidget);
+    },
+  );
 
   testWidgets('renders loading indicator initially', (tester) async {
     whenListen(
@@ -149,29 +143,30 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
-  testWidgets('renders membership info, product dropdown and submit button on success', (
-    tester,
-  ) async {
-    whenListen(
-      renewCubit,
-      const Stream<MembershipRenewState>.empty(),
-      initialState: MembershipRenewState(
-        status: LoadStatus.success,
-        membership: membership,
-        products: products,
-        selectedProductId: 'prod-1',
-      ),
-    );
+  testWidgets(
+    'renders membership info, product dropdown and submit button on success',
+    (tester) async {
+      whenListen(
+        renewCubit,
+        const Stream<MembershipRenewState>.empty(),
+        initialState: MembershipRenewState(
+          status: LoadStatus.success,
+          membership: membership,
+          products: products,
+          selectedProductId: 'prod-1',
+        ),
+      );
 
-    await tester.pumpWidget(
-      wrapScreen(const MembershipRenewScreen(membershipId: 'm-1')),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        wrapScreen(const MembershipRenewScreen(membershipId: 'm-1')),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Membership ID: m-1'), findsOneWidget);
-    expect(find.text('Current package: Gold Package'), findsOneWidget);
-    expect(find.text(MembershipStrings.renewSubmit), findsOneWidget);
-  });
+      expect(find.text('Membership ID: m-1'), findsOneWidget);
+      expect(find.text('Current package: Gold Package'), findsOneWidget);
+      expect(find.text(MembershipStrings.renewSubmit), findsOneWidget);
+    },
+  );
 
   testWidgets('submits renew form when button tapped', (tester) async {
     whenListen(

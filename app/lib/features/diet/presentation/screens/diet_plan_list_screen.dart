@@ -21,8 +21,7 @@ class DietPlanListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          getIt<DietPlanListCubit>()..load(isTemplate: isTemplate),
+      create: (_) => getIt<DietPlanListCubit>()..load(isTemplate: isTemplate),
       child: const _DietPlanListBody(),
     );
   }
@@ -68,7 +67,8 @@ class _DietPlanListBody extends StatelessWidget {
             child: BlocBuilder<DietPlanListCubit, DietPlanListState>(
               builder: (context, state) {
                 final showData =
-                    state.status == LoadStatus.success || state.items.isNotEmpty;
+                    state.status == LoadStatus.success ||
+                    state.items.isNotEmpty;
                 if (state.status == LoadStatus.loading && !showData) {
                   return const AppLoading();
                 }
@@ -80,55 +80,54 @@ class _DietPlanListBody extends StatelessWidget {
                 }
                 final items = state.items;
                 return items.isEmpty
-                      ? const AppEmptyView(message: DietStrings.noneFound)
-                      : RefreshIndicator(
-                          onRefresh: () =>
-                              context.read<DietPlanListCubit>().load(),
-                          child: ListView.builder(
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              final plan = items[index];
-                              final subtitle = plan.dailyCalorieTarget == null
-                                  ? null
-                                  : '${plan.dailyCalorieTarget} kcal/day';
-                              return ListTile(
-                                title: Row(
-                                  children: [
-                                    Expanded(child: Text(plan.title)),
-                                    if (plan.isTemplate)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 6,
-                                          vertical: 2,
-                                        ),
-                                        margin: const EdgeInsets.only(left: 6),
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .secondaryContainer,
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          DietStrings.templateBadge,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .labelSmall,
-                                        ),
+                    ? const AppEmptyView(message: DietStrings.noneFound)
+                    : RefreshIndicator(
+                        onRefresh: () =>
+                            context.read<DietPlanListCubit>().load(),
+                        child: ListView.builder(
+                          itemCount: items.length,
+                          itemBuilder: (context, index) {
+                            final plan = items[index];
+                            final subtitle = plan.dailyCalorieTarget == null
+                                ? null
+                                : '${plan.dailyCalorieTarget} kcal/day';
+                            return ListTile(
+                              title: Row(
+                                children: [
+                                  Expanded(child: Text(plan.title)),
+                                  if (plan.isTemplate)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
                                       ),
-                                  ],
-                                ),
-                                subtitle:
-                                    subtitle == null ? null : Text(subtitle),
-                                trailing: DietPlanStatusChip(
-                                  status: plan.status,
-                                ),
-                                onTap: () => context.push(
-                                  Routes.trainerPlansDietById(plan.id),
-                                ),
-                              );
-                            },
-                          ),
-                        );
+                                      margin: const EdgeInsets.only(left: 6),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.secondaryContainer,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        DietStrings.templateBadge,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.labelSmall,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              subtitle: subtitle == null
+                                  ? null
+                                  : Text(subtitle),
+                              trailing: DietPlanStatusChip(status: plan.status),
+                              onTap: () => context.push(
+                                Routes.trainerPlansDietById(plan.id),
+                              ),
+                            );
+                          },
+                        ),
+                      );
               },
             ),
           ),
@@ -145,4 +144,3 @@ const _filters = <(DietPlanListFilter, String)>[
   (DietPlanListFilter.archived, DietStrings.filterArchived),
   (DietPlanListFilter.templates, DietStrings.filterTemplates),
 ];
-

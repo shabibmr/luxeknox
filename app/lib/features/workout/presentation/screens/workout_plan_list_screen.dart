@@ -76,18 +76,14 @@ class _WorkoutPlanListBody extends StatelessWidget {
                     message: state.failure == null
                         ? 'Something went wrong'
                         : failureMessage(state.failure!),
-                    onRetry: () =>
-                        context.read<WorkoutPlanListCubit>().load(),
+                    onRetry: () => context.read<WorkoutPlanListCubit>().load(),
                   );
                 }
                 if (items.isEmpty) {
-                  return const AppEmptyView(
-                    message: WorkoutStrings.noneFound,
-                  );
+                  return const AppEmptyView(message: WorkoutStrings.noneFound);
                 }
                 return RefreshIndicator(
-                  onRefresh: () =>
-                      context.read<WorkoutPlanListCubit>().load(),
+                  onRefresh: () => context.read<WorkoutPlanListCubit>().load(),
                   child: ListView.builder(
                     itemCount: items.length,
                     itemBuilder: (context, index) {

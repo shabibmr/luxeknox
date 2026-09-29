@@ -4,7 +4,9 @@ import '../../domain/entities/membership_history_entry.dart';
 import '../../domain/entities/membership_status.dart';
 import 'membership_date.dart';
 
-MembershipHistoryAction _actionToDomain(api.MembershipHistoryActionEnum action) {
+MembershipHistoryAction _actionToDomain(
+  api.MembershipHistoryActionEnum action,
+) {
   return switch (action.name) {
     'created' => MembershipHistoryAction.created,
     'renewed' => MembershipHistoryAction.renewed,

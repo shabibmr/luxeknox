@@ -14,6 +14,7 @@ abstract class WorkoutPlanVersionsState with _$WorkoutPlanVersionsState {
   const factory WorkoutPlanVersionsState({
     @Default(LoadStatus.initial) LoadStatus status,
     @Default(<WorkoutPlanVersion>[]) List<WorkoutPlanVersion> versions,
+
     /// True after a successful fetch, so an empty history is still data.
     @Default(false) bool hasLoaded,
     String? expandedId,
@@ -32,9 +33,8 @@ class WorkoutPlanVersionsCubit extends Cubit<WorkoutPlanVersionsState> {
     emit(state.copyWith(status: LoadStatus.loading, failure: null));
     final result = await _listVersions(planId);
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (versions) => emit(
         state.copyWith(
           status: LoadStatus.success,

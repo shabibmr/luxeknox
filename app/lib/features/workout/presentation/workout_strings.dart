@@ -117,10 +117,7 @@ abstract final class WorkoutStrings {
     WorkoutPlanStatus.archived => statusArchived,
   };
 
-  static String exerciseSubtitle({
-    int? sets,
-    String? reps,
-  }) {
+  static String exerciseSubtitle({int? sets, String? reps}) {
     final parts = <String>[];
     if (sets != null) parts.add('$sets sets');
     if (reps != null && reps.isNotEmpty) parts.add('$reps reps');

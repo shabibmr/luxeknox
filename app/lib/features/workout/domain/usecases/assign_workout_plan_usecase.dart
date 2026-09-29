@@ -8,10 +8,7 @@ import '../entities/workout_plan.dart';
 import '../repositories/workout_plan_repository.dart';
 
 class AssignWorkoutPlanParams extends Equatable {
-  const AssignWorkoutPlanParams({
-    required this.planId,
-    required this.memberId,
-  });
+  const AssignWorkoutPlanParams({required this.planId, required this.memberId});
 
   final String planId;
   final String memberId;

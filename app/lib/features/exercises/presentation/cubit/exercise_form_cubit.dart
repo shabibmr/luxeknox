@@ -49,9 +49,8 @@ class ExerciseFormCubit extends Cubit<ExerciseFormState> {
     final result = await action();
     if (isClosed) return;
     result.fold(
-      (failure) => emit(
-        ExerciseFormState(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(ExerciseFormState(status: LoadStatus.failure, failure: failure)),
       (_) => emit(const ExerciseFormState(status: LoadStatus.success)),
     );
   }

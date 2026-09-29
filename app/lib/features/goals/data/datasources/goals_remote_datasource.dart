@@ -32,9 +32,7 @@ abstract class GoalsRemoteDataSource {
     api.MeasurementWrite write,
   );
 
-  Future<api.ProgressPhotoPage> listProgressPhotos({
-    required int memberId,
-  });
+  Future<api.ProgressPhotoPage> listProgressPhotos({required int memberId});
 
   Future<api.ProgressPhoto> createProgressPhoto(
     int memberId,
@@ -119,9 +117,7 @@ class GoalsRemoteDataSourceImpl implements GoalsRemoteDataSource {
     int id,
     api.GoalCheckInWrite write,
   ) async {
-    return _unwrap(
-      await _goalApi.checkInGoal(id: id, goalCheckInWrite: write),
-    );
+    return _unwrap(await _goalApi.checkInGoal(id: id, goalCheckInWrite: write));
   }
 
   @override
@@ -195,10 +191,7 @@ class GoalsRemoteDataSourceImpl implements GoalsRemoteDataSource {
     api.ProgressNoteWrite write,
   ) async {
     return _unwrap(
-      await _goalApi.createProgressNote(
-        id: memberId,
-        progressNoteWrite: write,
-      ),
+      await _goalApi.createProgressNote(id: memberId, progressNoteWrite: write),
     );
   }
 }

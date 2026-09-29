@@ -39,9 +39,7 @@ void main() {
     expect(find.text('10am'), findsOneWidget);
   });
 
-  testWidgets('AppHeatmap renders in dark mode without error', (
-    tester,
-  ) async {
+  testWidgets('AppHeatmap renders in dark mode without error', (tester) async {
     await pumpApp(
       tester,
       const AppHeatmap(

@@ -117,7 +117,8 @@ class ListBroadcastsUseCase
 }
 
 @lazySingleton
-class ListDevicesUseCase implements UseCase<List<NotificationDevice>, NoParams> {
+class ListDevicesUseCase
+    implements UseCase<List<NotificationDevice>, NoParams> {
   const ListDevicesUseCase(this._repository);
 
   final NotificationsRepository _repository;
@@ -149,7 +150,9 @@ class RegisterDeviceUseCase
   final NotificationsRepository _repository;
 
   @override
-  Future<Either<Failure, NotificationDevice>> call(RegisterDeviceParams params) {
+  Future<Either<Failure, NotificationDevice>> call(
+    RegisterDeviceParams params,
+  ) {
     return _repository.registerDevice(
       deviceToken: params.deviceToken,
       platform: params.platform,

@@ -1,9 +1,4 @@
-enum AttendanceCheckInMethod {
-  qrCode,
-  rfid,
-  biometric,
-  manualOverride,
-}
+enum AttendanceCheckInMethod { qrCode, rfid, biometric, manualOverride }
 
 extension AttendanceCheckInMethodX on AttendanceCheckInMethod {
   String get label => switch (this) {

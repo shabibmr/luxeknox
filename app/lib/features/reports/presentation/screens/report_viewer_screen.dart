@@ -44,8 +44,9 @@ class ReportViewerScreen extends StatelessWidget {
     }
 
     return BlocProvider(
-      create: (_) => getIt<ReportCubit>()
-        ..load(parsed, trainerOwnLocked: trainerOwnLocked),
+      create: (_) =>
+          getIt<ReportCubit>()
+            ..load(parsed, trainerOwnLocked: trainerOwnLocked),
       child: _ReportViewerBody(
         type: parsed,
         trainerOwnLocked: trainerOwnLocked,
@@ -55,10 +56,7 @@ class ReportViewerScreen extends StatelessWidget {
 }
 
 class _ReportViewerBody extends StatefulWidget {
-  const _ReportViewerBody({
-    required this.type,
-    required this.trainerOwnLocked,
-  });
+  const _ReportViewerBody({required this.type, required this.trainerOwnLocked});
 
   final AppReportType type;
   final bool trainerOwnLocked;
@@ -84,16 +82,16 @@ class _ReportViewerBodyState extends State<_ReportViewerBody> {
     final csv = await cubit.exportCsv();
     if (!mounted) return;
     if (csv == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(ReportStrings.exportFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(ReportStrings.exportFailed)));
       return;
     }
     await Clipboard.setData(ClipboardData(text: csv));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(ReportStrings.exported)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text(ReportStrings.exported)));
   }
 
   @override
@@ -134,11 +132,11 @@ class _ReportViewerBodyState extends State<_ReportViewerBody> {
                           _to = to;
                         });
                         context.read<ReportCubit>().applyFilters(
-                              from: from,
-                              to: to,
-                              productId: query.productId,
-                              trainerId: query.trainerId,
-                            );
+                          from: from,
+                          to: to,
+                          productId: query.productId,
+                          trainerId: query.trainerId,
+                        );
                       },
                     ),
                     const SizedBox(height: 12),
@@ -149,13 +147,13 @@ class _ReportViewerBodyState extends State<_ReportViewerBody> {
                       lockTrainerId: widget.trainerOwnLocked,
                       onApply: ({productId, trainerId}) {
                         context.read<ReportCubit>().applyFilters(
-                              from: _from,
-                              to: _to,
-                              productId: productId,
-                              trainerId: trainerId,
-                              clearProductId: productId == null,
-                              clearTrainerId: trainerId == null,
-                            );
+                          from: _from,
+                          to: _to,
+                          productId: productId,
+                          trainerId: trainerId,
+                          clearProductId: productId == null,
+                          clearTrainerId: trainerId == null,
+                        );
                       },
                     ),
                   ],
@@ -225,10 +223,7 @@ class _ReportBody extends StatelessWidget {
           ),
         ),
         if (state.exporting)
-          const ColoredBox(
-            color: Color(0x33000000),
-            child: AppLoading(),
-          ),
+          const ColoredBox(color: Color(0x33000000), child: AppLoading()),
       ],
     );
   }

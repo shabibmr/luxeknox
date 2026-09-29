@@ -73,13 +73,11 @@ class _ExercisePickerViewState extends State<_ExercisePickerView> {
           Expanded(
             child: BlocBuilder<ExercisePickerCubit, ExercisePickerState>(
               builder: (context, state) {
-                if (state.status == LoadStatus.loading &&
-                    state.items.isEmpty) {
+                if (state.status == LoadStatus.loading && state.items.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (state.status == LoadStatus.failure &&
-                    state.items.isEmpty) {
+                if (state.status == LoadStatus.failure && state.items.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -95,9 +93,7 @@ class _ExercisePickerViewState extends State<_ExercisePickerView> {
                 }
 
                 if (state.items.isEmpty) {
-                  return const Center(
-                    child: Text(WorkoutStrings.noExercises),
-                  );
+                  return const Center(child: Text(WorkoutStrings.noExercises));
                 }
 
                 return Column(

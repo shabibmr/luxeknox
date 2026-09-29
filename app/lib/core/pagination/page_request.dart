@@ -13,16 +13,9 @@ final class PageRequest extends Equatable {
   /// Maximum items to return for this page.
   final int limit;
 
-  const PageRequest({
-    this.cursor,
-    this.limit = defaultLimit,
-  });
+  const PageRequest({this.cursor, this.limit = defaultLimit});
 
-  PageRequest copyWith({
-    String? cursor,
-    int? limit,
-    bool clearCursor = false,
-  }) {
+  PageRequest copyWith({String? cursor, int? limit, bool clearCursor = false}) {
     return PageRequest(
       cursor: clearCursor ? null : (cursor ?? this.cursor),
       limit: limit ?? this.limit,

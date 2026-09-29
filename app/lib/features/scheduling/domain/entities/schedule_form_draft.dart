@@ -98,8 +98,11 @@ class ScheduleFormDraft extends Equatable {
     }
     if (recurUntil != null && start != null) {
       final startDateOnly = DateTime(start!.year, start!.month, start!.day);
-      final recurDateOnly =
-          DateTime(recurUntil!.year, recurUntil!.month, recurUntil!.day);
+      final recurDateOnly = DateTime(
+        recurUntil!.year,
+        recurUntil!.month,
+        recurUntil!.day,
+      );
       if (recurDateOnly.isBefore(startDateOnly)) {
         errors['recurUntil'] = _recurUntilBeforeStartError;
       }

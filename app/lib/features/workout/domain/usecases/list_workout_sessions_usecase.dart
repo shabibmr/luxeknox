@@ -9,11 +9,7 @@ import '../entities/workout_session.dart';
 import '../repositories/workout_session_repository.dart';
 
 class ListWorkoutSessionsParams extends Equatable {
-  const ListWorkoutSessionsParams({
-    this.memberId,
-    this.limit,
-    this.cursor,
-  });
+  const ListWorkoutSessionsParams({this.memberId, this.limit, this.cursor});
 
   final String? memberId;
   final int? limit;

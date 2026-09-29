@@ -72,8 +72,7 @@ class TrainersDirectoryCubit extends Cubit<TrainersDirectoryState> {
     }
     final query = state.query;
     final cursor = state.nextCursor;
-    final statusParam =
-        state.statusFilter == 'all' ? null : state.statusFilter;
+    final statusParam = state.statusFilter == 'all' ? null : state.statusFilter;
     emit(
       state.copyWith(
         status: LoadStatus.success,

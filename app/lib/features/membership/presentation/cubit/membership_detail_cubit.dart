@@ -45,9 +45,8 @@ class MembershipDetailCubit extends Cubit<MembershipDetailState> {
     final result = await _getMembership(membershipId);
     if (isClosed) return;
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (membership) => emit(
         state.copyWith(
           status: LoadStatus.success,

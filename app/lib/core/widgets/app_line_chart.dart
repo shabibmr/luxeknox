@@ -8,8 +8,7 @@ List<double> appLineChartUniqueXs(List<AppLineSeries> series) {
   final xs = <double>{
     for (final s in series)
       for (final p in s.points) p.dx,
-  }.toList()
-    ..sort();
+  }.toList()..sort();
   return xs;
 }
 
@@ -87,9 +86,7 @@ class AppLineChart extends StatelessWidget {
           lineBarsData: [
             for (var i = 0; i < series.length; i++)
               LineChartBarData(
-                spots: [
-                  for (final p in series[i].points) FlSpot(p.dx, p.dy),
-                ],
+                spots: [for (final p in series[i].points) FlSpot(p.dx, p.dy)],
                 color: series[i].color ?? palette[i % palette.length],
                 barWidth: 2,
                 dotData: const FlDotData(show: false),
@@ -124,8 +121,7 @@ class AppLineChart extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      xLabelFormatter?.call(value) ??
-                          value.toStringAsFixed(0),
+                      xLabelFormatter?.call(value) ?? value.toStringAsFixed(0),
                       style: axisLabelStyle,
                     ),
                   );
@@ -137,10 +133,8 @@ class AppLineChart extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            getDrawingHorizontalLine: (value) => FlLine(
-              color: theme.colorScheme.outlineVariant,
-              strokeWidth: 1,
-            ),
+            getDrawingHorizontalLine: (value) =>
+                FlLine(color: theme.colorScheme.outlineVariant, strokeWidth: 1),
           ),
         ),
       ),

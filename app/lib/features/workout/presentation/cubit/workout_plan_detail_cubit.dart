@@ -17,6 +17,7 @@ abstract class WorkoutPlanDetailState with _$WorkoutPlanDetailState {
   const factory WorkoutPlanDetailState({
     @Default(LoadStatus.initial) LoadStatus status,
     WorkoutPlan? plan,
+
     /// Set after a successful template assign; UI navigates then clears.
     WorkoutPlan? assignedPlan,
     @Default(false) bool actionInFlight,
@@ -52,9 +53,8 @@ class WorkoutPlanDetailCubit extends Cubit<WorkoutPlanDetailState> {
     );
     final result = await _getPlan(planId);
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (plan) => emit(
         state.copyWith(
           status: LoadStatus.success,

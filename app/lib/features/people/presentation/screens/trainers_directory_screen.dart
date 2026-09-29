@@ -263,9 +263,7 @@ class _TrainersListPane extends StatelessWidget {
                 return const AppLoading();
               }
               if (state.items.isEmpty) {
-                return const AppEmptyView(
-                  message: PeopleStrings.emptyTrainers,
-                );
+                return const AppEmptyView(message: PeopleStrings.emptyTrainers);
               }
               return RefreshIndicator(
                 onRefresh: () async {

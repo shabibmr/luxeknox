@@ -27,10 +27,8 @@ abstract class MembershipFreezeFormState with _$MembershipFreezeFormState {
 
 @injectable
 class MembershipFreezeFormCubit extends Cubit<MembershipFreezeFormState> {
-  MembershipFreezeFormCubit(
-    this._getMembership,
-    this._requestFreeze,
-  ) : super(const MembershipFreezeFormState());
+  MembershipFreezeFormCubit(this._getMembership, this._requestFreeze)
+    : super(const MembershipFreezeFormState());
 
   final GetMembershipUseCase _getMembership;
   final RequestMembershipFreezeUseCase _requestFreeze;
@@ -41,9 +39,8 @@ class MembershipFreezeFormCubit extends Cubit<MembershipFreezeFormState> {
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (membership) {
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
@@ -82,11 +79,15 @@ class MembershipFreezeFormCubit extends Cubit<MembershipFreezeFormState> {
     }
 
     if (endDate.isBefore(startDate)) {
-      emit(state.copyWith(validationError: 'End date cannot be before start date'));
+      emit(
+        state.copyWith(validationError: 'End date cannot be before start date'),
+      );
       return false;
     }
 
-    emit(state.copyWith(isSubmitting: true, failure: null, validationError: null));
+    emit(
+      state.copyWith(isSubmitting: true, failure: null, validationError: null),
+    );
 
     final result = await _requestFreeze(
       RequestMembershipFreezeParams(

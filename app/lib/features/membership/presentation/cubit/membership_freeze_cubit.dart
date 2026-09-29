@@ -64,9 +64,8 @@ class MembershipFreezeCubit extends Cubit<MembershipFreezeState> {
     );
     if (isClosed) return;
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
         state.copyWith(
           status: LoadStatus.success,
@@ -88,9 +87,8 @@ class MembershipFreezeCubit extends Cubit<MembershipFreezeState> {
     final result = await _getFreezes(membershipId);
     if (isClosed) return;
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
         state.copyWith(
           status: LoadStatus.success,

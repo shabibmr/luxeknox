@@ -12,7 +12,9 @@ void main() {
 
   setUp(() {
     timezoneProvider = MockGymTimezoneProvider();
-    when(() => timezoneProvider.timezone()).thenAnswer((_) async => 'Asia/Kolkata');
+    when(
+      () => timezoneProvider.timezone(),
+    ).thenAnswer((_) async => 'Asia/Kolkata');
   });
 
   Widget buildApp({DateTime? start, DateTime? end}) {
@@ -43,7 +45,9 @@ void main() {
     expect(find.text('Times shown in Asia/Kolkata'), findsOneWidget);
   });
 
-  testWidgets('shows a validation error when end is before start', (tester) async {
+  testWidgets('shows a validation error when end is before start', (
+    tester,
+  ) async {
     final start = DateTime(2026, 1, 1, 10);
     final end = DateTime(2026, 1, 1, 9);
 

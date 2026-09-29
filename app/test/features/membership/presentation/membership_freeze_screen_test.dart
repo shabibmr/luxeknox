@@ -16,8 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockMembershipFreezeFormCubit
-    extends MockCubit<MembershipFreezeFormState>
+class MockMembershipFreezeFormCubit extends MockCubit<MembershipFreezeFormState>
     implements MembershipFreezeFormCubit {}
 
 class MockSessionCubit extends MockCubit<SessionState>
@@ -47,9 +46,7 @@ void main() {
   const canUpdate = Capabilities(
     slugs: ['memberships.read', 'memberships.update'],
   );
-  const noUpdate = Capabilities(
-    slugs: ['memberships.read'],
-  );
+  const noUpdate = Capabilities(slugs: ['memberships.read']);
 
   setUp(() {
     freezeCubit = MockMembershipFreezeFormCubit();
@@ -66,10 +63,7 @@ void main() {
 
   tearDown(() => getIt.reset());
 
-  Widget wrapScreen(
-    Widget child, {
-    Capabilities capabilities = canUpdate,
-  }) {
+  Widget wrapScreen(Widget child, {Capabilities capabilities = canUpdate}) {
     whenListen(
       sessionCubit,
       const Stream<SessionState>.empty(),
@@ -90,23 +84,22 @@ void main() {
         ),
       ],
     );
-    return MaterialApp.router(
-      routerConfig: router,
-    );
+    return MaterialApp.router(routerConfig: router);
   }
 
-  testWidgets('renders no permission message when memberships.update is missing', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      wrapScreen(
-        const MembershipFreezeScreen(membershipId: 'm-1'),
-        capabilities: noUpdate,
-      ),
-    );
+  testWidgets(
+    'renders no permission message when memberships.update is missing',
+    (tester) async {
+      await tester.pumpWidget(
+        wrapScreen(
+          const MembershipFreezeScreen(membershipId: 'm-1'),
+          capabilities: noUpdate,
+        ),
+      );
 
-    expect(find.text(MembershipStrings.noPermission), findsOneWidget);
-  });
+      expect(find.text(MembershipStrings.noPermission), findsOneWidget);
+    },
+  );
 
   testWidgets('renders dates, reason field, and Freeze membership button', (
     tester,
@@ -164,9 +157,7 @@ void main() {
     verify(() => freezeCubit.submit()).called(1);
   });
 
-  testWidgets('displays validation error if dates are invalid', (
-    tester,
-  ) async {
+  testWidgets('displays validation error if dates are invalid', (tester) async {
     when(() => freezeCubit.submit()).thenAnswer((_) async => false);
 
     whenListen(
@@ -189,9 +180,6 @@ void main() {
     await tester.tap(find.byKey(const Key('freeze_submit_button')));
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('End date cannot be before start date'),
-      findsWidgets,
-    );
+    expect(find.text('End date cannot be before start date'), findsWidgets);
   });
 }

@@ -13,10 +13,7 @@ import '../diet_strings.dart';
 /// Modal sheet: search foods via [FoodPickerCubit], tap to select.
 /// Hides unverified foods from Members (BR-DIET-002), and shows
 /// verified status badges for all foods.
-Future<Food?> showFoodPickerSheet(
-  BuildContext context, {
-  bool? verifiedOnly,
-}) {
+Future<Food?> showFoodPickerSheet(BuildContext context, {bool? verifiedOnly}) {
   return showModalBottomSheet<Food>(
     context: context,
     isScrollControlled: true,
@@ -136,13 +133,11 @@ class _FoodPickerViewState extends State<_FoodPickerView> {
               builder: (context, state) {
                 final visible = _visibleItems(state.items);
 
-                if (state.status == LoadStatus.loading &&
-                    state.items.isEmpty) {
+                if (state.status == LoadStatus.loading && state.items.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (state.status == LoadStatus.failure &&
-                    state.items.isEmpty) {
+                if (state.status == LoadStatus.failure && state.items.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -228,9 +223,7 @@ class _FoodPickerViewState extends State<_FoodPickerView> {
                                   ),
                               ],
                             ),
-                            subtitle: subtitle.isEmpty
-                                ? null
-                                : Text(subtitle),
+                            subtitle: subtitle.isEmpty ? null : Text(subtitle),
                             onTap: () => Navigator.of(context).pop(food),
                           );
                         },

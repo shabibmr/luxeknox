@@ -65,9 +65,7 @@ void main() {
   );
 
   setUpAll(() {
-    registerFallbackValue(
-      const ListSchedulesParams(),
-    );
+    registerFallbackValue(const ListSchedulesParams());
   });
 
   setUp(() {
@@ -135,9 +133,8 @@ void main() {
 
   testWidgets('shows empty state when no alternatives', (tester) async {
     when(() => listSchedules(any())).thenAnswer(
-      (_) async => Right(
-        CursorPage(items: [current], nextCursor: null, hasMore: false),
-      ),
+      (_) async =>
+          Right(CursorPage(items: [current], nextCursor: null, hasMore: false)),
     );
 
     await tester.pumpWidget(
@@ -155,8 +152,9 @@ void main() {
   });
 
   testWidgets('surfaces list load failure', (tester) async {
-    when(() => listSchedules(any()))
-        .thenAnswer((_) async => const Left(NetworkFailure()));
+    when(
+      () => listSchedules(any()),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
 
     await tester.pumpWidget(
       wrap(

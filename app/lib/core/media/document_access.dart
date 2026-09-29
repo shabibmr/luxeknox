@@ -62,4 +62,3 @@ bool canDeleteMedia({
   if (viewerRole == UserType.member) return viewerId == parentMemberId;
   return false;
 }
-

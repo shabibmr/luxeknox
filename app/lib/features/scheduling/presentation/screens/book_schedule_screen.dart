@@ -43,9 +43,7 @@ class BookScheduleScreen extends StatelessWidget {
           BlocProvider(
             create: (_) => openSlotsCubit ?? getIt<OpenSlotsCubit>(),
           ),
-          BlocProvider(
-            create: (_) => bookBloc ?? getIt<BookScheduleBloc>(),
-          ),
+          BlocProvider(create: (_) => bookBloc ?? getIt<BookScheduleBloc>()),
         ],
         child: const _BookPtBody(),
       );
@@ -62,9 +60,7 @@ class BookScheduleScreen extends StatelessWidget {
             return cubit;
           },
         ),
-        BlocProvider(
-          create: (_) => bookBloc ?? getIt<BookScheduleBloc>(),
-        ),
+        BlocProvider(create: (_) => bookBloc ?? getIt<BookScheduleBloc>()),
       ],
       child: const _BookClassBody(),
     );
@@ -115,9 +111,9 @@ class _BookPtBodyState extends State<_BookPtBody> {
           final msg = participant.bookingStatus == BookingStatus.waitlisted
               ? SchedulingStrings.waitlistedSuccess
               : SchedulingStrings.bookSuccess;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(msg)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(msg)));
           setState(() => _selected = null);
           context.read<OpenSlotsCubit>().refresh();
         }
@@ -138,8 +134,8 @@ class _BookPtBodyState extends State<_BookPtBody> {
                   final session = context.read<SessionCubit>().state;
                   if (session is! SessionAuthenticated) return;
                   context.read<OpenSlotsCubit>().load(
-                        session.principal.profileId,
-                      );
+                    session.principal.profileId,
+                  );
                 },
               );
             }
@@ -240,11 +236,11 @@ class _BookPtBodyState extends State<_BookPtBody> {
     final session = context.read<SessionCubit>().state;
     if (session is! SessionAuthenticated) return;
     context.read<BookScheduleBloc>().add(
-          BookScheduleRequested(
-            scheduleId: slot.scheduleId,
-            memberId: session.principal.profileId,
-          ),
-        );
+      BookScheduleRequested(
+        scheduleId: slot.scheduleId,
+        memberId: session.principal.profileId,
+      ),
+    );
   }
 }
 
@@ -267,16 +263,14 @@ class _BookClassBody extends StatelessWidget {
           final msg = participant.bookingStatus == BookingStatus.waitlisted
               ? SchedulingStrings.waitlistedSuccess
               : SchedulingStrings.bookSuccess;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(msg)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(msg)));
           context.read<ScheduleCalendarCubit>().load();
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text(SchedulingStrings.bookClassTitle),
-        ),
+        appBar: AppBar(title: const Text(SchedulingStrings.bookClassTitle)),
         body: BlocBuilder<ScheduleCalendarCubit, ScheduleCalendarState>(
           builder: (context, state) {
             if (state.status == LoadStatus.loading && !state.hasLoaded) {
@@ -344,10 +338,10 @@ class _BookAction extends StatelessWidget {
     final session = context.read<SessionCubit>().state;
     if (session is! SessionAuthenticated) return;
     context.read<BookScheduleBloc>().add(
-          BookScheduleRequested(
-            scheduleId: scheduleId,
-            memberId: session.principal.profileId,
-          ),
-        );
+      BookScheduleRequested(
+        scheduleId: scheduleId,
+        memberId: session.principal.profileId,
+      ),
+    );
   }
 }

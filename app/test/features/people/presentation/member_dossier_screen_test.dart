@@ -70,9 +70,7 @@ void main() {
     sessionCubit = MockSessionCubit();
 
     when(() => getMember(42)).thenAnswer((_) async => const Right(testPerson));
-    when(
-      () => listMemberGoals(any()),
-    ).thenAnswer(
+    when(() => listMemberGoals(any())).thenAnswer(
       (_) async => const Right(
         CursorPage<MemberGoal>(items: [], nextCursor: null, hasMore: false),
       ),
@@ -103,9 +101,7 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      const MaterialApp(
-        home: MemberDossierScreen(memberId: 42),
-      ),
+      const MaterialApp(home: MemberDossierScreen(memberId: 42)),
     );
     await tester.pumpAndSettle();
 
@@ -113,24 +109,25 @@ void main() {
     expect(find.text(PeopleStrings.goals), findsOneWidget);
   });
 
-  testWidgets('tapping Goals tile navigates to ProgressHubScreen with goal creation enabled for trainer', (tester) async {
-    tester.view.physicalSize = const Size(800, 1400);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
+  testWidgets(
+    'tapping Goals tile navigates to ProgressHubScreen with goal creation enabled for trainer',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: MemberDossierScreen(memberId: 42),
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        const MaterialApp(home: MemberDossierScreen(memberId: 42)),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text(PeopleStrings.goals));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text(PeopleStrings.goals));
+      await tester.pumpAndSettle();
 
-    expect(find.byType(ProgressHubScreen), findsOneWidget);
-    expect(find.text(GoalsStrings.hubTitle), findsOneWidget);
-    // Floating action button for goal creation should be visible for trainer with goals.create
-    expect(find.byType(FloatingActionButton), findsOneWidget);
-  });
+      expect(find.byType(ProgressHubScreen), findsOneWidget);
+      expect(find.text(GoalsStrings.hubTitle), findsOneWidget);
+      // Floating action button for goal creation should be visible for trainer with goals.create
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+    },
+  );
 }

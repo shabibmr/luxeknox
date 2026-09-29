@@ -48,9 +48,8 @@ class MembershipCardCubit extends Cubit<MembershipCardState> {
     );
     if (isClosed) return;
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
         state.copyWith(
           status: LoadStatus.success,
@@ -77,8 +76,5 @@ class MembershipCardCubit extends Cubit<MembershipCardState> {
 
 Membership? _preferActive(List<Membership> items) {
   if (items.isEmpty) return null;
-  return items.firstWhere(
-    (m) => m.isActiveOrFrozen,
-    orElse: () => items.first,
-  );
+  return items.firstWhere((m) => m.isActiveOrFrozen, orElse: () => items.first);
 }

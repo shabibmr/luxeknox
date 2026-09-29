@@ -61,7 +61,11 @@ class AppHeatmap extends StatelessWidget {
               for (final label in colLabels)
                 SizedBox(
                   width: cellSize,
-                  child: Text(label, textAlign: TextAlign.center, style: labelStyle),
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: labelStyle,
+                  ),
                 ),
             ],
           ),

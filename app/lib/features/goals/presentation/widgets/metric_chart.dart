@@ -13,11 +13,7 @@ class MetricChartPoint {
 
 /// Dependency-free line chart for measurement trends (CustomPaint).
 class MetricChart extends StatelessWidget {
-  const MetricChart({
-    super.key,
-    required this.points,
-    this.height = 160,
-  });
+  const MetricChart({super.key, required this.points, this.height = 160});
 
   final List<MetricChartPoint> points;
   final double height;
@@ -78,8 +74,7 @@ class _MetricChartPainter extends CustomPainter {
       final p = points[i];
       final x = ((p.at.millisecondsSinceEpoch - minT) / tSpan) * size.width;
       final y =
-          size.height -
-          ((p.value.toDouble() - minV) / span) * size.height;
+          size.height - ((p.value.toDouble() - minV) / span) * size.height;
       if (i == 0) {
         path.moveTo(x, y);
       } else {
@@ -98,8 +93,7 @@ class _MetricChartPainter extends CustomPainter {
     for (final p in points) {
       final x = ((p.at.millisecondsSinceEpoch - minT) / tSpan) * size.width;
       final y =
-          size.height -
-          ((p.value.toDouble() - minV) / span) * size.height;
+          size.height - ((p.value.toDouble() - minV) / span) * size.height;
       canvas.drawCircle(Offset(x, y), 3.5, dotPaint);
     }
   }

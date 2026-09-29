@@ -92,10 +92,8 @@ abstract final class PeopleStrings {
   static const createMember = 'Create member';
   static const memberCreated = 'Member created.';
   static const reviewHint = 'Review the details below, then create the member.';
-  static const emailOrPhoneRequired =
-      'Email or phone number is required.';
-  static const alreadySubmittingMember =
-      'Already submitting — please wait.';
+  static const emailOrPhoneRequired = 'Email or phone number is required.';
+  static const alreadySubmittingMember = 'Already submitting — please wait.';
 
   // Edit Member screen
   static const editMemberTitle = 'Edit Member';

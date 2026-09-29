@@ -148,10 +148,7 @@ class _InboxBody extends StatelessWidget {
 enum _InboxMenu { markAllRead, registerDevice, rotateToken }
 
 class _LoadedInbox extends StatelessWidget {
-  const _LoadedInbox({
-    required this.state,
-    required this.detailPathBuilder,
-  });
+  const _LoadedInbox({required this.state, required this.detailPathBuilder});
 
   final NotificationsInboxState state;
   final String Function(String id) detailPathBuilder;

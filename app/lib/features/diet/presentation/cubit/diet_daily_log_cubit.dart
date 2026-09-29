@@ -88,12 +88,7 @@ class DietDailyLogCubit extends Cubit<DietDailyLogState> {
     this._recordDietLog,
     this._listDietLogs,
     this._listDietPlans,
-  ) : super(
-          DietDailyLogState(
-            memberId: '',
-            date: DateTime.now(),
-          ),
-        );
+  ) : super(DietDailyLogState(memberId: '', date: DateTime.now()));
 
   final RecordDietLogUseCase _recordDietLog;
   final ListDietLogsUseCase _listDietLogs;
@@ -116,37 +111,29 @@ class DietDailyLogCubit extends Cubit<DietDailyLogState> {
     final planResult = await _listDietPlans(
       ListDietPlansParams(memberId: memberId),
     );
-    planResult.fold(
-      (_) {},
-      (page) {
-        final active = page.items.where((p) => p.status.name == 'active').firstOrNull;
-        if (active != null) {
-          activePlanId = active.id;
-          planCalorieTarget = active.dailyCalorieTarget;
-        }
-      },
-    );
+    planResult.fold((_) {}, (page) {
+      final active = page.items
+          .where((p) => p.status.name == 'active')
+          .firstOrNull;
+      if (active != null) {
+        activePlanId = active.id;
+        planCalorieTarget = active.dailyCalorieTarget;
+      }
+    });
 
     // 2. Fetch existing log for effectiveDate
     final logResult = await _listDietLogs(
-      ListDietLogsParams(
-        memberId: memberId,
-        limit: 100,
-      ),
+      ListDietLogsParams(memberId: memberId, limit: 100),
     );
-
 
     DietLog? existing;
-    logResult.fold(
-      (_) {},
-      (page) {
-        existing = page.items.where((l) {
-          return l.loggedDate.year == effectiveDate.year &&
-              l.loggedDate.month == effectiveDate.month &&
-              l.loggedDate.day == effectiveDate.day;
-        }).firstOrNull;
-      },
-    );
+    logResult.fold((_) {}, (page) {
+      existing = page.items.where((l) {
+        return l.loggedDate.year == effectiveDate.year &&
+            l.loggedDate.month == effectiveDate.month &&
+            l.loggedDate.day == effectiveDate.day;
+      }).firstOrNull;
+    });
 
     if (existing != null) {
       emit(
@@ -187,12 +174,7 @@ class DietDailyLogCubit extends Cubit<DietDailyLogState> {
         targetCalories: state.targetCalories!,
       );
     }
-    emit(
-      state.copyWith(
-        caloriesConsumed: calories,
-        adherenceScore: adherence,
-      ),
-    );
+    emit(state.copyWith(caloriesConsumed: calories, adherenceScore: adherence));
   }
 
   void updateWater(int ml) {
@@ -223,7 +205,9 @@ class DietDailyLogCubit extends Cubit<DietDailyLogState> {
         totalCaloriesConsumed: state.caloriesConsumed,
         adherenceScore: state.adherenceScore,
         waterIntakeMl: state.waterIntakeMl,
-        memberNotes: state.memberNotes.trim().isEmpty ? null : state.memberNotes.trim(),
+        memberNotes: state.memberNotes.trim().isEmpty
+            ? null
+            : state.memberNotes.trim(),
       ),
     );
 
@@ -235,10 +219,7 @@ class DietDailyLogCubit extends Cubit<DietDailyLogState> {
         ),
       ),
       (saved) => emit(
-        state.copyWith(
-          status: DietDailyLogStatus.saved,
-          savedLog: saved,
-        ),
+        state.copyWith(status: DietDailyLogStatus.saved, savedLog: saved),
       ),
     );
   }

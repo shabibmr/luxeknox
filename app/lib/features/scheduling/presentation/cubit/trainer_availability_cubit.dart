@@ -14,6 +14,7 @@ abstract class TrainerAvailabilityState with _$TrainerAvailabilityState {
   const factory TrainerAvailabilityState({
     @Default(LoadStatus.initial) LoadStatus status,
     @Default(<TrainerAvailabilitySlot>[]) List<TrainerAvailabilitySlot> slots,
+
     /// True after a successful fetch, so an empty week is still data.
     @Default(false) bool hasLoaded,
     @Default(false) bool saving,
@@ -34,17 +35,12 @@ class TrainerAvailabilityCubit extends Cubit<TrainerAvailabilityState> {
   Future<void> load(String trainerId) async {
     _trainerId = trainerId;
     emit(
-      state.copyWith(
-        status: LoadStatus.loading,
-        failure: null,
-        saving: false,
-      ),
+      state.copyWith(status: LoadStatus.loading, failure: null, saving: false),
     );
     final result = await _get(trainerId);
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (slots) => emit(
         state.copyWith(
           status: LoadStatus.success,
@@ -62,11 +58,7 @@ class TrainerAvailabilityCubit extends Cubit<TrainerAvailabilityState> {
     if (trainerId == null || !state.hasLoaded || state.saving) return;
     final current = state.slots;
     emit(
-      state.copyWith(
-        saving: true,
-        failure: null,
-        status: LoadStatus.success,
-      ),
+      state.copyWith(saving: true, failure: null, status: LoadStatus.success),
     );
     final result = await _put(
       PutTrainerAvailabilityParams(trainerId: trainerId, slots: slots),

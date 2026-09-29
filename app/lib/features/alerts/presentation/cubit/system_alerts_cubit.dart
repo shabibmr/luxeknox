@@ -37,9 +37,8 @@ class SystemAlertsCubit extends Cubit<SystemAlertsState> {
     );
     final result = await _listAlerts(const ListSystemAlertsParams());
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
         state.copyWith(
           status: LoadStatus.success,

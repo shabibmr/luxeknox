@@ -14,11 +14,7 @@ import '../diet_strings.dart';
 import '../widgets/diet_macro_summary.dart';
 
 class DietMealDetailScreen extends StatelessWidget {
-  const DietMealDetailScreen({
-    super.key,
-    required this.mealId,
-    this.planId,
-  });
+  const DietMealDetailScreen({super.key, required this.mealId, this.planId});
 
   final String mealId;
   final String? planId;
@@ -26,9 +22,9 @@ class DietMealDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => DietMealDetailCubit(
-        getIt<GetDietMealUseCase>(),
-      )..load(mealId: mealId, planId: planId),
+      create: (_) =>
+          DietMealDetailCubit(getIt<GetDietMealUseCase>())
+            ..load(mealId: mealId, planId: planId),
       child: _DietMealDetailBody(mealId: mealId, planId: planId),
     );
   }
@@ -87,7 +83,9 @@ class _MealDetailContent extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          meal.mealName.isNotEmpty ? meal.mealName : DietStrings.mealDetailTitle,
+          meal.mealName.isNotEmpty
+              ? meal.mealName
+              : DietStrings.mealDetailTitle,
         ),
       ),
       body: ListView(
@@ -100,10 +98,7 @@ class _MealDetailContent extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      meal.mealName,
-                      style: theme.textTheme.headlineSmall,
-                    ),
+                    Text(meal.mealName, style: theme.textTheme.headlineSmall),
                     if (meal.scheduledTime != null &&
                         meal.scheduledTime!.isNotEmpty) ...[
                       const SizedBox(height: 4),
@@ -142,17 +137,11 @@ class _MealDetailContent extends StatelessWidget {
                 color: theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
-                meal.notes!,
-                style: theme.textTheme.bodyMedium,
-              ),
+              child: Text(meal.notes!, style: theme.textTheme.bodyMedium),
             ),
           ],
           const SizedBox(height: 16),
-          DietMacroSummary(
-            macros: macros,
-            calorieTarget: meal.targetCalories,
-          ),
+          DietMacroSummary(macros: macros, calorieTarget: meal.targetCalories),
           const Divider(height: 32),
           Text(DietStrings.foodsSection, style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
@@ -179,7 +168,8 @@ class _MealDetailContent extends StatelessWidget {
                     '${DietStrings.foodLineSubtitle(quantity: food.quantity, servingUnit: food.servingUnit)}'
                     '${foodMacros.calories > 0 ? ' · ${DietStrings.macroValue(foodMacros.calories, suffix: ' kcal')}' : ''}',
                   ),
-                  trailing: (foodMacros.proteinGrams > 0 ||
+                  trailing:
+                      (foodMacros.proteinGrams > 0 ||
                           foodMacros.carbsGrams > 0 ||
                           foodMacros.fatGrams > 0)
                       ? Text(

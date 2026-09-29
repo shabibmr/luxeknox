@@ -11,9 +11,7 @@ abstract class MembershipRemoteDataSource {
 
   Future<api.MembershipProduct> getProduct(int id);
 
-  Future<api.MembershipProduct> createProduct(
-    api.MembershipProductWrite write,
-  );
+  Future<api.MembershipProduct> createProduct(api.MembershipProductWrite write);
 
   Future<api.MembershipProduct> updateProduct(
     int id,

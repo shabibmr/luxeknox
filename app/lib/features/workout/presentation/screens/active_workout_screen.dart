@@ -168,9 +168,7 @@ class _StartPanelState extends State<_StartPanel> {
               onPressed: () {
                 final raw = _planIdController.text.trim();
                 context.read<ActiveWorkoutBloc>().add(
-                  ActiveWorkoutStarted(
-                    workoutPlanId: raw.isEmpty ? null : raw,
-                  ),
+                  ActiveWorkoutStarted(workoutPlanId: raw.isEmpty ? null : raw),
                 );
               },
               child: const Text(WorkoutStrings.startSession),
@@ -255,7 +253,10 @@ class _InProgressPanelState extends State<_InProgressPanel> {
         const RestTimerWidget(),
         const SizedBox(height: 8),
         if (exercises.isNotEmpty) ...[
-          Text(WorkoutStrings.exercisesSection, style: theme.textTheme.titleMedium),
+          Text(
+            WorkoutStrings.exercisesSection,
+            style: theme.textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
           for (final e in exercises) _ExerciseChoice(exercise: e, state: state),
         ] else ...[
@@ -457,10 +458,7 @@ class _ExerciseChoice extends StatelessWidget {
 }
 
 class _CompletedPanel extends StatelessWidget {
-  const _CompletedPanel({
-    required this.session,
-    required this.loggedSetCount,
-  });
+  const _CompletedPanel({required this.session, required this.loggedSetCount});
 
   final WorkoutSession session;
   final int loggedSetCount;

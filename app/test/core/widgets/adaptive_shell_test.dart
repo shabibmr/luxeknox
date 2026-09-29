@@ -43,28 +43,13 @@ void main() {
           },
           branches: [
             StatefulShellBranch(
-              routes: [
-                GoRoute(
-                  path: '/a',
-                  builder: (_, _) => const Text('A'),
-                ),
-              ],
+              routes: [GoRoute(path: '/a', builder: (_, _) => const Text('A'))],
             ),
             StatefulShellBranch(
-              routes: [
-                GoRoute(
-                  path: '/b',
-                  builder: (_, _) => const Text('B'),
-                ),
-              ],
+              routes: [GoRoute(path: '/b', builder: (_, _) => const Text('B'))],
             ),
             StatefulShellBranch(
-              routes: [
-                GoRoute(
-                  path: '/c',
-                  builder: (_, _) => const Text('C'),
-                ),
-              ],
+              routes: [GoRoute(path: '/c', builder: (_, _) => const Text('C'))],
             ),
           ],
         ),

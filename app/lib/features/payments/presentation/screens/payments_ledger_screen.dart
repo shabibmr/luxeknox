@@ -15,11 +15,7 @@ import '../payment_strings.dart';
 import '../widgets/payment_status_chip.dart';
 
 class PaymentsLedgerScreen extends StatelessWidget {
-  const PaymentsLedgerScreen({
-    super.key,
-    this.memberId,
-    required this.role,
-  });
+  const PaymentsLedgerScreen({super.key, this.memberId, required this.role});
 
   final String? memberId;
   final PaymentsLedgerRole role;
@@ -27,8 +23,7 @@ class PaymentsLedgerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          getIt<PaymentsLedgerCubit>()..load(memberId: memberId),
+      create: (_) => getIt<PaymentsLedgerCubit>()..load(memberId: memberId),
       child: _PaymentsLedgerBody(role: role),
     );
   }
@@ -103,12 +98,10 @@ class _PaymentsLedgerBody extends StatelessWidget {
                 );
               },
               builder: (context, state) {
-                if (state.status == LoadStatus.loading &&
-                    state.items.isEmpty) {
+                if (state.status == LoadStatus.loading && state.items.isEmpty) {
                   return const AppLoading();
                 }
-                if (state.status == LoadStatus.failure &&
-                    state.items.isEmpty) {
+                if (state.status == LoadStatus.failure && state.items.isEmpty) {
                   return AppErrorView(
                     message: state.failure == null
                         ? ''
@@ -121,41 +114,33 @@ class _PaymentsLedgerBody extends StatelessWidget {
                   return const AppEmptyView(message: PaymentStrings.noneFound);
                 }
                 return RefreshIndicator(
-                          onRefresh: () =>
-                              context.read<PaymentsLedgerCubit>().load(),
-                          child: ListView.builder(
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              final payment = items[index];
-                              return ListTile(
-                                title: Text(
-                                  PaymentStrings.invoiceSubtitle(
-                                    payment.invoiceNumber,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  '${PaymentStrings.memberIdLabel(payment.memberId)} · '
-                                  '${PaymentStrings.formatMoney(payment.totalAmount)}',
-                                ),
-                                trailing: PaymentStatusChip(
-                                  status: payment.status,
-                                ),
-                                onTap: switch (role) {
-                                  PaymentsLedgerRole.admin => () => context.go(
-                                    Routes.adminPaymentById(payment.id),
-                                  ),
-                                  PaymentsLedgerRole.member => () =>
-                                      context.go(
-                                        Routes.memberProfilePaymentById(
-                                          payment.id,
-                                        ),
-                                      ),
-                                  PaymentsLedgerRole.trainer => null,
-                                },
-                              );
-                            },
+                  onRefresh: () => context.read<PaymentsLedgerCubit>().load(),
+                  child: ListView.builder(
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final payment = items[index];
+                      return ListTile(
+                        title: Text(
+                          PaymentStrings.invoiceSubtitle(payment.invoiceNumber),
+                        ),
+                        subtitle: Text(
+                          '${PaymentStrings.memberIdLabel(payment.memberId)} · '
+                          '${PaymentStrings.formatMoney(payment.totalAmount)}',
+                        ),
+                        trailing: PaymentStatusChip(status: payment.status),
+                        onTap: switch (role) {
+                          PaymentsLedgerRole.admin => () => context.go(
+                            Routes.adminPaymentById(payment.id),
                           ),
-                        );
+                          PaymentsLedgerRole.member => () => context.go(
+                            Routes.memberProfilePaymentById(payment.id),
+                          ),
+                          PaymentsLedgerRole.trainer => null,
+                        },
+                      );
+                    },
+                  ),
+                );
               },
             ),
           ),

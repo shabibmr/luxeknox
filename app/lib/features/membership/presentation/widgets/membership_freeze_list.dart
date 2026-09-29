@@ -154,8 +154,7 @@ class _MembershipFreezeListBody extends StatelessWidget {
             final start = freeze.startDate.toString().split(' ').first;
             final end = freeze.endDate.toString().split(' ').first;
             final isBusy = state.busyId == freeze.id;
-            final actionsLocked =
-                isBusy || state.status == LoadStatus.loading;
+            final actionsLocked = isBusy || state.status == LoadStatus.loading;
             return ListTile(
               leading: const Icon(Icons.pause_circle_outline),
               title: Text('$start → $end'),
@@ -165,8 +164,7 @@ class _MembershipFreezeListBody extends StatelessWidget {
                   if (freeze.reason != null) freeze.reason!,
                 ].join(' · '),
               ),
-              trailing:
-                  canApprove && freeze.status == FreezeStatus.pending
+              trailing: canApprove && freeze.status == FreezeStatus.pending
                   ? isBusy
                         ? const SizedBox(
                             width: 20,
@@ -187,7 +185,10 @@ class _MembershipFreezeListBody extends StatelessWidget {
                                     : () => _handleApprove(context, freeze),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.close, color: Colors.red),
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.red,
+                                ),
                                 tooltip: MembershipStrings.reject,
                                 onPressed: actionsLocked
                                     ? null

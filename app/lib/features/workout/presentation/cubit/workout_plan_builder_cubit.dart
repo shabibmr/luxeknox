@@ -34,6 +34,7 @@ abstract class WorkoutPlanBuilderState with _$WorkoutPlanBuilderState {
     List<WorkoutPlanExerciseInput> exercises,
     @Default(false) bool dirty,
     @Default(false) bool saving,
+
     /// Local validation such as a missing title. API errors use [failure].
     String? errorMessage,
     Failure? failure,
@@ -91,9 +92,8 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
     );
     final result = await _getPlan(planId);
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (plan) => emit(
         WorkoutPlanBuilderState(
           status: LoadStatus.success,
@@ -177,8 +177,7 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
     final dayItems = state.exercises.where((e) => e.dayNumber == dayNumber);
     final nextIndex = dayItems.isEmpty
         ? 0
-        : dayItems.map((e) => e.orderIndex).reduce((a, b) => a > b ? a : b) +
-              1;
+        : dayItems.map((e) => e.orderIndex).reduce((a, b) => a > b ? a : b) + 1;
     final next = [
       ...state.exercises,
       WorkoutPlanExerciseInput(
@@ -257,9 +256,7 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
     final others = state.exercises
         .where((e) => e.dayNumber != fromDay && e.dayNumber != toDay)
         .toList();
-    _touch(
-      state.copyWith(exercises: [...others, ...fromReindexed, ...toList]),
-    );
+    _touch(state.copyWith(exercises: [...others, ...fromReindexed, ...toList]));
   }
 
   Future<bool> save() async {
@@ -267,9 +264,7 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
     final draft = state;
     final title = draft.title.trim();
     if (title.isEmpty) {
-      emit(
-        draft.copyWith(errorMessage: 'Title is required', failure: null),
-      );
+      emit(draft.copyWith(errorMessage: 'Title is required', failure: null));
       return false;
     }
 
@@ -304,21 +299,24 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
           isTemplate: draft.isTemplate,
         ),
       );
-      final failed = created.fold((failure) {
-        emit(
-          draft.copyWith(
-            saving: false,
-            status: LoadStatus.failure,
-            failure: failure,
-            errorMessage: null,
-            savedPlan: null,
-          ),
-        );
-        return true;
-      }, (p) {
-        plan = p;
-        return false;
-      });
+      final failed = created.fold(
+        (failure) {
+          emit(
+            draft.copyWith(
+              saving: false,
+              status: LoadStatus.failure,
+              failure: failure,
+              errorMessage: null,
+              savedPlan: null,
+            ),
+          );
+          return true;
+        },
+        (p) {
+          plan = p;
+          return false;
+        },
+      );
       if (failed) return false;
     } else {
       final updated = await _updatePlan(
@@ -342,21 +340,24 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
           isTemplate: draft.isTemplate,
         ),
       );
-      final failed = updated.fold((failure) {
-        emit(
-          draft.copyWith(
-            saving: false,
-            status: LoadStatus.failure,
-            failure: failure,
-            errorMessage: null,
-            savedPlan: null,
-          ),
-        );
-        return true;
-      }, (p) {
-        plan = p;
-        return false;
-      });
+      final failed = updated.fold(
+        (failure) {
+          emit(
+            draft.copyWith(
+              saving: false,
+              status: LoadStatus.failure,
+              failure: failure,
+              errorMessage: null,
+              savedPlan: null,
+            ),
+          );
+          return true;
+        },
+        (p) {
+          plan = p;
+          return false;
+        },
+      );
       if (failed) return false;
     }
 

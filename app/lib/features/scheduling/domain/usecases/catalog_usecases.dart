@@ -75,7 +75,9 @@ class GetTrainerAvailabilityUseCase
   final SchedulingRepository _repository;
 
   @override
-  Future<Either<Failure, List<TrainerAvailabilitySlot>>> call(String trainerId) {
+  Future<Either<Failure, List<TrainerAvailabilitySlot>>> call(
+    String trainerId,
+  ) {
     return _repository.getTrainerAvailability(trainerId);
   }
 }

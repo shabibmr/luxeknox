@@ -111,9 +111,7 @@ class AttendanceRemoteDataSourceImpl implements AttendanceRemoteDataSource {
     api.Date? from,
     api.Date? to,
   }) async {
-    return _unwrap(
-      await _attnApi.listAttendanceHistories(from: from, to: to),
-    );
+    return _unwrap(await _attnApi.listAttendanceHistories(from: from, to: to));
   }
 
   @override

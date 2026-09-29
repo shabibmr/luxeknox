@@ -33,9 +33,7 @@ class ReportsHubScreen extends StatelessWidget {
             title: Text(ReportStrings.titleFor(type)),
             subtitle: Text(ReportStrings.subtitleFor(type)),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.go(
-              Routes.adminReportsCategory(type.category),
-            ),
+            onTap: () => context.go(Routes.adminReportsCategory(type.category)),
           );
         },
       ),

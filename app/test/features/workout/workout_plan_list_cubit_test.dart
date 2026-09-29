@@ -63,11 +63,11 @@ void main() {
       ),
       isA<WorkoutPlanListState>()
           .having((s) => s.status, 'status', LoadStatus.success)
-          .having(
-            (s) => s.items.map((p) => p.id).toList(),
-            'ids',
-            ['1', '2', '3'],
-          ),
+          .having((s) => s.items.map((p) => p.id).toList(), 'ids', [
+            '1',
+            '2',
+            '3',
+          ]),
       isA<WorkoutPlanListState>()
           .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.filter, 'filter', WorkoutPlanListFilter.active)
@@ -78,9 +78,9 @@ void main() {
   blocTest<WorkoutPlanListCubit, WorkoutPlanListState>(
     'emits failure on repository error',
     build: () {
-      when(() => listPlans(any())).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(
+        () => listPlans(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return WorkoutPlanListCubit(listPlans);
     },
     act: (cubit) => cubit.load(),

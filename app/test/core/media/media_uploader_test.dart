@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockMediaApi extends Mock implements api.MEDIAApi {}
+
 class MockDio extends Mock implements Dio {}
 
 void main() {
@@ -46,22 +47,33 @@ void main() {
 
       expect(result.isLeft(), isTrue);
       expect(result.fold((f) => f, (_) => null), isA<ValidationFailure>());
-      verifyNever(() => mockApi.createMediaUpload(mediaUploadRequest: any(named: 'mediaUploadRequest')));
-    });
-
-    test('rejects payload exceeding purpose max size limit without invoking API', () async {
-      // avatar limit is 5MB. Provide 5MB + 1 byte
-      final largeBytes = Uint8List(5 * 1024 * 1024 + 1);
-      final result = await uploader.upload(
-        bytes: largeBytes,
-        contentType: 'image/jpeg',
-        purpose: MediaPurpose.avatar,
+      verifyNever(
+        () => mockApi.createMediaUpload(
+          mediaUploadRequest: any(named: 'mediaUploadRequest'),
+        ),
       );
-
-      expect(result.isLeft(), isTrue);
-      expect(result.fold((f) => f, (_) => null), isA<ValidationFailure>());
-      verifyNever(() => mockApi.createMediaUpload(mediaUploadRequest: any(named: 'mediaUploadRequest')));
     });
+
+    test(
+      'rejects payload exceeding purpose max size limit without invoking API',
+      () async {
+        // avatar limit is 5MB. Provide 5MB + 1 byte
+        final largeBytes = Uint8List(5 * 1024 * 1024 + 1);
+        final result = await uploader.upload(
+          bytes: largeBytes,
+          contentType: 'image/jpeg',
+          purpose: MediaPurpose.avatar,
+        );
+
+        expect(result.isLeft(), isTrue);
+        expect(result.fold((f) => f, (_) => null), isA<ValidationFailure>());
+        verifyNever(
+          () => mockApi.createMediaUpload(
+            mediaUploadRequest: any(named: 'mediaUploadRequest'),
+          ),
+        );
+      },
+    );
 
     test('completes two-step signed upload successfully', () async {
       final bytes = Uint8List.fromList([10, 20, 30, 40]);
@@ -72,22 +84,29 @@ void main() {
           ..expiresAt = DateTime.utc(2026, 9, 21, 13, 0, 0),
       );
 
-      when(() => mockApi.createMediaUpload(mediaUploadRequest: any(named: 'mediaUploadRequest')))
-          .thenAnswer((_) async => Response(
-                requestOptions: RequestOptions(path: ''),
-                data: uploadSlot,
-              ));
+      when(
+        () => mockApi.createMediaUpload(
+          mediaUploadRequest: any(named: 'mediaUploadRequest'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: ''),
+          data: uploadSlot,
+        ),
+      );
 
-      when(() => mockUploadDio.putUri(
-            any(),
-            data: any(named: 'data'),
-            cancelToken: any(named: 'cancelToken'),
-            onSendProgress: any(named: 'onSendProgress'),
-            options: any(named: 'options'),
-          )).thenAnswer((_) async => Response(
-            requestOptions: RequestOptions(path: ''),
-            statusCode: 200,
-          ));
+      when(
+        () => mockUploadDio.putUri(
+          any(),
+          data: any(named: 'data'),
+          cancelToken: any(named: 'cancelToken'),
+          onSendProgress: any(named: 'onSendProgress'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
+        (_) async =>
+            Response(requestOptions: RequestOptions(path: ''), statusCode: 200),
+      );
 
       final result = await uploader.upload(
         bytes: bytes,
@@ -98,14 +117,20 @@ void main() {
       expect(result.isRight(), isTrue);
       expect(result.getOrElse((_) => ''), equals('avatar/2026/09/user1.jpg'));
 
-      verify(() => mockApi.createMediaUpload(mediaUploadRequest: any(named: 'mediaUploadRequest'))).called(1);
-      verify(() => mockUploadDio.putUri(
-            Uri.parse('https://s3.example.com/put-slot-123'),
-            data: bytes,
-            cancelToken: any(named: 'cancelToken'),
-            onSendProgress: any(named: 'onSendProgress'),
-            options: any(named: 'options'),
-          )).called(1);
+      verify(
+        () => mockApi.createMediaUpload(
+          mediaUploadRequest: any(named: 'mediaUploadRequest'),
+        ),
+      ).called(1);
+      verify(
+        () => mockUploadDio.putUri(
+          Uri.parse('https://s3.example.com/put-slot-123'),
+          data: bytes,
+          cancelToken: any(named: 'cancelToken'),
+          onSendProgress: any(named: 'onSendProgress'),
+          options: any(named: 'options'),
+        ),
+      ).called(1);
     });
 
     test('maps Dio cancellation to NetworkFailure', () async {
@@ -117,21 +142,28 @@ void main() {
           ..expiresAt = DateTime.utc(2026, 9, 21, 13, 0, 0),
       );
 
-      when(() => mockApi.createMediaUpload(mediaUploadRequest: any(named: 'mediaUploadRequest')))
-          .thenAnswer((_) async => Response(
-                requestOptions: RequestOptions(path: ''),
-                data: uploadSlot,
-              ));
+      when(
+        () => mockApi.createMediaUpload(
+          mediaUploadRequest: any(named: 'mediaUploadRequest'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: ''),
+          data: uploadSlot,
+        ),
+      );
 
       final cancelToken = CancelToken();
 
-      when(() => mockUploadDio.putUri(
-            any(),
-            data: any(named: 'data'),
-            cancelToken: any(named: 'cancelToken'),
-            onSendProgress: any(named: 'onSendProgress'),
-            options: any(named: 'options'),
-          )).thenAnswer((_) async {
+      when(
+        () => mockUploadDio.putUri(
+          any(),
+          data: any(named: 'data'),
+          cancelToken: any(named: 'cancelToken'),
+          onSendProgress: any(named: 'onSendProgress'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer((_) async {
         cancelToken.cancel('User canceled upload');
         throw DioException(
           requestOptions: RequestOptions(path: ''),

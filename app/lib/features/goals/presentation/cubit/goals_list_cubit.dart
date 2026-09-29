@@ -28,9 +28,8 @@ class GoalsListCubit extends Cubit<GoalsListState> {
     emit(state.copyWith(status: LoadStatus.loading, failure: null));
     final result = await _listGoals(MemberIdParams(memberId));
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
         state.copyWith(
           status: LoadStatus.success,

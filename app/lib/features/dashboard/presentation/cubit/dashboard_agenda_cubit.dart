@@ -21,6 +21,7 @@ abstract class DashboardAgendaState with _$DashboardAgendaState {
     @Default(LoadStatus.initial) LoadStatus status,
     @Default(<ScheduleSession>[]) List<ScheduleSession> todayItems,
     @Default(<ScheduleSession>[]) List<ScheduleSession> upcomingItems,
+
     /// True after a successful fetch, so an empty agenda is still data.
     @Default(false) bool hasLoaded,
     UserType? role,
@@ -30,10 +31,8 @@ abstract class DashboardAgendaState with _$DashboardAgendaState {
 
 @injectable
 class DashboardAgendaCubit extends Cubit<DashboardAgendaState> {
-  DashboardAgendaCubit(
-    this._listSchedules, [
-    this._timezoneProvider,
-  ]) : super(const DashboardAgendaState());
+  DashboardAgendaCubit(this._listSchedules, [this._timezoneProvider])
+    : super(const DashboardAgendaState());
 
   final ListSchedulesUseCase _listSchedules;
   final GymTimezoneProvider? _timezoneProvider;
@@ -46,10 +45,7 @@ class DashboardAgendaCubit extends Cubit<DashboardAgendaState> {
   /// Member: filters with [memberId] (my bookings).
   /// Trainer: filters with [trainerId] (my sessions).
   /// Other roles: emits an empty success state (section is hidden by the UI).
-  Future<void> load({
-    required UserType role,
-    required String profileId,
-  }) async {
+  Future<void> load({required UserType role, required String profileId}) async {
     _role = role;
     _profileId = profileId;
 
@@ -64,13 +60,7 @@ class DashboardAgendaCubit extends Cubit<DashboardAgendaState> {
       return;
     }
 
-    emit(
-      state.copyWith(
-        status: LoadStatus.loading,
-        failure: null,
-        role: role,
-      ),
-    );
+    emit(state.copyWith(status: LoadStatus.loading, failure: null, role: role));
 
     final tz = await _timezoneProvider?.timezone();
     final offset =
@@ -99,10 +89,11 @@ class DashboardAgendaCubit extends Cubit<DashboardAgendaState> {
         ),
       ),
       (page) {
-        final items = page.items
-            .where((s) => s.status != ScheduleSessionStatus.cancelled)
-            .toList()
-          ..sort((a, b) => a.startTime.compareTo(b.startTime));
+        final items =
+            page.items
+                .where((s) => s.status != ScheduleSessionStatus.cancelled)
+                .toList()
+              ..sort((a, b) => a.startTime.compareTo(b.startTime));
 
         final today = <ScheduleSession>[];
         final upcoming = <ScheduleSession>[];

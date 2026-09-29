@@ -18,7 +18,8 @@ import 'package:mocktail/mocktail.dart';
 
 class MockReportCubit extends MockCubit<ReportState> implements ReportCubit {}
 
-class MockSessionCubit extends MockCubit<SessionState> implements SessionCubit {}
+class MockSessionCubit extends MockCubit<SessionState>
+    implements SessionCubit {}
 
 /// Export is shown only with `reports.export` (ADR-0006 §11).
 void main() {
@@ -67,11 +68,7 @@ void main() {
 
   setUp(() {
     report = MockReportCubit();
-    whenListen(
-      report,
-      const Stream<ReportState>.empty(),
-      initialState: loaded,
-    );
+    whenListen(report, const Stream<ReportState>.empty(), initialState: loaded);
     when(
       () => report.load(AppReportType.members, trainerOwnLocked: false),
     ).thenAnswer((_) async {});

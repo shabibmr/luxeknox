@@ -44,9 +44,8 @@ class AttendanceHistoryCubit extends Cubit<AttendanceHistoryState> {
       ListAttendancesParams(userId: userId, limit: 30),
     );
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
         state.copyWith(
           status: LoadStatus.success,
@@ -76,12 +75,7 @@ class AttendanceHistoryCubit extends Cubit<AttendanceHistoryState> {
       ),
     );
     result.fold(
-      (failure) => emit(
-        current.copyWith(
-          loadingMore: false,
-          failure: failure,
-        ),
-      ),
+      (failure) => emit(current.copyWith(loadingMore: false, failure: failure)),
       (page) => emit(
         current.copyWith(
           status: LoadStatus.success,
@@ -120,9 +114,8 @@ class AttendanceSummaryCubit extends Cubit<AttendanceSummaryState> {
       GetAttendanceSummaryParams(memberId: memberId),
     );
     await summaryResult.fold(
-      (failure) async => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) async =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (summary) async {
         final now = DateTime.now();
         final from = DateTime(now.year, now.month - 2, 1);
@@ -188,9 +181,8 @@ class AttendanceLiveFeedCubit extends Cubit<LiveFeedState> {
       ),
     );
     feed.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) {
         histories.fold(
           (failure) => emit(

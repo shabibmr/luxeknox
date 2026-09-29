@@ -46,9 +46,7 @@ class NotificationsRemoteDataSourceImpl
     int? limit,
     String? cursor,
   }) async {
-    return _unwrap(
-      await _api.listNotifications(limit: limit, cursor: cursor),
-    );
+    return _unwrap(await _api.listNotifications(limit: limit, cursor: cursor));
   }
 
   @override
@@ -70,16 +68,11 @@ class NotificationsRemoteDataSourceImpl
   Future<api.Notification> broadcastNotification(
     api.BroadcastRequest request,
   ) async {
-    return _unwrap(
-      await _api.broadcastNotification(broadcastRequest: request),
-    );
+    return _unwrap(await _api.broadcastNotification(broadcastRequest: request));
   }
 
   @override
-  Future<api.NotificationPage> listBroadcasts({
-    int? limit,
-    int? offset,
-  }) async {
+  Future<api.NotificationPage> listBroadcasts({int? limit, int? offset}) async {
     return _unwrap(await _api.listBroadcasts(limit: limit, offset: offset));
   }
 

@@ -53,13 +53,7 @@ class CreateProgressPhotoParams extends Equatable {
   final bool? isPrivate;
 
   @override
-  List<Object?> get props => [
-    memberId,
-    photoUrl,
-    pose,
-    takenDate,
-    isPrivate,
-  ];
+  List<Object?> get props => [memberId, photoUrl, pose, takenDate, isPrivate];
 }
 
 @lazySingleton

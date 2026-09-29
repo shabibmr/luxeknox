@@ -165,9 +165,9 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
     final ok = await cubit.changeStatus(next);
     if (!mounted || !ok) return;
     widget.onSaved?.call();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(PeopleStrings.statusUpdated)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text(PeopleStrings.statusUpdated)));
   }
 
   Future<void> _submit() async {
@@ -406,8 +406,8 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                   enabled: !submitting,
                   decoration: InputDecoration(
                     labelText: PeopleStrings.department,
-                    suffixIcon: !state.isCreate &&
-                            _department.text.trim().isNotEmpty
+                    suffixIcon:
+                        !state.isCreate && _department.text.trim().isNotEmpty
                         ? IconButton(
                             tooltip: PeopleStrings.clearDepartment,
                             onPressed: submitting
@@ -457,8 +457,8 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                           onPressed: submitting
                               ? null
                               : () {
-                                  final cubit =
-                                      context.read<EmployeeFormCubit>();
+                                  final cubit = context
+                                      .read<EmployeeFormCubit>();
                                   if (cubit.state.isCreate) {
                                     cubit.updateCreateInput(
                                       (i) => NewEmployeeInput(

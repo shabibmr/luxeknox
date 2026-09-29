@@ -35,15 +35,10 @@ class DietMealDetailCubit extends Cubit<DietMealDetailState> {
       GetDietMealParams(mealId: mealId, planId: planId),
     );
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (meal) => emit(
-        state.copyWith(
-          status: LoadStatus.success,
-          failure: null,
-          meal: meal,
-        ),
+        state.copyWith(status: LoadStatus.success, failure: null, meal: meal),
       ),
     );
   }

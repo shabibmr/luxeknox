@@ -12,19 +12,16 @@ import '../widgets/schedule_type_picker_field.dart';
 import '../widgets/trainer_picker_field.dart';
 
 class ScheduleFormScreen extends StatelessWidget {
-  const ScheduleFormScreen.create({
-    super.key,
-    this.initialStart,
-    this.cubit,
-  })  : scheduleId = null,
-        mode = ScheduleFormMode.create;
+  const ScheduleFormScreen.create({super.key, this.initialStart, this.cubit})
+    : scheduleId = null,
+      mode = ScheduleFormMode.create;
 
   const ScheduleFormScreen.edit({
     super.key,
     required this.scheduleId,
     this.cubit,
-  })  : initialStart = null,
-        mode = ScheduleFormMode.edit;
+  }) : initialStart = null,
+       mode = ScheduleFormMode.edit;
 
   final String? scheduleId;
   final DateTime? initialStart;
@@ -126,14 +123,14 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
           final msg = state.isCreate
               ? SchedulingStrings.scheduleCreatedSuccess
               : SchedulingStrings.scheduleUpdatedSuccess;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(msg)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(msg)));
           Navigator.of(context).pop(true);
         } else if (state.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error!)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.error!)));
         }
       },
       builder: (context, state) {
@@ -153,9 +150,7 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
             }
           },
           child: Scaffold(
-            appBar: AppBar(
-              title: Text(titleText),
-            ),
+            appBar: AppBar(title: Text(titleText)),
             body: state.initialLoading
                 ? const AppLoading()
                 : Form(
@@ -177,8 +172,9 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                                   Expanded(
                                     child: Text(
                                       '${SchedulingStrings.recurringSeries} • ${SchedulingStrings.editThisSessionOnly}',
-                                      style:
-                                          Theme.of(context).textTheme.bodyMedium,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium,
                                     ),
                                   ),
                                 ],
@@ -198,9 +194,9 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                                     child: Text(
                                       SchedulingStrings.rowVersionConflict,
                                       style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onErrorContainer,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onErrorContainer,
                                       ),
                                     ),
                                   ),
@@ -208,8 +204,8 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                                     onPressed: state.scheduleId == null
                                         ? null
                                         : () => context
-                                            .read<ScheduleFormCubit>()
-                                            .initEdit(state.scheduleId!),
+                                              .read<ScheduleFormCubit>()
+                                              .initEdit(state.scheduleId!),
                                     child: const Text('Reload'),
                                   ),
                                 ],
@@ -222,11 +218,11 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                           value: state.draft.scheduleType,
                           onChanged: (type) {
                             context.read<ScheduleFormCubit>().updateDraft(
-                                  (d) => d.copyWith(
-                                    scheduleType: type,
-                                    clearScheduleType: type == null,
-                                  ),
-                                );
+                              (d) => d.copyWith(
+                                scheduleType: type,
+                                clearScheduleType: type == null,
+                              ),
+                            );
                           },
                         ),
                         const SizedBox(height: 16),
@@ -239,8 +235,8 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                           ),
                           onChanged: (val) {
                             context.read<ScheduleFormCubit>().updateDraft(
-                                  (d) => d.copyWith(title: val),
-                                );
+                              (d) => d.copyWith(title: val),
+                            );
                           },
                         ),
                         const SizedBox(height: 16),
@@ -248,11 +244,11 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                           value: state.draft.trainer,
                           onChanged: (trainer) {
                             context.read<ScheduleFormCubit>().updateDraft(
-                                  (d) => d.copyWith(
-                                    trainer: trainer,
-                                    clearTrainer: trainer == null,
-                                  ),
-                                );
+                              (d) => d.copyWith(
+                                trainer: trainer,
+                                clearTrainer: trainer == null,
+                              ),
+                            );
                           },
                         ),
                         const SizedBox(height: 16),
@@ -260,11 +256,11 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                           value: state.draft.facility,
                           onChanged: (facility) {
                             context.read<ScheduleFormCubit>().updateDraft(
-                                  (d) => d.copyWith(
-                                    facility: facility,
-                                    clearFacility: facility == null,
-                                  ),
-                                );
+                              (d) => d.copyWith(
+                                facility: facility,
+                                clearFacility: facility == null,
+                              ),
+                            );
                           },
                         ),
                         const SizedBox(height: 16),
@@ -273,13 +269,13 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                           end: state.draft.end,
                           onStartChanged: (start) {
                             context.read<ScheduleFormCubit>().updateDraft(
-                                  (d) => d.copyWith(start: start),
-                                );
+                              (d) => d.copyWith(start: start),
+                            );
                           },
                           onEndChanged: (end) {
                             context.read<ScheduleFormCubit>().updateDraft(
-                                  (d) => d.copyWith(end: end),
-                                );
+                              (d) => d.copyWith(end: end),
+                            );
                           },
                         ),
                         if (state.isCreate) ...[
@@ -287,11 +283,11 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                           InkWell(
                             key: const Key('schedule_recur_until_field'),
                             onTap: () async {
-                              final initial = state.draft.recurUntil ??
+                              final initial =
+                                  state.draft.recurUntil ??
                                   state.draft.start ??
                                   DateTime.now();
-                              final first =
-                                  state.draft.start ?? DateTime(2000);
+                              final first = state.draft.start ?? DateTime(2000);
                               final picked = await showDatePicker(
                                 context: context,
                                 initialDate: initial.isBefore(first)
@@ -302,8 +298,8 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                               );
                               if (picked != null && context.mounted) {
                                 context.read<ScheduleFormCubit>().updateDraft(
-                                      (d) => d.copyWith(recurUntil: picked),
-                                    );
+                                  (d) => d.copyWith(recurUntil: picked),
+                                );
                               }
                             },
                             child: InputDecorator(
@@ -328,8 +324,7 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                                         },
                                       )
                                     : const Icon(Icons.calendar_month),
-                                errorText:
-                                    state.draft.validate()['recurUntil'],
+                                errorText: state.draft.validate()['recurUntil'],
                               ),
                               child: Text(
                                 state.draft.recurUntil == null
@@ -353,11 +348,11 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                           onChanged: (val) {
                             final cap = int.tryParse(val.trim());
                             context.read<ScheduleFormCubit>().updateDraft(
-                                  (d) => d.copyWith(
-                                    maxCapacity: cap,
-                                    clearMaxCapacity: cap == null,
-                                  ),
-                                );
+                              (d) => d.copyWith(
+                                maxCapacity: cap,
+                                clearMaxCapacity: cap == null,
+                              ),
+                            );
                           },
                         ),
                         const SizedBox(height: 16),
@@ -371,11 +366,11 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                           ),
                           onChanged: (val) {
                             context.read<ScheduleFormCubit>().updateDraft(
-                                  (d) => d.copyWith(
-                                    notes: val.trim().isEmpty ? null : val,
-                                    clearNotes: val.trim().isEmpty,
-                                  ),
-                                );
+                              (d) => d.copyWith(
+                                notes: val.trim().isEmpty ? null : val,
+                                clearNotes: val.trim().isEmpty,
+                              ),
+                            );
                           },
                         ),
                         const SizedBox(height: 24),
@@ -384,13 +379,13 @@ class _ScheduleFormBodyState extends State<_ScheduleFormBody> {
                           onPressed: state.submitting
                               ? null
                               : () =>
-                                  context.read<ScheduleFormCubit>().submit(),
+                                    context.read<ScheduleFormCubit>().submit(),
                           child: Text(
                             state.submitting
                                 ? SchedulingStrings.submitting
                                 : (state.isCreate
-                                    ? SchedulingStrings.createScheduleSubmit
-                                    : SchedulingStrings.updateScheduleSubmit),
+                                      ? SchedulingStrings.createScheduleSubmit
+                                      : SchedulingStrings.updateScheduleSubmit),
                           ),
                         ),
                       ],

@@ -17,8 +17,7 @@ import '../usecase/usecase.dart';
 @module
 abstract class RegisterModule {
   @singleton
-  AppConfig get appConfig =>
-      AppConfigBootstrap.resolved ?? AppConfig.fromEnv();
+  AppConfig get appConfig => AppConfigBootstrap.resolved ?? AppConfig.fromEnv();
 
   @singleton
   FlutterSecureStorage get secureStorage => const FlutterSecureStorage();

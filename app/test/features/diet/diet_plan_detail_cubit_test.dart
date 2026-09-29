@@ -13,8 +13,11 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockGet extends Mock implements GetDietPlanUseCase {}
+
 class _MockPublish extends Mock implements PublishDietPlanUseCase {}
+
 class _MockArchive extends Mock implements ArchiveDietPlanUseCase {}
+
 class _MockAssign extends Mock implements AssignDietPlanUseCase {}
 
 void main() {
@@ -60,7 +63,9 @@ void main() {
     'loads plan',
     build: () {
       when(() => getPlan('1')).thenAnswer(
-        (_) async => Right(plan(id: '1', status: DietPlanStatus.active, isTemplate: true)),
+        (_) async => Right(
+          plan(id: '1', status: DietPlanStatus.active, isTemplate: true),
+        ),
       );
       return buildCubit();
     },
@@ -80,9 +85,9 @@ void main() {
   blocTest<DietPlanDetailCubit, DietPlanDetailState>(
     'emits failure on getPlan error',
     build: () {
-      when(() => getPlan('1')).thenAnswer(
-        (_) async => const Left(NotFoundFailure()),
-      );
+      when(
+        () => getPlan('1'),
+      ).thenAnswer((_) async => const Left(NotFoundFailure()));
       return buildCubit();
     },
     act: (cubit) => cubit.load('1'),
@@ -106,7 +111,8 @@ void main() {
         (_) async => Right(plan(id: '1', status: DietPlanStatus.draft)),
       );
       when(() => publishPlan('1')).thenAnswer(
-        (_) async => Right(plan(id: '1', status: DietPlanStatus.active, rowVersion: 2)),
+        (_) async =>
+            Right(plan(id: '1', status: DietPlanStatus.active, rowVersion: 2)),
       );
       return buildCubit();
     },
@@ -140,7 +146,9 @@ void main() {
         (_) async => Right(plan(id: '2', status: DietPlanStatus.active)),
       );
       when(() => archivePlan('2')).thenAnswer(
-        (_) async => Right(plan(id: '2', status: DietPlanStatus.archived, rowVersion: 3)),
+        (_) async => Right(
+          plan(id: '2', status: DietPlanStatus.archived, rowVersion: 3),
+        ),
       );
       return buildCubit();
     },
@@ -170,10 +178,13 @@ void main() {
   blocTest<DietPlanDetailCubit, DietPlanDetailState>(
     'assigns template to member',
     build: () {
-      when(() => getPlan('5')).thenAnswer(
-        (_) async => Right(plan(id: '5', isTemplate: true)),
-      );
-      when(() => assignPlan(const AssignDietPlanParams(planId: '5', memberId: '42'))).thenAnswer(
+      when(
+        () => getPlan('5'),
+      ).thenAnswer((_) async => Right(plan(id: '5', isTemplate: true)));
+      when(
+        () =>
+            assignPlan(const AssignDietPlanParams(planId: '5', memberId: '42')),
+      ).thenAnswer(
         (_) async => Right(plan(id: '99', isTemplate: false, memberId: '42')),
       );
       return buildCubit();
@@ -198,11 +209,7 @@ void main() {
           .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.actionInFlight, 'actionInFlight', false)
           .having((s) => s.plan?.id, 'plan.id', '5')
-          .having(
-            (s) => s.assignedPlan?.id,
-            'assignedPlan.id',
-            '99',
-          ),
+          .having((s) => s.assignedPlan?.id, 'assignedPlan.id', '99'),
     ],
   );
 }

@@ -61,9 +61,7 @@ class NotificationDetailCubit extends Cubit<NotificationDetailState> {
     final result = await _markRead(notification.id);
     result.fold(
       (failure) => emit(current.copyWith(failure: failure)),
-      (updated) => emit(
-        current.copyWith(notification: updated, failure: null),
-      ),
+      (updated) => emit(current.copyWith(notification: updated, failure: null)),
     );
   }
 

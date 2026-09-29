@@ -55,4 +55,3 @@ abstract class DietPlanRepository {
 
   Future<Either<Failure, List<DietPlanVersion>>> listVersions(String planId);
 }
-

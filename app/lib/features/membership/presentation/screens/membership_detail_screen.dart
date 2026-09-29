@@ -287,7 +287,8 @@ class _MembershipDetailView extends StatelessWidget {
         state.actionInFlight || state.status == LoadStatus.loading;
 
     return RefreshIndicator(
-      onRefresh: () => context.read<MembershipDetailCubit>().load(membership.id),
+      onRefresh: () =>
+          context.read<MembershipDetailCubit>().load(membership.id),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -335,7 +336,9 @@ class _MembershipDetailView extends StatelessWidget {
               children: [
                 if (canApprove)
                   OutlinedButton(
-                    onPressed: actionsLocked ? null : () => _handleRenew(context),
+                    onPressed: actionsLocked
+                        ? null
+                        : () => _handleRenew(context),
                     child: const Text(MembershipStrings.renew),
                   ),
                 if (canUpdate)
@@ -361,7 +364,9 @@ class _MembershipDetailView extends StatelessWidget {
                   ),
                 if (canApprove)
                   OutlinedButton(
-                    onPressed: actionsLocked ? null : () => _handleCancel(context),
+                    onPressed: actionsLocked
+                        ? null
+                        : () => _handleCancel(context),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Theme.of(context).colorScheme.error,
                     ),

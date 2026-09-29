@@ -111,10 +111,7 @@ class _EditTrainerProfileBody extends StatelessWidget {
 }
 
 class _TrainerProfileForm extends StatefulWidget {
-  const _TrainerProfileForm({
-    required this.profile,
-    required this.isAdmin,
-  });
+  const _TrainerProfileForm({required this.profile, required this.isAdmin});
 
   final TrainerProfile profile;
   final bool isAdmin;
@@ -129,9 +126,7 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
   late final _phone = TextEditingController(
     text: widget.profile.phoneNumber ?? '',
   );
-  late final _gender = TextEditingController(
-    text: widget.profile.gender ?? '',
-  );
+  late final _gender = TextEditingController(text: widget.profile.gender ?? '');
   late final _bio = TextEditingController(text: widget.profile.bio ?? '');
   late final _specializations = TextEditingController(
     text: widget.profile.specializations.join(', '),
@@ -210,12 +205,16 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
         children: [
           TextField(
             controller: _firstName,
-            decoration: const InputDecoration(labelText: PeopleStrings.firstName),
+            decoration: const InputDecoration(
+              labelText: PeopleStrings.firstName,
+            ),
             onChanged: (_) => setState(() {}),
           ),
           TextField(
             controller: _lastName,
-            decoration: const InputDecoration(labelText: PeopleStrings.lastName),
+            decoration: const InputDecoration(
+              labelText: PeopleStrings.lastName,
+            ),
             onChanged: (_) => setState(() {}),
           ),
           TextField(
@@ -284,7 +283,9 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
                   maxClientsCapacity: widget.isAdmin
                       ? _optionalInt(_maxClients.text)
                       : widget.profile.maxClientsCapacity,
-                  isActive: widget.isAdmin ? _isActive : widget.profile.isActive,
+                  isActive: widget.isAdmin
+                      ? _isActive
+                      : widget.profile.isActive,
                 ),
               );
             },

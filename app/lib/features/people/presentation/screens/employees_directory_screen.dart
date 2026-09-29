@@ -295,8 +295,7 @@ class _EmployeesListPane extends StatelessWidget {
                       subtitle: Text(
                         [
                           employee.jobTitle,
-                          if (employee.department != null)
-                            employee.department!,
+                          if (employee.department != null) employee.department!,
                         ].join(' · '),
                       ),
                       trailing: employee.status == null

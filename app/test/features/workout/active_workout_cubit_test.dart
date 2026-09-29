@@ -72,13 +72,13 @@ void main() {
   }
 
   WorkoutPlan plan() {
-    return WorkoutPlan(
+    return const WorkoutPlan(
       id: '3',
       title: 'Push',
       isTemplate: false,
       status: WorkoutPlanStatus.active,
       rowVersion: 1,
-      exercises: const [
+      exercises: [
         WorkoutPlanExercise(
           exerciseId: '100',
           dayNumber: 1,
@@ -91,19 +91,11 @@ void main() {
   }
 
   setUpAll(() {
+    registerFallbackValue(const StartWorkoutSessionParams(memberId: '1'));
     registerFallbackValue(
-      const StartWorkoutSessionParams(memberId: '1'),
+      const LogWorkoutSetParams(sessionId: '1', exerciseId: '1', setNumber: 1),
     );
-    registerFallbackValue(
-      const LogWorkoutSetParams(
-        sessionId: '1',
-        exerciseId: '1',
-        setNumber: 1,
-      ),
-    );
-    registerFallbackValue(
-      const CompleteWorkoutSessionParams(sessionId: '1'),
-    );
+    registerFallbackValue(const CompleteWorkoutSessionParams(sessionId: '1'));
   });
 
   setUp(() {
@@ -130,22 +122,16 @@ void main() {
       getPlan,
       restTimer,
     );
-    bloc.add(
-      const ActiveWorkoutConfigured(memberId: '7', workoutPlanId: '3'),
-    );
+    bloc.add(const ActiveWorkoutConfigured(memberId: '7', workoutPlanId: '3'));
     return bloc;
   }
 
   blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
     'starts session, logs set (starts rest), completes',
     build: () {
-      when(() => startSession(any())).thenAnswer(
-        (_) async => Right(session()),
-      );
+      when(() => startSession(any())).thenAnswer((_) async => Right(session()));
       when(() => getPlan('3')).thenAnswer((_) async => Right(plan()));
-      when(() => logSet(any())).thenAnswer(
-        (_) async => Right(loggedSet()),
-      );
+      when(() => logSet(any())).thenAnswer((_) async => Right(loggedSet()));
       when(() => completeSession(any())).thenAnswer(
         (_) async => Right(
           session(
@@ -204,9 +190,9 @@ void main() {
           .having((s) => s.loggedSetCount, 'loggedSetCount', 1),
     ],
     verify: (_) {
-      final captured = verify(
-        () => completeSession(captureAny()),
-      ).captured.single as CompleteWorkoutSessionParams;
+      final captured =
+          verify(() => completeSession(captureAny())).captured.single
+              as CompleteWorkoutSessionParams;
       expect(captured.sessionId, 's1');
       expect(captured.notes, isNull);
       expect(captured.clientFeedbackRating, isNull);
@@ -216,26 +202,22 @@ void main() {
   blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
     'complete forwards notes and rating',
     build: () {
-      when(() => startSession(any())).thenAnswer(
-        (_) async => Right(session()),
-      );
+      when(() => startSession(any())).thenAnswer((_) async => Right(session()));
       when(() => getPlan('3')).thenAnswer((_) async => Right(plan()));
-      when(() => completeSession(any())).thenAnswer(
-        (invocation) async {
-          final params =
-              invocation.positionalArguments.first
-                  as CompleteWorkoutSessionParams;
-          return Right(
-            session(
-              completedAt: DateTime.utc(2026, 1, 1, 1),
-              durationMinutes: 30,
-              totalVolumeKg: 200,
-              notes: params.notes,
-              clientFeedbackRating: params.clientFeedbackRating,
-            ),
-          );
-        },
-      );
+      when(() => completeSession(any())).thenAnswer((invocation) async {
+        final params =
+            invocation.positionalArguments.first
+                as CompleteWorkoutSessionParams;
+        return Right(
+          session(
+            completedAt: DateTime.utc(2026, 1, 1, 1),
+            durationMinutes: 30,
+            totalVolumeKg: 200,
+            notes: params.notes,
+            clientFeedbackRating: params.clientFeedbackRating,
+          ),
+        );
+      });
       return buildBloc();
     },
     act: (bloc) async {
@@ -272,9 +254,9 @@ void main() {
           .having((s) => s.loggedSetCount, 'loggedSetCount', 0),
     ],
     verify: (_) {
-      final captured = verify(
-        () => completeSession(captureAny()),
-      ).captured.single as CompleteWorkoutSessionParams;
+      final captured =
+          verify(() => completeSession(captureAny())).captured.single
+              as CompleteWorkoutSessionParams;
       expect(captured.sessionId, 's1');
       expect(captured.notes, 'Felt strong');
       expect(captured.clientFeedbackRating, 5);
@@ -284,9 +266,9 @@ void main() {
   blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
     'start failure',
     build: () {
-      when(() => startSession(any())).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(
+        () => startSession(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return buildBloc();
     },
     act: (bloc) async {

@@ -52,7 +52,11 @@ class _AttendanceOccupancyTileState extends State<AttendanceOccupancyTile> {
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
               children: [
-                Icon(Icons.error_outline, size: 18, color: theme.colorScheme.error),
+                Icon(
+                  Icons.error_outline,
+                  size: 18,
+                  color: theme.colorScheme.error,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   AttendanceStrings.occupancyLoadFailed,

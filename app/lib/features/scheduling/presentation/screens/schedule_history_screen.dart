@@ -75,42 +75,37 @@ class _ScheduleHistoryBody extends StatelessWidget {
             return const AppEmptyView(message: SchedulingStrings.historyEmpty);
           }
           return RefreshIndicator(
-                      onRefresh: () =>
-                          context.read<ScheduleHistoryCubit>().load(),
-                      child: NotificationListener<ScrollNotification>(
-                        onNotification: (notification) {
-                          if (notification.metrics.pixels >=
-                              notification.metrics.maxScrollExtent - 200) {
-                            context.read<ScheduleHistoryCubit>().loadMore();
-                          }
-                          return false;
-                        },
-                        child: ListView.builder(
-                          itemCount:
-                              items.length + (hasMore && loadingMore ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index >= items.length) {
-                              return const Padding(
-                                padding: EdgeInsets.all(16),
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            }
-                            final session = items[index];
-                            return ListTile(
-                              title: Text(session.title),
-                              subtitle: Text(
-                                '${session.startTime.toLocal()} · '
-                                '${session.status.name}',
-                              ),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () =>
-                                  context.go(_detailPath(session.id)),
-                            );
-                          },
-                        ),
-                      ),
+            onRefresh: () => context.read<ScheduleHistoryCubit>().load(),
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                if (notification.metrics.pixels >=
+                    notification.metrics.maxScrollExtent - 200) {
+                  context.read<ScheduleHistoryCubit>().loadMore();
+                }
+                return false;
+              },
+              child: ListView.builder(
+                itemCount: items.length + (hasMore && loadingMore ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index >= items.length) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  final session = items[index];
+                  return ListTile(
+                    title: Text(session.title),
+                    subtitle: Text(
+                      '${session.startTime.toLocal()} · '
+                      '${session.status.name}',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.go(_detailPath(session.id)),
+                  );
+                },
+              ),
+            ),
           );
         },
       ),

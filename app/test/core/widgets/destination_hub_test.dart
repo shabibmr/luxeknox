@@ -23,10 +23,7 @@ void main() {
           path: '/exercises',
           builder: (_, _) => const Text('Exercises page'),
         ),
-        GoRoute(
-          path: '/foods',
-          builder: (_, _) => const Text('Foods page'),
-        ),
+        GoRoute(path: '/foods', builder: (_, _) => const Text('Foods page')),
       ],
     );
 

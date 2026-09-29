@@ -20,8 +20,7 @@ class _MockCreate extends Mock implements CreateWorkoutPlanUseCase {}
 
 class _MockUpdate extends Mock implements UpdateWorkoutPlanUseCase {}
 
-class _MockReplace extends Mock
-    implements ReplaceWorkoutPlanExercisesUseCase {}
+class _MockReplace extends Mock implements ReplaceWorkoutPlanExercisesUseCase {}
 
 class _MockPublish extends Mock implements PublishWorkoutPlanUseCase {}
 
@@ -68,9 +67,7 @@ void main() {
   }
 
   setUpAll(() {
-    registerFallbackValue(
-      const CreateWorkoutPlanParams(title: 'x'),
-    );
+    registerFallbackValue(const CreateWorkoutPlanParams(title: 'x'));
     registerFallbackValue(
       const UpdateWorkoutPlanParams(id: '1', rowVersion: 1),
     );
@@ -118,11 +115,10 @@ void main() {
           .having((s) => s.exercises.length, 'count', 1),
       isA<WorkoutPlanBuilderState>()
           .having((s) => s.status, 'status', LoadStatus.success)
-          .having(
-            (s) => s.exercises.map((e) => e.exerciseId).toList(),
-            'ids',
-            ['10', '11'],
-          ),
+          .having((s) => s.exercises.map((e) => e.exerciseId).toList(), 'ids', [
+            '10',
+            '11',
+          ]),
       isA<WorkoutPlanBuilderState>()
           .having((s) => s.status, 'status', LoadStatus.success)
           .having(
@@ -140,12 +136,12 @@ void main() {
   blocTest<WorkoutPlanBuilderCubit, WorkoutPlanBuilderState>(
     'save create then replaceExercises orchestration',
     build: () {
-      when(() => createPlan(any())).thenAnswer(
-        (_) async => Right(plan(id: '99', rowVersion: 1)),
-      );
-      when(() => replaceExercises(any())).thenAnswer(
-        (_) async => Right(plan(id: '99', rowVersion: 2)),
-      );
+      when(
+        () => createPlan(any()),
+      ).thenAnswer((_) async => Right(plan(id: '99', rowVersion: 1)));
+      when(
+        () => replaceExercises(any()),
+      ).thenAnswer((_) async => Right(plan(id: '99', rowVersion: 2)));
       return buildCubit();
     },
     act: (cubit) async {
@@ -172,9 +168,9 @@ void main() {
   blocTest<WorkoutPlanBuilderCubit, WorkoutPlanBuilderState>(
     'save edit updates metadata then replaces exercises',
     build: () {
-      when(() => getPlan('5')).thenAnswer(
-        (_) async => Right(plan(id: '5', title: 'Old')),
-      );
+      when(
+        () => getPlan('5'),
+      ).thenAnswer((_) async => Right(plan(id: '5', title: 'Old')));
       when(() => updatePlan(any())).thenAnswer(
         (_) async => Right(plan(id: '5', rowVersion: 4, title: 'Updated')),
       );
@@ -205,9 +201,9 @@ void main() {
   blocTest<WorkoutPlanBuilderCubit, WorkoutPlanBuilderState>(
     'save failure surfaces error without clearing dirty',
     build: () {
-      when(() => createPlan(any())).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(
+        () => createPlan(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return buildCubit();
     },
     act: (cubit) async {

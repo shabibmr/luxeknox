@@ -20,8 +20,7 @@ extension ScheduleMapper on api.Schedule {
       status: scheduleSessionStatusFromName(status.name),
       notes: notes,
       rowVersion: rowVersion,
-      participants:
-          participants?.map((p) => p.toDomain()).toList() ?? const [],
+      participants: participants?.map((p) => p.toDomain()).toList() ?? const [],
     );
   }
 }
@@ -72,8 +71,9 @@ extension TrainerAvailabilityMapper on api.TrainerAvailability {
       startTime: startTime,
       endTime: endTime,
       isRecurring: isRecurring,
-      overrideDate:
-          overrideDate == null ? null : apiDateToDateTime(overrideDate!),
+      overrideDate: overrideDate == null
+          ? null
+          : apiDateToDateTime(overrideDate!),
       isAvailable: isAvailable,
     );
   }

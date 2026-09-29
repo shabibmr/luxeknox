@@ -28,8 +28,7 @@ class GetDietMealUseCase implements UseCase<DietPlanMeal, GetDietMealParams> {
     if (params.planId != null) {
       final planResult = await _repository.getPlan(params.planId!);
       return planResult.flatMap((plan) {
-        final meal =
-            plan.meals.where((m) => m.id == params.mealId).firstOrNull;
+        final meal = plan.meals.where((m) => m.id == params.mealId).firstOrNull;
         if (meal != null) return Right(meal);
         return const Left(NotFoundFailure());
       });
@@ -38,8 +37,7 @@ class GetDietMealUseCase implements UseCase<DietPlanMeal, GetDietMealParams> {
     final plansResult = await _repository.listPlans();
     return plansResult.flatMap((page) {
       for (final plan in page.items) {
-        final meal =
-            plan.meals.where((m) => m.id == params.mealId).firstOrNull;
+        final meal = plan.meals.where((m) => m.id == params.mealId).firstOrNull;
         if (meal != null) return Right(meal);
       }
       return const Left(NotFoundFailure());

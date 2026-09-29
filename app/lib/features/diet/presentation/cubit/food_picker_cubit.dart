@@ -32,17 +32,14 @@ class FoodPickerCubit extends Cubit<FoodPickerState> {
     final text = search?.trim();
     final result = await _getFoods(
       GetFoodsParams(
-        filter: FoodFilter(
-          query: (text == null || text.isEmpty) ? null : text,
-        ),
+        filter: FoodFilter(query: (text == null || text.isEmpty) ? null : text),
       ),
     );
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
         state.copyWith(
           status: LoadStatus.success,

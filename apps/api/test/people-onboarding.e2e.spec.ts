@@ -305,7 +305,7 @@ describe('People onboarding E2E (V3-14)', () => {
         Authorization: `Bearer ${adminToken}`,
       },
       body: JSON.stringify({
-        purpose: 'member_photo',
+        purpose: 'avatar',
         content_type: 'image/jpeg',
         size_bytes: 4096,
       }),
@@ -327,15 +327,19 @@ describe('People onboarding E2E (V3-14)', () => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${adminToken}`,
       },
-      body: JSON.stringify({
-        file_url: slot.object_key,
-        file_size: 4096,
-        is_avatar: true,
-      }),
+      body: JSON.stringify({ photo_url: slot.object_key }),
     });
     expect(photoRes.status).toBe(201);
     const photo = (await photoRes.json()) as any;
-    expect(photo.is_avatar).toBe(true);
+    expect(photo.is_current_avatar).toBe(false);
+
+    // Gallery shots become the avatar via an explicit call.
+    const avatarRes = await fetch(`${testApp.baseUrl}/members/${member.id}/photos/${photo.id}/avatar`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(avatarRes.status).toBe(200);
+    expect(((await avatarRes.json()) as any).is_current_avatar).toBe(true);
 
     const getPhotoRes = await fetch(`${testApp.baseUrl}/members/${member.id}/photos`, {
       headers: { Authorization: `Bearer ${adminToken}` },
@@ -343,7 +347,7 @@ describe('People onboarding E2E (V3-14)', () => {
     expect(getPhotoRes.status).toBe(200);
     const photos = (await getPhotoRes.json()) as any;
     expect(Array.isArray(photos.data)).toBe(true);
-    expect(photos.data.some((p: any) => p.is_avatar)).toBe(true);
+    expect(photos.data.some((p: any) => p.id === photo.id && p.is_current_avatar)).toBe(true);
   });
 
   it('assign-trainer returns 422 at capacity and allows admin override', async () => {

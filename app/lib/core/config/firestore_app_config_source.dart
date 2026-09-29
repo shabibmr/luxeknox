@@ -20,10 +20,7 @@ class FirestoreAppConfigSource implements AppConfigRemoteSource {
   @override
   Future<String?> fetchApiBaseUrl() async {
     try {
-      final snap = await _firestore
-          .collection(collection)
-          .doc(document)
-          .get();
+      final snap = await _firestore.collection(collection).doc(document).get();
       if (!snap.exists) return null;
       final raw = snap.data()?[apiBaseUrlField];
       if (raw is! String) return null;

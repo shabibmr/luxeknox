@@ -23,7 +23,9 @@ void main() {
       asOf: DateTime(2026, 1, 1, 9),
       byGate: const [GateOccupancy(gateIdentifier: 'main', count: 5)],
     );
-    when(() => repository.getOccupancy()).thenAnswer((_) async => Right(occupancy));
+    when(
+      () => repository.getOccupancy(),
+    ).thenAnswer((_) async => Right(occupancy));
 
     final result = await useCase(const NoParams());
 

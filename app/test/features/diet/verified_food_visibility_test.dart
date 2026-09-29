@@ -14,6 +14,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockGetFoodsUseCase extends Mock implements GetFoodsUseCase {}
+
 class _MockSessionCubit extends Mock implements SessionCubit {}
 
 void main() {
@@ -52,9 +53,7 @@ void main() {
     }
 
     getIt.registerSingleton<SessionCubit>(mockSessionCubit);
-    getIt.registerFactory<FoodPickerCubit>(
-      () => FoodPickerCubit(mockGetFoods),
-    );
+    getIt.registerFactory<FoodPickerCubit>(() => FoodPickerCubit(mockGetFoods));
 
     when(() => mockSessionCubit.state).thenReturn(
       const SessionAuthenticated(
@@ -83,28 +82,29 @@ void main() {
     getIt.reset();
   });
 
-  testWidgets('shows both verified and unverified foods when verifiedOnly is false', (tester) async {
+  testWidgets(
+    'shows both verified and unverified foods when verifiedOnly is false',
+    (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: FoodPickerSheet(verifiedOnly: false)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Verified Oats'), findsOneWidget);
+      expect(find.text('Unverified Smoothie'), findsOneWidget);
+      expect(find.byIcon(Icons.verified), findsOneWidget);
+      expect(find.text('Unverified'), findsOneWidget);
+    },
+  );
+
+  testWidgets('hides unverified foods when verifiedOnly is true', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(
-          body: FoodPickerSheet(verifiedOnly: false),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Verified Oats'), findsOneWidget);
-    expect(find.text('Unverified Smoothie'), findsOneWidget);
-    expect(find.byIcon(Icons.verified), findsOneWidget);
-    expect(find.text('Unverified'), findsOneWidget);
-  });
-
-  testWidgets('hides unverified foods when verifiedOnly is true', (tester) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(
-          body: FoodPickerSheet(verifiedOnly: true),
-        ),
+        home: Scaffold(body: FoodPickerSheet(verifiedOnly: true)),
       ),
     );
     await tester.pumpAndSettle();

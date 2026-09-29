@@ -7,6 +7,7 @@ import {
   TRAINER_CREDENTIALS,
   type TestAppInstance,
 } from './helpers/mysql';
+import { members } from '../src/platform/db/schema/members';
 
 async function login(baseUrl: string, identifier: string, password: string): Promise<string> {
   const res = await fetch(`${baseUrl}/auth/login`, {
@@ -27,7 +28,16 @@ describe('Notification & Device Delivery E2E (NOT-016)', () => {
 
   beforeAll(async () => {
     testApp = await createTestApp();
-    await seedTestUsers(testApp.db);
+    const { member } = await seedTestUsers(testApp.db);
+    // all_members broadcasts target users with a members profile row.
+    await (testApp.db as any).insert(members).values({
+      user_id: member.id,
+      membership_number: `NOTIF${Date.now()}`.slice(0, 16),
+      first_name: 'E2E',
+      last_name: 'Member',
+      joined_date: new Date().toISOString().slice(0, 10),
+      created_at: new Date(),
+    });
 
     adminToken = await login(testApp.baseUrl, ADMIN_CREDENTIALS.email, ADMIN_CREDENTIALS.password);
     memberToken = await login(testApp.baseUrl, MEMBER_CREDENTIALS.email, MEMBER_CREDENTIALS.password);

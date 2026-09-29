@@ -20,9 +20,7 @@ void main() {
   late _MockExport exportCsv;
 
   setUpAll(() {
-    registerFallbackValue(
-      const ReportQuery(type: AppReportType.members),
-    );
+    registerFallbackValue(const ReportQuery(type: AppReportType.members));
   });
 
   setUp(() {
@@ -49,11 +47,7 @@ void main() {
     },
     act: (cubit) => cubit.load(AppReportType.members),
     expect: () => [
-      isA<ReportState>().having(
-        (s) => s.status,
-        'status',
-        LoadStatus.loading,
-      ),
+      isA<ReportState>().having((s) => s.status, 'status', LoadStatus.loading),
       isA<ReportState>()
           .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.result?.rows.length, 'rows', 3),
@@ -63,9 +57,9 @@ void main() {
   blocTest<ReportCubit, ReportState>(
     'paginates large result sets client-side',
     build: () {
-      when(() => getReport(any())).thenAnswer(
-        (_) async => Right(sample(rows: 120)),
-      );
+      when(
+        () => getReport(any()),
+      ).thenAnswer((_) async => Right(sample(rows: 120)));
       return ReportCubit(getReport, exportCsv);
     },
     act: (cubit) async {
@@ -73,11 +67,7 @@ void main() {
       cubit.setPage(1);
     },
     expect: () => [
-      isA<ReportState>().having(
-        (s) => s.status,
-        'status',
-        LoadStatus.loading,
-      ),
+      isA<ReportState>().having((s) => s.status, 'status', LoadStatus.loading),
       isA<ReportState>()
           .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.pageCount, 'pageCount', 3)
@@ -92,7 +82,9 @@ void main() {
     'exportCsv stores csv on success',
     build: () {
       when(() => getReport(any())).thenAnswer((_) async => Right(sample()));
-      when(() => exportCsv(any())).thenAnswer((_) async => const Right('a,b\n1,2\n'));
+      when(
+        () => exportCsv(any()),
+      ).thenAnswer((_) async => const Right('a,b\n1,2\n'));
       return ReportCubit(getReport, exportCsv);
     },
     act: (cubit) async {
@@ -100,16 +92,8 @@ void main() {
       await cubit.exportCsv();
     },
     expect: () => [
-      isA<ReportState>().having(
-        (s) => s.status,
-        'status',
-        LoadStatus.loading,
-      ),
-      isA<ReportState>().having(
-        (s) => s.status,
-        'status',
-        LoadStatus.success,
-      ),
+      isA<ReportState>().having((s) => s.status, 'status', LoadStatus.loading),
+      isA<ReportState>().having((s) => s.status, 'status', LoadStatus.success),
       isA<ReportState>().having((s) => s.exporting, 'exporting', true),
       isA<ReportState>()
           .having((s) => s.exportedCsv, 'csv', 'a,b\n1,2\n')
@@ -120,18 +104,14 @@ void main() {
   blocTest<ReportCubit, ReportState>(
     'emits failure on load error',
     build: () {
-      when(() => getReport(any())).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(
+        () => getReport(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return ReportCubit(getReport, exportCsv);
     },
     act: (cubit) => cubit.load(AppReportType.attendance),
     expect: () => [
-      isA<ReportState>().having(
-        (s) => s.status,
-        'status',
-        LoadStatus.loading,
-      ),
+      isA<ReportState>().having((s) => s.status, 'status', LoadStatus.loading),
       isA<ReportState>()
           .having((s) => s.status, 'status', LoadStatus.failure)
           .having((s) => s.failure, 'failure', isA<NetworkFailure>()),

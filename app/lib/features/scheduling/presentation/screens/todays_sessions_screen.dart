@@ -21,8 +21,7 @@ class TodaysSessionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          getIt<TodaysSessionsCubit>()..load(trainerId: trainerId),
+      create: (_) => getIt<TodaysSessionsCubit>()..load(trainerId: trainerId),
       child: const _TodaysSessionsBody(),
     );
   }
@@ -55,25 +54,23 @@ class _TodaysSessionsBody extends StatelessWidget {
             );
           }
           return RefreshIndicator(
-                    onRefresh: () =>
-                        context.read<TodaysSessionsCubit>().load(),
-                    child: ListView.builder(
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final session = items[index];
-                        return ListTile(
-                          title: Text(session.title),
-                          subtitle: Text(
-                            '${session.startTime.toLocal()} · '
-                            '${session.status.name}',
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => context.go(
-                            Routes.trainerScheduleById(session.id),
-                          ),
-                        );
-                      },
-                    ),
+            onRefresh: () => context.read<TodaysSessionsCubit>().load(),
+            child: ListView.builder(
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final session = items[index];
+                return ListTile(
+                  title: Text(session.title),
+                  subtitle: Text(
+                    '${session.startTime.toLocal()} · '
+                    '${session.status.name}',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () =>
+                      context.go(Routes.trainerScheduleById(session.id)),
+                );
+              },
+            ),
           );
         },
       ),

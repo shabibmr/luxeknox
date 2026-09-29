@@ -84,17 +84,12 @@ void main() {
       ),
     );
     registerFallbackValue(
-      const UpdateScheduleParams(
-        id: '1',
-        input: CreateScheduleInput(),
-      ),
+      const UpdateScheduleParams(id: '1', input: CreateScheduleInput()),
     );
     registerFallbackValue(
       const UnbookScheduleParams(scheduleId: '1', memberId: '9'),
     );
-    registerFallbackValue(
-      const CancelScheduleParams(scheduleId: '1'),
-    );
+    registerFallbackValue(const CancelScheduleParams(scheduleId: '1'));
     when(() => getSchedule(any())).thenAnswer((_) async => Right(session));
   });
 
@@ -121,7 +116,7 @@ void main() {
     build: () {
       when(() => book(any())).thenAnswer((_) async {
         await Future<void>.delayed(const Duration(milliseconds: 50));
-        return Right(
+        return const Right(
           ScheduleParticipantEntry(
             id: 'p1',
             scheduleId: '1',
@@ -132,10 +127,8 @@ void main() {
       });
       return buildCubit();
     },
-    seed: () => ScheduleDetailState(
-      status: LoadStatus.success,
-      session: session,
-    ),
+    seed: () =>
+        ScheduleDetailState(status: LoadStatus.success, session: session),
     act: (cubit) async {
       final first = cubit.book(memberId: '9');
       await cubit.book(memberId: '9');
@@ -155,7 +148,7 @@ void main() {
       when(() => book(any())).thenAnswer((invocation) async {
         calls += 1;
         if (calls == 1) return const Left(NetworkFailure());
-        return Right(
+        return const Right(
           ScheduleParticipantEntry(
             id: 'p1',
             scheduleId: '1',
@@ -166,10 +159,8 @@ void main() {
       });
       return buildCubit();
     },
-    seed: () => ScheduleDetailState(
-      status: LoadStatus.success,
-      session: session,
-    ),
+    seed: () =>
+        ScheduleDetailState(status: LoadStatus.success, session: session),
     act: (cubit) async {
       await cubit.load('1');
       await cubit.book(memberId: '9');
@@ -187,14 +178,13 @@ void main() {
   blocTest<ScheduleDetailCubit, ScheduleDetailState>(
     'reschedule success updates session times',
     build: () {
-      when(() => updateSchedule(any()))
-          .thenAnswer((_) async => Right(rescheduled));
+      when(
+        () => updateSchedule(any()),
+      ).thenAnswer((_) async => Right(rescheduled));
       return buildCubit();
     },
-    seed: () => ScheduleDetailState(
-      status: LoadStatus.success,
-      session: session,
-    ),
+    seed: () =>
+        ScheduleDetailState(status: LoadStatus.success, session: session),
     act: (cubit) async {
       await cubit.load('1');
       await cubit.reschedule(
@@ -217,15 +207,14 @@ void main() {
   blocTest<ScheduleDetailCubit, ScheduleDetailState>(
     'reschedule ConflictFailure reloads and sets isConflict',
     build: () {
-      when(() => updateSchedule(any()))
-          .thenAnswer((_) async => const Left(ConflictFailure()));
+      when(
+        () => updateSchedule(any()),
+      ).thenAnswer((_) async => const Left(ConflictFailure()));
       when(() => getSchedule(any())).thenAnswer((_) async => Right(session));
       return buildCubit();
     },
-    seed: () => ScheduleDetailState(
-      status: LoadStatus.success,
-      session: session,
-    ),
+    seed: () =>
+        ScheduleDetailState(status: LoadStatus.success, session: session),
     act: (cubit) async {
       await cubit.load('1');
       await cubit.reschedule(
@@ -244,7 +233,7 @@ void main() {
     'moveBooking books new then cancels old',
     build: () {
       when(() => book(any())).thenAnswer(
-        (_) async => Right(
+        (_) async => const Right(
           ScheduleParticipantEntry(
             id: 'p2',
             scheduleId: '99',
@@ -256,10 +245,8 @@ void main() {
       when(() => unbook(any())).thenAnswer((_) async => const Right(unit));
       return buildCubit();
     },
-    seed: () => ScheduleDetailState(
-      status: LoadStatus.success,
-      session: session,
-    ),
+    seed: () =>
+        ScheduleDetailState(status: LoadStatus.success, session: session),
     act: (cubit) async {
       await cubit.load('1');
       await cubit.moveBooking(targetScheduleId: '99', memberId: '9');
@@ -268,10 +255,12 @@ void main() {
       expect(cubit.state.message, SchedulingStrings.moveBookingSuccess);
       expect(cubit.state.movedToScheduleId, '99');
       final bookParams =
-          verify(() => book(captureAny())).captured.single as BookScheduleParams;
+          verify(() => book(captureAny())).captured.single
+              as BookScheduleParams;
       expect(bookParams.scheduleId, '99');
-      final unbookParams = verify(() => unbook(captureAny())).captured.single
-          as UnbookScheduleParams;
+      final unbookParams =
+          verify(() => unbook(captureAny())).captured.single
+              as UnbookScheduleParams;
       expect(unbookParams.scheduleId, '1');
     },
   );
@@ -279,14 +268,13 @@ void main() {
   blocTest<ScheduleDetailCubit, ScheduleDetailState>(
     'moveBooking ConflictFailure on book blocks with cap message and skips unbook',
     build: () {
-      when(() => book(any()))
-          .thenAnswer((_) async => const Left(ConflictFailure()));
+      when(
+        () => book(any()),
+      ).thenAnswer((_) async => const Left(ConflictFailure()));
       return buildCubit();
     },
-    seed: () => ScheduleDetailState(
-      status: LoadStatus.success,
-      session: session,
-    ),
+    seed: () =>
+        ScheduleDetailState(status: LoadStatus.success, session: session),
     act: (cubit) async {
       await cubit.load('1');
       await cubit.moveBooking(targetScheduleId: '99', memberId: '9');
@@ -303,7 +291,7 @@ void main() {
     'moveBooking cancel failure after book warns about rollback',
     build: () {
       when(() => book(any())).thenAnswer(
-        (_) async => Right(
+        (_) async => const Right(
           ScheduleParticipantEntry(
             id: 'p2',
             scheduleId: '99',
@@ -312,14 +300,13 @@ void main() {
           ),
         ),
       );
-      when(() => unbook(any()))
-          .thenAnswer((_) async => const Left(NetworkFailure()));
+      when(
+        () => unbook(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return buildCubit();
     },
-    seed: () => ScheduleDetailState(
-      status: LoadStatus.success,
-      session: session,
-    ),
+    seed: () =>
+        ScheduleDetailState(status: LoadStatus.success, session: session),
     act: (cubit) async {
       await cubit.load('1');
       await cubit.moveBooking(targetScheduleId: '99', memberId: '9');
@@ -336,17 +323,16 @@ void main() {
       when(() => cancel(any())).thenAnswer((_) async => Right(session));
       return buildCubit();
     },
-    seed: () => ScheduleDetailState(
-      status: LoadStatus.success,
-      session: session,
-    ),
+    seed: () =>
+        ScheduleDetailState(status: LoadStatus.success, session: session),
     act: (cubit) async {
       await cubit.load('1');
       await cubit.cancel(reason: 'Illness', cancelSeries: true);
     },
     verify: (_) {
       final captured =
-          verify(() => cancel(captureAny())).captured.single as CancelScheduleParams;
+          verify(() => cancel(captureAny())).captured.single
+              as CancelScheduleParams;
       expect(captured.cancelSeries, isTrue);
       expect(captured.reason, 'Illness');
     },

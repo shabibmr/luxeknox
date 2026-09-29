@@ -50,10 +50,7 @@ void main() {
       ),
       NotificationStrings.roleIdRequired,
     );
-    expect(
-      cubit.validate(form.copyWith(title: 'Hi', message: 'Body')),
-      isNull,
-    );
+    expect(cubit.validate(form.copyWith(title: 'Hi', message: 'Body')), isNull);
   });
 
   blocTest<BroadcastCubit, BroadcastState>(

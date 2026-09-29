@@ -95,8 +95,7 @@ StatefulShellRoute createMemberBranchRoute() {
               GoRoute(
                 path: 'workout/active',
                 builder: (context, state) => ActiveWorkoutScreen(
-                  workoutPlanId:
-                      state.uri.queryParameters['workoutPlanId'],
+                  workoutPlanId: state.uri.queryParameters['workoutPlanId'],
                 ),
               ),
               // Member: R (Self) — Workout Session History
@@ -123,9 +122,7 @@ StatefulShellRoute createMemberBranchRoute() {
                 path: 'diet/log',
                 builder: (context, state) {
                   final profileId = sessionProfileId(context);
-                  return DietDailyLogScreen(
-                    memberId: profileId?.toString(),
-                  );
+                  return DietDailyLogScreen(memberId: profileId?.toString());
                 },
               ),
               // Member: R (Self) — Diet History & Compliance
@@ -235,9 +232,8 @@ StatefulShellRoute createMemberBranchRoute() {
             routes: [
               GoRoute(
                 path: 'goal/:id',
-                builder: (context, state) => GoalDetailScreen(
-                  goalId: state.pathParameters['id']!,
-                ),
+                builder: (context, state) =>
+                    GoalDetailScreen(goalId: state.pathParameters['id']!),
               ),
               GoRoute(
                 path: 'measurements',

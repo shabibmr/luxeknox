@@ -65,9 +65,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: TodayAgendaCard(
-              items: [
-                session(id: '1', title: 'Morning HIIT', start: today),
-              ],
+              items: [session(id: '1', title: 'Morning HIIT', start: today)],
               title: DashboardStrings.todayAgendaMemberTitle,
               emptyMessage: DashboardStrings.todayAgendaMemberEmpty,
               onTapSession: (s) => tapped = s,
@@ -78,7 +76,10 @@ void main() {
 
       expect(find.byKey(const Key('today_agenda_card')), findsOneWidget);
       expect(find.text('Morning HIIT'), findsOneWidget);
-      expect(find.text(DashboardStrings.todayAgendaMemberTitle), findsOneWidget);
+      expect(
+        find.text(DashboardStrings.todayAgendaMemberTitle),
+        findsOneWidget,
+      );
 
       await tester.tap(find.text('Morning HIIT'));
       await tester.pump();
@@ -115,9 +116,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: UpcomingAgendaList(
-              items: [
-                session(id: '9', title: 'Yoga flow', start: start),
-              ],
+              items: [session(id: '9', title: 'Yoga flow', start: start)],
               onTapSession: (s) => tapped = s,
             ),
           ),
@@ -137,18 +136,12 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: UpcomingAgendaList(
-              items: const [],
-              onTapSession: (_) {},
-            ),
+            body: UpcomingAgendaList(items: const [], onTapSession: (_) {}),
           ),
         ),
       );
 
-      expect(
-        find.text(DashboardStrings.upcomingAgendaEmpty),
-        findsOneWidget,
-      );
+      expect(find.text(DashboardStrings.upcomingAgendaEmpty), findsOneWidget);
     });
   });
 
@@ -162,7 +155,7 @@ void main() {
       );
       whenListen(
         agendaCubit,
-        Stream<DashboardAgendaState>.empty(),
+        const Stream<DashboardAgendaState>.empty(),
         initialState: const DashboardAgendaState(
           status: LoadStatus.loading,
           role: UserType.member,
@@ -184,7 +177,7 @@ void main() {
       );
       whenListen(
         agendaCubit,
-        Stream<DashboardAgendaState>.empty(),
+        const Stream<DashboardAgendaState>.empty(),
         initialState: const DashboardAgendaState(
           status: LoadStatus.failure,
           role: UserType.trainer,
@@ -210,17 +203,13 @@ void main() {
         status: LoadStatus.success,
         hasLoaded: true,
         role: UserType.member,
-        todayItems: [
-          session(id: '1', title: 'PT block', start: today),
-        ],
-        upcomingItems: [
-          session(id: '2', title: 'Spin class', start: soon),
-        ],
+        todayItems: [session(id: '1', title: 'PT block', start: today)],
+        upcomingItems: [session(id: '2', title: 'Spin class', start: soon)],
       );
       when(() => agendaCubit.state).thenReturn(loaded);
       whenListen(
         agendaCubit,
-        Stream<DashboardAgendaState>.empty(),
+        const Stream<DashboardAgendaState>.empty(),
         initialState: loaded,
       );
 
@@ -246,7 +235,7 @@ void main() {
       );
       whenListen(
         agendaCubit,
-        Stream<DashboardAgendaState>.empty(),
+        const Stream<DashboardAgendaState>.empty(),
         initialState: const DashboardAgendaState(
           status: LoadStatus.success,
           hasLoaded: true,

@@ -249,13 +249,11 @@ class _ExerciseListPane extends StatelessWidget {
         Expanded(
           child: BlocBuilder<ExerciseListBloc, ExerciseListState>(
             builder: (context, state) {
-              if (state.status == LoadStatus.loading &&
-                  state.items.isEmpty) {
+              if (state.status == LoadStatus.loading && state.items.isEmpty) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              if (state.status == LoadStatus.failure &&
-                  state.items.isEmpty) {
+              if (state.status == LoadStatus.failure && state.items.isEmpty) {
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
@@ -279,8 +277,7 @@ class _ExerciseListPane extends StatelessWidget {
                 );
               }
 
-              if (state.status == LoadStatus.success &&
-                  state.items.isEmpty) {
+              if (state.status == LoadStatus.success && state.items.isEmpty) {
                 return const Center(child: Text(ExerciseStrings.noneFound));
               }
 

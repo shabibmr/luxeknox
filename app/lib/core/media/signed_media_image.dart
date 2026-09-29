@@ -53,10 +53,7 @@ class _SignedMediaImageState extends State<SignedMediaImage> {
 
   void _retry({bool forceRefresh = false}) {
     setState(() {
-      _future = _resolver.resolve(
-        widget.objectKey,
-        forceRefresh: forceRefresh,
-      );
+      _future = _resolver.resolve(widget.objectKey, forceRefresh: forceRefresh);
     });
   }
 

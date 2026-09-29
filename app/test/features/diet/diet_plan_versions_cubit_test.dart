@@ -13,10 +13,7 @@ class _MockListVersions extends Mock implements ListDietPlanVersionsUseCase {}
 void main() {
   late _MockListVersions listVersions;
 
-  DietPlanVersion version({
-    required String id,
-    int number = 1,
-  }) {
+  DietPlanVersion version({required String id, int number = 1}) {
     return DietPlanVersion(
       id: id,
       dietPlanId: '1',
@@ -33,10 +30,8 @@ void main() {
     'loads versions',
     build: () {
       when(() => listVersions('1')).thenAnswer(
-        (_) async => Right([
-          version(id: 'v1', number: 1),
-          version(id: 'v2', number: 2),
-        ]),
+        (_) async =>
+            Right([version(id: 'v1', number: 1), version(id: 'v2', number: 2)]),
       );
       return DietPlanVersionsCubit(listVersions);
     },
@@ -56,9 +51,9 @@ void main() {
   blocTest<DietPlanVersionsCubit, DietPlanVersionsState>(
     'toggles expanded version',
     build: () {
-      when(() => listVersions('1')).thenAnswer(
-        (_) async => Right([version(id: 'v1')]),
-      );
+      when(
+        () => listVersions('1'),
+      ).thenAnswer((_) async => Right([version(id: 'v1')]));
       return DietPlanVersionsCubit(listVersions);
     },
     act: (cubit) async {
@@ -75,19 +70,25 @@ void main() {
       isA<DietPlanVersionsState>()
           .having((s) => s.status, 'status', LoadStatus.success)
           .having((s) => s.expandedId, 'expanded', isNull),
-      isA<DietPlanVersionsState>()
-          .having((s) => s.expandedId, 'expanded', 'v1'),
-      isA<DietPlanVersionsState>()
-          .having((s) => s.expandedId, 'expanded', isNull),
+      isA<DietPlanVersionsState>().having(
+        (s) => s.expandedId,
+        'expanded',
+        'v1',
+      ),
+      isA<DietPlanVersionsState>().having(
+        (s) => s.expandedId,
+        'expanded',
+        isNull,
+      ),
     ],
   );
 
   blocTest<DietPlanVersionsCubit, DietPlanVersionsState>(
     'load failure',
     build: () {
-      when(() => listVersions('1')).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(
+        () => listVersions('1'),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return DietPlanVersionsCubit(listVersions);
     },
     act: (cubit) => cubit.load('1'),

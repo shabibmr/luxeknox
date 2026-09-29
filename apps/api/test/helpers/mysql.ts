@@ -35,52 +35,86 @@ export const INACTIVE_USER_CREDENTIALS = {
   password: 'InactiveSecurePassword123!',
 };
 
+interface ForeignKeyEdge {
+  table: string;
+  column: string;
+  refTable: string;
+  refColumn: string;
+}
+
+function rowsOf<T>(result: unknown): T[] {
+  if (!Array.isArray(result)) return [];
+  return (Array.isArray(result[0]) ? result[0] : result) as T[];
+}
+
+const ident = (name: string) => sql.raw(`\`${name.replace(/`/g, '``')}\``);
+
+/**
+ * Deletes rows of `table` whose `column` is in `values`, first deleting every
+ * row that references them (recursively, via the live FK graph).
+ */
+async function deleteWithDependents(
+  db: DrizzleDb<any>,
+  edges: ForeignKeyEdge[],
+  table: string,
+  column: string,
+  values: unknown[],
+  depth = 0,
+): Promise<void> {
+  if (values.length === 0) return;
+  if (depth > 10) throw new Error(`resetTestData: FK chain too deep at ${table}`);
+  const inList = sql.join(
+    values.map((v) => sql`${v}`),
+    sql`, `,
+  );
+
+  for (const edge of edges.filter((e) => e.refTable === table)) {
+    const refRows = rowsOf<Record<string, unknown>>(
+      await db.execute(
+        sql`SELECT DISTINCT ${ident(edge.refColumn)} AS v FROM ${ident(table)} WHERE ${ident(column)} IN (${inList})`,
+      ),
+    );
+    await deleteWithDependents(
+      db,
+      edges,
+      edge.table,
+      edge.column,
+      refRows.map((r) => r.v).filter((v) => v !== null),
+      depth + 1,
+    );
+  }
+
+  await db.execute(sql`DELETE FROM ${ident(table)} WHERE ${ident(column)} IN (${inList})`);
+}
+
 /**
  * Clears per-test rows. Does not touch seeded roles, permissions or settings.
- * audit_logs is intentionally omitted — the app user has no DELETE on it after F-03.
- * PEOPLE child rows are removed before users to satisfy FK constraints.
+ * audit_logs is intentionally omitted — the app user has no DELETE on it after F-03
+ * (it has no FK to users, so it never blocks the cleanup).
+ * Every row that transitively references an e2e user is removed first, driven by
+ * information_schema so new tables with user/member/trainer FKs are covered.
  */
 export async function resetTestData(db: DrizzleDb<any>): Promise<void> {
-  await db.execute(sql`
-    DELETE md FROM member_documents md
-    INNER JOIN members m ON m.id = md.member_id
-    INNER JOIN users u ON u.id = m.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
-  await db.execute(sql`
-    DELETE mp FROM member_photos mp
-    INNER JOIN members m ON m.id = mp.member_id
-    INNER JOIN users u ON u.id = m.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
-  await db.execute(sql`
-    DELETE mh FROM member_health mh
-    INNER JOIN members m ON m.id = mh.member_id
-    INNER JOIN users u ON u.id = m.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
-  await db.execute(sql`
-    DELETE ec FROM emergency_contacts ec
-    INNER JOIN users u ON u.id = ec.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
-  await db.execute(sql`
-    DELETE m FROM members m
-    INNER JOIN users u ON u.id = m.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
-  await db.execute(sql`
-    DELETE t FROM trainers t
-    INNER JOIN users u ON u.id = t.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
-  await db.execute(sql`
-    DELETE e FROM employees e
-    INNER JOIN users u ON u.id = e.user_id
-    WHERE u.email LIKE 'e2e_%@luxeknox.test'
-  `);
+  const edges = rowsOf<ForeignKeyEdge>(
+    await db.execute(sql`
+      SELECT TABLE_NAME AS \`table\`, COLUMN_NAME AS \`column\`,
+             REFERENCED_TABLE_NAME AS refTable, REFERENCED_COLUMN_NAME AS refColumn
+      FROM information_schema.KEY_COLUMN_USAGE
+      WHERE TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME IS NOT NULL
+    `),
+  );
+  const e2eUsers = rowsOf<{ id: number }>(
+    await db.execute(sql`SELECT id FROM users WHERE email LIKE 'e2e_%@luxeknox.test'`),
+  );
+
   await db.execute(sql`DELETE FROM sessions`);
-  await db.execute(sql`DELETE FROM users WHERE email LIKE 'e2e_%@luxeknox.test'`);
+  await deleteWithDependents(
+    db,
+    edges,
+    'users',
+    'id',
+    e2eUsers.map((u) => u.id),
+  );
 }
 
 /**

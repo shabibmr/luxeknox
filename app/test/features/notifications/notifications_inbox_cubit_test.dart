@@ -47,12 +47,8 @@ void main() {
     devices = _MockDeviceToken();
   });
 
-  NotificationsInboxCubit buildCubit() => NotificationsInboxCubit(
-    list,
-    markRead,
-    markAll,
-    devices,
-  );
+  NotificationsInboxCubit buildCubit() =>
+      NotificationsInboxCubit(list, markRead, markAll, devices);
 
   blocTest<NotificationsInboxCubit, NotificationsInboxState>(
     'loads inbox and exposes unread count',
@@ -60,7 +56,10 @@ void main() {
       when(() => list(any())).thenAnswer(
         (_) async => Right(
           CursorPage(
-            items: [n(id: '1'), n(id: '2', isRead: true)],
+            items: [
+              n(id: '1'),
+              n(id: '2', isRead: true),
+            ],
             nextCursor: null,
             hasMore: false,
           ),
@@ -88,7 +87,10 @@ void main() {
       when(() => list(any())).thenAnswer(
         (_) async => Right(
           CursorPage(
-            items: [n(id: '1'), n(id: '2')],
+            items: [
+              n(id: '1'),
+              n(id: '2'),
+            ],
             nextCursor: null,
             hasMore: false,
           ),
@@ -119,9 +121,9 @@ void main() {
   blocTest<NotificationsInboxCubit, NotificationsInboxState>(
     'emits failure on list error',
     build: () {
-      when(() => list(any())).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+      when(
+        () => list(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return buildCubit();
     },
     act: (cubit) => cubit.load(),

@@ -65,81 +65,79 @@ class _AdminAttendanceBody extends StatelessWidget {
           final items = state.items;
           final footfall = state.footfall;
           return RefreshIndicator(
-              onRefresh: () => context.read<AttendanceLiveFeedCubit>().load(),
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  Text(
-                    AttendanceStrings.footfall,
-                    style: Theme.of(context).textTheme.titleMedium,
+            onRefresh: () => context.read<AttendanceLiveFeedCubit>().load(),
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Text(
+                  AttendanceStrings.footfall,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 72,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: footfall.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final day = footfall[index];
+                      final max = footfall
+                          .map((d) => d.totalMemberCheckins)
+                          .fold<int>(1, (a, b) => a > b ? a : b);
+                      final height =
+                          48 * (day.totalMemberCheckins / max).clamp(0.1, 1.0);
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            width: 16,
+                            height: height,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          Text(
+                            '${day.date.month}/${day.date.day}',
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                        ],
+                      );
+                    },
                   ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 72,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: footfall.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        final day = footfall[index];
-                        final max = footfall
-                            .map((d) => d.totalMemberCheckins)
-                            .fold<int>(1, (a, b) => a > b ? a : b);
-                        final height =
-                            48 * (day.totalMemberCheckins / max).clamp(0.1, 1.0);
-                        return Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Container(
-                              width: 16,
-                              height: height,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            Text(
-                              '${day.date.month}/${day.date.day}',
-                              style: Theme.of(context).textTheme.labelSmall,
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    AttendanceStrings.liveFeed,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  if (items.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 24),
-                      child: AppEmptyView(
-                        message: AttendanceStrings.emptyFeed,
-                      ),
-                    )
-                  else
-                    ...items.map(
-                      (r) => ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text('User #${r.userId} · ${r.method.label}'),
-                        subtitle: Text(
-                          '${r.checkInTime}'
-                          '${r.checkOutTime == null ? ' · open' : ' → ${r.checkOutTime}'}',
-                        ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  AttendanceStrings.liveFeed,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                if (items.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 24),
+                    child: AppEmptyView(message: AttendanceStrings.emptyFeed),
+                  )
+                else
+                  ...items.map(
+                    (r) => ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('User #${r.userId} · ${r.method.label}'),
+                      subtitle: Text(
+                        '${r.checkInTime}'
+                        '${r.checkOutTime == null ? ' · open' : ' → ${r.checkOutTime}'}',
                       ),
                     ),
-                  if (state.failure != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(
-                        failureMessage(state.failure!),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
+                  ),
+                if (state.failure != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      failureMessage(state.failure!),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
                       ),
                     ),
-                ],
-              ),
-            );
+                  ),
+              ],
+            ),
+          );
         },
       ),
     );
@@ -186,9 +184,7 @@ class _ManualCheckInScreenState extends State<ManualCheckInScreen> {
         builder: (context, state) {
           final busy = state.status == LoadStatus.loading;
           return Scaffold(
-            appBar: AppBar(
-              title: const Text(AttendanceStrings.manualOverride),
-            ),
+            appBar: AppBar(title: const Text(AttendanceStrings.manualOverride)),
             body: ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -282,10 +278,7 @@ class _QrScanCheckInScreenState extends State<QrScanCheckInScreen> {
     _handledScan = true;
     _payloadController.text = raw;
     _cubit.add(
-      CheckInSubmitted(
-        method: AttendanceCheckInMethod.qrCode,
-        payload: raw,
-      ),
+      CheckInSubmitted(method: AttendanceCheckInMethod.qrCode, payload: raw),
     );
   }
 
@@ -360,8 +353,7 @@ class _QrScanCheckInScreenState extends State<QrScanCheckInScreen> {
                         onPressed: busy
                             ? null
                             : () {
-                                final payload =
-                                    _payloadController.text.trim();
+                                final payload = _payloadController.text.trim();
                                 if (payload.isEmpty) return;
                                 _cubit.add(
                                   CheckInSubmitted(

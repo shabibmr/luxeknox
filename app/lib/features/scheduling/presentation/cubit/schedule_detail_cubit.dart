@@ -20,12 +20,15 @@ abstract class ScheduleDetailState with _$ScheduleDetailState {
     @Default(LoadStatus.initial) LoadStatus status,
     ScheduleSession? session,
     @Default(false) bool actionInFlight,
+
     /// Success / action copy. API errors use [failure] (and optionally [message]
     /// for move-booking cap / rollback copy).
     String? message,
     Failure? failure,
+
     /// Staff reschedule hit a stale `rowVersion` (409); session was reloaded.
     @Default(false) bool isConflict,
+
     /// Set after a successful move so the UI can navigate to the new session.
     String? movedToScheduleId,
   }) = _ScheduleDetailState;
@@ -161,24 +164,18 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
       ),
     );
     final result = await _unbook(
-      UnbookScheduleParams(
-        scheduleId: scheduleId,
-        memberId: memberId,
-      ),
+      UnbookScheduleParams(scheduleId: scheduleId, memberId: memberId),
     );
-    await result.fold(
-      (failure) async {
-        emit(
-          state.copyWith(
-            actionInFlight: false,
-            status: LoadStatus.failure,
-            failure: failure,
-            message: null,
-          ),
-        );
-      },
-      (_) async => load(scheduleId),
-    );
+    await result.fold((failure) async {
+      emit(
+        state.copyWith(
+          actionInFlight: false,
+          status: LoadStatus.failure,
+          failure: failure,
+          message: null,
+        ),
+      );
+    }, (_) async => load(scheduleId));
   }
 
   Future<void> cancel({String? reason, bool cancelSeries = false}) async {
@@ -320,19 +317,16 @@ class ScheduleDetailCubit extends Cubit<ScheduleDetailState> {
         attended: attended,
       ),
     );
-    await result.fold(
-      (failure) async {
-        emit(
-          state.copyWith(
-            actionInFlight: false,
-            status: LoadStatus.failure,
-            failure: failure,
-            message: null,
-          ),
-        );
-      },
-      (_) async => load(scheduleId),
-    );
+    await result.fold((failure) async {
+      emit(
+        state.copyWith(
+          actionInFlight: false,
+          status: LoadStatus.failure,
+          failure: failure,
+          message: null,
+        ),
+      );
+    }, (_) async => load(scheduleId));
   }
 
   /// Staff: patch session start/end with optimistic concurrency via [rowVersion].

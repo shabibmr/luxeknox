@@ -58,6 +58,7 @@ export class MemberPhotoController {
 
   @Post(':photoId/avatar')
   @RequirePermission('health.update')
+  @HttpCode(200)
   @ApiOperation({
     operationId: 'setMemberAvatar',
     summary: 'Set current avatar from a gallery shot',

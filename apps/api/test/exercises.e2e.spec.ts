@@ -60,15 +60,23 @@ describe('Exercises E2E', () => {
       }
     });
 
-    it('POST /exercises returns 403 for trainer and member', async () => {
-      for (const token of [trainerToken, memberToken]) {
-        const res = await fetch(`${testApp.baseUrl}/exercises`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ name: uniqueName('forbidden') }),
-        });
-        expect(res.status).toBe(403);
-      }
+    it('POST /exercises returns 403 for member', async () => {
+      const res = await fetch(`${testApp.baseUrl}/exercises`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
+        body: JSON.stringify({ name: uniqueName('forbidden') }),
+      });
+      expect(res.status).toBe(403);
+    });
+
+    // exercises.create is granted to admin + trainer (docs/vertical-1-exercise-library-implementation.md).
+    it('POST /exercises succeeds for trainer', async () => {
+      const res = await fetch(`${testApp.baseUrl}/exercises`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${trainerToken}` },
+        body: JSON.stringify({ name: uniqueName('trainer_created') }),
+      });
+      expect(res.status).toBe(201);
     });
 
     it('PATCH /exercises/:id returns 403 for trainer and member', async () => {

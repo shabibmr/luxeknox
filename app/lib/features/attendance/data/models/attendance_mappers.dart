@@ -74,10 +74,8 @@ extension AttendanceOccupancyMapper on api.Occupancy {
       asOf: asOf.toLocal(),
       byGate: byGate
           .map(
-            (g) => GateOccupancy(
-              gateIdentifier: g.gateIdentifier,
-              count: g.count,
-            ),
+            (g) =>
+                GateOccupancy(gateIdentifier: g.gateIdentifier, count: g.count),
           )
           .toList(),
     );

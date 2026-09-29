@@ -34,13 +34,7 @@ class OpenSlotsCalculator {
       throw FormatException('Invalid date format: $dateIso');
     }
     final minutes = parseTimeToMinutes(time);
-    return DateTime(
-      parts[0],
-      parts[1],
-      parts[2],
-      minutes ~/ 60,
-      minutes % 60,
-    );
+    return DateTime(parts[0], parts[1], parts[2], minutes ~/ 60, minutes % 60);
   }
 
   /// Formats a local/UTC date as `yyyy-MM-dd`.
@@ -56,8 +50,7 @@ class OpenSlotsCalculator {
 
   static List<OpenSlot> mergeIntervals(List<OpenSlot> intervals) {
     if (intervals.isEmpty) return const [];
-    final sorted = [...intervals]
-      ..sort((a, b) => a.start.compareTo(b.start));
+    final sorted = [...intervals]..sort((a, b) => a.start.compareTo(b.start));
     final merged = <OpenSlot>[
       OpenSlot(start: sorted.first.start, end: sorted.first.end),
     ];
@@ -165,9 +158,7 @@ class OpenSlotsCalculator {
     final blocked = dayOverrides
         .where(
           (row) =>
-              !row.isAvailable &&
-              row.startTime != null &&
-              row.endTime != null,
+              !row.isAvailable && row.startTime != null && row.endTime != null,
         )
         .map(
           (row) => OpenSlot(
@@ -181,9 +172,7 @@ class OpenSlotsCalculator {
     final extraAvailable = dayOverrides
         .where(
           (row) =>
-              row.isAvailable &&
-              row.startTime != null &&
-              row.endTime != null,
+              row.isAvailable && row.startTime != null && row.endTime != null,
         )
         .map(
           (row) => OpenSlot(
@@ -276,15 +265,12 @@ class OpenSlotsCalculator {
       );
       final dayEnd = dayStart.add(const Duration(days: 1));
       final dayBusy = busyAll
-          .where(
-            (b) => b.start.isBefore(dayEnd) && b.end.isAfter(dayStart),
-          )
+          .where((b) => b.start.isBefore(dayEnd) && b.end.isAfter(dayStart))
           .toList();
       // Exclude this session from busy so its own seat stays open.
       final busyExcludingSelf = dayBusy
           .where(
-            (b) =>
-                b.start != session.startTime || b.end != session.endTime,
+            (b) => b.start != session.startTime || b.end != session.endTime,
           )
           .toList();
 
@@ -319,9 +305,7 @@ class OpenSlotsCalculator {
     required List<OpenSlot> openSlots,
     required List<ScheduleSession> sessions,
   }) {
-    final slotKeys = {
-      for (final s in openSlots) _slotKey(s.start, s.end),
-    };
+    final slotKeys = {for (final s in openSlots) _slotKey(s.start, s.end)};
     final matched = <BookableOpenSlot>[];
     for (final session in sessions) {
       if (session.status != ScheduleSessionStatus.scheduled || session.isFull) {

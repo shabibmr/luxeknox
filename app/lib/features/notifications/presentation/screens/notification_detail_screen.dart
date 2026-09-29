@@ -19,8 +19,7 @@ class NotificationDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          getIt<NotificationDetailCubit>()..load(notificationId),
+      create: (_) => getIt<NotificationDetailCubit>()..load(notificationId),
       child: _DetailBody(notificationId: notificationId),
     );
   }
@@ -52,64 +51,62 @@ class _DetailBody extends StatelessWidget {
         final Widget body;
         if (state.status == LoadStatus.loading && notification == null) {
           body = const AppLoading();
-        } else if (state.status == LoadStatus.failure &&
-            notification == null) {
+        } else if (state.status == LoadStatus.failure && notification == null) {
           body = AppErrorView(
             message: state.failure == null
                 ? ''
                 : failureMessage(state.failure!),
-            onRetry: () => context.read<NotificationDetailCubit>().load(
-              notificationId,
-            ),
+            onRetry: () =>
+                context.read<NotificationDetailCubit>().load(notificationId),
           );
         } else if (notification == null) {
           body = const AppLoading();
         } else {
           body = ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  Text(
-                    notification.title,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    DateFormat.yMMMd().add_jm().format(
-                      notification.createdAt.toLocal(),
-                    ),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Chip(
-                    label: Text(
-                      notification.unread
-                          ? NotificationStrings.unreadLabel
-                          : NotificationStrings.alreadyRead,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    notification.message,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  if (deepLinkPath != null) ...[
-                    const SizedBox(height: 24),
-                    FilledButton.icon(
-                      onPressed: () => context.push(deepLinkPath),
-                      icon: const Icon(Icons.open_in_new),
-                      label: const Text(NotificationStrings.openRelated),
-                    ),
-                  ],
-                  if (notification.unread) ...[
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: () =>
-                          context.read<NotificationDetailCubit>().markRead(),
-                      child: const Text(NotificationStrings.markRead),
-                    ),
-                  ],
-                ],
-              );
+            padding: const EdgeInsets.all(16),
+            children: [
+              Text(
+                notification.title,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                DateFormat.yMMMd().add_jm().format(
+                  notification.createdAt.toLocal(),
+                ),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              Chip(
+                label: Text(
+                  notification.unread
+                      ? NotificationStrings.unreadLabel
+                      : NotificationStrings.alreadyRead,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                notification.message,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              if (deepLinkPath != null) ...[
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: () => context.push(deepLinkPath),
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text(NotificationStrings.openRelated),
+                ),
+              ],
+              if (notification.unread) ...[
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: () =>
+                      context.read<NotificationDetailCubit>().markRead(),
+                  child: const Text(NotificationStrings.markRead),
+                ),
+              ],
+            ],
+          );
         }
         return Scaffold(
           appBar: AppBar(title: const Text(NotificationStrings.detailTitle)),

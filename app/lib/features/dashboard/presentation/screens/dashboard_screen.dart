@@ -29,20 +29,19 @@ class DashboardScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => getIt<DashboardCubit>()..load()),
-        BlocProvider(create: (context) {
-          final agenda = getIt<DashboardAgendaCubit>();
-          final session = context.read<SessionCubit>().state;
-          if (session is SessionAuthenticated) {
-            final role = session.principal.userType;
-            if (role == UserType.member || role == UserType.trainer) {
-              agenda.load(
-                role: role,
-                profileId: session.principal.profileId,
-              );
+        BlocProvider(
+          create: (context) {
+            final agenda = getIt<DashboardAgendaCubit>();
+            final session = context.read<SessionCubit>().state;
+            if (session is SessionAuthenticated) {
+              final role = session.principal.userType;
+              if (role == UserType.member || role == UserType.trainer) {
+                agenda.load(role: role, profileId: session.principal.profileId);
+              }
             }
-          }
-          return agenda;
-        }),
+            return agenda;
+          },
+        ),
       ],
       child: Scaffold(
         appBar: AppBar(title: const Text(DashboardStrings.title)),

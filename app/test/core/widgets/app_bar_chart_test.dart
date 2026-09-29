@@ -33,14 +33,10 @@ void main() {
     expect(find.byType(AppEmptyView), findsNothing);
   });
 
-  testWidgets('AppBarChart renders in dark mode without error', (
-    tester,
-  ) async {
+  testWidgets('AppBarChart renders in dark mode without error', (tester) async {
     await pumpApp(
       tester,
-      const AppBarChart(
-        data: [AppChartPoint(label: 'Mon', value: 3)],
-      ),
+      const AppBarChart(data: [AppChartPoint(label: 'Mon', value: 3)]),
       themeMode: ThemeMode.dark,
     );
 

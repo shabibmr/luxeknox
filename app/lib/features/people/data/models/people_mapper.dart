@@ -301,7 +301,9 @@ api.EmployeeUpdate employeeUpdateFromInput(EmployeeUpdateInput input) {
   );
 }
 
-api.EmployeeStatusRequest employeeStatusRequestFromDomain(EmployeeStatus status) {
+api.EmployeeStatusRequest employeeStatusRequestFromDomain(
+  EmployeeStatus status,
+) {
   return api.EmployeeStatusRequest(
     (b) => b..status = employeeStatusFromDomain(status),
   );

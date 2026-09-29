@@ -212,7 +212,11 @@ class MembershipRepositoryImpl implements MembershipRepository {
     try {
       final result = await _remoteDataSource.renew(
         intId,
-        _actionRequest(productId: productId, rowVersion: rowVersion, reason: reason),
+        _actionRequest(
+          productId: productId,
+          rowVersion: rowVersion,
+          reason: reason,
+        ),
       );
       return Right(result.toDomain());
     } catch (e) {
@@ -232,7 +236,11 @@ class MembershipRepositoryImpl implements MembershipRepository {
     try {
       final result = await _remoteDataSource.upgrade(
         intId,
-        _actionRequest(productId: productId, rowVersion: rowVersion, reason: reason),
+        _actionRequest(
+          productId: productId,
+          rowVersion: rowVersion,
+          reason: reason,
+        ),
       );
       return Right(result.toDomain());
     } catch (e) {

@@ -46,8 +46,7 @@ class _ScheduleDetailBody extends StatelessWidget {
   bool _memberIsBooked(ScheduleDetailState state, String? memberId) {
     if (memberId == null || state.session == null) return false;
     return state.session!.participants.any(
-      (p) =>
-          p.memberId == memberId && p.bookingStatus == BookingStatus.booked,
+      (p) => p.memberId == memberId && p.bookingStatus == BookingStatus.booked,
     );
   }
 
@@ -69,8 +68,7 @@ class _ScheduleDetailBody extends StatelessWidget {
       memberId: memberId,
     );
     if (!context.mounted) return;
-    final target =
-        context.read<ScheduleDetailCubit>().state.movedToScheduleId;
+    final target = context.read<ScheduleDetailCubit>().state.movedToScheduleId;
     if (moved == true && target != null) {
       context.go(Routes.memberScheduleById(target));
     }
@@ -82,8 +80,7 @@ class _ScheduleDetailBody extends StatelessWidget {
     final canBook = context.can('schedules.book');
     final canCancelBooking = context.can('schedules.cancel');
     final showReschedule = role.canRescheduleSession && canWrite;
-    final showMove =
-        role.canMoveBooking && canBook && canCancelBooking;
+    final showMove = role.canMoveBooking && canBook && canCancelBooking;
 
     return BlocConsumer<ScheduleDetailCubit, ScheduleDetailState>(
       listenWhen: (previous, current) {
@@ -98,7 +95,8 @@ class _ScheduleDetailBody extends StatelessWidget {
         return messageShown || actionFailed || conflict;
       },
       listener: (context, state) {
-        final text = state.message ??
+        final text =
+            state.message ??
             (state.failure == null ? null : failureMessage(state.failure!));
         if (text == null) return;
         final messenger = ScaffoldMessenger.of(context);
@@ -123,7 +121,8 @@ class _ScheduleDetailBody extends StatelessWidget {
             ? sessionState.principal.profileId
             : null;
         final memberBooked = _memberIsBooked(state, memberId);
-        final canRescheduleNow = showReschedule &&
+        final canRescheduleNow =
+            showReschedule &&
             session != null &&
             session.status == ScheduleSessionStatus.scheduled;
         final canMoveNow = showMove && memberBooked && session != null;
@@ -141,8 +140,9 @@ class _ScheduleDetailBody extends StatelessWidget {
                       final scope = await showDialog<String>(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          title:
-                              const Text(SchedulingStrings.editRecurringTitle),
+                          title: const Text(
+                            SchedulingStrings.editRecurringTitle,
+                          ),
                           content: const Text(
                             SchedulingStrings.editRecurringMessage,
                           ),
@@ -150,8 +150,9 @@ class _ScheduleDetailBody extends StatelessWidget {
                             TextButton(
                               key: const Key('edit_whole_series_button'),
                               onPressed: () => Navigator.of(ctx).pop('all'),
-                              child:
-                                  const Text(SchedulingStrings.editWholeSeries),
+                              child: const Text(
+                                SchedulingStrings.editWholeSeries,
+                              ),
                             ),
                             FilledButton(
                               key: const Key('edit_this_session_button'),
@@ -191,9 +192,9 @@ class _ScheduleDetailBody extends StatelessWidget {
                         message: state.failure == null
                             ? 'Something went wrong'
                             : failureMessage(state.failure!),
-                        onRetry: () => context
-                            .read<ScheduleDetailCubit>()
-                            .load(scheduleId),
+                        onRetry: () => context.read<ScheduleDetailCubit>().load(
+                          scheduleId,
+                        ),
                       )
                     : state.status == LoadStatus.loading
                     ? const AppLoading()
@@ -209,15 +210,18 @@ class _ScheduleDetailBody extends StatelessWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.repeat, size: 16, color: Colors.grey),
+                          const Icon(
+                            Icons.repeat,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             SchedulingStrings.recurringSeries,
                             key: const Key('recurring_series_indicator'),
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: Colors.grey),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                           ),
                         ],
                       ),
@@ -256,11 +260,11 @@ class _ScheduleDetailBody extends StatelessWidget {
                                         onPressed: actionInFlight
                                             ? null
                                             : () => context
-                                                .read<ScheduleDetailCubit>()
-                                                .markAttendance(
-                                                  participantId: p.id,
-                                                  attended: true,
-                                                ),
+                                                  .read<ScheduleDetailCubit>()
+                                                  .markAttendance(
+                                                    participantId: p.id,
+                                                    attended: true,
+                                                  ),
                                         child: const Text(
                                           AttendanceStrings.markAttended,
                                         ),
@@ -269,11 +273,11 @@ class _ScheduleDetailBody extends StatelessWidget {
                                         onPressed: actionInFlight
                                             ? null
                                             : () => context
-                                                .read<ScheduleDetailCubit>()
-                                                .markAttendance(
-                                                  participantId: p.id,
-                                                  attended: false,
-                                                ),
+                                                  .read<ScheduleDetailCubit>()
+                                                  .markAttendance(
+                                                    participantId: p.id,
+                                                    attended: false,
+                                                  ),
                                         child: const Text(
                                           AttendanceStrings.markNoShow,
                                         ),
@@ -283,8 +287,8 @@ class _ScheduleDetailBody extends StatelessWidget {
                                           onPressed: actionInFlight
                                               ? null
                                               : () => context
-                                                  .read<ScheduleDetailCubit>()
-                                                  .unbook(p.memberId),
+                                                    .read<ScheduleDetailCubit>()
+                                                    .unbook(p.memberId),
                                           child: const Text(
                                             SchedulingStrings.unbook,
                                           ),
@@ -296,11 +300,9 @@ class _ScheduleDetailBody extends StatelessWidget {
                                     onPressed: actionInFlight
                                         ? null
                                         : () => context
-                                            .read<ScheduleDetailCubit>()
-                                            .unbook(p.memberId),
-                                    child: const Text(
-                                      SchedulingStrings.unbook,
-                                    ),
+                                              .read<ScheduleDetailCubit>()
+                                              .unbook(p.memberId),
+                                    child: const Text(SchedulingStrings.unbook),
                                   )
                                 : null,
                           ),
@@ -323,8 +325,8 @@ class _ScheduleDetailBody extends StatelessWidget {
                                     onPressed: actionInFlight
                                         ? null
                                         : () => context
-                                            .read<ScheduleDetailCubit>()
-                                            .unbook(p.memberId),
+                                              .read<ScheduleDetailCubit>()
+                                              .unbook(p.memberId),
                                     child: const Text(
                                       SchedulingStrings.leaveWaitlist,
                                     ),
@@ -355,10 +357,8 @@ class _ScheduleDetailBody extends StatelessWidget {
                         key: const Key('move_booking_button'),
                         onPressed: actionInFlight || memberId == null
                             ? null
-                            : () => _openMoveBooking(
-                                context,
-                                memberId: memberId,
-                              ),
+                            : () =>
+                                  _openMoveBooking(context, memberId: memberId),
                         child: const Text(SchedulingStrings.moveBooking),
                       ),
                     ],
@@ -377,8 +377,7 @@ class _ScheduleDetailBody extends StatelessWidget {
                       OutlinedButton(
                         onPressed: actionInFlight
                             ? null
-                            : () =>
-                                context.read<ScheduleDetailCubit>().start(),
+                            : () => context.read<ScheduleDetailCubit>().start(),
                         child: const Text(SchedulingStrings.startSession),
                       ),
                       const SizedBox(height: 8),
@@ -386,8 +385,8 @@ class _ScheduleDetailBody extends StatelessWidget {
                         onPressed: actionInFlight
                             ? null
                             : () => context
-                                .read<ScheduleDetailCubit>()
-                                .complete(),
+                                  .read<ScheduleDetailCubit>()
+                                  .complete(),
                         child: const Text(SchedulingStrings.completeSession),
                       ),
                     ],
@@ -399,8 +398,7 @@ class _ScheduleDetailBody extends StatelessWidget {
                             ? null
                             : () async {
                                 if (session.isRecurring) {
-                                  final cancelSeries =
-                                      await showDialog<bool>(
+                                  final cancelSeries = await showDialog<bool>(
                                     context: context,
                                     builder: (ctx) => AlertDialog(
                                       title: const Text(
@@ -441,11 +439,10 @@ class _ScheduleDetailBody extends StatelessWidget {
                                       ],
                                     ),
                                   );
-                                  if (cancelSeries != null &&
-                                      context.mounted) {
-                                    context
-                                        .read<ScheduleDetailCubit>()
-                                        .cancel(cancelSeries: cancelSeries);
+                                  if (cancelSeries != null && context.mounted) {
+                                    context.read<ScheduleDetailCubit>().cancel(
+                                      cancelSeries: cancelSeries,
+                                    );
                                   }
                                 } else {
                                   context.read<ScheduleDetailCubit>().cancel();

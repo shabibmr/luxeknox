@@ -13,10 +13,10 @@ class RestTimerState extends Equatable {
   });
 
   const RestTimerState.idle()
-      : remainingSeconds = 0,
-        totalSeconds = 0,
-        isRunning = false,
-        isFinished = false;
+    : remainingSeconds = 0,
+      totalSeconds = 0,
+      isRunning = false,
+      isFinished = false;
 
   final int remainingSeconds;
   final int totalSeconds;
@@ -49,7 +49,8 @@ class RestTimerState extends Equatable {
 /// Client-only rest countdown. No API.
 @injectable
 class RestTimerCubit extends Cubit<RestTimerState> {
-  RestTimerCubit({@ignoreParam this.ticker}) : super(const RestTimerState.idle());
+  RestTimerCubit({@ignoreParam this.ticker})
+    : super(const RestTimerState.idle());
 
   /// Optional tick stream factory for tests (emits once per second).
   final Stream<void> Function()? ticker;
@@ -78,7 +79,8 @@ class RestTimerCubit extends Cubit<RestTimerState> {
         isFinished: false,
       ),
     );
-    final stream = ticker?.call() ?? Stream.periodic(const Duration(seconds: 1));
+    final stream =
+        ticker?.call() ?? Stream.periodic(const Duration(seconds: 1));
     _subscription = stream.listen((_) => _tick());
   }
 
@@ -89,11 +91,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
       _subscription?.cancel();
       _subscription = null;
       emit(
-        state.copyWith(
-          remainingSeconds: 0,
-          isRunning: false,
-          isFinished: true,
-        ),
+        state.copyWith(remainingSeconds: 0, isRunning: false, isFinished: true),
       );
       return;
     }
@@ -104,11 +102,7 @@ class RestTimerCubit extends Cubit<RestTimerState> {
     _subscription?.cancel();
     _subscription = null;
     emit(
-      state.copyWith(
-        remainingSeconds: 0,
-        isRunning: false,
-        isFinished: true,
-      ),
+      state.copyWith(remainingSeconds: 0, isRunning: false, isFinished: true),
     );
   }
 

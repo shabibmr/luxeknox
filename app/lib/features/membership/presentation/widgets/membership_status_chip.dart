@@ -13,9 +13,18 @@ class MembershipStatusChip extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final (label, color) = switch (status) {
       MembershipStatus.active => (MembershipStrings.statusActive, Colors.green),
-      MembershipStatus.expired => (MembershipStrings.statusExpired, scheme.error),
-      MembershipStatus.frozen => (MembershipStrings.statusFrozen, Colors.blueGrey),
-      MembershipStatus.cancelled => (MembershipStrings.statusCancelled, scheme.error),
+      MembershipStatus.expired => (
+        MembershipStrings.statusExpired,
+        scheme.error,
+      ),
+      MembershipStatus.frozen => (
+        MembershipStrings.statusFrozen,
+        Colors.blueGrey,
+      ),
+      MembershipStatus.cancelled => (
+        MembershipStrings.statusCancelled,
+        scheme.error,
+      ),
     };
     return Chip(
       label: Text(label),

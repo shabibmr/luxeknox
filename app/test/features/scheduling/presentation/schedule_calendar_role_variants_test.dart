@@ -17,7 +17,8 @@ import 'package:mocktail/mocktail.dart';
 class MockScheduleCalendarCubit extends MockCubit<ScheduleCalendarState>
     implements ScheduleCalendarCubit {}
 
-class MockSessionCubit extends MockCubit<SessionState> implements SessionCubit {}
+class MockSessionCubit extends MockCubit<SessionState>
+    implements SessionCubit {}
 
 void main() {
   final session = ScheduleSession(

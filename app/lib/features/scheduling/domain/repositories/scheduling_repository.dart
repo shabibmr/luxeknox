@@ -118,7 +118,8 @@ abstract class SchedulingRepository {
     String trainerId,
   );
 
-  Future<Either<Failure, List<TrainerAvailabilitySlot>>> putTrainerAvailability({
+  Future<Either<Failure, List<TrainerAvailabilitySlot>>>
+  putTrainerAvailability({
     required String trainerId,
     required List<TrainerAvailabilitySlot> slots,
   });

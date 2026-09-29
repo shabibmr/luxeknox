@@ -52,8 +52,9 @@ class ScheduleCalendarScreen extends StatelessWidget {
     }
 
     return BlocProvider(
-      create: (_) => getIt<ScheduleCalendarCubit>()
-        ..load(trainerId: resolvedTrainerId, memberId: resolvedMemberId),
+      create: (_) =>
+          getIt<ScheduleCalendarCubit>()
+            ..load(trainerId: resolvedTrainerId, memberId: resolvedMemberId),
       child: _ScheduleCalendarBody(role: role),
     );
   }
@@ -102,7 +103,8 @@ class _ScheduleCalendarBody extends StatelessWidget {
             IconButton(
               tooltip: SchedulingStrings.facilitiesTitle,
               icon: const Icon(Icons.apartment_outlined),
-              onPressed: () => context.go('${Routes.adminSchedules}/facilities'),
+              onPressed: () =>
+                  context.go('${Routes.adminSchedules}/facilities'),
             ),
         ],
       ),
@@ -200,4 +202,3 @@ class _ScheduleCalendarBody extends StatelessWidget {
     );
   }
 }
-

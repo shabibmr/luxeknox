@@ -65,10 +65,7 @@ void main() {
   testWidgets('tapping a slot chip notifies selection', (tester) async {
     BookableOpenSlot? picked;
     await tester.pumpWidget(
-      buildApp(
-        slotsForDay: slots,
-        onSlotSelected: (s) => picked = s,
-      ),
+      buildApp(slotsForDay: slots, onSlotSelected: (s) => picked = s),
     );
 
     await tester.tap(find.byKey(const Key('open_slot_chip_10')));
@@ -80,10 +77,7 @@ void main() {
   testWidgets('tapping a day chip notifies day change', (tester) async {
     DateTime? picked;
     await tester.pumpWidget(
-      buildApp(
-        slotsForDay: slots,
-        onDaySelected: (d) => picked = d,
-      ),
+      buildApp(slotsForDay: slots, onDaySelected: (d) => picked = d),
     );
 
     await tester.tap(find.byKey(const Key('open_slots_day_2026_9_22')));

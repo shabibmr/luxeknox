@@ -15,6 +15,7 @@ abstract class ScheduleHistoryState with _$ScheduleHistoryState {
   const factory ScheduleHistoryState({
     @Default(LoadStatus.initial) LoadStatus status,
     @Default(<ScheduleSession>[]) List<ScheduleSession> items,
+
     /// True after a successful fetch, so an empty archive is still data.
     @Default(false) bool hasLoaded,
     String? nextCursor,
@@ -28,7 +29,8 @@ abstract class ScheduleHistoryState with _$ScheduleHistoryState {
 /// backs the Schedule History screens for both roles.
 @injectable
 class ScheduleHistoryCubit extends Cubit<ScheduleHistoryState> {
-  ScheduleHistoryCubit(this._listSchedules) : super(const ScheduleHistoryState());
+  ScheduleHistoryCubit(this._listSchedules)
+    : super(const ScheduleHistoryState());
 
   final ListSchedulesUseCase _listSchedules;
 
@@ -59,9 +61,8 @@ class ScheduleHistoryCubit extends Cubit<ScheduleHistoryState> {
       ),
     );
     result.fold(
-      (failure) => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) {
         final items = page.items.where(_isPast).toList()
           ..sort((a, b) => b.startTime.compareTo(a.startTime));

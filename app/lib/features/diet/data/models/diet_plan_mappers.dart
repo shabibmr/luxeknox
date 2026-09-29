@@ -8,7 +8,6 @@ import '../../domain/entities/diet_plan_meal_input.dart';
 import '../../domain/entities/diet_plan_status.dart';
 import '../../domain/entities/diet_plan_version.dart';
 
-
 DietPlanStatus dietPlanStatusToDomain(api.DietPlanStatusEnum status) {
   return switch (status.name) {
     'active' => DietPlanStatus.active,
@@ -143,7 +142,5 @@ extension DietPlanVersionModelMapper on api.DietPlanVersion {
 }
 
 api.AssignPlanRequest toAssignPlanRequest(String memberId) {
-  return api.AssignPlanRequest(
-    (b) => b..memberId = int.parse(memberId),
-  );
+  return api.AssignPlanRequest((b) => b..memberId = int.parse(memberId));
 }

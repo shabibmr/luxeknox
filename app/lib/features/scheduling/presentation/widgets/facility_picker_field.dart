@@ -108,9 +108,7 @@ class _FacilityPickerFieldState extends State<FacilityPickerField> {
       ],
       onChanged: widget.enabled
           ? (id) => widget.onChanged(
-              id == null
-                  ? null
-                  : _facilities.firstWhere((f) => f.id == id),
+              id == null ? null : _facilities.firstWhere((f) => f.id == id),
             )
           : null,
     );

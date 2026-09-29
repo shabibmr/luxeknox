@@ -68,17 +68,18 @@ class _CatalogBody extends StatelessWidget {
             ),
         ],
       ),
-      body: BlocBuilder<
-        MembershipPackagesCatalogCubit,
-        MembershipPackagesCatalogState
-      >(
-        builder: (context, state) => _buildBody(
-          context,
-          state,
-          canUpdate: canUpdate,
-          hidePricing: hidePricing,
-        ),
-      ),
+      body:
+          BlocBuilder<
+            MembershipPackagesCatalogCubit,
+            MembershipPackagesCatalogState
+          >(
+            builder: (context, state) => _buildBody(
+              context,
+              state,
+              canUpdate: canUpdate,
+              hidePricing: hidePricing,
+            ),
+          ),
     );
   }
 
@@ -136,7 +137,9 @@ class _CatalogBody extends StatelessWidget {
             trailing: product.isActive
                 ? null
                 : const Icon(Icons.visibility_off_outlined, size: 18),
-            onTap: canUpdate ? () => _openForm(context, product: product) : null,
+            onTap: canUpdate
+                ? () => _openForm(context, product: product)
+                : null,
           );
         },
       ),
