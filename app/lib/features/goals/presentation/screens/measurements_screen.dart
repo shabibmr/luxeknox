@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_chart_types.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
+import '../../../../core/widgets/app_line_chart.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/entities/measurement.dart';
 import '../cubit/measurements_cubit.dart';
 import '../goals_strings.dart';
-import '../widgets/metric_chart.dart';
 
 class MeasurementsScreen extends StatelessWidget {
   const MeasurementsScreen({
@@ -152,19 +154,27 @@ class _MeasurementsBody extends StatelessWidget {
     }
   }
 
-  List<MetricChartPoint> _chartPoints(
+  AppLineSeries _chartSeries(
     MeasurementsState state,
     String metricId,
+    String name,
   ) {
-    final points = <MetricChartPoint>[];
+    final points = <MapEntry<DateTime, num>>[];
     for (final session in state.sessions) {
       for (final v in session.values) {
         if (v.metricId == metricId) {
-          points.add(MetricChartPoint(at: session.recordedAt, value: v.value));
+          points.add(MapEntry(session.recordedAt, v.value));
         }
       }
     }
-    return points;
+    points.sort((a, b) => a.key.compareTo(b.key));
+    return AppLineSeries(
+      name: name,
+      points: [
+        for (final p in points)
+          Offset(p.key.millisecondsSinceEpoch.toDouble(), p.value.toDouble()),
+      ],
+    );
   }
 
   @override
@@ -228,7 +238,14 @@ class _MeasurementsBody extends StatelessWidget {
                     const SizedBox(height: 8),
                     for (final m in metrics.take(3)) ...[
                       Text('${m.name} (${m.unitOfMeasure})'),
-                      MetricChart(points: _chartPoints(state, m.id)),
+                      AppLineChart(
+                        series: [_chartSeries(state, m.id, m.name)],
+                        height: 160,
+                        emptyMessage: GoalsStrings.chartsEmpty,
+                        xLabelFormatter: (x) => DateFormat('MMM d').format(
+                          DateTime.fromMillisecondsSinceEpoch(x.round()),
+                        ),
+                      ),
                       const SizedBox(height: 12),
                     ],
                     const Divider(),

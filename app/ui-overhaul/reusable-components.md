@@ -90,7 +90,6 @@ All widgets actually read from source (not guessed from filenames). 15 shared `c
 | `DietMacroSummary` / `FoodMacroBreakdown` | diet/foods widgets | Two different macro-display components (chip-based vs. progress-bar-based) for overlapping concepts (calories/protein/carb/fat) |
 | `ExerciseMedia` | `exercises/.../exercise_media.dart` | Gif preview + external video link launcher |
 | `GoalProgressBar` | `goals/.../goal_progress_bar.dart` | Goal title + `AchievementChip` + `LinearProgressIndicator` + stats line |
-| `MetricChart` | `goals/.../metric_chart.dart` | Dependency-free `CustomPainter` line chart for measurement trends — a **second, separate line-chart implementation** parallel to `core/widgets/app_line_chart.dart` (fl_chart-based) |
 | `PtScheduleGridView` | `pt/.../pt_schedule_grid_view.dart` | Hour × trainer availability grid for selling PT sessions (own legend, own cell coloring) |
 | `ReportChartSection` / `ReportDataTable` / `ReportDateRangeBar` / `ReportFiltersBar` / `ReportPaginationBar` | `reports/.../*.dart` | Report-viewer building blocks; `ReportChartSection` composes `AppBarChart`/`AppLineChart`/`AppHeatmap` correctly |
 | `OpenSlotsPicker` | `scheduling/.../open_slots_picker.dart` | Day-strip + slot-chip picker for PT booking |
