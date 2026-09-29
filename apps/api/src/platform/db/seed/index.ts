@@ -6,6 +6,7 @@ import { seedRoles } from './roles';
 import { seedUsers } from './admin';
 import { seedSettings } from './settings';
 import { seedNotificationTypes } from './notification-types';
+import { seedExercises } from './exercises';
 
 export async function runSeeds(): Promise<void> {
   console.log('[Seed] Starting database seed process...');
@@ -27,6 +28,10 @@ export async function runSeeds(): Promise<void> {
 
     console.log('[Seed] Seeding notification types & templates...');
     await seedNotificationTypes(db);
+
+    console.log('[Seed] Seeding exercise library...');
+    const ex = await seedExercises(db);
+    console.log(`[Seed] Exercises: ${ex.inserted} inserted, ${ex.skipped} already present.`);
 
     console.log('[Seed] Seed completed successfully.');
   } finally {

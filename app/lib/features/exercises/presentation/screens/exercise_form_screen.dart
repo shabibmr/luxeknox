@@ -67,9 +67,7 @@ class _ExerciseFormViewState extends State<_ExerciseFormView> {
   late final _instructionsController = TextEditingController(
     text: widget.exercise?.instructions,
   );
-  late final _difficultyController = TextEditingController(
-    text: widget.exercise?.difficultyLevel,
-  );
+  late String? _difficulty = _initialDifficulty(widget.exercise);
   late final _videoUrlController = TextEditingController(
     text: widget.exercise?.videoUrl,
   );
@@ -90,7 +88,6 @@ class _ExerciseFormViewState extends State<_ExerciseFormView> {
       _secondaryMusclesController,
       _equipmentController,
       _instructionsController,
-      _difficultyController,
       _videoUrlController,
       _gifUrlController,
     ]) {
@@ -110,7 +107,6 @@ class _ExerciseFormViewState extends State<_ExerciseFormView> {
       _secondaryMusclesController,
       _equipmentController,
       _instructionsController,
-      _difficultyController,
       _videoUrlController,
       _gifUrlController,
     ]) {
@@ -121,11 +117,24 @@ class _ExerciseFormViewState extends State<_ExerciseFormView> {
     _secondaryMusclesController.dispose();
     _equipmentController.dispose();
     _instructionsController.dispose();
-    _difficultyController.dispose();
     _videoUrlController.dispose();
     _gifUrlController.dispose();
     super.dispose();
   }
+
+  static String? _initialDifficulty(Exercise? exercise) {
+    final level = exercise?.difficultyLevel.trim();
+    return (level == null || level.isEmpty) ? null : level;
+  }
+
+  /// Standard levels, plus the exercise's existing value if it is a custom one
+  /// so editing never drops it.
+  late final List<String> _difficultyOptions = [
+    ...ExerciseStrings.difficultyLevels,
+    if (_difficulty != null &&
+        !ExerciseStrings.difficultyLevels.contains(_difficulty))
+      _difficulty!,
+  ];
 
   List<String> _splitList(String raw) =>
       raw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
@@ -144,7 +153,7 @@ class _ExerciseFormViewState extends State<_ExerciseFormView> {
       instructions: _instructionsController.text.trim(),
       videoUrl: _urlOrNull(_videoUrlController.text),
       gifUrl: _urlOrNull(_gifUrlController.text),
-      difficultyLevel: _difficultyController.text.trim(),
+      difficultyLevel: _difficulty ?? '',
       isActive: _isActive,
     );
 
@@ -273,15 +282,24 @@ class _ExerciseFormViewState extends State<_ExerciseFormView> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _difficultyController,
-                    enabled: !submitting,
+                  DropdownButtonFormField<String>(
+                    // ignore: deprecated_member_use
+                    value: _difficulty,
                     decoration: const InputDecoration(
                       labelText: ExerciseStrings.difficultyLabel,
                     ),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? ExerciseStrings.difficultyRequired
-                        : null,
+                    items: [
+                      for (final level in _difficultyOptions)
+                        DropdownMenuItem(value: level, child: Text(level)),
+                    ],
+                    onChanged: submitting
+                        ? null
+                        : (v) => setState(() {
+                            _difficulty = v;
+                            _isDirty = true;
+                          }),
+                    validator: (v) =>
+                        v == null ? ExerciseStrings.difficultyRequired : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
