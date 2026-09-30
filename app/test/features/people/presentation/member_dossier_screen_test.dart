@@ -282,6 +282,7 @@ void main() {
     expect(find.text(PeopleStrings.goals), findsNothing);
     expect(find.text(PeopleStrings.ptNotPurchased), findsOneWidget);
     expect(find.text(PeopleStrings.addPersonalTraining), findsNothing);
+    expect(find.text(PeopleStrings.assignMembership), findsNothing);
   });
 
   testWidgets('edit icon reveals inline editable profile fields', (
@@ -320,7 +321,8 @@ void main() {
     expect(find.text(PeopleStrings.workoutPlan), findsOneWidget);
     expect(find.text(PeopleStrings.dietPlan), findsOneWidget);
     expect(find.text(PtStrings.readOnlyBanner), findsNothing);
-    // Trainers cannot sell, renew or re-plan PT.
+    // Trainers cannot sell membership or sell/renew/re-plan PT.
+    expect(find.text(PeopleStrings.assignMembership), findsNothing);
     expect(find.text(PeopleStrings.addPersonalTraining), findsNothing);
     expect(find.text(PtStrings.renew), findsNothing);
     expect(find.text(PtStrings.changeTrainerSlot), findsNothing);
@@ -359,6 +361,28 @@ void main() {
 
     expect(find.byType(ProgressHubScreen), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsNothing);
+  });
+
+  testWidgets('admin can sell membership even when one is already active', (
+    tester,
+  ) async {
+    signInAs(adminPrincipal, ['memberships.create']);
+    stubExtras(membership: gymMembership());
+
+    await pumpDossier(tester);
+
+    expect(find.text(PeopleStrings.assignMembership), findsOneWidget);
+  });
+
+  testWidgets('admin without memberships.create cannot sell membership', (
+    tester,
+  ) async {
+    signInAs(adminPrincipal, ['pt_subscriptions.create']);
+    stubExtras(membership: gymMembership());
+
+    await pumpDossier(tester);
+
+    expect(find.text(PeopleStrings.assignMembership), findsNothing);
   });
 
   testWidgets('admin can add PT when membership is active and no PT is running', (

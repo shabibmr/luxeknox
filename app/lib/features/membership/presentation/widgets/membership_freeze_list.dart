@@ -17,10 +17,16 @@ class MembershipFreezeList extends StatelessWidget {
     super.key,
     required this.membershipId,
     this.canApprove = false,
+    this.onChanged,
   });
 
   final String membershipId;
   final bool canApprove;
+
+  /// Called after a freeze is approved or rejected, since that mutates the
+  /// membership's own status server-side and the parent screen's status
+  /// display won't otherwise know to reload.
+  final VoidCallback? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +36,7 @@ class MembershipFreezeList extends StatelessWidget {
       child: _MembershipFreezeListBody(
         membershipId: membershipId,
         canApprove: canApprove,
+        onChanged: onChanged,
       ),
     );
   }
@@ -39,10 +46,12 @@ class _MembershipFreezeListBody extends StatelessWidget {
   const _MembershipFreezeListBody({
     required this.membershipId,
     required this.canApprove,
+    this.onChanged,
   });
 
   final String membershipId;
   final bool canApprove;
+  final VoidCallback? onChanged;
 
   Future<void> _handleApprove(
     BuildContext context,
@@ -51,7 +60,11 @@ class _MembershipFreezeListBody extends StatelessWidget {
     final failure = await context.read<MembershipFreezeCubit>().approve(
       freeze.id,
     );
-    if (!context.mounted || failure == null) return;
+    if (!context.mounted) return;
+    if (failure == null) {
+      onChanged?.call();
+      return;
+    }
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(failureMessage(failure))));
@@ -92,7 +105,11 @@ class _MembershipFreezeListBody extends StatelessWidget {
       freeze.id,
       reason: reason.isEmpty ? null : reason,
     );
-    if (!context.mounted || failure == null) return;
+    if (!context.mounted) return;
+    if (failure == null) {
+      onChanged?.call();
+      return;
+    }
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(failureMessage(failure))));

@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/currency/gym_currency_provider.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_currency_field.dart';
+import '../../../../core/widgets/app_percent_field.dart';
 import '../../../../core/widgets/unsaved_changes_scope.dart';
 import '../../domain/entities/membership_product.dart';
 import '../cubit/membership_product_form_cubit.dart';
@@ -55,16 +60,25 @@ class _MembershipProductFormBodyState
     text: widget.product?.basePrice,
   );
   late final _taxController = TextEditingController(
-    text: widget.product?.taxPercentage,
+    text: widget.product?.taxPercentage ?? '0.00',
   );
   late bool _isActive = widget.product?.isActive ?? true;
   late final bool _initialIsActive = _isActive;
 
   bool _isDirty = false;
 
+  String? _currencyCode;
+
   @override
   void initState() {
     super.initState();
+    if (getIt.isRegistered<GymCurrencyProvider>()) {
+      unawaited(
+        getIt<GymCurrencyProvider>().currencyCode().then((code) {
+          if (mounted) setState(() => _currencyCode = code);
+        }),
+      );
+    }
     for (final c in [
       _nameController,
       _descriptionController,
@@ -243,30 +257,19 @@ class _MembershipProductFormBodyState
                           : null,
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
+                    AppCurrencyField(
                       controller: _priceController,
+                      label: MembershipStrings.basePriceLabel,
+                      currencyCode: _currencyCode,
                       enabled: !submitting,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(
-                        labelText: MembershipStrings.basePriceLabel,
-                        helperText: 'Two-decimal amount, e.g. 49.99',
-                      ),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? MembershipStrings.basePriceRequired
-                          : null,
+                      requiredMessage: MembershipStrings.basePriceRequired,
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
+                    AppPercentField(
                       controller: _taxController,
+                      label: MembershipStrings.taxPercentageLabel,
                       enabled: !submitting,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(
-                        labelText: MembershipStrings.taxPercentageLabel,
-                      ),
+                      invalidMessage: MembershipStrings.taxPercentageInvalid,
                     ),
                     const SizedBox(height: 8),
                     SwitchListTile(

@@ -241,6 +241,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await tester.ensureVisible(find.text(MembershipStrings.save));
       await tester.tap(find.text(MembershipStrings.save));
       await tester.pumpAndSettle();
 
@@ -250,4 +251,57 @@ void main() {
       expect(capturedProduct!.ptSessionsIncluded, equals(3));
     },
   );
+
+  testWidgets('base price pads amounts to 2 decimal places on save', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(adminPrincipal, const Capabilities(slugs: ['memberships.create'])),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, MembershipStrings.basePriceLabel),
+      '50',
+    );
+    await tester.ensureVisible(find.text(MembershipStrings.save));
+    await tester.tap(find.text(MembershipStrings.save));
+    await tester.pumpAndSettle();
+
+    final priceField = tester.widget<TextFormField>(
+      find.widgetWithText(TextFormField, MembershipStrings.basePriceLabel),
+    );
+    expect(priceField.controller?.text, '50.00');
+    expect(
+      find.text('Enter an amount with exactly 2 decimal places'),
+      findsNothing,
+    );
+  });
+
+  testWidgets('tax percentage pads to 2 decimal places on save', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(adminPrincipal, const Capabilities(slugs: ['memberships.create'])),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, MembershipStrings.basePriceLabel),
+      '49.99',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, MembershipStrings.taxPercentageLabel),
+      '18',
+    );
+    await tester.ensureVisible(find.text(MembershipStrings.save));
+    await tester.tap(find.text(MembershipStrings.save));
+    await tester.pumpAndSettle();
+
+    final taxField = tester.widget<TextFormField>(
+      find.widgetWithText(TextFormField, MembershipStrings.taxPercentageLabel),
+    );
+    expect(taxField.controller?.text, '18.00');
+    expect(find.text(MembershipStrings.taxPercentageInvalid), findsNothing);
+  });
 }

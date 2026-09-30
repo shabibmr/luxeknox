@@ -32,8 +32,20 @@ class HealthInfoCubit extends Cubit<HealthInfoState> {
     );
     final result = await _getHealth(memberId);
     result.fold(
-      (failure) =>
-          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
+      (failure) {
+        if (failure is NotFoundFailure) {
+          emit(
+            state.copyWith(
+              status: LoadStatus.success,
+              info: HealthInfo(id: 0, memberId: memberId),
+              failure: null,
+              message: null,
+            ),
+          );
+        } else {
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure));
+        }
+      },
       (info) => emit(
         state.copyWith(
           status: LoadStatus.success,

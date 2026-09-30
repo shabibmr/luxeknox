@@ -30,6 +30,20 @@ class MembershipsDirectoryScreen extends StatelessWidget {
 class _MembershipsDirectoryBody extends StatelessWidget {
   const _MembershipsDirectoryBody();
 
+  Future<void> _openCreate(BuildContext context) async {
+    await context.push(Routes.adminMembershipsCreate);
+    if (context.mounted) {
+      context.read<MembershipsDirectoryCubit>().load();
+    }
+  }
+
+  Future<void> _openDetail(BuildContext context, String id) async {
+    await context.push('${Routes.adminMemberships}/$id');
+    if (context.mounted) {
+      context.read<MembershipsDirectoryCubit>().load();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,7 +58,7 @@ class _MembershipsDirectoryBody extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go(Routes.adminMembershipsCreate),
+        onPressed: () => _openCreate(context),
         icon: const Icon(Icons.add),
         label: const Text(MembershipStrings.createFab),
       ),
@@ -117,9 +131,7 @@ class _MembershipsDirectoryBody extends StatelessWidget {
                         trailing: MembershipStatusChip(
                           status: membership.status,
                         ),
-                        onTap: () => context.go(
-                          '${Routes.adminMemberships}/${membership.id}',
-                        ),
+                        onTap: () => _openDetail(context, membership.id),
                       );
                     },
                   ),

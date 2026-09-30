@@ -8,6 +8,7 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../people/presentation/widgets/member_picker_sheet.dart';
 import '../bloc/create_membership_bloc.dart';
 import '../membership_strings.dart';
 
@@ -62,7 +63,10 @@ class _CreateMembershipBody extends StatelessWidget {
                     CreateMembershipStarted(memberId: memberId),
                   ),
                 )
-              : _CreateMembershipForm(state: state),
+              : _CreateMembershipForm(
+                  state: state,
+                  memberLocked: memberId != null,
+                ),
         );
       },
     );
@@ -70,15 +74,17 @@ class _CreateMembershipBody extends StatelessWidget {
 }
 
 class _CreateMembershipForm extends StatelessWidget {
-  const _CreateMembershipForm({required this.state});
+  const _CreateMembershipForm({
+    required this.state,
+    required this.memberLocked,
+  });
 
   final CreateMembershipState state;
+  final bool memberLocked;
 
   @override
   Widget build(BuildContext context) {
     final bloc = context.read<CreateMembershipBloc>();
-    final memberLocked =
-        state.members.isEmpty && state.selectedMemberId != null;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -89,32 +95,18 @@ class _CreateMembershipForm extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         if (!memberLocked) ...[
-          Text(
-            MembershipStrings.memberLabel,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            initialValue: state.selectedMemberId,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: MembershipStrings.selectMemberHint,
-            ),
-            items: state.members
-                .map(
-                  (m) => DropdownMenuItem(
-                    value: m.id.toString(),
-                    child: Text('${m.fullName} (${m.membershipNumber})'),
-                  ),
-                )
-                .toList(),
-            onChanged: state.submitting
-                ? null
-                : (value) {
-                    if (value != null) {
-                      bloc.add(CreateMembershipMemberSelected(value));
-                    }
-                  },
+          MemberPickerField(
+            selectedMember: state.selectedMember,
+            selectedMemberId: state.selectedMemberId,
+            selectedMemberName: state.selectedMember?.fullName,
+            labelText: MembershipStrings.memberLabel,
+            hintText: MembershipStrings.selectMemberHint,
+            enabled: !state.submitting,
+            onChanged: (member) {
+              if (member != null) {
+                bloc.add(CreateMembershipMemberSelected(member));
+              }
+            },
           ),
           const SizedBox(height: 16),
         ] else ...[

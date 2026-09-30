@@ -4,9 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_currency_field.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../core/widgets/app_percent_field.dart';
 import '../../domain/entities/pt_product.dart';
 import '../cubit/pt_packages_cubit.dart';
 import '../pt_strings.dart';
@@ -112,7 +114,6 @@ class _PtPackageForm extends StatefulWidget {
 class _PtPackageFormState extends State<_PtPackageForm> {
   final _formKey = GlobalKey<FormState>();
   late final _name = TextEditingController(text: widget.product?.name);
-  late final _code = TextEditingController(text: widget.product?.code);
   late final _description = TextEditingController(
     text: widget.product?.description,
   );
@@ -123,15 +124,14 @@ class _PtPackageFormState extends State<_PtPackageForm> {
     text: widget.product?.sessionsPerWeek.toString(),
   );
   late final _price = TextEditingController(text: widget.product?.basePrice);
-  late final _tax = TextEditingController(text: widget.product?.taxPercentage);
-
-  static final _money = RegExp(r'^\d+\.\d{2}$');
+  late final _tax = TextEditingController(
+    text: widget.product?.taxPercentage ?? '0.00',
+  );
 
   @override
   void dispose() {
     for (final c in [
       _name,
-      _code,
       _description,
       _duration,
       _sessions,
@@ -155,12 +155,30 @@ class _PtPackageFormState extends State<_PtPackageForm> {
     return null;
   }
 
+  String _generateCode(String name) {
+    var slug = name
+        .trim()
+        .toUpperCase()
+        .replaceAll(RegExp(r'[^A-Z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
+    if (slug.length > 20) {
+      slug = slug.substring(0, 20);
+    }
+    final suffix = DateTime.now().millisecondsSinceEpoch
+        .toRadixString(36)
+        .toUpperCase();
+    final shortSuffix =
+        suffix.length > 6 ? suffix.substring(suffix.length - 6) : suffix;
+    return slug.isEmpty ? 'PT-$shortSuffix' : '$slug-$shortSuffix';
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final name = _name.text.trim();
     final base = PtProduct(
       id: widget.product?.id ?? 0,
-      name: _name.text.trim(),
-      code: _code.text.trim(),
+      name: name,
+      code: widget.product?.code ?? _generateCode(name),
       description: _description.text.trim().isEmpty
           ? null
           : _description.text.trim(),
@@ -195,11 +213,6 @@ class _PtPackageFormState extends State<_PtPackageForm> {
                   validator: _required,
                 ),
                 TextFormField(
-                  controller: _code,
-                  decoration: const InputDecoration(labelText: PtStrings.code),
-                  validator: _required,
-                ),
-                TextFormField(
                   controller: _description,
                   decoration: const InputDecoration(
                     labelText: PtStrings.description,
@@ -222,30 +235,18 @@ class _PtPackageFormState extends State<_PtPackageForm> {
                   keyboardType: TextInputType.number,
                   validator: (v) => _int(v, max: 7),
                 ),
-                TextFormField(
+                AppCurrencyField(
                   controller: _price,
-                  decoration: const InputDecoration(labelText: PtStrings.price),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  validator: (v) => _money.hasMatch(v?.trim() ?? '')
-                      ? null
-                      : PtStrings.invalidMoney,
+                  label: PtStrings.price,
+                  enabled: !saving,
+                  requiredMessage: PtStrings.required,
+                  invalidMessage: PtStrings.invalidMoney,
                 ),
-                TextFormField(
+                AppPercentField(
                   controller: _tax,
-                  decoration: const InputDecoration(
-                    labelText: PtStrings.taxPercentage,
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  validator: (v) =>
-                      (v == null ||
-                          v.trim().isEmpty ||
-                          _money.hasMatch(v.trim()))
-                      ? null
-                      : PtStrings.invalidMoney,
+                  label: PtStrings.taxPercentage,
+                  enabled: !saving,
+                  invalidMessage: PtStrings.invalidMoney,
                 ),
               ],
             ),

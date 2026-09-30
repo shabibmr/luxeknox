@@ -22,6 +22,14 @@ Membership? preferActiveMembership(List<Membership> items) {
   return items.firstWhere((m) => m.isActiveOrFrozen, orElse: () => items.first);
 }
 
+/// Gym membership sales are admin-only. Selling while a contract is already
+/// active/frozen extends the end date on the server (assign-or-renew).
+bool canSellMembership({
+  required UserType userType,
+  required bool canCreateMembership,
+}) =>
+    userType == UserType.admin && canCreateMembership;
+
 /// PT can be added only while the gym membership is active and unexpired, and
 /// only one PT runs at a time (renew instead). Selling is admin/staff only.
 bool canSellPt({

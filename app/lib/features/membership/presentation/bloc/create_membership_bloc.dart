@@ -8,7 +8,6 @@ import '../../../../core/error/failure_messages.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../people/domain/entities/profile_summary.dart';
-import '../../../people/domain/usecases/list_members_usecase.dart';
 import '../../domain/entities/membership.dart';
 import '../../domain/entities/membership_product.dart';
 import '../../domain/usecases/create_membership_usecase.dart';
@@ -22,7 +21,7 @@ abstract class CreateMembershipState with _$CreateMembershipState {
     @Default(LoadStatus.initial) LoadStatus status,
     Failure? failure,
     @Default(<MembershipProduct>[]) List<MembershipProduct> products,
-    @Default(<ProfileSummary>[]) List<ProfileSummary> members,
+    ProfileSummary? selectedMember,
     String? selectedMemberId,
     String? selectedProductId,
     DateTime? startDate,
@@ -52,12 +51,12 @@ final class CreateMembershipStarted extends CreateMembershipEvent {
 }
 
 final class CreateMembershipMemberSelected extends CreateMembershipEvent {
-  const CreateMembershipMemberSelected(this.memberId);
+  const CreateMembershipMemberSelected(this.member);
 
-  final String memberId;
+  final ProfileSummary member;
 
   @override
-  List<Object?> get props => [memberId];
+  List<Object?> get props => [member];
 }
 
 final class CreateMembershipProductSelected extends CreateMembershipEvent {
@@ -106,7 +105,6 @@ class CreateMembershipBloc
   CreateMembershipBloc(
     this._createMembership,
     this._getProducts,
-    this._listMembers,
   ) : super(const CreateMembershipState()) {
     on<CreateMembershipStarted>(_onStarted);
     on<CreateMembershipMemberSelected>(_onMemberSelected);
@@ -119,7 +117,6 @@ class CreateMembershipBloc
 
   final CreateMembershipUseCase _createMembership;
   final GetMembershipProductsUseCase _getProducts;
-  final ListMembersUseCase _listMembers;
 
   Future<void> _onStarted(
     CreateMembershipStarted event,
@@ -142,25 +139,14 @@ class CreateMembershipBloc
       return;
     }
 
-    List<ProfileSummary> members = state.members;
-    if (event.memberId == null) {
-      final membersResult = await _listMembers(const ListMembersParams());
-      if (isClosed) return;
-      membersResult.fold((f) => failure = f, (page) => members = page.items);
-      if (failure != null) {
-        emit(state.copyWith(status: LoadStatus.failure, failure: failure));
-        return;
-      }
-    }
-
     final activeProducts = products.where((p) => p.isActive).toList();
     emit(
       state.copyWith(
         status: LoadStatus.success,
         failure: null,
         products: activeProducts.isEmpty ? products : activeProducts,
-        members: members,
         selectedMemberId: event.memberId ?? state.selectedMemberId,
+        selectedMember: event.memberId != null ? null : state.selectedMember,
         startDate: state.startDate ?? DateTime.now(),
       ),
     );
@@ -173,7 +159,8 @@ class CreateMembershipBloc
     if (state.submitting) return;
     emit(
       state.copyWith(
-        selectedMemberId: event.memberId,
+        selectedMember: event.member,
+        selectedMemberId: event.member.id.toString(),
         fieldError: null,
         submitError: null,
       ),

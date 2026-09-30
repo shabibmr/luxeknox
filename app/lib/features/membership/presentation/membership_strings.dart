@@ -16,7 +16,7 @@ class MembershipStrings {
   static const String packagesTooltip = 'Packages catalog';
   static const String memberLabel = 'Member';
   static const String packageLabel = 'Package';
-  static const String selectMemberHint = 'Select member';
+  static const String selectMemberHint = 'Search for a member';
   static const String selectPackageHint = 'Select package';
   static const String autoRenewLabel = 'Auto-renew';
 
@@ -40,6 +40,8 @@ class MembershipStrings {
   static const String basePriceLabel = 'Base price';
   static const String basePriceRequired = 'Base price is required';
   static const String taxPercentageLabel = 'Tax percentage';
+  static const String taxPercentageInvalid =
+      'Enter a percentage with exactly 2 decimal places';
   static const String maxFreezeDaysLabel = 'Max freeze days';
   static const String ptSessionsIncludedLabel = 'PT sessions included';
   static const String accessFacilitiesLabel = 'Access facilities';

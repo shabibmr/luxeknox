@@ -531,6 +531,7 @@ import '../../session/domain/usecases/reset_password_usecase.dart' as _i695;
 import '../../session/domain/usecases/restore_session_usecase.dart' as _i123;
 import '../../session/presentation/session_cubit.dart' as _i893;
 import '../config/app_config.dart' as _i650;
+import '../currency/gym_currency_provider.dart' as _i152;
 import '../media/image_compressor.dart' as _i525;
 import '../media/media_downloader.dart' as _i995;
 import '../media/media_picker.dart' as _i763;
@@ -1038,6 +1039,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i474.UpdateSettingsUseCase>(
       () => _i474.UpdateSettingsUseCase(gh<_i674.SettingsRepository>()),
     );
+    gh.lazySingleton<_i152.GymCurrencyProvider>(
+      () => _i152.GymCurrencyProvider(gh<_i744.GetPublicSettingsUseCase>()),
+    );
     gh.lazySingleton<_i570.GymTimezoneProvider>(
       () => _i570.GymTimezoneProvider(gh<_i744.GetPublicSettingsUseCase>()),
     );
@@ -1525,6 +1529,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i971.TrainersDirectoryCubit>(
       () => _i971.TrainersDirectoryCubit(gh<_i382.ListTrainersUseCase>()),
     );
+    gh.factory<_i632.CreateMembershipBloc>(
+      () => _i632.CreateMembershipBloc(
+        gh<_i65.CreateMembershipUseCase>(),
+        gh<_i359.GetMembershipProductsUseCase>(),
+      ),
+    );
     gh.singleton<_i893.SessionCubit>(
       () => _i893.SessionCubit(
         restoreSessionUseCase: gh<_i123.RestoreSessionUseCase>(),
@@ -1720,13 +1730,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.singleton<_i583.GoRouter>(
       () => registerModule.router(gh<_i893.SessionCubit>()),
-    );
-    gh.factory<_i632.CreateMembershipBloc>(
-      () => _i632.CreateMembershipBloc(
-        gh<_i65.CreateMembershipUseCase>(),
-        gh<_i359.GetMembershipProductsUseCase>(),
-        gh<_i436.ListMembersUseCase>(),
-      ),
     );
     gh.factory<_i1063.WorkoutPlanVersionsCubit>(
       () => _i1063.WorkoutPlanVersionsCubit(

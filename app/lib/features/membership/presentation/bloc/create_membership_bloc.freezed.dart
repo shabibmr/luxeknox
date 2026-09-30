@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CreateMembershipState {
 
- LoadStatus get status; Failure? get failure; List<MembershipProduct> get products; List<ProfileSummary> get members; String? get selectedMemberId; String? get selectedProductId; DateTime? get startDate; String? get lockerNumber; bool get autoRenew; bool get submitting; String? get fieldError; String? get submitError; Membership? get created;
+ LoadStatus get status; Failure? get failure; List<MembershipProduct> get products; ProfileSummary? get selectedMember; String? get selectedMemberId; String? get selectedProductId; DateTime? get startDate; String? get lockerNumber; bool get autoRenew; bool get submitting; String? get fieldError; String? get submitError; Membership? get created;
 /// Create a copy of CreateMembershipState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $CreateMembershipStateCopyWith<CreateMembershipState> get copyWith => _$CreateMe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateMembershipState&&(identical(other.status, status) || other.status == status)&&(identical(other.failure, failure) || other.failure == failure)&&const DeepCollectionEquality().equals(other.products, products)&&const DeepCollectionEquality().equals(other.members, members)&&(identical(other.selectedMemberId, selectedMemberId) || other.selectedMemberId == selectedMemberId)&&(identical(other.selectedProductId, selectedProductId) || other.selectedProductId == selectedProductId)&&(identical(other.startDate, startDate) || other.startDate == startDate)&&(identical(other.lockerNumber, lockerNumber) || other.lockerNumber == lockerNumber)&&(identical(other.autoRenew, autoRenew) || other.autoRenew == autoRenew)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.fieldError, fieldError) || other.fieldError == fieldError)&&(identical(other.submitError, submitError) || other.submitError == submitError)&&(identical(other.created, created) || other.created == created));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateMembershipState&&(identical(other.status, status) || other.status == status)&&(identical(other.failure, failure) || other.failure == failure)&&const DeepCollectionEquality().equals(other.products, products)&&(identical(other.selectedMember, selectedMember) || other.selectedMember == selectedMember)&&(identical(other.selectedMemberId, selectedMemberId) || other.selectedMemberId == selectedMemberId)&&(identical(other.selectedProductId, selectedProductId) || other.selectedProductId == selectedProductId)&&(identical(other.startDate, startDate) || other.startDate == startDate)&&(identical(other.lockerNumber, lockerNumber) || other.lockerNumber == lockerNumber)&&(identical(other.autoRenew, autoRenew) || other.autoRenew == autoRenew)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.fieldError, fieldError) || other.fieldError == fieldError)&&(identical(other.submitError, submitError) || other.submitError == submitError)&&(identical(other.created, created) || other.created == created));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,failure,const DeepCollectionEquality().hash(products),const DeepCollectionEquality().hash(members),selectedMemberId,selectedProductId,startDate,lockerNumber,autoRenew,submitting,fieldError,submitError,created);
+int get hashCode => Object.hash(runtimeType,status,failure,const DeepCollectionEquality().hash(products),selectedMember,selectedMemberId,selectedProductId,startDate,lockerNumber,autoRenew,submitting,fieldError,submitError,created);
 
 @override
 String toString() {
-  return 'CreateMembershipState(status: $status, failure: $failure, products: $products, members: $members, selectedMemberId: $selectedMemberId, selectedProductId: $selectedProductId, startDate: $startDate, lockerNumber: $lockerNumber, autoRenew: $autoRenew, submitting: $submitting, fieldError: $fieldError, submitError: $submitError, created: $created)';
+  return 'CreateMembershipState(status: $status, failure: $failure, products: $products, selectedMember: $selectedMember, selectedMemberId: $selectedMemberId, selectedProductId: $selectedProductId, startDate: $startDate, lockerNumber: $lockerNumber, autoRenew: $autoRenew, submitting: $submitting, fieldError: $fieldError, submitError: $submitError, created: $created)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $CreateMembershipStateCopyWith<$Res>  {
   factory $CreateMembershipStateCopyWith(CreateMembershipState value, $Res Function(CreateMembershipState) _then) = _$CreateMembershipStateCopyWithImpl;
 @useResult
 $Res call({
- LoadStatus status, Failure? failure, List<MembershipProduct> products, List<ProfileSummary> members, String? selectedMemberId, String? selectedProductId, DateTime? startDate, String? lockerNumber, bool autoRenew, bool submitting, String? fieldError, String? submitError, Membership? created
+ LoadStatus status, Failure? failure, List<MembershipProduct> products, ProfileSummary? selectedMember, String? selectedMemberId, String? selectedProductId, DateTime? startDate, String? lockerNumber, bool autoRenew, bool submitting, String? fieldError, String? submitError, Membership? created
 });
 
 
@@ -62,13 +62,13 @@ class _$CreateMembershipStateCopyWithImpl<$Res>
 
 /// Create a copy of CreateMembershipState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? failure = freezed,Object? products = null,Object? members = null,Object? selectedMemberId = freezed,Object? selectedProductId = freezed,Object? startDate = freezed,Object? lockerNumber = freezed,Object? autoRenew = null,Object? submitting = null,Object? fieldError = freezed,Object? submitError = freezed,Object? created = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? failure = freezed,Object? products = null,Object? selectedMember = freezed,Object? selectedMemberId = freezed,Object? selectedProductId = freezed,Object? startDate = freezed,Object? lockerNumber = freezed,Object? autoRenew = null,Object? submitting = null,Object? fieldError = freezed,Object? submitError = freezed,Object? created = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
 as Failure?,products: null == products ? _self.products : products // ignore: cast_nullable_to_non_nullable
-as List<MembershipProduct>,members: null == members ? _self.members : members // ignore: cast_nullable_to_non_nullable
-as List<ProfileSummary>,selectedMemberId: freezed == selectedMemberId ? _self.selectedMemberId : selectedMemberId // ignore: cast_nullable_to_non_nullable
+as List<MembershipProduct>,selectedMember: freezed == selectedMember ? _self.selectedMember : selectedMember // ignore: cast_nullable_to_non_nullable
+as ProfileSummary?,selectedMemberId: freezed == selectedMemberId ? _self.selectedMemberId : selectedMemberId // ignore: cast_nullable_to_non_nullable
 as String?,selectedProductId: freezed == selectedProductId ? _self.selectedProductId : selectedProductId // ignore: cast_nullable_to_non_nullable
 as String?,startDate: freezed == startDate ? _self.startDate : startDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,lockerNumber: freezed == lockerNumber ? _self.lockerNumber : lockerNumber // ignore: cast_nullable_to_non_nullable
@@ -162,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  Failure? failure,  List<MembershipProduct> products,  List<ProfileSummary> members,  String? selectedMemberId,  String? selectedProductId,  DateTime? startDate,  String? lockerNumber,  bool autoRenew,  bool submitting,  String? fieldError,  String? submitError,  Membership? created)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  Failure? failure,  List<MembershipProduct> products,  ProfileSummary? selectedMember,  String? selectedMemberId,  String? selectedProductId,  DateTime? startDate,  String? lockerNumber,  bool autoRenew,  bool submitting,  String? fieldError,  String? submitError,  Membership? created)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CreateMembershipState() when $default != null:
-return $default(_that.status,_that.failure,_that.products,_that.members,_that.selectedMemberId,_that.selectedProductId,_that.startDate,_that.lockerNumber,_that.autoRenew,_that.submitting,_that.fieldError,_that.submitError,_that.created);case _:
+return $default(_that.status,_that.failure,_that.products,_that.selectedMember,_that.selectedMemberId,_that.selectedProductId,_that.startDate,_that.lockerNumber,_that.autoRenew,_that.submitting,_that.fieldError,_that.submitError,_that.created);case _:
   return orElse();
 
 }
@@ -183,10 +183,10 @@ return $default(_that.status,_that.failure,_that.products,_that.members,_that.se
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  Failure? failure,  List<MembershipProduct> products,  List<ProfileSummary> members,  String? selectedMemberId,  String? selectedProductId,  DateTime? startDate,  String? lockerNumber,  bool autoRenew,  bool submitting,  String? fieldError,  String? submitError,  Membership? created)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  Failure? failure,  List<MembershipProduct> products,  ProfileSummary? selectedMember,  String? selectedMemberId,  String? selectedProductId,  DateTime? startDate,  String? lockerNumber,  bool autoRenew,  bool submitting,  String? fieldError,  String? submitError,  Membership? created)  $default,) {final _that = this;
 switch (_that) {
 case _CreateMembershipState():
-return $default(_that.status,_that.failure,_that.products,_that.members,_that.selectedMemberId,_that.selectedProductId,_that.startDate,_that.lockerNumber,_that.autoRenew,_that.submitting,_that.fieldError,_that.submitError,_that.created);case _:
+return $default(_that.status,_that.failure,_that.products,_that.selectedMember,_that.selectedMemberId,_that.selectedProductId,_that.startDate,_that.lockerNumber,_that.autoRenew,_that.submitting,_that.fieldError,_that.submitError,_that.created);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +203,10 @@ return $default(_that.status,_that.failure,_that.products,_that.members,_that.se
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  Failure? failure,  List<MembershipProduct> products,  List<ProfileSummary> members,  String? selectedMemberId,  String? selectedProductId,  DateTime? startDate,  String? lockerNumber,  bool autoRenew,  bool submitting,  String? fieldError,  String? submitError,  Membership? created)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  Failure? failure,  List<MembershipProduct> products,  ProfileSummary? selectedMember,  String? selectedMemberId,  String? selectedProductId,  DateTime? startDate,  String? lockerNumber,  bool autoRenew,  bool submitting,  String? fieldError,  String? submitError,  Membership? created)?  $default,) {final _that = this;
 switch (_that) {
 case _CreateMembershipState() when $default != null:
-return $default(_that.status,_that.failure,_that.products,_that.members,_that.selectedMemberId,_that.selectedProductId,_that.startDate,_that.lockerNumber,_that.autoRenew,_that.submitting,_that.fieldError,_that.submitError,_that.created);case _:
+return $default(_that.status,_that.failure,_that.products,_that.selectedMember,_that.selectedMemberId,_that.selectedProductId,_that.startDate,_that.lockerNumber,_that.autoRenew,_that.submitting,_that.fieldError,_that.submitError,_that.created);case _:
   return null;
 
 }
@@ -218,7 +218,7 @@ return $default(_that.status,_that.failure,_that.products,_that.members,_that.se
 
 
 class _CreateMembershipState implements CreateMembershipState {
-  const _CreateMembershipState({this.status = LoadStatus.initial, this.failure, final  List<MembershipProduct> products = const <MembershipProduct>[], final  List<ProfileSummary> members = const <ProfileSummary>[], this.selectedMemberId, this.selectedProductId, this.startDate, this.lockerNumber, this.autoRenew = false, this.submitting = false, this.fieldError, this.submitError, this.created}): _products = products,_members = members;
+  const _CreateMembershipState({this.status = LoadStatus.initial, this.failure, final  List<MembershipProduct> products = const <MembershipProduct>[], this.selectedMember, this.selectedMemberId, this.selectedProductId, this.startDate, this.lockerNumber, this.autoRenew = false, this.submitting = false, this.fieldError, this.submitError, this.created}): _products = products;
   
 
 @override@JsonKey() final  LoadStatus status;
@@ -230,13 +230,7 @@ class _CreateMembershipState implements CreateMembershipState {
   return EqualUnmodifiableListView(_products);
 }
 
- final  List<ProfileSummary> _members;
-@override@JsonKey() List<ProfileSummary> get members {
-  if (_members is EqualUnmodifiableListView) return _members;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_members);
-}
-
+@override final  ProfileSummary? selectedMember;
 @override final  String? selectedMemberId;
 @override final  String? selectedProductId;
 @override final  DateTime? startDate;
@@ -257,16 +251,16 @@ _$CreateMembershipStateCopyWith<_CreateMembershipState> get copyWith => __$Creat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateMembershipState&&(identical(other.status, status) || other.status == status)&&(identical(other.failure, failure) || other.failure == failure)&&const DeepCollectionEquality().equals(other._products, _products)&&const DeepCollectionEquality().equals(other._members, _members)&&(identical(other.selectedMemberId, selectedMemberId) || other.selectedMemberId == selectedMemberId)&&(identical(other.selectedProductId, selectedProductId) || other.selectedProductId == selectedProductId)&&(identical(other.startDate, startDate) || other.startDate == startDate)&&(identical(other.lockerNumber, lockerNumber) || other.lockerNumber == lockerNumber)&&(identical(other.autoRenew, autoRenew) || other.autoRenew == autoRenew)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.fieldError, fieldError) || other.fieldError == fieldError)&&(identical(other.submitError, submitError) || other.submitError == submitError)&&(identical(other.created, created) || other.created == created));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateMembershipState&&(identical(other.status, status) || other.status == status)&&(identical(other.failure, failure) || other.failure == failure)&&const DeepCollectionEquality().equals(other._products, _products)&&(identical(other.selectedMember, selectedMember) || other.selectedMember == selectedMember)&&(identical(other.selectedMemberId, selectedMemberId) || other.selectedMemberId == selectedMemberId)&&(identical(other.selectedProductId, selectedProductId) || other.selectedProductId == selectedProductId)&&(identical(other.startDate, startDate) || other.startDate == startDate)&&(identical(other.lockerNumber, lockerNumber) || other.lockerNumber == lockerNumber)&&(identical(other.autoRenew, autoRenew) || other.autoRenew == autoRenew)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.fieldError, fieldError) || other.fieldError == fieldError)&&(identical(other.submitError, submitError) || other.submitError == submitError)&&(identical(other.created, created) || other.created == created));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,failure,const DeepCollectionEquality().hash(_products),const DeepCollectionEquality().hash(_members),selectedMemberId,selectedProductId,startDate,lockerNumber,autoRenew,submitting,fieldError,submitError,created);
+int get hashCode => Object.hash(runtimeType,status,failure,const DeepCollectionEquality().hash(_products),selectedMember,selectedMemberId,selectedProductId,startDate,lockerNumber,autoRenew,submitting,fieldError,submitError,created);
 
 @override
 String toString() {
-  return 'CreateMembershipState(status: $status, failure: $failure, products: $products, members: $members, selectedMemberId: $selectedMemberId, selectedProductId: $selectedProductId, startDate: $startDate, lockerNumber: $lockerNumber, autoRenew: $autoRenew, submitting: $submitting, fieldError: $fieldError, submitError: $submitError, created: $created)';
+  return 'CreateMembershipState(status: $status, failure: $failure, products: $products, selectedMember: $selectedMember, selectedMemberId: $selectedMemberId, selectedProductId: $selectedProductId, startDate: $startDate, lockerNumber: $lockerNumber, autoRenew: $autoRenew, submitting: $submitting, fieldError: $fieldError, submitError: $submitError, created: $created)';
 }
 
 
@@ -277,7 +271,7 @@ abstract mixin class _$CreateMembershipStateCopyWith<$Res> implements $CreateMem
   factory _$CreateMembershipStateCopyWith(_CreateMembershipState value, $Res Function(_CreateMembershipState) _then) = __$CreateMembershipStateCopyWithImpl;
 @override @useResult
 $Res call({
- LoadStatus status, Failure? failure, List<MembershipProduct> products, List<ProfileSummary> members, String? selectedMemberId, String? selectedProductId, DateTime? startDate, String? lockerNumber, bool autoRenew, bool submitting, String? fieldError, String? submitError, Membership? created
+ LoadStatus status, Failure? failure, List<MembershipProduct> products, ProfileSummary? selectedMember, String? selectedMemberId, String? selectedProductId, DateTime? startDate, String? lockerNumber, bool autoRenew, bool submitting, String? fieldError, String? submitError, Membership? created
 });
 
 
@@ -294,13 +288,13 @@ class __$CreateMembershipStateCopyWithImpl<$Res>
 
 /// Create a copy of CreateMembershipState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? failure = freezed,Object? products = null,Object? members = null,Object? selectedMemberId = freezed,Object? selectedProductId = freezed,Object? startDate = freezed,Object? lockerNumber = freezed,Object? autoRenew = null,Object? submitting = null,Object? fieldError = freezed,Object? submitError = freezed,Object? created = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? failure = freezed,Object? products = null,Object? selectedMember = freezed,Object? selectedMemberId = freezed,Object? selectedProductId = freezed,Object? startDate = freezed,Object? lockerNumber = freezed,Object? autoRenew = null,Object? submitting = null,Object? fieldError = freezed,Object? submitError = freezed,Object? created = freezed,}) {
   return _then(_CreateMembershipState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
 as Failure?,products: null == products ? _self._products : products // ignore: cast_nullable_to_non_nullable
-as List<MembershipProduct>,members: null == members ? _self._members : members // ignore: cast_nullable_to_non_nullable
-as List<ProfileSummary>,selectedMemberId: freezed == selectedMemberId ? _self.selectedMemberId : selectedMemberId // ignore: cast_nullable_to_non_nullable
+as List<MembershipProduct>,selectedMember: freezed == selectedMember ? _self.selectedMember : selectedMember // ignore: cast_nullable_to_non_nullable
+as ProfileSummary?,selectedMemberId: freezed == selectedMemberId ? _self.selectedMemberId : selectedMemberId // ignore: cast_nullable_to_non_nullable
 as String?,selectedProductId: freezed == selectedProductId ? _self.selectedProductId : selectedProductId // ignore: cast_nullable_to_non_nullable
 as String?,startDate: freezed == startDate ? _self.startDate : startDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,lockerNumber: freezed == lockerNumber ? _self.lockerNumber : lockerNumber // ignore: cast_nullable_to_non_nullable

@@ -63,7 +63,7 @@ class _HealthInfoBody extends StatelessWidget {
           if (info == null) {
             return const AppLoading();
           }
-          return _HealthForm(info: info);
+          return _HealthForm(key: ValueKey(info.id), info: info);
         },
       ),
     );
@@ -71,7 +71,7 @@ class _HealthInfoBody extends StatelessWidget {
 }
 
 class _HealthForm extends StatefulWidget {
-  const _HealthForm({required this.info});
+  const _HealthForm({super.key, required this.info});
 
   final HealthInfo info;
 
@@ -115,6 +115,17 @@ class _HealthFormState extends State<_HealthForm> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (widget.info.id == 0)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              PeopleStrings.emptyHealth,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.outline,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
         TextField(
           controller: _blood,
           decoration: const InputDecoration(

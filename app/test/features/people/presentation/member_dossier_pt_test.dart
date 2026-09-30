@@ -141,6 +141,35 @@ void main() {
     );
   });
 
+  group('canSellMembership', () {
+    test('admin with memberships.create can sell', () {
+      expect(
+        canSellMembership(
+          userType: UserType.admin,
+          canCreateMembership: true,
+        ),
+        isTrue,
+      );
+    });
+
+    test('blocked for trainers and without the capability', () {
+      expect(
+        canSellMembership(
+          userType: UserType.trainer,
+          canCreateMembership: true,
+        ),
+        isFalse,
+      );
+      expect(
+        canSellMembership(
+          userType: UserType.admin,
+          canCreateMembership: false,
+        ),
+        isFalse,
+      );
+    });
+  });
+
   group('canSellPt', () {
     bool sell({
       UserType userType = UserType.admin,

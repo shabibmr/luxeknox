@@ -405,6 +405,8 @@ class _MembershipDetailView extends StatelessWidget {
           MembershipFreezeList(
             membershipId: membership.id,
             canApprove: canApprove,
+            onChanged: () =>
+                context.read<MembershipDetailCubit>().load(membership.id),
           ),
           const Divider(height: 32),
           Text(

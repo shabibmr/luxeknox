@@ -145,6 +145,8 @@ class Routes {
   static const String adminMembersEdit = '/admin/members/:id/edit';
   static const String adminMembersAssignMembership =
       '/admin/members/:id/assign-membership';
+  static String adminMembersAssignMembershipById(String id) =>
+      '/admin/members/$id/assign-membership';
   static const String adminMembersAddPt = '/admin/members/:id/add-pt';
   static String adminMembersAddPtById(int id) => '/admin/members/$id/add-pt';
   static const String adminMembersWorkoutHistory =
