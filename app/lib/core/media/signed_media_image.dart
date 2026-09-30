@@ -110,7 +110,11 @@ class _SignedMediaImageState extends State<SignedMediaImage> {
                 );
               },
               errorBuilder: (context, error, stackTrace) {
-                _onImageLoadError();
+                // errorBuilder runs during build — defer recovery so we never
+                // call setState synchronously (Flutter ErrorWidget "ERROR").
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _onImageLoadError();
+                });
                 return _StateBox(
                   height: widget.height,
                   child: InkWell(

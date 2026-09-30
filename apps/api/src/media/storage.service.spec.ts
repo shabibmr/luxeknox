@@ -48,4 +48,20 @@ describe('StorageService', () => {
     const result = await service.createSignedGet('id_proof/2026/09/abc.jpg', actor('admin'));
     expect(result.url).toContain('sig=');
   });
+
+  it('uses request public base override for signed URLs', async () => {
+    const slot = await service.createUploadSlot(
+      { purpose: 'avatar', content_type: 'image/png', size_bytes: 1024 },
+      actor('admin'),
+      'http://192.168.1.88:3000',
+    );
+    expect(slot.url.startsWith('http://192.168.1.88:3000/v1/media/objects?')).toBe(true);
+
+    const signed = await service.createSignedGet(
+      'avatar/2026/09/abc.png',
+      actor('admin'),
+      'http://192.168.1.88:3000',
+    );
+    expect(signed.url.startsWith('http://192.168.1.88:3000/v1/media/objects?')).toBe(true);
+  });
 });

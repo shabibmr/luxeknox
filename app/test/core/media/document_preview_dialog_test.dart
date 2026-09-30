@@ -100,5 +100,35 @@ void main() {
 
       expect(find.byType(SignedMediaImage), findsOneWidget);
     });
+
+    testWidgets('show() dialog lays out without ErrorWidget', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => DocumentPreviewDialog.show(
+                  context,
+                  objectKey: 'waiver/2026/09/doc.pdf',
+                  title: 'Liability Waiver',
+                  purpose: DocumentPurpose.waiver,
+                  viewerRole: UserType.admin,
+                  contentType: 'application/pdf',
+                  resolver: mockResolver,
+                ),
+                child: const Text('Open'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ErrorWidget), findsNothing);
+      expect(find.text('Open Document'), findsOneWidget);
+      expect(find.textContaining('ERROR'), findsNothing);
+    });
   });
 }

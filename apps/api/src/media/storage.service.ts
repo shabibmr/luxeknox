@@ -140,6 +140,7 @@ export class StorageService {
   async createUploadSlot(
     input: { purpose: MediaPurpose; content_type: string; size_bytes: number },
     actor: AuthenticatedUser,
+    publicBaseUrlOverride?: string,
   ): Promise<{ url: string; object_key: string; expires_at: string }> {
     const limits = PURPOSE_LIMITS[input.purpose];
     if (!limits) {
@@ -170,8 +171,9 @@ export class StorageService {
       );
     }
 
+    const base = (publicBaseUrlOverride || this.publicBaseUrl).replace(/\/$/, '');
     const signature = sign(this.signingSecret, 'PUT', objectKey, expiresUnix);
-    const url = `${this.publicBaseUrl}/v1/media/objects?key=${encodeURIComponent(objectKey)}&expires=${expiresUnix}&sig=${signature}&content_type=${encodeURIComponent(input.content_type)}`;
+    const url = `${base}/v1/media/objects?key=${encodeURIComponent(objectKey)}&expires=${expiresUnix}&sig=${signature}&content_type=${encodeURIComponent(input.content_type)}`;
 
     await this.auditService.recordAudit({
       actorUserId: actor.id,
@@ -190,6 +192,7 @@ export class StorageService {
   async createSignedGet(
     objectKey: string,
     actor: AuthenticatedUser,
+    publicBaseUrlOverride?: string,
   ): Promise<{ url: string; expires_at: string }> {
     const purpose = purposeFromObjectKey(objectKey);
     if (actor.userType === 'trainer' && purpose === 'id_proof') {
@@ -199,7 +202,8 @@ export class StorageService {
     const expiresAt = new Date(Date.now() + this.slotTtlSeconds * 1000);
     const expiresUnix = Math.floor(expiresAt.getTime() / 1000);
     const signature = sign(this.signingSecret, 'GET', objectKey, expiresUnix);
-    const url = `${this.publicBaseUrl}/v1/media/objects?key=${encodeURIComponent(objectKey)}&expires=${expiresUnix}&sig=${signature}`;
+    const base = (publicBaseUrlOverride || this.publicBaseUrl).replace(/\/$/, '');
+    const url = `${base}/v1/media/objects?key=${encodeURIComponent(objectKey)}&expires=${expiresUnix}&sig=${signature}`;
 
     await this.auditService.recordAudit({
       actorUserId: actor.id,

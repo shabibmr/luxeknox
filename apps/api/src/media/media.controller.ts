@@ -77,6 +77,9 @@ export class MediaController {
 
   /**
    * Local-disk signed GET target (ADR-0008). Auth is HMAC query signature, not Bearer.
+   *
+   * Sets CORS headers explicitly because `@Res()` bypasses Nest's enableCors()
+   * interceptor — Flutter web `Image.network` fetches require ACAO.
    */
   @Get('objects')
   @Public()
@@ -95,6 +98,8 @@ export class MediaController {
       Number(expires),
       sig,
     );
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.setHeader('Content-Type', contentType);
     res.status(200).send(body);
   }
@@ -111,11 +116,17 @@ export class MediaController {
   async createUpload(
     @Body(new ZodValidationPipe(mediaUploadRequestSchema)) dto: MediaUploadRequestDto,
     @CurrentUser() currentUser: AuthenticatedUser,
+    @Req() req: Request,
   ): Promise<MediaUploadResponseDto> {
-    return this.storageService.createUploadSlot(dto, currentUser);
+    return this.storageService.createUploadSlot(dto, currentUser, publicBaseFromRequest(req));
   }
 
-  @Get(':key')
+  /**
+   * Object keys are purpose/yyyy/mm/uuid.ext (contain `/`). The OpenAPI client
+   * substitutes the key into `/media/{key}` without encoding slashes, so a
+   * single-segment `:key` route 404s. Catch-all keeps OpenAPI path shape.
+   */
+  @Get('*')
   @ApiBearerAuth('bearer')
   @RequirePermission('media.read')
   @ApiOperation({
@@ -124,10 +135,43 @@ export class MediaController {
   })
   @ApiResponse({ status: 200, type: MediaDownloadResponseDto })
   async getSignedUrl(
-    @Param('key') key: string,
+    @Param('0') wildcard: string,
     @CurrentUser() currentUser: AuthenticatedUser,
+    @Req() req: Request,
   ): Promise<MediaDownloadResponseDto> {
-    const objectKey = decodeURIComponent(key);
-    return this.storageService.createSignedGet(objectKey, currentUser);
+    const objectKey = resolveObjectKey(wildcard, req);
+    if (!objectKey) {
+      throw new BadRequestError('Media object key is required');
+    }
+    return this.storageService.createSignedGet(
+      objectKey,
+      currentUser,
+      publicBaseFromRequest(req),
+    );
+  }
+}
+
+/** Prefer the request Host so signed PUT/GET URLs match the API the client reached. */
+function publicBaseFromRequest(req: Request): string | undefined {
+  const host = (req.get('x-forwarded-host') || req.get('host') || '').trim();
+  if (!host) return undefined;
+  const forwardedProto = req.get('x-forwarded-proto')?.split(',')[0]?.trim();
+  const proto = forwardedProto || req.protocol || 'http';
+  return `${proto}://${host}`.replace(/\/$/, '');
+}
+
+function resolveObjectKey(wildcard: string | undefined, req: Request): string {
+  const raw =
+    (wildcard && wildcard.length > 0
+      ? wildcard
+      : req.path.replace(/^\/(?:v1\/)?media\/?/, '')) || '';
+  const trimmed = raw.replace(/^\/+/, '');
+  if (!trimmed || trimmed === 'objects' || trimmed === 'uploads') {
+    return '';
+  }
+  try {
+    return decodeURIComponent(trimmed);
+  } catch {
+    return trimmed;
   }
 }

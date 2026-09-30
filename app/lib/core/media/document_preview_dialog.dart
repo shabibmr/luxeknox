@@ -65,7 +65,13 @@ class DocumentPreviewDialog extends StatelessWidget {
     if (contentType != null) {
       return contentType!.startsWith('image/');
     }
-    return purpose == DocumentPurpose.progressPhoto;
+    if (purpose == DocumentPurpose.progressPhoto) return true;
+    final lower = objectKey.toLowerCase();
+    return lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.webp') ||
+        lower.endsWith('.gif');
   }
 
   String _formatBytes(int bytes) {
@@ -80,13 +86,17 @@ class DocumentPreviewDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasAccess = canAccessDocument(role: viewerRole, purpose: purpose);
 
+    final size = MediaQuery.sizeOf(context);
+    final dialogWidth = size.width < 532 ? size.width - 32 : 500.0;
+    final dialogHeight = size.height < 648 ? size.height - 48 : 600.0;
+
     return Dialog(
       clipBehavior: Clip.antiAlias,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+      child: SizedBox(
+        width: dialogWidth,
+        height: dialogHeight,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AppBar(
