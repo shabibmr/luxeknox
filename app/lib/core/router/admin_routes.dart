@@ -419,19 +419,16 @@ class _AdminAdaptiveShellState extends State<_AdminAdaptiveShell> {
   bool _showMoreHub = false;
 
   void _onDestinationSelected(int index) {
+    // Always reset the destination branch to its root route: switching
+    // verticals (or re-tapping the active one) should never resume a
+    // stale, deep navigation state from a previous visit.
     if (index == _adminMoreBranchIndex) {
       setState(() => _showMoreHub = true);
-      widget.navigationShell.goBranch(
-        index,
-        initialLocation: index == widget.navigationShell.currentIndex,
-      );
+      widget.navigationShell.goBranch(index, initialLocation: true);
       return;
     }
     setState(() => _showMoreHub = false);
-    widget.navigationShell.goBranch(
-      index,
-      initialLocation: index == widget.navigationShell.currentIndex,
-    );
+    widget.navigationShell.goBranch(index, initialLocation: true);
   }
 
   @override

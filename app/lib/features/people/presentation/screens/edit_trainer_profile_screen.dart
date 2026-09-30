@@ -14,6 +14,7 @@ import '../../../../core/widgets/unsaved_changes_scope.dart';
 import '../../domain/entities/trainer_profile.dart';
 import '../cubit/edit_trainer_profile_cubit.dart';
 import '../people_strings.dart';
+import '../widgets/gender_radio_group.dart';
 
 class EditTrainerProfileScreen extends StatelessWidget {
   const EditTrainerProfileScreen({
@@ -126,7 +127,7 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
   late final _phone = TextEditingController(
     text: widget.profile.phoneNumber ?? '',
   );
-  late final _gender = TextEditingController(text: widget.profile.gender ?? '');
+  late String? _gender = widget.profile.gender;
   late final _bio = TextEditingController(text: widget.profile.bio ?? '');
   late final _specializations = TextEditingController(
     text: widget.profile.specializations.join(', '),
@@ -144,7 +145,6 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
     _firstName.dispose();
     _lastName.dispose();
     _phone.dispose();
-    _gender.dispose();
     _bio.dispose();
     _specializations.dispose();
     _hourlyRate.dispose();
@@ -156,7 +156,7 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
     if (_firstName.text != widget.profile.firstName) return true;
     if (_lastName.text != widget.profile.lastName) return true;
     if (_phone.text != (widget.profile.phoneNumber ?? '')) return true;
-    if (_gender.text != (widget.profile.gender ?? '')) return true;
+    if (_gender != widget.profile.gender) return true;
     if (_bio.text != (widget.profile.bio ?? '')) return true;
     final origSpecs = widget.profile.specializations.join(', ');
     if (_specializations.text != origSpecs) return true;
@@ -225,10 +225,9 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
             keyboardType: TextInputType.phone,
             onChanged: (_) => setState(() {}),
           ),
-          TextField(
-            controller: _gender,
-            decoration: const InputDecoration(labelText: PeopleStrings.gender),
-            onChanged: (_) => setState(() {}),
+          GenderRadioGroup(
+            value: _gender,
+            onChanged: (value) => setState(() => _gender = value),
           ),
           TextField(
             controller: _bio,
@@ -276,7 +275,7 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
                   firstName: _firstName.text.trim(),
                   lastName: _lastName.text.trim(),
                   phoneNumber: _optional(_phone.text),
-                  gender: _optional(_gender.text),
+                  gender: _gender,
                   bio: _optional(_bio.text),
                   specializations: _parseList(_specializations.text),
                   hourlyRate: _optional(_hourlyRate.text),

@@ -15,6 +15,7 @@ import '../../domain/usecases/update_member_usecase.dart';
 import '../../domain/usecases/upload_photo_usecase.dart';
 import '../cubit/edit_profile_cubit.dart';
 import '../people_strings.dart';
+import '../widgets/gender_radio_group.dart';
 
 class EditProfileScreen extends StatelessWidget {
   const EditProfileScreen({super.key, required this.memberId});
@@ -103,7 +104,7 @@ class _EditProfileFormState extends State<_EditProfileForm> {
   late final TextEditingController _lastNameController;
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;
-  late final TextEditingController _genderController;
+  late String? _gender;
   late final TextEditingController _addressController;
   late final TextEditingController _notesController;
 
@@ -115,7 +116,7 @@ class _EditProfileFormState extends State<_EditProfileForm> {
     _lastNameController = TextEditingController(text: p.lastName);
     _emailController = TextEditingController(text: p.email ?? '');
     _phoneController = TextEditingController(text: p.phoneNumber ?? '');
-    _genderController = TextEditingController(text: p.gender ?? '');
+    _gender = p.gender;
     _addressController = TextEditingController(text: p.address ?? '');
     _notesController = TextEditingController(text: p.notes ?? '');
   }
@@ -137,8 +138,8 @@ class _EditProfileFormState extends State<_EditProfileForm> {
       if (_phoneController.text != (p.phoneNumber ?? '')) {
         _phoneController.text = p.phoneNumber ?? '';
       }
-      if (_genderController.text != (p.gender ?? '')) {
-        _genderController.text = p.gender ?? '';
+      if (_gender != p.gender) {
+        setState(() => _gender = p.gender);
       }
       if (_addressController.text != (p.address ?? '')) {
         _addressController.text = p.address ?? '';
@@ -155,7 +156,6 @@ class _EditProfileFormState extends State<_EditProfileForm> {
     _lastNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _genderController.dispose();
     _addressController.dispose();
     _notesController.dispose();
     super.dispose();
@@ -281,10 +281,9 @@ class _EditProfileFormState extends State<_EditProfileForm> {
           decoration: const InputDecoration(labelText: PeopleStrings.phone),
           keyboardType: TextInputType.phone,
         ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _genderController,
-          decoration: const InputDecoration(labelText: PeopleStrings.gender),
+        GenderRadioGroup(
+          value: _gender,
+          onChanged: (value) => setState(() => _gender = value),
         ),
         const SizedBox(height: 12),
         TextField(
@@ -309,7 +308,7 @@ class _EditProfileFormState extends State<_EditProfileForm> {
                       lastName: _lastNameController.text.trim(),
                       email: _optional(_emailController.text),
                       phoneNumber: _optional(_phoneController.text),
-                      gender: _optional(_genderController.text),
+                      gender: _gender,
                       address: _optional(_addressController.text),
                       notes: _optional(_notesController.text),
                     ),

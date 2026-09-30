@@ -50,10 +50,10 @@ class AdaptiveShell extends StatelessWidget {
       onDestinationSelected!(index);
       return;
     }
-    navigationShell.goBranch(
-      index,
-      initialLocation: index == navigationShell.currentIndex,
-    );
+    // Always reset the destination branch to its root route: switching
+    // verticals (or re-tapping the active one) should never resume a
+    // stale, deep navigation state from a previous visit.
+    navigationShell.goBranch(index, initialLocation: true);
   }
 
   @override

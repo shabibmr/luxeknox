@@ -27,6 +27,7 @@ import '../../../scheduling/domain/entities/schedule_session.dart';
 import '../cubit/member_dossier_cubit.dart';
 import '../member_dossier_pt.dart';
 import '../people_strings.dart';
+import '../widgets/gender_radio_group.dart';
 import 'documents_screen.dart';
 import 'emergency_contacts_screen.dart';
 import 'health_info_screen.dart';
@@ -125,6 +126,7 @@ class _DossierContentState extends State<_DossierContent> {
   late final TextEditingController _lastNameController;
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;
+  late String? _gender;
 
   @override
   void initState() {
@@ -135,6 +137,7 @@ class _DossierContentState extends State<_DossierContent> {
     _lastNameController = TextEditingController(text: p.lastName);
     _emailController = TextEditingController(text: p.email ?? '');
     _phoneController = TextEditingController(text: p.phoneNumber ?? '');
+    _gender = p.gender;
   }
 
   @override
@@ -151,6 +154,7 @@ class _DossierContentState extends State<_DossierContent> {
       _lastNameController.text = person.lastName;
       _emailController.text = person.email ?? '';
       _phoneController.text = person.phoneNumber ?? '';
+      _gender = person.gender;
     }
   }
 
@@ -181,6 +185,12 @@ class _DossierContentState extends State<_DossierContent> {
     final membership = state.membership;
     final session = context.watch<SessionCubit>().state;
     final userType = session is SessionAuthenticated ? session.principal.userType : null;
+    final canAddMembership =
+        userType != null &&
+        canSellMembership(
+          userType: userType,
+          canCreateMembership: context.can('memberships.create'),
+        );
     final canAddPt =
         userType != null &&
         canSellPt(
@@ -216,6 +226,12 @@ class _DossierContentState extends State<_DossierContent> {
               title: const Text(PeopleStrings.phone),
               subtitle: Text(person.phoneNumber!),
             ),
+          if (person.gender != null && person.gender!.isNotEmpty)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text(PeopleStrings.gender),
+              subtitle: Text(person.gender!),
+            ),
           if (person.notes != null && person.notes!.isNotEmpty)
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -243,6 +259,10 @@ class _DossierContentState extends State<_DossierContent> {
             controller: _phoneController,
             decoration: const InputDecoration(labelText: PeopleStrings.phone),
           ),
+          GenderRadioGroup(
+            value: _gender,
+            onChanged: (value) => setState(() => _gender = value),
+          ),
           TextField(
             controller: _notesController,
             decoration: const InputDecoration(labelText: PeopleStrings.notes),
@@ -261,6 +281,7 @@ class _DossierContentState extends State<_DossierContent> {
                   phoneNumber: _phoneController.text.trim().isEmpty
                       ? null
                       : _phoneController.text.trim(),
+                  gender: _gender,
                   notes: _notesController.text.trim().isEmpty
                       ? null
                       : _notesController.text.trim(),
@@ -276,6 +297,14 @@ class _DossierContentState extends State<_DossierContent> {
           membershipsUnavailable: state.membershipsUnavailable,
           outstandingBalance: person.outstandingBalance,
           visitsThisMonth: state.visitsThisMonth,
+          canAddMembership: canAddMembership,
+          onAddMembership: () async {
+            final cubit = context.read<MemberDossierCubit>();
+            await context.push(
+              Routes.adminMembersAssignMembershipById(person.id.toString()),
+            );
+            if (mounted) await cubit.load(person.id);
+          },
         ),
         const Divider(),
         _PersonalTrainingSection(
@@ -432,12 +461,16 @@ class _MembershipSection extends StatelessWidget {
     required this.membershipsUnavailable,
     required this.outstandingBalance,
     required this.visitsThisMonth,
+    required this.canAddMembership,
+    required this.onAddMembership,
   });
 
   final Membership? membership;
   final bool membershipsUnavailable;
   final String? outstandingBalance;
   final int? visitsThisMonth;
+  final bool canAddMembership;
+  final VoidCallback onAddMembership;
 
   @override
   Widget build(BuildContext context) {
@@ -455,6 +488,7 @@ class _MembershipSection extends StatelessWidget {
         : '$visitsThisMonth';
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ListTile(
           contentPadding: EdgeInsets.zero,
@@ -477,6 +511,11 @@ class _MembershipSection extends StatelessWidget {
           title: const Text(PeopleStrings.attendanceThisMonth),
           subtitle: Text(visitsSubtitle),
         ),
+        if (canAddMembership)
+          FilledButton.tonal(
+            onPressed: onAddMembership,
+            child: const Text(PeopleStrings.assignMembership),
+          ),
       ],
     );
   }

@@ -51,8 +51,29 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
-class _DashboardBody extends StatelessWidget {
+class _DashboardBody extends StatefulWidget {
   const _DashboardBody();
+
+  @override
+  State<_DashboardBody> createState() => _DashboardBodyState();
+}
+
+class _DashboardBodyState extends State<_DashboardBody> {
+  // The shell keeps this branch's widget tree alive (via `Offstage` +
+  // `TickerMode`) when another tab is selected, so `initState` only runs
+  // once. Watch `TickerMode` to detect this tab becoming active again and
+  // refetch, instead of showing whatever was last loaded.
+  bool _wasActive = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isActive = TickerMode.valuesOf(context).enabled;
+    if (isActive && !_wasActive) {
+      _onRefresh(context);
+    }
+    _wasActive = isActive;
+  }
 
   Future<void> _onRefresh(BuildContext context) {
     return Future.wait([

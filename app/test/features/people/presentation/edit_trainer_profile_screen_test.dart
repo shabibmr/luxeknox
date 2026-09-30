@@ -110,7 +110,18 @@ void main() {
 
     expect(find.text('John'), findsOneWidget);
     expect(find.text('Doe'), findsOneWidget);
+    final scrollable = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(
+      find.text(PeopleStrings.maxClients),
+      300,
+      scrollable: scrollable,
+    );
     expect(find.text(PeopleStrings.maxClients), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text(PeopleStrings.statusActive),
+      300,
+      scrollable: scrollable,
+    );
     expect(find.text(PeopleStrings.statusActive), findsOneWidget);
   });
 
