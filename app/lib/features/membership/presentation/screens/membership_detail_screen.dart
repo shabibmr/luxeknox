@@ -244,8 +244,9 @@ class _MembershipDetailView extends StatelessWidget {
     );
     final reason = reasonController.text.trim();
     reasonController.dispose();
-    if (confirmed != true || selectedProductId == null || !context.mounted)
+    if (confirmed != true || selectedProductId == null || !context.mounted) {
       return;
+    }
 
     final failure = await context.read<MembershipDetailCubit>().upgrade(
       productId: selectedProductId!,
@@ -420,8 +421,19 @@ class _MembershipDetailView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [Text(label), Text(value)],
+        children: [
+          Expanded(
+            child: Text(label, overflow: TextOverflow.ellipsis),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

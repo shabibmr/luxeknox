@@ -80,7 +80,13 @@ class _InboxBody extends StatelessWidget {
           appBar: AppBar(
             title: Row(
               children: [
-                const Text(NotificationStrings.inboxTitle),
+                const Flexible(
+                  child: Text(
+                    NotificationStrings.inboxTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 if (unread > 0) ...[
                   const SizedBox(width: 8),
                   Badge(label: Text('$unread')),

@@ -277,29 +277,39 @@ class _DailyLogTile extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Row(
+            Wrap(
+              spacing: 16,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                if (log.totalCaloriesConsumed != null) ...[
-                  const Icon(
-                    Icons.local_fire_department,
-                    size: 16,
-                    color: Colors.orange,
+                if (log.totalCaloriesConsumed != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.local_fire_department,
+                        size: 16,
+                        color: Colors.orange,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        DietStrings.caloriesKcal(log.totalCaloriesConsumed!),
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    DietStrings.caloriesKcal(log.totalCaloriesConsumed!),
-                    style: theme.textTheme.bodyMedium,
+                if (log.waterIntakeMl != null && log.waterIntakeMl! > 0)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.water_drop, size: 16, color: Colors.blue),
+                      const SizedBox(width: 4),
+                      Text(
+                        DietStrings.waterMl(log.waterIntakeMl!),
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                ],
-                if (log.waterIntakeMl != null && log.waterIntakeMl! > 0) ...[
-                  const Icon(Icons.water_drop, size: 16, color: Colors.blue),
-                  const SizedBox(width: 4),
-                  Text(
-                    DietStrings.waterMl(log.waterIntakeMl!),
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ],
               ],
             ),
             if (log.memberNotes != null && log.memberNotes!.isNotEmpty) ...[

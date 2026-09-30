@@ -129,15 +129,28 @@ class MemberPickerSheet extends StatelessWidget {
                 )
               : null,
         ),
-        title: Text(member.fullName),
-        subtitle: Text('Membership: ${member.membershipNumber}'),
+        title: Text(
+          member.fullName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Text(
+          'Membership: ${member.membershipNumber}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         trailing: member.membershipStatus != null
-            ? Chip(
-                label: Text(
-                  member.membershipStatus!,
-                  style: const TextStyle(fontSize: 11),
+            ? ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 110),
+                child: Chip(
+                  label: Text(
+                    member.membershipStatus!,
+                    style: const TextStyle(fontSize: 11),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  visualDensity: VisualDensity.compact,
                 ),
-                visualDensity: VisualDensity.compact,
               )
             : null,
         onTap: () => Navigator.of(context).pop(member),

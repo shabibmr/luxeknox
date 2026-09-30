@@ -110,10 +110,14 @@ class _MealDetailContent extends StatelessWidget {
                             color: theme.colorScheme.secondary,
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            meal.scheduledTime!,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.secondary,
+                          Expanded(
+                            child: Text(
+                              meal.scheduledTime!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.secondary,
+                              ),
                             ),
                           ),
                         ],
@@ -123,9 +127,16 @@ class _MealDetailContent extends StatelessWidget {
                 ),
               ),
               if (meal.targetCalories != null)
-                Chip(
-                  avatar: const Icon(Icons.local_fire_department, size: 18),
-                  label: Text('${meal.targetCalories} kcal'),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 120),
+                  child: Chip(
+                    avatar: const Icon(Icons.local_fire_department, size: 18),
+                    label: Text(
+                      '${meal.targetCalories} kcal',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ),
             ],
           ),

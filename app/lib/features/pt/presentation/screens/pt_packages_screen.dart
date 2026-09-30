@@ -149,8 +149,9 @@ class _PtPackageFormState extends State<_PtPackageForm> {
   String? _int(String? v, {int min = 1, int? max}) {
     final n = int.tryParse(v?.trim() ?? '');
     if (n == null) return PtStrings.invalidNumber;
-    if (n < min || (max != null && n > max))
+    if (n < min || (max != null && n > max)) {
       return max != null ? PtStrings.sessionsRange : PtStrings.invalidNumber;
+    }
     return null;
   }
 

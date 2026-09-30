@@ -18,15 +18,28 @@ class FoodListItem extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      title: Text(food.name),
+      title: Text(
+        food.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       subtitle: Text(
         calories == null
             ? macroLabel
             : '${calories.toStringAsFixed(0)} kcal · $macroLabel',
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
       ),
-      trailing: Chip(
-        label: Text(food.servingUnit),
-        visualDensity: VisualDensity.compact,
+      trailing: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 110),
+        child: Chip(
+          label: Text(
+            food.servingUnit,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          visualDensity: VisualDensity.compact,
+        ),
       ),
     );
   }

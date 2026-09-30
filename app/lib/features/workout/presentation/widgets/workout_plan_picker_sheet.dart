@@ -47,11 +47,14 @@ class WorkoutPlanPickerSheet extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 16, 8, 0),
         child: Row(
           children: [
-            Text(
-              WorkoutStrings.listTitle,
-              style: Theme.of(context).textTheme.titleLarge,
+            Expanded(
+              child: Text(
+                WorkoutStrings.listTitle,
+                style: Theme.of(context).textTheme.titleLarge,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            const Spacer(),
             IconButton(
               icon: const Icon(Icons.close),
               onPressed: () => Navigator.of(context).pop(),

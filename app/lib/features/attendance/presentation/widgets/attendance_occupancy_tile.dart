@@ -58,9 +58,13 @@ class _AttendanceOccupancyTileState extends State<AttendanceOccupancyTile> {
                   color: theme.colorScheme.error,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  AttendanceStrings.occupancyLoadFailed,
-                  style: theme.textTheme.bodySmall,
+                Expanded(
+                  child: Text(
+                    AttendanceStrings.occupancyLoadFailed,
+                    style: theme.textTheme.bodySmall,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -99,10 +103,17 @@ class _AttendanceOccupancyTileState extends State<AttendanceOccupancyTile> {
                   ],
                 ),
               ),
-              Text(
-                AttendanceStrings.asOf(DateFormat.Hm().format(occupancy.asOf)),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer,
+              Flexible(
+                child: Text(
+                  AttendanceStrings.asOf(
+                    DateFormat.Hm().format(occupancy.asOf),
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
                 ),
               ),
             ],

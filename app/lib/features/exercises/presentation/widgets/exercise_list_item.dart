@@ -19,11 +19,26 @@ class ExerciseListItem extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      title: Text(exercise.name),
-      subtitle: Text('${exercise.primaryMuscleGroup} · $equipmentLabel'),
-      trailing: Chip(
-        label: Text(exercise.difficultyLevel),
-        visualDensity: VisualDensity.compact,
+      title: Text(
+        exercise.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        '${exercise.primaryMuscleGroup} · $equipmentLabel',
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 110),
+        child: Chip(
+          label: Text(
+            exercise.difficultyLevel,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          visualDensity: VisualDensity.compact,
+        ),
       ),
     );
   }

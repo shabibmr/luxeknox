@@ -34,12 +34,19 @@ class AppStatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final fg = foregroundColor ?? color;
     final bg = tinted ? color.withValues(alpha: 0.15) : color;
-    return Chip(
-      avatar: icon != null ? Icon(icon, size: 16, color: fg) : null,
-      label: Text(label),
-      backgroundColor: bg,
-      labelStyle: TextStyle(color: fg, fontWeight: FontWeight.w600),
-      side: BorderSide.none,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 120),
+      child: Chip(
+        avatar: icon != null ? Icon(icon, size: 16, color: fg) : null,
+        label: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        backgroundColor: bg,
+        labelStyle: TextStyle(color: fg, fontWeight: FontWeight.w600),
+        side: BorderSide.none,
+      ),
     );
   }
 }

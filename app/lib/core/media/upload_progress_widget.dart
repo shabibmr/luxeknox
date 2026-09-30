@@ -51,12 +51,14 @@ class UploadProgressWidget extends StatelessWidget {
           children: [
             if (isUploading) ...[
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Uploading…',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      'Uploading…',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   if (progress != null)
@@ -70,15 +72,17 @@ class UploadProgressWidget extends StatelessWidget {
               LinearProgressIndicator(value: progress),
               const SizedBox(height: 8),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   if (sentBytes != null && totalBytes != null)
-                    Text(
-                      '${_formatBytes(sentBytes!)} / ${_formatBytes(totalBytes!)}',
-                      style: theme.textTheme.bodySmall,
+                    Expanded(
+                      child: Text(
+                        '${_formatBytes(sentBytes!)} / ${_formatBytes(totalBytes!)}',
+                        style: theme.textTheme.bodySmall,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     )
                   else
-                    const SizedBox.shrink(),
+                    const Spacer(),
                   if (onCancel != null)
                     TextButton.icon(
                       onPressed: onCancel,

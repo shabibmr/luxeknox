@@ -147,15 +147,21 @@ class _DietDailyLogBodyState extends State<_DietDailyLogBody> {
                                   color: Colors.orange,
                                 ),
                                 const SizedBox(width: 8),
-                                Text(
-                                  DietStrings.caloriesLabel,
-                                  style: theme.textTheme.titleMedium,
+                                Expanded(
+                                  child: Text(
+                                    DietStrings.caloriesLabel,
+                                    style: theme.textTheme.titleMedium,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                                const Spacer(),
                                 if (state.targetCalories != null)
-                                  Text(
-                                    'Target: ${state.targetCalories!.toStringAsFixed(0)} kcal',
-                                    style: theme.textTheme.bodySmall,
+                                  Flexible(
+                                    child: Text(
+                                      'Target: ${state.targetCalories!.toStringAsFixed(0)} kcal',
+                                      style: theme.textTheme.bodySmall,
+                                      textAlign: TextAlign.end,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                               ],
                             ),
@@ -199,16 +205,23 @@ class _DietDailyLogBodyState extends State<_DietDailyLogBody> {
                                   color: Colors.blue,
                                 ),
                                 const SizedBox(width: 8),
-                                Text(
-                                  DietStrings.waterIntakeLabel,
-                                  style: theme.textTheme.titleMedium,
+                                Expanded(
+                                  child: Text(
+                                    DietStrings.waterIntakeLabel,
+                                    style: theme.textTheme.titleMedium,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                                const Spacer(),
-                                Text(
-                                  DietStrings.waterMl(state.waterIntakeMl),
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold,
+                                Flexible(
+                                  child: Text(
+                                    DietStrings.waterMl(state.waterIntakeMl),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          color: Colors.blue,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                    textAlign: TextAlign.end,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],

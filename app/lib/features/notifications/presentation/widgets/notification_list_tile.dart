@@ -42,13 +42,18 @@ class NotificationListTile extends StatelessWidget {
       ),
       isThreeLine: true,
       trailing: unread
-          ? Chip(
-              label: Text(
-                NotificationStrings.unreadLabel,
-                style: theme.textTheme.labelSmall,
+          ? ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 96),
+              child: Chip(
+                label: Text(
+                  NotificationStrings.unreadLabel,
+                  style: theme.textTheme.labelSmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
               ),
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
             )
           : null,
       onTap: onTap,

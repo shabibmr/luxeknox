@@ -20,7 +20,9 @@ abstract final class AppTheme {
         border: OutlineInputBorder(),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+        // Finite min width avoids BoxConstraints(infinite) asserts when a
+        // FilledButton sits in a shrink-wrapped Row (e.g. Stepper controls).
+        style: FilledButton.styleFrom(minimumSize: const Size(64, 48)),
       ),
       appBarTheme: AppBarTheme(
         centerTitle: false,
@@ -45,7 +47,7 @@ abstract final class AppTheme {
         border: OutlineInputBorder(),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+        style: FilledButton.styleFrom(minimumSize: const Size(64, 48)),
       ),
       appBarTheme: AppBarTheme(
         centerTitle: false,
