@@ -12,11 +12,11 @@
 
 5. ~~**Two independent filter bottom sheets.**~~ **DONE.** `exercise_filter_sheet.dart` and `food_filter_sheet.dart` shared the same outer shell (title + "Clear all" + padded content + full-width "Apply filters" button). Extracted `core/widgets/app_filter_sheet_shell.dart` (`AppFilterSheetShell`), which owns the shell and lays out a `children` list with the existing 12px inter-field spacing; each sheet now only supplies its own fields and `onClearAll`/`onApply` callbacks.
 
-6. **Two macro-display widgets for the same underlying data shape** (`diet/.../diet_macro_summary.dart` — chip-based, shows target vs. actual; `foods/.../food_macro_breakdown.dart` — progress-bar-based, shows % of calories). These solve different sub-problems (targets vs. breakdown) so aren't strictly duplicate, but sit in different features with no shared macro-formatting helper — calorie/gram string formatting is done separately in each (`DietStrings.macroValue` vs. inline `toStringAsFixed`).
+6. ~~**Two macro-display widgets for the same underlying data shape**~~ **DONE.** (`diet/.../diet_macro_summary.dart` — chip-based, shows target vs. actual; `foods/.../food_macro_breakdown.dart` — progress-bar-based, shows % of calories). Extracted a shared `core/presentation/macro_format.dart` (`MacroFormat`) covering the gram/calorie ("drop trailing `.0`") and percent formatting; `DietStrings.macroValue` and `FoodMacroBreakdown`'s `_MacroRow` both delegate to it.
 
-7. **`TodayAgendaCard` vs. `UpcomingAgendaList`** (both in `dashboard/.../widgets/`) render the same `ListTile` shape (title + time subtitle + chevron + onTap) for scheduling sessions, differing only in date-format and section title/empty-message wiring. Could be one `AgendaSessionList` parameterized by a subtitle formatter.
+7. ~~**`TodayAgendaCard` vs. `UpcomingAgendaList`**~~ **DONE.** (both in `dashboard/.../widgets/`) render the same `ListTile` shape (title + time subtitle + chevron + onTap) for scheduling sessions, differing only in date-format and section title/empty-message wiring. Unified via `agenda_session_list.dart`.
 
-8. **`MoreHubScreen` duplicates `DestinationHubScreen`'s list+ListTile+chevron+divider structure inline** instead of composing it, even though `DestinationHubItem`/`DestinationHubScreen` already exist in the same directory for exactly this "list of nav tiles" shape.
+8. ~~**`MoreHubScreen` duplicates `DestinationHubScreen`'s list+ListTile+chevron+divider structure inline**~~ **DONE.** instead of composing it, even though `DestinationHubItem`/`DestinationHubScreen` already exist in the same directory for exactly this "list of nav tiles" shape. `MoreHubScreen` now routes through `DestinationHubScreen`.
 
 ## (b) Inconsistent empty/error/loading handling
 
@@ -47,14 +47,14 @@ Pattern: **detail/builder/form screens are the consistent gap** — list screens
 | # | Component | Screens/widgets that would use it | Effort |
 |---|---|---|---|
 | 1 | ~~`AppStatusChip` generic status chip~~ **DONE** | `membership_status_chip`, `payment_status_chip`, `diet_plan_status_chip`, `plan_status_chip`, `achievement_chip` | S |
-| 2 | Backfill `AppEmptyView`/`AppErrorView` onto the ~25 spinner-only screens listed in (c) | membership (6), exercises/foods detail+library (4), goals detail/form (2), PT (2), workout builder/detail/versions/active (4), diet builder/detail/versions/log/meal (5), report viewer empty-rows (1) | M (mechanical but touches ~24 files) |
+| 2 | ~~Backfill `AppEmptyView`/`AppErrorView` onto the ~25 spinner-only screens listed in (c)~~ **DONE** | membership (6), exercises/foods detail+library (4), goals detail/form (2), PT (2), workout builder/detail/versions/active (4), diet builder/detail/versions/log/meal (5), report viewer empty-rows (1) | M (mechanical but touches ~24 files) |
 | 3 | ~~`AppPickerSheet<T>` generic search-and-pick sheet~~ **DONE** | `FoodPickerSheet`, `ExercisePickerSheet` | M |
 | 4 | ~~`AppCatalogDropdownField<T>` generic unpaged-catalog dropdown~~ **DONE** | `FacilityPickerField`, `ScheduleTypePickerField` | S |
 | 5 | ~~`AppFilterSheetShell` generic filter-sheet chrome~~ **DONE** | `ExerciseFilterSheet`, `FoodFilterSheet` | S |
-| 6 | Unify `AgendaSessionList` for `TodayAgendaCard`/`UpcomingAgendaList` | dashboard agenda section | S |
+| 6 | ~~Unify `AgendaSessionList` for `TodayAgendaCard`/`UpcomingAgendaList`~~ **DONE** | dashboard agenda section | S |
 | 7 | ~~Reconcile `MetricChart` (CustomPainter) into `AppLineChart` (fl_chart)~~ **DONE** | goals measurements screen | M (visual-risk: needs design sign-off since fl_chart styling differs from the hand-rolled painter) |
-| 8 | Route `MoreHubScreen` through `DestinationHubScreen`/`DestinationHubItem` instead of duplicating the list chrome | admin More tab | S |
-| 9 | Shared macro-formatting helper (calories/protein/carbs/fat string formatting) used by both `DietMacroSummary` and `FoodMacroBreakdown` | diet + foods features | S |
-| 10 | Reconcile the two dashboard "loading" vocabularies (`DashboardSkeleton` vs. inline `AppLoading`/spinner in `DashboardAgendaSection`) into one dashboard-loading pattern | dashboard screen | S |
+| 8 | ~~Route `MoreHubScreen` through `DestinationHubScreen`/`DestinationHubItem` instead of duplicating the list chrome~~ **DONE** | admin More tab | S |
+| 9 | ~~Shared macro-formatting helper (calories/protein/carbs/fat string formatting) used by both `DietMacroSummary` and `FoodMacroBreakdown`~~ **DONE** | diet + foods features | S |
+| 10 | ~~Reconcile the two dashboard "loading" vocabularies (`DashboardSkeleton` vs. inline `AppLoading`/spinner in `DashboardAgendaSection`) into one dashboard-loading pattern~~ **DONE** | dashboard screen | S |
 
-Recommended sequencing: do #1, #4, #5, #6, #8, #9, #10 first (all S, low risk, no visual-design decisions needed) before tackling #2 (mechanical but large surface area) and #3/#7 (need a small design pass).
+All ten extraction candidates are complete.
