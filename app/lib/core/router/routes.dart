@@ -142,7 +142,9 @@ class Routes {
   static const String adminMembers = '/admin/members';
   static const String adminMembersAdd = '/admin/members/add';
   static const String adminMembersDetail = '/admin/members/:id';
+  static String adminMembersDetailById(int id) => '/admin/members/$id';
   static const String adminMembersEdit = '/admin/members/:id/edit';
+  static String adminMembersEditById(int id) => '/admin/members/$id/edit';
   static const String adminMembersAssignMembership =
       '/admin/members/:id/assign-membership';
   static String adminMembersAssignMembershipById(String id) =>

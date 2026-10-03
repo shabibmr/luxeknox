@@ -69,13 +69,24 @@ export type AvailabilityRow = {
   is_available: boolean;
 };
 
+export const DEFAULT_TRAINER_AVAILABILITY: readonly AvailabilityRow[] = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
+  day_of_week: day,
+  start_time: '06:00:00',
+  end_time: '21:00:00',
+  is_recurring: true,
+  override_date: null,
+  is_available: true,
+}));
+
 /**
  * Whether the trainer's availability covers the whole hour starting at `hourMinutes`
  * on `dateIso`. Recurring windows for the weekday apply first; date overrides then
  * block (is_available=false) or add (is_available=true) time — same precedence as
  * `buildDayAvailabilityWindows` in sched/slot-calculation.ts, but in wall-clock minutes.
+ * If a trainer has no custom availability rows configured, standard gym hours apply.
  */
 export function coversHour(rows: readonly AvailabilityRow[], dateIso: string, hourMinutes: number): boolean {
+  const effectiveRows = rows.length === 0 ? DEFAULT_TRAINER_AVAILABILITY : rows;
   const from = hourMinutes;
   const to = hourMinutes + PT_SLOT_MINUTES;
   const within = (r: AvailabilityRow) =>
@@ -83,18 +94,19 @@ export function coversHour(rows: readonly AvailabilityRow[], dateIso: string, ho
   const overlaps = (r: AvailabilityRow) =>
     parseTimeToMinutes(r.start_time) < to && parseTimeToMinutes(r.end_time) > from;
 
-  const overrides = rows.filter((r) => !r.is_recurring && r.override_date === dateIso);
+  const overrides = effectiveRows.filter((r) => !r.is_recurring && r.override_date === dateIso);
   if (overrides.some((r) => !r.is_available && overlaps(r))) return false;
   if (overrides.some((r) => r.is_available && within(r))) return true;
 
   const dow = dayOfWeek(dateIso);
-  return rows.some((r) => r.is_recurring && r.is_available && r.day_of_week === dow && within(r));
+  return effectiveRows.some((r) => r.is_recurring && r.is_available && r.day_of_week === dow && within(r));
 }
 
 /** Candidate hours (minutes since midnight) a trainer could offer on a given weekday. */
 export function recurringHoursForWeekday(rows: readonly AvailabilityRow[], weekday: number): number[] {
+  const effectiveRows = rows.length === 0 ? DEFAULT_TRAINER_AVAILABILITY : rows;
   const hours = new Set<number>();
-  for (const r of rows) {
+  for (const r of effectiveRows) {
     if (!r.is_recurring || !r.is_available || r.day_of_week !== weekday) continue;
     const start = Math.ceil(parseTimeToMinutes(r.start_time) / 60) * 60;
     const end = parseTimeToMinutes(r.end_time);
@@ -102,3 +114,4 @@ export function recurringHoursForWeekday(rows: readonly AvailabilityRow[], weekd
   }
   return [...hours].sort((a, b) => a - b);
 }
+

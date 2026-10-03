@@ -315,7 +315,10 @@ class _DossierContentState extends State<_DossierContent> {
           canRenewPt: canRenewPt,
           onAddPt: () async {
             final cubit = context.read<MemberDossierCubit>();
-            await context.push<bool>(Routes.adminMembersAddPtById(person.id));
+            await context.push<bool>(
+              Routes.adminMembersAddPtById(person.id),
+              extra: person.fullName,
+            );
             if (mounted) await cubit.reloadPt(person.id);
           },
           onChangePt: (sub) => _changePt(sub),
@@ -378,10 +381,16 @@ class _DossierContentState extends State<_DossierContent> {
       (_) => <PtProduct>[],
       (items) => items,
     );
+    final person = cubit.state.person;
     if (!mounted) return;
     await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => SellPtScreen(memberId: sub.memberId, replanning: sub, products: products),
+        builder: (_) => SellPtScreen(
+          memberId: sub.memberId,
+          memberName: person?.fullName,
+          replanning: sub,
+          products: products,
+        ),
       ),
     );
     if (mounted) await cubit.reloadPt(sub.memberId);

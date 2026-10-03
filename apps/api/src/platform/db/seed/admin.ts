@@ -4,6 +4,7 @@ import { users } from '../schema/users';
 import { roles } from '../schema/roles';
 import { members, membershipNumberCounters } from '../schema/members';
 import { trainers } from '../schema/trainers';
+import { trainerAvailabilities } from '../schema/scheduling';
 import { hashPassword } from '../../../auth/password';
 
 /** Documented bootstrap fallback — matches `.env.example` and e2e helpers. */
@@ -115,15 +116,17 @@ async function seedDemoProfiles(db: DrizzleDb<any>, now: Date): Promise<void> {
 
   if (trainerUser) {
     const existing = await db
-      .select({ id: trainers.id })
+      .select({ id: trainers.id, gender: trainers.gender })
       .from(trainers)
       .where(eq(trainers.user_id, trainerUser.id))
       .limit(1);
+    let trainerId: number;
     if (!existing[0]) {
-      await db.insert(trainers).values({
+      const [inserted] = await db.insert(trainers).values({
         user_id: trainerUser.id,
         first_name: 'Demo',
         last_name: 'Trainer',
+        gender: 'male',
         bio: 'Seeded demo trainer',
         specializations: ['strength', 'conditioning'],
         hourly_rate: '75.00',
@@ -133,12 +136,50 @@ async function seedDemoProfiles(db: DrizzleDb<any>, now: Date): Promise<void> {
         created_at: now,
         updated_at: now,
       });
+      trainerId = Number(inserted?.insertId ?? 0);
+      if (!trainerId) {
+        const found = await db
+          .select({ id: trainers.id })
+          .from(trainers)
+          .where(eq(trainers.user_id, trainerUser.id))
+          .limit(1);
+        trainerId = Number(found[0]?.id ?? 0);
+      }
+    } else {
+      trainerId = Number(existing[0].id);
+      if (!existing[0].gender) {
+        await db
+          .update(trainers)
+          .set({ gender: 'male', updated_at: now })
+          .where(eq(trainers.id, trainerId));
+      }
+    }
+
+    if (trainerId) {
+      const existingAvail = await db
+        .select({ id: trainerAvailabilities.id })
+        .from(trainerAvailabilities)
+        .where(eq(trainerAvailabilities.trainer_id, trainerId))
+        .limit(1);
+      if (!existingAvail[0]) {
+        const slots = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
+          trainer_id: trainerId,
+          day_of_week: day,
+          start_time: '06:00:00',
+          end_time: '21:00:00',
+          is_recurring: true,
+          override_date: null,
+          is_available: true,
+          created_at: now,
+        }));
+        await db.insert(trainerAvailabilities).values(slots);
+      }
     }
   }
 
   if (memberUser) {
     const existing = await db
-      .select({ id: members.id })
+      .select({ id: members.id, gender: members.gender })
       .from(members)
       .where(eq(members.user_id, memberUser.id))
       .limit(1);
@@ -167,7 +208,7 @@ async function seedDemoProfiles(db: DrizzleDb<any>, now: Date): Promise<void> {
         membership_number: membershipNumber,
         first_name: 'Demo',
         last_name: 'Member',
-        gender: null,
+        gender: 'male',
         date_of_birth: null,
         address: null,
         assigned_trainer_id: null,
@@ -176,6 +217,11 @@ async function seedDemoProfiles(db: DrizzleDb<any>, now: Date): Promise<void> {
         created_at: now,
         updated_at: now,
       });
+    } else if (!existing[0].gender) {
+      await db
+        .update(members)
+        .set({ gender: 'male', updated_at: now })
+        .where(eq(members.id, existing[0].id));
     }
   }
 }

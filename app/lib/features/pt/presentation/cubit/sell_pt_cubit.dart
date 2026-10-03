@@ -7,6 +7,8 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../payments/domain/entities/payment_method.dart';
 import '../../../payments/domain/usecases/get_payment_methods_usecase.dart';
+import '../../../people/domain/entities/person.dart';
+import '../../../people/domain/usecases/get_member_usecase.dart';
 import '../../domain/entities/pt_product.dart';
 import '../../domain/entities/pt_schedule_grid.dart';
 import '../../domain/entities/pt_subscription.dart';
@@ -20,6 +22,8 @@ abstract class SellPtState with _$SellPtState {
   const factory SellPtState({
     @Default(LoadStatus.initial) LoadStatus status,
     required int memberId,
+    String? memberName,
+    Person? member,
 
     /// Set when re-planning (reassign trainer / change slot) an existing PT.
     PtSubscription? replanning,
@@ -66,20 +70,48 @@ class SellPtCubit extends Cubit<SellPtState> {
     this._getPaymentMethods,
     this._getGrid,
     this._purchase,
-    this._replan,
-  ) : super(const SellPtState(memberId: 0));
+    this._replan, [
+    this._getMember,
+  ]) : super(const SellPtState(memberId: 0));
 
   final GetPtProductsUseCase _getProducts;
   final GetPaymentMethodsUseCase _getPaymentMethods;
   final GetPtScheduleGridUseCase _getGrid;
   final PurchasePtUseCase _purchase;
   final ReplanPtUseCase _replan;
+  final GetMemberUseCase? _getMember;
 
-  Future<void> init(int memberId) async {
-    emit(SellPtState(memberId: memberId, status: LoadStatus.loading, startDate: _today()));
-    final products = await _getProducts(const NoParams());
-    final methods = await _getPaymentMethods(const NoParams());
+  Future<void> init(int memberId, {String? memberName}) async {
+    emit(
+      SellPtState(
+        memberId: memberId,
+        memberName: memberName,
+        status: LoadStatus.loading,
+        startDate: _today(),
+      ),
+    );
+    final productsFuture = _getProducts(const NoParams());
+    final methodsFuture = _getPaymentMethods(const NoParams());
+    final memberFuture = _getMember?.call(memberId);
+
+    final products = await productsFuture;
+    final methods = await methodsFuture;
+    final memberResult = memberFuture != null ? await memberFuture : null;
+
     if (isClosed) return;
+
+    Person? person;
+    String? resolvedName = memberName;
+    if (memberResult != null) {
+      memberResult.fold(
+        (_) => null,
+        (p) {
+          person = p;
+          resolvedName ??= p.fullName;
+        },
+      );
+    }
+
     products.fold(
       (failure) => emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (items) {
@@ -94,6 +126,8 @@ class SellPtCubit extends Cubit<SellPtState> {
             products: active,
             paymentMethods: paymentMethods,
             paymentMethodId: paymentMethods.length == 1 ? paymentMethods.first.id : null,
+            member: person,
+            memberName: resolvedName,
           ),
         );
       },
@@ -102,13 +136,18 @@ class SellPtCubit extends Cubit<SellPtState> {
 
   /// Re-plan an existing PT from [effectiveDate]; package and period are fixed,
   /// trainer / weekdays / hour can change.
-  Future<void> initReplan(PtSubscription subscription, List<PtProduct> products) async {
+  Future<void> initReplan(
+    PtSubscription subscription,
+    List<PtProduct> products, {
+    String? memberName,
+  }) async {
     final product = products.where((p) => p.id == subscription.ptProductId).firstOrNull;
     final today = _today();
     final effective = subscription.startDate.isAfter(today) ? subscription.startDate : today;
     emit(
       SellPtState(
         memberId: subscription.memberId,
+        memberName: memberName,
         status: LoadStatus.success,
         replanning: subscription,
         products: products,
@@ -119,6 +158,15 @@ class SellPtCubit extends Cubit<SellPtState> {
         slotStart: subscription.slotStart,
       ),
     );
+    if (_getMember != null) {
+      final res = await _getMember(subscription.memberId);
+      if (!isClosed) {
+        res.fold(
+          (_) => null,
+          (p) => emit(state.copyWith(member: p, memberName: state.memberName ?? p.fullName)),
+        );
+      }
+    }
     await loadGrid();
   }
 

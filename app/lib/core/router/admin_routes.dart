@@ -121,7 +121,8 @@ StatefulShellRoute createAdminBranchRoute() {
                           title: ShellStrings.adminMembers,
                         );
                       }
-                      return SellPtScreen(memberId: id);
+                      final memberName = state.extra as String?;
+                      return SellPtScreen(memberId: id, memberName: memberName);
                     },
                   ),
                   GoRoute(

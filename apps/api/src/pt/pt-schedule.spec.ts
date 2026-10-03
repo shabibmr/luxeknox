@@ -70,4 +70,15 @@ describe('pt-schedule helpers', () => {
     expect(recurringHoursForWeekday([recurring(1, '06:30', '08:00')], 1)).toEqual([420]);
     expect(recurringHoursForWeekday([recurring(1, '15:00', '18:00')], 1)).toEqual([900, 960, 1020]);
   });
+
+  it('falls back to default operating hours when a trainer has no custom availability rows', () => {
+    // Empty rows fallback should cover 06:00 to 21:00 on any day (0-6)
+    expect(coversHour([], '2026-10-05', 6 * 60)).toBe(true);
+    expect(coversHour([], '2026-10-05', 20 * 60)).toBe(true);
+    expect(coversHour([], '2026-10-05', 21 * 60)).toBe(false); // 21-22 overruns 21:00
+    const mondayHours = recurringHoursForWeekday([], 1);
+    expect(mondayHours).toContain(6 * 60); // 06:00
+    expect(mondayHours).toContain(20 * 60); // 20:00
+    expect(mondayHours).not.toContain(21 * 60);
+  });
 });

@@ -25,10 +25,56 @@ class PtScheduleGridView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (grid.trainers.isEmpty || grid.hours.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Text(PtStrings.gridEmpty, style: Theme.of(context).textTheme.bodyMedium),
+    if (grid.trainers.isEmpty) {
+      final theme = Theme.of(context);
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.people_outline, color: theme.colorScheme.error),
+                  const SizedBox(width: 8),
+                  Text('No eligible trainers found', style: theme.textTheme.titleSmall),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'No active ${grid.gender} trainers are currently available in the gym. '
+                'Personal training requires trainers to be the same gender as the member (${grid.gender}).',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (grid.hours.isEmpty) {
+      final theme = Theme.of(context);
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.schedule, color: theme.colorScheme.error),
+                  const SizedBox(width: 8),
+                  Text('No matching time slots', style: theme.textTheme.titleSmall),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Available trainers (${grid.trainers.map((t) => t.name).join(', ')}) do not have open slots '
+                'on all selected training days (${ptWeekdaysLabel(grid.weekdays)}). Try picking different days.',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
       );
     }
     final theme = Theme.of(context);

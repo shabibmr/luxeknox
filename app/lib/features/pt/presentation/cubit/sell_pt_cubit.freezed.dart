@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SellPtState {
 
- LoadStatus get status; int get memberId;/// Set when re-planning (reassign trainer / change slot) an existing PT.
+ LoadStatus get status; int get memberId; String? get memberName; Person? get member;/// Set when re-planning (reassign trainer / change slot) an existing PT.
  PtSubscription? get replanning; List<PtProduct> get products; List<PaymentMethod> get paymentMethods; PtProduct? get product; DateTime? get startDate; List<int> get weekdays; LoadStatus get gridStatus; PtScheduleGrid? get grid; int? get trainerId; String? get slotStart; String? get paymentMethodId; String? get discount; String? get reason; bool get submitting; PtSubscription? get result; Failure? get failure;
 /// Create a copy of SellPtState
 /// with the given fields replaced by the non-null parameter values.
@@ -26,16 +26,16 @@ $SellPtStateCopyWith<SellPtState> get copyWith => _$SellPtStateCopyWithImpl<Sell
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SellPtState&&(identical(other.status, status) || other.status == status)&&(identical(other.memberId, memberId) || other.memberId == memberId)&&(identical(other.replanning, replanning) || other.replanning == replanning)&&const DeepCollectionEquality().equals(other.products, products)&&const DeepCollectionEquality().equals(other.paymentMethods, paymentMethods)&&(identical(other.product, product) || other.product == product)&&(identical(other.startDate, startDate) || other.startDate == startDate)&&const DeepCollectionEquality().equals(other.weekdays, weekdays)&&(identical(other.gridStatus, gridStatus) || other.gridStatus == gridStatus)&&(identical(other.grid, grid) || other.grid == grid)&&(identical(other.trainerId, trainerId) || other.trainerId == trainerId)&&(identical(other.slotStart, slotStart) || other.slotStart == slotStart)&&(identical(other.paymentMethodId, paymentMethodId) || other.paymentMethodId == paymentMethodId)&&(identical(other.discount, discount) || other.discount == discount)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.result, result) || other.result == result)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SellPtState&&(identical(other.status, status) || other.status == status)&&(identical(other.memberId, memberId) || other.memberId == memberId)&&(identical(other.memberName, memberName) || other.memberName == memberName)&&(identical(other.member, member) || other.member == member)&&(identical(other.replanning, replanning) || other.replanning == replanning)&&const DeepCollectionEquality().equals(other.products, products)&&const DeepCollectionEquality().equals(other.paymentMethods, paymentMethods)&&(identical(other.product, product) || other.product == product)&&(identical(other.startDate, startDate) || other.startDate == startDate)&&const DeepCollectionEquality().equals(other.weekdays, weekdays)&&(identical(other.gridStatus, gridStatus) || other.gridStatus == gridStatus)&&(identical(other.grid, grid) || other.grid == grid)&&(identical(other.trainerId, trainerId) || other.trainerId == trainerId)&&(identical(other.slotStart, slotStart) || other.slotStart == slotStart)&&(identical(other.paymentMethodId, paymentMethodId) || other.paymentMethodId == paymentMethodId)&&(identical(other.discount, discount) || other.discount == discount)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.result, result) || other.result == result)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,memberId,replanning,const DeepCollectionEquality().hash(products),const DeepCollectionEquality().hash(paymentMethods),product,startDate,const DeepCollectionEquality().hash(weekdays),gridStatus,grid,trainerId,slotStart,paymentMethodId,discount,reason,submitting,result,failure);
+int get hashCode => Object.hashAll([runtimeType,status,memberId,memberName,member,replanning,const DeepCollectionEquality().hash(products),const DeepCollectionEquality().hash(paymentMethods),product,startDate,const DeepCollectionEquality().hash(weekdays),gridStatus,grid,trainerId,slotStart,paymentMethodId,discount,reason,submitting,result,failure]);
 
 @override
 String toString() {
-  return 'SellPtState(status: $status, memberId: $memberId, replanning: $replanning, products: $products, paymentMethods: $paymentMethods, product: $product, startDate: $startDate, weekdays: $weekdays, gridStatus: $gridStatus, grid: $grid, trainerId: $trainerId, slotStart: $slotStart, paymentMethodId: $paymentMethodId, discount: $discount, reason: $reason, submitting: $submitting, result: $result, failure: $failure)';
+  return 'SellPtState(status: $status, memberId: $memberId, memberName: $memberName, member: $member, replanning: $replanning, products: $products, paymentMethods: $paymentMethods, product: $product, startDate: $startDate, weekdays: $weekdays, gridStatus: $gridStatus, grid: $grid, trainerId: $trainerId, slotStart: $slotStart, paymentMethodId: $paymentMethodId, discount: $discount, reason: $reason, submitting: $submitting, result: $result, failure: $failure)';
 }
 
 
@@ -46,7 +46,7 @@ abstract mixin class $SellPtStateCopyWith<$Res>  {
   factory $SellPtStateCopyWith(SellPtState value, $Res Function(SellPtState) _then) = _$SellPtStateCopyWithImpl;
 @useResult
 $Res call({
- LoadStatus status, int memberId, PtSubscription? replanning, List<PtProduct> products, List<PaymentMethod> paymentMethods, PtProduct? product, DateTime? startDate, List<int> weekdays, LoadStatus gridStatus, PtScheduleGrid? grid, int? trainerId, String? slotStart, String? paymentMethodId, String? discount, String? reason, bool submitting, PtSubscription? result, Failure? failure
+ LoadStatus status, int memberId, String? memberName, Person? member, PtSubscription? replanning, List<PtProduct> products, List<PaymentMethod> paymentMethods, PtProduct? product, DateTime? startDate, List<int> weekdays, LoadStatus gridStatus, PtScheduleGrid? grid, int? trainerId, String? slotStart, String? paymentMethodId, String? discount, String? reason, bool submitting, PtSubscription? result, Failure? failure
 });
 
 
@@ -63,11 +63,13 @@ class _$SellPtStateCopyWithImpl<$Res>
 
 /// Create a copy of SellPtState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? memberId = null,Object? replanning = freezed,Object? products = null,Object? paymentMethods = null,Object? product = freezed,Object? startDate = freezed,Object? weekdays = null,Object? gridStatus = null,Object? grid = freezed,Object? trainerId = freezed,Object? slotStart = freezed,Object? paymentMethodId = freezed,Object? discount = freezed,Object? reason = freezed,Object? submitting = null,Object? result = freezed,Object? failure = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? memberId = null,Object? memberName = freezed,Object? member = freezed,Object? replanning = freezed,Object? products = null,Object? paymentMethods = null,Object? product = freezed,Object? startDate = freezed,Object? weekdays = null,Object? gridStatus = null,Object? grid = freezed,Object? trainerId = freezed,Object? slotStart = freezed,Object? paymentMethodId = freezed,Object? discount = freezed,Object? reason = freezed,Object? submitting = null,Object? result = freezed,Object? failure = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,memberId: null == memberId ? _self.memberId : memberId // ignore: cast_nullable_to_non_nullable
-as int,replanning: freezed == replanning ? _self.replanning : replanning // ignore: cast_nullable_to_non_nullable
+as int,memberName: freezed == memberName ? _self.memberName : memberName // ignore: cast_nullable_to_non_nullable
+as String?,member: freezed == member ? _self.member : member // ignore: cast_nullable_to_non_nullable
+as Person?,replanning: freezed == replanning ? _self.replanning : replanning // ignore: cast_nullable_to_non_nullable
 as PtSubscription?,products: null == products ? _self.products : products // ignore: cast_nullable_to_non_nullable
 as List<PtProduct>,paymentMethods: null == paymentMethods ? _self.paymentMethods : paymentMethods // ignore: cast_nullable_to_non_nullable
 as List<PaymentMethod>,product: freezed == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
@@ -168,10 +170,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  int memberId,  PtSubscription? replanning,  List<PtProduct> products,  List<PaymentMethod> paymentMethods,  PtProduct? product,  DateTime? startDate,  List<int> weekdays,  LoadStatus gridStatus,  PtScheduleGrid? grid,  int? trainerId,  String? slotStart,  String? paymentMethodId,  String? discount,  String? reason,  bool submitting,  PtSubscription? result,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  int memberId,  String? memberName,  Person? member,  PtSubscription? replanning,  List<PtProduct> products,  List<PaymentMethod> paymentMethods,  PtProduct? product,  DateTime? startDate,  List<int> weekdays,  LoadStatus gridStatus,  PtScheduleGrid? grid,  int? trainerId,  String? slotStart,  String? paymentMethodId,  String? discount,  String? reason,  bool submitting,  PtSubscription? result,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SellPtState() when $default != null:
-return $default(_that.status,_that.memberId,_that.replanning,_that.products,_that.paymentMethods,_that.product,_that.startDate,_that.weekdays,_that.gridStatus,_that.grid,_that.trainerId,_that.slotStart,_that.paymentMethodId,_that.discount,_that.reason,_that.submitting,_that.result,_that.failure);case _:
+return $default(_that.status,_that.memberId,_that.memberName,_that.member,_that.replanning,_that.products,_that.paymentMethods,_that.product,_that.startDate,_that.weekdays,_that.gridStatus,_that.grid,_that.trainerId,_that.slotStart,_that.paymentMethodId,_that.discount,_that.reason,_that.submitting,_that.result,_that.failure);case _:
   return orElse();
 
 }
@@ -189,10 +191,10 @@ return $default(_that.status,_that.memberId,_that.replanning,_that.products,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  int memberId,  PtSubscription? replanning,  List<PtProduct> products,  List<PaymentMethod> paymentMethods,  PtProduct? product,  DateTime? startDate,  List<int> weekdays,  LoadStatus gridStatus,  PtScheduleGrid? grid,  int? trainerId,  String? slotStart,  String? paymentMethodId,  String? discount,  String? reason,  bool submitting,  PtSubscription? result,  Failure? failure)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  int memberId,  String? memberName,  Person? member,  PtSubscription? replanning,  List<PtProduct> products,  List<PaymentMethod> paymentMethods,  PtProduct? product,  DateTime? startDate,  List<int> weekdays,  LoadStatus gridStatus,  PtScheduleGrid? grid,  int? trainerId,  String? slotStart,  String? paymentMethodId,  String? discount,  String? reason,  bool submitting,  PtSubscription? result,  Failure? failure)  $default,) {final _that = this;
 switch (_that) {
 case _SellPtState():
-return $default(_that.status,_that.memberId,_that.replanning,_that.products,_that.paymentMethods,_that.product,_that.startDate,_that.weekdays,_that.gridStatus,_that.grid,_that.trainerId,_that.slotStart,_that.paymentMethodId,_that.discount,_that.reason,_that.submitting,_that.result,_that.failure);case _:
+return $default(_that.status,_that.memberId,_that.memberName,_that.member,_that.replanning,_that.products,_that.paymentMethods,_that.product,_that.startDate,_that.weekdays,_that.gridStatus,_that.grid,_that.trainerId,_that.slotStart,_that.paymentMethodId,_that.discount,_that.reason,_that.submitting,_that.result,_that.failure);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -209,10 +211,10 @@ return $default(_that.status,_that.memberId,_that.replanning,_that.products,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  int memberId,  PtSubscription? replanning,  List<PtProduct> products,  List<PaymentMethod> paymentMethods,  PtProduct? product,  DateTime? startDate,  List<int> weekdays,  LoadStatus gridStatus,  PtScheduleGrid? grid,  int? trainerId,  String? slotStart,  String? paymentMethodId,  String? discount,  String? reason,  bool submitting,  PtSubscription? result,  Failure? failure)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  int memberId,  String? memberName,  Person? member,  PtSubscription? replanning,  List<PtProduct> products,  List<PaymentMethod> paymentMethods,  PtProduct? product,  DateTime? startDate,  List<int> weekdays,  LoadStatus gridStatus,  PtScheduleGrid? grid,  int? trainerId,  String? slotStart,  String? paymentMethodId,  String? discount,  String? reason,  bool submitting,  PtSubscription? result,  Failure? failure)?  $default,) {final _that = this;
 switch (_that) {
 case _SellPtState() when $default != null:
-return $default(_that.status,_that.memberId,_that.replanning,_that.products,_that.paymentMethods,_that.product,_that.startDate,_that.weekdays,_that.gridStatus,_that.grid,_that.trainerId,_that.slotStart,_that.paymentMethodId,_that.discount,_that.reason,_that.submitting,_that.result,_that.failure);case _:
+return $default(_that.status,_that.memberId,_that.memberName,_that.member,_that.replanning,_that.products,_that.paymentMethods,_that.product,_that.startDate,_that.weekdays,_that.gridStatus,_that.grid,_that.trainerId,_that.slotStart,_that.paymentMethodId,_that.discount,_that.reason,_that.submitting,_that.result,_that.failure);case _:
   return null;
 
 }
@@ -224,11 +226,13 @@ return $default(_that.status,_that.memberId,_that.replanning,_that.products,_tha
 
 
 class _SellPtState extends SellPtState {
-  const _SellPtState({this.status = LoadStatus.initial, required this.memberId, this.replanning, final  List<PtProduct> products = const <PtProduct>[], final  List<PaymentMethod> paymentMethods = const <PaymentMethod>[], this.product, this.startDate, final  List<int> weekdays = const <int>[], this.gridStatus = LoadStatus.initial, this.grid, this.trainerId, this.slotStart, this.paymentMethodId, this.discount, this.reason, this.submitting = false, this.result, this.failure}): _products = products,_paymentMethods = paymentMethods,_weekdays = weekdays,super._();
+  const _SellPtState({this.status = LoadStatus.initial, required this.memberId, this.memberName, this.member, this.replanning, final  List<PtProduct> products = const <PtProduct>[], final  List<PaymentMethod> paymentMethods = const <PaymentMethod>[], this.product, this.startDate, final  List<int> weekdays = const <int>[], this.gridStatus = LoadStatus.initial, this.grid, this.trainerId, this.slotStart, this.paymentMethodId, this.discount, this.reason, this.submitting = false, this.result, this.failure}): _products = products,_paymentMethods = paymentMethods,_weekdays = weekdays,super._();
   
 
 @override@JsonKey() final  LoadStatus status;
 @override final  int memberId;
+@override final  String? memberName;
+@override final  Person? member;
 /// Set when re-planning (reassign trainer / change slot) an existing PT.
 @override final  PtSubscription? replanning;
  final  List<PtProduct> _products;
@@ -275,16 +279,16 @@ _$SellPtStateCopyWith<_SellPtState> get copyWith => __$SellPtStateCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SellPtState&&(identical(other.status, status) || other.status == status)&&(identical(other.memberId, memberId) || other.memberId == memberId)&&(identical(other.replanning, replanning) || other.replanning == replanning)&&const DeepCollectionEquality().equals(other._products, _products)&&const DeepCollectionEquality().equals(other._paymentMethods, _paymentMethods)&&(identical(other.product, product) || other.product == product)&&(identical(other.startDate, startDate) || other.startDate == startDate)&&const DeepCollectionEquality().equals(other._weekdays, _weekdays)&&(identical(other.gridStatus, gridStatus) || other.gridStatus == gridStatus)&&(identical(other.grid, grid) || other.grid == grid)&&(identical(other.trainerId, trainerId) || other.trainerId == trainerId)&&(identical(other.slotStart, slotStart) || other.slotStart == slotStart)&&(identical(other.paymentMethodId, paymentMethodId) || other.paymentMethodId == paymentMethodId)&&(identical(other.discount, discount) || other.discount == discount)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.result, result) || other.result == result)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SellPtState&&(identical(other.status, status) || other.status == status)&&(identical(other.memberId, memberId) || other.memberId == memberId)&&(identical(other.memberName, memberName) || other.memberName == memberName)&&(identical(other.member, member) || other.member == member)&&(identical(other.replanning, replanning) || other.replanning == replanning)&&const DeepCollectionEquality().equals(other._products, _products)&&const DeepCollectionEquality().equals(other._paymentMethods, _paymentMethods)&&(identical(other.product, product) || other.product == product)&&(identical(other.startDate, startDate) || other.startDate == startDate)&&const DeepCollectionEquality().equals(other._weekdays, _weekdays)&&(identical(other.gridStatus, gridStatus) || other.gridStatus == gridStatus)&&(identical(other.grid, grid) || other.grid == grid)&&(identical(other.trainerId, trainerId) || other.trainerId == trainerId)&&(identical(other.slotStart, slotStart) || other.slotStart == slotStart)&&(identical(other.paymentMethodId, paymentMethodId) || other.paymentMethodId == paymentMethodId)&&(identical(other.discount, discount) || other.discount == discount)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.result, result) || other.result == result)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,memberId,replanning,const DeepCollectionEquality().hash(_products),const DeepCollectionEquality().hash(_paymentMethods),product,startDate,const DeepCollectionEquality().hash(_weekdays),gridStatus,grid,trainerId,slotStart,paymentMethodId,discount,reason,submitting,result,failure);
+int get hashCode => Object.hashAll([runtimeType,status,memberId,memberName,member,replanning,const DeepCollectionEquality().hash(_products),const DeepCollectionEquality().hash(_paymentMethods),product,startDate,const DeepCollectionEquality().hash(_weekdays),gridStatus,grid,trainerId,slotStart,paymentMethodId,discount,reason,submitting,result,failure]);
 
 @override
 String toString() {
-  return 'SellPtState(status: $status, memberId: $memberId, replanning: $replanning, products: $products, paymentMethods: $paymentMethods, product: $product, startDate: $startDate, weekdays: $weekdays, gridStatus: $gridStatus, grid: $grid, trainerId: $trainerId, slotStart: $slotStart, paymentMethodId: $paymentMethodId, discount: $discount, reason: $reason, submitting: $submitting, result: $result, failure: $failure)';
+  return 'SellPtState(status: $status, memberId: $memberId, memberName: $memberName, member: $member, replanning: $replanning, products: $products, paymentMethods: $paymentMethods, product: $product, startDate: $startDate, weekdays: $weekdays, gridStatus: $gridStatus, grid: $grid, trainerId: $trainerId, slotStart: $slotStart, paymentMethodId: $paymentMethodId, discount: $discount, reason: $reason, submitting: $submitting, result: $result, failure: $failure)';
 }
 
 
@@ -295,7 +299,7 @@ abstract mixin class _$SellPtStateCopyWith<$Res> implements $SellPtStateCopyWith
   factory _$SellPtStateCopyWith(_SellPtState value, $Res Function(_SellPtState) _then) = __$SellPtStateCopyWithImpl;
 @override @useResult
 $Res call({
- LoadStatus status, int memberId, PtSubscription? replanning, List<PtProduct> products, List<PaymentMethod> paymentMethods, PtProduct? product, DateTime? startDate, List<int> weekdays, LoadStatus gridStatus, PtScheduleGrid? grid, int? trainerId, String? slotStart, String? paymentMethodId, String? discount, String? reason, bool submitting, PtSubscription? result, Failure? failure
+ LoadStatus status, int memberId, String? memberName, Person? member, PtSubscription? replanning, List<PtProduct> products, List<PaymentMethod> paymentMethods, PtProduct? product, DateTime? startDate, List<int> weekdays, LoadStatus gridStatus, PtScheduleGrid? grid, int? trainerId, String? slotStart, String? paymentMethodId, String? discount, String? reason, bool submitting, PtSubscription? result, Failure? failure
 });
 
 
@@ -312,11 +316,13 @@ class __$SellPtStateCopyWithImpl<$Res>
 
 /// Create a copy of SellPtState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? memberId = null,Object? replanning = freezed,Object? products = null,Object? paymentMethods = null,Object? product = freezed,Object? startDate = freezed,Object? weekdays = null,Object? gridStatus = null,Object? grid = freezed,Object? trainerId = freezed,Object? slotStart = freezed,Object? paymentMethodId = freezed,Object? discount = freezed,Object? reason = freezed,Object? submitting = null,Object? result = freezed,Object? failure = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? memberId = null,Object? memberName = freezed,Object? member = freezed,Object? replanning = freezed,Object? products = null,Object? paymentMethods = null,Object? product = freezed,Object? startDate = freezed,Object? weekdays = null,Object? gridStatus = null,Object? grid = freezed,Object? trainerId = freezed,Object? slotStart = freezed,Object? paymentMethodId = freezed,Object? discount = freezed,Object? reason = freezed,Object? submitting = null,Object? result = freezed,Object? failure = freezed,}) {
   return _then(_SellPtState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,memberId: null == memberId ? _self.memberId : memberId // ignore: cast_nullable_to_non_nullable
-as int,replanning: freezed == replanning ? _self.replanning : replanning // ignore: cast_nullable_to_non_nullable
+as int,memberName: freezed == memberName ? _self.memberName : memberName // ignore: cast_nullable_to_non_nullable
+as String?,member: freezed == member ? _self.member : member // ignore: cast_nullable_to_non_nullable
+as Person?,replanning: freezed == replanning ? _self.replanning : replanning // ignore: cast_nullable_to_non_nullable
 as PtSubscription?,products: null == products ? _self._products : products // ignore: cast_nullable_to_non_nullable
 as List<PtProduct>,paymentMethods: null == paymentMethods ? _self._paymentMethods : paymentMethods // ignore: cast_nullable_to_non_nullable
 as List<PaymentMethod>,product: freezed == product ? _self.product : product // ignore: cast_nullable_to_non_nullable

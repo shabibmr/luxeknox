@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../people/presentation/member_dossier_pt.dart' show formatCalendarDate;
@@ -19,9 +20,16 @@ import '../widgets/pt_schedule_grid_view.dart';
 /// With [replanning] set, the same screen changes trainer and/or slot of an
 /// existing PT from an effective date (no payment).
 class SellPtScreen extends StatelessWidget {
-  const SellPtScreen({super.key, required this.memberId, this.replanning, this.products});
+  const SellPtScreen({
+    super.key,
+    required this.memberId,
+    this.memberName,
+    this.replanning,
+    this.products,
+  });
 
   final int memberId;
+  final String? memberName;
   final PtSubscription? replanning;
   final List<PtProduct>? products;
 
@@ -31,19 +39,31 @@ class SellPtScreen extends StatelessWidget {
       create: (_) {
         final cubit = getIt<SellPtCubit>();
         if (replanning != null && products != null) {
-          cubit.initReplan(replanning!, products!);
+          cubit.initReplan(replanning!, products!, memberName: memberName);
         } else {
-          cubit.init(memberId);
+          cubit.init(memberId, memberName: memberName);
         }
         return cubit;
       },
-      child: const _SellPtView(),
+      child: _SellPtView(memberId: memberId),
     );
   }
 }
 
 class _SellPtView extends StatelessWidget {
-  const _SellPtView();
+  const _SellPtView({required this.memberId});
+
+  final int memberId;
+
+  void _onBack(BuildContext context, int id) {
+    if (context.canPop()) {
+      context.pop();
+    } else if (id > 0) {
+      context.go(Routes.adminMembersDetailById(id));
+    } else {
+      context.go(Routes.adminMembers);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,15 +85,43 @@ class _SellPtView extends StatelessWidget {
         }
       },
       builder: (context, state) {
+        final theme = Theme.of(context);
+        final effectiveMemberId = state.memberId > 0 ? state.memberId : memberId;
+        final displayName = state.memberName ?? state.member?.fullName;
+
         return Scaffold(
-          appBar: AppBar(title: Text(state.isReplan ? PtStrings.replanTitle : PtStrings.sellTitle)),
+          appBar: AppBar(
+            leading: BackButton(
+              onPressed: () => _onBack(context, effectiveMemberId),
+            ),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(state.isReplan ? PtStrings.replanTitle : PtStrings.sellTitle),
+                if (displayName != null && displayName.isNotEmpty)
+                  Text(
+                    'For $displayName',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+          ),
           body: switch (state.status) {
             LoadStatus.initial || LoadStatus.loading => const AppLoading(),
             LoadStatus.failure => AppErrorView(
               message: failureMessage(state.failure!),
-              onRetry: () => context.read<SellPtCubit>().init(state.memberId),
+              onRetry: () => context.read<SellPtCubit>().init(
+                    state.memberId,
+                    memberName: state.memberName,
+                  ),
             ),
-            LoadStatus.success => _Form(state: state),
+            LoadStatus.success => _Form(
+                state: state,
+                onBack: () => _onBack(context, effectiveMemberId),
+              ),
           },
         );
       },
@@ -82,19 +130,95 @@ class _SellPtView extends StatelessWidget {
 }
 
 class _Form extends StatelessWidget {
-  const _Form({required this.state});
+  const _Form({required this.state, required this.onBack});
 
   final SellPtState state;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<SellPtCubit>();
     final theme = Theme.of(context);
     final product = state.product;
+    final displayName = state.memberName ?? state.member?.fullName ?? 'Member #${state.memberId}';
+    final hasNoGender = state.member != null &&
+        (state.member!.gender == null || state.member!.gender!.trim().isEmpty);
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // 0. Member info banner
+        Card(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  foregroundColor: theme.colorScheme.onPrimaryContainer,
+                  child: const Icon(Icons.person),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      if (state.member != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          'Membership: ${state.member!.membershipNumber} · Gender: ${state.member!.gender ?? 'Not set'}',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (hasNoGender)
+                  TextButton.icon(
+                    icon: const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 18),
+                    label: const Text('Set Gender', style: TextStyle(color: Colors.orange)),
+                    onPressed: () => context.push(Routes.adminMembersEditById(state.memberId)),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (hasNoGender)
+          Card(
+            color: theme.colorScheme.errorContainer,
+            margin: const EdgeInsets.only(bottom: 16),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline, color: theme.colorScheme.onErrorContainer),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Member gender must be set to Male or Female before assigning personal training. Trainers are matched by gender.',
+                      style: TextStyle(color: theme.colorScheme.onErrorContainer),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push(Routes.adminMembersEditById(state.memberId)),
+                    child: Text(
+                      'Edit Profile',
+                      style: TextStyle(
+                        color: theme.colorScheme.onErrorContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
         // 1. Package & start/effective date
         Text(PtStrings.stepPackage, style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
@@ -172,9 +296,39 @@ class _Form extends StatelessWidget {
         Text(PtStrings.gridHint, style: theme.textTheme.bodySmall),
         const SizedBox(height: 8),
         if (!state.canLoadGrid)
-          const SizedBox.shrink()
+          Card(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: theme.colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      product == null
+                          ? 'Select a PT package and choose training days above to view available trainers and hours.'
+                          : 'Select ${state.sessionsPerWeek} training days above to view available trainers and hours.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
         else if (state.gridStatus == LoadStatus.loading)
-          const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
+          const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(
+              child: Column(
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 12),
+                  Text('Loading trainer availability schedule...'),
+                ],
+              ),
+            ),
+          )
         else if (state.gridStatus == LoadStatus.failure)
           AppErrorView(
             message: state.failure == null ? '' : failureMessage(state.failure!),
@@ -218,11 +372,25 @@ class _Form extends StatelessWidget {
         const SizedBox(height: 16),
         _Summary(state: state),
         const SizedBox(height: 16),
-        FilledButton(
-          onPressed: state.canSubmit ? cubit.submit : null,
-          child: state.submitting
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(state.isReplan ? PtStrings.confirmReplan : PtStrings.confirmSell),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: onBack,
+                child: const Text(PtStrings.back),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: FilledButton(
+                onPressed: state.canSubmit ? cubit.submit : null,
+                child: state.submitting
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text(state.isReplan ? PtStrings.confirmReplan : PtStrings.confirmSell),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -241,6 +409,8 @@ class _Summary extends StatelessWidget {
     final end = state.isReplan
         ? state.replanning!.endDate
         : state.startDate!.add(Duration(days: state.product!.durationDays));
+    final memberName = state.memberName ?? state.member?.fullName ?? 'Member #${state.memberId}';
+
     Widget row(String k, String v) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -258,6 +428,7 @@ class _Summary extends StatelessWidget {
           children: [
             Text(PtStrings.stepConfirm, style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),
+            row('Member', memberName),
             row(PtStrings.summaryPackage, state.product!.name),
             row(PtStrings.summaryPeriod, '${formatCalendarDate(state.startDate!)} → ${formatCalendarDate(end)}'),
             row(PtStrings.summaryDays, ptWeekdaysLabel(state.weekdays)),
@@ -270,3 +441,4 @@ class _Summary extends StatelessWidget {
     );
   }
 }
+
