@@ -33,7 +33,8 @@ void main() {
       );
     });
 
-    test('unauthenticated allows forgot/reset password routes', () {
+    test('unauthenticated allows forgot/reset password routes; '
+        'explicit sign-out drops the stale deep link', () {
       expect(
         appRedirectLogic(
           sessionState: const SessionUnauthenticated(),
@@ -47,6 +48,13 @@ void main() {
           currentPath: Routes.resetPassword,
         ),
         isNull,
+      );
+      expect(
+        appRedirectLogic(
+          sessionState: const SessionUnauthenticated(explicitSignOut: true),
+          currentPath: Routes.trainerHome,
+        ),
+        Routes.login,
       );
       expect(
         appRedirectLogic(

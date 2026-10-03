@@ -160,7 +160,7 @@ void main() {
         );
       },
       act: (cubit) => cubit.logout(),
-      expect: () => [const SessionUnauthenticated()],
+      expect: () => [const SessionUnauthenticated(explicitSignOut: true)],
     );
 
     blocTest<SessionCubit, SessionState>(

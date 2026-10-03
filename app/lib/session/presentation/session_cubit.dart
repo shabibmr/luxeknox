@@ -41,7 +41,17 @@ final class SessionAuthenticated extends SessionState {
 }
 
 final class SessionUnauthenticated extends SessionState {
-  const SessionUnauthenticated();
+  const SessionUnauthenticated({this.explicitSignOut = false});
+
+  /// True when this state resulted from the user deliberately signing out
+  /// (as opposed to a failed restore/refresh). Redirect logic uses this to
+  /// avoid preserving the previous session's deep link — otherwise a
+  /// different user logging back in can land on a path left over from the
+  /// prior account (e.g. a trainer's screen after an admin signs back in).
+  final bool explicitSignOut;
+
+  @override
+  List<Object?> get props => [explicitSignOut];
 }
 
 @singleton
@@ -90,7 +100,7 @@ class SessionCubit extends Cubit<SessionState> {
 
   Future<void> logout() async {
     await _logoutUseCase(const NoParams());
-    emit(const SessionUnauthenticated());
+    emit(const SessionUnauthenticated(explicitSignOut: true));
   }
 
   void onSignedOut() {

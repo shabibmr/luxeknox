@@ -28,6 +28,12 @@ String? appRedirectLogic({
     if (isPublicAuthRoute) {
       return currentPath == Routes.splash ? Routes.login : null;
     }
+    if (sessionState.explicitSignOut) {
+      // Don't carry the previous account's path into the next login —
+      // otherwise a different user signing in can land on a screen left
+      // over from the prior session (e.g. an admin seeing a trainer page).
+      return Routes.login;
+    }
     // Preserve intended deep link for restore after sign-in.
     return Routes.loginWithRedirect(currentPath);
   }
