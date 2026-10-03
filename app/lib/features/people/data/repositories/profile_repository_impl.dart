@@ -23,7 +23,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final health = await _remote.getHealth(memberId);
       return Right(healthInfoFromApi(health));
     } catch (e) {
-      return Left(mapThrownToFailure(e));
+      final failure = mapThrownToFailure(e);
+      // No health row yet: show an empty form; the first save creates it.
+      if (failure is NotFoundFailure) {
+        return Right(HealthInfo(id: 0, memberId: memberId));
+      }
+      return Left(failure);
     }
   }
 
