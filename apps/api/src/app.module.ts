@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { PlatformModule } from './platform/platform.module';
 import { HealthModule } from './platform/health/health.module';
 import { DrizzleModule } from './platform/db/drizzle.module';
@@ -20,6 +21,7 @@ import { PtModule } from './pt/pt.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     DrizzleModule.forRoot(),
     PlatformModule,
     HealthModule,
