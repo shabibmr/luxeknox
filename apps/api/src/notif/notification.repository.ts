@@ -263,6 +263,12 @@ export class NotificationRepository extends BaseRepository<
     return Number(result[0]?.affectedRows ?? 0) > 0;
   }
 
+  async deleteDeviceByToken(deviceToken: string): Promise<boolean> {
+    const db = this.getDb() as any;
+    const result = await db.delete(userDevices).where(eq(userDevices.device_token, deviceToken));
+    return Number(result[0]?.affectedRows ?? 0) > 0;
+  }
+
   // ==================== Broadcasts ====================
 
   async findBroadcasts(limit: number, offset: number, senderUserId?: number): Promise<{ rows: BroadcastItem[]; total: number }> {

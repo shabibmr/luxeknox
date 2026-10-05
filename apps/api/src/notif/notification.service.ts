@@ -143,7 +143,9 @@ export class NotificationService {
       return;
     }
 
-    let allFailed = true;
+    let anySuccess = false;
+    let liveFailureCount = 0;
+    let invalidTokenCount = 0;
     let lastError: string | null = null;
 
     for (const device of devices) {
@@ -157,25 +159,39 @@ export class NotificationService {
         });
 
         if (result.success) {
-          allFailed = false;
+          anySuccess = true;
+        } else if (result.invalidToken) {
+          invalidTokenCount += 1;
+          await this.repository.deleteDeviceByToken(device.device_token);
         } else {
+          liveFailureCount += 1;
           lastError = result.errorMessage ?? 'Unknown push error';
         }
       } catch (err: any) {
+        liveFailureCount += 1;
         lastError = err?.message ?? String(err);
       }
     }
 
-    if (allFailed) {
-      await this.repository.updateDeliveryStatus(delivery.id, 'failed', {
-        failureReason: lastError,
-        retryCount: delivery.retry_count + 1,
-      });
-    } else {
+    if (anySuccess) {
       await this.repository.updateDeliveryStatus(delivery.id, 'sent', {
         deliveredAt: new Date(),
       });
+      return;
     }
+
+    if (liveFailureCount === 0 && invalidTokenCount > 0) {
+      await this.repository.updateDeliveryStatus(delivery.id, 'failed', {
+        failureReason: 'No valid device tokens',
+        retryCount: delivery.retry_count + 1,
+      });
+      return;
+    }
+
+    await this.repository.updateDeliveryStatus(delivery.id, 'failed', {
+      failureReason: lastError,
+      retryCount: delivery.retry_count + 1,
+    });
   }
 
   // ==================== User Inbox ====================

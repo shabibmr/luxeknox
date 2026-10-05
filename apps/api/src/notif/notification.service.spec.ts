@@ -59,6 +59,7 @@ describe('NotificationService (V13: NOT-003 to NOT-015)', () => {
       findDevicesByUserId: vi.fn().mockResolvedValue([]),
       upsertDevice: vi.fn(),
       deleteDevice: vi.fn().mockResolvedValue(true),
+      deleteDeviceByToken: vi.fn().mockResolvedValue(true),
       findBroadcasts: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
       findActiveUserIdsForRole: vi.fn().mockResolvedValue([100, 101]),
       findAllActiveMemberUserIds: vi.fn().mockResolvedValue([100, 101, 102]),
@@ -139,6 +140,59 @@ describe('NotificationService (V13: NOT-003 to NOT-015)', () => {
         10,
         'sent',
         expect.objectContaining({ deliveredAt: expect.any(Date) }),
+      );
+    });
+
+    it('deletes invalid tokens and marks sent when another device succeeds', async () => {
+      repo.findDevicesByUserId.mockResolvedValue([
+        { id: 1, device_token: 'dead_token', device_platform: 'android' },
+        { id: 2, device_token: 'live_token', device_platform: 'ios' },
+      ]);
+      repo.findDelivery.mockResolvedValue({ id: 10, retry_count: 0 });
+
+      const send = vi
+        .spyOn(pushDispatcher, 'send')
+        .mockResolvedValueOnce({
+          success: false,
+          invalidToken: true,
+          errorMessage: 'Invalid device token',
+        })
+        .mockResolvedValueOnce({ success: true, messageId: 'msg_ok' });
+
+      await service.sendPushToUser(100, 1, 'Test Title', 'Test Body');
+
+      expect(repo.deleteDeviceByToken).toHaveBeenCalledWith('dead_token');
+      expect(repo.deleteDeviceByToken).toHaveBeenCalledTimes(1);
+      expect(repo.updateDeliveryStatus).toHaveBeenCalledWith(
+        10,
+        'sent',
+        expect.objectContaining({ deliveredAt: expect.any(Date) }),
+      );
+      expect(send).toHaveBeenCalledTimes(2);
+    });
+
+    it('keeps the token and marks failed when push fails without invalidToken', async () => {
+      repo.findDevicesByUserId.mockResolvedValue([
+        { id: 1, device_token: 'transient_fail_token', device_platform: 'android' },
+      ]);
+      repo.findDelivery.mockResolvedValue({ id: 10, retry_count: 0 });
+
+      vi.spyOn(pushDispatcher, 'send').mockResolvedValue({
+        success: false,
+        invalidToken: false,
+        errorMessage: 'Push send failed',
+      });
+
+      await service.sendPushToUser(100, 1, 'Test Title', 'Test Body');
+
+      expect(repo.deleteDeviceByToken).not.toHaveBeenCalled();
+      expect(repo.updateDeliveryStatus).toHaveBeenCalledWith(
+        10,
+        'failed',
+        expect.objectContaining({
+          failureReason: 'Push send failed',
+          retryCount: 1,
+        }),
       );
     });
   });
