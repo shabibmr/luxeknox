@@ -355,4 +355,14 @@ export class NotificationRepository extends BaseRepository<
       .limit(1);
     return (rows[0] as NotificationType) ?? null;
   }
+
+  async findTypeById(typeId: number): Promise<NotificationType | null> {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select()
+      .from(notificationTypes)
+      .where(eq(notificationTypes.id, typeId))
+      .limit(1);
+    return (rows[0] as NotificationType) ?? null;
+  }
 }

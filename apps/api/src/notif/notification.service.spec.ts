@@ -65,6 +65,7 @@ describe('NotificationService (V13: NOT-003 to NOT-015)', () => {
       findAllActiveMemberUserIds: vi.fn().mockResolvedValue([100, 101, 102]),
       findActiveAssignedClientUserIds: vi.fn().mockResolvedValue([100]),
       findTypeByCode: vi.fn().mockResolvedValue({ id: 5, type_code: 'announcement' }),
+      findTypeById: vi.fn().mockResolvedValue({ id: 5, type_code: 'announcement' }),
     };
 
     pushDispatcher = new LoggingPushDispatcherAdapter();
@@ -192,6 +193,39 @@ describe('NotificationService (V13: NOT-003 to NOT-015)', () => {
         expect.objectContaining({
           failureReason: 'Push send failed',
           retryCount: 1,
+        }),
+      );
+    });
+
+    it('attaches deep-link keys on every push send', async () => {
+      repo.findDevicesByUserId.mockResolvedValue([
+        { id: 1, device_token: 'tok', device_platform: 'android' },
+      ]);
+      repo.findDelivery.mockResolvedValue({ id: 10, retry_count: 0 });
+
+      const send = vi.spyOn(pushDispatcher, 'send').mockResolvedValue({
+        success: true,
+        messageId: 'msg_1',
+      });
+
+      await service.sendPushToUser(
+        100,
+        9,
+        'Booking Confirmed',
+        'Confirmed',
+        { schedule_id: 12 },
+        'booking_confirmed',
+      );
+
+      expect(send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            schedule_id: '12',
+            notification_id: '9',
+            type_code: 'booking_confirmed',
+            entity_type: 'schedule',
+            entity_id: '12',
+          },
         }),
       );
     });
