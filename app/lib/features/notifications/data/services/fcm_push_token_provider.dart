@@ -14,6 +14,10 @@ class FcmPushTokenProvider implements PushTokenProvider {
   bool _started = false;
   bool _live = false;
 
+  /// Web push requires a VAPID key from Firebase Console → Cloud Messaging.
+  /// Pass with `--dart-define=FCM_VAPID_KEY=...`. Empty keeps web non-live.
+  static const String _vapidKey = String.fromEnvironment('FCM_VAPID_KEY');
+
   @override
   bool get isLive => _live;
 
@@ -28,6 +32,12 @@ class FcmPushTokenProvider implements PushTokenProvider {
     }
     if (!_fcmSupported) {
       debugPrint('FCM: not supported on this platform — stub tokens only.');
+      return;
+    }
+    if (kIsWeb && _vapidKey.isEmpty) {
+      debugPrint(
+        'FCM: web requires --dart-define=FCM_VAPID_KEY — stub tokens only.',
+      );
       return;
     }
 
@@ -69,6 +79,9 @@ class FcmPushTokenProvider implements PushTokenProvider {
       final messaging = FirebaseMessaging.instance;
       if (forceRefresh) {
         await messaging.deleteToken();
+      }
+      if (kIsWeb) {
+        return await messaging.getToken(vapidKey: _vapidKey);
       }
       return await messaging.getToken();
     } catch (e) {

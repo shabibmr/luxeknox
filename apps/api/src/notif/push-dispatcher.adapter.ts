@@ -13,6 +13,8 @@ export interface PushDispatchResult {
   success: boolean;
   messageId?: string;
   errorMessage?: string;
+  /** True when FCM rejected the registration token and the device row should be removed. */
+  invalidToken?: boolean;
 }
 
 export abstract class PushDispatcherAdapter {

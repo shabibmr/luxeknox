@@ -28,3 +28,68 @@
 ## Console
 
 https://console.firebase.google.com/project/luxe-knox-app/overview
+
+## Web push (FCM token)
+
+Web needs a VAPID key and the messaging service worker. Android/iOS are unchanged when the define is omitted.
+
+1. Firebase Console → Project settings → Cloud Messaging → **Web Push certificates** → generate / copy the key pair.
+2. Run Chrome with the key:
+
+```powershell
+cd app
+flutter run -d chrome --dart-define=FCM_VAPID_KEY=<web-push-certificate-key>
+```
+
+3. Allow notifications in the browser. After login, `POST /devices` should store a row with `device_platform = web`.
+4. Service worker: `app/web/firebase-messaging-sw.js` (served at `/firebase-messaging-sw.js`). It uses the same `apiKey` / `projectId` / `messagingSenderId` / `appId` as `DefaultFirebaseOptions.web` and Firebase JS **12.19.0** (matches `firebase_core_web`).
+
+Without `FCM_VAPID_KEY`, web stays on stub device tokens (`FcmPushTokenProvider.isLive` stays false).
+
+## API push delivery (FCM vs logging)
+
+The Nest notif module sends device pushes through `PushDispatcherAdapter`.
+
+- When `FIREBASE_CLIENT_EMAIL` and `FIREBASE_PRIVATE_KEY` are set, the API uses `FcmPushDispatcherAdapter` (`firebase-admin`).
+- When either is missing, it uses `LoggingPushDispatcherAdapter` (inbox still works; no real FCM).
+
+Add these to `apps/api/.env` (see `apps/api/.env.example`). Never commit a service-account JSON file.
+
+| Variable | Notes |
+| --- | --- |
+| `FIREBASE_PROJECT_ID` | Defaults to `luxe-knox-app` when email and key are set |
+| `FIREBASE_CLIENT_EMAIL` | Service account email |
+| `FIREBASE_PRIVATE_KEY` | PEM; literal `\n` sequences are turned into newlines |
+
+### Service account
+
+1. Firebase Console → Project settings → **Service accounts** → Generate new private key.
+2. Put the JSON `client_email` into `FIREBASE_CLIENT_EMAIL`.
+3. Put the JSON `private_key` into `FIREBASE_PRIVATE_KEY` (keep `\n` escapes or real newlines).
+4. Store the file only on the server or in a secret manager. Do not commit it.
+
+### Tell the modes apart
+
+- Log line containing `[PushDispatcher]` → logging adapter (credentials missing).
+- Successful FCM returns a Firebase message id shaped like `projects/.../messages/...`. The logging adapter fabricates ids like `msg_<timestamp>_...`.
+
+### Platform notes
+
+- **iOS:** Upload an APNs auth key (`.p8`) for bundle `com.luxeknox.app` under Firebase Console → Project settings → Cloud Messaging. Code cannot upload that key.
+- **Android:** SHA-1 is for Google Sign-In only, not FCM. FCM needs `google-services.json`, which is already present under `app/android/app/`.
+- **Web:** See [Web push (FCM token)](#web-push-fcm-token) above for the VAPID define and service worker.
+
+### Local verification (automated)
+
+```powershell
+pnpm --filter api exec vitest run src/notif/fcm-push-dispatcher.adapter.spec.ts src/notif/notification.service.spec.ts src/notif/notification-payload.spec.ts src/notif/notification-event.consumer.spec.ts src/notif/notification-jobs.service.spec.ts
+cd app
+flutter test test/features/notifications/deep_link_resolver_test.dart
+```
+
+### Manual check (debug Android + real credentials)
+
+1. Sign in. Confirm `POST /devices` stored a token.
+2. Book a session. Confirm an FCM message on the device and an inbox row.
+3. Force-stop the app and broadcast from the staff screen. Confirm the tray item opens notification detail.
+4. Replace the token in MySQL with `invalid`. Broadcast again. Confirm that device row is removed and the delivery is `failed` when it was the only device.

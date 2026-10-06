@@ -18,6 +18,7 @@ import {
   type BroadcastItem,
   type InboxItem,
 } from './notification.repository';
+import { buildPushData } from './notification-payload';
 import { PushDispatcherAdapter } from './push-dispatcher.adapter';
 import type {
   BroadcastListQueryDto,
@@ -111,11 +112,19 @@ export class NotificationService {
 
     await this.repository.insertDeliveries(deliveryRows);
 
-    // 3. Trigger asynchronous push delivery to registered devices
+    // 3. Enrich payload with deep-link keys after insert, then push
+    const pushData = buildPushData({
+      typeCode,
+      dataPayload,
+      notificationId,
+    });
+
     for (const userId of uniqueRecipients) {
-      this.sendPushToUser(userId, notificationId, title, message, dataPayload).catch((err) => {
-        this.logger.error(`Error sending push to user ${userId}: ${err.message}`);
-      });
+      this.sendPushToUser(userId, notificationId, title, message, pushData, typeCode).catch(
+        (err) => {
+          this.logger.error(`Error sending push to user ${userId}: ${err.message}`);
+        },
+      );
     }
 
     return notificationId;
@@ -130,6 +139,7 @@ export class NotificationService {
     title: string,
     message: string,
     dataPayload?: Record<string, unknown> | null,
+    typeCode?: string | null,
   ): Promise<void> {
     const devices = await this.repository.findDevicesByUserId(userId);
     const delivery = await this.repository.findDelivery(notificationId, userId);
@@ -143,7 +153,15 @@ export class NotificationService {
       return;
     }
 
-    let allFailed = true;
+    const pushData = buildPushData({
+      typeCode,
+      dataPayload,
+      notificationId,
+    });
+
+    let anySuccess = false;
+    let liveFailureCount = 0;
+    let invalidTokenCount = 0;
     let lastError: string | null = null;
 
     for (const device of devices) {
@@ -153,29 +171,43 @@ export class NotificationService {
           platform: device.device_platform,
           title,
           body: message,
-          data: dataPayload,
+          data: pushData,
         });
 
         if (result.success) {
-          allFailed = false;
+          anySuccess = true;
+        } else if (result.invalidToken) {
+          invalidTokenCount += 1;
+          await this.repository.deleteDeviceByToken(device.device_token);
         } else {
+          liveFailureCount += 1;
           lastError = result.errorMessage ?? 'Unknown push error';
         }
       } catch (err: any) {
+        liveFailureCount += 1;
         lastError = err?.message ?? String(err);
       }
     }
 
-    if (allFailed) {
-      await this.repository.updateDeliveryStatus(delivery.id, 'failed', {
-        failureReason: lastError,
-        retryCount: delivery.retry_count + 1,
-      });
-    } else {
+    if (anySuccess) {
       await this.repository.updateDeliveryStatus(delivery.id, 'sent', {
         deliveredAt: new Date(),
       });
+      return;
     }
+
+    if (liveFailureCount === 0 && invalidTokenCount > 0) {
+      await this.repository.updateDeliveryStatus(delivery.id, 'failed', {
+        failureReason: 'No valid device tokens',
+        retryCount: delivery.retry_count + 1,
+      });
+      return;
+    }
+
+    await this.repository.updateDeliveryStatus(delivery.id, 'failed', {
+      failureReason: lastError,
+      retryCount: delivery.retry_count + 1,
+    });
   }
 
   // ==================== User Inbox ====================
@@ -365,12 +397,22 @@ export class NotificationService {
       const notif = await this.repository.findNotificationById(delivery.notification_id);
       if (!notif) continue;
 
+      let typeCode: string | null =
+        typeof notif.data_payload?.type_code === 'string'
+          ? notif.data_payload.type_code
+          : null;
+      if (!typeCode && notif.notification_type_id != null) {
+        const notifType = await this.repository.findTypeById(notif.notification_type_id);
+        typeCode = notifType?.type_code ?? null;
+      }
+
       await this.sendPushToUser(
         delivery.user_id,
         delivery.notification_id,
         notif.title,
         notif.message,
         notif.data_payload,
+        typeCode,
       );
       retried++;
     }

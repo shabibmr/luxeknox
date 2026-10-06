@@ -33,10 +33,10 @@
   <link rel="manifest" href="manifest.json">
 
   <!--
-    Web FCM: after `flutterfire configure`, add the Firebase JS SDK scripts
-    here (compat or modular) matching firebase_options.dart. Until then the
-    Flutter client uses stub device tokens on web.
-    See docs/flutter/fcm-setup.md.
+    Web FCM: FlutterFire injects the modular Firebase JS SDK into this page.
+    Background pushes use web/firebase-messaging-sw.js (compat SDK, same
+    luxe-knox-app keys as DefaultFirebaseOptions.web). Live web tokens also
+    need --dart-define=FCM_VAPID_KEY=... — see docs/flutter/firebase-luxe-knox-app-setup.md.
   -->
 </head>
 <body>

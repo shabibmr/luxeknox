@@ -59,11 +59,13 @@ describe('NotificationService (V13: NOT-003 to NOT-015)', () => {
       findDevicesByUserId: vi.fn().mockResolvedValue([]),
       upsertDevice: vi.fn(),
       deleteDevice: vi.fn().mockResolvedValue(true),
+      deleteDeviceByToken: vi.fn().mockResolvedValue(true),
       findBroadcasts: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
       findActiveUserIdsForRole: vi.fn().mockResolvedValue([100, 101]),
       findAllActiveMemberUserIds: vi.fn().mockResolvedValue([100, 101, 102]),
       findActiveAssignedClientUserIds: vi.fn().mockResolvedValue([100]),
       findTypeByCode: vi.fn().mockResolvedValue({ id: 5, type_code: 'announcement' }),
+      findTypeById: vi.fn().mockResolvedValue({ id: 5, type_code: 'announcement' }),
     };
 
     pushDispatcher = new LoggingPushDispatcherAdapter();
@@ -139,6 +141,92 @@ describe('NotificationService (V13: NOT-003 to NOT-015)', () => {
         10,
         'sent',
         expect.objectContaining({ deliveredAt: expect.any(Date) }),
+      );
+    });
+
+    it('deletes invalid tokens and marks sent when another device succeeds', async () => {
+      repo.findDevicesByUserId.mockResolvedValue([
+        { id: 1, device_token: 'dead_token', device_platform: 'android' },
+        { id: 2, device_token: 'live_token', device_platform: 'ios' },
+      ]);
+      repo.findDelivery.mockResolvedValue({ id: 10, retry_count: 0 });
+
+      const send = vi
+        .spyOn(pushDispatcher, 'send')
+        .mockResolvedValueOnce({
+          success: false,
+          invalidToken: true,
+          errorMessage: 'Invalid device token',
+        })
+        .mockResolvedValueOnce({ success: true, messageId: 'msg_ok' });
+
+      await service.sendPushToUser(100, 1, 'Test Title', 'Test Body');
+
+      expect(repo.deleteDeviceByToken).toHaveBeenCalledWith('dead_token');
+      expect(repo.deleteDeviceByToken).toHaveBeenCalledTimes(1);
+      expect(repo.updateDeliveryStatus).toHaveBeenCalledWith(
+        10,
+        'sent',
+        expect.objectContaining({ deliveredAt: expect.any(Date) }),
+      );
+      expect(send).toHaveBeenCalledTimes(2);
+    });
+
+    it('keeps the token and marks failed when push fails without invalidToken', async () => {
+      repo.findDevicesByUserId.mockResolvedValue([
+        { id: 1, device_token: 'transient_fail_token', device_platform: 'android' },
+      ]);
+      repo.findDelivery.mockResolvedValue({ id: 10, retry_count: 0 });
+
+      vi.spyOn(pushDispatcher, 'send').mockResolvedValue({
+        success: false,
+        invalidToken: false,
+        errorMessage: 'Push send failed',
+      });
+
+      await service.sendPushToUser(100, 1, 'Test Title', 'Test Body');
+
+      expect(repo.deleteDeviceByToken).not.toHaveBeenCalled();
+      expect(repo.updateDeliveryStatus).toHaveBeenCalledWith(
+        10,
+        'failed',
+        expect.objectContaining({
+          failureReason: 'Push send failed',
+          retryCount: 1,
+        }),
+      );
+    });
+
+    it('attaches deep-link keys on every push send', async () => {
+      repo.findDevicesByUserId.mockResolvedValue([
+        { id: 1, device_token: 'tok', device_platform: 'android' },
+      ]);
+      repo.findDelivery.mockResolvedValue({ id: 10, retry_count: 0 });
+
+      const send = vi.spyOn(pushDispatcher, 'send').mockResolvedValue({
+        success: true,
+        messageId: 'msg_1',
+      });
+
+      await service.sendPushToUser(
+        100,
+        9,
+        'Booking Confirmed',
+        'Confirmed',
+        { schedule_id: 12 },
+        'booking_confirmed',
+      );
+
+      expect(send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            schedule_id: '12',
+            notification_id: '9',
+            type_code: 'booking_confirmed',
+            entity_type: 'schedule',
+            entity_id: '12',
+          },
+        }),
       );
     });
   });

@@ -3,6 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { and, eq, gte, lte, sql } from 'drizzle-orm';
 import { JobRunnerService } from '../job/job-runner.service';
 import { NotificationService } from './notification.service';
+import { NotificationRepository } from './notification.repository';
 import { MembershipRepository } from '../memb/membership.repository';
 import { ScheduleRepository } from '../sched/schedule.repository';
 import { MemberRepository } from '../people/member.repository';
@@ -10,6 +11,7 @@ import { memberships } from '../platform/db/schema/memberships';
 import { schedules, scheduleParticipants } from '../platform/db/schema/scheduling';
 import { members } from '../platform/db/schema/members';
 import { users } from '../platform/db/schema/users';
+import { payments } from '../platform/db/schema/payments';
 
 export const NOTIFICATION_MEMBERSHIP_REMINDERS_JOB = 'notifications.membership_reminders';
 export const NOTIFICATION_SESSION_REMINDERS_JOB = 'notifications.session_reminders';
@@ -26,7 +28,12 @@ export class NotificationJobsService implements OnModuleInit {
     private readonly membershipRepository: MembershipRepository,
     private readonly scheduleRepository: ScheduleRepository,
     private readonly memberRepository: MemberRepository,
+    private readonly notificationRepository: NotificationRepository,
   ) {}
+
+  private utcDay(date = new Date()): string {
+    return date.toISOString().slice(0, 10);
+  }
 
   onModuleInit(): void {
     this.jobRunner.register(NOTIFICATION_MEMBERSHIP_REMINDERS_JOB, () =>
@@ -109,8 +116,18 @@ export class NotificationJobsService implements OnModuleInit {
         ),
       );
 
+    const day = this.utcDay();
     let sent = 0;
     for (const row of rows) {
+      const alreadySent = await this.notificationRepository.hasDeliveryToday(
+        row.userId,
+        'membership_expiry',
+        'membership_id',
+        row.membershipId,
+        day,
+      );
+      if (alreadySent) continue;
+
       await this.notificationService.dispatch({
         recipientUserIds: [row.userId],
         title: 'Membership Expiring Soon',
@@ -151,8 +168,18 @@ export class NotificationJobsService implements OnModuleInit {
         ),
       );
 
+    const day = this.utcDay();
     let sent = 0;
     for (const row of rows) {
+      const alreadySent = await this.notificationRepository.hasDeliveryToday(
+        row.userId,
+        'session_reminder',
+        'schedule_id',
+        row.scheduleId,
+        day,
+      );
+      if (alreadySent) continue;
+
       await this.notificationService.dispatch({
         recipientUserIds: [row.userId],
         title: 'Upcoming Session Reminder',
@@ -168,9 +195,57 @@ export class NotificationJobsService implements OnModuleInit {
   }
 
   async runPaymentReminders(): Promise<number> {
-    // V09 payment module is pending; placeholder logic that will query pending invoices once V09 lands
-    this.logger.log('Payment reminder job executed (no pending payments found in pre-V09 schema)');
-    return 0;
+    const db = (this.membershipRepository as any).getDb();
+    const rows = await db
+      .select({
+        paymentId: payments.id,
+        totalAmount: payments.total_amount,
+        amountPaid: payments.amount_paid,
+        paymentDate: payments.payment_date,
+        userId: members.user_id,
+      })
+      .from(payments)
+      .innerJoin(members, eq(members.id, payments.member_id))
+      .innerJoin(users, eq(users.id, members.user_id))
+      .where(
+        and(
+          eq(payments.status, 'pending'),
+          sql`${payments.amount_paid} < ${payments.total_amount}`,
+          eq(users.status, 'active'),
+        ),
+      );
+
+    const day = this.utcDay();
+    let sent = 0;
+    for (const row of rows) {
+      const alreadySent = await this.notificationRepository.hasDeliveryToday(
+        row.userId,
+        'payment_due',
+        'payment_id',
+        row.paymentId,
+        day,
+      );
+      if (alreadySent) continue;
+
+      const amount =
+        typeof row.totalAmount === 'string'
+          ? row.totalAmount
+          : Number(row.totalAmount).toFixed(2);
+      await this.notificationService.dispatch({
+        recipientUserIds: [row.userId],
+        title: 'Payment Due',
+        message: `You have an outstanding payment of ${amount}.`,
+        typeCode: 'payment_due',
+        dataPayload: {
+          payment_id: row.paymentId,
+          amount,
+        },
+      });
+      sent++;
+    }
+
+    this.logger.log(`Dispatched ${sent} payment due reminder(s)`);
+    return sent;
   }
 
   async runRetryFailedDeliveries(): Promise<number> {

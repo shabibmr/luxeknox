@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, inArray, lt, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lt, sql, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
@@ -263,6 +263,12 @@ export class NotificationRepository extends BaseRepository<
     return Number(result[0]?.affectedRows ?? 0) > 0;
   }
 
+  async deleteDeviceByToken(deviceToken: string): Promise<boolean> {
+    const db = this.getDb() as any;
+    const result = await db.delete(userDevices).where(eq(userDevices.device_token, deviceToken));
+    return Number(result[0]?.affectedRows ?? 0) > 0;
+  }
+
   // ==================== Broadcasts ====================
 
   async findBroadcasts(limit: number, offset: number, senderUserId?: number): Promise<{ rows: BroadcastItem[]; total: number }> {
@@ -348,5 +354,56 @@ export class NotificationRepository extends BaseRepository<
       .where(eq(notificationTypes.type_code, typeCode))
       .limit(1);
     return (rows[0] as NotificationType) ?? null;
+  }
+
+  async findTypeById(typeId: number): Promise<NotificationType | null> {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select()
+      .from(notificationTypes)
+      .where(eq(notificationTypes.id, typeId))
+      .limit(1);
+    return (rows[0] as NotificationType) ?? null;
+  }
+
+  /**
+   * True when the user already has a delivery today for this type whose
+   * data_payload contains the given entity field/id (UTC calendar day).
+   */
+  async hasDeliveryToday(
+    userId: number,
+    typeCode: string,
+    entityKey: 'schedule_id' | 'membership_id' | 'payment_id',
+    entityId: number | string,
+    day: string,
+  ): Promise<boolean> {
+    const db = this.getDb() as any;
+    const dayStart = new Date(`${day}T00:00:00.000Z`);
+    const dayEnd = new Date(`${day}T00:00:00.000Z`);
+    dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
+    const entityIdStr = String(entityId);
+    // entityKey is a closed union — safe to embed as a JSON path literal.
+    const jsonPath = sql.raw(`'$.${entityKey}'`);
+
+    const rows = await db
+      .select({ id: notificationDeliveries.id })
+      .from(notificationDeliveries)
+      .innerJoin(notifications, eq(notificationDeliveries.notification_id, notifications.id))
+      .innerJoin(
+        notificationTypes,
+        eq(notifications.notification_type_id, notificationTypes.id),
+      )
+      .where(
+        and(
+          eq(notificationDeliveries.user_id, userId),
+          eq(notificationTypes.type_code, typeCode),
+          gte(notifications.created_at, dayStart),
+          lt(notifications.created_at, dayEnd),
+          sql`CAST(JSON_UNQUOTE(JSON_EXTRACT(${notifications.data_payload}, ${jsonPath})) AS CHAR) = ${entityIdStr}`,
+        ),
+      )
+      .limit(1);
+
+    return rows.length > 0;
   }
 }

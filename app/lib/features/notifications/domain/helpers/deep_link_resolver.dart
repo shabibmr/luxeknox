@@ -25,6 +25,7 @@ String? resolveDeepLinkPath(DeepLinkTarget target) {
     'diet' || 'diets' || 'diet_plan' => Routes.memberHomeDietHistory,
     'notification' || 'notifications' => Routes.memberNotificationById(id),
     'member' || 'members' || 'person' || 'people' => Routes.adminMemberById(id),
+    'trainer' || 'trainers' => Routes.memberProfileTrainer,
     _ => null,
   };
 }

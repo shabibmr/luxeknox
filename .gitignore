@@ -31,6 +31,9 @@ coverage/
 .env.*.local
 !.env.example
 
+# Firebase Admin SDK private keys (never commit)
+*firebase-adminsdk*.json
+
 # Logs
 *.log
 npm-debug.log*
