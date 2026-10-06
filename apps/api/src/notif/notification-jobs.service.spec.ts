@@ -8,6 +8,7 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
   let membershipRepo: any;
   let scheduleRepo: any;
   let memberRepo: any;
+  let notificationRepo: any;
   let fakeDb: any;
 
   beforeEach(() => {
@@ -34,6 +35,9 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
     memberRepo = {
       findById: vi.fn(),
     };
+    notificationRepo = {
+      hasDeliveryToday: vi.fn().mockResolvedValue(false),
+    };
 
     jobsService = new NotificationJobsService(
       jobRunner,
@@ -41,6 +45,7 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
       membershipRepo as any,
       scheduleRepo as any,
       memberRepo as any,
+      notificationRepo as any,
     );
   });
 
@@ -142,5 +147,75 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
     const sent = await jobsService.runPaymentReminders();
     expect(sent).toBe(0);
     expect(notificationService.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('skips session reminder when a session_reminder delivery already exists today', async () => {
+    fakeDb.where.mockResolvedValue([
+      {
+        scheduleId: 12,
+        title: 'Pilates Class',
+        startTime: new Date(Date.now() + 3600000),
+        userId: 200,
+      },
+    ]);
+    notificationRepo.hasDeliveryToday.mockResolvedValue(true);
+
+    const sent = await jobsService.runSessionReminders();
+    expect(sent).toBe(0);
+    expect(notificationService.dispatch).not.toHaveBeenCalled();
+    expect(notificationRepo.hasDeliveryToday).toHaveBeenCalledWith(
+      200,
+      'session_reminder',
+      'schedule_id',
+      12,
+      expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    );
+  });
+
+  it('skips membership expiry reminder when already sent today for that membership', async () => {
+    fakeDb.where.mockResolvedValue([
+      {
+        membershipId: 1,
+        memberId: 10,
+        endDate: '2026-09-25',
+        userId: 100,
+      },
+    ]);
+    notificationRepo.hasDeliveryToday.mockResolvedValue(true);
+
+    const sent = await jobsService.runMembershipReminders();
+    expect(sent).toBe(0);
+    expect(notificationService.dispatch).not.toHaveBeenCalled();
+    expect(notificationRepo.hasDeliveryToday).toHaveBeenCalledWith(
+      100,
+      'membership_expiry',
+      'membership_id',
+      1,
+      expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    );
+  });
+
+  it('skips payment due reminder when already sent today for that payment', async () => {
+    fakeDb.where.mockResolvedValue([
+      {
+        paymentId: 44,
+        totalAmount: '150.00',
+        amountPaid: '0.00',
+        paymentDate: new Date('2026-10-01T00:00:00Z'),
+        userId: 100,
+      },
+    ]);
+    notificationRepo.hasDeliveryToday.mockResolvedValue(true);
+
+    const sent = await jobsService.runPaymentReminders();
+    expect(sent).toBe(0);
+    expect(notificationService.dispatch).not.toHaveBeenCalled();
+    expect(notificationRepo.hasDeliveryToday).toHaveBeenCalledWith(
+      100,
+      'payment_due',
+      'payment_id',
+      44,
+      expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    );
   });
 });
