@@ -24,6 +24,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
       return Right(healthInfoFromApi(health));
     } catch (e) {
       final failure = mapThrownToFailure(e);
+      // No health row yet: show an empty form; the first save creates it.
       if (failure is NotFoundFailure) {
         return Right(HealthInfo(id: 0, memberId: memberId));
       }
