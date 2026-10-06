@@ -12,11 +12,6 @@ void main() {
       // TODO
     });
 
-    // String gender
-    test('to test the property `gender`', () async {
-      // TODO
-    });
-
     // Date startDate
     test('to test the property `startDate`', () async {
       // TODO

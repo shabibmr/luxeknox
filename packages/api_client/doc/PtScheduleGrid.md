@@ -9,7 +9,6 @@ import 'package:api_client/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **memberId** | **int** |  | 
-**gender** | **String** |  | 
 **startDate** | [**Date**](Date.md) |  | 
 **endDate** | [**Date**](Date.md) |  | 
 **weekdays** | **BuiltList&lt;int&gt;** |  | 

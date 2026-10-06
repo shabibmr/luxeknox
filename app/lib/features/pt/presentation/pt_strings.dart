@@ -34,9 +34,9 @@ abstract final class PtStrings {
   static const pickDaysHint = 'Pick exactly the number of days this package includes.';
   static String daysChosen(int chosen, int total) => '$chosen of $total days chosen';
   static const gridHint =
-      'Only trainers of the member\'s gender are shown. A slot is free only if it is '
+      'All active trainers are shown. A slot is free only if it is '
       'open on every training day of the whole period.';
-  static const gridEmpty = 'No same-gender trainer has availability on these days.';
+  static const gridEmpty = 'No trainer has availability on these days.';
   static const free = 'Free';
   static const occupied = 'Occupied';
   static const unavailable = 'Unavailable';

@@ -49,6 +49,7 @@ void main() {
         firstName: 'Ada',
         lastName: 'Lovelace',
         email: 'ada@example.com',
+        gender: 'female',
         password: 'secret1',
       ),
     );
@@ -71,6 +72,7 @@ void main() {
         firstName: 'Ada',
         lastName: 'Lovelace',
         email: 'ada@example.com',
+        gender: 'female',
         password: 'secret1',
       ),
     );
@@ -92,6 +94,7 @@ void main() {
         firstName: 'Ada',
         lastName: 'Lovelace',
         email: 'ada@example.com',
+        gender: 'female',
         password: 'secret1',
       ),
     );

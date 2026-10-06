@@ -11,6 +11,7 @@ class NewEmployeeInput extends Equatable {
     this.jobTitle = '',
     this.department,
     this.hireDate,
+    this.gender,
     required this.roleId,
   });
 
@@ -22,13 +23,15 @@ class NewEmployeeInput extends Equatable {
   final String jobTitle;
   final String? department;
   final DateTime? hireDate;
+  final String? gender;
   final int roleId;
 
   bool get hasBasicInfo =>
       firstName.trim().isNotEmpty &&
       lastName.trim().isNotEmpty &&
       email.trim().isNotEmpty &&
-      jobTitle.trim().isNotEmpty;
+      jobTitle.trim().isNotEmpty &&
+      (gender?.trim().isNotEmpty ?? false);
 
   NewEmployeeInput copyWith({
     String? firstName,
@@ -39,6 +42,7 @@ class NewEmployeeInput extends Equatable {
     String? jobTitle,
     String? department,
     DateTime? hireDate,
+    String? gender,
     int? roleId,
   }) {
     return NewEmployeeInput(
@@ -50,6 +54,7 @@ class NewEmployeeInput extends Equatable {
       jobTitle: jobTitle ?? this.jobTitle,
       department: department ?? this.department,
       hireDate: hireDate ?? this.hireDate,
+      gender: gender ?? this.gender,
       roleId: roleId ?? this.roleId,
     );
   }
@@ -64,6 +69,7 @@ class NewEmployeeInput extends Equatable {
     jobTitle,
     department,
     hireDate,
+    gender,
     roleId,
   ];
 }

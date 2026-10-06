@@ -42,8 +42,7 @@ class PtScheduleGridView extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'No active ${grid.gender} trainers are currently available in the gym. '
-                'Personal training requires trainers to be the same gender as the member (${grid.gender}).',
+                'No active trainers are currently available in the gym.',
                 style: theme.textTheme.bodyMedium,
               ),
             ],

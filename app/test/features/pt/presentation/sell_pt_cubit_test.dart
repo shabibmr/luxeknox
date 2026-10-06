@@ -50,7 +50,6 @@ void main() {
   const cash = PaymentMethod(id: '1', methodName: 'Cash', isDigital: false, isActive: true);
 
   final grid = PtScheduleGrid(
-    gender: 'female',
     startDate: DateTime(2026, 10, 5),
     endDate: DateTime(2026, 11, 2),
     weekdays: const [1, 3, 5],

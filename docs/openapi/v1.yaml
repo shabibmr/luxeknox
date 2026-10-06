@@ -1889,10 +1889,10 @@ paths:
   /pt/schedule-grid:
     get:
       operationId: getPtScheduleGrid
-      summary: Hours × same-gender trainers occupancy for a PT package, start date and weekdays
+      summary: Hours × active trainers occupancy for a PT package, start date and weekdays
       description: >
         A cell is `free` only when the hour is inside the trainer's availability and clash-free on
-        every occurrence date of the PT period. Only trainers of the member's gender are listed.
+        every occurrence date of the PT period. All active trainers are listed.
       tags: [PT]
       x-status: mvp
       x-parity: required
@@ -2017,7 +2017,7 @@ paths:
       - $ref: "#/components/parameters/Id"
     post:
       operationId: reassignPtTrainer
-      summary: Move remaining PT sessions to another same-gender trainer
+      summary: Move remaining PT sessions to another active trainer
       tags: [PT]
       x-status: mvp
       x-parity: required
@@ -6903,7 +6903,7 @@ components:
           $ref: "#/components/schemas/User"
     MemberCreate:
       type: object
-      required: [first_name, last_name, password]
+      required: [first_name, last_name, password, gender]
       description: >
         Supply email or phone_number (at least one identifier) plus password for
         login creation (FR-AUTH-008). Profile fields create the members row in the
@@ -7037,7 +7037,7 @@ components:
           type: integer
     TrainerCreate:
       type: object
-      required: [first_name, last_name, email]
+      required: [first_name, last_name, email, gender]
       properties:
         email:
           type: string
@@ -7110,6 +7110,10 @@ components:
           type: string
         last_name:
           type: string
+        gender:
+          type: string
+          nullable: true
+          description: Male or female. Null only for employees created before gender was required.
         job_title:
           type: string
         department:
@@ -7123,7 +7127,7 @@ components:
           $ref: "#/components/schemas/Id"
     EmployeeCreate:
       type: object
-      required: [email, first_name, last_name, job_title]
+      required: [email, first_name, last_name, job_title, gender]
       properties:
         email:
           type: string
@@ -7135,6 +7139,9 @@ components:
           type: string
         last_name:
           type: string
+        gender:
+          type: string
+          enum: [male, female]
         job_title:
           type: string
         department:
@@ -7703,7 +7710,7 @@ components:
         trainer_id:
           type: integer
           format: int64
-          description: Optionally move to another same-gender trainer in the same re-plan.
+          description: Optionally move to another active trainer in the same re-plan.
         effective_date:
           type: string
           format: date
@@ -7738,13 +7745,10 @@ components:
           type: string
     PtScheduleGrid:
       type: object
-      required: [member_id, gender, start_date, end_date, weekdays, hours, trainers, cells]
+      required: [member_id, start_date, end_date, weekdays, hours, trainers, cells]
       properties:
         member_id:
           $ref: "#/components/schemas/Id"
-        gender:
-          type: string
-          enum: [male, female]
         start_date:
           type: string
           format: date

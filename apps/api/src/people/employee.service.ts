@@ -71,6 +71,7 @@ export class EmployeeService {
       profile: {
         first_name: dto.first_name,
         last_name: dto.last_name,
+        gender: dto.gender,
         job_title: dto.job_title,
         department: dto.department,
         hire_date: dto.hire_date,
@@ -123,6 +124,7 @@ export class EmployeeService {
     if (dto.hire_date !== undefined) patch.hire_date = dto.hire_date;
     if (dto.first_name !== undefined) patch.first_name = dto.first_name;
     if (dto.last_name !== undefined) patch.last_name = dto.last_name;
+    if (dto.gender !== undefined) patch.gender = dto.gender;
 
     await this.repository.updateEmployee(id, patch);
 

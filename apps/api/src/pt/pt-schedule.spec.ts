@@ -3,7 +3,6 @@ import {
   addDays,
   coversHour,
   enumerateOccurrenceDates,
-  normalizeGender,
   normalizeSlotStart,
   recurringHoursForWeekday,
   slotLabel,
@@ -20,13 +19,6 @@ const recurring = (day: number, start: string, end: string): AvailabilityRow => 
 });
 
 describe('pt-schedule helpers', () => {
-  it('normalises free-text gender and rejects unknown values', () => {
-    expect(normalizeGender(' Male ')).toBe('male');
-    expect(normalizeGender('F')).toBe('female');
-    expect(normalizeGender('other')).toBeNull();
-    expect(normalizeGender(null)).toBeNull();
-  });
-
   it('enumerates only the chosen weekdays across the range (inclusive)', () => {
     // 2026-10-05 is a Monday.
     const dates = enumerateOccurrenceDates('2026-10-05', addDays('2026-10-05', 13), [1, 3, 5]);

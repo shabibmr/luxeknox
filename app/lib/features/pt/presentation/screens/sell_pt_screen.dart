@@ -141,8 +141,6 @@ class _Form extends StatelessWidget {
     final theme = Theme.of(context);
     final product = state.product;
     final displayName = state.memberName ?? state.member?.fullName ?? 'Member #${state.memberId}';
-    final hasNoGender = state.member != null &&
-        (state.member!.gender == null || state.member!.gender!.trim().isEmpty);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -178,46 +176,10 @@ class _Form extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (hasNoGender)
-                  TextButton.icon(
-                    icon: const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 18),
-                    label: const Text('Set Gender', style: TextStyle(color: Colors.orange)),
-                    onPressed: () => context.push(Routes.adminMembersEditById(state.memberId)),
-                  ),
               ],
             ),
           ),
         ),
-        if (hasNoGender)
-          Card(
-            color: theme.colorScheme.errorContainer,
-            margin: const EdgeInsets.only(bottom: 16),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Icon(Icons.error_outline, color: theme.colorScheme.onErrorContainer),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Member gender must be set to Male or Female before assigning personal training. Trainers are matched by gender.',
-                      style: TextStyle(color: theme.colorScheme.onErrorContainer),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => context.push(Routes.adminMembersEditById(state.memberId)),
-                    child: Text(
-                      'Edit Profile',
-                      style: TextStyle(
-                        color: theme.colorScheme.onErrorContainer,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
 
         // 1. Package & start/effective date
         Text(PtStrings.stepPackage, style: theme.textTheme.titleMedium),

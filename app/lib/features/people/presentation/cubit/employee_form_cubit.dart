@@ -189,6 +189,7 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
               jobTitle: employee.jobTitle,
               department: employee.department,
               hireDate: employee.hireDate,
+              gender: employee.gender,
             ),
             initialLoading: false,
           ),
@@ -264,6 +265,7 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
               jobTitle: employee.jobTitle,
               department: employee.department,
               hireDate: employee.hireDate,
+              gender: employee.gender,
             ),
           ),
         );
@@ -327,6 +329,7 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
               jobTitle: employee.jobTitle,
               department: employee.department,
               hireDate: employee.hireDate,
+              gender: employee.gender,
             ),
           ),
         );
@@ -392,6 +395,9 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
     if (input.jobTitle.trim().isEmpty) {
       return PeopleStrings.jobTitleRequired;
     }
+    if ((input.gender?.trim() ?? '').isEmpty) {
+      return PeopleStrings.genderRequired;
+    }
     return null;
   }
 
@@ -399,6 +405,9 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
     final title = input.jobTitle?.trim() ?? '';
     if (title.isEmpty) {
       return PeopleStrings.jobTitleRequired;
+    }
+    if ((input.gender?.trim() ?? '').isEmpty) {
+      return PeopleStrings.genderRequired;
     }
     return null;
   }

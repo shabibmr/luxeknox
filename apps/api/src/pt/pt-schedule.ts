@@ -7,21 +7,6 @@ import { parseTimeToMinutes } from '../sched/slot-calculation';
 
 export const PT_SLOT_MINUTES = 60;
 
-export type Gender = 'male' | 'female';
-
-/**
- * Member/trainer gender is free text (VARCHAR) — normalise before comparing so
- * "Male", " male ", "M" all match. Anything unrecognised returns null, which the
- * hard same-gender rule treats as "cannot assign".
- */
-export function normalizeGender(value: string | null | undefined): Gender | null {
-  if (value == null) return null;
-  const v = value.trim().toLowerCase();
-  if (v === 'male' || v === 'm' || v === 'man') return 'male';
-  if (v === 'female' || v === 'f' || v === 'woman') return 'female';
-  return null;
-}
-
 export function addDays(isoDate: string, days: number): string {
   const d = new Date(`${isoDate}T00:00:00.000Z`);
   d.setUTCDate(d.getUTCDate() + days);

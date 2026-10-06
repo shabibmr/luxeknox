@@ -302,6 +302,12 @@ class _EditProfileFormState extends State<_EditProfileForm> {
           onPressed: widget.isSaving
               ? null
               : () {
+                  if ((_gender ?? '').trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text(PeopleStrings.genderRequired)),
+                    );
+                    return;
+                  }
                   context.read<EditProfileCubit>().save(
                     person.copyWith(
                       firstName: _firstNameController.text.trim(),

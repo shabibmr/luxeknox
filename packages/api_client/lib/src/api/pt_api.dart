@@ -397,8 +397,8 @@ class PTApi {
     );
   }
 
-  /// Hours × same-gender trainers occupancy for a PT package, start date and weekdays
-  /// A cell is &#x60;free&#x60; only when the hour is inside the trainer&#39;s availability and clash-free on every occurrence date of the PT period. Only trainers of the member&#39;s gender are listed. 
+  /// Hours × active trainers occupancy for a PT package, start date and weekdays
+  /// A cell is &#x60;free&#x60; only when the hour is inside the trainer&#39;s availability and clash-free on every occurrence date of the PT period. All active trainers are listed. 
   ///
   /// Parameters:
   /// * [memberId] 
@@ -769,7 +769,7 @@ class PTApi {
     );
   }
 
-  /// Move remaining PT sessions to another same-gender trainer
+  /// Move remaining PT sessions to another active trainer
   /// 
   ///
   /// Parameters:

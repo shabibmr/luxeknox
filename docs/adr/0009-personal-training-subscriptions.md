@@ -12,12 +12,11 @@
 
 The gym sells Personal Training (PT) as an add-on for members whose membership has not
 expired. A trainer is assigned for the whole PT period at a fixed hour on fixed weekdays.
-That trainer-hour must show as occupied to everyone else for the whole period. The trainer
-and member must be of the same gender. The trainer then works on the member's goals,
+That trainer-hour must show as occupied to everyone else for the whole period. Any active
+trainer can take any member. The trainer then works on the member's goals,
 workout plans and diet plans.
 
-The old model kept a session counter on the membership. It had no trainer, no slot and no
-gender rule, and it could not block a trainer's hour for weeks at a time.
+The old model kept a session counter on the membership. It had no trainer and no slot, and it could not block a trainer's hour for weeks at a time.
 
 ## Decision
 
@@ -33,8 +32,9 @@ gender rule, and it could not block a trainer's hour for weeks at a time.
    A trainer-hour is **free** only if it falls inside the trainer's `trainer_availabilities`
    and has no clash on *every* PT date. Sales lock the trainer row (`SELECT … FOR UPDATE`)
    and re-check before inserting.
-4. **Hard same-gender rule.** Genders are normalised from the free-text columns. A missing
-   or unknown gender blocks the sale, and there is no override.
+4. **No gender rule.** Member and trainer gender do not restrict PT. Trainers are listed
+   regardless of gender, and a missing gender does not block a sale. *(Amended: the
+   original same-gender rule was removed. Trainer and member gender are no longer checked.)*
 5. **Membership gate.** A sale needs an `active` membership whose end date has not passed.
    PT may run beyond the membership end date.
 6. **Payment gate.** A sale or renewal only goes through when payment activates it (paid,

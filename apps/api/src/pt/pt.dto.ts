@@ -109,7 +109,7 @@ export const ptChangeSlotSchema = z
   .object({
     weekdays,
     slot_start: hourSlot,
-    /** Optionally move to another (same-gender) trainer in the same re-plan. */
+    /** Optionally move to another active trainer in the same re-plan. */
     trainer_id: z.number().int().positive().optional(),
     effective_date: isoDate,
     reason: z.string().trim().max(500).optional(),

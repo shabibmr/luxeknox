@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BadRequestError,
-  BusinessRuleError,
   ConflictError,
 } from '../platform/errors/app-error';
 import { PtScheduleService } from './pt-schedule.service';
@@ -214,14 +213,13 @@ describe('PT subscriptions', () => {
       expect(payment.id).toBe(555);
     });
 
-    it('hard-blocks a trainer of a different gender', async () => {
-      await expect(purchase({ trainer_id: 8 })).rejects.toThrow(/same gender/);
-      expect(scheduleRepo.insertSchedule).not.toHaveBeenCalled();
+    it('allows a trainer of any gender', async () => {
+      await expect(purchase({ trainer_id: 8 })).resolves.toBeDefined();
     });
 
-    it('blocks when the member has no gender on file', async () => {
+    it('allows a member with no gender on file', async () => {
       memberRepo.findById.mockResolvedValue({ ...femaleMember, gender: null });
-      await expect(purchase()).rejects.toBeInstanceOf(BusinessRuleError);
+      await expect(purchase()).resolves.toBeDefined();
     });
 
     it('requires an active, unexpired membership', async () => {
@@ -297,7 +295,7 @@ describe('PT subscriptions', () => {
   });
 
   describe('schedule grid', () => {
-    it('lists only same-gender trainers and marks hours free/occupied/unavailable', async () => {
+    it('lists all active trainers and marks hours free/occupied/unavailable', async () => {
       scheduleRepo.findBusyForTrainer.mockResolvedValue([
         {
           id: 1,
@@ -315,8 +313,11 @@ describe('PT subscriptions', () => {
         weekdays: [1, 3, 5],
       });
 
-      expect(grid.gender).toBe('female');
-      expect(grid.trainers).toEqual([{ id: 7, name: 'Rina S' }]);
+      expect(grid).not.toHaveProperty('gender');
+      expect(grid.trainers).toEqual([
+        { id: 7, name: 'Rina S' },
+        { id: 8, name: 'Arun M' },
+      ]);
       expect(grid.hours).toEqual(['17:00:00', '18:00:00', '19:00:00']);
       const cell = (slot: string) => grid.cells.find((c) => c.slot_start === slot)!;
       expect(cell('17:00:00')).toMatchObject({ status: 'free', occupied_by: null });
@@ -500,10 +501,10 @@ describe('PT subscriptions', () => {
       ).rejects.toThrow(/3 session\(s\) per week/);
     });
 
-    it('refuses an opposite-gender trainer', async () => {
+    it('accepts a trainer of the opposite gender', async () => {
       await expect(
         service.reassignTrainer(900, { trainer_id: 8, effective_date: '2026-10-12' }, admin),
-      ).rejects.toThrow(/same gender/);
+      ).resolves.toBeDefined();
     });
 
     it('moves trainer and slot together in one re-plan', async () => {

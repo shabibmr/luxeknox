@@ -78,6 +78,7 @@ void main() {
           ..email = 'fallback@example.com'
           ..firstName = 'F'
           ..lastName = 'L'
+          ..gender = 'male'
           ..jobTitle = 'Desk'
           ..roleId = 1,
       ),
@@ -145,6 +146,7 @@ void main() {
       firstName: 'Ed',
       lastName: 'Ford',
       email: 'ed@example.com',
+      gender: 'male',
       jobTitle: 'Front Desk',
       roleId: 3,
     );

@@ -16,10 +16,8 @@ import {
   addDays,
   coversHour,
   enumerateOccurrenceDates,
-  normalizeGender,
   PT_SLOT_MINUTES,
   recurringHoursForWeekday,
-  type Gender,
 } from './pt-schedule';
 import { PtSubscriptionRepository } from './pt-subscription.repository';
 
@@ -46,7 +44,6 @@ export type PtGridCell = {
 
 export type PtScheduleGrid = {
   member_id: number;
-  gender: Gender;
   start_date: string;
   end_date: string;
   weekdays: number[];
@@ -72,28 +69,18 @@ export class PtScheduleService {
     private readonly settingsService: SettingsService,
   ) {}
 
-  /** Gender of the member, or a 422 explaining why PT cannot be assigned. */
-  async requireMemberGender(memberId: number): Promise<Gender> {
+  /** Member must exist. */
+  async requireMember(memberId: number): Promise<void> {
     const member = await this.memberRepository.findById(memberId);
     if (!member) throw new NotFoundError('Member not found');
-    const gender = normalizeGender(member.gender);
-    if (!gender) {
-      throw new BusinessRuleError(
-        'Member gender must be set to Male or Female before assigning a personal trainer',
-      );
-    }
-    return gender;
   }
 
-  /** Trainer must be active and the same gender as the member (hard rule, no override). */
-  async requireEligibleTrainer(trainerId: number, memberGender: Gender): Promise<Trainer> {
+  /** Trainer must exist and be active. */
+  async requireEligibleTrainer(trainerId: number): Promise<Trainer> {
     const trainer = await this.trainerRepository.findById(trainerId);
     if (!trainer) throw new NotFoundError('Trainer not found');
     if (!trainer.is_active) {
       throw new BusinessRuleError('Inactive trainers cannot take personal training');
-    }
-    if (normalizeGender(trainer.gender) !== memberGender) {
-      throw new BusinessRuleError('Trainer and member must be of the same gender');
     }
     return trainer;
   }
@@ -165,7 +152,7 @@ export class PtScheduleService {
   }
 
   async buildGrid(query: PtScheduleGridQueryDto): Promise<PtScheduleGrid> {
-    const gender = await this.requireMemberGender(query.member_id);
+    await this.requireMember(query.member_id);
     const product = await this.productRepository.findById(query.pt_product_id);
     if (!product) throw new NotFoundError('PT package not found');
 
@@ -189,9 +176,7 @@ export class PtScheduleService {
     const dates = enumerateOccurrenceDates(query.start_date, endDate, query.weekdays);
     const tz = await this.settingsService.getTimezone();
 
-    const trainers = (await this.trainerRepository.findAllActive()).filter(
-      (t) => normalizeGender(t.gender) === gender,
-    );
+    const trainers = await this.trainerRepository.findAllActive();
 
     const availabilityByTrainer = new Map<number, Awaited<ReturnType<TrainerAvailabilityRepository['findByTrainerId']>>>();
     const hourSet = new Set<number>();
@@ -249,7 +234,6 @@ export class PtScheduleService {
 
     return {
       member_id: query.member_id,
-      gender,
       start_date: query.start_date,
       end_date: endDate,
       weekdays: [...query.weekdays].sort((a, b) => a - b),

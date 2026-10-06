@@ -6,7 +6,7 @@ enum PtSubscriptionStatus { scheduled, active, completed, cancelled }
 /// member is active, read-only once it has ended (until renewed).
 enum TrainerAccess { full, readOnly }
 
-/// A member's PT: one same-gender trainer, a fixed recurring one-hour slot on
+/// A member's PT: one active trainer, a fixed recurring one-hour slot on
 /// [weekdays] (0=Sunday … 6=Saturday), for [startDate]–[endDate].
 class PtSubscription extends Equatable {
   const PtSubscription({

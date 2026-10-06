@@ -12,6 +12,7 @@ Name | Type | Description | Notes
 **userId** | **int** |  | 
 **firstName** | **String** |  | 
 **lastName** | **String** |  | 
+**gender** | **String** |  | [optional] 
 **jobTitle** | **String** |  | 
 **department** | **String** |  | [optional] 
 **hireDate** | [**Date**](Date.md) |  | [optional] 

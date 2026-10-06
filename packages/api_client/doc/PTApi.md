@@ -13,11 +13,11 @@ Method | HTTP request | Description
 [**createPtProduct**](PTApi.md#createptproduct) | **POST** /pt-products | Create a PT package
 [**getMemberPtSummary**](PTApi.md#getmemberptsummary) | **GET** /members/{id}/pt-subscriptions | Member&#39;s current PT, PT history, and the calling trainer&#39;s access level
 [**getPtProduct**](PTApi.md#getptproduct) | **GET** /pt-products/{id} | PT package detail
-[**getPtScheduleGrid**](PTApi.md#getptschedulegrid) | **GET** /pt/schedule-grid | Hours × same-gender trainers occupancy for a PT package, start date and weekdays
+[**getPtScheduleGrid**](PTApi.md#getptschedulegrid) | **GET** /pt/schedule-grid | Hours × active trainers occupancy for a PT package, start date and weekdays
 [**getPtSubscription**](PTApi.md#getptsubscription) | **GET** /pt-subscriptions/{id} | PT subscription detail
 [**listPtProducts**](PTApi.md#listptproducts) | **GET** /pt-products | Personal Training package catalog
 [**purchasePtSubscription**](PTApi.md#purchaseptsubscription) | **POST** /pt-subscriptions | Sell PT — assign trainer + fixed weekly slot, take payment, generate sessions
-[**reassignPtTrainer**](PTApi.md#reassignpttrainer) | **POST** /pt-subscriptions/{id}/reassign-trainer | Move remaining PT sessions to another same-gender trainer
+[**reassignPtTrainer**](PTApi.md#reassignpttrainer) | **POST** /pt-subscriptions/{id}/reassign-trainer | Move remaining PT sessions to another active trainer
 [**renewPtSubscription**](PTApi.md#renewptsubscription) | **POST** /pt-subscriptions/{id}/renew | Renew PT with the same trainer and slot
 [**updatePtProduct**](PTApi.md#updateptproduct) | **PATCH** /pt-products/{id} | Update or archive a PT package
 
@@ -191,9 +191,9 @@ Name | Type | Description  | Notes
 # **getPtScheduleGrid**
 > PtScheduleGrid getPtScheduleGrid(memberId, ptProductId, startDate, weekdays, excludeSubscriptionId)
 
-Hours × same-gender trainers occupancy for a PT package, start date and weekdays
+Hours × active trainers occupancy for a PT package, start date and weekdays
 
-A cell is `free` only when the hour is inside the trainer's availability and clash-free on every occurrence date of the PT period. Only trainers of the member's gender are listed. 
+A cell is `free` only when the hour is inside the trainer's availability and clash-free on every occurrence date of the PT period. All active trainers are listed. 
 
 ### Example
 ```dart
@@ -369,7 +369,7 @@ Name | Type | Description  | Notes
 # **reassignPtTrainer**
 > PtSubscription reassignPtTrainer(id, ptReassignTrainerRequest)
 
-Move remaining PT sessions to another same-gender trainer
+Move remaining PT sessions to another active trainer
 
 ### Example
 ```dart

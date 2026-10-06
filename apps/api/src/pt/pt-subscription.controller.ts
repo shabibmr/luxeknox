@@ -32,7 +32,7 @@ export class PtSubscriptionController {
   @RequirePermission('pt_subscriptions.create')
   @ApiOperation({
     operationId: 'getPtScheduleGrid',
-    summary: 'Hours × same-gender trainers occupancy for a PT package, start date and weekdays',
+    summary: 'Hours × active trainers occupancy for a PT package, start date and weekdays',
   })
   @ApiResponse({ status: 200, description: 'OK' })
   grid(@Query() rawQuery: Record<string, unknown>) {
@@ -51,7 +51,7 @@ export class PtSubscriptionController {
   })
   @ApiResponse({ status: 201, description: 'Created' })
   @ApiResponse({ status: 409, description: 'Slot not free for the whole period / member already has PT' })
-  @ApiResponse({ status: 422, description: 'Gender mismatch, membership expired, payment insufficient' })
+  @ApiResponse({ status: 422, description: 'Membership expired, payment insufficient' })
   purchase(
     @Body(new ZodValidationPipe(ptPurchaseSchema)) dto: PtPurchaseDto,
     @CurrentUser() actor: AuthenticatedUser,

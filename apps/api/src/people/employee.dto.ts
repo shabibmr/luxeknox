@@ -7,6 +7,7 @@ export const employeeCreateSchema = z.object({
   password: z.string().min(1, 'password is required').max(255),
   first_name: z.string().trim().min(1).max(100),
   last_name: z.string().trim().min(1).max(100),
+  gender: z.string().trim().min(1, 'gender is required').max(32),
   job_title: z.string().trim().min(1).max(150),
   department: z.string().trim().max(150).optional().nullable(),
   hire_date: z.string().trim().min(1).optional().nullable(),
@@ -23,6 +24,7 @@ export const employeeUpdateSchema = z
     hire_date: z.string().trim().min(1).optional().nullable(),
     first_name: z.string().trim().min(1).max(100).optional(),
     last_name: z.string().trim().min(1).max(100).optional(),
+    gender: z.string().trim().min(1, 'gender cannot be cleared').max(32).optional(),
   })
   .strict();
 

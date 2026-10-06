@@ -200,11 +200,11 @@ Class | Method | HTTP request | Description
 [*PTApi*](doc/PTApi.md) | [**createPtProduct**](doc/PTApi.md#createptproduct) | **POST** /pt-products | Create a PT package
 [*PTApi*](doc/PTApi.md) | [**getMemberPtSummary**](doc/PTApi.md#getmemberptsummary) | **GET** /members/{id}/pt-subscriptions | Member&#39;s current PT, PT history, and the calling trainer&#39;s access level
 [*PTApi*](doc/PTApi.md) | [**getPtProduct**](doc/PTApi.md#getptproduct) | **GET** /pt-products/{id} | PT package detail
-[*PTApi*](doc/PTApi.md) | [**getPtScheduleGrid**](doc/PTApi.md#getptschedulegrid) | **GET** /pt/schedule-grid | Hours × same-gender trainers occupancy for a PT package, start date and weekdays
+[*PTApi*](doc/PTApi.md) | [**getPtScheduleGrid**](doc/PTApi.md#getptschedulegrid) | **GET** /pt/schedule-grid | Hours × active trainers occupancy for a PT package, start date and weekdays
 [*PTApi*](doc/PTApi.md) | [**getPtSubscription**](doc/PTApi.md#getptsubscription) | **GET** /pt-subscriptions/{id} | PT subscription detail
 [*PTApi*](doc/PTApi.md) | [**listPtProducts**](doc/PTApi.md#listptproducts) | **GET** /pt-products | Personal Training package catalog
 [*PTApi*](doc/PTApi.md) | [**purchasePtSubscription**](doc/PTApi.md#purchaseptsubscription) | **POST** /pt-subscriptions | Sell PT — assign trainer + fixed weekly slot, take payment, generate sessions
-[*PTApi*](doc/PTApi.md) | [**reassignPtTrainer**](doc/PTApi.md#reassignpttrainer) | **POST** /pt-subscriptions/{id}/reassign-trainer | Move remaining PT sessions to another same-gender trainer
+[*PTApi*](doc/PTApi.md) | [**reassignPtTrainer**](doc/PTApi.md#reassignpttrainer) | **POST** /pt-subscriptions/{id}/reassign-trainer | Move remaining PT sessions to another active trainer
 [*PTApi*](doc/PTApi.md) | [**renewPtSubscription**](doc/PTApi.md#renewptsubscription) | **POST** /pt-subscriptions/{id}/renew | Renew PT with the same trainer and slot
 [*PTApi*](doc/PTApi.md) | [**updatePtProduct**](doc/PTApi.md#updateptproduct) | **PATCH** /pt-products/{id} | Update or archive a PT package
 [*RBACApi*](doc/RBACApi.md) | [**assignEmployeeRole**](doc/RBACApi.md#assignemployeerole) | **PUT** /employees/{id}/role | Assign exactly one role

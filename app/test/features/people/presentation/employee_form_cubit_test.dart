@@ -40,6 +40,7 @@ void main() {
     userId: 22,
     fullName: 'Ada Lovelace',
     jobTitle: 'Front desk',
+    gender: 'female',
     roleId: 3,
     email: 'ada@example.com',
     status: 'active',
@@ -111,6 +112,7 @@ void main() {
       (i) => i.copyWith(
         firstName: 'Ada',
         lastName: 'Lovelace',
+        gender: 'female',
         email: 'ada@example.com',
         password: 'secret1',
         jobTitle: 'Front desk',
@@ -136,6 +138,7 @@ void main() {
       (i) => i.copyWith(
         firstName: 'Ada',
         lastName: 'Lovelace',
+        gender: 'female',
         email: 'ada@example.com',
         password: 'secret1',
         jobTitle: 'Front desk',
@@ -160,6 +163,7 @@ void main() {
       (i) => i.copyWith(
         firstName: 'Ada',
         lastName: 'Lovelace',
+        gender: 'female',
         email: 'ada@example.com',
         password: 'secret1',
         jobTitle: 'Front desk',

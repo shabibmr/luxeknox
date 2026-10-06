@@ -14,6 +14,7 @@ part 'employee_update.g.dart';
 /// Properties:
 /// * [firstName] 
 /// * [lastName] 
+/// * [gender] 
 /// * [jobTitle] 
 /// * [department] 
 /// * [hireDate] 
@@ -24,6 +25,9 @@ abstract class EmployeeUpdate implements Built<EmployeeUpdate, EmployeeUpdateBui
 
   @BuiltValueField(wireName: r'last_name')
   String? get lastName;
+
+  @BuiltValueField(wireName: r'gender')
+  String? get gender;
 
   @BuiltValueField(wireName: r'job_title')
   String? get jobTitle;
@@ -68,6 +72,13 @@ class _$EmployeeUpdateSerializer implements PrimitiveSerializer<EmployeeUpdate> 
       yield r'last_name';
       yield serializers.serialize(
         object.lastName,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.gender != null) {
+      yield r'gender';
+      yield serializers.serialize(
+        object.gender,
         specifiedType: const FullType(String),
       );
     }
@@ -130,6 +141,14 @@ class _$EmployeeUpdateSerializer implements PrimitiveSerializer<EmployeeUpdate> 
           ) as String?;
           if (valueDes == null) continue;
           result.lastName = valueDes;
+          break;
+        case r'gender':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.gender = valueDes;
           break;
         case r'job_title':
           final valueDes = serializers.deserialize(

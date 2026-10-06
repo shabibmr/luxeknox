@@ -89,7 +89,7 @@ pie title Database Entities Distribution (56 Tables)
 
 * **Purpose**: Member-specific profile details.
 * **Supporting Screens**: Profile Screen, Edit Profile, Members Directory, Member Dossier.
-* **Key Attributes**: `id`, `user_id` (FK), `membership_number`, `first_name`, `last_name`, `gender`, `date_of_birth`, `address`, `assigned_trainer_id` (FK to trainers), `joined_date`, `notes`.
+* **Key Attributes**: `id`, `user_id` (FK), `membership_number`, `first_name`, `last_name`, `gender` (required on create and update), `date_of_birth`, `address`, `assigned_trainer_id` (FK to trainers), `joined_date`, `notes`.
 * **`membership_number`**: format `M` + 8 zero-padded digits (`M00000001`, …); unique and immutable after insert. Allocated via single-row `membership_number_counters` (`SELECT … FOR UPDATE` inside the person-create transaction).
 
 ### `membership_number_counters`
@@ -101,13 +101,13 @@ pie title Database Entities Distribution (56 Tables)
 
 * **Purpose**: Trainer qualifications and employment data. Avatar is `users.avatar_url`.
 * **Supporting Screens**: Trainer Profile, Staff Directory, My Trainer Screen.
-* **Key Attributes**: `id`, `user_id` (FK), `first_name`, `last_name`, `bio`, `specializations` (JSON/text), `hourly_rate`, `rating`, `max_clients_capacity`, `is_active`.
+* **Key Attributes**: `id`, `user_id` (FK), `first_name`, `last_name`, `gender` (required on create and update), `bio`, `specializations` (JSON/text), `hourly_rate`, `rating`, `max_clients_capacity`, `is_active`.
 
 ### `employees`
 
 * **Purpose**: Staff records for front desk, management, and maintenance. Emergency contacts use `emergency_contacts` via `user_id` (not a column here).
 * **Supporting Screens**: Staff Directory & Roles, Employee Profile.
-* **Key Attributes**: `id`, `user_id` (FK), `first_name`, `last_name`, `job_title`, `department`, `hire_date`, `status` (active, on_probation, suspended, terminated).
+* **Key Attributes**: `id`, `user_id` (FK), `first_name`, `last_name`, `gender` (required on create and update; nullable only for rows created before this field), `job_title`, `department`, `hire_date`, `status` (active, on_probation, suspended, terminated).
 
 ---
 

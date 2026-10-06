@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../domain/entities/new_member_input.dart';
+import '../people_strings.dart';
 import '../../domain/entities/person.dart';
 import '../../domain/usecases/create_member_usecase.dart';
 
@@ -59,6 +60,10 @@ class AddMemberWizardCubit extends Cubit<AddMemberWizardState> {
 
   void nextStep() {
     if (state.step >= AddMemberWizardState.stepCount - 1) return;
+    if (state.step == 0 && !_hasGender) {
+      emit(state.copyWith(error: PeopleStrings.genderRequired));
+      return;
+    }
     emit(state.copyWith(step: state.step + 1, clearError: true));
   }
 
@@ -67,7 +72,13 @@ class AddMemberWizardCubit extends Cubit<AddMemberWizardState> {
     emit(state.copyWith(step: state.step - 1, clearError: true));
   }
 
+  bool get _hasGender => (state.input.gender?.trim() ?? '').isNotEmpty;
+
   Future<void> submit() async {
+    if (!_hasGender) {
+      emit(state.copyWith(error: PeopleStrings.genderRequired));
+      return;
+    }
     emit(state.copyWith(submitting: true, clearError: true));
     final result = await _createMember(state.input);
     result.fold(

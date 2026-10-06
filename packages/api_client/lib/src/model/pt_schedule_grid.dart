@@ -16,7 +16,6 @@ part 'pt_schedule_grid.g.dart';
 ///
 /// Properties:
 /// * [memberId] 
-/// * [gender] 
 /// * [startDate] 
 /// * [endDate] 
 /// * [weekdays] 
@@ -27,10 +26,6 @@ part 'pt_schedule_grid.g.dart';
 abstract class PtScheduleGrid implements Built<PtScheduleGrid, PtScheduleGridBuilder> {
   @BuiltValueField(wireName: r'member_id')
   int get memberId;
-
-  @BuiltValueField(wireName: r'gender')
-  PtScheduleGridGenderEnum get gender;
-  // enum genderEnum {  male,  female,  };
 
   @BuiltValueField(wireName: r'start_date')
   Date get startDate;
@@ -77,11 +72,6 @@ class _$PtScheduleGridSerializer implements PrimitiveSerializer<PtScheduleGrid> 
     yield serializers.serialize(
       object.memberId,
       specifiedType: const FullType(int),
-    );
-    yield r'gender';
-    yield serializers.serialize(
-      object.gender,
-      specifiedType: const FullType(PtScheduleGridGenderEnum),
     );
     yield r'start_date';
     yield serializers.serialize(
@@ -142,13 +132,6 @@ class _$PtScheduleGridSerializer implements PrimitiveSerializer<PtScheduleGrid> 
             specifiedType: const FullType(int),
           ) as int;
           result.memberId = valueDes;
-          break;
-        case r'gender':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(PtScheduleGridGenderEnum),
-          ) as PtScheduleGridGenderEnum;
-          result.gender = valueDes;
           break;
         case r'start_date':
           final valueDes = serializers.deserialize(
@@ -219,21 +202,5 @@ class _$PtScheduleGridSerializer implements PrimitiveSerializer<PtScheduleGrid> 
     );
     return result.build();
   }
-}
-
-
-class PtScheduleGridGenderEnum extends EnumClass {
-
-  @BuiltValueEnumConst(wireName: r'male')
-  static const PtScheduleGridGenderEnum male = _$ptScheduleGridGenderEnum_male;
-  @BuiltValueEnumConst(wireName: r'female')
-  static const PtScheduleGridGenderEnum female = _$ptScheduleGridGenderEnum_female;
-
-  static Serializer<PtScheduleGridGenderEnum> get serializer => _$ptScheduleGridGenderEnumSerializer;
-
-  const PtScheduleGridGenderEnum._(String name): super(name);
-
-  static BuiltSet<PtScheduleGridGenderEnum> get values => _$ptScheduleGridGenderEnumValues;
-  static PtScheduleGridGenderEnum valueOf(String name) => _$ptScheduleGridGenderEnumValueOf(name);
 }
 

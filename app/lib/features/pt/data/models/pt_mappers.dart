@@ -67,7 +67,6 @@ extension MemberPtSummaryApiX on api.MemberPtSummary {
 
 extension PtScheduleGridApiX on api.PtScheduleGrid {
   PtScheduleGrid toDomain() => PtScheduleGrid(
-    gender: gender.name,
     startDate: apiDateToDateTime(startDate),
     endDate: apiDateToDateTime(endDate),
     weekdays: weekdays.toList(),

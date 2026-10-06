@@ -270,6 +270,12 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
           const SizedBox(height: 16),
           FilledButton(
             onPressed: () {
+              if ((_gender ?? '').trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text(PeopleStrings.genderRequired)),
+                );
+                return;
+              }
               context.read<EditTrainerProfileCubit>().save(
                 widget.profile.copyWith(
                   firstName: _firstName.text.trim(),

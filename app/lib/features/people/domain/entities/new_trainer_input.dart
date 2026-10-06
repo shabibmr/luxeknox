@@ -29,7 +29,8 @@ class NewTrainerInput extends Equatable {
   bool get hasBasicInfo =>
       firstName.trim().isNotEmpty &&
       lastName.trim().isNotEmpty &&
-      email.trim().isNotEmpty;
+      email.trim().isNotEmpty &&
+      (gender?.trim().isNotEmpty ?? false);
 
   NewTrainerInput copyWith({
     String? firstName,

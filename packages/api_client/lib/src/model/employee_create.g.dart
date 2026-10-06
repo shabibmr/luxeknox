@@ -18,6 +18,8 @@ class _$EmployeeCreate extends EmployeeCreate {
   @override
   final String lastName;
   @override
+  final String gender;
+  @override
   final String jobTitle;
   @override
   final String? department;
@@ -35,6 +37,7 @@ class _$EmployeeCreate extends EmployeeCreate {
       this.password,
       required this.firstName,
       required this.lastName,
+      required this.gender,
       required this.jobTitle,
       this.department,
       this.hireDate,
@@ -56,6 +59,7 @@ class _$EmployeeCreate extends EmployeeCreate {
         password == other.password &&
         firstName == other.firstName &&
         lastName == other.lastName &&
+        gender == other.gender &&
         jobTitle == other.jobTitle &&
         department == other.department &&
         hireDate == other.hireDate &&
@@ -70,6 +74,7 @@ class _$EmployeeCreate extends EmployeeCreate {
     _$hash = $jc(_$hash, password.hashCode);
     _$hash = $jc(_$hash, firstName.hashCode);
     _$hash = $jc(_$hash, lastName.hashCode);
+    _$hash = $jc(_$hash, gender.hashCode);
     _$hash = $jc(_$hash, jobTitle.hashCode);
     _$hash = $jc(_$hash, department.hashCode);
     _$hash = $jc(_$hash, hireDate.hashCode);
@@ -86,6 +91,7 @@ class _$EmployeeCreate extends EmployeeCreate {
           ..add('password', password)
           ..add('firstName', firstName)
           ..add('lastName', lastName)
+          ..add('gender', gender)
           ..add('jobTitle', jobTitle)
           ..add('department', department)
           ..add('hireDate', hireDate)
@@ -118,6 +124,10 @@ class EmployeeCreateBuilder
   String? get lastName => _$this._lastName;
   set lastName(String? lastName) => _$this._lastName = lastName;
 
+  String? _gender;
+  String? get gender => _$this._gender;
+  set gender(String? gender) => _$this._gender = gender;
+
   String? _jobTitle;
   String? get jobTitle => _$this._jobTitle;
   set jobTitle(String? jobTitle) => _$this._jobTitle = jobTitle;
@@ -146,6 +156,7 @@ class EmployeeCreateBuilder
       _password = $v.password;
       _firstName = $v.firstName;
       _lastName = $v.lastName;
+      _gender = $v.gender;
       _jobTitle = $v.jobTitle;
       _department = $v.department;
       _hireDate = $v.hireDate;
@@ -179,6 +190,8 @@ class EmployeeCreateBuilder
               firstName, r'EmployeeCreate', 'firstName'),
           lastName: BuiltValueNullFieldError.checkNotNull(
               lastName, r'EmployeeCreate', 'lastName'),
+          gender: BuiltValueNullFieldError.checkNotNull(
+              gender, r'EmployeeCreate', 'gender'),
           jobTitle: BuiltValueNullFieldError.checkNotNull(
               jobTitle, r'EmployeeCreate', 'jobTitle'),
           department: department,

@@ -59,6 +59,7 @@ export interface TrainerProfileInput {
 export interface EmployeeProfileInput {
   first_name: string;
   last_name: string;
+  gender?: string | null;
   job_title: string;
   department?: string | null;
   hire_date?: string | null;
@@ -234,6 +235,7 @@ export class PersonFactory {
         user_id: userId,
         first_name: input.profile.first_name,
         last_name: input.profile.last_name,
+        gender: input.profile.gender ?? null,
         job_title: input.profile.job_title,
         department: input.profile.department ?? null,
         hire_date: input.profile.hire_date ?? null,

@@ -13,6 +13,7 @@ Name | Type | Description | Notes
 **password** | **String** |  | [optional] 
 **firstName** | **String** |  | 
 **lastName** | **String** |  | 
+**gender** | **String** |  | 
 **jobTitle** | **String** |  | 
 **department** | **String** |  | [optional] 
 **hireDate** | [**Date**](Date.md) |  | [optional] 

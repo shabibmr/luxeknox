@@ -12,6 +12,8 @@ class _$EmployeeUpdate extends EmployeeUpdate {
   @override
   final String? lastName;
   @override
+  final String? gender;
+  @override
   final String? jobTitle;
   @override
   final String? department;
@@ -24,6 +26,7 @@ class _$EmployeeUpdate extends EmployeeUpdate {
   _$EmployeeUpdate._(
       {this.firstName,
       this.lastName,
+      this.gender,
       this.jobTitle,
       this.department,
       this.hireDate})
@@ -41,6 +44,7 @@ class _$EmployeeUpdate extends EmployeeUpdate {
     return other is EmployeeUpdate &&
         firstName == other.firstName &&
         lastName == other.lastName &&
+        gender == other.gender &&
         jobTitle == other.jobTitle &&
         department == other.department &&
         hireDate == other.hireDate;
@@ -51,6 +55,7 @@ class _$EmployeeUpdate extends EmployeeUpdate {
     var _$hash = 0;
     _$hash = $jc(_$hash, firstName.hashCode);
     _$hash = $jc(_$hash, lastName.hashCode);
+    _$hash = $jc(_$hash, gender.hashCode);
     _$hash = $jc(_$hash, jobTitle.hashCode);
     _$hash = $jc(_$hash, department.hashCode);
     _$hash = $jc(_$hash, hireDate.hashCode);
@@ -63,6 +68,7 @@ class _$EmployeeUpdate extends EmployeeUpdate {
     return (newBuiltValueToStringHelper(r'EmployeeUpdate')
           ..add('firstName', firstName)
           ..add('lastName', lastName)
+          ..add('gender', gender)
           ..add('jobTitle', jobTitle)
           ..add('department', department)
           ..add('hireDate', hireDate))
@@ -81,6 +87,10 @@ class EmployeeUpdateBuilder
   String? _lastName;
   String? get lastName => _$this._lastName;
   set lastName(String? lastName) => _$this._lastName = lastName;
+
+  String? _gender;
+  String? get gender => _$this._gender;
+  set gender(String? gender) => _$this._gender = gender;
 
   String? _jobTitle;
   String? get jobTitle => _$this._jobTitle;
@@ -103,6 +113,7 @@ class EmployeeUpdateBuilder
     if ($v != null) {
       _firstName = $v.firstName;
       _lastName = $v.lastName;
+      _gender = $v.gender;
       _jobTitle = $v.jobTitle;
       _department = $v.department;
       _hireDate = $v.hireDate;
@@ -129,6 +140,7 @@ class EmployeeUpdateBuilder
         _$EmployeeUpdate._(
           firstName: firstName,
           lastName: lastName,
+          gender: gender,
           jobTitle: jobTitle,
           department: department,
           hireDate: hireDate,

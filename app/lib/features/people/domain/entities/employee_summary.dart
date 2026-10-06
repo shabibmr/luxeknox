@@ -8,6 +8,7 @@ class EmployeeSummary extends Equatable {
     required this.fullName,
     required this.jobTitle,
     this.department,
+    this.gender,
     this.status,
     this.roleId,
     this.email,
@@ -20,6 +21,7 @@ class EmployeeSummary extends Equatable {
   final String fullName;
   final String jobTitle;
   final String? department;
+  final String? gender;
   final String? status;
   final int? roleId;
   final String? email;
@@ -33,6 +35,7 @@ class EmployeeSummary extends Equatable {
     fullName,
     jobTitle,
     department,
+    gender,
     status,
     roleId,
     email,

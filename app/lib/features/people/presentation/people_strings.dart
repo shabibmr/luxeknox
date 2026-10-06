@@ -92,6 +92,7 @@ abstract final class PeopleStrings {
   static const gender = 'Gender';
   static const genderMale = 'Male';
   static const genderFemale = 'Female';
+  static const genderRequired = 'Gender is required. Select Male or Female.';
   static const dateOfBirth = 'Date of birth';
   static const address = 'Address';
   static const changeAvatar = 'Change avatar';

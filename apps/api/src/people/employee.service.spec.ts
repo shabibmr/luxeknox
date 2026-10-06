@@ -38,6 +38,7 @@ describe('EmployeeService.setStatus', () => {
     user_id: 70,
     first_name: 'Desk',
     last_name: 'Staff',
+    gender: 'male',
     job_title: 'Front desk',
     department: 'ops',
     hire_date: '2026-01-01',

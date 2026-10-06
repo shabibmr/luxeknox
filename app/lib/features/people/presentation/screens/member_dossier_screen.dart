@@ -271,6 +271,12 @@ class _DossierContentState extends State<_DossierContent> {
           const SizedBox(height: 12),
           FilledButton(
             onPressed: () {
+              if ((_gender ?? '').trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text(PeopleStrings.genderRequired)),
+                );
+                return;
+              }
               context.read<MemberDossierCubit>().save(
                 person.copyWith(
                   firstName: _firstNameController.text.trim(),

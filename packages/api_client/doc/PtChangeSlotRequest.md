@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **weekdays** | **BuiltList&lt;int&gt;** |  | 
 **slotStart** | **String** |  | 
-**trainerId** | **int** | Optionally move to another same-gender trainer in the same re-plan. | [optional] 
+**trainerId** | **int** | Optionally move to another active trainer in the same re-plan. | [optional] 
 **effectiveDate** | [**Date**](Date.md) |  | 
 **reason** | **String** |  | [optional] 
 

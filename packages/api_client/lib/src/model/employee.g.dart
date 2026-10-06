@@ -16,6 +16,8 @@ class _$Employee extends Employee {
   @override
   final String lastName;
   @override
+  final String? gender;
+  @override
   final String jobTitle;
   @override
   final String? department;
@@ -34,6 +36,7 @@ class _$Employee extends Employee {
       required this.userId,
       required this.firstName,
       required this.lastName,
+      this.gender,
       required this.jobTitle,
       this.department,
       this.hireDate,
@@ -55,6 +58,7 @@ class _$Employee extends Employee {
         userId == other.userId &&
         firstName == other.firstName &&
         lastName == other.lastName &&
+        gender == other.gender &&
         jobTitle == other.jobTitle &&
         department == other.department &&
         hireDate == other.hireDate &&
@@ -69,6 +73,7 @@ class _$Employee extends Employee {
     _$hash = $jc(_$hash, userId.hashCode);
     _$hash = $jc(_$hash, firstName.hashCode);
     _$hash = $jc(_$hash, lastName.hashCode);
+    _$hash = $jc(_$hash, gender.hashCode);
     _$hash = $jc(_$hash, jobTitle.hashCode);
     _$hash = $jc(_$hash, department.hashCode);
     _$hash = $jc(_$hash, hireDate.hashCode);
@@ -85,6 +90,7 @@ class _$Employee extends Employee {
           ..add('userId', userId)
           ..add('firstName', firstName)
           ..add('lastName', lastName)
+          ..add('gender', gender)
           ..add('jobTitle', jobTitle)
           ..add('department', department)
           ..add('hireDate', hireDate)
@@ -112,6 +118,10 @@ class EmployeeBuilder implements Builder<Employee, EmployeeBuilder> {
   String? _lastName;
   String? get lastName => _$this._lastName;
   set lastName(String? lastName) => _$this._lastName = lastName;
+
+  String? _gender;
+  String? get gender => _$this._gender;
+  set gender(String? gender) => _$this._gender = gender;
 
   String? _jobTitle;
   String? get jobTitle => _$this._jobTitle;
@@ -144,6 +154,7 @@ class EmployeeBuilder implements Builder<Employee, EmployeeBuilder> {
       _userId = $v.userId;
       _firstName = $v.firstName;
       _lastName = $v.lastName;
+      _gender = $v.gender;
       _jobTitle = $v.jobTitle;
       _department = $v.department;
       _hireDate = $v.hireDate;
@@ -177,6 +188,7 @@ class EmployeeBuilder implements Builder<Employee, EmployeeBuilder> {
               firstName, r'Employee', 'firstName'),
           lastName: BuiltValueNullFieldError.checkNotNull(
               lastName, r'Employee', 'lastName'),
+          gender: gender,
           jobTitle: BuiltValueNullFieldError.checkNotNull(
               jobTitle, r'Employee', 'jobTitle'),
           department: department,

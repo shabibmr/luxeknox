@@ -116,8 +116,8 @@ export class PtSubscriptionService {
   ): Promise<{ subscription: PtSubscriptionView; payment: PaymentDto }> {
     const product = await this.requireActiveProduct(dto.pt_product_id);
     this.assertWeekdayCount(product, dto.weekdays);
-    const gender = await this.scheduleService.requireMemberGender(dto.member_id);
-    await this.scheduleService.requireEligibleTrainer(dto.trainer_id, gender);
+    await this.scheduleService.requireMember(dto.member_id);
+    await this.scheduleService.requireEligibleTrainer(dto.trainer_id);
 
     const today = await this.today();
     if (dto.start_date < today) {
@@ -169,8 +169,7 @@ export class PtSubscriptionService {
         'The selected package has a different number of sessions per week; sell a new PT and pick a new slot instead',
       );
     }
-    const gender = await this.scheduleService.requireMemberGender(current.member_id);
-    await this.scheduleService.requireEligibleTrainer(current.trainer_id, gender);
+    await this.scheduleService.requireEligibleTrainer(current.trainer_id);
 
     const today = await this.today();
     const membershipId = await this.requireActiveMembership(current.member_id, today);
@@ -210,8 +209,7 @@ export class PtSubscriptionService {
     if (dto.trainer_id === oldTrainerId) {
       throw new BadRequestError('Member is already with this trainer');
     }
-    const gender = await this.scheduleService.requireMemberGender(sub.member_id);
-    await this.scheduleService.requireEligibleTrainer(dto.trainer_id, gender);
+    await this.scheduleService.requireEligibleTrainer(dto.trainer_id);
 
     return this.replan({
       sub,
@@ -238,8 +236,7 @@ export class PtSubscriptionService {
     const oldTrainerId = this.trainerOn(sub, await this.repository.listChanges(sub.id), effective);
     const trainerId = dto.trainer_id ?? oldTrainerId;
     if (trainerId !== oldTrainerId) {
-      const gender = await this.scheduleService.requireMemberGender(sub.member_id);
-      await this.scheduleService.requireEligibleTrainer(trainerId, gender);
+      await this.scheduleService.requireEligibleTrainer(trainerId);
     }
 
     return this.replan({

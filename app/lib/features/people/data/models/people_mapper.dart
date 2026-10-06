@@ -185,6 +185,7 @@ EmployeeSummary employeeSummaryFromApi(api.Employee employee) {
     fullName: name.isNotEmpty ? name : 'Employee #${employee.id}',
     jobTitle: employee.jobTitle,
     department: employee.department,
+    gender: employee.gender,
     status: _apiEmployeeStatusWire(employee.status),
     roleId: employee.roleId,
     hireDate: _apiDateToDateTime(employee.hireDate),
@@ -225,6 +226,7 @@ EmployeeSummary employeeSummaryFromJson(Map<String, dynamic> json) {
     fullName: name.isNotEmpty ? name : (email ?? 'Employee #$id'),
     jobTitle: (json['job_title'] as String?) ?? '',
     department: json['department'] as String?,
+    gender: json['gender'] as String?,
     status: json['status'] as String?,
     roleId: (json['role_id'] as num?)?.toInt(),
     email: email,
@@ -261,6 +263,7 @@ Map<String, dynamic> employeeCreateBodyFromInput(NewEmployeeInput input) {
     'password': input.password,
     'first_name': input.firstName,
     'last_name': input.lastName,
+    'gender': input.gender,
     'job_title': input.jobTitle,
     'department': input.department,
     'hire_date': _dateTimeToWireDate(input.hireDate),
@@ -273,6 +276,7 @@ Map<String, dynamic> employeeCreateBodyFromInput(NewEmployeeInput input) {
 Map<String, dynamic> employeeUpdateBodyFromInput(EmployeeUpdateInput input) {
   return <String, dynamic>{
     if (input.jobTitle != null) 'job_title': input.jobTitle,
+    if (input.gender != null) 'gender': input.gender,
     'department': input.department,
     'hire_date': _dateTimeToWireDate(input.hireDate),
   };
@@ -286,6 +290,7 @@ api.EmployeeCreate employeeCreateFromInput(NewEmployeeInput input) {
       ..password = input.password
       ..firstName = input.firstName
       ..lastName = input.lastName
+      ..gender = input.gender
       ..jobTitle = input.jobTitle
       ..department = input.department
       ..hireDate = _dateTimeToApiDate(input.hireDate)
@@ -296,6 +301,7 @@ api.EmployeeCreate employeeCreateFromInput(NewEmployeeInput input) {
 api.EmployeeUpdate employeeUpdateFromInput(EmployeeUpdateInput input) {
   return api.EmployeeUpdate(
     (b) => b
+      ..gender = input.gender
       ..jobTitle = input.jobTitle
       ..department = input.department
       ..hireDate = _dateTimeToApiDate(input.hireDate),

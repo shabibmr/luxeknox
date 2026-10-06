@@ -15,7 +15,7 @@ part 'pt_change_slot_request.g.dart';
 /// Properties:
 /// * [weekdays] 
 /// * [slotStart] 
-/// * [trainerId] - Optionally move to another same-gender trainer in the same re-plan.
+/// * [trainerId] - Optionally move to another active trainer in the same re-plan.
 /// * [effectiveDate] 
 /// * [reason] 
 @BuiltValue()
@@ -26,7 +26,7 @@ abstract class PtChangeSlotRequest implements Built<PtChangeSlotRequest, PtChang
   @BuiltValueField(wireName: r'slot_start')
   String get slotStart;
 
-  /// Optionally move to another same-gender trainer in the same re-plan.
+  /// Optionally move to another active trainer in the same re-plan.
   @BuiltValueField(wireName: r'trainer_id')
   int? get trainerId;
 

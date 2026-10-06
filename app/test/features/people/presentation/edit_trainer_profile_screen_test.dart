@@ -39,6 +39,7 @@ void main() {
     userId: 10,
     firstName: 'John',
     lastName: 'Doe',
+    gender: 'male',
     bio: 'Fitness Enthusiast',
     specializations: ['Strength', 'HIIT'],
     hourlyRate: '50.00',

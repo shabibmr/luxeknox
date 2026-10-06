@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **firstName** | **String** |  | [optional] 
 **lastName** | **String** |  | [optional] 
+**gender** | **String** |  | [optional] 
 **jobTitle** | **String** |  | [optional] 
 **department** | **String** |  | [optional] 
 **hireDate** | [**Date**](Date.md) |  | [optional] 

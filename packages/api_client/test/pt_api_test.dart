@@ -35,9 +35,9 @@ void main() {
       // TODO
     });
 
-    // Hours × same-gender trainers occupancy for a PT package, start date and weekdays
+    // Hours × active trainers occupancy for a PT package, start date and weekdays
     //
-    // A cell is `free` only when the hour is inside the trainer's availability and clash-free on every occurrence date of the PT period. Only trainers of the member's gender are listed. 
+    // A cell is `free` only when the hour is inside the trainer's availability and clash-free on every occurrence date of the PT period. All active trainers are listed. 
     //
     //Future<PtScheduleGrid> getPtScheduleGrid(int memberId, int ptProductId, Date startDate, String weekdays, { int excludeSubscriptionId }) async
     test('test getPtScheduleGrid', () async {
@@ -65,7 +65,7 @@ void main() {
       // TODO
     });
 
-    // Move remaining PT sessions to another same-gender trainer
+    // Move remaining PT sessions to another active trainer
     //
     //Future<PtSubscription> reassignPtTrainer(int id, PtReassignTrainerRequest ptReassignTrainerRequest) async
     test('test reassignPtTrainer', () async {

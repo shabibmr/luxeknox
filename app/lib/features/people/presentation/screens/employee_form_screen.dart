@@ -12,6 +12,7 @@ import '../../domain/entities/employee_status.dart';
 import '../../domain/entities/new_employee_input.dart';
 import '../cubit/employee_form_cubit.dart';
 import '../people_strings.dart';
+import '../widgets/gender_radio_group.dart';
 
 /// Admin create/edit employee form.
 class EmployeeFormScreen extends StatelessWidget {
@@ -386,6 +387,23 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                           ),
                   ),
                 ],
+                GenderRadioGroup(
+                  value: context.select<EmployeeFormCubit, String?>(
+                    (c) => c.state.isCreate
+                        ? c.state.createInput.gender
+                        : c.state.updateInput.gender,
+                  ),
+                  enabled: !submitting,
+                  onChanged: (v) {
+                    final cubit = context.read<EmployeeFormCubit>();
+                    if (cubit.state.isCreate) {
+                      cubit.updateCreateInput((i) => i.copyWith(gender: v));
+                    } else {
+                      cubit.updateEditInput((i) => i.copyWith(gender: v));
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
                 TextField(
                   controller: _jobTitle,
                   enabled: !submitting,

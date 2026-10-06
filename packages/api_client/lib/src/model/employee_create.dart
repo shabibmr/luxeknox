@@ -17,6 +17,7 @@ part 'employee_create.g.dart';
 /// * [password] 
 /// * [firstName] 
 /// * [lastName] 
+/// * [gender] 
 /// * [jobTitle] 
 /// * [department] 
 /// * [hireDate] 
@@ -37,6 +38,9 @@ abstract class EmployeeCreate implements Built<EmployeeCreate, EmployeeCreateBui
 
   @BuiltValueField(wireName: r'last_name')
   String get lastName;
+
+  @BuiltValueField(wireName: r'gender')
+  String get gender;
 
   @BuiltValueField(wireName: r'job_title')
   String get jobTitle;
@@ -100,6 +104,11 @@ class _$EmployeeCreateSerializer implements PrimitiveSerializer<EmployeeCreate> 
     yield r'last_name';
     yield serializers.serialize(
       object.lastName,
+      specifiedType: const FullType(String),
+    );
+    yield r'gender';
+    yield serializers.serialize(
+      object.gender,
       specifiedType: const FullType(String),
     );
     yield r'job_title';
@@ -185,6 +194,13 @@ class _$EmployeeCreateSerializer implements PrimitiveSerializer<EmployeeCreate> 
             specifiedType: const FullType(String),
           ) as String;
           result.lastName = valueDes;
+          break;
+        case r'gender':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.gender = valueDes;
           break;
         case r'job_title':
           final valueDes = serializers.deserialize(
