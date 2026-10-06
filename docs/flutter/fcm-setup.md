@@ -30,7 +30,7 @@ flutterfire configure --project=<project-id> \
 5. Replace placeholder `google-services.json` / `GoogleService-Info.plist` if FlutterFire did not.
 6. Add `GoogleService-Info.plist` to the Xcode Runner target if it is not already a project resource.
 7. iOS: upload an APNs key/certificate in Firebase Console → Project settings → Cloud Messaging.
-8. Web (optional): add Firebase JS SDK scripts to `web/index.html` per FlutterFire web docs.
+8. Web: `web/firebase-messaging-sw.js` is present. Pass `--dart-define=FCM_VAPID_KEY=...` (Web Push certificate from Cloud Messaging settings). Details: [firebase-luxe-knox-app-setup.md](./firebase-luxe-knox-app-setup.md).
 
 ## Verify
 
