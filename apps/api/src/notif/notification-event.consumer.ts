@@ -4,6 +4,7 @@ import { IdempotencyRepository } from '../platform/idempotency/idempotency.repos
 import { NotificationService } from './notification.service';
 import { MemberRepository } from '../people/member.repository';
 import { ScheduleRepository } from '../sched/schedule.repository';
+import { MembershipRepository } from '../memb/membership.repository';
 
 @Injectable()
 export class NotificationEventConsumer implements OnModuleInit {
@@ -15,6 +16,7 @@ export class NotificationEventConsumer implements OnModuleInit {
     private readonly idempotencyRepository: IdempotencyRepository,
     private readonly memberRepository: MemberRepository,
     private readonly scheduleRepository: ScheduleRepository,
+    private readonly membershipRepository: MembershipRepository,
   ) {}
 
   onModuleInit(): void {
@@ -200,9 +202,33 @@ export class NotificationEventConsumer implements OnModuleInit {
     membershipId: number;
     freezeId: number;
   }): Promise<void> {
-    // Notify member that freeze request was received and is pending
-    // We can resolve member through membership
-    // If not found, skip safely
+    const membership = await this.membershipRepository.findById(payload.membershipId);
+    if (!membership) return;
+
+    const member = await this.memberRepository.findById(membership.member_id);
+    if (!member) return;
+
+    const freeze = await this.membershipRepository.findFreezeById(payload.freezeId);
+    const startDate = freeze?.start_date;
+    const endDate = freeze?.end_date;
+
+    const message =
+      startDate && endDate
+        ? `Your membership freeze request from ${startDate} to ${endDate} is currently pending approval.`
+        : 'Your membership freeze request is currently pending approval.';
+
+    await this.notificationService.dispatch({
+      recipientUserIds: [member.user_id],
+      title: 'Freeze Request Pending',
+      message,
+      typeCode: 'freeze_pending',
+      dataPayload: {
+        membership_id: membership.id,
+        freeze_id: payload.freezeId,
+        ...(startDate ? { start_date: startDate } : {}),
+        ...(endDate ? { end_date: endDate } : {}),
+      },
+    });
   }
 
   private async handleTrainerAssigned(payload: {

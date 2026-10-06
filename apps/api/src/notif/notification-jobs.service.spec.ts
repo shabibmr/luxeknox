@@ -111,4 +111,36 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
     expect(retried).toBe(2);
     expect(notificationService.retryFailedDeliveries).toHaveBeenCalledWith(3);
   });
+
+  it('runs payment reminders for pending unpaid invoices of active users', async () => {
+    fakeDb.where.mockResolvedValue([
+      {
+        paymentId: 44,
+        totalAmount: '150.00',
+        amountPaid: '0.00',
+        paymentDate: new Date('2026-10-01T00:00:00Z'),
+        userId: 100,
+      },
+    ]);
+
+    const sent = await jobsService.runPaymentReminders();
+    expect(sent).toBe(1);
+    expect(notificationService.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recipientUserIds: [100],
+        typeCode: 'payment_due',
+        dataPayload: expect.objectContaining({
+          payment_id: 44,
+          amount: '150.00',
+        }),
+      }),
+    );
+  });
+
+  it('returns 0 payment reminders when no pending unpaid invoices exist', async () => {
+    fakeDb.where.mockResolvedValue([]);
+    const sent = await jobsService.runPaymentReminders();
+    expect(sent).toBe(0);
+    expect(notificationService.dispatch).not.toHaveBeenCalled();
+  });
 });

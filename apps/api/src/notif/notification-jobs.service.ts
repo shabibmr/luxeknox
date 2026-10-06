@@ -10,6 +10,7 @@ import { memberships } from '../platform/db/schema/memberships';
 import { schedules, scheduleParticipants } from '../platform/db/schema/scheduling';
 import { members } from '../platform/db/schema/members';
 import { users } from '../platform/db/schema/users';
+import { payments } from '../platform/db/schema/payments';
 
 export const NOTIFICATION_MEMBERSHIP_REMINDERS_JOB = 'notifications.membership_reminders';
 export const NOTIFICATION_SESSION_REMINDERS_JOB = 'notifications.session_reminders';
@@ -168,9 +169,47 @@ export class NotificationJobsService implements OnModuleInit {
   }
 
   async runPaymentReminders(): Promise<number> {
-    // V09 payment module is pending; placeholder logic that will query pending invoices once V09 lands
-    this.logger.log('Payment reminder job executed (no pending payments found in pre-V09 schema)');
-    return 0;
+    const db = (this.membershipRepository as any).getDb();
+    const rows = await db
+      .select({
+        paymentId: payments.id,
+        totalAmount: payments.total_amount,
+        amountPaid: payments.amount_paid,
+        paymentDate: payments.payment_date,
+        userId: members.user_id,
+      })
+      .from(payments)
+      .innerJoin(members, eq(members.id, payments.member_id))
+      .innerJoin(users, eq(users.id, members.user_id))
+      .where(
+        and(
+          eq(payments.status, 'pending'),
+          sql`${payments.amount_paid} < ${payments.total_amount}`,
+          eq(users.status, 'active'),
+        ),
+      );
+
+    let sent = 0;
+    for (const row of rows) {
+      const amount =
+        typeof row.totalAmount === 'string'
+          ? row.totalAmount
+          : Number(row.totalAmount).toFixed(2);
+      await this.notificationService.dispatch({
+        recipientUserIds: [row.userId],
+        title: 'Payment Due',
+        message: `You have an outstanding payment of ${amount}.`,
+        typeCode: 'payment_due',
+        dataPayload: {
+          payment_id: row.paymentId,
+          amount,
+        },
+      });
+      sent++;
+    }
+
+    this.logger.log(`Dispatched ${sent} payment due reminder(s)`);
+    return sent;
   }
 
   async runRetryFailedDeliveries(): Promise<number> {

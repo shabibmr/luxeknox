@@ -9,6 +9,7 @@ describe('NotificationEventConsumer (NOT-009)', () => {
   let idempotencyRepo: any;
   let memberRepo: any;
   let scheduleRepo: any;
+  let membershipRepo: any;
 
   beforeEach(() => {
     eventBus = {
@@ -32,6 +33,15 @@ describe('NotificationEventConsumer (NOT-009)', () => {
       }),
       findParticipantById: vi.fn().mockResolvedValue({ id: 20, member_id: 10 }),
     };
+    membershipRepo = {
+      findById: vi.fn().mockResolvedValue({ id: 7, member_id: 10 }),
+      findFreezeById: vi.fn().mockResolvedValue({
+        id: 3,
+        membership_id: 7,
+        start_date: '2026-10-10',
+        end_date: '2026-10-20',
+      }),
+    };
 
     consumer = new NotificationEventConsumer(
       eventBus as any,
@@ -39,6 +49,7 @@ describe('NotificationEventConsumer (NOT-009)', () => {
       idempotencyRepo as any,
       memberRepo as any,
       scheduleRepo as any,
+      membershipRepo as any,
     );
   });
 
@@ -133,5 +144,42 @@ describe('NotificationEventConsumer (NOT-009)', () => {
         title: 'Personal Trainer Assigned',
       }),
     );
+  });
+
+  it('handles membership.freeze_pending and dispatches freeze_pending with membership_id', async () => {
+    const event = {
+      eventName: 'membership.freeze_pending',
+      occurredAt: new Date(),
+      payload: { membershipId: 7, freezeId: 3 },
+    };
+
+    await consumer.handleIdempotentEvent(event, 'membership.freeze_pending', async (payload) => {
+      await (consumer as any).handleMembershipFreezePending(payload);
+    });
+
+    expect(membershipRepo.findById).toHaveBeenCalledWith(7);
+    expect(memberRepo.findById).toHaveBeenCalledWith(10);
+    expect(notificationService.dispatch).toHaveBeenCalledTimes(1);
+    expect(notificationService.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recipientUserIds: [100],
+        typeCode: 'freeze_pending',
+        dataPayload: expect.objectContaining({
+          membership_id: 7,
+          freeze_id: 3,
+        }),
+      }),
+    );
+  });
+
+  it('skips freeze_pending dispatch when membership is missing', async () => {
+    membershipRepo.findById.mockResolvedValue(null);
+
+    await (consumer as any).handleMembershipFreezePending({
+      membershipId: 99,
+      freezeId: 3,
+    });
+
+    expect(notificationService.dispatch).not.toHaveBeenCalled();
   });
 });
