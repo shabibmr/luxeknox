@@ -9,6 +9,7 @@ import { SessionCache } from './session.cache';
 import { LoginThrottle } from './login-throttle';
 import { AuthGuard } from './auth.guard';
 import { PasswordResetTokenRepository } from './password-reset-token.repository';
+import { FirebaseTokenVerifier } from './firebase-token-verifier';
 import { RbacModule } from '../rbac/rbac.module';
 import { PeopleModule } from '../people/people.module';
 import { PlatformModule } from '../platform/platform.module';
@@ -24,6 +25,7 @@ import { PlatformModule } from '../platform/platform.module';
     LoginThrottle,
     AuthGuard,
     PasswordResetTokenRepository,
+    FirebaseTokenVerifier,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,

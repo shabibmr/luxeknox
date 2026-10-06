@@ -15,6 +15,7 @@ import type { Role } from '../platform/db/schema/roles';
 import type { PersonFactory } from '../people/person.factory';
 import type { PasswordResetTokenRepository } from './password-reset-token.repository';
 import type { AuditService } from '../platform/audit/audit.service';
+import type { FirebaseTokenVerifier } from './firebase-token-verifier';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -27,6 +28,7 @@ describe('AuthService', () => {
   let personFactory: PersonFactory;
   let passwordResetTokenRepository: PasswordResetTokenRepository;
   let auditService: AuditService;
+  let firebaseTokenVerifier: FirebaseTokenVerifier;
 
   const validPassword = 'CorrectPassword123!';
   let validPasswordHash: string;
@@ -97,6 +99,10 @@ describe('AuthService', () => {
       recordAudit: vi.fn().mockResolvedValue(undefined),
     } as unknown as AuditService;
 
+    firebaseTokenVerifier = {
+      verify: vi.fn().mockResolvedValue(null),
+    } as unknown as FirebaseTokenVerifier;
+
     authService = new AuthService(
       userRepository,
       sessionRepository,
@@ -107,6 +113,7 @@ describe('AuthService', () => {
       personFactory,
       passwordResetTokenRepository,
       auditService,
+      firebaseTokenVerifier,
     );
   });
 
@@ -368,6 +375,67 @@ describe('AuthService', () => {
 
       expect(sessionRepository.revokeSession).toHaveBeenCalledWith(session.id, expect.any(Date));
       expect(sessionCache.get(atHash)).toBeNull();
+    });
+  });
+
+  describe('loginWithFirebase', () => {
+    const identity = { email: 'test@example.com', emailVerified: true };
+
+    it('issues a session for a verified email that matches an active account', async () => {
+      vi.mocked(firebaseTokenVerifier.verify).mockResolvedValue(identity);
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValue(mockUser);
+
+      const result = await authService.loginWithFirebase('id-token', '10.0.0.1');
+
+      expect(firebaseTokenVerifier.verify).toHaveBeenCalledWith('id-token');
+      expect(userRepository.findByIdentifier).toHaveBeenCalledWith('test@example.com');
+      expect(sessionRepository.createSession).toHaveBeenCalledTimes(1);
+      expect(result.accessToken).toBeTruthy();
+      expect(result.refreshToken).toBeTruthy();
+    });
+
+    it('rejects an invalid token without touching the database', async () => {
+      vi.mocked(firebaseTokenVerifier.verify).mockResolvedValue(null);
+
+      await expect(authService.loginWithFirebase('bad', '10.0.0.1')).rejects.toThrow(
+        'Invalid credentials',
+      );
+      expect(userRepository.findByIdentifier).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unverified email', async () => {
+      vi.mocked(firebaseTokenVerifier.verify).mockResolvedValue({
+        email: 'test@example.com',
+        emailVerified: false,
+      });
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValue(mockUser);
+
+      await expect(authService.loginWithFirebase('id-token', '10.0.0.1')).rejects.toThrow(
+        'Invalid credentials',
+      );
+      expect(sessionRepository.createSession).not.toHaveBeenCalled();
+    });
+
+    it('rejects an email with no LuxeKnox account using the same message', async () => {
+      vi.mocked(firebaseTokenVerifier.verify).mockResolvedValue(identity);
+
+      await expect(authService.loginWithFirebase('id-token', '10.0.0.1')).rejects.toThrow(
+        'Invalid credentials',
+      );
+      expect(sessionRepository.createSession).not.toHaveBeenCalled();
+    });
+
+    it('rejects an inactive account using the same message', async () => {
+      vi.mocked(firebaseTokenVerifier.verify).mockResolvedValue(identity);
+      vi.mocked(userRepository.findByIdentifier).mockResolvedValue({
+        ...mockUser,
+        status: 'suspended',
+      } as User);
+
+      await expect(authService.loginWithFirebase('id-token', '10.0.0.1')).rejects.toThrow(
+        'Invalid credentials',
+      );
+      expect(sessionRepository.createSession).not.toHaveBeenCalled();
     });
   });
 });

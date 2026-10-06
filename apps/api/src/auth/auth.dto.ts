@@ -107,6 +107,20 @@ export type ResetPasswordDto = z.infer<typeof resetPasswordSchema>;
 // Refresh Token DTO & Schema
 // ==========================================
 
+export const firebaseLoginSchema = z.object({
+  idToken: z.string().trim().min(1),
+});
+
+export type FirebaseLoginInput = z.infer<typeof firebaseLoginSchema>;
+
+export class FirebaseLoginDto {
+  @ApiProperty({
+    type: String,
+    description: 'Firebase ID token obtained after Google sign-in on the client',
+  })
+  idToken!: string;
+}
+
 export const refreshTokenSchema = z
   .object({
     refreshToken: z.string().optional(),

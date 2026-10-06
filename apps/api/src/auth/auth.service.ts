@@ -17,6 +17,7 @@ import { PermissionCache } from '../rbac/permission-cache';
 import { RoleRepository } from '../rbac/role.repository';
 import { PersonFactory } from '../people/person.factory';
 import { AuditService } from '../platform/audit/audit.service';
+import { FirebaseTokenVerifier } from './firebase-token-verifier';
 
 /** Access token lifespan in seconds (30 minutes) per ADR-0003 */
 export const ACCESS_TOKEN_EXPIRY_SECONDS = 1800;
@@ -39,6 +40,7 @@ export class AuthService {
     private readonly personFactory: PersonFactory,
     private readonly passwordResetTokenRepository: PasswordResetTokenRepository,
     private readonly auditService: AuditService,
+    private readonly firebaseTokenVerifier: FirebaseTokenVerifier,
   ) {}
 
   /**
@@ -86,6 +88,36 @@ export class AuthService {
     // 7. Issue tokens and persist new session (stamp sessions.profile_id)
     const familyId = randomUUID();
     return this.createSessionAndIssueTokens(userResult, familyId, profileId);
+  }
+
+  /**
+   * Signs in with a Google-backed Firebase ID token.
+   *
+   * The token must carry a Firebase-verified email that matches an existing active
+   * account. Unknown accounts, inactive accounts, and unverified emails all get the
+   * same rejection as bad credentials, so the response never reveals account status.
+   *
+   * @param idToken Firebase ID token from the client
+   * @param ipAddress Client IP address
+   */
+  async loginWithFirebase(idToken: string, ipAddress: string): Promise<AuthResponse> {
+    const identity = await this.firebaseTokenVerifier.verify(idToken);
+    if (!identity || !identity.emailVerified) {
+      throw new UnauthorizedError('Invalid credentials');
+    }
+
+    this.loginThrottle.check(identity.email, ipAddress);
+
+    const user = await this.userRepository.findByIdentifier(identity.email);
+    if (!user || user.status !== 'active') {
+      this.loginThrottle.recordFailure(identity.email, ipAddress);
+      throw new UnauthorizedError('Invalid credentials');
+    }
+
+    this.loginThrottle.recordSuccess(identity.email);
+
+    const profileId = await this.personFactory.resolveProfileId(user.id, user.user_type);
+    return this.createSessionAndIssueTokens(user, randomUUID(), profileId);
   }
 
   /**

@@ -15,8 +15,10 @@ import { Public } from './public.decorator';
 import { AuthService } from './auth.service';
 import {
   AuthResponseDto,
+  FirebaseLoginDto,
   LoginDto,
   RefreshTokenDto,
+  firebaseLoginSchema,
   loginSchema,
   refreshTokenSchema,
   changePasswordSchema,
@@ -70,6 +72,35 @@ export class AuthController {
     ).trim();
 
     return this.authService.login(identifier, dto.password, ipAddress);
+  }
+
+  @Post('firebase')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Sign in with a Google-backed Firebase ID token',
+    description:
+      'Verifies the Firebase ID token and maps its verified email to an existing active account. Returns the same token pair as /auth/login.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Authentication successful',
+    type: AuthResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid token, unverified email, or no active account for this email',
+  })
+  @ApiResponse({
+    status: 429,
+    description: 'Rate limit exceeded for email or IP',
+  })
+  async loginWithFirebase(
+    @Body(new ZodValidationPipe(firebaseLoginSchema)) dto: FirebaseLoginDto,
+    @Req() req: Request,
+  ): Promise<AuthResponseDto> {
+    const ipAddress = req.ip ?? req.socket.remoteAddress ?? 'unknown';
+    return this.authService.loginWithFirebase(dto.idToken, ipAddress);
   }
 
   @Post('refresh')
