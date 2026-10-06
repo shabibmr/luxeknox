@@ -9,6 +9,8 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
   let scheduleRepo: any;
   let memberRepo: any;
   let notificationRepo: any;
+  let paymentRepo: any;
+  let idempotencyRepo: any;
   let fakeDb: any;
 
   beforeEach(() => {
@@ -38,6 +40,13 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
     notificationRepo = {
       hasDeliveryToday: vi.fn().mockResolvedValue(false),
     };
+    paymentRepo = {
+      findPendingPaymentReminderCandidates: vi.fn().mockResolvedValue([]),
+    };
+    idempotencyRepo = {
+      findActiveKeys: vi.fn().mockResolvedValue(new Set()),
+      recordJobKeys: vi.fn().mockResolvedValue(undefined),
+    };
 
     jobsService = new NotificationJobsService(
       jobRunner,
@@ -46,6 +55,8 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
       scheduleRepo as any,
       memberRepo as any,
       notificationRepo as any,
+      paymentRepo as any,
+      idempotencyRepo as any,
     );
   });
 
@@ -88,6 +99,13 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
         title: 'Membership Expiring Soon',
       }),
     );
+    expect(idempotencyRepo.recordJobKeys).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: expect.stringMatching(/^remind:membership_expiry:1:\d{4}-\d{2}-\d{2}$/),
+        }),
+      ]),
+    );
   });
 
   it('runs session reminder query and dispatches notifications for upcoming booked sessions', async () => {
@@ -109,6 +127,13 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
         title: 'Upcoming Session Reminder',
       }),
     );
+    expect(idempotencyRepo.recordJobKeys).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: expect.stringMatching(/^remind:session_reminder:12:200:\d{4}-\d{2}-\d{2}$/),
+        }),
+      ]),
+    );
   });
 
   it('runs retry failed deliveries job', async () => {
@@ -117,12 +142,12 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
     expect(notificationService.retryFailedDeliveries).toHaveBeenCalledWith(3);
   });
 
-  it('runs payment reminders for pending unpaid invoices of active users', async () => {
-    fakeDb.where.mockResolvedValue([
+  it('runs payment reminders for pending unpaid invoices of active users reporting outstanding balance', async () => {
+    paymentRepo.findPendingPaymentReminderCandidates.mockResolvedValue([
       {
         paymentId: 44,
         totalAmount: '150.00',
-        amountPaid: '0.00',
+        amountPaid: '100.00',
         paymentDate: new Date('2026-10-01T00:00:00Z'),
         userId: 100,
       },
@@ -134,16 +159,24 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
       expect.objectContaining({
         recipientUserIds: [100],
         typeCode: 'payment_due',
+        message: 'You have an outstanding payment of 50.00.',
         dataPayload: expect.objectContaining({
           payment_id: 44,
-          amount: '150.00',
+          amount: '50.00',
         }),
       }),
+    );
+    expect(idempotencyRepo.recordJobKeys).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: expect.stringMatching(/^remind:payment_due:44:\d{4}-\d{2}-\d{2}$/),
+        }),
+      ]),
     );
   });
 
   it('returns 0 payment reminders when no pending unpaid invoices exist', async () => {
-    fakeDb.where.mockResolvedValue([]);
+    paymentRepo.findPendingPaymentReminderCandidates.mockResolvedValue([]);
     const sent = await jobsService.runPaymentReminders();
     expect(sent).toBe(0);
     expect(notificationService.dispatch).not.toHaveBeenCalled();
@@ -158,18 +191,14 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
         userId: 200,
       },
     ]);
-    notificationRepo.hasDeliveryToday.mockResolvedValue(true);
+    const today = new Date().toISOString().slice(0, 10);
+    idempotencyRepo.findActiveKeys.mockResolvedValue(
+      new Set([`remind:session_reminder:12:200:${today}`]),
+    );
 
     const sent = await jobsService.runSessionReminders();
     expect(sent).toBe(0);
     expect(notificationService.dispatch).not.toHaveBeenCalled();
-    expect(notificationRepo.hasDeliveryToday).toHaveBeenCalledWith(
-      200,
-      'session_reminder',
-      'schedule_id',
-      12,
-      expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-    );
   });
 
   it('skips membership expiry reminder when already sent today for that membership', async () => {
@@ -181,22 +210,18 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
         userId: 100,
       },
     ]);
-    notificationRepo.hasDeliveryToday.mockResolvedValue(true);
+    const today = new Date().toISOString().slice(0, 10);
+    idempotencyRepo.findActiveKeys.mockResolvedValue(
+      new Set([`remind:membership_expiry:1:${today}`]),
+    );
 
     const sent = await jobsService.runMembershipReminders();
     expect(sent).toBe(0);
     expect(notificationService.dispatch).not.toHaveBeenCalled();
-    expect(notificationRepo.hasDeliveryToday).toHaveBeenCalledWith(
-      100,
-      'membership_expiry',
-      'membership_id',
-      1,
-      expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-    );
   });
 
   it('skips payment due reminder when already sent today for that payment', async () => {
-    fakeDb.where.mockResolvedValue([
+    paymentRepo.findPendingPaymentReminderCandidates.mockResolvedValue([
       {
         paymentId: 44,
         totalAmount: '150.00',
@@ -205,17 +230,13 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
         userId: 100,
       },
     ]);
-    notificationRepo.hasDeliveryToday.mockResolvedValue(true);
+    const today = new Date().toISOString().slice(0, 10);
+    idempotencyRepo.findActiveKeys.mockResolvedValue(
+      new Set([`remind:payment_due:44:${today}`]),
+    );
 
     const sent = await jobsService.runPaymentReminders();
     expect(sent).toBe(0);
     expect(notificationService.dispatch).not.toHaveBeenCalled();
-    expect(notificationRepo.hasDeliveryToday).toHaveBeenCalledWith(
-      100,
-      'payment_due',
-      'payment_id',
-      44,
-      expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-    );
   });
 });

@@ -72,6 +72,12 @@ export function buildPushData(input: BuildPushDataInput): Record<string, string>
     return data;
   }
 
-  // trainer_assigned and unknown codes: leave entity_* unset
+  if (typeCode === 'trainer_assigned' && data.trainer_id) {
+    data.entity_type = 'trainer';
+    data.entity_id = data.trainer_id;
+    return data;
+  }
+
+  // unknown codes: leave entity_* unset
   return data;
 }

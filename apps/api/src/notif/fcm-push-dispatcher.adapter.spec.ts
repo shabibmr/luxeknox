@@ -3,28 +3,27 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const { sendMock, messagingMock, initializeAppMock, certMock, apps } =
   vi.hoisted(() => {
     const sendMock = vi.fn();
-    const messagingMock = vi.fn(() => ({ send: sendMock }));
-    const initializeAppMock = vi.fn();
+    const messagingMock = vi.fn((_app?: unknown) => ({ send: sendMock }));
+    const initializeAppMock = vi.fn((_opts?: unknown, name?: string) => {
+      const app = { name: name ?? '[DEFAULT]' };
+      apps.push(app);
+      return app;
+    });
     const certMock = vi.fn((value: unknown) => value);
-    const apps: unknown[] = [];
+    const apps: any[] = [];
     return { sendMock, messagingMock, initializeAppMock, certMock, apps };
   });
 
-vi.mock('firebase-admin', () => ({
-  default: {
-    get apps() {
-      return apps;
-    },
-    initializeApp: initializeAppMock,
-    credential: { cert: certMock },
-    messaging: messagingMock,
-  },
-  get apps() {
-    return apps;
+vi.mock('firebase-admin/app', () => ({
+  get getApps() {
+    return () => apps;
   },
   initializeApp: initializeAppMock,
-  credential: { cert: certMock },
-  messaging: messagingMock,
+  cert: certMock,
+}));
+
+vi.mock('firebase-admin/messaging', () => ({
+  getMessaging: messagingMock,
 }));
 
 import { FcmPushDispatcherAdapter } from './fcm-push-dispatcher.adapter';
@@ -81,6 +80,24 @@ describe('FcmPushDispatcherAdapter', () => {
     });
   });
 
+  it('initializes dedicated fcm-push app even if a default app already exists', () => {
+    apps.length = 0;
+    apps.push({ name: '[DEFAULT]' }); // Existing credential-less app from verifier
+
+    new FcmPushDispatcherAdapter({
+      projectId: 'luxe-knox-app',
+      clientEmail: 'sa@luxe-knox-app.iam.gserviceaccount.com',
+      privateKey: 'key',
+    });
+
+    expect(initializeAppMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        credential: expect.anything(),
+      }),
+      'fcm-push',
+    );
+  });
+
   it('marks registration-token-not-registered as invalidToken', async () => {
     sendMock.mockRejectedValue({
       code: 'messaging/registration-token-not-registered',
@@ -98,6 +115,26 @@ describe('FcmPushDispatcherAdapter', () => {
       success: false,
       invalidToken: true,
       errorMessage: 'Invalid device token',
+    });
+  });
+
+  it('does not treat messaging/invalid-argument as invalidToken', async () => {
+    sendMock.mockRejectedValue({
+      code: 'messaging/invalid-argument',
+      message: 'Invalid argument provided',
+    });
+
+    const result = await adapter.send({
+      deviceToken: 'token-with-bad-argument',
+      platform: 'android',
+      title: 'Hi',
+      body: 'There',
+    });
+
+    expect(result).toEqual({
+      success: false,
+      invalidToken: false,
+      errorMessage: 'Push send failed',
     });
   });
 

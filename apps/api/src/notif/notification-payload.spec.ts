@@ -90,7 +90,7 @@ describe('buildPushData', () => {
     });
   });
 
-  it('omits entity keys for trainer_assigned', () => {
+  it('attaches entity keys for trainer_assigned', () => {
     const data = buildPushData({
       typeCode: 'trainer_assigned',
       dataPayload: { member_id: 1, trainer_id: 2 },
@@ -101,9 +101,9 @@ describe('buildPushData', () => {
       type_code: 'trainer_assigned',
       member_id: '1',
       trainer_id: '2',
+      entity_type: 'trainer',
+      entity_id: '2',
     });
-    expect(data).not.toHaveProperty('entity_type');
-    expect(data).not.toHaveProperty('entity_id');
   });
 
   it('keeps an explicit entity_type from the payload', () => {

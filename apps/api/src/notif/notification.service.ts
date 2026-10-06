@@ -112,15 +112,9 @@ export class NotificationService {
 
     await this.repository.insertDeliveries(deliveryRows);
 
-    // 3. Enrich payload with deep-link keys after insert, then push
-    const pushData = buildPushData({
-      typeCode,
-      dataPayload,
-      notificationId,
-    });
-
+    // 3. Dispatch push notifications
     for (const userId of uniqueRecipients) {
-      this.sendPushToUser(userId, notificationId, title, message, pushData, typeCode).catch(
+      this.sendPushToUser(userId, notificationId, title, message, dataPayload, typeCode).catch(
         (err) => {
           this.logger.error(`Error sending push to user ${userId}: ${err.message}`);
         },

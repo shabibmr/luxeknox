@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as admin from 'firebase-admin';
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getMessaging, type Messaging } from 'firebase-admin/messaging';
 import type {
   PushDispatchResult,
   PushDispatcherAdapter,
@@ -23,19 +24,24 @@ function readFirebaseErrorCode(err: unknown): string | undefined {
 @Injectable()
 export class FcmPushDispatcherAdapter implements PushDispatcherAdapter {
   private readonly logger = new Logger(FcmPushDispatcherAdapter.name);
-  private readonly messaging: admin.messaging.Messaging;
+  private readonly messaging: Messaging;
 
   constructor(credentials: FcmCredentials) {
-    if (!admin.apps.length) {
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: credentials.projectId,
-          clientEmail: credentials.clientEmail,
-          privateKey: credentials.privateKey,
-        }),
-      });
-    }
-    this.messaging = admin.messaging();
+    const appName = 'fcm-push';
+    const existing = getApps().find((app) => app.name === appName);
+    const app =
+      existing ??
+      initializeApp(
+        {
+          credential: cert({
+            projectId: credentials.projectId,
+            clientEmail: credentials.clientEmail,
+            privateKey: credentials.privateKey,
+          }),
+        },
+        appName,
+      );
+    this.messaging = getMessaging(app);
   }
 
   async send(payload: PushMessagePayload): Promise<PushDispatchResult> {
@@ -61,8 +67,7 @@ export class FcmPushDispatcherAdapter implements PushDispatcherAdapter {
       const code = readFirebaseErrorCode(err);
       const invalidToken =
         code === 'messaging/registration-token-not-registered' ||
-        code === 'messaging/invalid-registration-token' ||
-        code === 'messaging/invalid-argument';
+        code === 'messaging/invalid-registration-token';
 
       this.logger.warn(
         `FCM send failed for ${payload.platform} device (invalidToken=${invalidToken}, code=${code ?? 'unknown'})`,

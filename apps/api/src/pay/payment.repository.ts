@@ -4,6 +4,7 @@ import { BaseRepository } from '../platform/db/base.repository';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import { members } from '../platform/db/schema/members';
+import { users } from '../platform/db/schema/users';
 import {
   invoiceNumberCounters,
   paymentHistories,
@@ -207,5 +208,38 @@ export class PaymentRepository extends BaseRepository<typeof payments, Payment, 
       total_amount: Number(total).toFixed(2),
       invoice_count: Number(rows[0]?.invoice_count ?? 0),
     };
+  }
+
+  /**
+   * Pending invoices where amount_paid < total_amount for active users.
+   */
+  async findPendingPaymentReminderCandidates(): Promise<
+    Array<{
+      paymentId: number;
+      totalAmount: string | number;
+      amountPaid: string | number;
+      paymentDate: Date;
+      userId: number;
+    }>
+  > {
+    const db = this.getDb() as any;
+    return db
+      .select({
+        paymentId: payments.id,
+        totalAmount: payments.total_amount,
+        amountPaid: payments.amount_paid,
+        paymentDate: payments.payment_date,
+        userId: members.user_id,
+      })
+      .from(payments)
+      .innerJoin(members, eq(members.id, payments.member_id))
+      .innerJoin(users, eq(users.id, members.user_id))
+      .where(
+        and(
+          eq(payments.status, 'pending'),
+          sql`${payments.amount_paid} < ${payments.total_amount}`,
+          eq(users.status, 'active'),
+        ),
+      );
   }
 }

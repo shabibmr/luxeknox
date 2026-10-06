@@ -1,17 +1,18 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { and, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, eq, gte, lte } from 'drizzle-orm';
 import { JobRunnerService } from '../job/job-runner.service';
 import { NotificationService } from './notification.service';
 import { NotificationRepository } from './notification.repository';
 import { MembershipRepository } from '../memb/membership.repository';
 import { ScheduleRepository } from '../sched/schedule.repository';
 import { MemberRepository } from '../people/member.repository';
+import { PaymentRepository } from '../pay/payment.repository';
+import { IdempotencyRepository } from '../platform/idempotency/idempotency.repository';
 import { memberships } from '../platform/db/schema/memberships';
 import { schedules, scheduleParticipants } from '../platform/db/schema/scheduling';
 import { members } from '../platform/db/schema/members';
 import { users } from '../platform/db/schema/users';
-import { payments } from '../platform/db/schema/payments';
 
 export const NOTIFICATION_MEMBERSHIP_REMINDERS_JOB = 'notifications.membership_reminders';
 export const NOTIFICATION_SESSION_REMINDERS_JOB = 'notifications.session_reminders';
@@ -29,6 +30,8 @@ export class NotificationJobsService implements OnModuleInit {
     private readonly scheduleRepository: ScheduleRepository,
     private readonly memberRepository: MemberRepository,
     private readonly notificationRepository: NotificationRepository,
+    private readonly paymentRepository: PaymentRepository,
+    private readonly idempotencyRepository: IdempotencyRepository,
   ) {}
 
   private utcDay(date = new Date()): string {
@@ -96,7 +99,7 @@ export class NotificationJobsService implements OnModuleInit {
     const today = new Date().toISOString().slice(0, 10);
     const in7Days = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-    const db = (this.membershipRepository as any).getDb();
+    const db = this.membershipRepository.getDb() as any;
     const rows = await db
       .select({
         membershipId: memberships.id,
@@ -117,16 +120,19 @@ export class NotificationJobsService implements OnModuleInit {
       );
 
     const day = this.utcDay();
+    const candidateKeys = rows.map(
+      (r: { membershipId: number }) => `remind:membership_expiry:${r.membershipId}:${day}`,
+    );
+    const activeKeys = await this.idempotencyRepository.findActiveKeys(candidateKeys, new Date());
+
+    const processedEntries: Array<{ key: string; path: string; expiresAt: Date }> = [];
+    const expiresAt = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
     let sent = 0;
-    for (const row of rows) {
-      const alreadySent = await this.notificationRepository.hasDeliveryToday(
-        row.userId,
-        'membership_expiry',
-        'membership_id',
-        row.membershipId,
-        day,
-      );
-      if (alreadySent) continue;
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const key = candidateKeys[i];
+      if (activeKeys.has(key)) continue;
 
       await this.notificationService.dispatch({
         recipientUserIds: [row.userId],
@@ -135,7 +141,12 @@ export class NotificationJobsService implements OnModuleInit {
         typeCode: 'membership_expiry',
         dataPayload: { membership_id: row.membershipId, end_date: row.endDate },
       });
+      processedEntries.push({ key, path: NOTIFICATION_MEMBERSHIP_REMINDERS_JOB, expiresAt });
       sent++;
+    }
+
+    if (processedEntries.length > 0) {
+      await this.idempotencyRepository.recordJobKeys(processedEntries);
     }
 
     this.logger.log(`Dispatched ${sent} membership expiry reminder(s)`);
@@ -146,7 +157,7 @@ export class NotificationJobsService implements OnModuleInit {
     const now = new Date();
     const in2Hours = new Date(now.getTime() + 2 * 60 * 60 * 1000);
 
-    const db = (this.scheduleRepository as any).getDb();
+    const db = this.scheduleRepository.getDb() as any;
     const rows = await db
       .select({
         scheduleId: schedules.id,
@@ -169,16 +180,20 @@ export class NotificationJobsService implements OnModuleInit {
       );
 
     const day = this.utcDay();
+    const candidateKeys = rows.map(
+      (r: { scheduleId: number; userId: number }) =>
+        `remind:session_reminder:${r.scheduleId}:${r.userId}:${day}`,
+    );
+    const activeKeys = await this.idempotencyRepository.findActiveKeys(candidateKeys, new Date());
+
+    const processedEntries: Array<{ key: string; path: string; expiresAt: Date }> = [];
+    const expiresAt = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
     let sent = 0;
-    for (const row of rows) {
-      const alreadySent = await this.notificationRepository.hasDeliveryToday(
-        row.userId,
-        'session_reminder',
-        'schedule_id',
-        row.scheduleId,
-        day,
-      );
-      if (alreadySent) continue;
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const key = candidateKeys[i];
+      if (activeKeys.has(key)) continue;
 
       await this.notificationService.dispatch({
         recipientUserIds: [row.userId],
@@ -187,7 +202,12 @@ export class NotificationJobsService implements OnModuleInit {
         typeCode: 'session_reminder',
         dataPayload: { schedule_id: row.scheduleId },
       });
+      processedEntries.push({ key, path: NOTIFICATION_SESSION_REMINDERS_JOB, expiresAt });
       sent++;
+    }
+
+    if (processedEntries.length > 0) {
+      await this.idempotencyRepository.recordJobKeys(processedEntries);
     }
 
     this.logger.log(`Dispatched ${sent} upcoming session reminder(s)`);
@@ -195,42 +215,29 @@ export class NotificationJobsService implements OnModuleInit {
   }
 
   async runPaymentReminders(): Promise<number> {
-    const db = (this.membershipRepository as any).getDb();
-    const rows = await db
-      .select({
-        paymentId: payments.id,
-        totalAmount: payments.total_amount,
-        amountPaid: payments.amount_paid,
-        paymentDate: payments.payment_date,
-        userId: members.user_id,
-      })
-      .from(payments)
-      .innerJoin(members, eq(members.id, payments.member_id))
-      .innerJoin(users, eq(users.id, members.user_id))
-      .where(
-        and(
-          eq(payments.status, 'pending'),
-          sql`${payments.amount_paid} < ${payments.total_amount}`,
-          eq(users.status, 'active'),
-        ),
-      );
+    const rows = await this.paymentRepository.findPendingPaymentReminderCandidates();
 
     const day = this.utcDay();
-    let sent = 0;
-    for (const row of rows) {
-      const alreadySent = await this.notificationRepository.hasDeliveryToday(
-        row.userId,
-        'payment_due',
-        'payment_id',
-        row.paymentId,
-        day,
-      );
-      if (alreadySent) continue;
+    const candidateKeys = rows.map(
+      (r) => `remind:payment_due:${r.paymentId}:${day}`,
+    );
+    const activeKeys = await this.idempotencyRepository.findActiveKeys(candidateKeys, new Date());
 
-      const amount =
-        typeof row.totalAmount === 'string'
-          ? row.totalAmount
-          : Number(row.totalAmount).toFixed(2);
+    const processedEntries: Array<{ key: string; path: string; expiresAt: Date }> = [];
+    const expiresAt = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+    let sent = 0;
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const key = candidateKeys[i];
+      if (activeKeys.has(key)) continue;
+
+      const outstanding = Math.max(
+        0,
+        Number(row.totalAmount) - Number(row.amountPaid ?? 0),
+      );
+      const amount = outstanding.toFixed(2);
+
       await this.notificationService.dispatch({
         recipientUserIds: [row.userId],
         title: 'Payment Due',
@@ -241,7 +248,12 @@ export class NotificationJobsService implements OnModuleInit {
           amount,
         },
       });
+      processedEntries.push({ key, path: NOTIFICATION_PAYMENT_REMINDERS_JOB, expiresAt });
       sent++;
+    }
+
+    if (processedEntries.length > 0) {
+      await this.idempotencyRepository.recordJobKeys(processedEntries);
     }
 
     this.logger.log(`Dispatched ${sent} payment due reminder(s)`);
