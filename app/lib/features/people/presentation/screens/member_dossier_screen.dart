@@ -58,7 +58,8 @@ class _MemberDossierBody extends StatelessWidget {
     return BlocConsumer<MemberDossierCubit, MemberDossierState>(
       // Only react to a new message/failure, not to every state change that still carries one.
       listenWhen: (previous, current) =>
-          previous.message != current.message || previous.failure != current.failure,
+          previous.message != current.message ||
+          previous.failure != current.failure,
       listener: (context, state) {
         if (state.message != null) {
           final text = state.message == 'pt_renewed'
@@ -201,7 +202,10 @@ class _DossierContentState extends State<_DossierContent> {
         );
     final canChangePt =
         userType != null &&
-        canManagePt(userType: userType, canManage: context.can('pt_subscriptions.manage'));
+        canManagePt(
+          userType: userType,
+          canManage: context.can('pt_subscriptions.manage'),
+        );
     final canRenewPt =
         userType != null &&
         userType == UserType.admin &&
@@ -404,14 +408,16 @@ class _DossierContentState extends State<_DossierContent> {
 
   Future<void> _renewPt(PtSubscription sub) async {
     final cubit = context.read<MemberDossierCubit>();
-    final methods = (await getIt<GetPaymentMethodsUseCase>()(const NoParams())).fold(
-      (_) => <PaymentMethod>[],
-      (items) => items.where((m) => m.isActive).toList(),
-    );
+    final methods = (await getIt<GetPaymentMethodsUseCase>()(const NoParams()))
+        .fold(
+          (_) => <PaymentMethod>[],
+          (items) => items.where((m) => m.isActive).toList(),
+        );
     if (!mounted) return;
     final payment = await showDialog<PtPayment>(
       context: context,
-      builder: (_) => _RenewPtDialog(subscription: sub, paymentMethods: methods),
+      builder: (_) =>
+          _RenewPtDialog(subscription: sub, paymentMethods: methods),
     );
     if (payment == null || !mounted) return;
     await cubit.renewPt(subscriptionId: sub.id, payment: payment);
@@ -419,7 +425,10 @@ class _DossierContentState extends State<_DossierContent> {
 }
 
 class _RenewPtDialog extends StatefulWidget {
-  const _RenewPtDialog({required this.subscription, required this.paymentMethods});
+  const _RenewPtDialog({
+    required this.subscription,
+    required this.paymentMethods,
+  });
 
   final PtSubscription subscription;
   final List<PaymentMethod> paymentMethods;
@@ -429,8 +438,9 @@ class _RenewPtDialog extends StatefulWidget {
 }
 
 class _RenewPtDialogState extends State<_RenewPtDialog> {
-  late String? _methodId =
-      widget.paymentMethods.length == 1 ? widget.paymentMethods.first.id : null;
+  late String? _methodId = widget.paymentMethods.length == 1
+      ? widget.paymentMethods.first.id
+      : null;
 
   @override
   Widget build(BuildContext context) {
@@ -441,14 +451,22 @@ class _RenewPtDialogState extends State<_RenewPtDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(PtStrings.renewBody(sub.trainerName, ptWeekdaysLabel(sub.weekdays), sub.slotLabel)),
+          Text(
+            PtStrings.renewBody(
+              sub.trainerName,
+              ptWeekdaysLabel(sub.weekdays),
+              sub.slotLabel,
+            ),
+          ),
           const SizedBox(height: 12),
           if (widget.paymentMethods.isEmpty)
             const Text(PtStrings.noPaymentMethods)
           else
             DropdownButtonFormField<String>(
               initialValue: _methodId,
-              decoration: const InputDecoration(labelText: PtStrings.paymentMethod),
+              decoration: const InputDecoration(
+                labelText: PtStrings.paymentMethod,
+              ),
               items: [
                 for (final m in widget.paymentMethods)
                   DropdownMenuItem(value: m.id, child: Text(m.methodName)),
@@ -458,11 +476,16 @@ class _RenewPtDialogState extends State<_RenewPtDialog> {
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text(PtStrings.cancel)),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text(PtStrings.cancel),
+        ),
         FilledButton(
           onPressed: _methodId == null
               ? null
-              : () => Navigator.of(context).pop(PtPayment(paymentMethodId: int.parse(_methodId!))),
+              : () => Navigator.of(
+                  context,
+                ).pop(PtPayment(paymentMethodId: int.parse(_methodId!))),
           child: const Text(PtStrings.renew),
         ),
       ],
@@ -634,6 +657,19 @@ class _PersonalTrainingSection extends StatelessWidget {
             onPressed: onAddPt,
             child: const Text(PeopleStrings.addPersonalTraining),
           ),
+        // Goals apply to every member, not only those with personal training.
+        ListTile(
+          title: const Text(PeopleStrings.goals),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => ProgressHubScreen(
+                memberId: person.id.toString(),
+                canCreateGoals: !readOnly,
+              ),
+            ),
+          ),
+        ),
         if (showCoaching) ...[
           if (current != null)
             ListTile(
@@ -641,18 +677,6 @@ class _PersonalTrainingSection extends StatelessWidget {
               title: const Text(PeopleStrings.nextSchedule),
               subtitle: Text(_scheduleLabel(state.nextSchedule)),
             ),
-          ListTile(
-            title: const Text(PeopleStrings.goals),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => ProgressHubScreen(
-                  memberId: person.id.toString(),
-                  canCreateGoals: !readOnly,
-                ),
-              ),
-            ),
-          ),
           ListTile(
             title: const Text(PeopleStrings.workoutPlan),
             trailing: const Icon(Icons.chevron_right),

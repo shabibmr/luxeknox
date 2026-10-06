@@ -279,7 +279,7 @@ void main() {
     expect(find.text('6'), findsOneWidget);
     expect(find.text(PeopleStrings.firstName), findsNothing);
     expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
-    expect(find.text(PeopleStrings.goals), findsNothing);
+    expect(find.text(PeopleStrings.goals), findsOneWidget);
     expect(find.text(PeopleStrings.ptNotPurchased), findsOneWidget);
     expect(find.text(PeopleStrings.addPersonalTraining), findsNothing);
     expect(find.text(PeopleStrings.assignMembership), findsNothing);
@@ -394,7 +394,7 @@ void main() {
     await pumpDossier(tester);
 
     expect(find.text(PeopleStrings.addPersonalTraining), findsOneWidget);
-    expect(find.text(PeopleStrings.goals), findsNothing);
+    expect(find.text(PeopleStrings.goals), findsOneWidget);
   });
 
   testWidgets('admin cannot add PT when the membership has expired', (
