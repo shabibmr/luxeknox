@@ -28,3 +28,20 @@
 ## Console
 
 https://console.firebase.google.com/project/luxe-knox-app/overview
+
+## Web push (FCM token)
+
+Web needs a VAPID key and the messaging service worker. Android/iOS are unchanged when the define is omitted.
+
+1. Firebase Console → Project settings → Cloud Messaging → **Web Push certificates** → generate / copy the key pair.
+2. Run Chrome with the key:
+
+```powershell
+cd app
+flutter run -d chrome --dart-define=FCM_VAPID_KEY=<web-push-certificate-key>
+```
+
+3. Allow notifications in the browser. After login, `POST /devices` should store a row with `device_platform = web`.
+4. Service worker: `app/web/firebase-messaging-sw.js` (served at `/firebase-messaging-sw.js`). It uses the same `apiKey` / `projectId` / `messagingSenderId` / `appId` as `DefaultFirebaseOptions.web` and Firebase JS **12.19.0** (matches `firebase_core_web`).
+
+Without `FCM_VAPID_KEY`, web stays on stub device tokens (`FcmPushTokenProvider.isLive` stays false).
