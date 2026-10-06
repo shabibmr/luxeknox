@@ -13,6 +13,7 @@ part 'login_cubit.freezed.dart';
 abstract class LoginState with _$LoginState {
   const factory LoginState({
     @Default(LoadStatus.initial) LoadStatus status,
+    @Default(false) bool isGoogleSubmitting,
     String? errorMessage,
   }) = _LoginState;
 }
@@ -53,6 +54,27 @@ class LoginCubit extends Cubit<LoginState> {
     );
   }
 
+  Future<void> signInWithGoogle() async {
+    emit(const LoginState(status: LoadStatus.loading, isGoogleSubmitting: true));
+
+    final result = await _sessionCubit.loginWithGoogle();
+    result.fold(
+      (failure) {
+        if (failure is CancelledFailure) {
+          emit(const LoginState());
+          return;
+        }
+        emit(
+          LoginState(
+            status: LoadStatus.failure,
+            errorMessage: _googleMessageFor(failure),
+          ),
+        );
+      },
+      (_) => emit(const LoginState()),
+    );
+  }
+
   /// Wrong credentials, unknown identifier, and a suspended account all map
   /// to [AuthFailure] server-side and must show the identical message
   /// (FR-AUTH-002 — never reveal whether the account exists or its status).
@@ -61,5 +83,14 @@ class LoginCubit extends Cubit<LoginState> {
     RateLimitFailure() => AuthStrings.rateLimited,
     NetworkFailure() => AuthStrings.networkError,
     _ => AuthStrings.genericError,
+  };
+
+  /// Same account-status neutrality as [_messageFor]: an [AuthFailure] from the
+  /// Google exchange never tells the user whether a LuxeKnox account exists.
+  String _googleMessageFor(Failure failure) => switch (failure) {
+    AuthFailure() => AuthStrings.googleSignInUnavailable,
+    RateLimitFailure() => AuthStrings.rateLimited,
+    NetworkFailure() => AuthStrings.networkError,
+    _ => AuthStrings.googleSignInFailed,
   };
 }

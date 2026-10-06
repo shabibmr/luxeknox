@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 
 abstract class SessionRemoteDataSource {
   Future<api.SessionResponse> login(String identifier, String password);
+  Future<api.SessionResponse> loginWithFirebase(String idToken);
   Future<void> logout(String refreshToken);
   Future<api.SessionResponse> refresh(String refreshToken);
   Future<api.MeResponse> getMe();
@@ -20,9 +21,10 @@ abstract class SessionRemoteDataSource {
 
 @LazySingleton(as: SessionRemoteDataSource)
 class SessionRemoteDataSourceImpl implements SessionRemoteDataSource {
-  SessionRemoteDataSourceImpl(this._authApi);
+  SessionRemoteDataSourceImpl(this._authApi, this._dio);
 
   final api.AUTHApi _authApi;
+  final Dio _dio;
 
   @override
   Future<api.SessionResponse> login(String identifier, String password) async {
@@ -44,6 +46,34 @@ class SessionRemoteDataSourceImpl implements SessionRemoteDataSource {
       );
     }
     return data;
+  }
+
+  @override
+  Future<api.SessionResponse> loginWithFirebase(String idToken) async {
+    final response = await _dio.post<dynamic>(
+      '/auth/firebase',
+      data: {'idToken': idToken},
+    );
+    final data = response.data;
+    if (data == null) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        type: DioExceptionType.badResponse,
+        response: response,
+      );
+    }
+    final deserialized = api.standardSerializers.deserializeWith(
+      api.SessionResponse.serializer,
+      data,
+    );
+    if (deserialized == null) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        type: DioExceptionType.badResponse,
+        response: response,
+      );
+    }
+    return deserialized;
   }
 
   @override

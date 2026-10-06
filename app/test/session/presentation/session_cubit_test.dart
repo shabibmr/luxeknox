@@ -4,6 +4,7 @@ import 'package:luxeknox/session/domain/entities/capabilities.dart';
 import 'package:luxeknox/session/domain/entities/principal.dart';
 import 'package:luxeknox/session/domain/entities/user_type.dart';
 import 'package:luxeknox/session/domain/usecases/login_usecase.dart';
+import 'package:luxeknox/session/domain/usecases/login_with_google_usecase.dart';
 import 'package:luxeknox/session/domain/usecases/logout_usecase.dart';
 import 'package:luxeknox/session/domain/usecases/restore_session_usecase.dart';
 import 'package:luxeknox/session/presentation/session_cubit.dart';
@@ -18,10 +19,13 @@ class MockLoginUseCase extends Mock implements LoginUseCase {}
 
 class MockLogoutUseCase extends Mock implements LogoutUseCase {}
 
+class MockLoginWithGoogleUseCase extends Mock implements LoginWithGoogleUseCase {}
+
 void main() {
   late MockRestoreSessionUseCase mockRestoreUseCase;
   late MockLoginUseCase mockLoginUseCase;
   late MockLogoutUseCase mockLogoutUseCase;
+  late MockLoginWithGoogleUseCase mockLoginWithGoogleUseCase;
 
   const tPrincipal = Principal(
     userId: 'user-1',
@@ -35,15 +39,19 @@ void main() {
     mockRestoreUseCase = MockRestoreSessionUseCase();
     mockLoginUseCase = MockLoginUseCase();
     mockLogoutUseCase = MockLogoutUseCase();
+    mockLoginWithGoogleUseCase = MockLoginWithGoogleUseCase();
   });
+
+  SessionCubit createCubit() => SessionCubit(
+    restoreSessionUseCase: mockRestoreUseCase,
+    loginUseCase: mockLoginUseCase,
+    logoutUseCase: mockLogoutUseCase,
+    loginWithGoogleUseCase: mockLoginWithGoogleUseCase,
+  );
 
   group('SessionCubit (F7)', () {
     test('initial state is SessionUnknown', () {
-      final cubit = SessionCubit(
-        restoreSessionUseCase: mockRestoreUseCase,
-        loginUseCase: mockLoginUseCase,
-        logoutUseCase: mockLogoutUseCase,
-      );
+      final cubit = createCubit();
       expect(cubit.state, equals(const SessionUnknown()));
     });
 
@@ -53,11 +61,7 @@ void main() {
         when(
           () => mockRestoreUseCase(const NoParams()),
         ).thenAnswer((_) async => const Right((tPrincipal, tCapabilities)));
-        return SessionCubit(
-          restoreSessionUseCase: mockRestoreUseCase,
-          loginUseCase: mockLoginUseCase,
-          logoutUseCase: mockLogoutUseCase,
-        );
+        return createCubit();
       },
       act: (cubit) => cubit.restore(),
       expect: () => [
@@ -74,11 +78,7 @@ void main() {
         when(
           () => mockRestoreUseCase(const NoParams()),
         ).thenAnswer((_) async => const Left(AuthFailure()));
-        return SessionCubit(
-          restoreSessionUseCase: mockRestoreUseCase,
-          loginUseCase: mockLoginUseCase,
-          logoutUseCase: mockLogoutUseCase,
-        );
+        return createCubit();
       },
       act: (cubit) => cubit.restore(),
       expect: () => [const SessionUnauthenticated()],
@@ -90,11 +90,7 @@ void main() {
         when(
           () => mockRestoreUseCase(const NoParams()),
         ).thenAnswer((_) async => const Left(AuthFailure()));
-        return SessionCubit(
-          restoreSessionUseCase: mockRestoreUseCase,
-          loginUseCase: mockLoginUseCase,
-          logoutUseCase: mockLogoutUseCase,
-        );
+        return createCubit();
       },
       act: (cubit) => cubit.restore(),
       expect: () => [const SessionUnauthenticated()],
@@ -111,11 +107,7 @@ void main() {
             ),
           ),
         ).thenAnswer((_) async => const Right((tPrincipal, tCapabilities)));
-        return SessionCubit(
-          restoreSessionUseCase: mockRestoreUseCase,
-          loginUseCase: mockLoginUseCase,
-          logoutUseCase: mockLogoutUseCase,
-        );
+        return createCubit();
       },
       act: (cubit) => cubit.login('user@luxeknox.com', 'password123'),
       expect: () => [
@@ -137,13 +129,38 @@ void main() {
             ),
           ),
         ).thenAnswer((_) async => const Left(AuthFailure()));
-        return SessionCubit(
-          restoreSessionUseCase: mockRestoreUseCase,
-          loginUseCase: mockLoginUseCase,
-          logoutUseCase: mockLogoutUseCase,
-        );
+        return createCubit();
       },
       act: (cubit) => cubit.login('wrong@luxeknox.com', 'password123'),
+      expect: () => [const SessionUnauthenticated()],
+    );
+
+    blocTest<SessionCubit, SessionState>(
+      'loginWithGoogle success emits [SessionAuthenticated]',
+      build: () {
+        when(
+          () => mockLoginWithGoogleUseCase(const NoParams()),
+        ).thenAnswer((_) async => const Right((tPrincipal, tCapabilities)));
+        return createCubit();
+      },
+      act: (cubit) => cubit.loginWithGoogle(),
+      expect: () => [
+        const SessionAuthenticated(
+          principal: tPrincipal,
+          capabilities: tCapabilities,
+        ),
+      ],
+    );
+
+    blocTest<SessionCubit, SessionState>(
+      'loginWithGoogle failure emits [SessionUnauthenticated]',
+      build: () {
+        when(
+          () => mockLoginWithGoogleUseCase(const NoParams()),
+        ).thenAnswer((_) async => const Left(AuthFailure()));
+        return createCubit();
+      },
+      act: (cubit) => cubit.loginWithGoogle(),
       expect: () => [const SessionUnauthenticated()],
     );
 
@@ -153,11 +170,7 @@ void main() {
         when(
           () => mockLogoutUseCase(const NoParams()),
         ).thenAnswer((_) async => const Right(null));
-        return SessionCubit(
-          restoreSessionUseCase: mockRestoreUseCase,
-          loginUseCase: mockLoginUseCase,
-          logoutUseCase: mockLogoutUseCase,
-        );
+        return createCubit();
       },
       act: (cubit) => cubit.logout(),
       expect: () => [const SessionUnauthenticated(explicitSignOut: true)],
@@ -165,11 +178,7 @@ void main() {
 
     blocTest<SessionCubit, SessionState>(
       'onSignedOut emits [SessionUnauthenticated]',
-      build: () => SessionCubit(
-        restoreSessionUseCase: mockRestoreUseCase,
-        loginUseCase: mockLoginUseCase,
-        logoutUseCase: mockLogoutUseCase,
-      ),
+      build: () => createCubit(),
       act: (cubit) => cubit.onSignedOut(),
       expect: () => [const SessionUnauthenticated()],
     );

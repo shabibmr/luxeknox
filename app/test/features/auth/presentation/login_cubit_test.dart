@@ -1,5 +1,6 @@
 import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
+import 'package:luxeknox/features/auth/presentation/auth_strings.dart';
 import 'package:luxeknox/features/auth/presentation/cubit/login_cubit.dart';
 import 'package:luxeknox/session/domain/entities/capabilities.dart';
 import 'package:luxeknox/session/domain/entities/principal.dart';
@@ -13,16 +14,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:luxeknox/core/usecase/usecase.dart';
+import 'package:luxeknox/session/domain/usecases/login_with_google_usecase.dart';
+
 class MockRestoreSessionUseCase extends Mock implements RestoreSessionUseCase {}
 
 class MockLoginUseCase extends Mock implements LoginUseCase {}
 
 class MockLogoutUseCase extends Mock implements LogoutUseCase {}
 
+class MockLoginWithGoogleUseCase extends Mock implements LoginWithGoogleUseCase {}
+
 void main() {
   late MockRestoreSessionUseCase mockRestoreUseCase;
   late MockLoginUseCase mockLoginUseCase;
   late MockLogoutUseCase mockLogoutUseCase;
+  late MockLoginWithGoogleUseCase mockLoginWithGoogleUseCase;
   late SessionCubit sessionCubit;
 
   const tPrincipal = Principal(
@@ -41,10 +48,12 @@ void main() {
     mockRestoreUseCase = MockRestoreSessionUseCase();
     mockLoginUseCase = MockLoginUseCase();
     mockLogoutUseCase = MockLogoutUseCase();
+    mockLoginWithGoogleUseCase = MockLoginWithGoogleUseCase();
     sessionCubit = SessionCubit(
       restoreSessionUseCase: mockRestoreUseCase,
       loginUseCase: mockLoginUseCase,
       logoutUseCase: mockLogoutUseCase,
+      loginWithGoogleUseCase: mockLoginWithGoogleUseCase,
     );
   });
 
@@ -207,5 +216,56 @@ void main() {
       ).called(1);
       await cubit.close();
     });
+
+    blocTest<LoginCubit, LoginState>(
+      'signInWithGoogle success emits loading then initial',
+      build: () {
+        when(
+          () => mockLoginWithGoogleUseCase(const NoParams()),
+        ).thenAnswer((_) async => const Right((tPrincipal, tCapabilities)));
+        return LoginCubit(sessionCubit);
+      },
+      act: (cubit) => cubit.signInWithGoogle(),
+      expect: () => [
+        const LoginState(status: LoadStatus.loading, isGoogleSubmitting: true),
+        const LoginState(status: LoadStatus.initial, isGoogleSubmitting: false),
+      ],
+    );
+
+    blocTest<LoginCubit, LoginState>(
+      'signInWithGoogle user cancellation resets to initial without error',
+      build: () {
+        when(
+          () => mockLoginWithGoogleUseCase(const NoParams()),
+        ).thenAnswer((_) async => const Left(CancelledFailure()));
+        return LoginCubit(sessionCubit);
+      },
+      act: (cubit) => cubit.signInWithGoogle(),
+      expect: () => [
+        const LoginState(status: LoadStatus.loading, isGoogleSubmitting: true),
+        const LoginState(status: LoadStatus.initial, isGoogleSubmitting: false),
+      ],
+    );
+
+    blocTest<LoginCubit, LoginState>(
+      'signInWithGoogle auth failure emits neutral message that does not reveal account status',
+      build: () {
+        when(
+          () => mockLoginWithGoogleUseCase(const NoParams()),
+        ).thenAnswer((_) async => const Left(AuthFailure()));
+        return LoginCubit(sessionCubit);
+      },
+      act: (cubit) => cubit.signInWithGoogle(),
+      expect: () => [
+        const LoginState(status: LoadStatus.loading, isGoogleSubmitting: true),
+        isA<LoginState>()
+            .having((s) => s.status, 'status', LoadStatus.failure)
+            .having(
+              (s) => s.errorMessage,
+              'errorMessage',
+              AuthStrings.googleSignInUnavailable,
+            ),
+      ],
+    );
   });
 }

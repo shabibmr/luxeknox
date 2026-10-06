@@ -20,6 +20,13 @@ abstract class SessionRepository {
     String password,
   );
 
+  /// Authenticates a user using Google Sign-In via Firebase Auth.
+  ///
+  /// On success, returns the user's [Principal] and their [Capabilities].
+  /// If the user cancels the sign-in prompt, returns [CancelledFailure].
+  /// On failure, returns an appropriate [Failure].
+  Future<Either<Failure, (Principal, Capabilities)>> loginWithGoogle();
+
   /// Signs out the current user and clears their session.
   ///
   /// Typically this clears stored tokens and removes authenticated state.

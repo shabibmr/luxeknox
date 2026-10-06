@@ -13,6 +13,7 @@ import '../../../core/usecase/usecase.dart';
 import '../domain/entities/capabilities.dart';
 import '../domain/entities/principal.dart';
 import '../domain/usecases/login_usecase.dart';
+import '../domain/usecases/login_with_google_usecase.dart';
 import '../domain/usecases/logout_usecase.dart';
 import '../domain/usecases/restore_session_usecase.dart';
 
@@ -60,14 +61,17 @@ class SessionCubit extends Cubit<SessionState> {
     required RestoreSessionUseCase restoreSessionUseCase,
     required LoginUseCase loginUseCase,
     required LogoutUseCase logoutUseCase,
+    required LoginWithGoogleUseCase loginWithGoogleUseCase,
   }) : _restoreSessionUseCase = restoreSessionUseCase,
        _loginUseCase = loginUseCase,
        _logoutUseCase = logoutUseCase,
+       _loginWithGoogleUseCase = loginWithGoogleUseCase,
        super(const SessionUnknown());
 
   final RestoreSessionUseCase _restoreSessionUseCase;
   final LoginUseCase _loginUseCase;
   final LogoutUseCase _logoutUseCase;
+  final LoginWithGoogleUseCase _loginWithGoogleUseCase;
 
   Future<void> restore() async {
     final result = await _restoreSessionUseCase(const NoParams());
@@ -91,6 +95,21 @@ class SessionCubit extends Cubit<SessionState> {
     );
     result.fold(
       (_) => emit(const SessionUnauthenticated()),
+      (tuple) => emit(
+        SessionAuthenticated(principal: tuple.$1, capabilities: tuple.$2),
+      ),
+    );
+    return result;
+  }
+
+  Future<Either<Failure, (Principal, Capabilities)>> loginWithGoogle() async {
+    final result = await _loginWithGoogleUseCase(const NoParams());
+    result.fold(
+      (failure) {
+        if (state is! SessionAuthenticated) {
+          emit(const SessionUnauthenticated());
+        }
+      },
       (tuple) => emit(
         SessionAuthenticated(principal: tuple.$1, capabilities: tuple.$2),
       ),

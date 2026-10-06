@@ -41,6 +41,7 @@ import '../../features/attendance/presentation/cubit/attendance_history_cubit.da
     as _i85;
 import '../../features/attendance/presentation/cubit/attendance_pass_cubit.dart'
     as _i410;
+import '../../features/auth/data/services/firebase_auth_service.dart' as _i877;
 import '../../features/auth/presentation/cubit/change_password_cubit.dart'
     as _i33;
 import '../../features/auth/presentation/cubit/forgot_password_cubit.dart'
@@ -97,7 +98,7 @@ import '../../features/diet/domain/usecases/replace_diet_plan_meals_usecase.dart
 import '../../features/diet/domain/usecases/update_diet_plan_usecase.dart'
     as _i186;
 import '../../features/diet/presentation/cubit/diet_daily_log_cubit.dart'
-    as _i982;
+    as _i983;
 import '../../features/diet/presentation/cubit/diet_history_cubit.dart'
     as _i778;
 import '../../features/diet/presentation/cubit/diet_meal_detail_cubit.dart'
@@ -173,7 +174,7 @@ import '../../features/goals/domain/repositories/progress_photos_repository.dart
 import '../../features/goals/domain/usecases/goal_metrics_usecases.dart' as _i2;
 import '../../features/goals/domain/usecases/goals_usecases.dart' as _i62;
 import '../../features/goals/domain/usecases/measurements_usecases.dart'
-    as _i586;
+    as _i587;
 import '../../features/goals/domain/usecases/progress_notes_usecases.dart'
     as _i44;
 import '../../features/goals/domain/usecases/progress_photos_usecases.dart'
@@ -522,9 +523,10 @@ import '../../session/data/datasources/session_remote_datasource.dart' as _i963;
 import '../../session/data/repositories/session_repository_impl.dart' as _i803;
 import '../../session/domain/repositories/session_repository.dart' as _i158;
 import '../../session/domain/usecases/change_password_usecase.dart' as _i455;
-import '../../session/domain/usecases/forgot_password_usecase.dart' as _i587;
+import '../../session/domain/usecases/forgot_password_usecase.dart' as _i586;
 import '../../session/domain/usecases/get_me_usecase.dart' as _i852;
 import '../../session/domain/usecases/login_usecase.dart' as _i1059;
+import '../../session/domain/usecases/login_with_google_usecase.dart' as _i982;
 import '../../session/domain/usecases/logout_usecase.dart' as _i3;
 import '../../session/domain/usecases/refresh_session_usecase.dart' as _i898;
 import '../../session/domain/usecases/reset_password_usecase.dart' as _i695;
@@ -565,6 +567,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i668.CrashReporter>(
       () => const _i668.NoOpCrashReporter(),
+    );
+    gh.lazySingleton<_i877.FirebaseAuthService>(
+      () => _i877.FirebaseAuthServiceImpl(),
     );
     gh.lazySingleton<_i575.DeviceTokenStore>(
       () => _i808.DeviceTokenLocalStore(gh<_i558.FlutterSecureStorage>()),
@@ -614,6 +619,19 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i361.Dio>(),
       ),
     );
+    gh.lazySingleton<_i963.SessionRemoteDataSource>(
+      () => _i963.SessionRemoteDataSourceImpl(
+        gh<_i633.AUTHApi>(),
+        gh<_i361.Dio>(),
+      ),
+    );
+    gh.lazySingleton<_i158.SessionRepository>(
+      () => _i803.SessionRepositoryImpl(
+        gh<_i963.SessionRemoteDataSource>(),
+        gh<_i973.TokenStorage>(),
+        gh<_i877.FirebaseAuthService>(),
+      ),
+    );
     gh.lazySingleton<_i119.PtRemoteDataSource>(
       () => _i119.PtRemoteDataSourceImpl(gh<_i633.PTApi>()),
     );
@@ -626,9 +644,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i812.GoalsRemoteDataSource>(
       () => _i812.GoalsRemoteDataSourceImpl(gh<_i633.GOALApi>()),
-    );
-    gh.lazySingleton<_i963.SessionRemoteDataSource>(
-      () => _i963.SessionRemoteDataSourceImpl(gh<_i633.AUTHApi>()),
     );
     gh.lazySingleton<_i510.MediaUploader>(
       () => _i510.MediaUploader(gh<_i633.MEDIAApi>()),
@@ -651,6 +666,30 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i977.GoalMetricsRepository>(
       () => _i45.GoalMetricsRepositoryImpl(gh<_i812.GoalsRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i455.ChangePasswordUseCase>(
+      () => _i455.ChangePasswordUseCase(gh<_i158.SessionRepository>()),
+    );
+    gh.lazySingleton<_i586.ForgotPasswordUseCase>(
+      () => _i586.ForgotPasswordUseCase(gh<_i158.SessionRepository>()),
+    );
+    gh.lazySingleton<_i852.GetMeUseCase>(
+      () => _i852.GetMeUseCase(gh<_i158.SessionRepository>()),
+    );
+    gh.lazySingleton<_i1059.LoginUseCase>(
+      () => _i1059.LoginUseCase(gh<_i158.SessionRepository>()),
+    );
+    gh.lazySingleton<_i982.LoginWithGoogleUseCase>(
+      () => _i982.LoginWithGoogleUseCase(gh<_i158.SessionRepository>()),
+    );
+    gh.lazySingleton<_i898.RefreshSessionUseCase>(
+      () => _i898.RefreshSessionUseCase(gh<_i158.SessionRepository>()),
+    );
+    gh.lazySingleton<_i695.ResetPasswordUseCase>(
+      () => _i695.ResetPasswordUseCase(gh<_i158.SessionRepository>()),
+    );
+    gh.lazySingleton<_i123.RestoreSessionUseCase>(
+      () => _i123.RestoreSessionUseCase(gh<_i158.SessionRepository>()),
     );
     gh.lazySingleton<_i608.GoalsRepository>(
       () => _i159.GoalsRepositoryImpl(gh<_i812.GoalsRemoteDataSource>()),
@@ -681,12 +720,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i555.GoalsListCubit>(
       () => _i555.GoalsListCubit(gh<_i62.ListMemberGoalsUseCase>()),
     );
-    gh.lazySingleton<_i158.SessionRepository>(
-      () => _i803.SessionRepositoryImpl(
-        gh<_i963.SessionRemoteDataSource>(),
-        gh<_i973.TokenStorage>(),
-      ),
-    );
     gh.lazySingleton<_i804.GetDashboardUseCase>(
       () => _i804.GetDashboardUseCase(gh<_i665.DashboardRepository>()),
     );
@@ -701,6 +734,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i425.AttendanceRemoteDataSource>(
       () => _i425.AttendanceRemoteDataSourceImpl(gh<_i633.ATTNApi>()),
+    );
+    gh.factory<_i104.ForgotPasswordCubit>(
+      () => _i104.ForgotPasswordCubit(gh<_i586.ForgotPasswordUseCase>()),
     );
     gh.lazySingleton<_i140.SettingsRemoteDataSource>(
       () => _i140.SettingsRemoteDataSourceImpl(gh<_i633.SYSApi>()),
@@ -734,6 +770,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i633.WORKApi>(),
         gh<_i361.Dio>(),
       ),
+    );
+    gh.factory<_i33.ChangePasswordCubit>(
+      () => _i33.ChangePasswordCubit(gh<_i455.ChangePasswordUseCase>()),
     );
     gh.lazySingleton<_i327.ProfileRemoteDataSource>(
       () => _i327.ProfileRemoteDataSourceImpl(gh<_i633.HEALTHApi>()),
@@ -839,6 +878,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i2.UpdateGoalMetricUseCase>(),
       ),
     );
+    gh.factory<_i476.ResetPasswordCubit>(
+      () => _i476.ResetPasswordCubit(gh<_i695.ResetPasswordUseCase>()),
+    );
     gh.lazySingleton<_i728.FoodRepository>(
       () => _i64.FoodRepositoryImpl(gh<_i822.FoodRemoteDataSource>()),
     );
@@ -857,14 +899,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i630.UnregisterDeviceOnLogoutUseCase>(),
       ),
     );
-    gh.lazySingleton<_i586.ListMeasurementsUseCase>(
-      () => _i586.ListMeasurementsUseCase(gh<_i247.MeasurementsRepository>()),
+    gh.lazySingleton<_i587.ListMeasurementsUseCase>(
+      () => _i587.ListMeasurementsUseCase(gh<_i247.MeasurementsRepository>()),
     );
-    gh.lazySingleton<_i586.GetMeasurementUseCase>(
-      () => _i586.GetMeasurementUseCase(gh<_i247.MeasurementsRepository>()),
+    gh.lazySingleton<_i587.GetMeasurementUseCase>(
+      () => _i587.GetMeasurementUseCase(gh<_i247.MeasurementsRepository>()),
     );
-    gh.lazySingleton<_i586.CreateMeasurementUseCase>(
-      () => _i586.CreateMeasurementUseCase(gh<_i247.MeasurementsRepository>()),
+    gh.lazySingleton<_i587.CreateMeasurementUseCase>(
+      () => _i587.CreateMeasurementUseCase(gh<_i247.MeasurementsRepository>()),
     );
     gh.lazySingleton<_i325.MembershipRepository>(
       () => _i920.MembershipRepositoryImpl(
@@ -1002,33 +1044,20 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i773.WorkoutPlanRemoteDataSource>(),
       ),
     );
-    gh.factory<_i927.MeasurementsCubit>(
-      () => _i927.MeasurementsCubit(
-        gh<_i586.ListMeasurementsUseCase>(),
-        gh<_i586.CreateMeasurementUseCase>(),
-        gh<_i2.ListGoalMetricsUseCase>(),
+    gh.singleton<_i893.SessionCubit>(
+      () => _i893.SessionCubit(
+        restoreSessionUseCase: gh<_i123.RestoreSessionUseCase>(),
+        loginUseCase: gh<_i1059.LoginUseCase>(),
+        logoutUseCase: gh<_i3.LogoutUseCase>(),
+        loginWithGoogleUseCase: gh<_i982.LoginWithGoogleUseCase>(),
       ),
     );
-    gh.lazySingleton<_i455.ChangePasswordUseCase>(
-      () => _i455.ChangePasswordUseCase(gh<_i158.SessionRepository>()),
-    );
-    gh.lazySingleton<_i587.ForgotPasswordUseCase>(
-      () => _i587.ForgotPasswordUseCase(gh<_i158.SessionRepository>()),
-    );
-    gh.lazySingleton<_i852.GetMeUseCase>(
-      () => _i852.GetMeUseCase(gh<_i158.SessionRepository>()),
-    );
-    gh.lazySingleton<_i1059.LoginUseCase>(
-      () => _i1059.LoginUseCase(gh<_i158.SessionRepository>()),
-    );
-    gh.lazySingleton<_i898.RefreshSessionUseCase>(
-      () => _i898.RefreshSessionUseCase(gh<_i158.SessionRepository>()),
-    );
-    gh.lazySingleton<_i695.ResetPasswordUseCase>(
-      () => _i695.ResetPasswordUseCase(gh<_i158.SessionRepository>()),
-    );
-    gh.lazySingleton<_i123.RestoreSessionUseCase>(
-      () => _i123.RestoreSessionUseCase(gh<_i158.SessionRepository>()),
+    gh.factory<_i927.MeasurementsCubit>(
+      () => _i927.MeasurementsCubit(
+        gh<_i587.ListMeasurementsUseCase>(),
+        gh<_i587.CreateMeasurementUseCase>(),
+        gh<_i2.ListGoalMetricsUseCase>(),
+      ),
     );
     gh.lazySingleton<_i744.GetPublicSettingsUseCase>(
       () => _i744.GetPublicSettingsUseCase(gh<_i674.SettingsRepository>()),
@@ -1050,6 +1079,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i275.ExerciseRepository>(
       () => _i340.ExerciseRepositoryImpl(gh<_i100.ExerciseRemoteDataSource>()),
+    );
+    gh.factory<_i69.LoginCubit>(
+      () => _i69.LoginCubit(gh<_i893.SessionCubit>()),
     );
     gh.lazySingleton<_i748.ListProgressPhotosUseCase>(
       () =>
@@ -1118,9 +1150,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i212.DeviceTokenRegistrar>(),
       ),
     );
-    gh.factory<_i104.ForgotPasswordCubit>(
-      () => _i104.ForgotPasswordCubit(gh<_i587.ForgotPasswordUseCase>()),
-    );
     gh.factory<_i552.NotificationDetailCubit>(
       () => _i552.NotificationDetailCubit(
         gh<_i864.GetNotificationUseCase>(),
@@ -1182,9 +1211,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i864.ListBroadcastsUseCase>(),
       ),
     );
-    gh.factory<_i33.ChangePasswordCubit>(
-      () => _i33.ChangePasswordCubit(gh<_i455.ChangePasswordUseCase>()),
-    );
     gh.lazySingleton<_i770.DeleteDocumentUseCase>(
       () => _i770.DeleteDocumentUseCase(gh<_i211.DocumentRepository>()),
     );
@@ -1211,6 +1237,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i44.ListProgressNotesUseCase>(),
         gh<_i44.CreateProgressNoteUseCase>(),
       ),
+    );
+    gh.singleton<_i583.GoRouter>(
+      () => registerModule.router(gh<_i893.SessionCubit>()),
     );
     gh.lazySingleton<_i771.DietLogRepository>(
       () => _i532.DietLogRepositoryImpl(gh<_i785.DietLogRemoteDataSource>()),
@@ -1298,9 +1327,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i359.GetMembershipProductsUseCase>(),
         gh<_i806.RenewMembershipUseCase>(),
       ),
-    );
-    gh.factory<_i476.ResetPasswordCubit>(
-      () => _i476.ResetPasswordCubit(gh<_i695.ResetPasswordUseCase>()),
     );
     gh.factory<_i85.AttendanceHistoryCubit>(
       () => _i85.AttendanceHistoryCubit(gh<_i841.ListAttendancesUseCase>()),
@@ -1535,13 +1561,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i359.GetMembershipProductsUseCase>(),
       ),
     );
-    gh.singleton<_i893.SessionCubit>(
-      () => _i893.SessionCubit(
-        restoreSessionUseCase: gh<_i123.RestoreSessionUseCase>(),
-        loginUseCase: gh<_i1059.LoginUseCase>(),
-        logoutUseCase: gh<_i3.LogoutUseCase>(),
-      ),
-    );
     gh.factory<_i551.EditTrainerProfileCubit>(
       () => _i551.EditTrainerProfileCubit(
         gh<_i1033.GetTrainerUseCase>(),
@@ -1594,6 +1613,15 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i300.BookScheduleBloc>(
       () => _i300.BookScheduleBloc(gh<_i777.BookScheduleUseCase>()),
+    );
+    gh.lazySingleton<_i287.FcmMessagingService>(
+      () => _i287.FcmMessagingService(
+        gh<_i18.PushTokenProvider>(),
+        gh<_i212.DeviceTokenRegistrar>(),
+        gh<_i583.GoRouter>(),
+        gh<_i893.SessionCubit>(),
+      ),
+      dispose: (i) => i.dispose(),
     );
     gh.factory<_i847.EditMemberCubit>(
       () => _i847.EditMemberCubit(
@@ -1649,9 +1677,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i499.CreateMembershipProductUseCase>(),
         gh<_i30.UpdateMembershipProductUseCase>(),
       ),
-    );
-    gh.factory<_i69.LoginCubit>(
-      () => _i69.LoginCubit(gh<_i893.SessionCubit>()),
     );
     gh.factory<_i369.EmployeesDirectoryCubit>(
       () => _i369.EmployeesDirectoryCubit(gh<_i1004.ListEmployeesUseCase>()),
@@ -1722,15 +1747,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i377.RequestMembershipFreezeUseCase>(),
       ),
     );
-    gh.factory<_i982.DietDailyLogCubit>(
-      () => _i982.DietDailyLogCubit(
+    gh.factory<_i983.DietDailyLogCubit>(
+      () => _i983.DietDailyLogCubit(
         gh<_i638.RecordDietLogUseCase>(),
         gh<_i1025.ListDietLogsUseCase>(),
         gh<_i639.ListDietPlansUseCase>(),
       ),
-    );
-    gh.singleton<_i583.GoRouter>(
-      () => registerModule.router(gh<_i893.SessionCubit>()),
     );
     gh.factory<_i1063.WorkoutPlanVersionsCubit>(
       () => _i1063.WorkoutPlanVersionsCubit(
@@ -1760,15 +1782,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i757.ExerciseListBloc(
         getExercisesUseCase: gh<_i871.GetExercisesUseCase>(),
       ),
-    );
-    gh.lazySingleton<_i287.FcmMessagingService>(
-      () => _i287.FcmMessagingService(
-        gh<_i18.PushTokenProvider>(),
-        gh<_i212.DeviceTokenRegistrar>(),
-        gh<_i583.GoRouter>(),
-        gh<_i893.SessionCubit>(),
-      ),
-      dispose: (i) => i.dispose(),
     );
     return this;
   }

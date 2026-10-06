@@ -5,6 +5,7 @@ import 'package:luxeknox/core/di/injector.dart';
 import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/features/auth/presentation/cubit/login_cubit.dart';
 import 'package:luxeknox/features/auth/presentation/screens/login_screen.dart';
+import 'package:luxeknox/features/auth/presentation/widgets/google_sign_in_button.dart';
 import 'package:luxeknox/session/domain/entities/capabilities.dart';
 import 'package:luxeknox/session/domain/entities/principal.dart';
 import 'package:luxeknox/session/domain/entities/user_type.dart';
@@ -107,6 +108,48 @@ void main() {
       await tester.tap(find.byIcon(Icons.visibility));
       await tester.pump();
       expect(find.byIcon(Icons.visibility_off), findsOneWidget);
+    });
+
+    testWidgets('Google sign-in button and OR divider are rendered', (
+      tester,
+    ) async {
+      await pumpLoginScreen(tester);
+
+      expect(find.text('OR'), findsOneWidget);
+      expect(find.text('Sign in with Google'), findsOneWidget);
+      expect(find.byType(GoogleSignInButton), findsOneWidget);
+    });
+
+    testWidgets('tapping Google sign-in triggers loginWithGoogle', (
+      tester,
+    ) async {
+      when(
+        () => mockSessionCubit.loginWithGoogle(),
+      ).thenAnswer((_) async => const Right((tPrincipal, tCapabilities)));
+
+      await pumpLoginScreen(tester);
+      await tester.tap(find.byType(GoogleSignInButton));
+      await tester.pumpAndSettle();
+
+      verify(() => mockSessionCubit.loginWithGoogle()).called(1);
+    });
+
+    testWidgets('Google button is disabled while submission is in flight', (
+      tester,
+    ) async {
+      final completer = Completer<Either<Failure, (Principal, Capabilities)>>();
+      when(
+        () => mockSessionCubit.loginWithGoogle(),
+      ).thenAnswer((_) => completer.future);
+
+      await pumpLoginScreen(tester);
+      await tester.tap(find.byType(GoogleSignInButton));
+      await tester.pump();
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      completer.complete(const Right((tPrincipal, tCapabilities)));
+      await tester.pumpAndSettle();
     });
   });
 }

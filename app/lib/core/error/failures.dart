@@ -76,3 +76,8 @@ final class NetworkFailure extends Failure {
 final class UnknownFailure extends Failure {
   const UnknownFailure();
 }
+
+/// Failure indicating an operation was explicitly cancelled by the user.
+final class CancelledFailure extends Failure {
+  const CancelledFailure();
+}

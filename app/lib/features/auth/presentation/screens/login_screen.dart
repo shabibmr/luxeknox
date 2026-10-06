@@ -3,12 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/config/app_config.dart';
+import '../../../../core/config/app_config_bootstrap.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../auth_strings.dart';
 import '../cubit/login_cubit.dart';
+import '../widgets/google_sign_in_button.dart';
+
+/// google_sign_in has native implementations only for Android and iOS; web uses a
+/// Firebase popup. Desktop has neither, so the button would always fail there.
+bool get _supportsGoogleSignIn =>
+    kIsWeb ||
+    defaultTargetPlatform == TargetPlatform.android ||
+    defaultTargetPlatform == TargetPlatform.iOS;
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -56,13 +64,16 @@ class _LoginFormState extends State<_LoginForm> {
       appBar: AppBar(title: const Text(AuthStrings.signInTitle)),
       body: BlocBuilder<LoginCubit, LoginState>(
         builder: (context, state) {
+          final isGoogleSubmitting = state.isGoogleSubmitting;
           final isSubmitting = state.status == LoadStatus.loading;
+          final isEmailSubmitting = isSubmitting && !isGoogleSubmitting;
           return Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Form(
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -125,7 +136,7 @@ class _LoginFormState extends State<_LoginForm> {
                       const SizedBox(height: 24),
                       FilledButton(
                         onPressed: isSubmitting ? null : _submit,
-                        child: isSubmitting
+                        child: isEmailSubmitting
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
@@ -141,11 +152,36 @@ class _LoginFormState extends State<_LoginForm> {
                             : () => context.go(Routes.forgotPassword),
                         child: const Text(AuthStrings.forgotPassword),
                       ),
-                      if (!kReleaseMode) ...[
+                      if (_supportsGoogleSignIn) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                AuthStrings.orDivider,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                              ),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        GoogleSignInButton(
+                          isLoading: state.isGoogleSubmitting,
+                          onPressed: isSubmitting
+                              ? null
+                              : () => context.read<LoginCubit>().signInWithGoogle(),
+                        ),
+                      ],
+                      if (!kReleaseMode && AppConfigBootstrap.resolved != null) ...[
                         const SizedBox(height: 16),
                         // Debug aid: shows which API the app is talking to.
                         SelectableText(
-                          'API: ${getIt<AppConfig>().apiBaseUrl}',
+                          'API: ${AppConfigBootstrap.resolved!.apiBaseUrl}',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
@@ -155,7 +191,8 @@ class _LoginFormState extends State<_LoginForm> {
                 ),
               ),
             ),
-          );
+          ),
+        );
         },
       ),
     );

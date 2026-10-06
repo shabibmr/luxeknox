@@ -1,9 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../core/error/failures.dart';
 import '../../../core/error/map_thrown.dart';
 import '../../../core/storage/token_storage.dart';
+import '../../../features/auth/data/services/firebase_auth_service.dart';
 import '../../domain/entities/capabilities.dart';
 import '../../domain/entities/principal.dart';
 import '../../domain/repositories/session_repository.dart';
@@ -12,10 +14,15 @@ import '../models/session_mapper.dart';
 
 @LazySingleton(as: SessionRepository)
 class SessionRepositoryImpl implements SessionRepository {
-  SessionRepositoryImpl(this._remoteDataSource, this._tokenStorage);
+  SessionRepositoryImpl(
+    this._remoteDataSource,
+    this._tokenStorage,
+    this._firebaseAuthService,
+  );
 
   final SessionRemoteDataSource _remoteDataSource;
   final TokenStorage _tokenStorage;
+  final FirebaseAuthService _firebaseAuthService;
 
   @override
   Future<Either<Failure, (Principal, Capabilities)>> login(
@@ -33,6 +40,42 @@ class SessionRepositoryImpl implements SessionRepository {
   }
 
   @override
+  Future<Either<Failure, (Principal, Capabilities)>> loginWithGoogle() async {
+    try {
+      final credential = await _firebaseAuthService.signInWithGoogle();
+      if (credential == null || credential.user == null) {
+        return const Left(CancelledFailure());
+      }
+
+      final idToken = await credential.user!.getIdToken();
+      if (idToken == null) {
+        throw StateError('Firebase returned no ID token');
+      }
+
+      final session = await _remoteDataSource.loginWithFirebase(idToken);
+      await _tokenStorage.writeAccessToken(session.accessToken);
+      await _tokenStorage.writeRefreshToken(session.refreshToken);
+      return Right(SessionMapper.fromSessionResponse(session));
+    } catch (e) {
+      // Firebase may be signed in even though LuxeKnox rejected the exchange.
+      // Drop that session so the next attempt starts from a clean state.
+      await _discardFirebaseSession();
+      if (e is FirebaseAuthException && e.code == 'network-request-failed') {
+        return const Left(NetworkFailure());
+      }
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  Future<void> _discardFirebaseSession() async {
+    try {
+      await _firebaseAuthService.signOut();
+    } catch (_) {
+      // Best effort. The sign-in error is what the user needs to see.
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> logout() async {
     try {
       final refreshToken = await _tokenStorage.readRefreshToken();
@@ -43,6 +86,9 @@ class SessionRepositoryImpl implements SessionRepository {
           // Failure on remote logout should not block local clearance
         }
       }
+      try {
+        await _firebaseAuthService.signOut();
+      } catch (_) {}
       await _tokenStorage.clear();
       return const Right(null);
     } catch (e) {

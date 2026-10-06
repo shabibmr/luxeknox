@@ -38,4 +38,11 @@ abstract final class AuthStrings {
   static const networkError =
       'Network error. Please check your connection and try again.';
   static const genericError = 'Something went wrong. Please try again.';
+
+  static const signInWithGoogle = 'Sign in with Google';
+  static const orDivider = 'OR';
+  // Deliberately identical for unknown, inactive, and unverified accounts (FR-AUTH-002).
+  static const googleSignInUnavailable =
+      "We couldn't sign you in with this Google account. Contact gym administration if you think this is a mistake.";
+  static const googleSignInFailed = 'Google sign-in failed. Please try again.';
 }

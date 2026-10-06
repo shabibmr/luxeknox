@@ -77,5 +77,18 @@
 	</array>
 	<key>FirebaseAppDelegateProxyEnabled</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.27985362758-2h6u8671ae27nidpkr52pos1qtiu37rd</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>27985362758-2h6u8671ae27nidpkr52pos1qtiu37rd.apps.googleusercontent.com</string>
 </dict>
 </plist>

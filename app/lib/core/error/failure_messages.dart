@@ -19,6 +19,7 @@ String failureMessage(Failure failure) {
     RateLimitFailure() => 'Too many requests. Please try again later.',
     NetworkFailure() =>
       'Network error. Please check your connection and try again.',
+    CancelledFailure() => 'Operation was cancelled.',
     UnknownFailure() => 'An unexpected error occurred. Please try again.',
   };
 }
