@@ -12,5 +12,5 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
-  // Delivery logging / local display can be added when Nest NOTIF lands.
+  // System tray uses the FCM notification payload; do not show a second local notification here.
 }
