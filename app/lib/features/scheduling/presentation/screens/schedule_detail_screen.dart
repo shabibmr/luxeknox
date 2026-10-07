@@ -43,11 +43,18 @@ class _ScheduleDetailBody extends StatelessWidget {
   final String scheduleId;
   final ScheduleCalendarRole role;
 
-  bool _memberIsBooked(ScheduleDetailState state, String? memberId) {
-    if (memberId == null || state.session == null) return false;
-    return state.session!.participants.any(
-      (p) => p.memberId == memberId && p.bookingStatus == BookingStatus.booked,
-    );
+  ScheduleParticipantEntry? _memberBooking(
+    ScheduleDetailState state,
+    String? memberId,
+  ) {
+    if (memberId == null || state.session == null) return null;
+    for (final participant in state.session!.participants) {
+      if (participant.memberId == memberId &&
+          participant.bookingStatus != BookingStatus.cancelled) {
+        return participant;
+      }
+    }
+    return null;
   }
 
   Future<void> _openReschedule(BuildContext context) async {
@@ -120,7 +127,9 @@ class _ScheduleDetailBody extends StatelessWidget {
         final memberId = sessionState is SessionAuthenticated
             ? sessionState.principal.profileId
             : null;
-        final memberBooked = _memberIsBooked(state, memberId);
+        final memberBooking = _memberBooking(state, memberId);
+        final memberBooked =
+            memberBooking?.bookingStatus == BookingStatus.booked;
         final canRescheduleNow =
             showReschedule &&
             session != null &&
@@ -235,6 +244,77 @@ class _ScheduleDetailBody extends StatelessWidget {
                         '${session.isFull ? ' (full)' : ''}',
                       ),
                     const SizedBox(height: 16),
+                    if (role == ScheduleCalendarRole.member) ...[
+                      Text(
+                        SchedulingStrings.bookingInfo,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      if (memberBooking == null)
+                        Text(SchedulingStrings.notBooked)
+                      else
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            memberBooking.bookingStatus ==
+                                    BookingStatus.waitlisted
+                                ? SchedulingStrings.waitlisted
+                                : SchedulingStrings.booked,
+                          ),
+                          subtitle: memberBooking.attended == null
+                              ? null
+                              : Text(
+                                  memberBooking.attended!
+                                      ? AttendanceStrings.markAttended
+                                      : AttendanceStrings.markNoShow,
+                                ),
+                          trailing: context.can('schedules.cancel')
+                              ? TextButton(
+                                  onPressed: actionInFlight
+                                      ? null
+                                      : () => context
+                                            .read<ScheduleDetailCubit>()
+                                            .unbook(memberId!),
+                                  child: Text(
+                                    memberBooking.bookingStatus ==
+                                            BookingStatus.waitlisted
+                                        ? SchedulingStrings.leaveWaitlist
+                                        : SchedulingStrings.unbook,
+                                  ),
+                                )
+                              : null,
+                        ),
+                      if (session.facilityId != null)
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.room_outlined),
+                          title: Text(
+                            SchedulingStrings.roomLabel +
+                                ': ' +
+                                session.facilityId!,
+                          ),
+                        ),
+                      if (session.trainerId != null)
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.person_outline),
+                          title: Text(
+                            SchedulingStrings.trainerLabel +
+                                ': ' +
+                                session.trainerId!,
+                          ),
+                          subtitle: session.notes == null
+                              ? null
+                              : Text(session.notes!),
+                        ),
+                      if (session.notes != null)
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.info_outline),
+                          title: Text(SchedulingStrings.cancellationPolicy),
+                          subtitle: Text(session.notes!),
+                        ),
+                    ] else ...[
                     Text(
                       SchedulingStrings.roster,
                       style: Theme.of(context).textTheme.titleMedium,
@@ -334,8 +414,11 @@ class _ScheduleDetailBody extends StatelessWidget {
                                 : null,
                           ),
                         ),
-                    const SizedBox(height: 24),
-                    if (role.showBookActions)
+
+                    ],                    const SizedBox(height: 24),
+                    if (role.showBookActions &&
+                        context.can('schedules.book') &&
+                        memberBooking == null)
                       FilledButton(
                         onPressed: actionInFlight
                             ? null
