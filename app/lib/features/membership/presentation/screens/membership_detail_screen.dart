@@ -8,12 +8,14 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
-import '../../../../session/domain/entities/user_type.dart';
-import '../../../../session/presentation/session_cubit.dart';
 import '../cubit/membership_detail_cubit.dart';
+import '../cubit/membership_freeze_cubit.dart';
+import '../cubit/membership_history_cubit.dart';
+import '../membership_date_format.dart';
 import '../membership_strings.dart';
 import '../widgets/membership_freeze_list.dart';
 import '../widgets/membership_history_list.dart';
@@ -32,8 +34,18 @@ class MembershipDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<MembershipDetailCubit>()..load(membershipId),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => getIt<MembershipDetailCubit>()..load(membershipId),
+        ),
+        BlocProvider(
+          create: (_) => getIt<MembershipFreezeCubit>()..load(membershipId: membershipId),
+        ),
+        BlocProvider(
+          create: (_) => getIt<MembershipHistoryCubit>()..load(membershipId: membershipId),
+        ),
+      ],
       child: _MembershipDetailView(membershipId: membershipId),
     );
   }
@@ -260,10 +272,7 @@ class _MembershipDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final canApprove = context.can('memberships.approve');
     final canUpdate = context.can('memberships.update');
-    final session = context.watch<SessionCubit>().state;
-    final hidePricing =
-        session is SessionAuthenticated &&
-        session.principal.userType == UserType.trainer;
+    final hidePricing = !context.can('memberships.view_price');
 
     return Scaffold(
       appBar: AppBar(title: const Text(MembershipStrings.detailTitle)),
@@ -334,11 +343,11 @@ class _MembershipDetailView extends StatelessWidget {
           const SizedBox(height: 16),
           _infoRow(
             MembershipStrings.startDateLabel,
-            membership.startDate.toString().split(' ').first,
+            formatMembershipDate(membership.startDate),
           ),
           _infoRow(
             MembershipStrings.endDateLabel,
-            membership.endDate.toString().split(' ').first,
+            formatMembershipDate(membership.endDate),
           ),
           if (membership.lockerNumber != null)
             _infoRow(
