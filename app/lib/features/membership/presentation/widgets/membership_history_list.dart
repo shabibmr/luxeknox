@@ -95,13 +95,11 @@ class _MembershipHistoryListBody extends StatelessWidget {
               title: Text(_actionLabel(entry.action)),
               subtitle: entry.newEndDate != null
                   ? Text(
-                      'New end date: ${entry.newEndDate!.toLocal()}'
-                          .split(' ')
-                          .first,
+                      'New end date: ${formatMembershipDate(entry.newEndDate!)}',
                     )
                   : null,
               trailing: Text(
-                entry.timestamp.toLocal().toString().split(' ').first,
+                formatMembershipDate(entry.timestamp),
               ),
             );
           },
