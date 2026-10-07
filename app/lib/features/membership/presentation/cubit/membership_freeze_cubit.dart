@@ -8,6 +8,7 @@ import '../../domain/entities/membership_freeze.dart';
 import '../../domain/usecases/approve_freeze_usecase.dart';
 import '../../domain/usecases/get_membership_freezes_usecase.dart';
 import '../../domain/usecases/get_memberships_usecase.dart';
+import '../../domain/entities/membership.dart';
 import '../../domain/usecases/reject_freeze_usecase.dart';
 
 part 'membership_freeze_cubit.freezed.dart';
@@ -70,7 +71,7 @@ class MembershipFreezeCubit extends Cubit<MembershipFreezeState> {
         state.copyWith(
           status: LoadStatus.success,
           failure: null,
-          membershipId: page.items.isEmpty ? null : page.items.first.id,
+          membershipId: page.items.isEmpty ? null : _preferActive(page.items)?.id,
         ),
       ),
     );
@@ -126,4 +127,9 @@ class MembershipFreezeCubit extends Cubit<MembershipFreezeState> {
     }
     return failure;
   }
+}
+
+Membership? _preferActive(List<Membership> items) {
+  if (items.isEmpty) return null;
+  return items.firstWhere((m) => m.isActiveOrFrozen, orElse: () => items.first);
 }
