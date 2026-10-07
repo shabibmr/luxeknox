@@ -115,13 +115,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "gender": {
-          "name": "gender",
-          "type": "varchar(32)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "job_title": {
           "name": "job_title",
           "type": "varchar(150)",
