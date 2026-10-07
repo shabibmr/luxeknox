@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/membership_freeze.dart';
@@ -30,14 +29,10 @@ class MembershipFreezeList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) =>
-          getIt<MembershipFreezeCubit>()..load(membershipId: membershipId),
-      child: _MembershipFreezeListBody(
-        membershipId: membershipId,
-        canApprove: canApprove,
-        onChanged: onChanged,
-      ),
+    return _MembershipFreezeListBody(
+      membershipId: membershipId,
+      canApprove: canApprove,
+      onChanged: onChanged,
     );
   }
 }
@@ -168,8 +163,8 @@ class _MembershipFreezeListBody extends StatelessWidget {
           itemCount: state.items.length,
           itemBuilder: (context, index) {
             final freeze = state.items[index];
-            final start = freeze.startDate.toString().split(' ').first;
-            final end = freeze.endDate.toString().split(' ').first;
+            final start = formatMembershipDate(freeze.startDate);
+            final end = formatMembershipDate(freeze.endDate);
             final isBusy = state.busyId == freeze.id;
             final actionsLocked = isBusy || state.status == LoadStatus.loading;
             return ListTile(
