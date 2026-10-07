@@ -8,7 +8,6 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
-import '../../../../
 import '../../domain/entities/membership_product.dart';
 import '../cubit/membership_packages_catalog_cubit.dart';
 import '../membership_strings.dart';
@@ -45,7 +44,7 @@ class _CatalogBody extends StatelessWidget {
       ),
     );
     if (saved == true && context.mounted) {
-      await context.read<MembershipPackagesCatalogCubit>().load();
+      await context.read<MembershipPackagesCatalogCubit>().load(activeOnly: readOnly);
     }
   }
 
