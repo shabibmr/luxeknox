@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
@@ -213,7 +214,9 @@ class _BookPtBodyState extends State<_BookPtBody> {
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
-                      onPressed: submitting || _selected == null
+                      onPressed: submitting ||
+                              _selected == null ||
+                              !context.can('schedules.book')
                           ? null
                           : () => _book(context, _selected!),
                       child: Text(
@@ -327,7 +330,9 @@ class _BookAction extends StatelessWidget {
       builder: (context, state) {
         final submitting = state.status == LoadStatus.loading;
         return TextButton(
-          onPressed: submitting ? null : () => _book(context),
+          onPressed: submitting || !context.can('schedules.book')
+              ? null
+              : () => _book(context),
           child: Text(
             submitting && state.scheduleId == scheduleId
                 ? SchedulingStrings.submitting
