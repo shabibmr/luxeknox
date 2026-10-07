@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
@@ -60,10 +61,19 @@ class ScheduleCalendarScreen extends StatelessWidget {
   }
 }
 
-class _ScheduleCalendarBody extends StatelessWidget {
+class _ScheduleCalendarBody extends StatefulWidget {
   const _ScheduleCalendarBody({required this.role});
 
   final ScheduleCalendarRole role;
+
+  @override
+  State<_ScheduleCalendarBody> createState() => _ScheduleCalendarBodyState();
+}
+
+class _ScheduleCalendarBodyState extends State<_ScheduleCalendarBody> {
+  ScheduleSessionStatus? _statusFilter;
+
+  ScheduleCalendarRole get role => widget.role;
 
   @override
   Widget build(BuildContext context) {
@@ -82,15 +92,22 @@ class _ScheduleCalendarBody extends StatelessWidget {
                 context.read<ScheduleCalendarCubit>().shiftRange(7),
           ),
           if (role == ScheduleCalendarRole.member) ...[
+            if (context.can('schedules.book'))
+              IconButton(
+                tooltip: SchedulingStrings.bookPtTitle,
+                icon: const Icon(Icons.person_add_alt),
+                onPressed: () => context.go(Routes.memberScheduleBookPt),
+              ),
+            if (context.can('schedules.book'))
+              IconButton(
+                tooltip: SchedulingStrings.bookClassTitle,
+                icon: const Icon(Icons.groups_outlined),
+                onPressed: () => context.go(Routes.memberScheduleBookClass),
+              ),
             IconButton(
-              tooltip: SchedulingStrings.bookPtTitle,
-              icon: const Icon(Icons.person_add_alt),
-              onPressed: () => context.go(Routes.memberScheduleBookPt),
-            ),
-            IconButton(
-              tooltip: SchedulingStrings.bookClassTitle,
-              icon: const Icon(Icons.groups_outlined),
-              onPressed: () => context.go(Routes.memberScheduleBookClass),
+              tooltip: SchedulingStrings.historyTitle,
+              icon: const Icon(Icons.history),
+              onPressed: () => context.go(Routes.memberScheduleHistory),
             ),
           ],
           if (role == ScheduleCalendarRole.trainer)
@@ -121,7 +138,9 @@ class _ScheduleCalendarBody extends StatelessWidget {
               onRetry: () => context.read<ScheduleCalendarCubit>().load(),
             );
           }
-          final items = state.items;
+          final items = state.items
+              .where((s) => _statusFilter == null || s.status == _statusFilter)
+              .toList();
           final from = state.from;
           final to = state.to;
           return Column(
@@ -149,15 +168,7 @@ class _ScheduleCalendarBody extends StatelessWidget {
                               title: Row(
                                 children: [
                                   Expanded(child: Text(session.title)),
-                                  if (session.isRecurring) ...[
-                                    const SizedBox(width: 4),
-                                    const Icon(
-                                      Icons.repeat,
-                                      size: 16,
-                                      key: Key('recurring_indicator'),
-                                      color: Colors.grey,
-                                    ),
-                                  ],
+
                                 ],
                               ),
                               subtitle: Text(
