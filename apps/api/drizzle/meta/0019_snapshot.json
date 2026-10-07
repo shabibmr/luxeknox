@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "5380d5d7-3a05-4a50-87ad-3c5210e9943a",
-  "prevId": "2c24802a-a707-4c9d-9ef1-e5d4d7de7a49",
+  "id": "3f7402f1-ba1e-4a66-87af-318c7768452a",
+  "prevId": "5380d5d7-3a05-4a50-87ad-3c5210e9943a",
   "tables": {
     "attendance_histories": {
       "name": "attendance_histories",
@@ -1029,6 +1029,13 @@
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "gender": {
+          "name": "gender",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "job_title": {
@@ -4320,6 +4327,472 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
+    "pt_products": {
+      "name": "pt_products",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(150)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "duration_days": {
+          "name": "duration_days",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sessions_per_week": {
+          "name": "sessions_per_week",
+          "type": "tinyint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "base_price": {
+          "name": "base_price",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tax_percentage": {
+          "name": "tax_percentage",
+          "type": "decimal(5,2)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'0.00'"
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "pt_products_code_unique": {
+          "name": "pt_products_code_unique",
+          "columns": [
+            "code"
+          ],
+          "isUnique": true
+        },
+        "pt_products_is_active_idx": {
+          "name": "pt_products_is_active_idx",
+          "columns": [
+            "is_active"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "pt_products_id": {
+          "name": "pt_products_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "pt_subscription_changes": {
+      "name": "pt_subscription_changes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "pt_subscription_id": {
+          "name": "pt_subscription_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "change_type": {
+          "name": "change_type",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "effective_date": {
+          "name": "effective_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "old_trainer_id": {
+          "name": "old_trainer_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "new_trainer_id": {
+          "name": "new_trainer_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "old_weekdays": {
+          "name": "old_weekdays",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "new_weekdays": {
+          "name": "new_weekdays",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "old_slot_start": {
+          "name": "old_slot_start",
+          "type": "varchar(8)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "new_slot_start": {
+          "name": "new_slot_start",
+          "type": "varchar(8)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "changed_by_user_id": {
+          "name": "changed_by_user_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "pt_subscription_changes_subscription_idx": {
+          "name": "pt_subscription_changes_subscription_idx",
+          "columns": [
+            "pt_subscription_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "pt_subscription_changes_pt_subscription_id_pt_subscriptions_id_fk": {
+          "name": "pt_subscription_changes_pt_subscription_id_pt_subscriptions_id_fk",
+          "tableFrom": "pt_subscription_changes",
+          "tableTo": "pt_subscriptions",
+          "columnsFrom": [
+            "pt_subscription_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pt_subscription_changes_changed_by_user_id_users_id_fk": {
+          "name": "pt_subscription_changes_changed_by_user_id_users_id_fk",
+          "tableFrom": "pt_subscription_changes",
+          "tableTo": "users",
+          "columnsFrom": [
+            "changed_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "pt_subscription_changes_id": {
+          "name": "pt_subscription_changes_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "pt_subscriptions": {
+      "name": "pt_subscriptions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "member_id": {
+          "name": "member_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "pt_product_id": {
+          "name": "pt_product_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "trainer_id": {
+          "name": "trainer_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "membership_id": {
+          "name": "membership_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "renewed_from_id": {
+          "name": "renewed_from_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "weekdays": {
+          "name": "weekdays",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slot_start": {
+          "name": "slot_start",
+          "type": "varchar(8)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'scheduled'"
+        },
+        "row_version": {
+          "name": "row_version",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "pt_subscriptions_member_id_idx": {
+          "name": "pt_subscriptions_member_id_idx",
+          "columns": [
+            "member_id"
+          ],
+          "isUnique": false
+        },
+        "pt_subscriptions_trainer_id_idx": {
+          "name": "pt_subscriptions_trainer_id_idx",
+          "columns": [
+            "trainer_id"
+          ],
+          "isUnique": false
+        },
+        "pt_subscriptions_status_idx": {
+          "name": "pt_subscriptions_status_idx",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        },
+        "pt_subscriptions_end_date_idx": {
+          "name": "pt_subscriptions_end_date_idx",
+          "columns": [
+            "end_date"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "pt_subscriptions_member_id_members_id_fk": {
+          "name": "pt_subscriptions_member_id_members_id_fk",
+          "tableFrom": "pt_subscriptions",
+          "tableTo": "members",
+          "columnsFrom": [
+            "member_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pt_subscriptions_pt_product_id_pt_products_id_fk": {
+          "name": "pt_subscriptions_pt_product_id_pt_products_id_fk",
+          "tableFrom": "pt_subscriptions",
+          "tableTo": "pt_products",
+          "columnsFrom": [
+            "pt_product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pt_subscriptions_trainer_id_trainers_id_fk": {
+          "name": "pt_subscriptions_trainer_id_trainers_id_fk",
+          "tableFrom": "pt_subscriptions",
+          "tableTo": "trainers",
+          "columnsFrom": [
+            "trainer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pt_subscriptions_membership_id_memberships_id_fk": {
+          "name": "pt_subscriptions_membership_id_memberships_id_fk",
+          "tableFrom": "pt_subscriptions",
+          "tableTo": "memberships",
+          "columnsFrom": [
+            "membership_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pt_subscriptions_renewed_from_id_pt_subscriptions_id_fk": {
+          "name": "pt_subscriptions_renewed_from_id_pt_subscriptions_id_fk",
+          "tableFrom": "pt_subscriptions",
+          "tableTo": "pt_subscriptions",
+          "columnsFrom": [
+            "renewed_from_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "pt_subscriptions_id": {
+          "name": "pt_subscriptions_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
     "facilities": {
       "name": "facilities",
       "columns": {
@@ -4707,6 +5180,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "pt_subscription_id": {
+          "name": "pt_subscription_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "schedule_type_id": {
           "name": "schedule_type_id",
           "type": "bigint unsigned",
@@ -4841,6 +5321,13 @@
           ],
           "isUnique": false
         },
+        "schedules_pt_subscription_id_idx": {
+          "name": "schedules_pt_subscription_id_idx",
+          "columns": [
+            "pt_subscription_id"
+          ],
+          "isUnique": false
+        },
         "schedules_status_idx": {
           "name": "schedules_status_idx",
           "columns": [
@@ -4857,6 +5344,19 @@
         }
       },
       "foreignKeys": {
+        "schedules_pt_subscription_id_pt_subscriptions_id_fk": {
+          "name": "schedules_pt_subscription_id_pt_subscriptions_id_fk",
+          "tableFrom": "schedules",
+          "tableTo": "pt_subscriptions",
+          "columnsFrom": [
+            "pt_subscription_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "schedules_schedule_type_id_schedule_types_id_fk": {
           "name": "schedules_schedule_type_id_schedule_types_id_fk",
           "tableFrom": "schedules",
@@ -6167,6 +6667,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "pt_subscription_id": {
+          "name": "pt_subscription_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "payment_method_id": {
           "name": "payment_method_id",
           "type": "bigint unsigned",
@@ -6292,6 +6799,13 @@
             "payment_date"
           ],
           "isUnique": false
+        },
+        "payments_pt_subscription_id_idx": {
+          "name": "payments_pt_subscription_id_idx",
+          "columns": [
+            "pt_subscription_id"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {
@@ -6314,6 +6828,19 @@
           "tableTo": "memberships",
           "columnsFrom": [
             "membership_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "payments_pt_subscription_id_pt_subscriptions_id_fk": {
+          "name": "payments_pt_subscription_id_pt_subscriptions_id_fk",
+          "tableFrom": "payments",
+          "tableTo": "pt_subscriptions",
+          "columnsFrom": [
+            "pt_subscription_id"
           ],
           "columnsTo": [
             "id"
