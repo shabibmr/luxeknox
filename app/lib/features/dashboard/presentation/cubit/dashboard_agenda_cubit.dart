@@ -10,6 +10,9 @@ import '../../domain/usecases/get_dashboard_agenda_usecase.dart';
 import '../../../scheduling/domain/entities/schedule_session.dart';
 import '../../../scheduling/domain/usecases/schedule_usecases.dart';
 
+export '../../domain/usecases/get_dashboard_agenda_usecase.dart'
+    show kDashboardAgendaDaySpan;
+
 part 'dashboard_agenda_cubit.freezed.dart';
 
 @freezed
@@ -28,11 +31,10 @@ abstract class DashboardAgendaState with _$DashboardAgendaState {
 
 @injectable
 class DashboardAgendaCubit extends Cubit<DashboardAgendaState> {
-  DashboardAgendaCubit(this._listSchedules, [GymTimezoneProvider? timezoneProvider])
-    : _getAgenda = GetDashboardAgendaUseCase(_listSchedules, timezoneProvider),
+  DashboardAgendaCubit(ListSchedulesUseCase listSchedules, [GymTimezoneProvider? timezoneProvider])
+    : _getAgenda = GetDashboardAgendaUseCase(listSchedules, timezoneProvider),
       super(const DashboardAgendaState());
 
-  final ListSchedulesUseCase _listSchedules;
   final GetDashboardAgendaUseCase _getAgenda;
 
   UserType? _role;
