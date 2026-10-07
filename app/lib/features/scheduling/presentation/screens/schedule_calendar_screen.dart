@@ -111,6 +111,25 @@ class _ScheduleCalendarBodyState extends State<_ScheduleCalendarBody> {
               onPressed: () => context.go(Routes.memberScheduleHistory),
             ),
           ],
+          PopupMenuButton<ScheduleSessionStatus>(
+            tooltip: 'Filter status',
+            onSelected: (value) =>
+                setState(() => _statusFilter = value),
+            itemBuilder: (_) => ScheduleSessionStatus.values
+                .map(
+                  (s) => PopupMenuItem(
+                    value: s,
+                    child: Text(s.name),
+                  ),
+                )
+                .toList(),
+          ),
+          if (_statusFilter != null)
+            IconButton(
+              tooltip: 'Clear filter',
+              icon: const Icon(Icons.filter_alt_off),
+              onPressed: () => setState(() => _statusFilter = null),
+            ),
           if (role == ScheduleCalendarRole.trainer)
             IconButton(
               tooltip: SchedulingStrings.availabilityTitle,
