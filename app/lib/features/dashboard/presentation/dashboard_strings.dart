@@ -28,6 +28,7 @@ class DashboardStrings {
   static const String progress = 'Progress';
   static const String payments = 'Payments';
   static const String schedule = 'Schedule';
+  static const String viewSchedule = 'View schedule';
   static const String retry = 'Retry';
   static const String staleDataNotice =
       'Showing last loaded data — refresh failed.';
