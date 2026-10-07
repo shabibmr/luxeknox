@@ -81,14 +81,18 @@ void main() {
 
   tearDown(() => getIt.reset());
 
-  Widget wrap(Widget child, Principal principal) {
+  Widget wrap(
+    Widget child,
+    Principal principal, {
+    Capabilities capabilities = const Capabilities(slugs: ['schedules.book']),
+  }) {
     final sessionCubit = MockSessionCubit();
     whenListen(
       sessionCubit,
       const Stream<SessionState>.empty(),
       initialState: SessionAuthenticated(
         principal: principal,
-        capabilities: const Capabilities(slugs: []),
+        capabilities: capabilities,
       ),
     );
     return MaterialApp(

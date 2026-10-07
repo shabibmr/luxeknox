@@ -188,7 +188,15 @@ class _ScheduleCalendarBodyState extends State<_ScheduleCalendarBody> {
                               title: Row(
                                 children: [
                                   Expanded(child: Text(session.title)),
-
+                                  if (session.isRecurring) ...[
+                                    const SizedBox(width: 4),
+                                    const Icon(
+                                      Icons.repeat,
+                                      size: 16,
+                                      key: Key('recurring_indicator'),
+                                      color: Colors.grey,
+                                    ),
+                                  ],
                                 ],
                               ),
                               subtitle: Text(

@@ -12,6 +12,7 @@ import '../../../../core/widgets/app_loading.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../../attendance/presentation/attendance_strings.dart';
 import '../../domain/entities/schedule_enums.dart';
+import '../../domain/entities/schedule_session.dart';
 import '../../domain/usecases/schedule_usecases.dart';
 import '../cubit/schedule_detail_cubit.dart';
 import '../schedule_role.dart';
