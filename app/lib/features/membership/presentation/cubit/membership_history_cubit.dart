@@ -55,8 +55,8 @@ class MembershipHistoryCubit extends Cubit<MembershipHistoryState> {
       GetMembershipsParams(memberId: memberId),
     );
     if (isClosed) return;
-    result.fold(
-      (failure) =>
+    await result.fold(
+      (failure) async =>
           emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) async {
         final id = _preferActive(page.items)?.id;
