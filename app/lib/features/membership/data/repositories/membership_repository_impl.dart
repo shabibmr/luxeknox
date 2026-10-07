@@ -32,6 +32,7 @@ class MembershipRepositoryImpl implements MembershipRepository {
     String? q,
     int? limit,
     int? offset,
+    bool activeOnly = false,
   }) async {
     try {
       final page = await _remoteDataSource.getProducts(
@@ -41,7 +42,7 @@ class MembershipRepositoryImpl implements MembershipRepository {
       );
       return Right(
         CursorPage<MembershipProduct>(
-          items: page.data.map((m) => m.toDomain()).toList(),
+          items: page.data.map((m) => m.toDomain()).where((m) => !activeOnly || m.isActive).toList(),
           nextCursor: page.meta.nextCursor,
           hasMore: page.meta.hasMore,
         ),
