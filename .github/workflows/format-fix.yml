@@ -28,7 +28,7 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm exec drizzle-kit generate --name ci_schema_refresh
           node -e "const fs=require('fs'); const crypto=require('crypto'); const old=JSON.parse(fs.readFileSync('drizzle/meta/0019_snapshot.json','utf8')); const cur=JSON.parse(fs.readFileSync('drizzle/meta/0012_snapshot.json','utf8')); cur.id=crypto.randomUUID(); cur.prevId=old.id; fs.writeFileSync('drizzle/meta/0019_snapshot.json', JSON.stringify(cur,null,2)+'\\n');"
-          git show origin/main:apps/api/drizzle/meta/0000_snapshot.json > drizzle/meta/0000_snapshot.json
+          curl -fsSL https://raw.githubusercontent.com/shabibmr/luxeknox/main/apps/api/drizzle/meta/0000_snapshot.json -o drizzle/meta/0000_snapshot.json
           git restore drizzle/meta/_journal.json
           rm -f drizzle/0012_ci_schema_refresh.sql drizzle/meta/0012_snapshot.json
           pnpm db:check
