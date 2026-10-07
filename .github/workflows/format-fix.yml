@@ -21,6 +21,13 @@ jobs:
           channel: stable
       - run: flutter pub get
       - run: dart format .
+      - name: Verify API schema drift
+        working-directory: apps/api
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm db:check
+
       - name: Commit formatting
         run: |
           if git diff --quiet; then
