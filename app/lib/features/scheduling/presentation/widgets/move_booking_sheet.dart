@@ -1,3 +1,11 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+
+import '../../domain/entities/schedule_session.dart';
+import '../cubit/schedule_detail_cubit.dart';
+import '../scheduling_strings.dart';
+
 Future<bool?> showMoveBookingSheet({
   required BuildContext context,
   required ScheduleSession session,
