@@ -7,7 +7,11 @@ import '../entities/pt_subscription.dart';
 
 /// Payment captured together with a PT sale/renewal (single tender).
 class PtPayment {
-  const PtPayment({required this.paymentMethodId, this.discountAmount, this.transactionReference});
+  const PtPayment({
+    required this.paymentMethodId,
+    this.discountAmount,
+    this.transactionReference,
+  });
 
   final int paymentMethodId;
   final String? discountAmount;
@@ -39,7 +43,10 @@ abstract class PtRepository {
     required PtPayment payment,
   });
 
-  Future<Either<Failure, PtSubscription>> renew(int subscriptionId, {required PtPayment payment});
+  Future<Either<Failure, PtSubscription>> renew(
+    int subscriptionId, {
+    required PtPayment payment,
+  });
 
   Future<Either<Failure, PtSubscription>> reassignTrainer(
     int subscriptionId, {

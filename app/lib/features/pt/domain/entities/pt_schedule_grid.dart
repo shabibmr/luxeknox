@@ -30,7 +30,13 @@ class PtGridCell extends Equatable {
   final List<DateTime> conflictDates;
 
   @override
-  List<Object?> get props => [trainerId, slotStart, status, occupiedBy, conflictDates];
+  List<Object?> get props => [
+    trainerId,
+    slotStart,
+    status,
+    occupiedBy,
+    conflictDates,
+  ];
 }
 
 /// Hours × active trainers for one PT period and weekday pattern. A cell is
@@ -60,7 +66,14 @@ class PtScheduleGrid extends Equatable {
   }
 
   @override
-  List<Object?> get props => [startDate, endDate, weekdays, hours, trainers, cells];
+  List<Object?> get props => [
+    startDate,
+    endDate,
+    weekdays,
+    hours,
+    trainers,
+    cells,
+  ];
 }
 
 /// "17:00:00" → "17:00-18:00".

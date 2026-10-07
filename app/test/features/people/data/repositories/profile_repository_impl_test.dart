@@ -36,48 +36,51 @@ void main() {
       final result = await repository.getHealthInfo(10);
 
       expect(result.isRight(), isTrue);
-      result.fold(
-        (_) => fail('Expected Right'),
-        (info) {
-          expect(info.id, 1);
-          expect(info.memberId, 10);
-          expect(info.bloodGroup, 'O+');
-          expect(info.heightCm, 180.0);
-        },
-      );
+      result.fold((_) => fail('Expected Right'), (info) {
+        expect(info.id, 1);
+        expect(info.memberId, 10);
+        expect(info.bloodGroup, 'O+');
+        expect(info.heightCm, 180.0);
+      });
     });
 
-    test('returns empty HealthInfo(id: 0, memberId: 10) when remote datasource throws 404', () async {
-      final req = RequestOptions(path: '/members/10/health');
-      when(() => mockRemote.getHealth(10)).thenThrow(
-        DioException(
-          requestOptions: req,
-          response: Response(
+    test(
+      'returns empty HealthInfo(id: 0, memberId: 10) when remote datasource throws 404',
+      () async {
+        final req = RequestOptions(path: '/members/10/health');
+        when(() => mockRemote.getHealth(10)).thenThrow(
+          DioException(
             requestOptions: req,
-            statusCode: 404,
-            data: {'message': 'Member health not found'},
+            response: Response(
+              requestOptions: req,
+              statusCode: 404,
+              data: {'message': 'Member health not found'},
+            ),
+            type: DioExceptionType.badResponse,
           ),
-          type: DioExceptionType.badResponse,
-        ),
-      );
+        );
 
-      final result = await repository.getHealthInfo(10);
+        final result = await repository.getHealthInfo(10);
 
-      expect(result, const Right(HealthInfo(id: 0, memberId: 10)));
-    });
+        expect(result, const Right(HealthInfo(id: 0, memberId: 10)));
+      },
+    );
 
-    test('returns NetworkFailure when remote datasource throws connection error', () async {
-      final req = RequestOptions(path: '/members/10/health');
-      when(() => mockRemote.getHealth(10)).thenThrow(
-        DioException(
-          requestOptions: req,
-          type: DioExceptionType.connectionError,
-        ),
-      );
+    test(
+      'returns NetworkFailure when remote datasource throws connection error',
+      () async {
+        final req = RequestOptions(path: '/members/10/health');
+        when(() => mockRemote.getHealth(10)).thenThrow(
+          DioException(
+            requestOptions: req,
+            type: DioExceptionType.connectionError,
+          ),
+        );
 
-      final result = await repository.getHealthInfo(10);
+        final result = await repository.getHealthInfo(10);
 
-      expect(result, const Left(NetworkFailure()));
-    });
+        expect(result, const Left(NetworkFailure()));
+      },
+    );
   });
 }

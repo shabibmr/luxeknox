@@ -35,8 +35,7 @@ void main() {
   ) async {
     const exercise = Exercise(
       id: '1',
-      name:
-          'Single-Arm Dumbbell Romanian Deadlift With Contralateral Reach',
+      name: 'Single-Arm Dumbbell Romanian Deadlift With Contralateral Reach',
       primaryMuscleGroup: 'Hamstrings and Posterior Chain',
       secondaryMuscles: ['Glutes', 'Erectors'],
       equipmentNeeded: ['Dumbbell', 'Bench', 'Resistance band'],
@@ -50,7 +49,9 @@ void main() {
     expect(find.byType(ExerciseListItem), findsOneWidget);
   });
 
-  testWidgets('FoodListItem survives long name + chip at 320px', (tester) async {
+  testWidgets('FoodListItem survives long name + chip at 320px', (
+    tester,
+  ) async {
     const food = Food(
       id: '1',
       name: 'Organic Grass-Fed Greek Yogurt With Honey And Granola Topping',

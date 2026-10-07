@@ -68,10 +68,7 @@ class _MacroRow extends StatelessWidget {
           const SizedBox(width: 8),
           SizedBox(
             width: 44,
-            child: Text(
-              MacroFormat.percent(percent),
-              textAlign: TextAlign.end,
-            ),
+            child: Text(MacroFormat.percent(percent), textAlign: TextAlign.end),
           ),
         ],
       ),

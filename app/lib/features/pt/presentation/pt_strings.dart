@@ -31,8 +31,10 @@ abstract final class PtStrings {
   static const back = 'Back';
   static const startDate = 'Start date';
   static const effectiveFrom = 'Effective from';
-  static const pickDaysHint = 'Pick exactly the number of days this package includes.';
-  static String daysChosen(int chosen, int total) => '$chosen of $total days chosen';
+  static const pickDaysHint =
+      'Pick exactly the number of days this package includes.';
+  static String daysChosen(int chosen, int total) =>
+      '$chosen of $total days chosen';
   static const gridHint =
       'All active trainers are shown. A slot is free only if it is '
       'open on every training day of the whole period.';
@@ -44,7 +46,8 @@ abstract final class PtStrings {
   static String clashes(int n) => n == 1 ? '1 clash' : '$n clashes';
   static const paymentMethod = 'Payment method';
   static const discount = 'Discount (optional)';
-  static const noPaymentMethods = 'No active payment methods — add one under Payments.';
+  static const noPaymentMethods =
+      'No active payment methods — add one under Payments.';
   static const reason = 'Reason (optional)';
   static const confirmSell = 'Take payment & assign';
   static const confirmReplan = 'Apply change';

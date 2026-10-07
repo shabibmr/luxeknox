@@ -49,16 +49,22 @@ abstract class SellPtState with _$SellPtState {
   bool get isReplan => replanning != null;
 
   /// A re-plan keeps the subscription's own weekday count; the package may have been edited since.
-  int? get sessionsPerWeek => replanning?.weekdays.length ?? product?.sessionsPerWeek;
+  int? get sessionsPerWeek =>
+      replanning?.weekdays.length ?? product?.sessionsPerWeek;
 
-  bool get weekdaysComplete => product != null && weekdays.length == sessionsPerWeek;
+  bool get weekdaysComplete =>
+      product != null && weekdays.length == sessionsPerWeek;
 
-  bool get canLoadGrid => product != null && startDate != null && weekdaysComplete;
+  bool get canLoadGrid =>
+      product != null && startDate != null && weekdaysComplete;
 
   bool get slotChosen => trainerId != null && slotStart != null;
 
   bool get canSubmit =>
-      !submitting && canLoadGrid && slotChosen && (isReplan || paymentMethodId != null);
+      !submitting &&
+      canLoadGrid &&
+      slotChosen &&
+      (isReplan || paymentMethodId != null);
 }
 
 /// Drives the "Add Personal Training" flow (package → weekdays → grid → pay)
@@ -103,17 +109,15 @@ class SellPtCubit extends Cubit<SellPtState> {
     Person? person;
     String? resolvedName = memberName;
     if (memberResult != null) {
-      memberResult.fold(
-        (_) => null,
-        (p) {
-          person = p;
-          resolvedName ??= p.fullName;
-        },
-      );
+      memberResult.fold((_) => null, (p) {
+        person = p;
+        resolvedName ??= p.fullName;
+      });
     }
 
     products.fold(
-      (failure) => emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (items) {
         final active = items.where((p) => p.isActive).toList();
         final paymentMethods = methods.fold(
@@ -125,7 +129,9 @@ class SellPtCubit extends Cubit<SellPtState> {
             status: LoadStatus.success,
             products: active,
             paymentMethods: paymentMethods,
-            paymentMethodId: paymentMethods.length == 1 ? paymentMethods.first.id : null,
+            paymentMethodId: paymentMethods.length == 1
+                ? paymentMethods.first.id
+                : null,
             member: person,
             memberName: resolvedName,
           ),
@@ -141,9 +147,13 @@ class SellPtCubit extends Cubit<SellPtState> {
     List<PtProduct> products, {
     String? memberName,
   }) async {
-    final product = products.where((p) => p.id == subscription.ptProductId).firstOrNull;
+    final product = products
+        .where((p) => p.id == subscription.ptProductId)
+        .firstOrNull;
     final today = _today();
-    final effective = subscription.startDate.isAfter(today) ? subscription.startDate : today;
+    final effective = subscription.startDate.isAfter(today)
+        ? subscription.startDate
+        : today;
     emit(
       SellPtState(
         memberId: subscription.memberId,
@@ -163,7 +173,12 @@ class SellPtCubit extends Cubit<SellPtState> {
       if (!isClosed) {
         res.fold(
           (_) => null,
-          (p) => emit(state.copyWith(member: p, memberName: state.memberName ?? p.fullName)),
+          (p) => emit(
+            state.copyWith(
+              member: p,
+              memberName: state.memberName ?? p.fullName,
+            ),
+          ),
         );
       }
     }
@@ -171,13 +186,30 @@ class SellPtCubit extends Cubit<SellPtState> {
   }
 
   void selectProduct(PtProduct product) {
-    final keep = state.weekdays.length <= product.sessionsPerWeek ? state.weekdays : <int>[];
-    emit(state.copyWith(product: product, weekdays: keep, grid: null, trainerId: null, slotStart: null));
+    final keep = state.weekdays.length <= product.sessionsPerWeek
+        ? state.weekdays
+        : <int>[];
+    emit(
+      state.copyWith(
+        product: product,
+        weekdays: keep,
+        grid: null,
+        trainerId: null,
+        slotStart: null,
+      ),
+    );
     _maybeLoadGrid();
   }
 
   void setStartDate(DateTime date) {
-    emit(state.copyWith(startDate: DateTime(date.year, date.month, date.day), grid: null, trainerId: null, slotStart: null));
+    emit(
+      state.copyWith(
+        startDate: DateTime(date.year, date.month, date.day),
+        grid: null,
+        trainerId: null,
+        slotStart: null,
+      ),
+    );
     _maybeLoadGrid();
   }
 
@@ -193,7 +225,14 @@ class SellPtCubit extends Cubit<SellPtState> {
       return;
     }
     days.sort();
-    emit(state.copyWith(weekdays: days, grid: null, trainerId: null, slotStart: null));
+    emit(
+      state.copyWith(
+        weekdays: days,
+        grid: null,
+        trainerId: null,
+        slotStart: null,
+      ),
+    );
     _maybeLoadGrid();
   }
 
@@ -215,8 +254,11 @@ class SellPtCubit extends Cubit<SellPtState> {
     );
     if (isClosed) return;
     result.fold(
-      (failure) => emit(state.copyWith(gridStatus: LoadStatus.failure, failure: failure)),
-      (grid) => emit(state.copyWith(gridStatus: LoadStatus.success, grid: grid)),
+      (failure) => emit(
+        state.copyWith(gridStatus: LoadStatus.failure, failure: failure),
+      ),
+      (grid) =>
+          emit(state.copyWith(gridStatus: LoadStatus.success, grid: grid)),
     );
   }
 
@@ -226,13 +268,20 @@ class SellPtCubit extends Cubit<SellPtState> {
     emit(state.copyWith(trainerId: trainerId, slotStart: slotStart));
   }
 
-  void setPaymentMethod(String? id) => emit(state.copyWith(paymentMethodId: id));
+  void setPaymentMethod(String? id) =>
+      emit(state.copyWith(paymentMethodId: id));
 
-  void setDiscount(String? value) =>
-      emit(state.copyWith(discount: (value == null || value.trim().isEmpty) ? null : value.trim()));
+  void setDiscount(String? value) => emit(
+    state.copyWith(
+      discount: (value == null || value.trim().isEmpty) ? null : value.trim(),
+    ),
+  );
 
-  void setReason(String? value) =>
-      emit(state.copyWith(reason: (value == null || value.trim().isEmpty) ? null : value.trim()));
+  void setReason(String? value) => emit(
+    state.copyWith(
+      reason: (value == null || value.trim().isEmpty) ? null : value.trim(),
+    ),
+  );
 
   Future<void> submit() async {
     if (!state.canSubmit) return;

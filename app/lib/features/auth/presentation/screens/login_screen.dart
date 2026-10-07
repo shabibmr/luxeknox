@@ -74,125 +74,133 @@ class _LoginFormState extends State<_LoginForm> {
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Image.asset(
-                        'assets/logo/luxeknox_logo.png',
-                        height: 80,
-                        semanticLabel: 'LuxeKnox',
-                      ),
-                      const SizedBox(height: 32),
-                      if (state.status == LoadStatus.failure &&
-                          state.errorMessage != null) ...[
-                        MaterialBanner(
-                          content: Text(state.errorMessage!),
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.errorContainer,
-                          actions: const [SizedBox.shrink()],
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Image.asset(
+                          'assets/logo/luxeknox_logo.png',
+                          height: 80,
+                          semanticLabel: 'LuxeKnox',
+                        ),
+                        const SizedBox(height: 32),
+                        if (state.status == LoadStatus.failure &&
+                            state.errorMessage != null) ...[
+                          MaterialBanner(
+                            content: Text(state.errorMessage!),
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.errorContainer,
+                            actions: const [SizedBox.shrink()],
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        TextFormField(
+                          controller: _identifierController,
+                          enabled: !isSubmitting,
+                          decoration: const InputDecoration(
+                            labelText: AuthStrings.emailOrPhone,
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                          autofillHints: const [AutofillHints.username],
+                          validator: (value) =>
+                              (value == null || value.trim().isEmpty)
+                              ? AuthStrings.enterEmailOrPhone
+                              : null,
                         ),
                         const SizedBox(height: 16),
-                      ],
-                      TextFormField(
-                        controller: _identifierController,
-                        enabled: !isSubmitting,
-                        decoration: const InputDecoration(
-                          labelText: AuthStrings.emailOrPhone,
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                        autofillHints: const [AutofillHints.username],
-                        validator: (value) =>
-                            (value == null || value.trim().isEmpty)
-                            ? AuthStrings.enterEmailOrPhone
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _passwordController,
-                        enabled: !isSubmitting,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          labelText: AuthStrings.password,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                            ),
-                            onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword,
-                            ),
-                          ),
-                        ),
-                        autofillHints: const [AutofillHints.password],
-                        validator: (value) => (value == null || value.isEmpty)
-                            ? AuthStrings.enterPassword
-                            : null,
-                        onFieldSubmitted: (_) => _submit(),
-                      ),
-                      const SizedBox(height: 24),
-                      FilledButton(
-                        onPressed: isSubmitting ? null : _submit,
-                        child: isEmailSubmitting
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text(AuthStrings.signIn),
-                      ),
-                      TextButton(
-                        onPressed: isSubmitting
-                            ? null
-                            : () => context.go(Routes.forgotPassword),
-                        child: const Text(AuthStrings.forgotPassword),
-                      ),
-                      if (_supportsGoogleSignIn) ...[
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            const Expanded(child: Divider()),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: Text(
-                                AuthStrings.orDivider,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.outline,
-                                ),
+                        TextFormField(
+                          controller: _passwordController,
+                          enabled: !isSubmitting,
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
+                            labelText: AuthStrings.password,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
                               ),
                             ),
-                            const Expanded(child: Divider()),
-                          ],
+                          ),
+                          autofillHints: const [AutofillHints.password],
+                          validator: (value) => (value == null || value.isEmpty)
+                              ? AuthStrings.enterPassword
+                              : null,
+                          onFieldSubmitted: (_) => _submit(),
                         ),
-                        const SizedBox(height: 16),
-                        GoogleSignInButton(
-                          isLoading: state.isGoogleSubmitting,
+                        const SizedBox(height: 24),
+                        FilledButton(
+                          onPressed: isSubmitting ? null : _submit,
+                          child: isEmailSubmitting
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(AuthStrings.signIn),
+                        ),
+                        TextButton(
                           onPressed: isSubmitting
                               ? null
-                              : () => context.read<LoginCubit>().signInWithGoogle(),
+                              : () => context.go(Routes.forgotPassword),
+                          child: const Text(AuthStrings.forgotPassword),
                         ),
+                        if (_supportsGoogleSignIn) ...[
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              const Expanded(child: Divider()),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Text(
+                                  AuthStrings.orDivider,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.outline,
+                                      ),
+                                ),
+                              ),
+                              const Expanded(child: Divider()),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          GoogleSignInButton(
+                            isLoading: state.isGoogleSubmitting,
+                            onPressed: isSubmitting
+                                ? null
+                                : () => context
+                                      .read<LoginCubit>()
+                                      .signInWithGoogle(),
+                          ),
+                        ],
+                        if (!kReleaseMode &&
+                            AppConfigBootstrap.resolved != null) ...[
+                          const SizedBox(height: 16),
+                          // Debug aid: shows which API the app is talking to.
+                          SelectableText(
+                            'API: ${AppConfigBootstrap.resolved!.apiBaseUrl}',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
                       ],
-                      if (!kReleaseMode && AppConfigBootstrap.resolved != null) ...[
-                        const SizedBox(height: 16),
-                        // Debug aid: shows which API the app is talking to.
-                        SelectableText(
-                          'API: ${AppConfigBootstrap.resolved!.apiBaseUrl}',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        );
+          );
         },
       ),
     );

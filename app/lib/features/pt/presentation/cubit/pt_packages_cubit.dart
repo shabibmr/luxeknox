@@ -24,17 +24,21 @@ abstract class PtPackagesState with _$PtPackagesState {
 /// Admin catalog of Personal Training packages (list + create/edit/archive).
 @injectable
 class PtPackagesCubit extends Cubit<PtPackagesState> {
-  PtPackagesCubit(this._getProducts, this._saveProduct) : super(const PtPackagesState());
+  PtPackagesCubit(this._getProducts, this._saveProduct)
+    : super(const PtPackagesState());
 
   final GetPtProductsUseCase _getProducts;
   final SavePtProductUseCase _saveProduct;
 
   Future<void> load() async {
-    emit(state.copyWith(status: LoadStatus.loading, failure: null, message: null));
+    emit(
+      state.copyWith(status: LoadStatus.loading, failure: null, message: null),
+    );
     final result = await _getProducts(const NoParams());
     if (isClosed) return;
     result.fold(
-      (failure) => emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (items) => emit(state.copyWith(status: LoadStatus.success, items: items)),
     );
   }
@@ -61,5 +65,6 @@ class PtPackagesCubit extends Cubit<PtPackagesState> {
     );
   }
 
-  Future<void> setActive(PtProduct product, bool active) => save(product.copyWith(isActive: active));
+  Future<void> setActive(PtProduct product, bool active) =>
+      save(product.copyWith(isActive: active));
 }

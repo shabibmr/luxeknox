@@ -16,8 +16,12 @@ class AchievementChip extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return AppStatusChip(
       label: GoalsStrings.statusLabelFor(status),
-      color: achieved ? scheme.primaryContainer : scheme.surfaceContainerHighest,
-      foregroundColor: achieved ? scheme.onPrimaryContainer : scheme.onSurfaceVariant,
+      color: achieved
+          ? scheme.primaryContainer
+          : scheme.surfaceContainerHighest,
+      foregroundColor: achieved
+          ? scheme.onPrimaryContainer
+          : scheme.onSurfaceVariant,
       icon: achieved ? Icons.emoji_events : Icons.flag_outlined,
       tinted: false,
     );

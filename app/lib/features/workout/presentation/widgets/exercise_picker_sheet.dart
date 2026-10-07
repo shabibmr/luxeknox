@@ -53,9 +53,9 @@ class _ExercisePickerViewState extends State<_ExercisePickerView> {
   }
 
   void _load([String? text]) {
-    context
-        .read<ExercisePickerCubit>()
-        .load(search: text ?? _searchController.text);
+    context.read<ExercisePickerCubit>().load(
+      search: text ?? _searchController.text,
+    );
   }
 
   void _onSearchChanged(String value) {

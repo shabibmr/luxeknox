@@ -185,7 +185,9 @@ class _DossierContentState extends State<_DossierContent> {
     final person = state.person!;
     final membership = state.membership;
     final session = context.watch<SessionCubit>().state;
-    final userType = session is SessionAuthenticated ? session.principal.userType : null;
+    final userType = session is SessionAuthenticated
+        ? session.principal.userType
+        : null;
     final canAddMembership =
         userType != null &&
         canSellMembership(
@@ -387,10 +389,9 @@ class _DossierContentState extends State<_DossierContent> {
   /// Reassign trainer and/or move weekdays+hour from an effective date.
   Future<void> _changePt(PtSubscription sub) async {
     final cubit = context.read<MemberDossierCubit>();
-    final products = (await getIt<GetPtProductsUseCase>()(const NoParams())).fold(
-      (_) => <PtProduct>[],
-      (items) => items,
-    );
+    final products = (await getIt<GetPtProductsUseCase>()(
+      const NoParams(),
+    )).fold((_) => <PtProduct>[], (items) => items);
     final person = cubit.state.person;
     if (!mounted) return;
     await Navigator.of(context).push<bool>(

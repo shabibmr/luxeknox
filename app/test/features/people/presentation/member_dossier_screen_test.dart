@@ -126,7 +126,9 @@ void main() {
     );
   }
 
-  PtSubscription ptSub({PtSubscriptionStatus status = PtSubscriptionStatus.active}) {
+  PtSubscription ptSub({
+    PtSubscriptionStatus status = PtSubscriptionStatus.active,
+  }) {
     final now = DateTime.now();
     return PtSubscription(
       id: 900,
@@ -162,9 +164,8 @@ void main() {
       ),
     );
     when(() => getAttendanceSummary(any())).thenAnswer(
-      (_) async => Right(
-        AttendanceSummaryInfo(visitsThisMonth: visitsThisMonth),
-      ),
+      (_) async =>
+          Right(AttendanceSummaryInfo(visitsThisMonth: visitsThisMonth)),
     );
     when(() => listSchedules(any())).thenAnswer(
       (_) async => const Right(
@@ -315,7 +316,10 @@ void main() {
 
     expect(find.text(PeopleStrings.ptActive), findsOneWidget);
     expect(find.text('PT Monthly 3x'), findsOneWidget);
-    expect(find.textContaining('Mon / Wed / Fri · 17:00-18:00'), findsOneWidget);
+    expect(
+      find.textContaining('Mon / Wed / Fri · 17:00-18:00'),
+      findsOneWidget,
+    );
     expect(find.text('Alex Coach'), findsOneWidget);
     expect(find.text(PeopleStrings.goals), findsOneWidget);
     expect(find.text(PeopleStrings.workoutPlan), findsOneWidget);
@@ -348,7 +352,10 @@ void main() {
     final ended = ptSub(status: PtSubscriptionStatus.completed);
     stubExtras(
       membership: gymMembership(),
-      pt: MemberPtSummary(history: [ended], trainerAccess: TrainerAccess.readOnly),
+      pt: MemberPtSummary(
+        history: [ended],
+        trainerAccess: TrainerAccess.readOnly,
+      ),
     );
 
     await pumpDossier(tester);
@@ -385,17 +392,21 @@ void main() {
     expect(find.text(PeopleStrings.assignMembership), findsNothing);
   });
 
-  testWidgets('admin can add PT when membership is active and no PT is running', (
-    tester,
-  ) async {
-    signInAs(adminPrincipal, ['pt_subscriptions.create', 'pt_subscriptions.manage']);
-    stubExtras(membership: gymMembership());
+  testWidgets(
+    'admin can add PT when membership is active and no PT is running',
+    (tester) async {
+      signInAs(adminPrincipal, [
+        'pt_subscriptions.create',
+        'pt_subscriptions.manage',
+      ]);
+      stubExtras(membership: gymMembership());
 
-    await pumpDossier(tester);
+      await pumpDossier(tester);
 
-    expect(find.text(PeopleStrings.addPersonalTraining), findsOneWidget);
-    expect(find.text(PeopleStrings.goals), findsOneWidget);
-  });
+      expect(find.text(PeopleStrings.addPersonalTraining), findsOneWidget);
+      expect(find.text(PeopleStrings.goals), findsOneWidget);
+    },
+  );
 
   testWidgets('admin cannot add PT when the membership has expired', (
     tester,
@@ -411,7 +422,10 @@ void main() {
   testWidgets('admin sees renew and change trainer/slot on an active PT', (
     tester,
   ) async {
-    signInAs(adminPrincipal, ['pt_subscriptions.create', 'pt_subscriptions.manage']);
+    signInAs(adminPrincipal, [
+      'pt_subscriptions.create',
+      'pt_subscriptions.manage',
+    ]);
     stubExtras(
       membership: gymMembership(),
       pt: MemberPtSummary(current: ptSub(), history: [ptSub()]),
@@ -428,7 +442,9 @@ void main() {
     tester,
   ) async {
     stubExtras(membership: gymMembership());
-    when(() => getPtSummary(any())).thenAnswer((_) async => const Left(NetworkFailure()));
+    when(
+      () => getPtSummary(any()),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
 
     await pumpDossier(tester);
 
@@ -436,32 +452,29 @@ void main() {
     expect(find.text(PeopleStrings.addPersonalTraining), findsNothing);
   });
 
-  testWidgets(
-    'memberships load failure surfaces an error',
-    (tester) async {
-      when(() => getMemberships(any())).thenAnswer(
-        (_) async => const Left(NetworkFailure()),
-      );
+  testWidgets('memberships load failure surfaces an error', (tester) async {
+    when(
+      () => getMemberships(any()),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
 
-      await pumpDossier(tester);
+    await pumpDossier(tester);
 
-      expect(find.text(PeopleStrings.addPersonalTraining), findsNothing);
-      expect(find.text(PeopleStrings.unavailable), findsWidgets);
-      expect(find.text('6'), findsOneWidget);
-      expect(
-        find.text('Network error. Please check your connection and try again.'),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(find.text(PeopleStrings.addPersonalTraining), findsNothing);
+    expect(find.text(PeopleStrings.unavailable), findsWidgets);
+    expect(find.text('6'), findsOneWidget);
+    expect(
+      find.text('Network error. Please check your connection and try again.'),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('attendance load failure does not show zero visits', (
     tester,
   ) async {
     stubExtras(membership: gymMembership());
-    when(() => getAttendanceSummary(any())).thenAnswer(
-      (_) async => const Left(NetworkFailure()),
-    );
+    when(
+      () => getAttendanceSummary(any()),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
 
     await pumpDossier(tester);
 

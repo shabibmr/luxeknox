@@ -19,7 +19,8 @@ class MockLoginUseCase extends Mock implements LoginUseCase {}
 
 class MockLogoutUseCase extends Mock implements LogoutUseCase {}
 
-class MockLoginWithGoogleUseCase extends Mock implements LoginWithGoogleUseCase {}
+class MockLoginWithGoogleUseCase extends Mock
+    implements LoginWithGoogleUseCase {}
 
 void main() {
   late MockRestoreSessionUseCase mockRestoreUseCase;

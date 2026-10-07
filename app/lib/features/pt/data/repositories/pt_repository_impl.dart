@@ -26,21 +26,28 @@ class PtRepositoryImpl implements PtRepository {
     }
   }
 
-  static String _hour(String slot) => slot.length >= 5 ? slot.substring(0, 5) : slot;
+  static String _hour(String slot) =>
+      slot.length >= 5 ? slot.substring(0, 5) : slot;
 
   @override
-  Future<Either<Failure, List<PtProduct>>> getProducts({String? q}) => _guard(() async {
-    final page = await _remote.listProducts(q: q, limit: 100);
-    return page.data.map((p) => p.toDomain()).toList();
-  });
+  Future<Either<Failure, List<PtProduct>>> getProducts({String? q}) =>
+      _guard(() async {
+        final page = await _remote.listProducts(q: q, limit: 100);
+        return page.data.map((p) => p.toDomain()).toList();
+      });
 
   @override
-  Future<Either<Failure, PtProduct>> createProduct(PtProduct product) =>
-      _guard(() async => (await _remote.createProduct(product.toWriteModel())).toDomain());
+  Future<Either<Failure, PtProduct>> createProduct(PtProduct product) => _guard(
+    () async =>
+        (await _remote.createProduct(product.toWriteModel())).toDomain(),
+  );
 
   @override
   Future<Either<Failure, PtProduct>> updateProduct(PtProduct product) => _guard(
-    () async => (await _remote.updateProduct(product.id, product.toWriteModel())).toDomain(),
+    () async => (await _remote.updateProduct(
+      product.id,
+      product.toWriteModel(),
+    )).toDomain(),
   );
 
   @override
@@ -89,19 +96,21 @@ class PtRepositoryImpl implements PtRepository {
   });
 
   @override
-  Future<Either<Failure, PtSubscription>> renew(int subscriptionId, {required PtPayment payment}) =>
-      _guard(() async {
-        final result = await _remote.renew(
-          subscriptionId,
-          api.PtRenewRequest(
-            (b) => b
-              ..paymentMethodId = payment.paymentMethodId
-              ..discountAmount = payment.discountAmount
-              ..transactionReference = payment.transactionReference,
-          ),
-        );
-        return result.subscription.toDomain();
-      });
+  Future<Either<Failure, PtSubscription>> renew(
+    int subscriptionId, {
+    required PtPayment payment,
+  }) => _guard(() async {
+    final result = await _remote.renew(
+      subscriptionId,
+      api.PtRenewRequest(
+        (b) => b
+          ..paymentMethodId = payment.paymentMethodId
+          ..discountAmount = payment.discountAmount
+          ..transactionReference = payment.transactionReference,
+      ),
+    );
+    return result.subscription.toDomain();
+  });
 
   @override
   Future<Either<Failure, PtSubscription>> reassignTrainer(

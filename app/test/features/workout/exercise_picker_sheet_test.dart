@@ -41,11 +41,7 @@ void main() {
 
     when(() => mockGetExercises(any())).thenAnswer(
       (_) async => const Right(
-        CursorPage(
-          items: [testExercise],
-          nextCursor: null,
-          hasMore: false,
-        ),
+        CursorPage(items: [testExercise], nextCursor: null, hasMore: false),
       ),
     );
   });
@@ -88,15 +84,11 @@ void main() {
     expect(selected!.name, 'Barbell Bench Press');
   });
 
-  testWidgets('ExercisePickerField displays selected exercise', (
-    tester,
-  ) async {
+  testWidgets('ExercisePickerField displays selected exercise', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: ExercisePickerField(
-            selectedExercise: testExercise,
-          ),
+          body: ExercisePickerField(selectedExercise: testExercise),
         ),
       ),
     );
