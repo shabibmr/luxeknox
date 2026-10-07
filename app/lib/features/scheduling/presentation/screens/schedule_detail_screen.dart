@@ -472,12 +472,12 @@ class _ScheduleDetailBody extends StatelessWidget {
                     if (canMoveNow) ...[
                       const SizedBox(height: 8),
                       OutlinedButton(
-                        key: const Key('move_booking_button'),
+                        key: const Key('reschedule_booking_button'),
                         onPressed: actionInFlight || memberId == null
                             ? null
                             : () =>
                                   _openMoveBooking(context, memberId: memberId),
-                        child: const Text(SchedulingStrings.moveBooking),
+                        child: const Text(SchedulingStrings.reschedule),
                       ),
                     ],
                     if (canRescheduleNow) ...[
