@@ -57,6 +57,7 @@ class ScheduleHistoryCubit extends Cubit<ScheduleHistoryState> {
       ListSchedulesParams(
         memberId: memberId,
         trainerId: trainerId,
+        to: DateTime.now(),
         limit: _pageSize,
       ),
     );
@@ -91,6 +92,7 @@ class ScheduleHistoryCubit extends Cubit<ScheduleHistoryState> {
       ListSchedulesParams(
         memberId: _memberId,
         trainerId: _trainerId,
+        to: DateTime.now(),
         cursor: cursor,
         limit: _pageSize,
       ),
