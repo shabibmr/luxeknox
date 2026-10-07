@@ -59,7 +59,7 @@ class MembershipHistoryCubit extends Cubit<MembershipHistoryState> {
       (failure) async =>
           emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) async {
-        final id = _preferActive(page.items)?.id;
+        final id = page.items.preferActive?.id;
         if (id == null) {
           emit(
             state.copyWith(
@@ -100,9 +100,4 @@ class MembershipHistoryCubit extends Cubit<MembershipHistoryState> {
       ),
     );
   }
-}
-
-Membership? _preferActive(List<Membership> items) {
-  if (items.isEmpty) return null;
-  return items.firstWhere((m) => m.isActiveOrFrozen, orElse: () => items.first);
 }

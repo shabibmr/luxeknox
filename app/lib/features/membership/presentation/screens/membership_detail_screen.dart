@@ -11,6 +11,8 @@ import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../session/domain/entities/user_type.dart';
+import '../../../../session/presentation/session_cubit.dart';
 import '../cubit/membership_detail_cubit.dart';
 import '../cubit/membership_freeze_cubit.dart';
 import '../cubit/membership_history_cubit.dart';
@@ -271,7 +273,11 @@ class _MembershipDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final canApprove = context.can('memberships.approve');
     final canUpdate = context.can('memberships.update');
-    final hidePricing = !context.can('memberships.view_price');
+    final session = context.watch<SessionCubit>().state;
+    final isTrainer =
+        session is SessionAuthenticated &&
+        session.principal.userType == UserType.trainer;
+    final hidePricing = isTrainer && !context.can('memberships.view_price');
 
     return Scaffold(
       appBar: AppBar(title: const Text(MembershipStrings.detailTitle)),

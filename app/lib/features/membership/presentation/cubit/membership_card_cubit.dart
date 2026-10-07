@@ -52,7 +52,7 @@ class MembershipCardCubit extends Cubit<MembershipCardState> {
         state.copyWith(
           status: LoadStatus.success,
           failure: null,
-          membership: _preferActive(page.items),
+          membership: page.items.preferActive,
         ),
       ),
     );
@@ -71,7 +71,3 @@ class MembershipCardCubit extends Cubit<MembershipCardState> {
   }
 }
 
-Membership? _preferActive(List<Membership> items) {
-  if (items.isEmpty) return null;
-  return items.firstWhere((m) => m.isActiveOrFrozen, orElse: () => items.first);
-}

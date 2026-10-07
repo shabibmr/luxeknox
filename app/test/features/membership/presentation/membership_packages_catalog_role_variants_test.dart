@@ -55,7 +55,7 @@ void main() {
 
   setUp(() {
     final cubit = MockMembershipPackagesCatalogCubit();
-    when(() => cubit.load()).thenAnswer((_) async {});
+    when(() => cubit.load(activeOnly: any(named: 'activeOnly'))).thenAnswer((_) async {});
     whenListen(
       cubit,
       const Stream<MembershipPackagesCatalogState>.empty(),
@@ -69,7 +69,11 @@ void main() {
 
   tearDown(() => getIt.reset());
 
-  Widget wrap(Principal principal, Capabilities capabilities) {
+  Widget wrap(
+    Principal principal,
+    Capabilities capabilities, {
+    bool readOnly = false,
+  }) {
     final sessionCubit = MockSessionCubit();
     whenListen(
       sessionCubit,
@@ -82,7 +86,7 @@ void main() {
     return MaterialApp(
       home: BlocProvider<SessionCubit>.value(
         value: sessionCubit,
-        child: const MembershipPackagesCatalogScreen(),
+        child: MembershipPackagesCatalogScreen(readOnly: readOnly),
       ),
     );
   }
@@ -163,4 +167,23 @@ void main() {
 
     await expectControls(tester, canCreate: false, canUpdate: true);
   });
+
+  testWidgets('readOnly: true triggers load with activeOnly: true', (tester) async {
+    await tester.pumpWidget(wrap(memberPrincipal, readOnly, readOnly: true));
+    await tester.pumpAndSettle();
+
+    verify(() => getIt<MembershipPackagesCatalogCubit>().load(activeOnly: true)).called(1);
+  });
+
+  testWidgets('trainer hides base price whereas member sees base price', (tester) async {
+    await tester.pumpWidget(wrap(trainerPrincipal, readOnly));
+    await tester.pumpAndSettle();
+    expect(find.text('GOLD · 30d'), findsOneWidget);
+    expect(find.textContaining('99.00'), findsNothing);
+
+    await tester.pumpWidget(wrap(memberPrincipal, readOnly));
+    await tester.pumpAndSettle();
+    expect(find.text('GOLD · 30d · 99.00'), findsOneWidget);
+  });
 }
+

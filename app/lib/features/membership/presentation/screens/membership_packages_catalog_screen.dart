@@ -8,6 +8,8 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../session/domain/entities/user_type.dart';
+import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/entities/membership_product.dart';
 import '../cubit/membership_packages_catalog_cubit.dart';
 import '../membership_strings.dart';
@@ -52,7 +54,11 @@ class _CatalogBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final canCreate = !readOnly && context.can('memberships.create');
     final canUpdate = !readOnly && context.can('memberships.update');
-    final hidePricing = !context.can('memberships.view_price');
+    final session = context.watch<SessionCubit>().state;
+    final isTrainer =
+        session is SessionAuthenticated &&
+        session.principal.userType == UserType.trainer;
+    final hidePricing = isTrainer && !context.can('memberships.view_price');
 
     return Scaffold(
       appBar: AppBar(

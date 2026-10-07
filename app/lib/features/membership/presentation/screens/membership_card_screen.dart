@@ -54,7 +54,16 @@ class _MembershipCardBody extends StatelessWidget {
           title: const Text(MembershipStrings.requestFreeze),
           content: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (membership.product?.maxFreezeDays != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8, left: 16),
+                  child: Text(
+                    '${MembershipStrings.maxFreezeDaysLabel}: ${membership.product!.maxFreezeDays}',
+                    style: Theme.of(dialogContext).textTheme.bodySmall,
+                  ),
+                ),
               ListTile(
                 title: const Text(MembershipStrings.startDateLabel),
                 subtitle: Text(start == null ? '—' : formatMembershipDate(start!)),
@@ -230,6 +239,11 @@ class _MembershipCardBody extends StatelessWidget {
             _infoRow(
               MembershipStrings.remainingPtSessions,
               membership.remainingPtSessions.toString(),
+            ),
+          if (membership.product?.maxFreezeDays != null)
+            _infoRow(
+              MembershipStrings.maxFreezeDaysLabel,
+              membership.product!.maxFreezeDays.toString(),
             ),
           if (membership.product?.accessFacilities.isNotEmpty ?? false)
             _infoRow(
