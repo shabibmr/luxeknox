@@ -12,7 +12,6 @@ import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/entities/open_slot.dart';
-import '../../domain/entities/schedule_enums.dart';
 import '../bloc/book_schedule_bloc.dart';
 import '../cubit/open_slots_cubit.dart';
 import '../cubit/schedule_calendar_cubit.dart';
