@@ -89,7 +89,4 @@ class DashboardAgendaCubit extends Cubit<DashboardAgendaState> {
     if (role == null || profileId == null) return;
     await load(role: role, profileId: profileId);
   }
-
-  static bool _isSameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
 }
