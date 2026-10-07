@@ -9,14 +9,15 @@ import '../entities/membership_product.dart';
 import '../repositories/membership_repository.dart';
 
 class GetMembershipProductsParams extends Equatable {
-  const GetMembershipProductsParams({this.q, this.limit, this.offset});
+  const GetMembershipProductsParams({this.q, this.limit, this.offset, this.activeOnly = false});
 
   final String? q;
   final int? limit;
   final int? offset;
+  final bool activeOnly;
 
   @override
-  List<Object?> get props => [q, limit, offset];
+  List<Object?> get props => [q, limit, offset, activeOnly];
 }
 
 @lazySingleton
@@ -35,6 +36,7 @@ class GetMembershipProductsUseCase
       q: params.q,
       limit: params.limit,
       offset: params.offset,
+      activeOnly: params.activeOnly,
     );
   }
 }

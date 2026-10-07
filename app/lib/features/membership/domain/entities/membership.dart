@@ -54,3 +54,13 @@ class Membership extends Equatable {
     product,
   ];
 }
+
+extension MembershipIterableX on Iterable<Membership> {
+  /// Returns the first active or frozen membership if one exists, otherwise
+  /// the first available membership or null if empty.
+  Membership? get preferActive {
+    if (isEmpty) return null;
+    return firstWhere((m) => m.isActiveOrFrozen, orElse: () => first);
+  }
+}
+

@@ -6,14 +6,14 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/time/gym_timezone_provider.dart';
 import '../../../../session/domain/entities/user_type.dart';
-import '../../../scheduling/domain/entities/schedule_enums.dart';
+import '../../domain/usecases/get_dashboard_agenda_usecase.dart';
 import '../../../scheduling/domain/entities/schedule_session.dart';
 import '../../../scheduling/domain/usecases/schedule_usecases.dart';
 
-part 'dashboard_agenda_cubit.freezed.dart';
+export '../../domain/usecases/get_dashboard_agenda_usecase.dart'
+    show kDashboardAgendaDaySpan;
 
-/// Agenda window: calendar today through the next 7 days (8 days total).
-const int kDashboardAgendaDaySpan = 8;
+part 'dashboard_agenda_cubit.freezed.dart';
 
 @freezed
 abstract class DashboardAgendaState with _$DashboardAgendaState {
@@ -31,11 +31,11 @@ abstract class DashboardAgendaState with _$DashboardAgendaState {
 
 @injectable
 class DashboardAgendaCubit extends Cubit<DashboardAgendaState> {
-  DashboardAgendaCubit(this._listSchedules, [this._timezoneProvider])
-    : super(const DashboardAgendaState());
+  DashboardAgendaCubit(ListSchedulesUseCase listSchedules, [GymTimezoneProvider? timezoneProvider])
+    : _getAgenda = GetDashboardAgendaUseCase(listSchedules, timezoneProvider),
+      super(const DashboardAgendaState());
 
-  final ListSchedulesUseCase _listSchedules;
-  final GymTimezoneProvider? _timezoneProvider;
+  final GetDashboardAgendaUseCase _getAgenda;
 
   UserType? _role;
   String? _profileId;
@@ -62,23 +62,7 @@ class DashboardAgendaCubit extends Cubit<DashboardAgendaState> {
 
     emit(state.copyWith(status: LoadStatus.loading, failure: null, role: role));
 
-    final tz = await _timezoneProvider?.timezone();
-    final offset =
-        _timezoneProvider?.getOffset(tz) ?? DateTime.now().timeZoneOffset;
-
-    final utcNow = DateTime.now().toUtc();
-    final gymNow = utcNow.add(offset);
-    final from = DateTime(gymNow.year, gymNow.month, gymNow.day);
-    final to = from.add(const Duration(days: kDashboardAgendaDaySpan));
-    final result = await _listSchedules(
-      ListSchedulesParams(
-        from: from,
-        to: to,
-        trainerId: role == UserType.trainer ? profileId : null,
-        memberId: role == UserType.member ? profileId : null,
-        limit: 100,
-      ),
-    );
+    final result = await _getAgenda(role: role, profileId: profileId);
 
     result.fold(
       (failure) => emit(
@@ -88,37 +72,16 @@ class DashboardAgendaCubit extends Cubit<DashboardAgendaState> {
           role: role,
         ),
       ),
-      (page) {
-        final items =
-            page.items
-                .where((s) => s.status != ScheduleSessionStatus.cancelled)
-                .toList()
-              ..sort((a, b) => a.startTime.compareTo(b.startTime));
-
-        final today = <ScheduleSession>[];
-        final upcoming = <ScheduleSession>[];
-        for (final session in items) {
-          final sessionGymTime = session.startTime.isUtc
-              ? session.startTime.add(offset)
-              : session.startTime.toUtc().add(offset);
-          if (_isSameDay(sessionGymTime, from)) {
-            today.add(session);
-          } else if (sessionGymTime.isAfter(from)) {
-            upcoming.add(session);
-          }
-        }
-
-        emit(
-          state.copyWith(
-            status: LoadStatus.success,
-            failure: null,
-            todayItems: today,
-            upcomingItems: upcoming,
-            hasLoaded: true,
-            role: role,
-          ),
-        );
-      },
+      (agenda) => emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          todayItems: agenda.today,
+          upcomingItems: agenda.upcoming,
+          hasLoaded: true,
+          role: role,
+        ),
+      ),
     );
   }
 
@@ -128,7 +91,4 @@ class DashboardAgendaCubit extends Cubit<DashboardAgendaState> {
     if (role == null || profileId == null) return;
     await load(role: role, profileId: profileId);
   }
-
-  static bool _isSameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
 }

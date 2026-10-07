@@ -27,9 +27,9 @@ class MembershipPackagesCatalogCubit
 
   final GetMembershipProductsUseCase _getProducts;
 
-  Future<void> load() async {
+  Future<void> load({bool activeOnly = false}) async {
     emit(state.copyWith(status: LoadStatus.loading, failure: null));
-    final result = await _getProducts(const GetMembershipProductsParams());
+    final result = await _getProducts(GetMembershipProductsParams(activeOnly: activeOnly));
     if (isClosed) return;
     result.fold(
       (failure) =>

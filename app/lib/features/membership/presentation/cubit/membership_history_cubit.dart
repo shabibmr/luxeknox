@@ -7,6 +7,7 @@ import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/membership_history_entry.dart';
 import '../../domain/usecases/get_membership_history_usecase.dart';
 import '../../domain/usecases/get_memberships_usecase.dart';
+import '../../domain/entities/membership.dart';
 
 part 'membership_history_cubit.freezed.dart';
 
@@ -54,16 +55,24 @@ class MembershipHistoryCubit extends Cubit<MembershipHistoryState> {
       GetMembershipsParams(memberId: memberId),
     );
     if (isClosed) return;
-    result.fold(
-      (failure) =>
+    await result.fold(
+      (failure) async =>
           emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
-      (page) => emit(
-        state.copyWith(
-          status: LoadStatus.success,
-          failure: null,
-          membershipId: page.items.isEmpty ? null : page.items.first.id,
-        ),
-      ),
+      (page) async {
+        final id = page.items.preferActive?.id;
+        if (id == null) {
+          emit(
+            state.copyWith(
+              status: LoadStatus.success,
+              failure: null,
+              membershipId: null,
+              items: const [],
+            ),
+          );
+          return;
+        }
+        await _loadHistory(id);
+      },
     );
   }
 
@@ -86,7 +95,7 @@ class MembershipHistoryCubit extends Cubit<MembershipHistoryState> {
         state.copyWith(
           status: LoadStatus.success,
           failure: null,
-          items: page.items,
+          items: [...page.items]..sort((a, b) => b.timestamp.compareTo(a.timestamp)),
         ),
       ),
     );
