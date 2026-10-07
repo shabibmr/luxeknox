@@ -58,13 +58,21 @@ class MembershipHistoryCubit extends Cubit<MembershipHistoryState> {
     result.fold(
       (failure) =>
           emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
-      (page) => emit(
-        state.copyWith(
-          status: LoadStatus.success,
-          failure: null,
-          membershipId: page.items.isEmpty ? null : _preferActive(page.items)?.id,
-        ),
-      ),
+      (page) async {
+        final id = _preferActive(page.items)?.id;
+        if (id == null) {
+          emit(
+            state.copyWith(
+              status: LoadStatus.success,
+              failure: null,
+              membershipId: null,
+              items: const [],
+            ),
+          );
+          return;
+        }
+        await _loadHistory(id);
+      },
     );
   }
 
