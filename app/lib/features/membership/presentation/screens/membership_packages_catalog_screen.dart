@@ -8,8 +8,7 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
-import '../../../../session/domain/entities/user_type.dart';
-import '../../../../session/presentation/session_cubit.dart';
+import '../../../../
 import '../../domain/entities/membership_product.dart';
 import '../cubit/membership_packages_catalog_cubit.dart';
 import '../membership_strings.dart';
@@ -25,7 +24,7 @@ class MembershipPackagesCatalogScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<MembershipPackagesCatalogCubit>()..load(),
+      create: (_) => getIt<MembershipPackagesCatalogCubit>()..load(activeOnly: readOnly),
       child: _CatalogBody(readOnly: readOnly),
     );
   }
@@ -54,10 +53,7 @@ class _CatalogBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final canCreate = !readOnly && context.can('memberships.create');
     final canUpdate = !readOnly && context.can('memberships.update');
-    final session = context.watch<SessionCubit>().state;
-    final hidePricing =
-        session is SessionAuthenticated &&
-        session.principal.userType == UserType.trainer;
+    final hidePricing = !context.can('memberships.view_price');
 
     return Scaffold(
       appBar: AppBar(
@@ -103,14 +99,14 @@ class _CatalogBody extends StatelessWidget {
         message: state.failure == null
             ? MembershipStrings.noneFound
             : failureMessage(state.failure!),
-        onRetry: () => context.read<MembershipPackagesCatalogCubit>().load(),
+        onRetry: () => context.read<MembershipPackagesCatalogCubit>().load(activeOnly: readOnly),
       );
     }
     if (noItems) {
       return const AppEmptyView(message: MembershipStrings.noneFound);
     }
     return RefreshIndicator(
-      onRefresh: () => context.read<MembershipPackagesCatalogCubit>().load(),
+      onRefresh: () => context.read<MembershipPackagesCatalogCubit>().load(activeOnly: readOnly),
       child: ListView.builder(
         itemCount: state.items.length,
         itemBuilder: (context, index) {
