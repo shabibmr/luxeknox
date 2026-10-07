@@ -7,6 +7,7 @@ import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/membership_history_entry.dart';
 import '../../domain/usecases/get_membership_history_usecase.dart';
 import '../../domain/usecases/get_memberships_usecase.dart';
+import '../../domain/entities/membership.dart';
 
 part 'membership_history_cubit.freezed.dart';
 
@@ -61,7 +62,7 @@ class MembershipHistoryCubit extends Cubit<MembershipHistoryState> {
         state.copyWith(
           status: LoadStatus.success,
           failure: null,
-          membershipId: page.items.isEmpty ? null : page.items.first.id,
+          membershipId: page.items.isEmpty ? null : _preferActive(page.items)?.id,
         ),
       ),
     );
@@ -91,4 +92,9 @@ class MembershipHistoryCubit extends Cubit<MembershipHistoryState> {
       ),
     );
   }
+}
+
+Membership? _preferActive(List<Membership> items) {
+  if (items.isEmpty) return null;
+  return items.firstWhere((m) => m.isActiveOrFrozen, orElse: () => items.first);
 }
