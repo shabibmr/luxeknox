@@ -285,11 +285,9 @@ class _BookClassBody extends StatelessWidget {
               );
             }
             final open = state.items
-                .where(
-                  (s) =>
-                      s.status == ScheduleSessionStatus.scheduled && !s.isFull,
-                )
-                .toList();
+                .where((s) => s.status == ScheduleSessionStatus.scheduled)
+                .toList()
+              ..sort((a, b) => a.startTime.compareTo(b.startTime));
             if (open.isEmpty) {
               return const AppEmptyView(message: SchedulingStrings.noneFound);
             }
@@ -299,7 +297,13 @@ class _BookClassBody extends StatelessWidget {
                 final session = open[index];
                 return ListTile(
                   title: Text(session.title),
-                  subtitle: Text(session.startTime.toString()),
+                  subtitle: Text(
+                    session.startTime.toString() +
+                        ' · ' +
+                        (session.isFull
+                            ? 'Full — booking may waitlist'
+                            : 'Available'),
+                  ),
                   trailing: _BookAction(scheduleId: session.id),
                   onTap: () => context.go('/schedule/${session.id}'),
                 );
