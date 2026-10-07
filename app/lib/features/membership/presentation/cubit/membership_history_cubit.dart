@@ -95,7 +95,7 @@ class MembershipHistoryCubit extends Cubit<MembershipHistoryState> {
         state.copyWith(
           status: LoadStatus.success,
           failure: null,
-          items: page.items,
+          items: [...page.items]..sort((a, b) => b.timestamp.compareTo(a.timestamp)),
         ),
       ),
     );
