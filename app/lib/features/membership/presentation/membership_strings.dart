@@ -64,6 +64,7 @@ class MembershipStrings {
   static const String startDateLabel = 'Start date';
   static const String endDateLabel = 'End date';
   static const String remainingPtSessions = 'Remaining PT sessions';
+  static const String remainingDays = 'Remaining days';
   static const String lockerNumberLabel = 'Locker';
   static const String noActiveMembership = 'No active membership on file.';
 
