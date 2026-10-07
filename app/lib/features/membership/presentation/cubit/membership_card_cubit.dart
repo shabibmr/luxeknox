@@ -5,7 +5,6 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/membership.dart';
-import '../../domain/entities/membership_freeze.dart';
 import '../../domain/usecases/get_memberships_usecase.dart';
 import '../../domain/usecases/request_membership_freeze_usecase.dart';
 
