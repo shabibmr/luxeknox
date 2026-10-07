@@ -12,6 +12,7 @@ import '../../../../core/widgets/app_loading.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../../attendance/presentation/attendance_strings.dart';
 import '../../domain/entities/schedule_enums.dart';
+import '../../domain/usecases/schedule_usecases.dart';
 import '../cubit/schedule_detail_cubit.dart';
 import '../schedule_role.dart';
 import '../scheduling_strings.dart';
@@ -69,13 +70,46 @@ class _ScheduleDetailBody extends StatelessWidget {
   }) async {
     final session = context.read<ScheduleDetailCubit>().state.session;
     if (session == null) return;
+
+    final result = await getIt<ListSchedulesUseCase>()(
+      ListSchedulesParams(
+        from: DateTime.now(),
+        to: DateTime.now().add(const Duration(days: 14)),
+        limit: 50,
+      ),
+    );
+    if (!context.mounted) return;
+
+    final alternatives = result.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(failureMessage(failure))),
+        );
+        return <ScheduleSession>[];
+      },
+      (page) => page.items
+          .where(
+            (s) =>
+                s.id != session.id &&
+                s.scheduleTypeId == session.scheduleTypeId &&
+                s.status == ScheduleSessionStatus.scheduled &&
+                !s.isFull,
+          )
+          .toList()
+        ..sort((a, b) => a.startTime.compareTo(b.startTime)),
+    );
+
+    if (alternatives.isEmpty) return;
+
     final moved = await showMoveBookingSheet(
       context: context,
       session: session,
       memberId: memberId,
+      alternatives: alternatives,
     );
     if (!context.mounted) return;
-    final target = context.read<ScheduleDetailCubit>().state.movedToScheduleId;
+    final target =
+        context.read<ScheduleDetailCubit>().state.movedToScheduleId;
     if (moved == true && target != null) {
       context.go(Routes.memberScheduleById(target));
     }
@@ -215,7 +249,8 @@ class _ScheduleDetailBody extends StatelessWidget {
                       session.title,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
-                    if (session.isRecurring) ...[
+                    if (session.isRecurring &&
+                        role != ScheduleCalendarRole.member) ...[
                       const SizedBox(height: 4),
                       Row(
                         children: [
