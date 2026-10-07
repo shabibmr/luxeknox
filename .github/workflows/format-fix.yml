@@ -32,6 +32,8 @@ jobs:
           git restore drizzle/meta/_journal.json
           rm -f drizzle/0012_ci_schema_refresh.sql drizzle/meta/0012_snapshot.json
           pnpm db:check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add drizzle/meta/0019_snapshot.json
           git commit -m "fix(db): refresh Drizzle schema baseline"
           git push origin HEAD:fix/ci-main-build
