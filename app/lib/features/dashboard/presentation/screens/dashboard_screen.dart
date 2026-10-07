@@ -46,7 +46,10 @@ class DashboardScreen extends StatelessWidget {
         ),
       ],
       child: Scaffold(
-        appBar: AppBar(title: const Text(DashboardStrings.title)),
+        appBar: AppBar(
+          title: const Text(DashboardStrings.title),
+          actions: const [_NotificationsButton()],
+        ),
         body: const _DashboardBody(),
       ),
     );
