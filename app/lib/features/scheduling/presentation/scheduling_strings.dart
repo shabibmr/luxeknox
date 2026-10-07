@@ -20,6 +20,13 @@ class SchedulingStrings {
   static const String leaveWaitlist = 'Leave waitlist';
   static const String unbook = 'Cancel booking';
   static const String roster = 'Roster';
+  static const String bookingInfo = 'My booking';
+  static const String booked = 'Booked';
+  static const String waitlisted = 'Waitlisted';
+  static const String notBooked = 'Not booked';
+  static const String roomLabel = 'Room';
+  static const String trainerLabel = 'Trainer';
+  static const String cancellationPolicy = 'Cancellation policy';
   static const String waitlist = 'Waitlist';
   static const String submitting = 'Working…';
   static const String facilitiesEmpty = 'No facilities yet.';
