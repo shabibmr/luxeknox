@@ -28,12 +28,11 @@ abstract class DashboardAgendaState with _$DashboardAgendaState {
 
 @injectable
 class DashboardAgendaCubit extends Cubit<DashboardAgendaState> {
-  DashboardAgendaCubit(this._listSchedules, [this._timezoneProvider])
-    : _getAgenda = GetDashboardAgendaUseCase(_listSchedules, _timezoneProvider),
+  DashboardAgendaCubit(this._listSchedules, [GymTimezoneProvider? timezoneProvider])
+    : _getAgenda = GetDashboardAgendaUseCase(_listSchedules, timezoneProvider),
       super(const DashboardAgendaState());
 
   final ListSchedulesUseCase _listSchedules;
-  final GymTimezoneProvider? _timezoneProvider;
   final GetDashboardAgendaUseCase _getAgenda;
 
   UserType? _role;
