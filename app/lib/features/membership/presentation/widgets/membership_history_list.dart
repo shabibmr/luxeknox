@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/membership_status.dart';
+import '../membership_date_format.dart';
 import '../cubit/membership_history_cubit.dart';
 import '../membership_strings.dart';
 
@@ -15,11 +15,7 @@ class MembershipHistoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) =>
-          getIt<MembershipHistoryCubit>()..load(membershipId: membershipId),
-      child: _MembershipHistoryListBody(membershipId: membershipId),
-    );
+    return _MembershipHistoryListBody(membershipId: membershipId);
   }
 }
 
