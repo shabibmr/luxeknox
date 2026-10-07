@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
@@ -60,17 +59,16 @@ class MembershipCardCubit extends Cubit<MembershipCardState> {
     );
   }
 
-  /// Null when nothing was submitted. Otherwise the use-case result so the
-  /// screen can tell a successful request from a failure.
-  Future<Either<Failure, MembershipFreeze>?> requestFreeze(
-    RequestMembershipFreezeParams params,
-  ) async {
-    if (state.membership == null || state.requestingFreeze) return null;
-    emit(state.copyWith(requestingFreeze: true));
+  Future<void> requestFreeze(RequestMembershipFreezeParams params) async {
+    if (state.membership == null || state.requestingFreeze) return;
+    emit(state.copyWith(requestingFreeze: true, failure: null));
     final result = await _requestFreeze(params);
-    if (isClosed) return null;
-    emit(state.copyWith(requestingFreeze: false));
-    return result;
+    if (isClosed) return;
+    result.fold(
+      (failure) =>
+          emit(state.copyWith(requestingFreeze: false, failure: failure)),
+      (_) => emit(state.copyWith(requestingFreeze: false, failure: null)),
+    );
   }
 }
 
