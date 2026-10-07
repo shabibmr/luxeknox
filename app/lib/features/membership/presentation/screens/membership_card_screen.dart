@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
@@ -85,6 +86,7 @@ class _MembershipCardBody extends StatelessWidget {
                 decoration: const InputDecoration(
                   labelText: MembershipStrings.reasonLabel,
                 ),
+                onChanged: (_) => setDialogState(() {}),
               ),
             ],
           ),
