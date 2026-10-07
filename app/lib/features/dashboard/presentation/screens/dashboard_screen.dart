@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../session/domain/entities/user_type.dart';
 import '../../../../session/presentation/session_cubit.dart';
@@ -51,29 +53,8 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
-class _DashboardBody extends StatefulWidget {
+class _DashboardBody extends StatelessWidget {
   const _DashboardBody();
-
-  @override
-  State<_DashboardBody> createState() => _DashboardBodyState();
-}
-
-class _DashboardBodyState extends State<_DashboardBody> {
-  // The shell keeps this branch's widget tree alive (via `Offstage` +
-  // `TickerMode`) when another tab is selected, so `initState` only runs
-  // once. Watch `TickerMode` to detect this tab becoming active again and
-  // refetch, instead of showing whatever was last loaded.
-  bool _wasActive = true;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final isActive = TickerMode.valuesOf(context).enabled;
-    if (isActive && !_wasActive) {
-      _onRefresh(context);
-    }
-    _wasActive = isActive;
-  }
 
   Future<void> _onRefresh(BuildContext context) {
     return Future.wait([
@@ -91,29 +72,129 @@ class _DashboardBodyState extends State<_DashboardBody> {
       return const DashboardSkeleton();
     }
 
-    final hasData = context.select((DashboardCubit c) => c.state.hasData);
-    if (status == DashboardStatus.failure && !hasData) {
-      final failure = context.select((DashboardCubit c) => c.state.failure);
-      return _ErrorView(
-        message: failure == null
-            ? DashboardStrings.empty
-            : failureMessage(failure),
-        onRetry: () => context.read<DashboardCubit>().load(),
-      );
-    }
-
     return RefreshIndicator(
       onRefresh: () => _onRefresh(context),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: const [
+          _DashboardLoadErrorBanner(),
           _StaleDataBanner(),
           _MemberSection(),
+          _MemberQuickActions(),
           _TrainerSection(),
           DashboardAgendaSection(),
           _AdminSection(),
           _EmptyNotice(),
         ],
+      ),
+    );
+  }
+}
+
+class _DashboardLoadErrorBanner extends StatelessWidget {
+  const _DashboardLoadErrorBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final showError = context.select(
+      (DashboardCubit c) =>
+          c.state.status == DashboardStatus.failure && !c.state.hasData,
+    );
+    if (!showError) return const SizedBox.shrink();
+
+    final failure = context.select((DashboardCubit c) => c.state.failure);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const Icon(Icons.cloud_off_outlined),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  failure == null
+                      ? DashboardStrings.dashboardError
+                      : failureMessage(failure),
+                ),
+              ),
+              TextButton(
+                onPressed: () => context.read<DashboardCubit>().load(),
+                child: const Text(DashboardStrings.retry),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NotificationsButton extends StatelessWidget {
+  const _NotificationsButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final role = context.select<SessionCubit, UserType?>((cubit) {
+      final state = cubit.state;
+      return state is SessionAuthenticated ? state.principal.userType : null;
+    });
+
+    final path = switch (role) {
+      UserType.member => Routes.memberNotifications,
+      UserType.trainer => Routes.trainerNotifications,
+      _ => null,
+    };
+
+    if (path == null) return const SizedBox.shrink();
+
+    return IconButton(
+      tooltip: DashboardStrings.notifications,
+      onPressed: () => context.go(path),
+      icon: const Icon(Icons.notifications_none),
+    );
+  }
+}
+
+class _MemberQuickActions extends StatelessWidget {
+  const _MemberQuickActions();
+
+  @override
+  Widget build(BuildContext context) {
+    final role = context.select<SessionCubit, UserType?>((cubit) {
+      final state = cubit.state;
+      return state is SessionAuthenticated ? state.principal.userType : null;
+    });
+    if (role != UserType.member) return const SizedBox.shrink();
+
+    final actions = [
+      (Icons.calendar_month_outlined, DashboardStrings.schedule, Routes.memberSchedule),
+      (Icons.event_available_outlined, DashboardStrings.attendance, Routes.memberProfileAttendanceSummary),
+      (Icons.fitness_center_outlined, DashboardStrings.workout, Routes.memberHomeWorkoutActive),
+      (Icons.restaurant_outlined, DashboardStrings.diet, Routes.memberHomeDietLog),
+      (Icons.trending_up_outlined, DashboardStrings.progress, Routes.memberProgress),
+      (Icons.payments_outlined, DashboardStrings.payments, Routes.memberProfilePayments),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final action in actions)
+                ActionChip(
+                  avatar: Icon(action.$1, size: 18),
+                  label: Text(action.$2),
+                  onPressed: () => context.go(action.$3),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -215,26 +296,3 @@ class _EmptyNotice extends StatelessWidget {
   }
 }
 
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(message, textAlign: TextAlign.center),
-          const SizedBox(height: 12),
-          FilledButton(
-            onPressed: onRetry,
-            child: const Text(DashboardStrings.retry),
-          ),
-        ],
-      ),
-    );
-  }
-}
