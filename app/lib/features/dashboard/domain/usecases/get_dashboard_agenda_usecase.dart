@@ -6,7 +6,7 @@ import '../../../../core/time/gym_timezone_provider.dart';
 import '../../../scheduling/domain/entities/schedule_enums.dart';
 import '../../../scheduling/domain/entities/schedule_session.dart';
 import '../../../scheduling/domain/usecases/schedule_usecases.dart';
-import '../../../session/domain/entities/user_type.dart';
+import '../../../../session/domain/entities/user_type.dart';
 
 const int kDashboardAgendaDaySpan = 8;
 
