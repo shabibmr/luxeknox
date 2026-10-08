@@ -21,8 +21,10 @@ class ApiBaseUrlResolver {
   /// Trims the URL and ensures the Nest global prefix `/v1` is present on
   /// absolute API base URLs. Returns an empty string for a blank URL.
   ///
-  /// Firestore has been seeded without `/v1` (`https://api.luxeknox.com`); Nest
-  /// only serves routes under `/v1`, so login and every other call 404 without it.
+  /// Contract: Firestore `config/app` holds the API host only
+  /// (`https://api.luxeknox.com`). This client is built against the v1 API, so
+  /// it owns the version and appends `/v1` itself. A value that already ends in
+  /// `/v1` is accepted unchanged.
   static String normalize(String raw) {
     final trimmed = raw.trim();
     if (trimmed.isEmpty) return trimmed;

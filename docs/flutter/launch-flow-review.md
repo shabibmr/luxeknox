@@ -2,7 +2,7 @@
 
 Date: 2026-10-08. Scope: the uncommitted working tree and the existing code on the path from `main()` to the first real screen.
 Sources: `/code-review high`, plus `/simplify` run from four angles (reuse, simplification, efficiency, altitude).
-This is a report only. No code was changed.
+All items in §5 have since been implemented; line references below describe the code as it was at review time.
 
 ## 1. Launch sequence (as it is today)
 
@@ -70,7 +70,8 @@ This is a report only. No code was changed.
 3. ✅ **S1** (also fixes B5 and E6 partly): remove FCM's parallel deep-link parking. **B6**: guard `start()`. (S12 done alongside.)
 4. ✅ **E1 + E2 + S5 + S6 + S7 + B7**: rewrite the config bootstrap (stale-while-revalidate, one catch).
 5. ✅ **S2 + S3 + S4 + B8**: clean up `redirect_logic`; the existing `redirect_logic_test.dart` covers it.
-6. ✅ **E3, E4, E5, E7, S9, S10, S12-S14**: small cleanups. (E6 second half — skip unchanged token re-registration — still open.)
-7. **S8**: a data/contract decision for the team. Not a code change by itself.
+6. ✅ **E3, E4, E5, E7, S9, S10, S12-S14**: small cleanups.
+   ✅ **E6**: `DeviceTokenRegistrar.syncToken` skips the POST when a stored `<userId>|<token>` marker matches, and concurrent calls share one in-flight future. The marker is cleared on logout and before any registration attempt.
+7. ✅ **S8**: decided that Firestore `config/app` holds the host only and the client appends `/v1`, because this client is built against the v1 API. The contract is documented on `ApiBaseUrlResolver.normalize`. No data change needed.
 
 Known unrelated failures: 3 tests in `test/core/router/exercise_routes_test.dart` (they fail on the base commit too).
