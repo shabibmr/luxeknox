@@ -559,9 +559,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i525.ImageCompressor>(() => _i525.ImageCompressor());
     gh.lazySingleton<_i763.MediaPicker>(() => _i763.MediaPicker());
-    gh.lazySingleton<_i18.PushTokenProvider>(
-      () => _i202.FcmPushTokenProvider(),
-    );
     gh.singleton<_i973.TokenStorage>(
       () => registerModule.tokenStorage(gh<_i558.FlutterSecureStorage>()),
     );
@@ -574,36 +571,61 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i575.DeviceTokenStore>(
       () => _i808.DeviceTokenLocalStore(gh<_i558.FlutterSecureStorage>()),
     );
-    gh.singleton<_i361.Dio>(
+    gh.lazySingleton<_i18.PushTokenProvider>(
+      () => _i202.FcmPushTokenProvider(gh<_i668.CrashReporter>()),
+    );
+    gh.lazySingleton<_i361.Dio>(
       () => registerModule.dio(gh<_i650.AppConfig>(), gh<_i973.TokenStorage>()),
     );
-    gh.singleton<_i633.AUTHApi>(() => registerModule.authApi(gh<_i361.Dio>()));
-    gh.singleton<_i633.WORKApi>(() => registerModule.workApi(gh<_i361.Dio>()));
-    gh.singleton<_i633.DIETApi>(() => registerModule.dietApi(gh<_i361.Dio>()));
-    gh.singleton<_i633.PEOPLEApi>(
+    gh.lazySingleton<_i633.AUTHApi>(
+      () => registerModule.authApi(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i633.WORKApi>(
+      () => registerModule.workApi(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i633.DIETApi>(
+      () => registerModule.dietApi(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i633.PEOPLEApi>(
       () => registerModule.peopleApi(gh<_i361.Dio>()),
     );
-    gh.singleton<_i633.HEALTHApi>(
+    gh.lazySingleton<_i633.HEALTHApi>(
       () => registerModule.healthApi(gh<_i361.Dio>()),
     );
-    gh.singleton<_i633.MEDIAApi>(
+    gh.lazySingleton<_i633.MEDIAApi>(
       () => registerModule.mediaApi(gh<_i361.Dio>()),
     );
-    gh.singleton<_i633.MEMBApi>(() => registerModule.membApi(gh<_i361.Dio>()));
-    gh.singleton<_i633.PTApi>(() => registerModule.ptApi(gh<_i361.Dio>()));
-    gh.singleton<_i633.DASHApi>(() => registerModule.dashApi(gh<_i361.Dio>()));
-    gh.singleton<_i633.SCHEDApi>(
+    gh.lazySingleton<_i633.MEMBApi>(
+      () => registerModule.membApi(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i633.PTApi>(() => registerModule.ptApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i633.DASHApi>(
+      () => registerModule.dashApi(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i633.SCHEDApi>(
       () => registerModule.schedApi(gh<_i361.Dio>()),
     );
-    gh.singleton<_i633.ATTNApi>(() => registerModule.attnApi(gh<_i361.Dio>()));
-    gh.singleton<_i633.PAYApi>(() => registerModule.payApi(gh<_i361.Dio>()));
-    gh.singleton<_i633.RPTApi>(() => registerModule.rptApi(gh<_i361.Dio>()));
-    gh.singleton<_i633.GOALApi>(() => registerModule.goalApi(gh<_i361.Dio>()));
-    gh.singleton<_i633.NOTIFApi>(
+    gh.lazySingleton<_i633.ATTNApi>(
+      () => registerModule.attnApi(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i633.PAYApi>(
+      () => registerModule.payApi(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i633.RPTApi>(
+      () => registerModule.rptApi(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i633.GOALApi>(
+      () => registerModule.goalApi(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i633.NOTIFApi>(
       () => registerModule.notifApi(gh<_i361.Dio>()),
     );
-    gh.singleton<_i633.SYSApi>(() => registerModule.sysApi(gh<_i361.Dio>()));
-    gh.singleton<_i633.RBACApi>(() => registerModule.rbacApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i633.SYSApi>(
+      () => registerModule.sysApi(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i633.RBACApi>(
+      () => registerModule.rbacApi(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i817.DashboardRemoteDataSource>(
       () => _i817.DashboardRemoteDataSourceImpl(gh<_i633.DASHApi>()),
     );
@@ -1549,6 +1571,16 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i853.PaymentsLedgerCubit>(
       () => _i853.PaymentsLedgerCubit(gh<_i645.GetPaymentsUseCase>()),
     );
+    gh.lazySingleton<_i287.FcmMessagingService>(
+      () => _i287.FcmMessagingService(
+        gh<_i18.PushTokenProvider>(),
+        gh<_i212.DeviceTokenRegistrar>(),
+        gh<_i583.GoRouter>(),
+        gh<_i893.SessionCubit>(),
+        gh<_i668.CrashReporter>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
     gh.factory<_i979.FoodPickerCubit>(
       () => _i979.FoodPickerCubit(gh<_i687.GetFoodsUseCase>()),
     );
@@ -1613,15 +1645,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i300.BookScheduleBloc>(
       () => _i300.BookScheduleBloc(gh<_i777.BookScheduleUseCase>()),
-    );
-    gh.lazySingleton<_i287.FcmMessagingService>(
-      () => _i287.FcmMessagingService(
-        gh<_i18.PushTokenProvider>(),
-        gh<_i212.DeviceTokenRegistrar>(),
-        gh<_i583.GoRouter>(),
-        gh<_i893.SessionCubit>(),
-      ),
-      dispose: (i) => i.dispose(),
     );
     gh.factory<_i847.EditMemberCubit>(
       () => _i847.EditMemberCubit(
@@ -1732,12 +1755,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i978.TodaysSessionsCubit>(
       () => _i978.TodaysSessionsCubit(gh<_i777.ListSchedulesUseCase>()),
     );
-    gh.factory<_i628.DashboardAgendaCubit>(
-      () => _i628.DashboardAgendaCubit(
-        gh<_i777.ListSchedulesUseCase>(),
-        gh<_i570.GymTimezoneProvider>(),
-      ),
-    );
     gh.factory<_i756.ExerciseDetailCubit>(
       () => _i756.ExerciseDetailCubit(gh<_i1034.GetExerciseUseCase>()),
     );
@@ -1752,6 +1769,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i638.RecordDietLogUseCase>(),
         gh<_i1025.ListDietLogsUseCase>(),
         gh<_i639.ListDietPlansUseCase>(),
+      ),
+    );
+    gh.factory<_i628.DashboardAgendaCubit>(
+      () => _i628.DashboardAgendaCubit(
+        gh<_i777.ListSchedulesUseCase>(),
+        gh<_i570.GymTimezoneProvider>(),
       ),
     );
     gh.factory<_i1063.WorkoutPlanVersionsCubit>(

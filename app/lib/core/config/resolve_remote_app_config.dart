@@ -1,5 +1,6 @@
+import 'dart:developer' as developer;
+
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../firebase_options.dart';
@@ -43,6 +44,11 @@ Future<void> _initFirebase() async {
       );
     }
   } catch (e, st) {
-    debugPrint('AppConfig: Firebase init failed: $e\n$st');
+    developer.log(
+      'Firebase init failed',
+      name: 'AppConfig',
+      error: e,
+      stackTrace: st,
+    );
   }
 }

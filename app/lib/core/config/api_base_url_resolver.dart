@@ -1,6 +1,5 @@
 import 'dart:async';
-
-import 'package:flutter/foundation.dart';
+import 'dart:developer' as developer;
 
 import 'firestore_app_config_source.dart';
 import 'remote_api_base_url_store.dart';
@@ -43,7 +42,10 @@ class ApiBaseUrlResolver {
     }
     final remote = await _refresh(null);
     if (remote != null) return remote;
-    debugPrint('AppConfig: no remote/cached API_BASE_URL; using fallback');
+    developer.log(
+      'No remote/cached API_BASE_URL; using fallback',
+      name: 'AppConfig',
+    );
     return normalize(_fallbackUrl);
   }
 
@@ -54,8 +56,13 @@ class ApiBaseUrlResolver {
       final remote = _normalizeOrNull(await _source.fetchApiBaseUrl());
       if (remote != null && remote != cached) await _store.write(remote);
       return remote;
-    } catch (e) {
-      debugPrint('AppConfig: remote API_BASE_URL fetch failed: $e');
+    } catch (e, st) {
+      developer.log(
+        'Remote API_BASE_URL fetch failed',
+        name: 'AppConfig',
+        error: e,
+        stackTrace: st,
+      );
       return null;
     }
   }

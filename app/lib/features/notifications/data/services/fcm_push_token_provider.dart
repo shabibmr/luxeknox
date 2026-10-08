@@ -5,12 +5,16 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/monitoring/crash_reporter.dart';
 import '../../../../firebase_options.dart';
 import '../../domain/repositories/push_token_provider.dart';
 import 'fcm_background_handler.dart';
 
 @LazySingleton(as: PushTokenProvider)
 class FcmPushTokenProvider implements PushTokenProvider {
+  FcmPushTokenProvider(this._crashReporter);
+
+  final CrashReporter _crashReporter;
   bool _started = false;
   bool _live = false;
 
@@ -27,15 +31,19 @@ class FcmPushTokenProvider implements PushTokenProvider {
     _started = true;
 
     if (!DefaultFirebaseOptions.isConfigured) {
-      debugPrint('FCM: Firebase options not configured — stub tokens only.');
+      _crashReporter.log(
+        'FCM: Firebase options not configured — stub tokens only.',
+      );
       return;
     }
     if (!_fcmSupported) {
-      debugPrint('FCM: not supported on this platform — stub tokens only.');
+      _crashReporter.log(
+        'FCM: not supported on this platform — stub tokens only.',
+      );
       return;
     }
     if (kIsWeb && _vapidKey.isEmpty) {
-      debugPrint(
+      _crashReporter.log(
         'FCM: web requires --dart-define=FCM_VAPID_KEY — stub tokens only.',
       );
       return;
@@ -64,8 +72,7 @@ class FcmPushTokenProvider implements PushTokenProvider {
 
       _live = true;
     } catch (e, st) {
-      debugPrint('FCM: failed to start ($e)');
-      debugPrint('$st');
+      _crashReporter.recordError(e, st);
       _live = false;
     }
   }
@@ -85,7 +92,7 @@ class FcmPushTokenProvider implements PushTokenProvider {
       }
       return await messaging.getToken();
     } catch (e) {
-      debugPrint('FCM: getToken failed ($e)');
+      _crashReporter.log('FCM: getToken failed ($e)');
       return null;
     }
   }

@@ -126,8 +126,10 @@ class SessionRepositoryImpl implements SessionRepository {
   @override
   Future<Either<Failure, (Principal, Capabilities)>> restore() async {
     try {
-      final accessToken = await _tokenStorage.readAccessToken();
-      final refreshToken = await _tokenStorage.readRefreshToken();
+      final (accessToken, refreshToken) = await (
+        _tokenStorage.readAccessToken(),
+        _tokenStorage.readRefreshToken(),
+      ).wait;
 
       if (accessToken == null && refreshToken == null) {
         return const Left(AuthFailure());
@@ -137,23 +139,14 @@ class SessionRepositoryImpl implements SessionRepository {
       // If the access token is expired, RefreshInterceptor automatically
       // triggers token refresh and retries getMe().
       final meResult = await getMe();
-      return await meResult.fold(
-        (failure) async {
-          // Only clear stored tokens if authentication explicitly failed
-          // (i.e. revoked/expired tokens), never on network or server errors.
-          if (failure is AuthFailure) {
-            await _tokenStorage.clear();
-          }
-          return Left(failure);
-        },
-        (data) async => Right(data),
-      );
-    } catch (e) {
-      final failure = mapThrownToFailure(e);
-      if (failure is AuthFailure) {
+      // Only clear stored tokens if authentication explicitly failed
+      // (i.e. revoked/expired tokens), never on network or server errors.
+      if (meResult.fold((failure) => failure is AuthFailure, (_) => false)) {
         await _tokenStorage.clear();
       }
-      return Left(failure);
+      return meResult;
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
     }
   }
 

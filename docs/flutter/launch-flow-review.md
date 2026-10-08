@@ -69,8 +69,8 @@ This is a report only. No code was changed.
 2. ✅ **B3 + B4 + S11**: make restore safe and bounded.
 3. ✅ **S1** (also fixes B5 and E6 partly): remove FCM's parallel deep-link parking. **B6**: guard `start()`. (S12 done alongside.)
 4. ✅ **E1 + E2 + S5 + S6 + S7 + B7**: rewrite the config bootstrap (stale-while-revalidate, one catch).
-5. ✅ **S2 + S3 + S4 + B8**: clean up `redirect_logic`; the existing `redirect_logic_test.dart` covers it. (S14 still open.)
-6. **E3, E4, E5, E7, S9, S10, S12-S14**: small cleanups.
+5. ✅ **S2 + S3 + S4 + B8**: clean up `redirect_logic`; the existing `redirect_logic_test.dart` covers it.
+6. ✅ **E3, E4, E5, E7, S9, S10, S12-S14**: small cleanups. (E6 second half — skip unchanged token re-registration — still open.)
 7. **S8**: a data/contract decision for the team. Not a code change by itself.
 
 Known unrelated failures: 3 tests in `test/core/router/exercise_routes_test.dart` (they fail on the base commit too).

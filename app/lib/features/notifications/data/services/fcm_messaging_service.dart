@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/monitoring/crash_reporter.dart';
 import '../../../../firebase_options.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/helpers/notification_push_handler.dart';
@@ -21,12 +21,14 @@ class FcmMessagingService {
     this._deviceTokens,
     this._router,
     this._sessionCubit,
+    this._crashReporter,
   );
 
   final PushTokenProvider _pushTokens;
   final DeviceTokenRegistrar _deviceTokens;
   final GoRouter _router;
   final SessionCubit _sessionCubit;
+  final CrashReporter _crashReporter;
 
   final _localNotifications = FlutterLocalNotificationsPlugin();
   final _pushHandler = const NotificationPushHandler();
@@ -51,7 +53,7 @@ class FcmMessagingService {
     try {
       await _start();
     } catch (e, st) {
-      debugPrint('FCM: start failed: $e\n$st');
+      _crashReporter.recordError(e, st);
       dispose();
       _started = false;
     }
@@ -100,8 +102,8 @@ class FcmMessagingService {
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
+    // Permission is requested once, by FirebaseMessaging.requestPermission.
     await androidPlugin?.createNotificationChannel(_androidChannel);
-    await androidPlugin?.requestNotificationsPermission();
   }
 
   void _listenForeground() {
@@ -142,8 +144,8 @@ class FcmMessagingService {
       final token = await _pushTokens.getToken();
       if (token == null || token.isEmpty) return;
       await _deviceTokens.registerOrRotate(tokenOverride: token);
-    } catch (e) {
-      debugPrint('FCM: token sync failed: $e');
+    } catch (e, st) {
+      _crashReporter.recordError(e, st);
     }
   }
 
@@ -190,7 +192,7 @@ class FcmMessagingService {
   void _navigateFromPayload(Map<String, dynamic> data) {
     final path = _pushHandler.handleIncomingPush(data);
     if (path == null || path.isEmpty) {
-      debugPrint('FCM: no deep link for payload keys ${data.keys}');
+      _crashReporter.log('FCM: no deep link for payload keys ${data.keys}');
       return;
     }
     _router.go(path);

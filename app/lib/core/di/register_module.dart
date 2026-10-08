@@ -26,7 +26,7 @@ abstract class RegisterModule {
   TokenStorage tokenStorage(FlutterSecureStorage storage) =>
       TokenStorage(storage: storage);
 
-  @singleton
+  @lazySingleton
   Dio dio(AppConfig config, TokenStorage tokenStorage) {
     return configureDioClient(
       config: config,
@@ -37,55 +37,55 @@ abstract class RegisterModule {
     );
   }
 
-  @singleton
+  @lazySingleton
   AUTHApi authApi(Dio dio) => AUTHApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   WORKApi workApi(Dio dio) => WORKApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   DIETApi dietApi(Dio dio) => DIETApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   PEOPLEApi peopleApi(Dio dio) => PEOPLEApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   HEALTHApi healthApi(Dio dio) => HEALTHApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   MEDIAApi mediaApi(Dio dio) => MEDIAApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   MEMBApi membApi(Dio dio) => MEMBApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   PTApi ptApi(Dio dio) => PTApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   DASHApi dashApi(Dio dio) => DASHApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   SCHEDApi schedApi(Dio dio) => SCHEDApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   ATTNApi attnApi(Dio dio) => ATTNApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   PAYApi payApi(Dio dio) => PAYApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   RPTApi rptApi(Dio dio) => RPTApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   GOALApi goalApi(Dio dio) => GOALApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   NOTIFApi notifApi(Dio dio) => NOTIFApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   SYSApi sysApi(Dio dio) => SYSApi(dio, standardSerializers);
 
-  @singleton
+  @lazySingleton
   RBACApi rbacApi(Dio dio) => RBACApi(dio, standardSerializers);
 
   @singleton

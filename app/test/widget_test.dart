@@ -6,7 +6,6 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mocktail/mocktail.dart';
 
 class MockSessionCubit extends MockCubit<SessionState>
     implements SessionCubit {}
@@ -21,8 +20,6 @@ void main() {
         const Stream<SessionState>.empty(),
         initialState: const SessionUnknown(),
       );
-      when(() => sessionCubit.restore()).thenAnswer((_) async {});
-
       getIt.registerSingleton<SessionCubit>(sessionCubit);
       getIt.registerSingleton<GoRouter>(createRouter(sessionCubit));
       addTearDown(getIt.reset);
@@ -31,7 +28,6 @@ void main() {
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      verify(() => sessionCubit.restore()).called(1);
     },
   );
 }

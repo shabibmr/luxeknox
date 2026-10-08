@@ -95,18 +95,15 @@ class SessionCubit extends Cubit<SessionState> {
   }
 
   Future<void> _restore() async {
-    final result = await _restoreWithRetries(Stopwatch()..start()).timeout(
-      restoreTimeout,
-      onTimeout: () => const Left(NetworkFailure()),
-    );
+    final result = await _restoreWithRetries(
+      Stopwatch()..start(),
+    ).timeout(restoreTimeout, onTimeout: () => const Left(NetworkFailure()));
     // Another path (login, refresh sign-out) already decided the session
     // while restore was running; don't override it.
     if (state is! SessionUnknown) return;
     result.fold(
       (_) => emit(const SessionUnauthenticated()),
-      (tuple) => emit(
-        SessionAuthenticated(principal: tuple.$1, capabilities: tuple.$2),
-      ),
+      _emitAuthenticated,
     );
   }
 
@@ -139,25 +136,18 @@ class SessionCubit extends Cubit<SessionState> {
     );
     result.fold(
       (_) => emit(const SessionUnauthenticated()),
-      (tuple) => emit(
-        SessionAuthenticated(principal: tuple.$1, capabilities: tuple.$2),
-      ),
+      _emitAuthenticated,
     );
     return result;
   }
 
   Future<Either<Failure, (Principal, Capabilities)>> loginWithGoogle() async {
     final result = await _loginWithGoogleUseCase(const NoParams());
-    result.fold(
-      (failure) {
-        if (state is! SessionAuthenticated) {
-          emit(const SessionUnauthenticated());
-        }
-      },
-      (tuple) => emit(
-        SessionAuthenticated(principal: tuple.$1, capabilities: tuple.$2),
-      ),
-    );
+    result.fold((failure) {
+      if (state is! SessionAuthenticated) {
+        emit(const SessionUnauthenticated());
+      }
+    }, _emitAuthenticated);
     return result;
   }
 
@@ -169,4 +159,8 @@ class SessionCubit extends Cubit<SessionState> {
   void onSignedOut() {
     emit(const SessionUnauthenticated());
   }
+
+  void _emitAuthenticated((Principal, Capabilities) session) => emit(
+    SessionAuthenticated(principal: session.$1, capabilities: session.$2),
+  );
 }

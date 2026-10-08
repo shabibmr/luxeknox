@@ -17,6 +17,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await resolveRemoteAppConfig();
   configureDependencies();
+  // Start before the first frame; the splash shows until it resolves.
+  unawaited(getIt<SessionCubit>().restore());
   runApp(const LuxeKnoxApp());
   unawaited(getIt<FcmMessagingService>().start());
 }

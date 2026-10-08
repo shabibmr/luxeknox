@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/core/monitoring/crash_reporter.dart';
 import 'package:luxeknox/features/notifications/data/services/fcm_messaging_service.dart';
 import 'package:luxeknox/features/notifications/domain/repositories/device_token_registrar.dart';
 import 'package:luxeknox/features/notifications/domain/repositories/push_token_provider.dart';
@@ -20,6 +21,8 @@ class MockDeviceTokenRegistrar extends Mock implements DeviceTokenRegistrar {}
 class MockGoRouter extends Mock implements GoRouter {}
 
 class MockSessionCubit extends Mock implements SessionCubit {}
+
+class MockCrashReporter extends Mock implements CrashReporter {}
 
 void main() {
   late MockPushTokenProvider pushTokens;
@@ -59,6 +62,7 @@ void main() {
       deviceTokens,
       MockGoRouter(),
       sessionCubit,
+      MockCrashReporter(),
     );
   });
 
@@ -78,19 +82,21 @@ void main() {
     verify(() => pushTokens.ensureStarted()).called(2);
   });
 
-  test('syncs the device token when the session becomes authenticated',
-      () async {
-    when(() => pushTokens.getToken()).thenAnswer((_) async => 'fcm-token');
-    await service.start();
+  test(
+    'syncs the device token when the session becomes authenticated',
+    () async {
+      when(() => pushTokens.getToken()).thenAnswer((_) async => 'fcm-token');
+      await service.start();
 
-    when(() => sessionCubit.state).thenReturn(authenticated);
-    sessionStates.add(authenticated);
-    await pumpEventQueue();
+      when(() => sessionCubit.state).thenReturn(authenticated);
+      sessionStates.add(authenticated);
+      await pumpEventQueue();
 
-    verify(
-      () => deviceTokens.registerOrRotate(tokenOverride: 'fcm-token'),
-    ).called(1);
-  });
+      verify(
+        () => deviceTokens.registerOrRotate(tokenOverride: 'fcm-token'),
+      ).called(1);
+    },
+  );
 
   test('a failing token sync does not escape the session listener', () async {
     when(() => pushTokens.getToken()).thenThrow(StateError('no token'));
