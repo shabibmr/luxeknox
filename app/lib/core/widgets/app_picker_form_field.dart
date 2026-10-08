@@ -84,7 +84,7 @@ class AppPickerFormField<T> extends StatelessWidget {
           text ?? hintText,
           style: text == null
               ? theme.inputDecorationTheme.hintStyle ??
-                  TextStyle(color: theme.hintColor)
+                    TextStyle(color: theme.hintColor)
               : theme.textTheme.bodyMedium,
         ),
       ),

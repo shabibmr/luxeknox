@@ -98,7 +98,9 @@ class _AppCatalogDropdownFieldState<T>
     }
     return DropdownButtonFormField<String>(
       key: widget.fieldKey,
-      initialValue: widget.value != null ? widget.itemId(widget.value as T) : null,
+      initialValue: widget.value != null
+          ? widget.itemId(widget.value as T)
+          : null,
       decoration: InputDecoration(
         labelText: widget.label,
         errorText: widget.errorText,

@@ -206,8 +206,9 @@ class _BuilderFormState extends State<_BuilderForm> {
             if (!state.isTemplate) ...[
               const SizedBox(height: 12),
               MemberPickerField(
-                selectedMemberId:
-                    state.memberId.isEmpty ? null : state.memberId,
+                selectedMemberId: state.memberId.isEmpty
+                    ? null
+                    : state.memberId,
                 onChanged: (member) {
                   final id = member?.id.toString() ?? '';
                   _memberId.text = id;

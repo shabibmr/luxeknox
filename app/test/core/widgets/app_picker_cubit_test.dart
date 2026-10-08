@@ -33,7 +33,11 @@ void main() {
     test('load() successfully emits items and pagination info', () async {
       final cubit = AppPickerCubit<TestItem>(
         fetcher: ({cursor, query}) async => const Right(
-          CursorPage(items: [item1, item2], nextCursor: 'cursor_2', hasMore: true),
+          CursorPage(
+            items: [item1, item2],
+            nextCursor: 'cursor_2',
+            hasMore: true,
+          ),
         ),
       );
 

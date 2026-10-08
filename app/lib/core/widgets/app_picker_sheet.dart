@@ -119,7 +119,8 @@ class _AppPagedPickerSheetState<T> extends State<AppPagedPickerSheet<T>> {
           searchFieldKey: widget.searchFieldKey,
           searchLabel: widget.searchLabel,
           onSearchChanged: _cubit.onSearchChanged,
-          onSearchSubmitted: (q) => _cubit.load(query: q.trim().isEmpty ? null : q.trim()),
+          onSearchSubmitted: (q) =>
+              _cubit.load(query: q.trim().isEmpty ? null : q.trim()),
           isLoading: state.status == LoadStatus.loading && state.items.isEmpty,
           isLoadingMore: state.isLoadingMore,
           items: state.items,
@@ -127,7 +128,11 @@ class _AppPagedPickerSheetState<T> extends State<AppPagedPickerSheet<T>> {
           errorMessage: state.failure != null && state.items.isEmpty
               ? failureMessage(state.failure!)
               : null,
-          onRetry: () => _cubit.load(query: _searchController.text.trim().isEmpty ? null : _searchController.text.trim()),
+          onRetry: () => _cubit.load(
+            query: _searchController.text.trim().isEmpty
+                ? null
+                : _searchController.text.trim(),
+          ),
           emptyMessage: widget.emptyMessage,
           retryLabel: widget.retryLabel,
           heightFactor: widget.heightFactor,
@@ -211,10 +216,7 @@ class AppPickerSheet<T> extends StatelessWidget {
                     onSubmitted: onSearchSubmitted,
                     onChanged: onSearchChanged,
                   ),
-                  if (header != null) ...[
-                    const SizedBox(height: 8),
-                    header!,
-                  ],
+                  if (header != null) ...[const SizedBox(height: 8), header!],
                 ],
               ),
             ),

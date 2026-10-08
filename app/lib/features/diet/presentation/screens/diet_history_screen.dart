@@ -302,7 +302,11 @@ class _DailyLogTile extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.water_drop, size: 16, color: Colors.blue),
+                      const Icon(
+                        Icons.water_drop,
+                        size: 16,
+                        color: Colors.blue,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         DietStrings.waterMl(log.waterIntakeMl!),

@@ -55,24 +55,23 @@ class LoginCubit extends Cubit<LoginState> {
   }
 
   Future<void> signInWithGoogle() async {
-    emit(const LoginState(status: LoadStatus.loading, isGoogleSubmitting: true));
+    emit(
+      const LoginState(status: LoadStatus.loading, isGoogleSubmitting: true),
+    );
 
     final result = await _sessionCubit.loginWithGoogle();
-    result.fold(
-      (failure) {
-        if (failure is CancelledFailure) {
-          emit(const LoginState());
-          return;
-        }
-        emit(
-          LoginState(
-            status: LoadStatus.failure,
-            errorMessage: _googleMessageFor(failure),
-          ),
-        );
-      },
-      (_) => emit(const LoginState()),
-    );
+    result.fold((failure) {
+      if (failure is CancelledFailure) {
+        emit(const LoginState());
+        return;
+      }
+      emit(
+        LoginState(
+          status: LoadStatus.failure,
+          errorMessage: _googleMessageFor(failure),
+        ),
+      );
+    }, (_) => emit(const LoginState()));
   }
 
   /// Wrong credentials, unknown identifier, and a suspended account all map

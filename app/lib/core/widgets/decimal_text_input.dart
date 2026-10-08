@@ -13,9 +13,7 @@ String? normalizeDecimalText(
   final value = raw.trim();
   if (value.isEmpty) {
     if (!emptyToZero) return null;
-    return decimalDigits > 0
-        ? 0.0.toStringAsFixed(decimalDigits)
-        : '0';
+    return decimalDigits > 0 ? 0.0.toStringAsFixed(decimalDigits) : '0';
   }
   final number = double.tryParse(value);
   if (number == null) return null;

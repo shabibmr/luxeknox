@@ -438,9 +438,7 @@ class _MembershipDetailView extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Expanded(
-            child: Text(label, overflow: TextOverflow.ellipsis),
-          ),
+          Expanded(child: Text(label, overflow: TextOverflow.ellipsis)),
           const SizedBox(width: 8),
           Flexible(
             child: Text(

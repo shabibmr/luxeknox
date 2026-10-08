@@ -18,11 +18,7 @@ class FoodListItem extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      title: Text(
-        food.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      title: Text(food.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         calories == null
             ? macroLabel

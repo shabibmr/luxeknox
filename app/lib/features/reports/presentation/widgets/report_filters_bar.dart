@@ -92,7 +92,8 @@ class _ReportFiltersBarState extends State<ReportFiltersBar> {
         if (showProduct) ...[
           if (_products.isNotEmpty)
             DropdownButtonFormField<String>(
-              initialValue: _product.text.isNotEmpty &&
+              initialValue:
+                  _product.text.isNotEmpty &&
                       _products.any((p) => p.id == _product.text)
                   ? _product.text
                   : null,
@@ -103,10 +104,7 @@ class _ReportFiltersBarState extends State<ReportFiltersBar> {
               items: [
                 const DropdownMenuItem(value: '', child: Text('All Packages')),
                 ..._products.map(
-                  (p) => DropdownMenuItem(
-                    value: p.id,
-                    child: Text(p.name),
-                  ),
+                  (p) => DropdownMenuItem(value: p.id, child: Text(p.name)),
                 ),
               ],
               onChanged: (v) => setState(() => _product.text = v ?? ''),

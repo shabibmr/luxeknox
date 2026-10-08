@@ -71,7 +71,9 @@ extension PtScheduleGridApiX on api.PtScheduleGrid {
     endDate: apiDateToDateTime(endDate),
     weekdays: weekdays.toList(),
     hours: hours.toList(),
-    trainers: trainers.map((t) => PtGridTrainer(id: t.id, name: t.name)).toList(),
+    trainers: trainers
+        .map((t) => PtGridTrainer(id: t.id, name: t.name))
+        .toList(),
     cells: cells
         .map(
           (c) => PtGridCell(

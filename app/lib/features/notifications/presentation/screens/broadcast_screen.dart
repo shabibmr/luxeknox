@@ -213,7 +213,8 @@ class _ComposeTabState extends State<_ComposeTab> {
           const SizedBox(height: 12),
           if (_roles.isNotEmpty)
             DropdownButtonFormField<String>(
-              initialValue: form.roleId.isNotEmpty &&
+              initialValue:
+                  form.roleId.isNotEmpty &&
                       _roles.any((r) => r.id.toString() == form.roleId)
                   ? form.roleId
                   : null,

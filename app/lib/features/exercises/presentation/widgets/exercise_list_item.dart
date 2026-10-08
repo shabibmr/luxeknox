@@ -19,11 +19,7 @@ class ExerciseListItem extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      title: Text(
-        exercise.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      title: Text(exercise.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         '${exercise.primaryMuscleGroup} · $equipmentLabel',
         maxLines: 2,

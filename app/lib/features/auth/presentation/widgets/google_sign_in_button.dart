@@ -24,13 +24,15 @@ class GoogleSignInButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         minimumSize: const Size.fromHeight(48),
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         side: BorderSide(
-          color: isDark ? theme.colorScheme.outlineVariant : const Color(0xFF747775),
+          color: isDark
+              ? theme.colorScheme.outlineVariant
+              : const Color(0xFF747775),
         ),
-        backgroundColor: isDark ? theme.colorScheme.surfaceContainerHigh : Colors.white,
+        backgroundColor: isDark
+            ? theme.colorScheme.surfaceContainerHigh
+            : Colors.white,
         foregroundColor: isDark ? Colors.white : const Color(0xFF1F1F1F),
         elevation: 0,
       ),
@@ -44,11 +46,7 @@ class GoogleSignInButton extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: GoogleLogo(),
-                ),
+                SizedBox(width: 20, height: 20, child: GoogleLogo()),
                 SizedBox(width: 12),
                 Flexible(
                   child: Text(
@@ -76,10 +74,7 @@ class GoogleLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size(size, size),
-      painter: _GoogleLogoPainter(),
-    );
+    return CustomPaint(size: Size(size, size), painter: _GoogleLogoPainter());
   }
 }
 
@@ -89,7 +84,10 @@ class _GoogleLogoPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     final strokeWidth = radius * 0.42;
-    final arcRect = Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
+    final arcRect = Rect.fromCircle(
+      center: center,
+      radius: radius - strokeWidth / 2,
+    );
 
     final paint = Paint()
       ..style = PaintingStyle.stroke
