@@ -60,9 +60,29 @@ class AddMemberWizardCubit extends Cubit<AddMemberWizardState> {
 
   void nextStep() {
     if (state.step >= AddMemberWizardState.stepCount - 1) return;
-    if (state.step == 0 && !_hasGender) {
-      emit(state.copyWith(error: PeopleStrings.genderRequired));
-      return;
+    if (state.step == 0) {
+      if (state.input.firstName.trim().isEmpty) {
+        emit(state.copyWith(error: PeopleStrings.firstNameRequired));
+        return;
+      }
+      if (state.input.lastName.trim().isEmpty) {
+        emit(state.copyWith(error: PeopleStrings.lastNameRequired));
+        return;
+      }
+      if (!_hasGender) {
+        emit(state.copyWith(error: PeopleStrings.genderRequired));
+        return;
+      }
+    } else if (state.step == 1) {
+      if (!_hasContactInfo) {
+        emit(state.copyWith(error: PeopleStrings.emailOrPhoneRequired));
+        return;
+      }
+      final email = state.input.email?.trim() ?? '';
+      if (email.isNotEmpty && !_isValidEmail(email)) {
+        emit(state.copyWith(error: PeopleStrings.invalidEmail));
+        return;
+      }
     }
     emit(state.copyWith(step: state.step + 1, clearError: true));
   }
@@ -74,9 +94,32 @@ class AddMemberWizardCubit extends Cubit<AddMemberWizardState> {
 
   bool get _hasGender => (state.input.gender?.trim() ?? '').isNotEmpty;
 
+  bool get _hasContactInfo {
+    final hasEmail = (state.input.email?.trim() ?? '').isNotEmpty;
+    final hasPhone = (state.input.phoneNumber?.trim() ?? '').isNotEmpty;
+    return hasEmail || hasPhone;
+  }
+
+  static bool _isValidEmail(String email) {
+    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+        .hasMatch(email);
+  }
+
   Future<void> submit() async {
+    if (state.input.firstName.trim().isEmpty) {
+      emit(state.copyWith(error: PeopleStrings.firstNameRequired));
+      return;
+    }
+    if (state.input.lastName.trim().isEmpty) {
+      emit(state.copyWith(error: PeopleStrings.lastNameRequired));
+      return;
+    }
     if (!_hasGender) {
       emit(state.copyWith(error: PeopleStrings.genderRequired));
+      return;
+    }
+    if (!_hasContactInfo) {
+      emit(state.copyWith(error: PeopleStrings.emailOrPhoneRequired));
       return;
     }
     emit(state.copyWith(submitting: true, clearError: true));

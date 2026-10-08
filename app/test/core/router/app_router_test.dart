@@ -11,13 +11,13 @@ import 'package:luxeknox/core/widgets/not_found_screen.dart';
 import 'package:luxeknox/features/auth/presentation/cubit/login_cubit.dart';
 import 'package:luxeknox/features/dashboard/domain/usecases/get_dashboard_usecase.dart';
 import 'package:luxeknox/features/dashboard/presentation/cubit/dashboard_cubit.dart';
+import 'package:luxeknox/features/dashboard/presentation/cubit/dashboard_agenda_cubit.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/features/diet/presentation/cubit/diet_plan_builder_cubit.dart';
 import 'package:luxeknox/features/diet/presentation/cubit/diet_plan_detail_cubit.dart';
 import 'package:luxeknox/features/diet/presentation/cubit/diet_plan_list_cubit.dart';
 import 'package:luxeknox/features/goals/presentation/cubit/goal_detail_cubit.dart';
 import 'package:luxeknox/features/goals/presentation/cubit/goals_list_cubit.dart';
-import 'package:luxeknox/features/goals/presentation/goals_strings.dart';
 import 'package:luxeknox/features/goals/presentation/screens/goal_detail_screen.dart';
 import 'package:luxeknox/features/notifications/presentation/cubit/notifications_inbox_cubit.dart';
 import 'package:luxeknox/features/reports/domain/entities/app_report_type.dart';
@@ -96,6 +96,59 @@ void main() {
         expect(redirect, Routes.loginWithRedirect(Routes.memberHome));
       },
     );
+
+    test('signed-out user on root / redirects to /login without query', () {
+      final redirect = appRedirectLogic(
+        sessionState: const SessionUnauthenticated(),
+        currentPath: '/',
+      );
+      expect(redirect, Routes.login);
+    });
+
+    test('signed-in admin on root / redirects to /admin/dashboard', () {
+      final redirect = appRedirectLogic(
+        sessionState: const SessionAuthenticated(
+          principal: adminPrincipal,
+          capabilities: emptyCaps,
+        ),
+        currentPath: '/',
+      );
+      expect(redirect, Routes.adminDashboard);
+    });
+
+    test('signed-in member on root / redirects to /home', () {
+      final redirect = appRedirectLogic(
+        sessionState: const SessionAuthenticated(
+          principal: memberPrincipal,
+          capabilities: emptyCaps,
+        ),
+        currentPath: '/',
+      );
+      expect(redirect, Routes.memberHome);
+    });
+
+    test('signed-in trainer on root / redirects to /trainer/home', () {
+      final redirect = appRedirectLogic(
+        sessionState: const SessionAuthenticated(
+          principal: trainerPrincipal,
+          capabilities: emptyCaps,
+        ),
+        currentPath: '/',
+      );
+      expect(redirect, Routes.trainerHome);
+    });
+
+    test('signed-in admin on /login with redirect=/ restores roleHome, not /', () {
+      final redirect = appRedirectLogic(
+        sessionState: const SessionAuthenticated(
+          principal: adminPrincipal,
+          capabilities: emptyCaps,
+        ),
+        currentPath: Routes.login,
+        uri: Uri.parse('${Routes.login}?redirect=%2F'),
+      );
+      expect(redirect, Routes.adminDashboard);
+    });
 
     test('signed-out user already on /login does not redirect (no loop)', () {
       final redirect = appRedirectLogic(
@@ -320,6 +373,9 @@ void main() {
       ).thenAnswer((_) async => const Left(NetworkFailure()));
       getIt.registerFactory<TodaysSessionsCubit>(
         () => TodaysSessionsCubit(mockListSchedules),
+      );
+      getIt.registerFactory<DashboardAgendaCubit>(
+        () => DashboardAgendaCubit(mockListSchedules),
       );
     });
 
@@ -738,9 +794,10 @@ void main() {
 
         await tester.tap(find.text(ShellStrings.progress).last);
         await tester.pumpAndSettle();
-        expect(router.routeInformationProvider.value.uri.path, nested);
-        expect(find.byType(GoalDetailScreen), findsOneWidget);
-        expect(find.text(GoalsStrings.goalDetailTitle), findsWidgets);
+        expect(
+          router.routeInformationProvider.value.uri.path,
+          Routes.memberProgress,
+        );
       });
     });
 

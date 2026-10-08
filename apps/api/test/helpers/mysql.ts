@@ -16,7 +16,7 @@ export interface TestAppInstance {
 }
 
 export const ADMIN_CREDENTIALS = {
-  email: process.env.BOOTSTRAP_ADMIN_EMAIL || 'admin@luxeknox.com',
+  email: process.env.BOOTSTRAP_ADMIN_EMAIL || 'admin',
   password: process.env.BOOTSTRAP_ADMIN_PASSWORD || '123456',
 };
 

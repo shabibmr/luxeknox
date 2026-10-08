@@ -96,6 +96,31 @@ class _LoginFormState extends State<_LoginForm> {
                         ),
                         const SizedBox(height: 16),
                       ],
+                      if (_supportsGoogleSignIn) ...[
+                        GoogleSignInButton(
+                          isLoading: state.isGoogleSubmitting,
+                          onPressed: isSubmitting
+                              ? null
+                              : () => context.read<LoginCubit>().signInWithGoogle(),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                AuthStrings.orDivider,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                              ),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                      ],
                       TextFormField(
                         controller: _identifierController,
                         enabled: !isSubmitting,
@@ -152,31 +177,6 @@ class _LoginFormState extends State<_LoginForm> {
                             : () => context.go(Routes.forgotPassword),
                         child: const Text(AuthStrings.forgotPassword),
                       ),
-                      if (_supportsGoogleSignIn) ...[
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            const Expanded(child: Divider()),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: Text(
-                                AuthStrings.orDivider,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.outline,
-                                ),
-                              ),
-                            ),
-                            const Expanded(child: Divider()),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        GoogleSignInButton(
-                          isLoading: state.isGoogleSubmitting,
-                          onPressed: isSubmitting
-                              ? null
-                              : () => context.read<LoginCubit>().signInWithGoogle(),
-                        ),
-                      ],
                       if (!kReleaseMode && AppConfigBootstrap.resolved != null) ...[
                         const SizedBox(height: 16),
                         // Debug aid: shows which API the app is talking to.

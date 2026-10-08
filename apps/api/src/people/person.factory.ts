@@ -30,7 +30,7 @@ export { normalizeEmail, normalizePhone } from './credentials';
 export interface PersonCredentials {
   email?: string | null;
   phone_number?: string | null;
-  password: string;
+  password?: string | null;
 }
 
 export interface MemberProfileInput {
@@ -173,7 +173,9 @@ export class PersonFactory {
       throw new BadRequestError('At least one of email or phone_number is required');
     }
 
-    const passwordHash = await hashPassword(input.credentials.password);
+    const passwordHash = input.credentials.password
+      ? await hashPassword(input.credentials.password)
+      : null;
     const now = new Date();
 
     return runInTransaction(this.db, async (tx) => {
@@ -250,8 +252,8 @@ export class PersonFactory {
   }
 
   private assertCredentials(credentials: PersonCredentials): void {
-    if (!credentials.password || credentials.password.length < 1) {
-      throw new BadRequestError('password is required');
+    if (credentials.password !== undefined && credentials.password !== null && credentials.password.length < 1) {
+      throw new BadRequestError('password cannot be empty if provided');
     }
   }
 

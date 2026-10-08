@@ -31,7 +31,7 @@ abstract class MemberCreate implements Built<MemberCreate, MemberCreateBuilder> 
   String? get phoneNumber;
 
   @BuiltValueField(wireName: r'password')
-  String get password;
+  String? get password;
 
   @BuiltValueField(wireName: r'first_name')
   String get firstName;
@@ -91,11 +91,13 @@ class _$MemberCreateSerializer implements PrimitiveSerializer<MemberCreate> {
         specifiedType: const FullType(String),
       );
     }
-    yield r'password';
-    yield serializers.serialize(
-      object.password,
-      specifiedType: const FullType(String),
-    );
+    if (object.password != null) {
+      yield r'password';
+      yield serializers.serialize(
+        object.password,
+        specifiedType: const FullType(String),
+      );
+    }
     yield r'first_name';
     yield serializers.serialize(
       object.firstName,

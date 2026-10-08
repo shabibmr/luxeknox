@@ -107,4 +107,69 @@ void main() {
     expect(find.widgetWithText(FilledButton, PeopleStrings.next), findsWidgets);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('password field is not present in wizard', (tester) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const MaterialApp(home: AddMemberWizardScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.text(PeopleStrings.password), findsNothing);
+  });
+
+  testWidgets('validates required fields before proceeding to step 1', (tester) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const MaterialApp(home: AddMemberWizardScreen()));
+    await tester.pumpAndSettle();
+
+    // Tap Next with empty fields
+    await tester.tap(find.widgetWithText(FilledButton, PeopleStrings.next).first);
+    await tester.pumpAndSettle();
+
+    // Validation messages should be displayed
+    expect(find.text(PeopleStrings.firstNameRequired), findsOneWidget);
+    expect(find.text(PeopleStrings.lastNameRequired), findsOneWidget);
+    expect(find.text(PeopleStrings.genderRequired), findsOneWidget);
+
+    // Enter first and last name
+    await tester.enterText(
+      find.widgetWithText(TextField, PeopleStrings.firstName),
+      'John',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, PeopleStrings.lastName),
+      'Doe',
+    );
+    await tester.pumpAndSettle();
+
+    // First and last name errors cleared, but gender error persists on next
+    await tester.tap(find.widgetWithText(FilledButton, PeopleStrings.next).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text(PeopleStrings.firstNameRequired), findsNothing);
+    expect(find.text(PeopleStrings.lastNameRequired), findsNothing);
+    expect(find.text(PeopleStrings.genderRequired), findsOneWidget);
+
+    // Select Male
+    await tester.tap(find.text(PeopleStrings.genderMale));
+    await tester.pumpAndSettle();
+
+    // Now tap Next -> should advance to Step 1 (Contact & account)
+    await tester.tap(find.widgetWithText(FilledButton, PeopleStrings.next).first);
+    await tester.pumpAndSettle();
+
+    // In step 1, tap Next with empty email and phone
+    await tester.tap(
+      find.widgetWithText(FilledButton, PeopleStrings.next).first,
+      warnIfMissed: false,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(PeopleStrings.emailOrPhoneRequired), findsWidgets);
+  });
 }
