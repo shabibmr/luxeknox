@@ -21,6 +21,14 @@ class Routes {
   static const String resetPassword = '/reset-password';
   static const String changePassword = '/change-password';
 
+  /// Password-recovery screens; open without a session.
+  static bool isRecoveryPath(String path) =>
+      path == forgotPassword || path == resetPassword;
+
+  /// Screens shown before sign-in: splash, login and recovery.
+  static bool isPublicAuthPath(String path) =>
+      path == login || path == splash || isRecoveryPath(path);
+
   // ========== Member App Routes ==========
   // Home Stack
   static const String memberHome = '/home';
@@ -315,6 +323,11 @@ class Routes {
 
   static String loginWithRedirect(String intendedPath) => Uri(
     path: login,
+    queryParameters: {redirectQueryParam: intendedPath},
+  ).toString();
+
+  static String splashWithRedirect(String intendedPath) => Uri(
+    path: splash,
     queryParameters: {redirectQueryParam: intendedPath},
   ).toString();
 }

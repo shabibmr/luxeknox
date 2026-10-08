@@ -7,27 +7,26 @@ abstract class AppConfigRemoteSource {
 
 /// Reads remote app config from Firestore `config/app`.
 class FirestoreAppConfigSource implements AppConfigRemoteSource {
-  FirestoreAppConfigSource({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  FirestoreAppConfigSource({this._firestore});
 
   static const String collection = 'config';
   static const String document = 'app';
   static const String apiBaseUrlField = 'API_BASE_URL';
 
-  final FirebaseFirestore _firestore;
+  /// Resolved on first fetch, so a failed Firebase init surfaces as a fetch
+  /// error rather than a constructor throw.
+  final FirebaseFirestore? _firestore;
 
-  /// Returns a non-empty `API_BASE_URL`, or null if missing / unreadable.
+  /// Returns the raw `API_BASE_URL`, or null if the doc or field is missing.
+  /// Throws on read errors and after a 2s timeout.
   @override
   Future<String?> fetchApiBaseUrl() async {
-    try {
-      final snap = await _firestore.collection(collection).doc(document).get();
-      if (!snap.exists) return null;
-      final raw = snap.data()?[apiBaseUrlField];
-      if (raw is! String) return null;
-      final trimmed = raw.trim();
-      return trimmed.isEmpty ? null : trimmed;
-    } catch (_) {
-      return null;
-    }
+    final snap = await (_firestore ?? FirebaseFirestore.instance)
+        .collection(collection)
+        .doc(document)
+        .get()
+        .timeout(const Duration(seconds: 2));
+    final raw = snap.data()?[apiBaseUrlField];
+    return raw is String ? raw : null;
   }
 }

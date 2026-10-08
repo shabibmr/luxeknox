@@ -39,24 +39,11 @@ GoRouter createRouter(SessionCubit sessionCubit) {
   return GoRouter(
     initialLocation: Routes.splash,
     refreshListenable: GoRouterRefreshStream(sessionCubit.stream),
-    redirect: (context, state) {
-      // Prefer full path for deep-link restore; fall back to matched location
-      // when the route did not match (errorBuilder / unknown).
-      final path = state.uri.path.isNotEmpty
-          ? state.uri.path
-          : state.matchedLocation;
-      return appRedirectLogic(
-        sessionState: sessionCubit.state,
-        currentPath: path,
-        uri: state.uri,
-      );
-    },
+    redirect: (context, state) =>
+        appRedirectLogic(sessionState: sessionCubit.state, uri: state.uri),
     errorBuilder: (context, state) => NotFoundScreen(uri: state.uri),
     routes: [
-      GoRoute(
-        path: '/',
-        redirect: (context, state) => null,
-      ),
+      GoRoute(path: '/', redirect: (context, state) => null),
       GoRoute(
         path: Routes.splash,
         builder: (context, state) => const SplashScreen(),

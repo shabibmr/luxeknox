@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../firebase_options.dart';
@@ -10,30 +11,38 @@ import 'remote_api_base_url_store.dart';
 
 /// Initializes Firebase (when configured), resolves `API_BASE_URL`, and
 /// stores the result on [AppConfigBootstrap.resolved].
-Future<AppConfig> resolveRemoteAppConfig() async {
+Future<void> resolveRemoteAppConfig() async {
   final env = AppConfig.fromEnv();
-
-  if (!DefaultFirebaseOptions.isConfigured) {
-    AppConfigBootstrap.resolved = env;
-    return env;
-  }
-
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  }
-
-  final prefs = await SharedPreferences.getInstance();
-  final store = RemoteApiBaseUrlStore(prefs);
-  final resolver = ApiBaseUrlResolver(
-    store: store,
-    source: FirestoreAppConfigSource(),
-    fallbackUrl: env.apiBaseUrl,
+  AppConfigBootstrap.resolved = env.copyWith(
+    apiBaseUrl: await _resolveApiBaseUrl(env.apiBaseUrl),
   );
+}
 
-  final apiBaseUrl = await resolver.resolve();
-  final resolved = env.copyWith(apiBaseUrl: apiBaseUrl);
-  AppConfigBootstrap.resolved = resolved;
-  return resolved;
+Future<String> _resolveApiBaseUrl(String fallbackUrl) async {
+  if (!DefaultFirebaseOptions.isConfigured) return fallbackUrl;
+
+  // Prefs don't need Firebase, so both start together.
+  final (_, prefs) = await (
+    _initFirebase(),
+    SharedPreferences.getInstance(),
+  ).wait;
+  return ApiBaseUrlResolver(
+    store: RemoteApiBaseUrlStore(prefs),
+    source: FirestoreAppConfigSource(),
+    fallbackUrl: fallbackUrl,
+  ).resolve();
+}
+
+/// A failed init is logged, not thrown: the resolver then falls back to the
+/// cached or default URL, and FCM's own start guard handles the rest.
+Future<void> _initFirebase() async {
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+  } catch (e, st) {
+    debugPrint('AppConfig: Firebase init failed: $e\n$st');
+  }
 }

@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../error/failures.dart';
+import 'auth_interceptor.dart';
 import 'error_interceptor.dart';
 
 /// Handles token refresh on a 401 response, ensuring at most one refresh
@@ -88,7 +89,10 @@ class RefreshInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (!_is401(err)) {
+    // A 401 from a token endpoint is final. Refreshing for `/auth/refresh`
+    // itself would await the in-flight refresh it belongs to and deadlock.
+    if (!_is401(err) ||
+        AuthInterceptor.excludedPaths.contains(err.requestOptions.path)) {
       handler.next(err);
       return;
     }
@@ -120,13 +124,21 @@ class RefreshInterceptor extends Interceptor {
       _inFlightRefresh = null;
     }
 
-    final signedOut = result.isLeft();
-    if (signedOut) {
+    final refreshFailure = result.fold((failure) => failure, (_) => null);
+    if (refreshFailure is AuthFailure) {
+      // The refresh token was rejected: the session is over.
       if (!_signedOutNotifiedForCurrentRefresh) {
         _signedOutNotifiedForCurrentRefresh = true;
         _onSignedOut();
       }
       handler.next(err);
+      return;
+    }
+    if (refreshFailure != null) {
+      // Refresh couldn't complete (offline, server error). The session may
+      // still be valid, so don't sign out, and report the refresh failure
+      // instead of the 401 so callers don't treat it as an auth failure.
+      handler.next(err.copyWith(error: FailureDioException(refreshFailure, err)));
       return;
     }
 

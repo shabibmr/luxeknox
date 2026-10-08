@@ -15,17 +15,10 @@ void main() {
     expect(store.read(), isNull);
   });
 
-  test('write then read round-trips trimmed URL', () async {
+  test('write then read round-trips the URL', () async {
     final prefs = await SharedPreferences.getInstance();
     final store = RemoteApiBaseUrlStore(prefs);
-    await store.write('  https://api.example.com  ');
-    expect(store.read(), 'https://api.example.com');
-  });
-
-  test('read treats blank stored value as null', () async {
-    SharedPreferences.setMockInitialValues({RemoteApiBaseUrlStore.key: '   '});
-    final prefs = await SharedPreferences.getInstance();
-    final store = RemoteApiBaseUrlStore(prefs);
-    expect(store.read(), isNull);
+    await store.write('https://api.example.com/v1');
+    expect(store.read(), 'https://api.example.com/v1');
   });
 }

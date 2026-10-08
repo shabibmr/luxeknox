@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -15,8 +17,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await resolveRemoteAppConfig();
   configureDependencies();
-  await getIt<FcmMessagingService>().start();
   runApp(const LuxeKnoxApp());
+  unawaited(getIt<FcmMessagingService>().start());
 }
 
 class LuxeKnoxApp extends StatelessWidget {

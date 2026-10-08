@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/core/error/map_thrown.dart';
 import 'package:luxeknox/core/network/error_interceptor.dart';
 import 'package:luxeknox/core/network/refresh_interceptor.dart';
 import 'package:dio/dio.dart';
@@ -40,6 +42,27 @@ class _TestErrorHandler extends ErrorInterceptorHandler {
     if (!_completer.isCompleted) {
       _completer.completeError(err);
     }
+  }
+}
+
+/// Answers every request with 401 `unauthenticated`.
+class _UnauthorizedAdapter implements HttpClientAdapter {
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<List<int>>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    return ResponseBody.fromString(
+      jsonEncode({'code': 'unauthenticated'}),
+      401,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
   }
 }
 
@@ -167,6 +190,85 @@ void main() {
       expect(forwardedError!.response?.statusCode, 401);
     },
   );
+
+  test('a 401 from /auth/refresh is forwarded without refreshing', () async {
+    final err = _unauthorizedError(dio, '/auth/refresh');
+    final handler = _TestErrorHandler();
+    DioException? forwardedError;
+    unawaited(
+      handler.result.then(
+        (_) {},
+        onError: (Object e) {
+          if (e is DioException) forwardedError = e;
+        },
+      ),
+    );
+
+    await interceptor.onError(err, handler);
+    await Future<void>.delayed(Duration.zero);
+
+    verifyNever(() => refreshCaller.call());
+    verifyNever(() => signedOutCaller.call());
+    expect(forwardedError?.response?.statusCode, 401);
+  });
+
+  test('refresh rejected with 401 through the real chain signs out instead '
+      'of deadlocking', () async {
+    final chainDio = Dio(BaseOptions(baseUrl: 'https://api.test'))
+      ..httpClientAdapter = _UnauthorizedAdapter();
+    var signedOutCount = 0;
+    chainDio.interceptors.addAll([
+      RefreshInterceptor(
+        refresh: () async {
+          try {
+            await chainDio.post<dynamic>('/auth/refresh');
+            return const Right(null);
+          } on DioException catch (e) {
+            return Left(mapThrownToFailure(e));
+          }
+        },
+        dio: chainDio,
+        onSignedOut: () => signedOutCount++,
+      ),
+      ErrorInterceptor(),
+    ]);
+
+    final error = await chainDio
+        .get<dynamic>('/auth/me')
+        .then<Object?>((_) => null, onError: (Object e) => e)
+        .timeout(const Duration(seconds: 2));
+
+    expect(error, isA<DioException>());
+    expect(mapThrownToFailure(error!), const AuthFailure());
+    expect(signedOutCount, 1);
+  });
+
+  test('refresh NetworkFailure does not sign out and surfaces NetworkFailure '
+      'instead of the 401', () async {
+    when(
+      () => refreshCaller.call(),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
+
+    final err = _unauthorizedError(dio, '/exercises');
+    final handler = _TestErrorHandler();
+    DioException? forwardedError;
+    unawaited(
+      handler.result.then(
+        (_) {},
+        onError: (Object e) {
+          if (e is DioException) forwardedError = e;
+        },
+      ),
+    );
+
+    await interceptor.onError(err, handler);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(() => refreshCaller.call()).called(1);
+    verifyNever(() => signedOutCaller.call());
+    expect(forwardedError, isNotNull);
+    expect(mapThrownToFailure(forwardedError!), const NetworkFailure());
+  });
 
   test(
     'a non-401 error is forwarded untouched without calling refresh',

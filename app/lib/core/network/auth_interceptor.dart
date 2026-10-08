@@ -10,7 +10,9 @@ class AuthInterceptor extends InterceptorsWrapper {
 
   final TokenStorage _tokenStorage;
 
-  static const List<String> _excludedPaths = [
+  /// Endpoints that issue tokens. They never carry a bearer token, and a 401
+  /// from them is final (no refresh-and-retry, see `RefreshInterceptor`).
+  static const List<String> excludedPaths = [
     '/auth/login',
     '/auth/firebase',
     '/auth/refresh',
@@ -21,7 +23,7 @@ class AuthInterceptor extends InterceptorsWrapper {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    if (_excludedPaths.contains(options.path)) {
+    if (excludedPaths.contains(options.path)) {
       handler.next(options);
       return;
     }

@@ -6,6 +6,11 @@ import 'package:equatable/equatable.dart';
 sealed class Failure extends Equatable {
   const Failure();
 
+  /// Whether retrying the same call later may succeed (connectivity issues).
+  /// Server errors ([UnknownFailure]) are not retried: they rarely clear up
+  /// within seconds and each attempt can cost a full request timeout.
+  bool get isTransient => this is NetworkFailure;
+
   @override
   List<Object?> get props => [];
 }

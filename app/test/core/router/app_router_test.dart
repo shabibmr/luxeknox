@@ -95,7 +95,7 @@ void main() {
       () {
         final redirect = appRedirectLogic(
           sessionState: const SessionUnauthenticated(),
-          currentPath: Routes.memberHome,
+          uri: Uri.parse(Routes.memberHome),
         );
         expect(redirect, Routes.loginWithRedirect(Routes.memberHome));
       },
@@ -104,7 +104,7 @@ void main() {
     test('signed-out user on root / redirects to /login without query', () {
       final redirect = appRedirectLogic(
         sessionState: const SessionUnauthenticated(),
-        currentPath: '/',
+        uri: Uri.parse('/'),
       );
       expect(redirect, Routes.login);
     });
@@ -115,7 +115,7 @@ void main() {
           principal: adminPrincipal,
           capabilities: emptyCaps,
         ),
-        currentPath: '/',
+        uri: Uri.parse('/'),
       );
       expect(redirect, Routes.adminDashboard);
     });
@@ -126,7 +126,7 @@ void main() {
           principal: memberPrincipal,
           capabilities: emptyCaps,
         ),
-        currentPath: '/',
+        uri: Uri.parse('/'),
       );
       expect(redirect, Routes.memberHome);
     });
@@ -137,27 +137,29 @@ void main() {
           principal: trainerPrincipal,
           capabilities: emptyCaps,
         ),
-        currentPath: '/',
+        uri: Uri.parse('/'),
       );
       expect(redirect, Routes.trainerHome);
     });
 
-    test('signed-in admin on /login with redirect=/ restores roleHome, not /', () {
-      final redirect = appRedirectLogic(
-        sessionState: const SessionAuthenticated(
-          principal: adminPrincipal,
-          capabilities: emptyCaps,
-        ),
-        currentPath: Routes.login,
-        uri: Uri.parse('${Routes.login}?redirect=%2F'),
-      );
-      expect(redirect, Routes.adminDashboard);
-    });
+    test(
+      'signed-in admin on /login with redirect=/ restores roleHome, not /',
+      () {
+        final redirect = appRedirectLogic(
+          sessionState: const SessionAuthenticated(
+            principal: adminPrincipal,
+            capabilities: emptyCaps,
+          ),
+          uri: Uri.parse('${Routes.login}?redirect=%2F'),
+        );
+        expect(redirect, Routes.adminDashboard);
+      },
+    );
 
     test('signed-out user already on /login does not redirect (no loop)', () {
       final redirect = appRedirectLogic(
         sessionState: const SessionUnauthenticated(),
-        currentPath: Routes.login,
+        uri: Uri.parse(Routes.login),
       );
       expect(redirect, isNull);
     });
@@ -165,7 +167,7 @@ void main() {
     test('unknown session on /login redirects to /splash', () {
       final redirect = appRedirectLogic(
         sessionState: const SessionUnknown(),
-        currentPath: Routes.login,
+        uri: Uri.parse(Routes.login),
       );
       expect(redirect, Routes.splash);
     });
@@ -173,7 +175,7 @@ void main() {
     test('unknown session on /splash does not redirect (no loop)', () {
       final redirect = appRedirectLogic(
         sessionState: const SessionUnknown(),
-        currentPath: Routes.splash,
+        uri: Uri.parse(Routes.splash),
       );
       expect(redirect, isNull);
     });
@@ -184,7 +186,7 @@ void main() {
           principal: memberPrincipal,
           capabilities: emptyCaps,
         ),
-        currentPath: Routes.login,
+        uri: Uri.parse(Routes.login),
       );
       expect(redirect, Routes.memberHome);
     });
@@ -195,7 +197,7 @@ void main() {
           principal: trainerPrincipal,
           capabilities: emptyCaps,
         ),
-        currentPath: Routes.login,
+        uri: Uri.parse(Routes.login),
       );
       expect(redirect, Routes.trainerHome);
     });
@@ -206,7 +208,7 @@ void main() {
           principal: adminPrincipal,
           capabilities: emptyCaps,
         ),
-        currentPath: Routes.login,
+        uri: Uri.parse(Routes.login),
       );
       expect(redirect, Routes.adminDashboard);
     });
@@ -219,7 +221,7 @@ void main() {
             principal: memberPrincipal,
             capabilities: emptyCaps,
           ),
-          currentPath: Routes.adminDashboard,
+          uri: Uri.parse(Routes.adminDashboard),
         );
         expect(redirect, Routes.memberHome);
       },
@@ -233,7 +235,7 @@ void main() {
             principal: adminPrincipal,
             capabilities: emptyCaps,
           ),
-          currentPath: Routes.adminWorkoutLibrary,
+          uri: Uri.parse(Routes.adminWorkoutLibrary),
         );
         expect(redirect, isNull);
       },

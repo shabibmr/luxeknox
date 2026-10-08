@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:fake_async/fake_async.dart';
 import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/core/usecase/usecase.dart';
 import 'package:luxeknox/session/domain/entities/capabilities.dart';
@@ -95,6 +98,83 @@ void main() {
       act: (cubit) => cubit.restore(),
       expect: () => [const SessionUnauthenticated()],
     );
+
+    test('UnknownFailure (server error) is not retried', () async {
+      when(
+        () => mockRestoreUseCase(const NoParams()),
+      ).thenAnswer((_) async => const Left(UnknownFailure()));
+      final cubit = createCubit();
+
+      await cubit.restore();
+
+      verify(() => mockRestoreUseCase(const NoParams())).called(1);
+      expect(cubit.state, const SessionUnauthenticated());
+    });
+
+    test('NetworkFailure is retried and a later success authenticates', () {
+      fakeAsync((async) {
+        var calls = 0;
+        when(() => mockRestoreUseCase(const NoParams())).thenAnswer((_) async {
+          calls++;
+          return calls < 3
+              ? const Left(NetworkFailure())
+              : const Right((tPrincipal, tCapabilities));
+        });
+        final cubit = createCubit();
+
+        cubit.restore();
+        async.elapse(const Duration(seconds: 3));
+
+        expect(calls, 3);
+        expect(cubit.state, isA<SessionAuthenticated>());
+      });
+    });
+
+    test('restore gives up after restoreTimeout when requests hang', () {
+      fakeAsync((async) {
+        when(
+          () => mockRestoreUseCase(const NoParams()),
+        ).thenAnswer((_) => Completer<Never>().future);
+        final cubit = createCubit();
+
+        cubit.restore();
+        async.elapse(SessionCubit.restoreTimeout - const Duration(seconds: 1));
+        expect(cubit.state, const SessionUnknown());
+        async.elapse(const Duration(seconds: 1));
+
+        expect(cubit.state, const SessionUnauthenticated());
+      });
+    });
+
+    test('concurrent restore calls share one in-flight restore', () async {
+      final pending = Completer<Either<Failure, (Principal, Capabilities)>>();
+      when(
+        () => mockRestoreUseCase(const NoParams()),
+      ).thenAnswer((_) => pending.future);
+      final cubit = createCubit();
+
+      final first = cubit.restore();
+      final second = cubit.restore();
+      pending.complete(const Right((tPrincipal, tCapabilities)));
+      await Future.wait([first, second]);
+
+      verify(() => mockRestoreUseCase(const NoParams())).called(1);
+    });
+
+    test('a sign-out during restore is not overridden by a late success', () async {
+      final pending = Completer<Either<Failure, (Principal, Capabilities)>>();
+      when(
+        () => mockRestoreUseCase(const NoParams()),
+      ).thenAnswer((_) => pending.future);
+      final cubit = createCubit();
+
+      final restoring = cubit.restore();
+      cubit.onSignedOut();
+      pending.complete(const Right((tPrincipal, tCapabilities)));
+      await restoring;
+
+      expect(cubit.state, const SessionUnauthenticated());
+    });
 
     blocTest<SessionCubit, SessionState>(
       'login success emits [SessionAuthenticated]',

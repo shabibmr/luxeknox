@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:luxeknox/core/config/api_base_url_resolver.dart';
 import 'package:luxeknox/core/config/firestore_app_config_source.dart';
@@ -5,13 +7,20 @@ import 'package:luxeknox/core/config/remote_api_base_url_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeSource implements AppConfigRemoteSource {
-  _FakeSource(this.value);
+  _FakeSource(this.fetch);
 
-  final String? value;
+  final Future<String?> Function() fetch;
+
+  int calls = 0;
 
   @override
-  Future<String?> fetchApiBaseUrl() async => value;
+  Future<String?> fetchApiBaseUrl() {
+    calls++;
+    return fetch();
+  }
 }
+
+_FakeSource _returns(String? value) => _FakeSource(() async => value);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +35,7 @@ void main() {
   test('uses Firestore value, appends /v1, and writes cache', () async {
     final resolver = ApiBaseUrlResolver(
       store: store,
-      source: _FakeSource('https://from.firestore'),
+      source: _returns(' https://from.firestore '),
       fallbackUrl: 'https://fallback',
     );
 
@@ -37,7 +46,7 @@ void main() {
   test('keeps an existing /v1 suffix', () async {
     final resolver = ApiBaseUrlResolver(
       store: store,
-      source: _FakeSource('https://api.luxeknox.com/v1/'),
+      source: _returns('https://api.luxeknox.com/v1/'),
       fallbackUrl: 'https://fallback/v1',
     );
 
@@ -45,25 +54,70 @@ void main() {
     expect(store.read(), 'https://api.luxeknox.com/v1');
   });
 
-  test('uses cache when Firestore returns null', () async {
-    await store.write('https://cached');
+  test(
+    'returns the cache without waiting, then refreshes it for next launch',
+    () async {
+      await store.write('https://cached');
+      final remote = Completer<String?>();
+      final source = _FakeSource(() => remote.future);
+      final resolver = ApiBaseUrlResolver(
+        store: store,
+        source: source,
+        fallbackUrl: 'https://fallback',
+      );
+
+      expect(await resolver.resolve(), 'https://cached/v1');
+      expect(source.calls, 1);
+
+      remote.complete('https://new.firestore');
+      await pumpEventQueue();
+      expect(store.read(), 'https://new.firestore/v1');
+    },
+  );
+
+  test('a failed background refresh keeps the cache', () async {
+    await store.write('https://cached/v1');
     final resolver = ApiBaseUrlResolver(
       store: store,
-      source: _FakeSource(null),
+      source: _FakeSource(() async => throw TimeoutException('slow')),
       fallbackUrl: 'https://fallback',
     );
 
     expect(await resolver.resolve(), 'https://cached/v1');
+    await pumpEventQueue();
+    expect(store.read(), 'https://cached/v1');
   });
 
   test('uses fallback when cache and Firestore are empty', () async {
     final resolver = ApiBaseUrlResolver(
       store: store,
-      source: _FakeSource(null),
+      source: _returns('  '),
       fallbackUrl: 'https://fallback',
     );
 
     expect(await resolver.resolve(), 'https://fallback/v1');
+    expect(store.read(), isNull);
+  });
+
+  test('uses fallback when there is no cache and Firestore throws', () async {
+    final resolver = ApiBaseUrlResolver(
+      store: store,
+      source: _FakeSource(() async => throw StateError('no Firebase app')),
+      fallbackUrl: 'https://fallback',
+    );
+
+    expect(await resolver.resolve(), 'https://fallback/v1');
+  });
+
+  test('a blank cached value is treated as missing', () async {
+    await store.write('   ');
+    final resolver = ApiBaseUrlResolver(
+      store: store,
+      source: _returns('https://from.firestore'),
+      fallbackUrl: 'https://fallback',
+    );
+
+    expect(await resolver.resolve(), 'https://from.firestore/v1');
   });
 
   test('normalize strips trailing slashes before appending /v1', () {

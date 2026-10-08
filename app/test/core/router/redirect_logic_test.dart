@@ -20,46 +20,115 @@ void main() {
       expect(
         appRedirectLogic(
           sessionState: const SessionUnknown(),
-          currentPath: Routes.login,
+          uri: Uri.parse(Routes.login),
         ),
         Routes.splash,
       );
       expect(
         appRedirectLogic(
           sessionState: const SessionUnknown(),
-          currentPath: Routes.splash,
+          uri: Uri.parse(Routes.splash),
         ),
         isNull,
       );
     });
+
+    test('unknown session on login keeps its parked redirect', () {
+      expect(
+        appRedirectLogic(
+          sessionState: const SessionUnknown(),
+          uri: Uri.parse(Routes.loginWithRedirect('/admin/members?q=a')),
+        ),
+        Routes.splashWithRedirect('/admin/members?q=a'),
+      );
+    });
+
+    test('unauthenticated session leaves public auth screens alone', () {
+      for (final path in [
+        Routes.login,
+        Routes.forgotPassword,
+        Routes.resetPassword,
+      ]) {
+        expect(
+          appRedirectLogic(
+            sessionState: const SessionUnauthenticated(explicitSignOut: true),
+            uri: Uri.parse(path),
+          ),
+          isNull,
+          reason: path,
+        );
+      }
+    });
+
+    test(
+      'unknown session with protected deep link preserves redirect query to splash',
+      () {
+        expect(
+          appRedirectLogic(
+            sessionState: const SessionUnknown(),
+            uri: Uri.parse(Routes.adminMembers),
+          ),
+          Routes.splashWithRedirect(Routes.adminMembers),
+        );
+      },
+    );
+
+    test(
+      'unauthenticated on splash with redirect query routes to login with redirect',
+      () {
+        expect(
+          appRedirectLogic(
+            sessionState: const SessionUnauthenticated(),
+            uri: Uri.parse(Routes.splashWithRedirect(Routes.adminMembers)),
+          ),
+          Routes.loginWithRedirect(Routes.adminMembers),
+        );
+      },
+    );
+
+    test(
+      'authenticated on splash with redirect query restores intended route',
+      () {
+        expect(
+          appRedirectLogic(
+            sessionState: const SessionAuthenticated(
+              principal: principal,
+              capabilities: capabilities,
+            ),
+            uri: Uri.parse(Routes.splashWithRedirect(Routes.adminMembers)),
+          ),
+          Routes.adminMembers,
+        );
+      },
+    );
 
     test('unauthenticated allows forgot/reset password routes; '
         'explicit sign-out drops the stale deep link', () {
       expect(
         appRedirectLogic(
           sessionState: const SessionUnauthenticated(),
-          currentPath: Routes.forgotPassword,
+          uri: Uri.parse(Routes.forgotPassword),
         ),
         isNull,
       );
       expect(
         appRedirectLogic(
           sessionState: const SessionUnauthenticated(),
-          currentPath: Routes.resetPassword,
+          uri: Uri.parse(Routes.resetPassword),
         ),
         isNull,
       );
       expect(
         appRedirectLogic(
           sessionState: const SessionUnauthenticated(explicitSignOut: true),
-          currentPath: Routes.trainerHome,
+          uri: Uri.parse(Routes.trainerHome),
         ),
         Routes.login,
       );
       expect(
         appRedirectLogic(
           sessionState: const SessionUnauthenticated(),
-          currentPath: Routes.adminMembers,
+          uri: Uri.parse(Routes.adminMembers),
         ),
         Routes.loginWithRedirect(Routes.adminMembers),
       );
@@ -72,7 +141,7 @@ void main() {
             principal: principal,
             capabilities: capabilities,
           ),
-          currentPath: Routes.login,
+          uri: Uri.parse(Routes.login),
         ),
         Routes.adminDashboard,
       );
@@ -85,7 +154,6 @@ void main() {
             principal: principal,
             capabilities: capabilities,
           ),
-          currentPath: Routes.login,
           uri: Uri.parse(Routes.loginWithRedirect(Routes.adminMembers)),
         ),
         Routes.adminMembers,
@@ -99,7 +167,7 @@ void main() {
             principal: principal,
             capabilities: Capabilities(slugs: []),
           ),
-          currentPath: Routes.adminMembershipsCreate,
+          uri: Uri.parse(Routes.adminMembershipsCreate),
         ),
         Routes.adminDashboard,
       );
@@ -109,7 +177,7 @@ void main() {
             principal: principal,
             capabilities: Capabilities(slugs: ['memberships.create']),
           ),
-          currentPath: Routes.adminMembershipsCreate,
+          uri: Uri.parse(Routes.adminMembershipsCreate),
         ),
         isNull,
       );
@@ -127,7 +195,7 @@ void main() {
             ),
             capabilities: Capabilities(slugs: ['memberships.read']),
           ),
-          currentPath: '/admin/members/42/assign-membership',
+          uri: Uri.parse('/admin/members/42/assign-membership'),
         ),
         Routes.trainerHome,
       );
@@ -140,7 +208,7 @@ void main() {
             principal: principal,
             capabilities: Capabilities(slugs: ['memberships.read']),
           ),
-          currentPath: '/admin/members/42/assign-membership',
+          uri: Uri.parse('/admin/members/42/assign-membership'),
         ),
         Routes.adminDashboard,
       );

@@ -133,26 +133,27 @@ class SessionRepositoryImpl implements SessionRepository {
         return const Left(AuthFailure());
       }
 
-      // If we have token credentials, try getMe()
+      // getMe() uses Dio, which has RefreshInterceptor attached.
+      // If the access token is expired, RefreshInterceptor automatically
+      // triggers token refresh and retries getMe().
       final meResult = await getMe();
-      return await meResult.fold((failure) async {
-        // If access token failed (e.g. AuthFailure), attempt refresh once
-        if (refreshToken != null) {
-          final refreshResult = await refresh();
-          return await refreshResult.fold(
-            (refreshFailure) async {
-              await _tokenStorage.clear();
-              return Left(refreshFailure);
-            },
-            (_) => getMe(),
-          );
-        }
-        await _tokenStorage.clear();
-        return Left(failure);
-      }, (data) async => Right(data));
+      return await meResult.fold(
+        (failure) async {
+          // Only clear stored tokens if authentication explicitly failed
+          // (i.e. revoked/expired tokens), never on network or server errors.
+          if (failure is AuthFailure) {
+            await _tokenStorage.clear();
+          }
+          return Left(failure);
+        },
+        (data) async => Right(data),
+      );
     } catch (e) {
-      await _tokenStorage.clear();
-      return Left(mapThrownToFailure(e));
+      final failure = mapThrownToFailure(e);
+      if (failure is AuthFailure) {
+        await _tokenStorage.clear();
+      }
+      return Left(failure);
     }
   }
 

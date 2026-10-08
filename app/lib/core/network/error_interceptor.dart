@@ -52,6 +52,12 @@ class FailureDioException implements Exception {
 class ErrorInterceptor extends InterceptorsWrapper {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
+    // Keep a failure attached upstream (e.g. by RefreshInterceptor when a
+    // refresh fails offline) rather than re-deriving it from the response.
+    if (err.error is FailureDioException) {
+      handler.next(err);
+      return;
+    }
     final failure = mapDioErrorToFailure(err);
     handler.next(err.copyWith(error: FailureDioException(failure, err)));
   }

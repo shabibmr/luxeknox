@@ -73,14 +73,58 @@ class SessionCubit extends Cubit<SessionState> {
   final LogoutUseCase _logoutUseCase;
   final LoginWithGoogleUseCase _loginWithGoogleUseCase;
 
-  Future<void> restore() async {
-    final result = await _restoreSessionUseCase(const NoParams());
+  /// Delays between restore retries on a transient (network) failure, so a
+  /// flaky cold start with valid tokens doesn't land on login.
+  static const _restoreRetryDelays = [
+    Duration(seconds: 1),
+    Duration(seconds: 2),
+    Duration(seconds: 4),
+  ];
+
+  /// Upper bound on time spent on the splash. Past it, restore gives up and
+  /// the user lands on login (stored tokens are kept for the next launch).
+  static const restoreTimeout = Duration(seconds: 10);
+
+  Future<void>? _restoring;
+
+  /// Resolves [SessionUnknown] to authenticated or unauthenticated. Concurrent
+  /// calls (e.g. the splash being rebuilt) share one in-flight restore.
+  Future<void> restore() {
+    if (state is! SessionUnknown) return Future.value();
+    return _restoring ??= _restore().whenComplete(() => _restoring = null);
+  }
+
+  Future<void> _restore() async {
+    final result = await _restoreWithRetries(Stopwatch()..start()).timeout(
+      restoreTimeout,
+      onTimeout: () => const Left(NetworkFailure()),
+    );
+    // Another path (login, refresh sign-out) already decided the session
+    // while restore was running; don't override it.
+    if (state is! SessionUnknown) return;
     result.fold(
       (_) => emit(const SessionUnauthenticated()),
       (tuple) => emit(
         SessionAuthenticated(principal: tuple.$1, capabilities: tuple.$2),
       ),
     );
+  }
+
+  Future<Either<Failure, (Principal, Capabilities)>> _restoreWithRetries(
+    Stopwatch elapsed,
+  ) async {
+    var result = await _restoreSessionUseCase(const NoParams());
+    for (final delay in _restoreRetryDelays) {
+      final transient = result.fold((f) => f.isTransient, (_) => false);
+      if (!transient ||
+          state is! SessionUnknown ||
+          elapsed.elapsed + delay >= restoreTimeout) {
+        break;
+      }
+      await Future<void>.delayed(delay);
+      result = await _restoreSessionUseCase(const NoParams());
+    }
+    return result;
   }
 
   /// Returns the raw [Either] so callers (e.g. `LoginCubit`) can distinguish

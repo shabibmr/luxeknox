@@ -42,19 +42,35 @@ class FcmMessagingService {
   bool _started = false;
 
   /// Initializes messaging (no-op when Firebase options are placeholders).
+  ///
+  /// Runs unawaited from `main`, so failures are caught here; the service is
+  /// then reset so a later [start] can try again.
   Future<void> start() async {
     if (_started) return;
     _started = true;
+    try {
+      await _start();
+    } catch (e, st) {
+      debugPrint('FCM: start failed: $e\n$st');
+      dispose();
+      _started = false;
+    }
+  }
+
+  Future<void> _start() async {
+    _listenSession();
 
     await _pushTokens.ensureStarted();
     if (!_pushTokens.isLive) return;
+
+    // Session may have become authenticated while ensureStarted() was pending
+    // (the stream listener then saw a null token); sync now that it is live.
+    await _syncTokenIfAuthenticated();
 
     await _initLocalNotifications();
     _listenForeground();
     _listenOpens();
     _listenTokenRefresh();
-    _listenSession();
-    await _syncTokenIfAuthenticated();
     await _handleInitialMessage();
   }
 
@@ -111,19 +127,24 @@ class FcmMessagingService {
 
   void _listenSession() {
     _subscriptions.add(
-      _sessionCubit.stream.listen((state) async {
+      _sessionCubit.stream.listen((state) {
         if (state is SessionAuthenticated) {
-          await _syncTokenIfAuthenticated();
+          unawaited(_syncTokenIfAuthenticated());
         }
       }),
     );
   }
 
+  /// Best effort: a failed sync is retried on the next login or token refresh.
   Future<void> _syncTokenIfAuthenticated() async {
     if (_sessionCubit.state is! SessionAuthenticated) return;
-    final token = await _pushTokens.getToken();
-    if (token == null || token.isEmpty) return;
-    await _deviceTokens.registerOrRotate(tokenOverride: token);
+    try {
+      final token = await _pushTokens.getToken();
+      if (token == null || token.isEmpty) return;
+      await _deviceTokens.registerOrRotate(tokenOverride: token);
+    } catch (e) {
+      debugPrint('FCM: token sync failed: $e');
+    }
   }
 
   Future<void> _handleInitialMessage() async {
@@ -164,6 +185,8 @@ class FcmMessagingService {
     _navigateFromPayload(Map<String, dynamic>.from(message.data));
   }
 
+  /// Navigates in any session state: the router's redirect parks the path in
+  /// `?redirect=` while on splash/login and restores it after sign-in.
   void _navigateFromPayload(Map<String, dynamic> data) {
     final path = _pushHandler.handleIncomingPush(data);
     if (path == null || path.isEmpty) {

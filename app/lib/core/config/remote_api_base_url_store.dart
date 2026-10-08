@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Local cache for the remote `API_BASE_URL` from Firestore.
+/// Local cache for the remote `API_BASE_URL` from Firestore. Values are stored
+/// as given; `ApiBaseUrlResolver.normalize` cleans them up.
 class RemoteApiBaseUrlStore {
   RemoteApiBaseUrlStore(this._prefs);
 
@@ -8,14 +9,7 @@ class RemoteApiBaseUrlStore {
 
   final SharedPreferences _prefs;
 
-  String? read() {
-    final value = _prefs.getString(key);
-    if (value == null) return null;
-    final trimmed = value.trim();
-    return trimmed.isEmpty ? null : trimmed;
-  }
+  String? read() => _prefs.getString(key);
 
-  Future<void> write(String url) async {
-    await _prefs.setString(key, url.trim());
-  }
+  Future<void> write(String url) => _prefs.setString(key, url);
 }
