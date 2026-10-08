@@ -12,10 +12,11 @@ import '../presentation/load_status.dart';
 ///
 /// Can be used with cursor-based, offset-based, or non-paginated endpoints.
 /// For non-paginated endpoints, return `CursorPage(items: [...], nextCursor: null, hasMore: false)`.
-typedef PageFetcher<T> = Future<Either<Failure, CursorPage<T>>> Function({
-  String? query,
-  String? cursor,
-});
+typedef PageFetcher<T> =
+    Future<Either<Failure, CursorPage<T>>> Function({
+      String? query,
+      String? cursor,
+    });
 
 /// Generic state for an entity picker.
 class AppPickerState<T> extends Equatable {
@@ -102,12 +103,8 @@ class AppPickerCubit<T> extends Cubit<AppPickerState<T>> {
     if (isClosed || epoch != _searchEpoch) return;
 
     result.fold(
-      (failure) => emit(
-        state.copyWith(
-          status: LoadStatus.failure,
-          failure: failure,
-        ),
-      ),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (page) => emit(
         state.copyWith(
           status: LoadStatus.success,

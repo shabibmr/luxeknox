@@ -38,11 +38,7 @@ class AppStatusChip extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 120),
       child: Chip(
         avatar: icon != null ? Icon(icon, size: 16, color: fg) : null,
-        label: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
         backgroundColor: bg,
         labelStyle: TextStyle(color: fg, fontWeight: FontWeight.w600),
         side: BorderSide.none,
