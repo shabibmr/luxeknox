@@ -115,6 +115,7 @@ abstract final class PeopleStrings {
   static const memberCreated = 'Member created.';
   static const reviewHint = 'Review the details below, then create the member.';
   static const emailOrPhoneRequired = 'Email or phone number is required.';
+  static const invalidEmail = 'Enter a valid email address.';
   static const alreadySubmittingMember = 'Already submitting — please wait.';
 
   // Edit Member screen

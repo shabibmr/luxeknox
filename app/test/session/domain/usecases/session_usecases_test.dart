@@ -40,20 +40,20 @@ void main() {
   group('Session UseCases (F4)', () {
     test('LoginUseCase calls repository.login and returns result', () async {
       when(
-        () => mockRepository.login('admin@luxeknox.com', 'password123'),
+        () => mockRepository.login('admin', 'password123'),
       ).thenAnswer((_) async => const Right((tPrincipal, tCapabilities)));
 
       final useCase = LoginUseCase(mockRepository);
       final result = await useCase(
         const LoginParams(
-          identifier: 'admin@luxeknox.com',
+          identifier: 'admin',
           password: 'password123',
         ),
       );
 
       expect(result, const Right((tPrincipal, tCapabilities)));
       verify(
-        () => mockRepository.login('admin@luxeknox.com', 'password123'),
+        () => mockRepository.login('admin', 'password123'),
       ).called(1);
     });
 

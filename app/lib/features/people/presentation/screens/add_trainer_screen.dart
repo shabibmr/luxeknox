@@ -35,12 +35,16 @@ class _AddTrainerBodyState extends State<_AddTrainerBody> {
   final _lastName = TextEditingController();
   final _email = TextEditingController();
   final _phone = TextEditingController();
-  final _password = TextEditingController();
   String? _gender;
   final _bio = TextEditingController();
   final _hourlyRate = TextEditingController();
   final _maxClients = TextEditingController();
   final _specializationInput = TextEditingController();
+
+  String? _firstNameError;
+  String? _lastNameError;
+  String? _emailError;
+  String? _genderError;
 
   @override
   void dispose() {
@@ -48,7 +52,6 @@ class _AddTrainerBodyState extends State<_AddTrainerBody> {
     _lastName.dispose();
     _email.dispose();
     _phone.dispose();
-    _password.dispose();
     _bio.dispose();
     _hourlyRate.dispose();
     _maxClients.dispose();
@@ -63,6 +66,43 @@ class _AddTrainerBodyState extends State<_AddTrainerBody> {
     onChanged(controller.text);
   }
 
+  static bool _isValidEmail(String email) {
+    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+        .hasMatch(email);
+  }
+
+  bool _validate() {
+    final first = _firstName.text.trim();
+    final last = _lastName.text.trim();
+    final email = _email.text.trim();
+    final gender = _gender?.trim() ?? '';
+    String? firstErr;
+    String? lastErr;
+    String? emailErr;
+    String? genderErr;
+
+    if (first.isEmpty) firstErr = PeopleStrings.firstNameRequired;
+    if (last.isEmpty) lastErr = PeopleStrings.lastNameRequired;
+    if (email.isEmpty) {
+      emailErr = PeopleStrings.emailRequired;
+    } else if (!_isValidEmail(email)) {
+      emailErr = PeopleStrings.invalidEmail;
+    }
+    if (gender.isEmpty) genderErr = PeopleStrings.genderRequired;
+
+    setState(() {
+      _firstNameError = firstErr;
+      _lastNameError = lastErr;
+      _emailError = emailErr;
+      _genderError = genderErr;
+    });
+
+    return firstErr == null &&
+        lastErr == null &&
+        emailErr == null &&
+        genderErr == null;
+  }
+
   Future<void> _submit() async {
     final cubit = context.read<TrainerFormCubit>();
     if (cubit.state.submitting) {
@@ -72,13 +112,16 @@ class _AddTrainerBodyState extends State<_AddTrainerBody> {
       return;
     }
 
+    if (!_validate()) {
+      return;
+    }
+
     cubit.updateInput(
       (input) => input.copyWith(
         firstName: _firstName.text.trim(),
         lastName: _lastName.text.trim(),
         email: _email.text.trim(),
         phoneNumber: _optional(_phone.text),
-        password: _optional(_password.text),
         gender: _gender,
         bio: _optional(_bio.text),
         hourlyRate: _optional(_hourlyRate.text),
@@ -138,44 +181,62 @@ class _AddTrainerBodyState extends State<_AddTrainerBody> {
                     controller: _firstName,
                     enabled: !submitting,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: PeopleStrings.firstName,
+                      errorText: _firstNameError,
                     ),
-                    onChanged: (_) => _syncField(
-                      _firstName,
-                      (v) => context.read<TrainerFormCubit>().updateInput(
-                        (i) => i.copyWith(firstName: v),
-                      ),
-                    ),
+                    onChanged: (_) {
+                      if (_firstNameError != null) {
+                        setState(() => _firstNameError = null);
+                      }
+                      _syncField(
+                        _firstName,
+                        (v) => context.read<TrainerFormCubit>().updateInput(
+                          (i) => i.copyWith(firstName: v),
+                        ),
+                      );
+                    },
                   ),
                   TextField(
                     controller: _lastName,
                     enabled: !submitting,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: PeopleStrings.lastName,
+                      errorText: _lastNameError,
                     ),
-                    onChanged: (_) => _syncField(
-                      _lastName,
-                      (v) => context.read<TrainerFormCubit>().updateInput(
-                        (i) => i.copyWith(lastName: v),
-                      ),
-                    ),
+                    onChanged: (_) {
+                      if (_lastNameError != null) {
+                        setState(() => _lastNameError = null);
+                      }
+                      _syncField(
+                        _lastName,
+                        (v) => context.read<TrainerFormCubit>().updateInput(
+                          (i) => i.copyWith(lastName: v),
+                        ),
+                      );
+                    },
                   ),
                   TextField(
                     controller: _email,
                     enabled: !submitting,
                     keyboardType: TextInputType.emailAddress,
                     autocorrect: false,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: PeopleStrings.email,
+                      errorText: _emailError,
                     ),
-                    onChanged: (_) => _syncField(
-                      _email,
-                      (v) => context.read<TrainerFormCubit>().updateInput(
-                        (i) => i.copyWith(email: v),
-                      ),
-                    ),
+                    onChanged: (_) {
+                      if (_emailError != null) {
+                        setState(() => _emailError = null);
+                      }
+                      _syncField(
+                        _email,
+                        (v) => context.read<TrainerFormCubit>().updateInput(
+                          (i) => i.copyWith(email: v),
+                        ),
+                      );
+                    },
                   ),
                   TextField(
                     controller: _phone,
@@ -191,25 +252,15 @@ class _AddTrainerBodyState extends State<_AddTrainerBody> {
                       ),
                     ),
                   ),
-                  TextField(
-                    controller: _password,
-                    enabled: !submitting,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: PeopleStrings.password,
-                    ),
-                    onChanged: (_) => _syncField(
-                      _password,
-                      (v) => context.read<TrainerFormCubit>().updateInput(
-                        (i) => i.copyWith(password: _optional(v)),
-                      ),
-                    ),
-                  ),
                   GenderRadioGroup(
                     value: _gender,
                     enabled: !submitting,
+                    errorText: _genderError,
                     onChanged: (v) {
-                      setState(() => _gender = v);
+                      setState(() {
+                        _gender = v;
+                        _genderError = null;
+                      });
                       context.read<TrainerFormCubit>().updateInput(
                         (i) => i.copyWith(gender: v),
                       );

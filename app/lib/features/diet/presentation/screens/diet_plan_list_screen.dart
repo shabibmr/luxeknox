@@ -14,21 +14,34 @@ import '../diet_strings.dart';
 import '../widgets/diet_plan_status_chip.dart';
 
 class DietPlanListScreen extends StatelessWidget {
-  const DietPlanListScreen({super.key, this.isTemplate});
+  const DietPlanListScreen({
+    super.key,
+    this.isTemplate,
+    this.createPath,
+    this.detailPathBuilder,
+  });
 
   final bool? isTemplate;
+  final String? createPath;
+  final String Function(String id)? detailPathBuilder;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<DietPlanListCubit>()..load(isTemplate: isTemplate),
-      child: const _DietPlanListBody(),
+      child: _DietPlanListBody(
+        createPath: createPath,
+        detailPathBuilder: detailPathBuilder,
+      ),
     );
   }
 }
 
 class _DietPlanListBody extends StatelessWidget {
-  const _DietPlanListBody();
+  const _DietPlanListBody({this.createPath, this.detailPathBuilder});
+
+  final String? createPath;
+  final String Function(String id)? detailPathBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +49,8 @@ class _DietPlanListBody extends StatelessWidget {
       appBar: AppBar(title: const Text(DietStrings.listTitle)),
       floatingActionButton: FloatingActionButton(
         tooltip: DietStrings.createTitle,
-        onPressed: () => context.push(Routes.trainerPlansDietsCreate),
+        onPressed: () =>
+            context.push(createPath ?? Routes.trainerPlansDietsCreate),
         child: const Icon(Icons.add),
       ),
       body: Column(
@@ -122,7 +136,8 @@ class _DietPlanListBody extends StatelessWidget {
                                   : Text(subtitle),
                               trailing: DietPlanStatusChip(status: plan.status),
                               onTap: () => context.push(
-                                Routes.trainerPlansDietById(plan.id),
+                                detailPathBuilder?.call(plan.id) ??
+                                    Routes.trainerPlansDietById(plan.id),
                               ),
                             );
                           },

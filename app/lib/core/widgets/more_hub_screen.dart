@@ -56,6 +56,10 @@ class MoreHubScreen extends StatelessWidget {
       path: Routes.adminDietLibrary,
     ),
     DestinationHubItem(
+      title: ShellStrings.dietPlans,
+      path: Routes.adminDietPlans,
+    ),
+    DestinationHubItem(
       title: ShellStrings.goalMetrics,
       path: Routes.adminGoalMetrics,
     ),

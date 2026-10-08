@@ -6903,7 +6903,7 @@ components:
           $ref: "#/components/schemas/User"
     MemberCreate:
       type: object
-      required: [first_name, last_name, password, gender]
+      required: [first_name, last_name, gender]
       description: >
         Supply email or phone_number (at least one identifier) plus password for
         login creation (FR-AUTH-008). Profile fields create the members row in the

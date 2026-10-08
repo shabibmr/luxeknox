@@ -17,23 +17,32 @@ import '../../../people/presentation/widgets/member_picker_sheet.dart';
 import '../../../people/presentation/widgets/member_trainer_header.dart';
 
 class DietPlanBuilderScreen extends StatelessWidget {
-  const DietPlanBuilderScreen({super.key, this.planId});
+  const DietPlanBuilderScreen({
+    super.key,
+    this.planId,
+    this.detailPathBuilder,
+  });
 
   final String? planId;
+  final String Function(String id)? detailPathBuilder;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<DietPlanBuilderCubit>()..init(planId: planId),
-      child: _BuilderBody(planId: planId),
+      child: _BuilderBody(
+        planId: planId,
+        detailPathBuilder: detailPathBuilder,
+      ),
     );
   }
 }
 
 class _BuilderBody extends StatelessWidget {
-  const _BuilderBody({this.planId});
+  const _BuilderBody({this.planId, this.detailPathBuilder});
 
   final String? planId;
+  final String Function(String id)? detailPathBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +72,10 @@ class _BuilderBody extends StatelessWidget {
         }
         return UnsavedChangesScope(
           hasUnsavedChanges: state.dirty && !state.saving,
-          child: _BuilderForm(state: state),
+          child: _BuilderForm(
+            state: state,
+            detailPathBuilder: detailPathBuilder,
+          ),
         );
       },
     );
@@ -71,9 +83,10 @@ class _BuilderBody extends StatelessWidget {
 }
 
 class _BuilderForm extends StatefulWidget {
-  const _BuilderForm({required this.state});
+  const _BuilderForm({required this.state, this.detailPathBuilder});
 
   final DietPlanBuilderState state;
+  final String Function(String id)? detailPathBuilder;
 
   @override
   State<_BuilderForm> createState() => _BuilderFormState();
@@ -153,7 +166,9 @@ class _BuilderFormState extends State<_BuilderForm> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text(DietStrings.saved)));
-      context.go(Routes.trainerPlansDietById(ready.planId!));
+      final target = widget.detailPathBuilder?.call(ready.planId!) ??
+          Routes.trainerPlansDietById(ready.planId!);
+      context.go(target);
     }
   }
 

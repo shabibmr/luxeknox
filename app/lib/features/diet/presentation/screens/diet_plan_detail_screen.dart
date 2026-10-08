@@ -18,23 +18,45 @@ import '../widgets/diet_plan_status_chip.dart';
 import '../../../people/presentation/widgets/member_picker_sheet.dart';
 
 class DietPlanDetailScreen extends StatelessWidget {
-  const DietPlanDetailScreen({super.key, required this.planId});
+  const DietPlanDetailScreen({
+    super.key,
+    required this.planId,
+    this.editPathBuilder,
+    this.versionsPathBuilder,
+    this.detailPathBuilder,
+  });
 
   final String planId;
+  final String Function(String id)? editPathBuilder;
+  final String Function(String id)? versionsPathBuilder;
+  final String Function(String id)? detailPathBuilder;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<DietPlanDetailCubit>()..load(planId),
-      child: _DietPlanDetailBody(planId: planId),
+      child: _DietPlanDetailBody(
+        planId: planId,
+        editPathBuilder: editPathBuilder,
+        versionsPathBuilder: versionsPathBuilder,
+        detailPathBuilder: detailPathBuilder,
+      ),
     );
   }
 }
 
 class _DietPlanDetailBody extends StatelessWidget {
-  const _DietPlanDetailBody({required this.planId});
+  const _DietPlanDetailBody({
+    required this.planId,
+    this.editPathBuilder,
+    this.versionsPathBuilder,
+    this.detailPathBuilder,
+  });
 
   final String planId;
+  final String Function(String id)? editPathBuilder;
+  final String Function(String id)? versionsPathBuilder;
+  final String Function(String id)? detailPathBuilder;
 
   Future<void> _assign(BuildContext context) async {
     final member = await showMemberPickerSheet(context);
@@ -50,7 +72,10 @@ class _DietPlanDetailBody extends StatelessWidget {
       ).showSnackBar(const SnackBar(content: Text(DietStrings.assigned)));
       final assignedId = next.assignedPlan!.id;
       cubit.clearAssignedPlan();
-      context.push(Routes.trainerPlansDietById(assignedId));
+      context.push(
+        detailPathBuilder?.call(assignedId) ??
+            Routes.trainerPlansDietById(assignedId),
+      );
     }
   }
 
@@ -72,7 +97,8 @@ class _DietPlanDetailBody extends StatelessWidget {
                   onPressed: inFlight
                       ? null
                       : () => context.push(
-                          Routes.trainerPlansDietVersionsById(plan.id),
+                          versionsPathBuilder?.call(plan.id) ??
+                              Routes.trainerPlansDietVersionsById(plan.id),
                         ),
                 ),
                 IconButton(
@@ -81,7 +107,8 @@ class _DietPlanDetailBody extends StatelessWidget {
                   onPressed: inFlight
                       ? null
                       : () => context.push(
-                          Routes.trainerPlansDietEditById(plan.id),
+                          editPathBuilder?.call(plan.id) ??
+                              Routes.trainerPlansDietEditById(plan.id),
                         ),
                 ),
                 if (plan.isTemplate)

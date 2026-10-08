@@ -388,10 +388,6 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
     if (input.email.trim().isEmpty) {
       return PeopleStrings.emailRequired;
     }
-    final password = input.password?.trim() ?? '';
-    if (password.isEmpty) {
-      return PeopleStrings.passwordRequired;
-    }
     if (input.jobTitle.trim().isEmpty) {
       return PeopleStrings.jobTitleRequired;
     }

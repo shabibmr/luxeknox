@@ -18,7 +18,7 @@ export const memberCreateSchema = z
   .object({
     email: optionalEmail,
     phone_number: optionalPhone,
-    password: z.string().min(1, 'password is required').max(255),
+    password: z.string().min(1).max(255).optional().nullable(),
     first_name: z.string().trim().min(1, 'first_name is required').max(100),
     last_name: z.string().trim().min(1, 'last_name is required').max(100),
     gender: z.string().trim().min(1, 'gender is required').max(32),

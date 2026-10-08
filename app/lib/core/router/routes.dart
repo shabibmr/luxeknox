@@ -192,6 +192,11 @@ class Routes {
   static const String adminSchedulesEdit = '/admin/schedules/:id/edit';
   static const String adminWorkoutLibrary = '/admin/workout-library';
   static const String adminDietLibrary = '/admin/diet-library';
+  static const String adminDietPlans = '/admin/diet-plans';
+  static const String adminDietPlansCreate = '/admin/diet-plans/create';
+  static const String adminDietPlansDetail = '/admin/diet-plans/:id';
+  static const String adminDietPlansEdit = '/admin/diet-plans/:id/edit';
+  static const String adminDietPlansVersions = '/admin/diet-plans/:id/versions';
   static const String adminGoalMetrics = '/admin/goal-metrics';
   static const String adminNotificationsBroadcast =
       '/admin/notifications/broadcast';
@@ -299,6 +304,14 @@ class Routes {
       '/admin/schedules/$id/edit';
 
   static String memberProfilePaymentById(String id) => '/profile/payments/$id';
+
+  static String adminDietPlansDetailById(String id) => '/admin/diet-plans/$id';
+
+  static String adminDietPlansEditById(String id) =>
+      '/admin/diet-plans/$id/edit';
+
+  static String adminDietPlansVersionsById(String id) =>
+      '/admin/diet-plans/$id/versions';
 
   static String loginWithRedirect(String intendedPath) => Uri(
     path: login,

@@ -54,6 +54,10 @@ GoRouter createRouter(SessionCubit sessionCubit) {
     errorBuilder: (context, state) => NotFoundScreen(uri: state.uri),
     routes: [
       GoRoute(
+        path: '/',
+        redirect: (context, state) => null,
+      ),
+      GoRoute(
         path: Routes.splash,
         builder: (context, state) => const SplashScreen(),
       ),

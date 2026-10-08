@@ -23,7 +23,7 @@ describe('ProgressService (GOA-010, GOA-011, GOA-012, GOA-014)', () => {
     id: 1,
     roleId: 1,
     userType: 'admin',
-    email: 'admin@luxeknox.com',
+    email: 'admin',
     phoneNumber: null,
     profileId: null,
     sessionId: 1,

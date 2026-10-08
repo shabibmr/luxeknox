@@ -82,6 +82,7 @@ abstract final class ShellStrings {
   static const schedules = 'Schedules';
   static const workoutLibrary = 'Workout Library';
   static const dietLibrary = 'Food Library';
+  static const dietPlans = 'Diet Plans';
   static const goalMetrics = 'Goal Metrics';
   static const notificationsBroadcast = 'Broadcast Notifications';
   static const reports = 'Reports';

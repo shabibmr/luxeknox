@@ -96,7 +96,7 @@ void main() {
     expect(find.text(PeopleStrings.addTrainerTitle), findsOneWidget);
     expect(find.text(PeopleStrings.firstName), findsOneWidget);
     expect(find.text(PeopleStrings.email), findsOneWidget);
-    expect(find.text(PeopleStrings.password), findsOneWidget);
+    expect(find.text(PeopleStrings.password), findsNothing);
     expect(find.text(PeopleStrings.specializations), findsOneWidget);
     expect(find.text(PeopleStrings.maxClients), findsOneWidget);
     expect(find.text(PeopleStrings.createTrainer), findsOneWidget);
