@@ -25,6 +25,9 @@ String? appRedirectLogic({
   }
 
   if (sessionState is SessionUnauthenticated) {
+    if (currentPath == '/' || currentPath.isEmpty) {
+      return Routes.login;
+    }
     if (isPublicAuthRoute) {
       return currentPath == Routes.splash ? Routes.login : null;
     }
@@ -43,10 +46,15 @@ String? appRedirectLogic({
     final capabilities = sessionState.capabilities;
     final roleHome = _roleHome(role);
 
+    if (currentPath == '/' || currentPath.isEmpty) {
+      return roleHome;
+    }
+
     if (isPublicAuthRoute) {
       final intended = uri?.queryParameters[Routes.redirectQueryParam];
       if (intended != null &&
           intended.isNotEmpty &&
+          intended != '/' &&
           _isAllowedForRole(intended, role)) {
         final slug = RouteCapabilities.requiredSlug(intended);
         if (slug == null || capabilities.can(slug)) {

@@ -38,7 +38,7 @@ jobs:
       DB_NAME: luxeknox
       DB_ADMIN_USER: root
       DB_ADMIN_PASSWORD: root_secret
-      BOOTSTRAP_ADMIN_EMAIL: admin@luxeknox.com
+      BOOTSTRAP_ADMIN_EMAIL: admin
       BOOTSTRAP_ADMIN_PASSWORD: AdminSecurePassword123!
 
     steps:

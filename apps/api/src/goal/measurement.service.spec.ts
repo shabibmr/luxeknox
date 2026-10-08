@@ -24,7 +24,7 @@ describe('MeasurementService (GOA-006, GOA-007, GOA-008, GOA-013)', () => {
     id: 1,
     roleId: 1,
     userType: 'admin',
-    email: 'admin@luxeknox.com',
+    email: 'admin',
     phoneNumber: null,
     profileId: null,
     sessionId: 1,

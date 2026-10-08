@@ -80,6 +80,10 @@ class DashboardAgendaSection extends StatelessWidget {
           context.go(_detailPath(role, session.id));
         }
 
+        final schedulePath = role == UserType.trainer
+            ? Routes.trainerSchedule
+            : Routes.memberSchedule;
+
         final todayTitle = role == UserType.trainer
             ? DashboardStrings.todayAgendaTrainerTitle
             : DashboardStrings.todayAgendaMemberTitle;
@@ -102,6 +106,15 @@ class DashboardAgendaSection extends StatelessWidget {
               UpcomingAgendaList(
                 items: state.upcomingItems,
                 onTapSession: openSession,
+              ),
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => context.go(schedulePath),
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text(DashboardStrings.viewSchedule),
+                ),
               ),
             ],
           ),

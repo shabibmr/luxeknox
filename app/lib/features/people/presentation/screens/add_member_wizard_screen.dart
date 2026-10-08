@@ -32,8 +32,13 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _addressController = TextEditingController();
+
+  String? _firstNameError;
+  String? _lastNameError;
+  String? _genderError;
+  String? _emailError;
+  String? _phoneError;
 
   @override
   void dispose() {
@@ -41,9 +46,70 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
     _lastNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _passwordController.dispose();
     _addressController.dispose();
     super.dispose();
+  }
+
+  static bool _isValidEmail(String email) {
+    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+        .hasMatch(email);
+  }
+
+  bool _validateStep0(AddMemberWizardState state) {
+    final first = _firstNameController.text.trim();
+    final last = _lastNameController.text.trim();
+    final gender = state.input.gender?.trim() ?? '';
+    String? firstErr;
+    String? lastErr;
+    String? genderErr;
+
+    if (first.isEmpty) firstErr = PeopleStrings.firstNameRequired;
+    if (last.isEmpty) lastErr = PeopleStrings.lastNameRequired;
+    if (gender.isEmpty) genderErr = PeopleStrings.genderRequired;
+
+    setState(() {
+      _firstNameError = firstErr;
+      _lastNameError = lastErr;
+      _genderError = genderErr;
+    });
+
+    return firstErr == null && lastErr == null && genderErr == null;
+  }
+
+  bool _validateStep1() {
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+    String? emailErr;
+    String? phoneErr;
+
+    if (email.isEmpty && phone.isEmpty) {
+      emailErr = PeopleStrings.emailOrPhoneRequired;
+      phoneErr = PeopleStrings.emailOrPhoneRequired;
+    } else if (email.isNotEmpty && !_isValidEmail(email)) {
+      emailErr = PeopleStrings.invalidEmail;
+    }
+
+    setState(() {
+      _emailError = emailErr;
+      _phoneError = phoneErr;
+    });
+
+    return emailErr == null && phoneErr == null;
+  }
+
+  void _onStepContinue(
+    AddMemberWizardCubit cubit,
+    AddMemberWizardState state,
+  ) {
+    if (state.step == 0) {
+      if (!_validateStep0(state)) return;
+      cubit.nextStep();
+    } else if (state.step == 1) {
+      if (!_validateStep1()) return;
+      cubit.nextStep();
+    } else if (state.step == AddMemberWizardState.stepCount - 1) {
+      cubit.submit();
+    }
   }
 
   @override
@@ -67,9 +133,7 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
           appBar: AppBar(title: const Text(PeopleStrings.addMemberTitle)),
           body: Stepper(
             currentStep: state.step,
-            onStepContinue: state.step == AddMemberWizardState.stepCount - 1
-                ? cubit.submit
-                : cubit.nextStep,
+            onStepContinue: () => _onStepContinue(cubit, state),
             onStepCancel: state.step == 0 ? null : cubit.previousStep,
             controlsBuilder: (context, details) {
               final isLast = state.step == AddMemberWizardState.stepCount - 1;
@@ -127,25 +191,41 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
                   children: [
                     TextField(
                       controller: _firstNameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: PeopleStrings.firstName,
+                        errorText: _firstNameError,
                       ),
-                      onChanged: (value) => cubit.updateInput(
-                        (i) => i.copyWith(firstName: value),
-                      ),
+                      onChanged: (value) {
+                        if (_firstNameError != null) {
+                          setState(() => _firstNameError = null);
+                        }
+                        cubit.updateInput(
+                          (i) => i.copyWith(firstName: value),
+                        );
+                      },
                     ),
                     TextField(
                       controller: _lastNameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: PeopleStrings.lastName,
+                        errorText: _lastNameError,
                       ),
-                      onChanged: (value) =>
-                          cubit.updateInput((i) => i.copyWith(lastName: value)),
+                      onChanged: (value) {
+                        if (_lastNameError != null) {
+                          setState(() => _lastNameError = null);
+                        }
+                        cubit.updateInput((i) => i.copyWith(lastName: value));
+                      },
                     ),
                     GenderRadioGroup(
                       value: state.input.gender,
-                      onChanged: (value) =>
-                          cubit.updateInput((i) => i.copyWith(gender: value)),
+                      errorText: _genderError,
+                      onChanged: (value) {
+                        if (_genderError != null) {
+                          setState(() => _genderError = null);
+                        }
+                        cubit.updateInput((i) => i.copyWith(gender: value));
+                      },
                     ),
                   ],
                 ),
@@ -158,29 +238,40 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
                   children: [
                     TextField(
                       controller: _emailController,
-                      decoration: const InputDecoration(
+                      keyboardType: TextInputType.emailAddress,
+                      autocorrect: false,
+                      decoration: InputDecoration(
                         labelText: PeopleStrings.email,
+                        errorText: _emailError,
                       ),
-                      onChanged: (value) =>
-                          cubit.updateInput((i) => i.copyWith(email: value)),
+                      onChanged: (value) {
+                        if (_emailError != null || _phoneError != null) {
+                          setState(() {
+                            _emailError = null;
+                            _phoneError = null;
+                          });
+                        }
+                        cubit.updateInput((i) => i.copyWith(email: value));
+                      },
                     ),
                     TextField(
                       controller: _phoneController,
-                      decoration: const InputDecoration(
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
                         labelText: PeopleStrings.phoneNumber,
+                        errorText: _phoneError,
                       ),
-                      onChanged: (value) => cubit.updateInput(
-                        (i) => i.copyWith(phoneNumber: value),
-                      ),
-                    ),
-                    TextField(
-                      controller: _passwordController,
-                      decoration: const InputDecoration(
-                        labelText: PeopleStrings.password,
-                      ),
-                      obscureText: true,
-                      onChanged: (value) =>
-                          cubit.updateInput((i) => i.copyWith(password: value)),
+                      onChanged: (value) {
+                        if (_emailError != null || _phoneError != null) {
+                          setState(() {
+                            _emailError = null;
+                            _phoneError = null;
+                          });
+                        }
+                        cubit.updateInput(
+                          (i) => i.copyWith(phoneNumber: value),
+                        );
+                      },
                     ),
                     TextField(
                       controller: _addressController,
@@ -206,11 +297,15 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
                       '${PeopleStrings.firstName}: ${state.input.firstName}',
                     ),
                     Text('${PeopleStrings.lastName}: ${state.input.lastName}'),
+                    Text('${PeopleStrings.gender}: ${state.input.gender ?? '-'}'),
                     Text('${PeopleStrings.email}: ${state.input.email ?? '-'}'),
                     Text(
                       '${PeopleStrings.phoneNumber}: '
                       '${state.input.phoneNumber ?? '-'}',
                     ),
+                    if (state.input.address != null &&
+                        state.input.address!.isNotEmpty)
+                      Text('${PeopleStrings.address}: ${state.input.address}'),
                   ],
                 ),
               ),

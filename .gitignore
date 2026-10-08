@@ -47,3 +47,8 @@ docs/openapi/v1.json
 # Local ignore directory
 .ignore/
 .media/
+research_notes/
+**/failures/
+
+# Firebase Admin SDK private keys (never commit)
+*firebase-adminsdk*.json

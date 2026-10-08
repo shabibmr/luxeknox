@@ -20,7 +20,7 @@ describe('MeController', () => {
 
   const mockUser: AuthenticatedUser = {
     id: 1,
-    email: 'admin@luxeknox.com',
+    email: 'admin',
     phoneNumber: '+15551234567',
     userType: 'admin',
     roleId: 1,
@@ -78,7 +78,7 @@ describe('MeController', () => {
     expect(result).toEqual({
       user: {
         id: 1,
-        email: 'admin@luxeknox.com',
+        email: 'admin',
         userType: 'admin',
         roleId: 1,
         user_type: 'admin',

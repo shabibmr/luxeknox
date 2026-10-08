@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/usecases/request_membership_freeze_usecase.dart';
 import '../cubit/membership_card_cubit.dart';
+import '../membership_date_format.dart';
 import '../membership_strings.dart';
 import '../widgets/membership_status_chip.dart';
 
@@ -51,10 +54,19 @@ class _MembershipCardBody extends StatelessWidget {
           title: const Text(MembershipStrings.requestFreeze),
           content: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (membership.product?.maxFreezeDays != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8, left: 16),
+                  child: Text(
+                    '${MembershipStrings.maxFreezeDaysLabel}: ${membership.product!.maxFreezeDays}',
+                    style: Theme.of(dialogContext).textTheme.bodySmall,
+                  ),
+                ),
               ListTile(
                 title: const Text(MembershipStrings.startDateLabel),
-                subtitle: Text(start?.toString().split(' ').first ?? '—'),
+                subtitle: Text(start == null ? '—' : formatMembershipDate(start!)),
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: dialogContext,
@@ -67,7 +79,7 @@ class _MembershipCardBody extends StatelessWidget {
               ),
               ListTile(
                 title: const Text(MembershipStrings.endDateLabel),
-                subtitle: Text(end?.toString().split(' ').first ?? '—'),
+                subtitle: Text(end == null ? '—' : formatMembershipDate(end!)),
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: dialogContext,
@@ -83,6 +95,7 @@ class _MembershipCardBody extends StatelessWidget {
                 decoration: const InputDecoration(
                   labelText: MembershipStrings.reasonLabel,
                 ),
+                onChanged: (_) => setDialogState(() {}),
               ),
             ],
           ),
@@ -92,7 +105,9 @@ class _MembershipCardBody extends StatelessWidget {
               child: const Text(MembershipStrings.cancel),
             ),
             TextButton(
-              onPressed: start != null && end != null
+              onPressed: start != null &&
+                      end != null &&
+                      reasonController.text.trim().isNotEmpty
                   ? () => Navigator.of(dialogContext).pop(true)
                   : null,
               child: const Text(MembershipStrings.confirm),
@@ -112,21 +127,12 @@ class _MembershipCardBody extends StatelessWidget {
       return;
     }
 
-    final result = await context.read<MembershipCardCubit>().requestFreeze(
+    await context.read<MembershipCardCubit>().requestFreeze(
       RequestMembershipFreezeParams(
         membershipId: membership.id,
         startDate: startDate,
         endDate: endDate,
-        reason: reason.isEmpty ? null : reason,
-      ),
-    );
-    if (!context.mounted || result == null) return;
-    result.fold(
-      (failure) => ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(failureMessage(failure)))),
-      (_) => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Freeze request submitted.')),
+        reason: reason,
       ),
     );
   }
@@ -135,8 +141,20 @@ class _MembershipCardBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(MembershipStrings.cardTitle)),
-      body: BlocBuilder<MembershipCardCubit, MembershipCardState>(
-        builder: (context, state) => _buildBody(context, state),
+      body: BlocListener<MembershipCardCubit, MembershipCardState>(
+        listenWhen: (previous, current) =>
+            previous.requestingFreeze && !current.requestingFreeze,
+        listener: (context, state) {
+          final message = state.failure == null
+              ? 'Freeze request submitted.'
+              : failureMessage(state.failure!);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+        },
+        child: BlocBuilder<MembershipCardCubit, MembershipCardState>(
+          builder: (context, state) => _buildBody(context, state),
+        ),
       ),
     );
   }
@@ -197,16 +215,35 @@ class _MembershipCardBody extends StatelessWidget {
           const SizedBox(height: 16),
           _infoRow(
             MembershipStrings.startDateLabel,
-            membership.startDate.toString().split(' ').first,
+            formatMembershipDate(membership.startDate),
           ),
           _infoRow(
             MembershipStrings.endDateLabel,
-            membership.endDate.toString().split(' ').first,
+            formatMembershipDate(membership.endDate),
           ),
           if (membership.lockerNumber != null)
             _infoRow(
               MembershipStrings.lockerNumberLabel,
               membership.lockerNumber!,
+            ),
+          if (membership.product?.description?.isNotEmpty ?? false)
+            _infoRow(
+              MembershipStrings.descriptionLabel,
+              membership.product!.description!,
+            ),
+          _infoRow(
+            MembershipStrings.remainingDays,
+            membership.daysUntilExpiry.clamp(0, 99999).toString(),
+          ),
+          if (membership.remainingPtSessions != null)
+            _infoRow(
+              MembershipStrings.remainingPtSessions,
+              membership.remainingPtSessions.toString(),
+            ),
+          if (membership.product?.maxFreezeDays != null)
+            _infoRow(
+              MembershipStrings.maxFreezeDaysLabel,
+              membership.product!.maxFreezeDays.toString(),
             ),
           if (membership.product?.accessFacilities.isNotEmpty ?? false)
             _infoRow(
@@ -226,6 +263,22 @@ class _MembershipCardBody extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Text(MembershipStrings.requestFreeze),
+          ),
+          const Divider(height: 32),
+          ListTile(
+            title: const Text(MembershipStrings.historyTitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(Routes.memberMembershipHistory),
+          ),
+          ListTile(
+            title: const Text(MembershipStrings.freezesTitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(Routes.memberMembershipFreezeHistory),
+          ),
+          ListTile(
+            title: const Text(MembershipStrings.catalogTitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(Routes.memberMembershipPackages),
           ),
         ],
       ),

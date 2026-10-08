@@ -14,7 +14,7 @@ export const users = mysqlTable(
     id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
     email: varchar('email', { length: 255 }),
     phone_number: varchar('phone_number', { length: 32 }),
-    password_hash: varchar('password_hash', { length: 255 }).notNull(),
+    password_hash: varchar('password_hash', { length: 255 }),
     user_type: mysqlEnum('user_type', USER_TYPES).notNull(),
     role_id: bigint('role_id', { mode: 'number', unsigned: true })
       .notNull()

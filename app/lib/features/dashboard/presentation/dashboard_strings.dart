@@ -20,6 +20,15 @@ class DashboardStrings {
   static const String expiringSoon = 'Expiring soon';
 
   static const String empty = 'Nothing to show yet.';
+  static const String dashboardError = 'Could not load the dashboard.';
+  static const String notifications = 'Notifications';
+  static const String attendance = 'Attendance';
+  static const String workout = 'Workout';
+  static const String diet = 'Diet';
+  static const String progress = 'Progress';
+  static const String payments = 'Payments';
+  static const String schedule = 'Schedule';
+  static const String viewSchedule = 'View schedule';
   static const String retry = 'Retry';
   static const String staleDataNotice =
       'Showing last loaded data — refresh failed.';

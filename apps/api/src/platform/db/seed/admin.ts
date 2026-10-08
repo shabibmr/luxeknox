@@ -8,7 +8,7 @@ import { trainerAvailabilities } from '../schema/scheduling';
 import { hashPassword } from '../../../auth/password';
 
 /** Documented bootstrap fallback — matches `.env.example` and e2e helpers. */
-export const DEFAULT_BOOTSTRAP_EMAIL = 'admin@luxeknox.com';
+export const DEFAULT_BOOTSTRAP_EMAIL = 'admin';
 
 /** Shared development password for all seeded demo accounts (admin/trainer/member). */
 export const DEFAULT_DEV_USER_PASSWORD = '123456';

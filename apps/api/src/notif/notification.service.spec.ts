@@ -18,7 +18,7 @@ describe('NotificationService (V13: NOT-003 to NOT-015)', () => {
     id: 1,
     roleId: 1,
     userType: 'admin',
-    email: 'admin@luxeknox.com',
+    email: 'admin',
     phoneNumber: null,
     profileId: null,
     sessionId: 1,

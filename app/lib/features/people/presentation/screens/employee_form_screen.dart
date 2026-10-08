@@ -81,10 +81,15 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
   final _lastName = TextEditingController();
   final _email = TextEditingController();
   final _phone = TextEditingController();
-  final _password = TextEditingController();
   final _jobTitle = TextEditingController();
   final _department = TextEditingController();
   bool _seededEdit = false;
+
+  String? _firstNameError;
+  String? _lastNameError;
+  String? _emailError;
+  String? _genderError;
+  String? _jobTitleError;
 
   @override
   void dispose() {
@@ -92,7 +97,6 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
     _lastName.dispose();
     _email.dispose();
     _phone.dispose();
-    _password.dispose();
     _jobTitle.dispose();
     _department.dispose();
     super.dispose();
@@ -171,6 +175,58 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
     ).showSnackBar(const SnackBar(content: Text(PeopleStrings.statusUpdated)));
   }
 
+  static bool _isValidEmail(String email) {
+    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+        .hasMatch(email);
+  }
+
+  bool _validateCreate(EmployeeFormState state) {
+    final first = _firstName.text.trim();
+    final last = _lastName.text.trim();
+    final email = _email.text.trim();
+    final gender = state.createInput.gender?.trim() ?? '';
+    final jobTitle = _jobTitle.text.trim();
+
+    String? firstErr;
+    String? lastErr;
+    String? emailErr;
+    String? genderErr;
+    String? jobTitleErr;
+
+    if (first.isEmpty) firstErr = PeopleStrings.firstNameRequired;
+    if (last.isEmpty) lastErr = PeopleStrings.lastNameRequired;
+    if (email.isEmpty) {
+      emailErr = PeopleStrings.emailRequired;
+    } else if (!_isValidEmail(email)) {
+      emailErr = PeopleStrings.invalidEmail;
+    }
+    if (gender.isEmpty) genderErr = PeopleStrings.genderRequired;
+    if (jobTitle.isEmpty) jobTitleErr = PeopleStrings.jobTitleRequired;
+
+    setState(() {
+      _firstNameError = firstErr;
+      _lastNameError = lastErr;
+      _emailError = emailErr;
+      _genderError = genderErr;
+      _jobTitleError = jobTitleErr;
+    });
+
+    return firstErr == null &&
+        lastErr == null &&
+        emailErr == null &&
+        genderErr == null &&
+        jobTitleErr == null;
+  }
+
+  bool _validateEdit() {
+    final jobTitle = _jobTitle.text.trim();
+    if (jobTitle.isEmpty) {
+      setState(() => _jobTitleError = PeopleStrings.jobTitleRequired);
+      return false;
+    }
+    return true;
+  }
+
   Future<void> _submit() async {
     final cubit = context.read<EmployeeFormCubit>();
     if (cubit.state.submitting) {
@@ -181,18 +237,23 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
     }
 
     if (cubit.state.isCreate) {
+      if (!_validateCreate(cubit.state)) {
+        return;
+      }
       cubit.updateCreateInput(
         (input) => input.copyWith(
           firstName: _firstName.text.trim(),
           lastName: _lastName.text.trim(),
           email: _email.text.trim(),
           phoneNumber: _optional(_phone.text),
-          password: _optional(_password.text),
           jobTitle: _jobTitle.text.trim(),
           department: _optional(_department.text),
         ),
       );
     } else {
+      if (!_validateEdit()) {
+        return;
+      }
       cubit.updateEditInput(
         (input) => input.copyWith(
           jobTitle: _jobTitle.text.trim(),
@@ -280,35 +341,53 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                     controller: _firstName,
                     enabled: !submitting,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: PeopleStrings.firstName,
+                      errorText: _firstNameError,
                     ),
-                    onChanged: (v) => context
-                        .read<EmployeeFormCubit>()
-                        .updateCreateInput((i) => i.copyWith(firstName: v)),
+                    onChanged: (v) {
+                      if (_firstNameError != null) {
+                        setState(() => _firstNameError = null);
+                      }
+                      context
+                          .read<EmployeeFormCubit>()
+                          .updateCreateInput((i) => i.copyWith(firstName: v));
+                    },
                   ),
                   TextField(
                     controller: _lastName,
                     enabled: !submitting,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: PeopleStrings.lastName,
+                      errorText: _lastNameError,
                     ),
-                    onChanged: (v) => context
-                        .read<EmployeeFormCubit>()
-                        .updateCreateInput((i) => i.copyWith(lastName: v)),
+                    onChanged: (v) {
+                      if (_lastNameError != null) {
+                        setState(() => _lastNameError = null);
+                      }
+                      context
+                          .read<EmployeeFormCubit>()
+                          .updateCreateInput((i) => i.copyWith(lastName: v));
+                    },
                   ),
                   TextField(
                     controller: _email,
                     enabled: !submitting,
                     keyboardType: TextInputType.emailAddress,
                     autocorrect: false,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: PeopleStrings.email,
+                      errorText: _emailError,
                     ),
-                    onChanged: (v) => context
-                        .read<EmployeeFormCubit>()
-                        .updateCreateInput((i) => i.copyWith(email: v)),
+                    onChanged: (v) {
+                      if (_emailError != null) {
+                        setState(() => _emailError = null);
+                      }
+                      context
+                          .read<EmployeeFormCubit>()
+                          .updateCreateInput((i) => i.copyWith(email: v));
+                    },
                   ),
                   TextField(
                     controller: _phone,
@@ -320,18 +399,6 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                     onChanged: (v) =>
                         context.read<EmployeeFormCubit>().updateCreateInput(
                           (i) => i.copyWith(phoneNumber: _optional(v)),
-                        ),
-                  ),
-                  TextField(
-                    controller: _password,
-                    enabled: !submitting,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: PeopleStrings.password,
-                    ),
-                    onChanged: (v) =>
-                        context.read<EmployeeFormCubit>().updateCreateInput(
-                          (i) => i.copyWith(password: _optional(v)),
                         ),
                   ),
                 ] else if (loaded != null) ...[
@@ -394,7 +461,11 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                         : c.state.updateInput.gender,
                   ),
                   enabled: !submitting,
+                  errorText: state.isCreate ? _genderError : null,
                   onChanged: (v) {
+                    if (_genderError != null) {
+                      setState(() => _genderError = null);
+                    }
                     final cubit = context.read<EmployeeFormCubit>();
                     if (cubit.state.isCreate) {
                       cubit.updateCreateInput((i) => i.copyWith(gender: v));
@@ -407,10 +478,14 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                 TextField(
                   controller: _jobTitle,
                   enabled: !submitting,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: PeopleStrings.jobTitle,
+                    errorText: _jobTitleError,
                   ),
                   onChanged: (v) {
+                    if (_jobTitleError != null) {
+                      setState(() => _jobTitleError = null);
+                    }
                     final cubit = context.read<EmployeeFormCubit>();
                     if (cubit.state.isCreate) {
                       cubit.updateCreateInput((i) => i.copyWith(jobTitle: v));

@@ -140,13 +140,18 @@ class SessionRepositoryImpl implements SessionRepository {
         if (refreshToken != null) {
           final refreshResult = await refresh();
           return await refreshResult.fold(
-            (refreshFailure) async => Left(refreshFailure),
+            (refreshFailure) async {
+              await _tokenStorage.clear();
+              return Left(refreshFailure);
+            },
             (_) => getMe(),
           );
         }
+        await _tokenStorage.clear();
         return Left(failure);
       }, (data) async => Right(data));
     } catch (e) {
+      await _tokenStorage.clear();
       return Left(mapThrownToFailure(e));
     }
   }

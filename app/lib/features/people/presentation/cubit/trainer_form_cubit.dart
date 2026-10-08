@@ -111,10 +111,6 @@ class TrainerFormCubit extends Cubit<TrainerFormState> {
     if (input.email.trim().isEmpty) {
       return PeopleStrings.emailRequired;
     }
-    final password = input.password?.trim() ?? '';
-    if (password.isEmpty) {
-      return PeopleStrings.passwordRequired;
-    }
     if ((input.gender?.trim() ?? '').isEmpty) {
       return PeopleStrings.genderRequired;
     }

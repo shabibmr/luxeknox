@@ -23,15 +23,26 @@ void main() {
     store = RemoteApiBaseUrlStore(await SharedPreferences.getInstance());
   });
 
-  test('uses Firestore value and writes cache', () async {
+  test('uses Firestore value, appends /v1, and writes cache', () async {
     final resolver = ApiBaseUrlResolver(
       store: store,
       source: _FakeSource('https://from.firestore'),
       fallbackUrl: 'https://fallback',
     );
 
-    expect(await resolver.resolve(), 'https://from.firestore');
-    expect(store.read(), 'https://from.firestore');
+    expect(await resolver.resolve(), 'https://from.firestore/v1');
+    expect(store.read(), 'https://from.firestore/v1');
+  });
+
+  test('keeps an existing /v1 suffix', () async {
+    final resolver = ApiBaseUrlResolver(
+      store: store,
+      source: _FakeSource('https://api.luxeknox.com/v1/'),
+      fallbackUrl: 'https://fallback/v1',
+    );
+
+    expect(await resolver.resolve(), 'https://api.luxeknox.com/v1');
+    expect(store.read(), 'https://api.luxeknox.com/v1');
   });
 
   test('uses cache when Firestore returns null', () async {
@@ -42,7 +53,7 @@ void main() {
       fallbackUrl: 'https://fallback',
     );
 
-    expect(await resolver.resolve(), 'https://cached');
+    expect(await resolver.resolve(), 'https://cached/v1');
   });
 
   test('uses fallback when cache and Firestore are empty', () async {
@@ -52,6 +63,17 @@ void main() {
       fallbackUrl: 'https://fallback',
     );
 
-    expect(await resolver.resolve(), 'https://fallback');
+    expect(await resolver.resolve(), 'https://fallback/v1');
+  });
+
+  test('normalize strips trailing slashes before appending /v1', () {
+    expect(
+      ApiBaseUrlResolver.normalize('https://api.luxeknox.com/'),
+      'https://api.luxeknox.com/v1',
+    );
+    expect(
+      ApiBaseUrlResolver.normalize('https://api.luxeknox.com/v1/'),
+      'https://api.luxeknox.com/v1',
+    );
   });
 }

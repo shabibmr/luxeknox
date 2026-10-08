@@ -8,6 +8,7 @@ import '../../domain/entities/membership_freeze.dart';
 import '../../domain/usecases/approve_freeze_usecase.dart';
 import '../../domain/usecases/get_membership_freezes_usecase.dart';
 import '../../domain/usecases/get_memberships_usecase.dart';
+import '../../domain/entities/membership.dart';
 import '../../domain/usecases/reject_freeze_usecase.dart';
 
 part 'membership_freeze_cubit.freezed.dart';
@@ -63,16 +64,24 @@ class MembershipFreezeCubit extends Cubit<MembershipFreezeState> {
       GetMembershipsParams(memberId: memberId),
     );
     if (isClosed) return;
-    result.fold(
-      (failure) =>
+    await result.fold(
+      (failure) async =>
           emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
-      (page) => emit(
-        state.copyWith(
-          status: LoadStatus.success,
-          failure: null,
-          membershipId: page.items.isEmpty ? null : page.items.first.id,
-        ),
-      ),
+      (page) async {
+        final id = page.items.preferActive?.id;
+        if (id == null) {
+          emit(
+            state.copyWith(
+              status: LoadStatus.success,
+              failure: null,
+              membershipId: null,
+              items: const [],
+            ),
+          );
+          return;
+        }
+        await _loadFreezes(id);
+      },
     );
   }
 
@@ -93,7 +102,7 @@ class MembershipFreezeCubit extends Cubit<MembershipFreezeState> {
         state.copyWith(
           status: LoadStatus.success,
           failure: null,
-          items: page.items,
+          items: [...page.items]..sort((a, b) => b.startDate.compareTo(a.startDate)),
         ),
       ),
     );

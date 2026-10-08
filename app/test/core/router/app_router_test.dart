@@ -19,7 +19,6 @@ import 'package:luxeknox/features/diet/presentation/cubit/diet_plan_list_cubit.d
 import 'package:luxeknox/features/diet/presentation/cubit/diet_plan_versions_cubit.dart';
 import 'package:luxeknox/features/goals/presentation/cubit/goal_detail_cubit.dart';
 import 'package:luxeknox/features/goals/presentation/cubit/goals_list_cubit.dart';
-import 'package:luxeknox/features/goals/presentation/goals_strings.dart';
 import 'package:luxeknox/features/goals/presentation/screens/goal_detail_screen.dart';
 import 'package:luxeknox/features/notifications/presentation/cubit/notifications_inbox_cubit.dart';
 import 'package:luxeknox/features/reports/domain/entities/app_report_type.dart';
@@ -101,6 +100,59 @@ void main() {
         expect(redirect, Routes.loginWithRedirect(Routes.memberHome));
       },
     );
+
+    test('signed-out user on root / redirects to /login without query', () {
+      final redirect = appRedirectLogic(
+        sessionState: const SessionUnauthenticated(),
+        currentPath: '/',
+      );
+      expect(redirect, Routes.login);
+    });
+
+    test('signed-in admin on root / redirects to /admin/dashboard', () {
+      final redirect = appRedirectLogic(
+        sessionState: const SessionAuthenticated(
+          principal: adminPrincipal,
+          capabilities: emptyCaps,
+        ),
+        currentPath: '/',
+      );
+      expect(redirect, Routes.adminDashboard);
+    });
+
+    test('signed-in member on root / redirects to /home', () {
+      final redirect = appRedirectLogic(
+        sessionState: const SessionAuthenticated(
+          principal: memberPrincipal,
+          capabilities: emptyCaps,
+        ),
+        currentPath: '/',
+      );
+      expect(redirect, Routes.memberHome);
+    });
+
+    test('signed-in trainer on root / redirects to /trainer/home', () {
+      final redirect = appRedirectLogic(
+        sessionState: const SessionAuthenticated(
+          principal: trainerPrincipal,
+          capabilities: emptyCaps,
+        ),
+        currentPath: '/',
+      );
+      expect(redirect, Routes.trainerHome);
+    });
+
+    test('signed-in admin on /login with redirect=/ restores roleHome, not /', () {
+      final redirect = appRedirectLogic(
+        sessionState: const SessionAuthenticated(
+          principal: adminPrincipal,
+          capabilities: emptyCaps,
+        ),
+        currentPath: Routes.login,
+        uri: Uri.parse('${Routes.login}?redirect=%2F'),
+      );
+      expect(redirect, Routes.adminDashboard);
+    });
 
     test('signed-out user already on /login does not redirect (no loop)', () {
       final redirect = appRedirectLogic(

@@ -14,6 +14,7 @@ abstract class MembershipRepository {
     String? q,
     int? limit,
     int? offset,
+    bool activeOnly = false,
   });
 
   Future<Either<Failure, MembershipProduct>> getProduct(String id);
