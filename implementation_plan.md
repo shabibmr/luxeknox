@@ -23,7 +23,7 @@ Dio must be built **after** this resolution so the first HTTP call uses the corr
 Allow `get`/`list` on `/config/app` for unauthenticated clients; keep deny-all elsewhere. Deploy rules.
 
 ### [NEW] seed via Firebase CLI / Admin REST
-Create document `config/app` with `{ "API_BASE_URL": "https://api.dev.luxeknox.com" }` on project `luxe-knox-app`.
+Create document `config/app` with `{ "API_BASE_URL": "https://api.luxeknox.com/v1" }` on project `luxe-knox-app` (include the Nest `/v1` prefix).
 
 ### [MODIFY] `app/pubspec.yaml`
 Add `cloud_firestore` and `shared_preferences` (compatible with existing `firebase_core`).

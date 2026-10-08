@@ -13,18 +13,34 @@ class ApiBaseUrlResolver {
   final AppConfigRemoteSource _source;
   final String _fallbackUrl;
 
+  /// Ensures the Nest global prefix `/v1` is present on absolute API base URLs.
+  ///
+  /// Firestore has been seeded without `/v1` (`https://api.luxeknox.com`); Nest
+  /// only serves routes under `/v1`, so login and every other call 404 without it.
+  static String normalize(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return trimmed;
+
+    final withoutTrailingSlash = trimmed.replaceFirst(RegExp(r'/+$'), '');
+    if (withoutTrailingSlash.endsWith('/v1')) {
+      return withoutTrailingSlash;
+    }
+    return '$withoutTrailingSlash/v1';
+  }
+
   Future<String> resolve() async {
     final cached = _store.read();
 
     final remote = await _source.fetchApiBaseUrl();
     if (remote != null) {
-      if (remote != cached) {
-        await _store.write(remote);
+      final normalized = normalize(remote);
+      if (normalized != cached) {
+        await _store.write(normalized);
       }
-      return remote;
+      return normalized;
     }
 
-    if (cached != null) return cached;
-    return _fallbackUrl;
+    if (cached != null) return normalize(cached);
+    return normalize(_fallbackUrl);
   }
 }
