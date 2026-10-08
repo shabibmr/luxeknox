@@ -8,7 +8,16 @@ abstract class DeviceTokenStore {
 
   Future<void> writeDeviceId(String id);
 
+  /// Clears the device id and the registration marker.
   Future<void> clearDeviceId();
+
+  /// Marker for the last successful registration (`<userId>|<token>`), used to
+  /// skip re-registering an unchanged token for the same user.
+  Future<String?> readRegistration();
+
+  Future<void> writeRegistration(String marker);
+
+  Future<void> clearRegistration();
 
   Future<void> clearAll();
 }

@@ -25,6 +25,9 @@ class DeviceTokenService implements DeviceTokenRegistrar {
   final DeviceTokenStore _store;
   final PushTokenProvider _pushTokens;
 
+  /// In-flight [syncToken] calls, keyed by registration marker.
+  final _inFlightSyncs = <String, Future<Either<Failure, Unit>>>{};
+
   DevicePlatform detectPlatform() {
     if (kIsWeb) return DevicePlatform.web;
     try {
@@ -65,7 +68,48 @@ class DeviceTokenService implements DeviceTokenRegistrar {
   Future<Either<Failure, NotificationDevice>> registerOrRotate({
     String? tokenOverride,
     bool forceNewToken = false,
+  }) => _registerOrRotate(
+    tokenOverride: tokenOverride,
+    forceNewToken: forceNewToken,
+  );
+
+  @override
+  Future<Either<Failure, Unit>> syncToken(
+    String token, {
+    required String userId,
+  }) {
+    final marker = _registrationMarker(userId, token);
+    return _inFlightSyncs[marker] ??= _syncToken(token, userId, marker)
+        .whenComplete(() {
+          // Block body: returning the removed future would make whenComplete
+          // wait on itself.
+          _inFlightSyncs.remove(marker);
+        });
+  }
+
+  Future<Either<Failure, Unit>> _syncToken(
+    String token,
+    String userId,
+    String marker,
+  ) async {
+    if (await _store.readRegistration() == marker) return const Right(unit);
+    final result = await _registerOrRotate(
+      tokenOverride: token,
+      ownerId: userId,
+    );
+    return result.map((_) => unit);
+  }
+
+  /// [ownerId] is recorded with the token on success so [syncToken] can skip
+  /// the next call; without it the marker stays cleared.
+  Future<Either<Failure, NotificationDevice>> _registerOrRotate({
+    String? tokenOverride,
+    bool forceNewToken = false,
+    String? ownerId,
   }) async {
+    // Cleared up front: a failure below may have already unregistered the
+    // stored device, so the old marker must not survive it.
+    await _store.clearRegistration();
     final platform = detectPlatform();
     var token = tokenOverride;
 
@@ -83,15 +127,20 @@ class DeviceTokenService implements DeviceTokenRegistrar {
       token = await ensureLocalToken();
     }
 
+    final marker = ownerId == null ? null : _registrationMarker(ownerId, token);
     final result = await _repository.registerDevice(
       deviceToken: token,
       platform: platform,
     );
     return result.fold(Left.new, (device) async {
       await _store.writeDeviceId(device.id);
+      if (marker != null) await _store.writeRegistration(marker);
       return Right(device);
     });
   }
+
+  static String _registrationMarker(String userId, String token) =>
+      '$userId|$token';
 
   /// Best-effort unregister used on logout. Ignores API failures.
   @override

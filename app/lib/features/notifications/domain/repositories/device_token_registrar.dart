@@ -10,5 +10,12 @@ abstract class DeviceTokenRegistrar {
     bool forceNewToken = false,
   });
 
+  /// Registers [token] for [userId], unless this device already registered
+  /// the same token for the same user. Concurrent calls share one request.
+  Future<Either<Failure, Unit>> syncToken(
+    String token, {
+    required String userId,
+  });
+
   Future<void> unregisterBestEffort();
 }

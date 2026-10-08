@@ -120,10 +120,7 @@ class FcmMessagingService {
 
   void _listenTokenRefresh() {
     _subscriptions.add(
-      _pushTokens.onTokenRefresh.listen((token) async {
-        if (_sessionCubit.state is! SessionAuthenticated) return;
-        await _deviceTokens.registerOrRotate(tokenOverride: token);
-      }),
+      _pushTokens.onTokenRefresh.listen(_syncTokenIfAuthenticated),
     );
   }
 
@@ -138,12 +135,14 @@ class FcmMessagingService {
   }
 
   /// Best effort: a failed sync is retried on the next login or token refresh.
-  Future<void> _syncTokenIfAuthenticated() async {
-    if (_sessionCubit.state is! SessionAuthenticated) return;
+  /// The registrar skips the request when the token and user are unchanged.
+  Future<void> _syncTokenIfAuthenticated([String? refreshedToken]) async {
+    final state = _sessionCubit.state;
+    if (state is! SessionAuthenticated) return;
     try {
-      final token = await _pushTokens.getToken();
+      final token = refreshedToken ?? await _pushTokens.getToken();
       if (token == null || token.isEmpty) return;
-      await _deviceTokens.registerOrRotate(tokenOverride: token);
+      await _deviceTokens.syncToken(token, userId: state.principal.userId);
     } catch (e, st) {
       _crashReporter.recordError(e, st);
     }

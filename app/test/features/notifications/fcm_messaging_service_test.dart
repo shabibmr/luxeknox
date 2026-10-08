@@ -52,9 +52,7 @@ void main() {
     when(() => pushTokens.ensureStarted()).thenAnswer((_) async {});
     when(() => pushTokens.isLive).thenReturn(false);
     when(
-      () => deviceTokens.registerOrRotate(
-        tokenOverride: any(named: 'tokenOverride'),
-      ),
+      () => deviceTokens.syncToken(any(), userId: any(named: 'userId')),
     ).thenAnswer((_) async => const Left(UnknownFailure()));
 
     service = FcmMessagingService(
@@ -92,9 +90,7 @@ void main() {
       sessionStates.add(authenticated);
       await pumpEventQueue();
 
-      verify(
-        () => deviceTokens.registerOrRotate(tokenOverride: 'fcm-token'),
-      ).called(1);
+      verify(() => deviceTokens.syncToken('fcm-token', userId: '1')).called(1);
     },
   );
 
@@ -107,9 +103,7 @@ void main() {
     await pumpEventQueue();
 
     verifyNever(
-      () => deviceTokens.registerOrRotate(
-        tokenOverride: any(named: 'tokenOverride'),
-      ),
+      () => deviceTokens.syncToken(any(), userId: any(named: 'userId')),
     );
   });
 }
