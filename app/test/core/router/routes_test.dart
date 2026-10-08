@@ -106,6 +106,11 @@ void main() {
         Routes.adminSchedules,
         Routes.adminWorkoutLibrary,
         Routes.adminDietLibrary,
+        Routes.adminDietPlans,
+        Routes.adminDietPlansCreate,
+        Routes.adminDietPlansDetail,
+        Routes.adminDietPlansEdit,
+        Routes.adminDietPlansVersions,
         Routes.adminGoalMetrics,
         Routes.adminNotificationsBroadcast,
         Routes.adminReportsHub,
@@ -119,7 +124,7 @@ void main() {
       // set's length equals the number of entries listed.
       expect(
         allRoutes.length,
-        95,
+        100,
         reason: 'All route constants should be unique; duplicate values found',
       );
     });
@@ -151,6 +156,18 @@ void main() {
       expect(
         Routes.trainerPlansDietVersionsById('5'),
         '/trainer/plans/diets/5/versions',
+      );
+      expect(
+        Routes.adminDietPlansDetailById('5'),
+        '/admin/diet-plans/5',
+      );
+      expect(
+        Routes.adminDietPlansEditById('5'),
+        '/admin/diet-plans/5/edit',
+      );
+      expect(
+        Routes.adminDietPlansVersionsById('5'),
+        '/admin/diet-plans/5/versions',
       );
       expect(
         Routes.loginWithRedirect('/admin/members/9'),

@@ -44,6 +44,10 @@ import '../../features/settings/presentation/screens/settings_category_screen.da
 import '../../features/settings/presentation/screens/settings_hub_screen.dart';
 import '../../features/diet/presentation/diet_history_role.dart';
 import '../../features/diet/presentation/screens/diet_history_screen.dart';
+import '../../features/diet/presentation/screens/diet_plan_builder_screen.dart';
+import '../../features/diet/presentation/screens/diet_plan_detail_screen.dart';
+import '../../features/diet/presentation/screens/diet_plan_list_screen.dart';
+import '../../features/diet/presentation/screens/diet_plan_versions_screen.dart';
 import '../../features/workout/presentation/screens/workout_history_screen.dart';
 import '../../features/workout/presentation/workout_history_role.dart';
 
@@ -366,6 +370,49 @@ StatefulShellRoute createAdminBranchRoute() {
           GoRoute(
             path: Routes.adminDietLibrary,
             builder: (context, state) => const FoodLibraryScreen(),
+          ),
+          GoRoute(
+            path: Routes.adminDietPlans,
+            builder: (context, state) => DietPlanListScreen(
+              createPath: Routes.adminDietPlansCreate,
+              detailPathBuilder: (id) => Routes.adminDietPlansDetailById(id),
+            ),
+            routes: [
+              GoRoute(
+                path: 'create',
+                builder: (context, state) => DietPlanBuilderScreen(
+                  detailPathBuilder: (id) =>
+                      Routes.adminDietPlansDetailById(id),
+                ),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => DietPlanDetailScreen(
+                  planId: state.pathParameters['id']!,
+                  editPathBuilder: (id) => Routes.adminDietPlansEditById(id),
+                  versionsPathBuilder: (id) =>
+                      Routes.adminDietPlansVersionsById(id),
+                  detailPathBuilder: (id) =>
+                      Routes.adminDietPlansDetailById(id),
+                ),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (context, state) => DietPlanBuilderScreen(
+                      planId: state.pathParameters['id'],
+                      detailPathBuilder: (id) =>
+                          Routes.adminDietPlansDetailById(id),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'versions',
+                    builder: (context, state) => DietPlanVersionsScreen(
+                      planId: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           GoRoute(
             path: Routes.adminGoalMetrics,

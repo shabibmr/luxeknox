@@ -20,6 +20,7 @@ abstract final class RouteCapabilities {
     ('/admin/goal-metrics', 'goals.create'),
     ('/admin/settings', 'settings.read'),
     ('/admin/schedules/create', 'schedules.write'),
+    ('/admin/diet-plans/create', 'diets.write'),
     ('/trainer/plans/workouts/create', 'workouts.write'),
     ('/trainer/plans/diets/create', 'diets.write'),
   ];
@@ -54,6 +55,9 @@ abstract final class RouteCapabilities {
       return 'workouts.write';
     }
     if (path.startsWith('/trainer/plans/diets/') && path.endsWith('/edit')) {
+      return 'diets.write';
+    }
+    if (path.startsWith('/admin/diet-plans/') && path.endsWith('/edit')) {
       return 'diets.write';
     }
     for (final (prefix, slug) in requirements) {

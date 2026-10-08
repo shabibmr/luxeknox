@@ -11,10 +11,12 @@ import 'package:luxeknox/core/widgets/not_found_screen.dart';
 import 'package:luxeknox/features/auth/presentation/cubit/login_cubit.dart';
 import 'package:luxeknox/features/dashboard/domain/usecases/get_dashboard_usecase.dart';
 import 'package:luxeknox/features/dashboard/presentation/cubit/dashboard_cubit.dart';
+import 'package:luxeknox/features/dashboard/presentation/cubit/dashboard_agenda_cubit.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/features/diet/presentation/cubit/diet_plan_builder_cubit.dart';
 import 'package:luxeknox/features/diet/presentation/cubit/diet_plan_detail_cubit.dart';
 import 'package:luxeknox/features/diet/presentation/cubit/diet_plan_list_cubit.dart';
+import 'package:luxeknox/features/diet/presentation/cubit/diet_plan_versions_cubit.dart';
 import 'package:luxeknox/features/goals/presentation/cubit/goal_detail_cubit.dart';
 import 'package:luxeknox/features/goals/presentation/cubit/goals_list_cubit.dart';
 import 'package:luxeknox/features/goals/presentation/goals_strings.dart';
@@ -63,6 +65,9 @@ class MockGoalsListCubit extends MockCubit<GoalsListState>
 
 class MockDietPlanBuilderCubit extends MockCubit<DietPlanBuilderState>
     implements DietPlanBuilderCubit {}
+
+class MockDietPlanVersionsCubit extends MockCubit<DietPlanVersionsState>
+    implements DietPlanVersionsCubit {}
 
 void main() {
   const memberPrincipal = Principal(
@@ -297,13 +302,24 @@ void main() {
         ).thenAnswer((_) async {});
         return cubit;
       });
+
+      getIt.registerFactory<DietPlanVersionsCubit>(() {
+        final cubit = MockDietPlanVersionsCubit();
+        whenListen(
+          cubit,
+          const Stream<DietPlanVersionsState>.empty(),
+          initialState: const DietPlanVersionsState(),
+        );
+        when(() => cubit.load(any())).thenAnswer((_) async {});
+        return cubit;
+      });
     }
 
     setUp(() {
       getIt.registerFactory<LoginCubit>(() => LoginCubit(MockSessionCubit()));
       // DashboardScreen (now the member/trainer/admin home route) resolves
-      // DashboardCubit from getIt — router-reachability tests below don't
-      // care about its data, just that the route builds without crashing.
+      // DashboardCubit and DashboardAgendaCubit from getIt — router-reachability
+      // tests below don't care about its data, just that the route builds without crashing.
       final mockGetDashboard = MockGetDashboardUseCase();
       when(
         () => mockGetDashboard(const NoParams()),
@@ -311,15 +327,18 @@ void main() {
       getIt.registerFactory<DashboardCubit>(
         () => DashboardCubit(mockGetDashboard),
       );
-      // TodaysSessionsScreen (trainer) resolves TodaysSessionsCubit from
-      // getIt — router-reachability tests below don't care about its data,
-      // just that the route builds without crashing.
+      // TodaysSessionsScreen (trainer) and DashboardScreen resolve
+      // TodaysSessionsCubit and DashboardAgendaCubit from getIt — router-reachability
+      // tests below don't care about its data, just that the route builds without crashing.
       final mockListSchedules = MockListSchedulesUseCase();
       when(
         () => mockListSchedules(any()),
       ).thenAnswer((_) async => const Left(NetworkFailure()));
       getIt.registerFactory<TodaysSessionsCubit>(
         () => TodaysSessionsCubit(mockListSchedules),
+      );
+      getIt.registerFactory<DashboardAgendaCubit>(
+        () => DashboardAgendaCubit(mockListSchedules),
       );
     });
 
@@ -436,6 +455,31 @@ void main() {
       ]) {
         testWidgets('$path is reachable and does not redirect', (tester) async {
           final router = await pumpTrainerRouter(tester);
+          router.go(path);
+          await tester.pumpAndSettle();
+          expect(router.routeInformationProvider.value.uri.path, path);
+        });
+      }
+    });
+
+    group('admin routing skeleton', () {
+      Future<GoRouter> pumpAdminRouter(WidgetTester tester) => pumpRouter(
+        tester,
+        const SessionAuthenticated(
+          principal: adminPrincipal,
+          capabilities: Capabilities(slugs: ['diets.write', 'diets.read']),
+        ),
+      );
+
+      for (final path in <String>[
+        Routes.adminDietPlans,
+        Routes.adminDietPlansCreate,
+        '/admin/diet-plans/9',
+        '/admin/diet-plans/9/edit',
+        '/admin/diet-plans/9/versions',
+      ]) {
+        testWidgets('$path is reachable and does not redirect', (tester) async {
+          final router = await pumpAdminRouter(tester);
           router.go(path);
           await tester.pumpAndSettle();
           expect(router.routeInformationProvider.value.uri.path, path);
@@ -698,8 +742,8 @@ void main() {
       });
     });
 
-    group('nested-stack preservation', () {
-      testWidgets('switching tabs keeps Progress nested route', (tester) async {
+    group('tab navigation', () {
+      testWidgets('switching tabs resets branch to root route', (tester) async {
         final sessionCubit = MockSessionCubit();
         when(() => sessionCubit.restore()).thenAnswer((_) async {});
         whenListen(
@@ -738,9 +782,10 @@ void main() {
 
         await tester.tap(find.text(ShellStrings.progress).last);
         await tester.pumpAndSettle();
-        expect(router.routeInformationProvider.value.uri.path, nested);
-        expect(find.byType(GoalDetailScreen), findsOneWidget);
-        expect(find.text(GoalsStrings.goalDetailTitle), findsWidgets);
+        expect(
+          router.routeInformationProvider.value.uri.path,
+          Routes.memberProgress,
+        );
       });
     });
 

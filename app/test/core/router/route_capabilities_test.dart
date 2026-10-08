@@ -100,6 +100,22 @@ void main() {
         RouteCapabilities.requiredSlug(Routes.trainerPlansDietsHistory),
         isNull,
       );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminDietPlansCreate),
+        'diets.write',
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminDietPlansEditById('9')),
+        'diets.write',
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminDietPlansDetailById('9')),
+        isNull,
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminDietPlans),
+        isNull,
+      );
     });
 
     test('matches category prefixes for reports and settings', () {
