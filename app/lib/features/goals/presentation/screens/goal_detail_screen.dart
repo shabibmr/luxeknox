@@ -6,6 +6,7 @@ import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../people/presentation/widgets/member_trainer_header.dart';
 import '../cubit/goal_detail_cubit.dart';
 import '../goals_strings.dart';
 import '../widgets/goal_progress_bar.dart';
@@ -104,6 +105,8 @@ class _GoalDetailBodyState extends State<_GoalDetailBody> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              MemberTrainerHeader(memberId: goal.memberId),
+              const SizedBox(height: 12),
               GoalProgressBar(goal: goal),
               const SizedBox(height: 24),
               Text(

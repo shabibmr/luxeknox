@@ -41,7 +41,7 @@ export class ProgressNoteController {
   }
 
   @Post('members/:id/progress-notes')
-  @RequirePermission('goals.write')
+  @RequirePermission('goals.remarks')
   @HttpCode(201)
   @ApiParam({ name: 'id', type: Number })
   @ApiOperation({ operationId: 'createProgressNote', summary: 'Add a progress note' })

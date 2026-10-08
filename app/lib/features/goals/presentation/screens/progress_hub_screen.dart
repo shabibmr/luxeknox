@@ -160,6 +160,42 @@ class _ProgressHubBody extends StatelessWidget {
                     }
                   },
                 ),
+                ActionChip(
+                  label: const Text(GoalsStrings.workoutPlanLink),
+                  onPressed: () {
+                    if (isTrainerContext) {
+                      final isAdminShell = GoRouterState.of(
+                        context,
+                      ).uri.path.startsWith('/admin');
+                      context.push(
+                        isAdminShell
+                            ? Routes.adminMembersWorkoutHistoryById(memberId)
+                            : Routes.trainerMembersWorkoutHistoryById(
+                                memberId,
+                              ),
+                      );
+                    } else {
+                      context.go(Routes.memberHomeWorkoutHistory);
+                    }
+                  },
+                ),
+                ActionChip(
+                  label: const Text(GoalsStrings.dietPlanLink),
+                  onPressed: () {
+                    if (isTrainerContext) {
+                      final isAdminShell = GoRouterState.of(
+                        context,
+                      ).uri.path.startsWith('/admin');
+                      context.push(
+                        isAdminShell
+                            ? Routes.adminMembersDietHistoryById(memberId)
+                            : Routes.trainerMembersDietHistoryById(memberId),
+                      );
+                    } else {
+                      context.go(Routes.memberHomeDietHistory);
+                    }
+                  },
+                ),
               ],
             ),
           ),

@@ -14,6 +14,7 @@ import '../widgets/exercise_picker_sheet.dart';
 import '../widgets/plan_exercise_reorder_list.dart';
 import '../workout_strings.dart';
 import '../../../people/presentation/widgets/member_picker_sheet.dart';
+import '../../../people/presentation/widgets/member_trainer_header.dart';
 
 class WorkoutPlanBuilderScreen extends StatelessWidget {
   const WorkoutPlanBuilderScreen({super.key, this.planId});
@@ -260,6 +261,10 @@ class _BuilderFormState extends State<_BuilderForm> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (state.memberId.trim().isNotEmpty) ...[
+              MemberTrainerHeader(memberId: state.memberId),
+              const SizedBox(height: 12),
+            ],
             if (state.errorMessage != null || state.failure != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),

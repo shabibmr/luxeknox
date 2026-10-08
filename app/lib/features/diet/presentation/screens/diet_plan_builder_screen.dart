@@ -14,6 +14,7 @@ import '../diet_strings.dart';
 import '../widgets/diet_macro_summary.dart';
 import '../widgets/food_picker_sheet.dart';
 import '../../../people/presentation/widgets/member_picker_sheet.dart';
+import '../../../people/presentation/widgets/member_trainer_header.dart';
 
 class DietPlanBuilderScreen extends StatelessWidget {
   const DietPlanBuilderScreen({super.key, this.planId});
@@ -185,6 +186,10 @@ class _BuilderFormState extends State<_BuilderForm> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (state.memberId.trim().isNotEmpty) ...[
+              MemberTrainerHeader(memberId: state.memberId),
+              const SizedBox(height: 12),
+            ],
             TextFormField(
               controller: _title,
               decoration: const InputDecoration(

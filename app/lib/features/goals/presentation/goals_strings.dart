@@ -19,6 +19,8 @@ abstract final class GoalsStrings {
   static const photosLink = 'Progress photos';
   static const notesLink = 'Notes';
   static const chartsLink = 'Charts';
+  static const workoutPlanLink = 'Workout Plan';
+  static const dietPlanLink = 'Diet Plan';
 
   static const goalDetailTitle = 'Goal';
   static const checkInTitle = 'Check in';

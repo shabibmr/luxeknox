@@ -6,6 +6,7 @@ import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../people/presentation/widgets/member_trainer_header.dart';
 import '../../domain/entities/goal_status.dart';
 import '../cubit/goal_form_cubit.dart';
 import '../goals_strings.dart';
@@ -21,15 +22,16 @@ class GoalFormScreen extends StatelessWidget {
     return BlocProvider(
       create: (_) =>
           getIt<GoalFormCubit>()..init(memberId: memberId, goalId: goalId),
-      child: _GoalFormBody(isEdit: goalId != null),
+      child: _GoalFormBody(isEdit: goalId != null, memberId: memberId),
     );
   }
 }
 
 class _GoalFormBody extends StatefulWidget {
-  const _GoalFormBody({required this.isEdit});
+  const _GoalFormBody({required this.isEdit, required this.memberId});
 
   final bool isEdit;
+  final String memberId;
 
   @override
   State<_GoalFormBody> createState() => _GoalFormBodyState();
@@ -113,34 +115,44 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
               : GoalsStrings.goalFormCreateTitle,
         ),
       ),
-      body: BlocConsumer<GoalFormCubit, GoalFormState>(
-        listener: (context, state) {
-          if (state.savedGoal != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text(GoalsStrings.goalSaved)),
-            );
-            Navigator.of(context).pop(true);
-          }
-        },
-        builder: (context, state) {
-          final showForm =
-              state.status == LoadStatus.success ||
-              state.metrics.isNotEmpty ||
-              state.existing != null;
-          if (state.status == LoadStatus.loading && !showForm) {
-            return const AppLoading();
-          }
-          if (state.status == LoadStatus.failure &&
-              !showForm &&
-              state.savedGoal == null) {
-            return AppErrorView(
-              message: failureMessage(state.failure!),
-              onRetry: () => Navigator.of(context).maybePop(),
-            );
-          }
-          if (state.savedGoal != null) return const AppLoading();
-          return _buildReadyForm(context, state);
-        },
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: MemberTrainerHeader(memberId: widget.memberId),
+          ),
+          Expanded(
+            child: BlocConsumer<GoalFormCubit, GoalFormState>(
+              listener: (context, state) {
+                if (state.savedGoal != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text(GoalsStrings.goalSaved)),
+                  );
+                  Navigator.of(context).pop(true);
+                }
+              },
+              builder: (context, state) {
+                final showForm =
+                    state.status == LoadStatus.success ||
+                    state.metrics.isNotEmpty ||
+                    state.existing != null;
+                if (state.status == LoadStatus.loading && !showForm) {
+                  return const AppLoading();
+                }
+                if (state.status == LoadStatus.failure &&
+                    !showForm &&
+                    state.savedGoal == null) {
+                  return AppErrorView(
+                    message: failureMessage(state.failure!),
+                    onRetry: () => Navigator.of(context).maybePop(),
+                  );
+                }
+                if (state.savedGoal != null) return const AppLoading();
+                return _buildReadyForm(context, state);
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

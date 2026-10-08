@@ -122,6 +122,7 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'GOAL', action: 'write', slug: 'goals.write', description: 'Log measurements, progress photos and update goals' },
   { module: 'GOAL', action: 'create', slug: 'goals.create', description: 'Create goals, metrics, measurements, progress notes or photos' },
   { module: 'GOAL', action: 'update', slug: 'goals.update', description: 'Update goals, metrics, check-ins, or delete progress photos' },
+  { module: 'GOAL', action: 'remarks', slug: 'goals.remarks', description: 'Add a progress note / remark on a goal (read-only roles keep this)' },
 
   // NOTIF
   { module: 'NOTIF', action: 'read', slug: 'notifications.read', description: 'View notifications and alerts' },
