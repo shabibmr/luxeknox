@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { AuditService } from '../platform/audit/audit.service';
-import { AuditService } from '../platform/audit/audit.service';
 import { SettingsRepository } from './settings.repository';
 import { BadRequestError } from '../platform/errors/app-error';
 import { type SettingDto, SETTING_CATALOGUE, getSettingDefinition, parseSettingCategory } from './settings.dto';
