@@ -26,6 +26,14 @@ class SettingsCategoryScreen extends StatelessWidget {
         body: const AppErrorView(message: SettingsStrings.unknownCategory),
       );
     }
+    if (!parsed.isImplemented) {
+      return Scaffold(
+        appBar: AppBar(title: Text(parsed.label)),
+        body: const AppEmptyView(
+          message: 'No configurable settings are available in this category yet.',
+        ),
+      );
+    }
     return BlocProvider(
       create: (_) => getIt<SettingsCategoryCubit>()..load(parsed),
       child: _SettingsCategoryBody(category: parsed),
