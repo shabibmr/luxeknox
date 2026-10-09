@@ -74,6 +74,16 @@ export const SEED_GYM_SETTINGS: readonly GymSettingDefinition[] = [
     setting_value: '12',
     description: 'Hours after which an open gate visit is automatically checked out',
   },
+  {
+    setting_key: 'diet_adherence_formula',
+    setting_value: 'calorie_ratio',
+    description: 'Formula used to calculate diet adherence scores',
+  },
+  {
+    setting_key: 'mandatory_measurement_metrics',
+    setting_value: '[]',
+    description: 'Metric IDs required in every measurement session (JSON array)',
+  },
 ] as const;
 
 /**
