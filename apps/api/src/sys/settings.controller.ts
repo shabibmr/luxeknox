@@ -1,14 +1,12 @@
 import { Body, Controller, Get, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SettingsService } from './settings.service';
-import { BadRequestError } from '../platform/errors/app-error';
 import { Public } from '../auth/public.decorator';
 import { RequirePermission } from '../rbac/require-permission.decorator';
 import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
 import {
   type SettingsListDto,
   type SettingsWriteDto,
-  settingCategorySchema,
   settingsWriteSchema,
 } from './settings.dto';
 
