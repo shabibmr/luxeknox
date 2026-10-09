@@ -5,13 +5,21 @@ import '../../domain/entities/gym_public_settings.dart';
 import '../../domain/entities/setting_category.dart';
 
 SettingCategory _categoryFromApi(api.SettingCategory category) {
-  return parseSettingCategory(category.name) ?? SettingCategory.general;
+  final parsed = parseSettingCategory(category.name);
+  if (parsed == null) {
+    throw FormatException('Unsupported settings category from API: ${category.name}');
+  }
+  return parsed;
 }
 
 api.SettingCategory categoryToApi(SettingCategory category) {
   return api.SettingCategory.values.firstWhere(
-    (v) => v.name == category.wireName,
-    orElse: () => api.SettingCategory.general,
+    (value) => value.name == category.wireName ||
+        value.name == category.name,
+    orElse: () => throw StateError(
+      'Settings category ${category.wireName} is not supported by api_client. '
+      'Regenerate the client from docs/openapi/v1.yaml.',
+    ),
   );
 }
 
