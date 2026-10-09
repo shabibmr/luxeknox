@@ -168,8 +168,7 @@ class ReplanPtParams extends Equatable {
   bool get slotChanged {
     final a = [...weekdays]..sort();
     final b = [...subscription.weekdays]..sort();
-    return slotStart.substring(0, 2) !=
-            subscription.slotStart.substring(0, 2) ||
+    return ptSlotKey(slotStart) != ptSlotKey(subscription.slotStart) ||
         a.join(',') != b.join(',');
   }
 

@@ -106,6 +106,15 @@ void main() {
       ),
     );
     registerFallbackValue(
+      ReplanPtParams(
+        subscription: sold,
+        trainerId: 0,
+        weekdays: const [],
+        slotStart: '',
+        effectiveDate: DateTime(2026),
+      ),
+    );
+    registerFallbackValue(
       PurchasePtParams(
         memberId: 0,
         ptProductId: 0,
@@ -401,5 +410,48 @@ void main() {
 
     await cubit.loadGrid();
     expect(cubit.state.failure, isNull);
+  });
+
+  test('a payment-methods load failure is surfaced, not hidden', () async {
+    when(
+      () => getPaymentMethods(any()),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
+    final cubit = build();
+    await cubit.init(42);
+
+    expect(cubit.state.status, LoadStatus.failure);
+    expect(cubit.state.failure, isA<NetworkFailure>());
+  });
+
+  test('submitting a replan sends the subscription and new slot', () async {
+    final moved = PtScheduleGrid(
+      startDate: DateTime(2026, 10, 5),
+      endDate: DateTime(2026, 11, 2),
+      weekdays: const [1, 3, 5],
+      hours: const ['18:00:00'],
+      trainers: const [PtGridTrainer(id: 7, name: 'Rina S')],
+      cells: const [
+        PtGridCell(
+          trainerId: 7,
+          slotStart: '18:00:00',
+          status: PtGridCellStatus.free,
+        ),
+      ],
+    );
+    when(() => getGrid(any())).thenAnswer((_) async => Right(moved));
+    when(() => replan(any())).thenAnswer((_) async => Right(sold));
+    final cubit = build();
+    await cubit.initReplan(sold, const [product]);
+    cubit
+      ..selectSlot(7, '18:00:00')
+      ..setReason('moved shifts');
+    await cubit.submit();
+
+    final p =
+        verify(() => replan(captureAny())).captured.single as ReplanPtParams;
+    expect(p.subscription, sold);
+    expect(p.slotStart, '18:00:00');
+    expect(p.reason, 'moved shifts');
+    expect(cubit.state.result, sold);
   });
 }

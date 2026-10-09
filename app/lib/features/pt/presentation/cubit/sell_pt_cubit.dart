@@ -68,13 +68,11 @@ abstract class SellPtState with _$SellPtState {
     if (r == null) return true;
     final a = [...weekdays]..sort();
     final b = [...r.weekdays]..sort();
+    final slot = slotStart;
     return trainerId != r.trainerId ||
         a.join(',') != b.join(',') ||
-        _hourOf(slotStart) != _hourOf(r.slotStart);
+        (slot == null ? null : ptSlotKey(slot)) != ptSlotKey(r.slotStart);
   }
-
-  static String? _hourOf(String? slot) =>
-      slot == null || slot.length < 2 ? slot : slot.substring(0, 2);
 
   bool get canSubmit =>
       !submitting &&
@@ -143,29 +141,36 @@ class SellPtCubit extends Cubit<SellPtState> {
       });
     }
 
-    products.fold(
-      (failure) =>
-          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
-      (items) {
-        final active = items.where((p) => p.isActive).toList();
-        final paymentMethods = methods.fold(
-          (_) => <PaymentMethod>[],
-          (m) => m.where((x) => x.isActive).toList(),
-        );
-        emit(
-          state.copyWith(
-            status: LoadStatus.success,
-            products: active,
-            paymentMethods: paymentMethods,
-            paymentMethodId: paymentMethods.length == 1
-                ? paymentMethods.first.id
-                : null,
-            member: person,
-            memberName: resolvedName,
-          ),
-        );
-      },
+    // A sale cannot proceed without payment methods, so a failed load is
+    // surfaced (with retry) rather than shown as "none configured".
+    final loadFailure = products.fold<Failure?>(
+      (f) => f,
+      (_) => methods.fold<Failure?>((f) => f, (_) => null),
     );
+    if (loadFailure != null) {
+      emit(state.copyWith(status: LoadStatus.failure, failure: loadFailure));
+      return;
+    }
+
+    products.fold((_) => null, (items) {
+      final active = items.where((p) => p.isActive).toList();
+      final paymentMethods = methods.fold(
+        (_) => <PaymentMethod>[],
+        (m) => m.where((x) => x.isActive).toList(),
+      );
+      emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          products: active,
+          paymentMethods: paymentMethods,
+          paymentMethodId: paymentMethods.length == 1
+              ? paymentMethods.first.id
+              : null,
+          member: person,
+          memberName: resolvedName,
+        ),
+      );
+    });
   }
 
   /// Re-plan an existing PT from [effectiveDate]; package and period are fixed,

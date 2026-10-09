@@ -77,6 +77,10 @@ class PtScheduleGrid extends Equatable {
 }
 
 /// "17:00:00" → "17:00-18:00".
+/// Canonical `HH:mm` of a slot start (`17:00:00` → `17:00`); safe on short input.
+String ptSlotKey(String slotStart) =>
+    slotStart.length >= 5 ? slotStart.substring(0, 5) : slotStart;
+
 String ptHourLabel(String slotStart) {
   final h = int.parse(slotStart.split(':').first);
   String two(int v) => v.toString().padLeft(2, '0');
