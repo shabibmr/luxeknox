@@ -217,7 +217,7 @@ describe('SettingsService', () => {
   describe('listSettings', () => {
     it('returns all settings with categories', async () => {
       const list = await service.listSettings();
-      expect(list.length).toBeGreaterThanOrEqual(13);
+      expect(list.length).toBeGreaterThanOrEqual(15);
       const tz = list.find((s) => s.setting_key === 'timezone');
       expect(tz?.category).toBe('general');
       const cur = list.find((s) => s.setting_key === 'currency');
