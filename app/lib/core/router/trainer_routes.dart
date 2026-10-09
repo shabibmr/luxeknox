@@ -27,7 +27,7 @@ import '../../features/reports/presentation/screens/report_viewer_screen.dart';
 import '../../features/payments/presentation/payment_ledger_role.dart';
 import '../../features/payments/presentation/screens/payments_ledger_screen.dart';
 import '../../features/people/presentation/screens/edit_trainer_profile_screen.dart';
-import '../../features/people/presentation/screens/health_info_screen.dart';
+import '../../features/people/presentation/screens/health_detail_screen.dart';
 import '../../features/people/presentation/screens/member_dossier_screen.dart';
 import '../../features/people/presentation/screens/members_directory_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
@@ -149,7 +149,7 @@ StatefulShellRoute createTrainerBranchRoute() {
                           title: ShellStrings.memberHealth,
                         );
                       }
-                      return HealthInfoScreen(memberId: id);
+                      return HealthDetailScreen(memberId: id);
                     },
                   ),
                   GoRoute(

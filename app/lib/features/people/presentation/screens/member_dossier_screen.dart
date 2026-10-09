@@ -30,7 +30,7 @@ import '../people_strings.dart';
 import '../widgets/gender_radio_group.dart';
 import 'documents_screen.dart';
 import 'emergency_contacts_screen.dart';
-import 'health_info_screen.dart';
+import 'health_detail_screen.dart';
 import 'medical_history_screen.dart';
 import 'photos_avatar_screen.dart';
 
@@ -342,7 +342,7 @@ class _DossierContentState extends State<_DossierContent> {
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => HealthInfoScreen(memberId: person.id),
+              builder: (_) => HealthDetailScreen(memberId: person.id),
             ),
           ),
         ),

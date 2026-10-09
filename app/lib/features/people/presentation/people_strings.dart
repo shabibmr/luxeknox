@@ -73,6 +73,8 @@ abstract final class PeopleStrings {
   static const dietaryPreferences = 'Dietary preferences';
   static const physicianName = 'Physician name';
   static const physicianPhone = 'Physician phone';
+  static const previous = 'Previous';
+  static const recordedOn = 'Recorded on';
   static const recordTitle = 'Title';
   static const description = 'Description';
   static const clearanceStatus = 'Clearance status';

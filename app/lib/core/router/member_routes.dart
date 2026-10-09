@@ -16,7 +16,7 @@ import '../../features/payments/presentation/screens/payments_ledger_screen.dart
 import '../../features/people/presentation/screens/documents_screen.dart';
 import '../../features/people/presentation/screens/edit_profile_screen.dart';
 import '../../features/people/presentation/screens/emergency_contacts_screen.dart';
-import '../../features/people/presentation/screens/health_info_screen.dart';
+import '../../features/people/presentation/screens/health_detail_screen.dart';
 import '../../features/people/presentation/screens/my_trainer_profile_screen.dart';
 import '../../features/scheduling/presentation/screens/book_schedule_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
@@ -320,7 +320,7 @@ StatefulShellRoute createMemberBranchRoute() {
                       title: ShellStrings.memberProfileHealth,
                     );
                   }
-                  return HealthInfoScreen(memberId: id);
+                  return HealthDetailScreen(memberId: id);
                 },
               ),
               // Member: E (Self) — Emergency Contacts Screen
