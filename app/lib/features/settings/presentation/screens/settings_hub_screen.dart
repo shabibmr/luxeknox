@@ -11,7 +11,9 @@ class SettingsHubScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final categories = SettingCategory.values;
+    final categories = SettingCategory.values
+        .where((category) => category.isImplemented)
+        .toList(growable: false);
     return Scaffold(
       appBar: AppBar(title: const Text(SettingsStrings.hubTitle)),
       body: ListView.separated(
