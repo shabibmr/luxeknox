@@ -209,7 +209,7 @@ export class SettingsService {
    * Retrieves all gym settings as a key-value record from the warmed cache.
    */
   async getAllSettings(): Promise<Record<string, string>> {
-    if (!this.cache) {
+    if (!this.cache || Date.now() - this.cacheLoadedAt > this.cacheTtlMs) {
       await this.refreshCache();
     }
     return Object.fromEntries(this.cache!.entries());
