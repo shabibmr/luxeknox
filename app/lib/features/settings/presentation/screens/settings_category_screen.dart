@@ -386,7 +386,7 @@ class _SettingRowState extends State<_SettingRow> {
   static String _label(String key) => key
       .split('_')
       .map((part) =>
-          part.isEmpty ? part : '\${part[0].toUpperCase()}\${part.substring(1)}')
+          part.isEmpty ? part : '${part[0].toUpperCase()}${part.substring(1)}')
       .join(' ');
 
   String _storedValue(String value) {
@@ -402,11 +402,10 @@ class _SettingRowState extends State<_SettingRow> {
   }
 
   void _update(String value) {
-    try {
-      widget.onChanged(_storedValue(value));
-    } on FormatException {
-      // Invalid list input remains visible and is reported by the field validator.
-    }
+    // Only commit valid values into the shared edit state. This prevents Save
+    // from sending an invalid intermediate value while the user is typing.
+    if (_validate(value) != null) return;
+    widget.onChanged(_storedValue(value));
   }
 
   String? _validate(String? raw) {
@@ -426,16 +425,16 @@ class _SettingRowState extends State<_SettingRow> {
       final number = int.tryParse(value);
       if (number == null) return 'Enter a whole number.';
       if (definition.minimum != null && number < definition.minimum!) {
-        return 'Minimum is \${definition.minimum}.';
+        return 'Minimum is ${definition.minimum}.';
       }
       if (definition.maximum != null && number > definition.maximum!) {
-        return 'Maximum is \${definition.maximum}.';
+        return 'Maximum is ${definition.maximum}.';
       }
     }
     if (definition.kind == _SettingInputKind.decimal) {
       final number = double.tryParse(value);
       if (number == null || number < (definition.minimum ?? 0) || number > (definition.maximum ?? 100)) {
-        return 'Enter a value between \${definition.minimum ?? 0} and \${definition.maximum ?? 100}.';
+        return 'Enter a value between ${definition.minimum ?? 0} and ${definition.maximum ?? 100}.';
       }
     }
     if (widget.settingKey == 'currency' && !RegExp(r'^[A-Z]{3}$').hasMatch(value)) {
@@ -445,7 +444,7 @@ class _SettingRowState extends State<_SettingRow> {
       return 'Time zone is required.';
     }
     if (definition.maxLength != null && value.length > definition.maxLength!) {
-      return 'Maximum \${definition.maxLength} characters.';
+      return 'Maximum ${definition.maxLength} characters.';
     }
     return null;
   }
