@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/diet_adherence.dart';
@@ -94,7 +96,24 @@ class _DietDailyLogBodyState extends State<_DietDailyLogBody> {
         final cubit = context.read<DietDailyLogCubit>();
 
         return Scaffold(
-          appBar: AppBar(title: const Text(DietStrings.dailyLogTitle)),
+          appBar: AppBar(
+            title: const Text(DietStrings.dailyLogTitle),
+            actions: [
+              if (state.dietPlanId != null)
+                IconButton(
+                  tooltip: DietStrings.viewPlan,
+                  icon: const Icon(Icons.restaurant_menu),
+                  onPressed: () => context.push(
+                    Routes.memberHomeDietPlanById(state.dietPlanId!),
+                  ),
+                ),
+              IconButton(
+                tooltip: DietStrings.viewHistory,
+                icon: const Icon(Icons.history),
+                onPressed: () => context.push(Routes.memberHomeDietHistory),
+              ),
+            ],
+          ),
           body: state.status == DietDailyLogStatus.loading
               ? const AppLoading()
               : state.status == DietDailyLogStatus.failure &&
@@ -163,6 +182,24 @@ class _DietDailyLogBodyState extends State<_DietDailyLogBody> {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
+                                if (state.dietPlanId != null) ...[
+                                  const SizedBox(width: 4),
+                                  IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    tooltip: DietStrings.viewPlan,
+                                    icon: const Icon(
+                                      Icons.open_in_new,
+                                      size: 16,
+                                    ),
+                                    onPressed: () => context.push(
+                                      Routes.memberHomeDietPlanById(
+                                        state.dietPlanId!,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                             const SizedBox(height: 12),

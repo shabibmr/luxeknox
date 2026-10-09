@@ -305,9 +305,7 @@ export class DietPlanService {
       throw new NotFoundError('Template not found');
     }
 
-    if (!template.is_template) {
-      throw new BadRequestError('Specified diet plan is not a template');
-    }
+    // Every diet plan acts as a template and can be copied to a member.
 
     await assertMemberAccess(this.memberRepo, actor, dto.member_id);
     await this.ptAccess?.assertTrainerCanWrite(actor, dto.member_id);

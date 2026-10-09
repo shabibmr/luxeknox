@@ -17,23 +17,32 @@ import '../../../people/presentation/widgets/member_picker_sheet.dart';
 import '../../../people/presentation/widgets/member_trainer_header.dart';
 
 class WorkoutPlanBuilderScreen extends StatelessWidget {
-  const WorkoutPlanBuilderScreen({super.key, this.planId});
+  const WorkoutPlanBuilderScreen({
+    super.key,
+    this.planId,
+    this.isTemplate,
+    this.memberId,
+  });
 
   final String? planId;
+  final bool? isTemplate;
+  final String? memberId;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<WorkoutPlanBuilderCubit>()..init(planId: planId),
-      child: _BuilderBody(planId: planId),
+      create: (_) => getIt<WorkoutPlanBuilderCubit>()
+        ..init(planId: planId, isTemplate: isTemplate, memberId: memberId),
+      child: _BuilderBody(planId: planId, isPureTemplate: isTemplate == true),
     );
   }
 }
 
 class _BuilderBody extends StatelessWidget {
-  const _BuilderBody({this.planId});
+  const _BuilderBody({this.planId, this.isPureTemplate = false});
 
   final String? planId;
+  final bool isPureTemplate;
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +81,10 @@ class _BuilderBody extends StatelessWidget {
         }
         return UnsavedChangesScope(
           hasUnsavedChanges: state.dirty && !state.saving,
-          child: _BuilderForm(state: state),
+          child: _BuilderForm(
+            state: state,
+            isPureTemplate: isPureTemplate,
+          ),
         );
       },
     );
@@ -80,9 +92,10 @@ class _BuilderBody extends StatelessWidget {
 }
 
 class _BuilderForm extends StatefulWidget {
-  const _BuilderForm({required this.state});
+  const _BuilderForm({required this.state, this.isPureTemplate = false});
 
   final WorkoutPlanBuilderState state;
+  final bool isPureTemplate;
 
   @override
   State<_BuilderForm> createState() => _BuilderFormState();
@@ -340,13 +353,14 @@ class _BuilderFormState extends State<_BuilderForm> {
                 },
               ),
             ],
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text(WorkoutStrings.isTemplateLabel),
-              value: state.isTemplate,
-              onChanged: (v) =>
-                  context.read<WorkoutPlanBuilderCubit>().setIsTemplate(v),
-            ),
+            if (!widget.isPureTemplate)
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text(WorkoutStrings.isTemplateLabel),
+                value: state.isTemplate,
+                onChanged: (v) =>
+                    context.read<WorkoutPlanBuilderCubit>().setIsTemplate(v),
+              ),
             const Divider(height: 32),
             Text(
               WorkoutStrings.exercisesSection,

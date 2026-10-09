@@ -78,9 +78,19 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
               state.title.isNotEmpty ||
               state.exercises.isNotEmpty));
 
-  Future<void> init({String? planId}) async {
+  Future<void> init({
+    String? planId,
+    bool? isTemplate,
+    String? memberId,
+  }) async {
     if (planId == null) {
-      emit(const WorkoutPlanBuilderState(status: LoadStatus.success));
+      emit(
+        WorkoutPlanBuilderState(
+          status: LoadStatus.success,
+          isTemplate: isTemplate ?? false,
+          memberId: memberId ?? '',
+        ),
+      );
       return;
     }
     emit(

@@ -119,7 +119,7 @@ import '../../features/exercises/data/repositories/exercise_repository_impl.dart
 import '../../features/exercises/domain/repositories/exercise_repository.dart'
     as _i275;
 import '../../features/exercises/domain/usecases/create_exercise_usecase.dart'
-    as _i1062;
+    as _i1063;
 import '../../features/exercises/domain/usecases/deactivate_exercise_usecase.dart'
     as _i708;
 import '../../features/exercises/domain/usecases/get_exercise_usecase.dart'
@@ -329,6 +329,8 @@ import '../../features/people/domain/usecases/create_emergency_contact_usecase.d
     as _i580;
 import '../../features/people/domain/usecases/create_employee_usecase.dart'
     as _i641;
+import '../../features/people/domain/usecases/create_health_record_usecase.dart'
+    as _i1062;
 import '../../features/people/domain/usecases/create_medical_record_usecase.dart'
     as _i527;
 import '../../features/people/domain/usecases/create_member_usecase.dart'
@@ -345,8 +347,6 @@ import '../../features/people/domain/usecases/get_assigned_trainer_usecase.dart'
     as _i502;
 import '../../features/people/domain/usecases/get_employee_usecase.dart'
     as _i780;
-import '../../features/people/domain/usecases/get_health_info_usecase.dart'
-    as _i311;
 import '../../features/people/domain/usecases/get_member_usecase.dart' as _i562;
 import '../../features/people/domain/usecases/get_trainer_usecase.dart'
     as _i1033;
@@ -356,6 +356,8 @@ import '../../features/people/domain/usecases/list_emergency_contacts_usecase.da
     as _i343;
 import '../../features/people/domain/usecases/list_employees_usecase.dart'
     as _i1004;
+import '../../features/people/domain/usecases/list_health_history_usecase.dart'
+    as _i684;
 import '../../features/people/domain/usecases/list_medical_records_usecase.dart'
     as _i578;
 import '../../features/people/domain/usecases/list_members_usecase.dart'
@@ -373,8 +375,6 @@ import '../../features/people/domain/usecases/update_emergency_contact_usecase.d
     as _i735;
 import '../../features/people/domain/usecases/update_employee_usecase.dart'
     as _i165;
-import '../../features/people/domain/usecases/update_health_info_usecase.dart'
-    as _i63;
 import '../../features/people/domain/usecases/update_medical_record_usecase.dart'
     as _i196;
 import '../../features/people/domain/usecases/update_member_usecase.dart'
@@ -509,6 +509,8 @@ import '../../features/workout/presentation/cubit/exercise_picker_cubit.dart'
     as _i467;
 import '../../features/workout/presentation/cubit/rest_timer_cubit.dart'
     as _i255;
+import '../../features/workout/presentation/cubit/todays_workout_cubit.dart'
+    as _i456;
 import '../../features/workout/presentation/cubit/workout_history_cubit.dart'
     as _i251;
 import '../../features/workout/presentation/cubit/workout_plan_builder_cubit.dart'
@@ -518,7 +520,7 @@ import '../../features/workout/presentation/cubit/workout_plan_detail_cubit.dart
 import '../../features/workout/presentation/cubit/workout_plan_list_cubit.dart'
     as _i731;
 import '../../features/workout/presentation/cubit/workout_plan_versions_cubit.dart'
-    as _i1063;
+    as _i1064;
 import '../../session/data/datasources/session_remote_datasource.dart' as _i963;
 import '../../session/data/repositories/session_repository_impl.dart' as _i803;
 import '../../session/domain/repositories/session_repository.dart' as _i158;
@@ -938,6 +940,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i580.CreateEmergencyContactUseCase>(
       () => _i580.CreateEmergencyContactUseCase(gh<_i121.ProfileRepository>()),
     );
+    gh.lazySingleton<_i1062.CreateHealthRecordUseCase>(
+      () => _i1062.CreateHealthRecordUseCase(gh<_i121.ProfileRepository>()),
+    );
     gh.lazySingleton<_i527.CreateMedicalRecordUseCase>(
       () => _i527.CreateMedicalRecordUseCase(gh<_i121.ProfileRepository>()),
     );
@@ -947,20 +952,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i148.DeleteMedicalRecordUseCase>(
       () => _i148.DeleteMedicalRecordUseCase(gh<_i121.ProfileRepository>()),
     );
-    gh.lazySingleton<_i311.GetHealthInfoUseCase>(
-      () => _i311.GetHealthInfoUseCase(gh<_i121.ProfileRepository>()),
-    );
     gh.lazySingleton<_i343.ListEmergencyContactsUseCase>(
       () => _i343.ListEmergencyContactsUseCase(gh<_i121.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i684.ListHealthHistoryUseCase>(
+      () => _i684.ListHealthHistoryUseCase(gh<_i121.ProfileRepository>()),
     );
     gh.lazySingleton<_i578.ListMedicalRecordsUseCase>(
       () => _i578.ListMedicalRecordsUseCase(gh<_i121.ProfileRepository>()),
     );
     gh.lazySingleton<_i735.UpdateEmergencyContactUseCase>(
       () => _i735.UpdateEmergencyContactUseCase(gh<_i121.ProfileRepository>()),
-    );
-    gh.lazySingleton<_i63.UpdateHealthInfoUseCase>(
-      () => _i63.UpdateHealthInfoUseCase(gh<_i121.ProfileRepository>()),
     );
     gh.lazySingleton<_i196.UpdateMedicalRecordUseCase>(
       () => _i196.UpdateMedicalRecordUseCase(gh<_i121.ProfileRepository>()),
@@ -1529,8 +1531,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i841.ListAttendanceHistoriesUseCase>(),
       ),
     );
-    gh.lazySingleton<_i1062.CreateExerciseUseCase>(
-      () => _i1062.CreateExerciseUseCase(gh<_i275.ExerciseRepository>()),
+    gh.lazySingleton<_i1063.CreateExerciseUseCase>(
+      () => _i1063.CreateExerciseUseCase(gh<_i275.ExerciseRepository>()),
     );
     gh.lazySingleton<_i708.DeactivateExerciseUseCase>(
       () => _i708.DeactivateExerciseUseCase(gh<_i275.ExerciseRepository>()),
@@ -1543,6 +1545,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i790.UpdateExerciseUseCase>(
       () => _i790.UpdateExerciseUseCase(gh<_i275.ExerciseRepository>()),
+    );
+    gh.factory<_i456.TodaysWorkoutCubit>(
+      () => _i456.TodaysWorkoutCubit(
+        gh<_i110.ListWorkoutPlansUseCase>(),
+        gh<_i391.GetWorkoutPlanUseCase>(),
+      ),
     );
     gh.factory<_i309.MembershipCardCubit>(
       () => _i309.MembershipCardCubit(
@@ -1777,8 +1785,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i570.GymTimezoneProvider>(),
       ),
     );
-    gh.factory<_i1063.WorkoutPlanVersionsCubit>(
-      () => _i1063.WorkoutPlanVersionsCubit(
+    gh.factory<_i1064.WorkoutPlanVersionsCubit>(
+      () => _i1064.WorkoutPlanVersionsCubit(
         gh<_i516.ListWorkoutPlanVersionsUseCase>(),
       ),
     );
@@ -1796,7 +1804,7 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i554.ExerciseFormCubit>(
       () => _i554.ExerciseFormCubit(
-        gh<_i1062.CreateExerciseUseCase>(),
+        gh<_i1063.CreateExerciseUseCase>(),
         gh<_i790.UpdateExerciseUseCase>(),
         gh<_i708.DeactivateExerciseUseCase>(),
       ),

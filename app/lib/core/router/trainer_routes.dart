@@ -344,7 +344,17 @@ StatefulShellRoute createTrainerBranchRoute() {
               ),
               GoRoute(
                 path: 'workouts/create',
-                builder: (context, state) => const WorkoutPlanBuilderScreen(),
+                builder: (context, state) {
+                  final memberId = state.uri.queryParameters['memberId'];
+                  final isTemplateParam = state.uri.queryParameters['isTemplate'];
+                  final isTemplate = isTemplateParam != null
+                      ? isTemplateParam == 'true'
+                      : (memberId == null);
+                  return WorkoutPlanBuilderScreen(
+                    isTemplate: isTemplate,
+                    memberId: memberId,
+                  );
+                },
               ),
               GoRoute(
                 path: 'workouts/history',
@@ -383,7 +393,17 @@ StatefulShellRoute createTrainerBranchRoute() {
               ),
               GoRoute(
                 path: 'diets/create',
-                builder: (context, state) => const DietPlanBuilderScreen(),
+                builder: (context, state) {
+                  final memberId = state.uri.queryParameters['memberId'];
+                  final isTemplateParam = state.uri.queryParameters['isTemplate'];
+                  final isTemplate = isTemplateParam != null
+                      ? isTemplateParam == 'true'
+                      : (memberId == null);
+                  return DietPlanBuilderScreen(
+                    isTemplate: isTemplate,
+                    memberId: memberId,
+                  );
+                },
               ),
               GoRoute(
                 path: 'diets/history',

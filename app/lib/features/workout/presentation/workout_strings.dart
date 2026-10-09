@@ -58,6 +58,17 @@ abstract final class WorkoutStrings {
   static const assignCancel = 'Cancel';
   static const assigned = 'Template assigned';
   static const viewVersions = 'Versions';
+  static const todayWorkoutTitle = "Today's workout";
+  static const totalDaysLabel = 'Days';
+  static const totalExercisesLabel = 'Exercises';
+  static const totalSetsLabel = 'Sets';
+  static const startTodayWorkout = "Start today's workout";
+  static const startDayWorkout = 'Start day session';
+  static const noActivePlanAssigned = 'No active workout plan assigned';
+  static const choosePlanOrStartEmpty =
+      'Choose a workout plan to start or contact your trainer.';
+  static const viewFullPlan = 'View full plan';
+  static const viewDetails = 'View details';
   static const noVersions = 'No versions yet.';
   static const versionExercises = 'exercises';
   static const changelogEmpty = 'No changelog';

@@ -471,17 +471,26 @@ describe('DietPlanService', () => {
       expect(assigned.id).toBe(200);
     });
 
-    it('rejects copy if source plan is not a template', async () => {
+    it('allows copy even if source plan is not a template (every plan acts as template)', async () => {
       const { service, planRepo } = buildService();
-      planRepo.findPlanById.mockResolvedValue({
-        id: 10,
-        title: 'Non Template',
-        is_template: false,
-      });
+      planRepo.findPlanById
+        .mockResolvedValueOnce({
+          id: 10,
+          title: 'Non Template',
+          is_template: false,
+          current_version: { id: 1, meals: [] },
+        })
+        .mockResolvedValueOnce({
+          id: 201,
+          title: 'Non Template',
+          member_id: 30,
+          is_template: false,
+        });
+      planRepo.insertPlan.mockResolvedValue({ id: 201, title: 'Non Template' });
+      planRepo.insertVersion.mockResolvedValue({ id: 71, diet_plan_id: 201, version_number: 1 });
 
-      await expect(
-        service.assign(10, { member_id: 30 }, trainerActor),
-      ).rejects.toThrow(BadRequestError);
+      const assigned = await service.assign(10, { member_id: 30 }, trainerActor);
+      expect(assigned.id).toBe(201);
     });
 
     it('rejects assigning if member already has active diet plan', async () => {

@@ -185,7 +185,7 @@ class _MemberQuickActions extends StatelessWidget {
       (
         Icons.fitness_center_outlined,
         DashboardStrings.workout,
-        Routes.memberHomeWorkoutActive,
+        Routes.memberHomeWorkoutToday,
       ),
       (
         Icons.restaurant_outlined,

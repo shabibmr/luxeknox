@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -43,7 +45,17 @@ class _WorkoutHistoryBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_title)),
+      appBar: AppBar(
+        title: Text(_title),
+        actions: [
+          if (role == WorkoutHistoryRole.member)
+            TextButton.icon(
+              icon: const Icon(Icons.today_outlined),
+              label: const Text(WorkoutStrings.todayWorkoutTitle),
+              onPressed: () => context.push(Routes.memberHomeWorkoutToday),
+            ),
+        ],
+      ),
       body: BlocBuilder<WorkoutHistoryCubit, WorkoutHistoryState>(
         builder: (context, state) {
           final items = state.items;

@@ -34,8 +34,11 @@ import '../../features/goals/presentation/screens/progress_photos_screen.dart';
 import '../../features/notifications/presentation/screens/notification_detail_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_inbox_screen.dart';
 import '../../features/workout/presentation/screens/active_workout_screen.dart';
+import '../../features/workout/presentation/screens/todays_workout_screen.dart';
 import '../../features/workout/presentation/screens/workout_history_screen.dart';
+import '../../features/workout/presentation/screens/workout_plan_detail_screen.dart';
 import '../../features/workout/presentation/workout_history_role.dart';
+import '../../features/diet/presentation/screens/diet_plan_detail_screen.dart';
 import '../l10n/shell_strings.dart';
 
 import '../widgets/adaptive_shell.dart';
@@ -86,6 +89,17 @@ StatefulShellRoute createMemberBranchRoute() {
             builder: (context, state) => const DashboardScreen(),
             routes: [
               GoRoute(
+                path: 'workout/today',
+                builder: (context, state) => const TodaysWorkoutScreen(),
+              ),
+              GoRoute(
+                path: 'workout/plan/:id',
+                builder: (context, state) => WorkoutPlanDetailScreen(
+                  planId: state.pathParameters['id']!,
+                  isViewOnly: true,
+                ),
+              ),
+              GoRoute(
                 path: 'workout/exercises/:id',
                 builder: (context, state) => ExerciseDetailScreen(
                   exerciseId: state.pathParameters['id']!,
@@ -108,6 +122,14 @@ StatefulShellRoute createMemberBranchRoute() {
                     memberId: profileId?.toString(),
                   );
                 },
+              ),
+              // Member: R — Diet Plan Details (View Mode)
+              GoRoute(
+                path: 'diet/plan/:id',
+                builder: (context, state) => DietPlanDetailScreen(
+                  planId: state.pathParameters['id']!,
+                  isViewOnly: true,
+                ),
               ),
               // Member: R — Meal Details
               GoRoute(

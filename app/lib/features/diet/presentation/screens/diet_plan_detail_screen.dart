@@ -21,12 +21,14 @@ class DietPlanDetailScreen extends StatelessWidget {
   const DietPlanDetailScreen({
     super.key,
     required this.planId,
+    this.isViewOnly = false,
     this.editPathBuilder,
     this.versionsPathBuilder,
     this.detailPathBuilder,
   });
 
   final String planId;
+  final bool isViewOnly;
   final String Function(String id)? editPathBuilder;
   final String Function(String id)? versionsPathBuilder;
   final String Function(String id)? detailPathBuilder;
@@ -37,6 +39,7 @@ class DietPlanDetailScreen extends StatelessWidget {
       create: (_) => getIt<DietPlanDetailCubit>()..load(planId),
       child: _DietPlanDetailBody(
         planId: planId,
+        isViewOnly: isViewOnly,
         editPathBuilder: editPathBuilder,
         versionsPathBuilder: versionsPathBuilder,
         detailPathBuilder: detailPathBuilder,
@@ -48,12 +51,14 @@ class DietPlanDetailScreen extends StatelessWidget {
 class _DietPlanDetailBody extends StatelessWidget {
   const _DietPlanDetailBody({
     required this.planId,
+    required this.isViewOnly,
     this.editPathBuilder,
     this.versionsPathBuilder,
     this.detailPathBuilder,
   });
 
   final String planId;
+  final bool isViewOnly;
   final String Function(String id)? editPathBuilder;
   final String Function(String id)? versionsPathBuilder;
   final String Function(String id)? detailPathBuilder;
@@ -90,7 +95,7 @@ class _DietPlanDetailBody extends StatelessWidget {
           appBar: AppBar(
             title: const Text(DietStrings.detailTitle),
             actions: [
-              if (plan != null) ...[
+              if (plan != null && !isViewOnly) ...[
                 IconButton(
                   tooltip: DietStrings.viewVersions,
                   icon: const Icon(Icons.history),
@@ -111,12 +116,12 @@ class _DietPlanDetailBody extends StatelessWidget {
                               Routes.trainerPlansDietEditById(plan.id),
                         ),
                 ),
-                if (plan.isTemplate)
-                  IconButton(
-                    tooltip: DietStrings.assignToMember,
-                    icon: const Icon(Icons.person_add_alt_1_outlined),
-                    onPressed: inFlight ? null : () => _assign(context),
-                  ),
+                // Rule 2 & 5: Every diet plan acts as a template too
+                IconButton(
+                  tooltip: DietStrings.assignToMember,
+                  icon: const Icon(Icons.person_add_alt_1_outlined),
+                  onPressed: inFlight ? null : () => _assign(context),
+                ),
                 if (plan.status == DietPlanStatus.draft)
                   IconButton(
                     tooltip: DietStrings.publish,
