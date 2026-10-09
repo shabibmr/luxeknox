@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AuditService } from '../platform/audit/audit.service';
 import { SettingsRepository } from './settings.repository';
 import { BadRequestError } from '../platform/errors/app-error';
-import { type SettingDto, SETTING_CATALOGUE, getSettingDefinition, parseSettingCategory, resolveSettingCategory } from './settings.dto';
+import { type SettingDto, SETTING_CATALOGUE, getSettingDefinition, parseSettingCategory } from './settings.dto';
 
 /**
  * SettingsService provides typed access to system settings configured in `gym_settings`.
