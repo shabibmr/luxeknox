@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SettingsService } from './settings.service';
 import { SettingsRepository } from './settings.repository';
+import { BadRequestError } from '../platform/errors/app-error';
 import type { GymSetting } from '../platform/db/schema/gym-settings';
 
 describe('SettingsService', () => {
@@ -216,17 +217,43 @@ describe('SettingsService', () => {
   describe('listSettings', () => {
     it('returns all settings with categories', async () => {
       const list = await service.listSettings();
-      expect(list).toHaveLength(4);
+      expect(list.length).toBeGreaterThanOrEqual(13);
       const tz = list.find((s) => s.setting_key === 'timezone');
-      expect(tz?.category).toBe('GENERAL');
+      expect(tz?.category).toBe('general');
       const cur = list.find((s) => s.setting_key === 'currency');
-      expect(cur?.category).toBe('BILLING');
+      expect(cur?.category).toBe('billing');
     });
 
     it('filters settings by category', async () => {
-      const billingSettings = await service.listSettings('BILLING');
-      expect(billingSettings.every((s) => s.category === 'BILLING')).toBe(true);
+      const billingSettings = await service.listSettings('billing');
+      expect(billingSettings.every((s) => s.category === 'billing')).toBe(true);
       expect(billingSettings.some((s) => s.setting_key === 'currency')).toBe(true);
+    });
+  });
+
+  describe('catalogue and update validation', () => {
+    it('returns default values for configured keys that are not seeded yet', async () => {
+      vi.mocked(mockRepository.findAll!).mockResolvedValue([]);
+      const list = await service.listSettings('attendance_gate');
+      expect(list.map((setting) => setting.setting_key)).toEqual([
+        'attendance_pass_ttl_minutes',
+        'attendance_debounce_seconds',
+        'attendance_daily_checkin_cap',
+        'attendance_auto_checkout_hours',
+      ]);
+      expect(list[0].setting_value).toBe('5');
+    });
+
+    it('rejects unsupported keys', async () => {
+      await expect(service.updateSettings([
+        { setting_key: 'new_arbitrary_setting', setting_value: 'x' },
+      ])).rejects.toBeInstanceOf(BadRequestError);
+    });
+
+    it('rejects invalid typed values', async () => {
+      await expect(service.updateSettings([
+        { setting_key: 'attendance_daily_checkin_cap', setting_value: '-1' },
+      ])).rejects.toBeInstanceOf(BadRequestError);
     });
   });
 
