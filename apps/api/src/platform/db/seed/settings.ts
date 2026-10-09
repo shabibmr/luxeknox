@@ -77,8 +77,8 @@ export const SEED_GYM_SETTINGS: readonly GymSettingDefinition[] = [
 ] as const;
 
 /**
- * Seeds default gym settings idempotently.
- * Uses ON DUPLICATE KEY UPDATE on `setting_key`.
+ * Seeds default gym settings idempotently. Existing values are deliberately
+ * preserved so running seeds cannot overwrite an administrator's configuration.
  */
 export async function seedSettings(db: DrizzleDb<any>): Promise<void> {
   const now = new Date();
