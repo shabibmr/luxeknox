@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/features/people/domain/entities/health_info.dart';
@@ -87,6 +89,7 @@ void main() {
       expect(cubit.state.records[0], tNewer);
       expect(cubit.state.currentIndex, 0);
       expect(cubit.state.status, LoadStatus.success);
+      expect(cubit.state.message, 'saved');
     });
 
     test('emits failure without mutating records when create fails', () async {
@@ -101,6 +104,23 @@ void main() {
       expect(cubit.state.records, [tOlder]);
       expect(cubit.state.status, LoadStatus.failure);
       expect(cubit.state.failure, const ValidationFailure(['Invalid height']));
+    });
+  });
+
+  group('HealthHistoryCubit.save guards against double-submit', () {
+    test('ignores a second save call while the first is still in flight', () async {
+      final completer = Completer<Either<Failure, HealthInfo>>();
+      when(() => mockCreate(any())).thenAnswer((_) => completer.future);
+      when(() => mockList(5)).thenAnswer((_) async => Right([tNewer, tOlder]));
+
+      final first = cubit.save(tOlder);
+      final second = cubit.save(tOlder);
+
+      completer.complete(Right(tNewer));
+      await first;
+      await second;
+
+      verify(() => mockCreate(any())).called(1);
     });
   });
 

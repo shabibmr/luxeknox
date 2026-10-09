@@ -206,7 +206,10 @@ class _HealthFormState extends State<_HealthForm> {
         FilledButton(
           onPressed: () {
             context.read<HealthHistoryCubit>().save(
-              widget.info.copyWith(
+              HealthInfo(
+                id: widget.info.id,
+                memberId: widget.info.memberId,
+                recordedAt: widget.info.recordedAt,
                 bloodGroup: _optional(_blood.text),
                 heightCm: double.tryParse(_height.text.trim()),
                 baselineWeightKg: double.tryParse(_weight.text.trim()),

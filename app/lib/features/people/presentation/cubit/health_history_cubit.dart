@@ -27,12 +27,14 @@ class HealthHistoryCubit extends Cubit<HealthHistoryState> {
   final ListHealthHistoryUseCase _list;
   final CreateHealthRecordUseCase _create;
 
+  bool _saving = false;
+
   bool get canGoPrevious => state.currentIndex < state.records.length - 1;
   bool get canGoNext => state.currentIndex > 0;
   HealthInfo? get current =>
       state.records.isEmpty ? null : state.records[state.currentIndex];
 
-  Future<void> load(int memberId) async {
+  Future<void> load(int memberId, {String? message}) async {
     emit(
       state.copyWith(status: LoadStatus.loading, failure: null, message: null),
     );
@@ -53,7 +55,7 @@ class HealthHistoryCubit extends Cubit<HealthHistoryState> {
               ],
               currentIndex: 0,
               failure: null,
-              message: null,
+              message: message,
             ),
           );
         } else {
@@ -63,7 +65,7 @@ class HealthHistoryCubit extends Cubit<HealthHistoryState> {
               records: records,
               currentIndex: 0,
               failure: null,
-              message: null,
+              message: message,
             ),
           );
         }
@@ -72,13 +74,19 @@ class HealthHistoryCubit extends Cubit<HealthHistoryState> {
   }
 
   Future<void> save(HealthInfo edited) async {
-    final result = await _create(edited);
-    await result.fold(
-      (failure) async => emit(
-        state.copyWith(status: LoadStatus.failure, failure: failure, message: null),
-      ),
-      (_) async => load(edited.memberId),
-    );
+    if (_saving) return;
+    _saving = true;
+    try {
+      final result = await _create(edited);
+      await result.fold(
+        (failure) async => emit(
+          state.copyWith(status: LoadStatus.failure, failure: failure, message: null),
+        ),
+        (_) async => load(edited.memberId, message: 'saved'),
+      );
+    } finally {
+      _saving = false;
+    }
   }
 
   void previous() {

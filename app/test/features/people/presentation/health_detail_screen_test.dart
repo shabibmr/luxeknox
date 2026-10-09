@@ -95,4 +95,50 @@ void main() {
 
     verify(() => createRecord(any())).called(1);
   });
+
+  testWidgets(
+    'clearing a field and entering non-numeric height saves nulls, not the stale values',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final tWithAllergies = HealthInfo(
+        id: 1,
+        memberId: 5,
+        bloodGroup: 'B+',
+        heightCm: 180,
+        allergies: 'Peanuts',
+        recordedAt: DateTime(2026, 1, 1),
+      );
+      when(() => listHistory(5))
+          .thenAnswer((_) async => Right([tWithAllergies]));
+      when(
+        () => createRecord(any()),
+      ).thenAnswer((_) async => Right(tNewer));
+
+      await tester.pumpWidget(wrap(const HealthDetailScreen(memberId: 5)));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, PeopleStrings.allergies),
+        '',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, PeopleStrings.heightCm),
+        'abc',
+      );
+
+      final saveButton = find.widgetWithText(FilledButton, PeopleStrings.save);
+      await tester.ensureVisible(saveButton);
+      await tester.tap(saveButton);
+      await tester.pumpAndSettle();
+
+      final saved = verify(() => createRecord(captureAny()))
+          .captured
+          .single as HealthInfo;
+      expect(saved.allergies, isNull);
+      expect(saved.heightCm, isNull);
+    },
+  );
 }
