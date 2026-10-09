@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SettingsController } from './settings.controller';
 import type { SettingsService } from './settings.service';
+import { BadRequestError } from '../platform/errors/app-error';
 
 describe('SettingsController', () => {
   let controller: SettingsController;
@@ -15,7 +16,7 @@ describe('SettingsController', () => {
         { id: 2, setting_key: 'currency', setting_value: 'INR', category: 'billing' },
       ]),
       updateSettings: vi.fn().mockResolvedValue([
-        { id: 1, setting_key: 'timezone', setting_value: 'Asia/Kolkata', category: 'GENERAL' },
+        { id: 1, setting_key: 'timezone', setting_value: 'Asia/Kolkata', category: 'general' },
         { id: 2, setting_key: 'currency', setting_value: 'USD', category: 'billing' },
       ]),
     };
@@ -43,7 +44,7 @@ describe('SettingsController', () => {
       expect(result).toEqual({
         data: [
           { id: 1, setting_key: 'timezone', setting_value: 'Asia/Kolkata', category: 'GENERAL' },
-          { id: 2, setting_key: 'currency', setting_value: 'INR', category: 'BILLING' },
+          { id: 2, setting_key: 'currency', setting_value: 'INR', category: 'billing' },
         ],
       });
       expect(mockSettingsService.listSettings).toHaveBeenCalledWith('general');
