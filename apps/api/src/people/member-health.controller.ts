@@ -1,53 +1,44 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Put } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { RequirePermission } from '../rbac/require-permission.decorator';
 import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
-import { memberHealthWriteSchema, type MemberHealthWriteDto } from './member-health.dto';
+import type { PaginatedResponse } from '../platform/http/pagination';
+import { MemberHealthRecordDto, memberHealthWriteSchema, type MemberHealthWriteDto } from './member-health.dto';
 import { MemberHealthService } from './member-health.service';
-import type { MemberHealth } from '../platform/db/schema/member-health';
-
-export class MemberHealthResponseDto {
-  @ApiProperty({ type: Number }) id!: number;
-  @ApiProperty({ type: Number }) member_id!: number;
-  @ApiProperty({ type: String, nullable: true }) blood_group!: string | null;
-  @ApiProperty({ type: Number, nullable: true }) height_cm!: number | null;
-  @ApiProperty({ type: Number, nullable: true }) baseline_weight_kg!: number | null;
-  @ApiProperty({ type: String, nullable: true }) allergies!: string | null;
-  @ApiProperty({ type: String, nullable: true }) dietary_preferences!: string | null;
-  @ApiProperty({ type: String, nullable: true }) physician_name!: string | null;
-  @ApiProperty({ type: String, nullable: true }) physician_phone!: string | null;
-}
 
 @ApiTags('HEALTH')
 @ApiBearerAuth('bearer')
-@Controller('members/:id/health')
+@Controller('members/:id/health/history')
 export class MemberHealthController {
   constructor(private readonly memberHealthService: MemberHealthService) {}
 
   @Get()
   @RequirePermission('health.read')
-  @ApiOperation({ operationId: 'getMemberHealth', summary: 'Current health row' })
+  @ApiOperation({ operationId: 'listMemberHealthHistory', summary: 'Member health history list' })
   @ApiParam({ name: 'id', type: Number })
-  @ApiResponse({ status: 200, type: MemberHealthResponseDto })
-  async get(
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  @ApiResponse({ status: 200, type: [MemberHealthRecordDto] })
+  async list(
     @Param('id', ParseIntPipe) memberId: number,
+    @Query() query: Record<string, unknown>,
     @CurrentUser() currentUser: AuthenticatedUser,
-  ): Promise<MemberHealth> {
-    return this.memberHealthService.get(memberId, currentUser);
+  ): Promise<PaginatedResponse<MemberHealthRecordDto>> {
+    return this.memberHealthService.list(memberId, query, currentUser);
   }
 
-  @Put()
+  @Post()
   @RequirePermission('health.update')
-  @ApiOperation({ operationId: 'putMemberHealth', summary: 'Replace current health row' })
+  @ApiOperation({ operationId: 'createMemberHealthRecord', summary: 'Record a new member health row' })
   @ApiParam({ name: 'id', type: Number })
-  @ApiResponse({ status: 200, type: MemberHealthResponseDto })
-  async put(
+  @ApiResponse({ status: 201, type: MemberHealthRecordDto })
+  async create(
     @Param('id', ParseIntPipe) memberId: number,
     @Body(new ZodValidationPipe(memberHealthWriteSchema)) dto: MemberHealthWriteDto,
     @CurrentUser() currentUser: AuthenticatedUser,
-  ): Promise<MemberHealth> {
-    return this.memberHealthService.put(memberId, dto, currentUser);
+  ): Promise<MemberHealthRecordDto> {
+    return this.memberHealthService.create(memberId, dto, currentUser);
   }
 }
