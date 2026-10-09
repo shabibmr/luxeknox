@@ -95,9 +95,8 @@ export async function seedSettings(db: DrizzleDb<any>): Promise<void> {
       })
       .onDuplicateKeyUpdate({
         set: {
-          setting_value: sql`VALUES(\`setting_value\`)`,
-          description: sql`VALUES(\`description\`)`,
-          updated_at: now,
+          // A repeatable seed must not overwrite administrator-chosen values.
+          setting_key: sql`setting_key`,
         },
       });
   }
