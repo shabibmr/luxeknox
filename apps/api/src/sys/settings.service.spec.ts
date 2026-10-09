@@ -3,6 +3,8 @@ import { SettingsService } from './settings.service';
 import { SettingsRepository } from './settings.repository';
 import { BadRequestError } from '../platform/errors/app-error';
 import type { GymSetting } from '../platform/db/schema/gym-settings';
+import { SETTING_CATALOGUE, parseSettingCategory } from './settings.dto';
+import { SEED_GYM_SETTINGS } from '../platform/db/seed/settings';
 
 describe('SettingsService', () => {
   let mockRepository: Partial<SettingsRepository>;
@@ -276,6 +278,30 @@ describe('SettingsService', () => {
 
       const tz = await service.getTimezone();
       expect(tz).toBe('Asia/Dubai');
+    });
+  });
+
+  describe('settings catalogue contract', () => {
+    it('keeps seeded keys and default values aligned with the runtime catalogue', () => {
+      const seeded = new Map(
+        SEED_GYM_SETTINGS.map((setting) => [setting.setting_key, setting.setting_value]),
+      );
+
+      expect([...seeded.keys()].sort()).toEqual(
+        SETTING_CATALOGUE.map((definition) => definition.setting_key).sort(),
+      );
+      for (const definition of SETTING_CATALOGUE) {
+        expect(seeded.get(definition.setting_key)).toBe(definition.default_value);
+      }
+    });
+
+    it('normalizes documented legacy category aliases', () => {
+      expect(parseSettingCategory('schedule')).toBe('booking_rules');
+      expect(parseSettingCategory('attendance')).toBe('attendance_gate');
+      expect(parseSettingCategory('security')).toBe('general');
+      expect(parseSettingCategory('gym')).toBe('general');
+      expect(parseSettingCategory(' WORKOUT ')).toBe('workout');
+      expect(parseSettingCategory('unknown')).toBeUndefined();
     });
   });
 });
