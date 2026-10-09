@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SettingsCategoryState {
 
- LoadStatus get status; List<AppSetting> get items; bool get saving; bool get saved; Failure? get failure;
+ LoadStatus get status; List<AppSetting> get items; List<AppSetting> get originalItems; bool get saving; bool get saved; Failure? get failure;
 /// Create a copy of SettingsCategoryState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $SettingsCategoryStateCopyWith<SettingsCategoryState> get copyWith => _$Settings
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsCategoryState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.saving, saving) || other.saving == saving)&&(identical(other.saved, saved) || other.saved == saved)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsCategoryState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.items, items)&&const DeepCollectionEquality().equals(other.originalItems, originalItems)&&(identical(other.saving, saving) || other.saving == saving)&&(identical(other.saved, saved) || other.saved == saved)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(items),saving,saved,failure);
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(items),const DeepCollectionEquality().hash(originalItems),saving,saved,failure);
 
 @override
 String toString() {
-  return 'SettingsCategoryState(status: $status, items: $items, saving: $saving, saved: $saved, failure: $failure)';
+  return 'SettingsCategoryState(status: $status, items: $items, originalItems: $originalItems, saving: $saving, saved: $saved, failure: $failure)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $SettingsCategoryStateCopyWith<$Res>  {
   factory $SettingsCategoryStateCopyWith(SettingsCategoryState value, $Res Function(SettingsCategoryState) _then) = _$SettingsCategoryStateCopyWithImpl;
 @useResult
 $Res call({
- LoadStatus status, List<AppSetting> items, bool saving, bool saved, Failure? failure
+ LoadStatus status, List<AppSetting> items, List<AppSetting> originalItems, bool saving, bool saved, Failure? failure
 });
 
 
@@ -66,6 +66,7 @@ class _$SettingsCategoryStateCopyWithImpl<$Res>
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
+as List<AppSetting>,originalItems: null == originalItems ? _self.originalItems : originalItems // ignore: cast_nullable_to_non_nullable
 as List<AppSetting>,saving: null == saving ? _self.saving : saving // ignore: cast_nullable_to_non_nullable
 as bool,saved: null == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable
 as bool,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
@@ -157,7 +158,7 @@ return $default(_that);case _:
 @optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  List<AppSetting> items,  bool saving,  bool saved,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SettingsCategoryState() when $default != null:
-return $default(_that.status,_that.items,_that.saving,_that.saved,_that.failure);case _:
+return $default(_that.status,_that.items,_that.originalItems,_that.saving,_that.saved,_that.failure);case _:
   return orElse();
 
 }
@@ -178,7 +179,7 @@ return $default(_that.status,_that.items,_that.saving,_that.saved,_that.failure)
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  List<AppSetting> items,  bool saving,  bool saved,  Failure? failure)  $default,) {final _that = this;
 switch (_that) {
 case _SettingsCategoryState():
-return $default(_that.status,_that.items,_that.saving,_that.saved,_that.failure);case _:
+return $default(_that.status,_that.items,_that.originalItems,_that.saving,_that.saved,_that.failure);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -210,11 +211,16 @@ return $default(_that.status,_that.items,_that.saving,_that.saved,_that.failure)
 
 
 class _SettingsCategoryState implements SettingsCategoryState {
-  const _SettingsCategoryState({this.status = LoadStatus.initial, final  List<AppSetting> items = const <AppSetting>[], this.saving = false, this.saved = false, this.failure}): _items = items;
+  const _SettingsCategoryState({this.status = LoadStatus.initial, final  List<AppSetting> items = const <AppSetting>[], List<AppSetting> originalItems = const <AppSetting>[], this.saving = false, this.saved = false, this.failure}): _items = items, _originalItems = originalItems;
   
 
 @override@JsonKey() final  LoadStatus status;
  final  List<AppSetting> _items;
+@override@JsonKey() List<AppSetting> get originalItems {
+  if (_originalItems is EqualUnmodifiableListView) return _originalItems;
+  return EqualUnmodifiableListView(_originalItems);
+}
+ final List<AppSetting> _originalItems;
 @override@JsonKey() List<AppSetting> get items {
   if (_items is EqualUnmodifiableListView) return _items;
   // ignore: implicit_dynamic_type
@@ -235,12 +241,12 @@ _$SettingsCategoryStateCopyWith<_SettingsCategoryState> get copyWith => __$Setti
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsCategoryState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.saving, saving) || other.saving == saving)&&(identical(other.saved, saved) || other.saved == saved)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsCategoryState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._items, _items)&&const DeepCollectionEquality().equals(other._originalItems, _originalItems)&&(identical(other.saving, saving) || other.saving == saving)&&(identical(other.saved, saved) || other.saved == saved)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_items),saving,saved,failure);
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_items),const DeepCollectionEquality().hash(_originalItems),saving,saved,failure);
 
 @override
 String toString() {
