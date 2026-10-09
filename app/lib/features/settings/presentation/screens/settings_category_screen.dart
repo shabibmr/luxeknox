@@ -11,11 +11,10 @@ import '../../domain/entities/setting_category.dart';
 import '../cubit/settings_category_cubit.dart';
 import '../settings_strings.dart';
 
-/// Generic key/value editor for a single settings category.
+/// Admin editor for the settings supported by the backend catalogue.
 class SettingsCategoryScreen extends StatelessWidget {
   const SettingsCategoryScreen({super.key, required this.category});
 
-  /// Path category segment (`general`, `booking_rules`, `gym`, …).
   final String category;
 
   @override
@@ -39,64 +38,14 @@ class _SettingsCategoryBody extends StatelessWidget {
 
   final SettingCategory category;
 
-  Future<void> _addSettingDialog(BuildContext context) async {
-    final cubit = context.read<SettingsCategoryCubit>();
-    final keyController = TextEditingController();
-    final valueController = TextEditingController();
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(SettingsStrings.addSetting),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: keyController,
-              decoration: const InputDecoration(
-                labelText: SettingsStrings.settingKey,
-              ),
-            ),
-            TextField(
-              controller: valueController,
-              decoration: const InputDecoration(
-                labelText: SettingsStrings.settingValue,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text(SettingsStrings.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text(SettingsStrings.add),
-          ),
-        ],
-      ),
-    );
-    if (result == true) {
-      cubit.addSetting(keyController.text, valueController.text);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(category.label)),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _addSettingDialog(context),
-        child: const Icon(Icons.add),
-      ),
       body: BlocConsumer<SettingsCategoryCubit, SettingsCategoryState>(
-        listenWhen: (previous, next) {
-          if (next.saved && !previous.saved) return true;
-          return next.failure != previous.failure &&
-              next.failure != null &&
-              next.items.isNotEmpty &&
-              next.status != LoadStatus.failure;
-        },
+        listenWhen: (previous, next) =>
+            (next.saved && !previous.saved) ||
+            (next.failure != previous.failure && next.failure != null),
         listener: (context, state) {
           if (state.saved) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -105,10 +54,11 @@ class _SettingsCategoryBody extends StatelessWidget {
             return;
           }
           final failure = state.failure;
-          if (failure == null) return;
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(failureMessage(failure))));
+          if (failure != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failureMessage(failure))),
+            );
+          }
         },
         builder: (context, state) {
           if (state.status == LoadStatus.loading && state.items.isEmpty) {
@@ -124,7 +74,6 @@ class _SettingsCategoryBody extends StatelessWidget {
             );
           }
           final items = state.items;
-          final saving = state.saving;
           if (items.isEmpty) {
             return const AppEmptyView(message: SettingsStrings.emptyCategory);
           }
@@ -137,23 +86,52 @@ class _SettingsCategoryBody extends StatelessWidget {
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final item = items[index];
-                    return _SettingRow(settingKey: item.key, value: item.value);
+                    return _SettingRow(
+                      key: ValueKey(item.key),
+                      settingKey: item.key,
+                      value: item.value,
+                      enabled: !state.saving,
+                      onChanged: (value) => context
+                          .read<SettingsCategoryCubit>()
+                          .editValue(item.key, value),
+                    );
                   },
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: FilledButton(
-                  onPressed: saving
-                      ? null
-                      : () => context.read<SettingsCategoryCubit>().save(),
-                  child: saving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text(SettingsStrings.save),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: state.saving
+                            ? null
+                            : () => context
+                                .read<SettingsCategoryCubit>()
+                                .load(category),
+                        child: const Text(SettingsStrings.discard),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: state.saving || !state.dirty
+                            ? null
+                            : () => context
+                                .read<SettingsCategoryCubit>()
+                                .save(),
+                        child: state.saving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(SettingsStrings.save),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -165,10 +143,18 @@ class _SettingsCategoryBody extends StatelessWidget {
 }
 
 class _SettingRow extends StatefulWidget {
-  const _SettingRow({required this.settingKey, required this.value});
+  const _SettingRow({
+    super.key,
+    required this.settingKey,
+    required this.value,
+    required this.enabled,
+    required this.onChanged,
+  });
 
   final String settingKey;
   final String value;
+  final bool enabled;
+  final ValueChanged<String> onChanged;
 
   @override
   State<_SettingRow> createState() => _SettingRowState();
@@ -187,7 +173,10 @@ class _SettingRowState extends State<_SettingRow> {
   void didUpdateWidget(covariant _SettingRow oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value && _controller.text != widget.value) {
-      _controller.text = widget.value;
+      _controller.value = TextEditingValue(
+        text: widget.value,
+        selection: TextSelection.collapsed(offset: widget.value.length),
+      );
     }
   }
 
@@ -197,21 +186,58 @@ class _SettingRowState extends State<_SettingRow> {
     super.dispose();
   }
 
+  TextInputType get _keyboardType {
+    if (widget.settingKey == 'tax_rate_percent') {
+      return const TextInputType.numberWithOptions(decimal: true);
+    }
+    const numericKeys = {
+      'default_page_size',
+      'schedule_booking_lead_time_minutes',
+      'schedule_cancellation_cutoff_minutes',
+      'schedule_member_booking_cap',
+      'attendance_pass_ttl_minutes',
+      'attendance_debounce_seconds',
+      'attendance_daily_checkin_cap',
+      'attendance_auto_checkout_hours',
+    };
+    return numericKeys.contains(widget.settingKey)
+        ? TextInputType.number
+        : TextInputType.text;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<SettingsCategoryCubit>();
+    final isBoolean = widget.value == 'true' || widget.value == 'false';
+    if (isBoolean) {
+      return SwitchListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        title: Text(_label(widget.settingKey)),
+        subtitle: Text(widget.settingKey),
+        value: widget.value == 'true',
+        onChanged: widget.enabled
+            ? (value) {
+                _controller.text = value.toString();
+                widget.onChanged(value.toString());
+              }
+            : null,
+      );
+    }
     return TextField(
       controller: _controller,
+      enabled: widget.enabled,
+      keyboardType: _keyboardType,
       decoration: InputDecoration(
-        labelText: widget.settingKey,
+        labelText: _label(widget.settingKey),
+        helperText: widget.settingKey,
         border: const OutlineInputBorder(),
-        suffixIcon: IconButton(
-          tooltip: SettingsStrings.delete,
-          icon: const Icon(Icons.close),
-          onPressed: () => cubit.removeSetting(widget.settingKey),
-        ),
       ),
-      onChanged: (value) => cubit.editValue(widget.settingKey, value),
+      onChanged: widget.onChanged,
     );
   }
+
+  String _label(String key) => key
+      .split('_')
+      .map((part) =>
+          part.isEmpty ? part : '${part[0].toUpperCase()}${part.substring(1)}')
+      .join(' ');
 }
