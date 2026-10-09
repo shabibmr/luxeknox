@@ -28,6 +28,11 @@ class DeviceTokenService implements DeviceTokenRegistrar {
   /// In-flight [syncToken] calls, keyed by registration marker.
   final _inFlightSyncs = <String, Future<Either<Failure, Unit>>>{};
 
+  /// Completes when the most recently queued sync finishes. Syncs for
+  /// different tokens run one after another so an older registration can never
+  /// finish last and overwrite the device id / marker of a newer one.
+  Future<void> _syncTail = Future.value();
+
   DevicePlatform detectPlatform() {
     if (kIsWeb) return DevicePlatform.web;
     try {
@@ -79,12 +84,15 @@ class DeviceTokenService implements DeviceTokenRegistrar {
     required String userId,
   }) {
     final marker = _registrationMarker(userId, token);
-    return _inFlightSyncs[marker] ??= _syncToken(token, userId, marker)
-        .whenComplete(() {
-          // Block body: returning the removed future would make whenComplete
-          // wait on itself.
-          _inFlightSyncs.remove(marker);
-        });
+    final existing = _inFlightSyncs[marker];
+    if (existing != null) return existing;
+    final queued = _syncTail.then((_) => _syncToken(token, userId, marker));
+    _syncTail = queued.then<void>((_) {}, onError: (_) {});
+    return _inFlightSyncs[marker] = queued.whenComplete(() {
+      // Block body: returning the removed future would make whenComplete
+      // wait on itself.
+      _inFlightSyncs.remove(marker);
+    });
   }
 
   Future<Either<Failure, Unit>> _syncToken(

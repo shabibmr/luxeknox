@@ -6,10 +6,15 @@ import 'package:equatable/equatable.dart';
 sealed class Failure extends Equatable {
   const Failure();
 
-  /// Whether retrying the same call later may succeed (connectivity issues).
-  /// Server errors ([UnknownFailure]) are not retried: they rarely clear up
-  /// within seconds and each attempt can cost a full request timeout.
-  bool get isTransient => this is NetworkFailure;
+  /// Whether retrying the same call later may succeed: connectivity issues,
+  /// rate limiting, and gateway errors (502/503/504, e.g. an API restart).
+  /// Other server errors are not retried: they rarely clear up within seconds
+  /// and each attempt can cost a full request timeout.
+  bool get isTransient => switch (this) {
+    NetworkFailure() || RateLimitFailure() => true,
+    UnknownFailure(:final retryable) => retryable,
+    _ => false,
+  };
 
   @override
   List<Object?> get props => [];
@@ -79,7 +84,13 @@ final class NetworkFailure extends Failure {
 /// Failure indicating an unknown or unexpected error occurred.
 /// Used as a catch-all for errors that do not fit other categories.
 final class UnknownFailure extends Failure {
-  const UnknownFailure();
+  /// True for temporary server-side errors (502/503/504) worth retrying.
+  final bool retryable;
+
+  const UnknownFailure({this.retryable = false});
+
+  @override
+  List<Object?> get props => [retryable];
 }
 
 /// Failure indicating an operation was explicitly cancelled by the user.

@@ -106,4 +106,38 @@ void main() {
       () => deviceTokens.syncToken(any(), userId: any(named: 'userId')),
     );
   });
+
+  test('a user switch while the token is fetched does not sync', () async {
+    final token = Completer<String?>();
+    when(() => pushTokens.getToken()).thenAnswer((_) => token.future);
+    await service.start();
+
+    when(() => sessionCubit.state).thenReturn(authenticated);
+    sessionStates.add(authenticated);
+    await pumpEventQueue();
+
+    when(() => sessionCubit.state).thenReturn(const SessionUnauthenticated());
+    token.complete('fcm-token');
+    await pumpEventQueue();
+
+    verifyNever(
+      () => deviceTokens.syncToken(any(), userId: any(named: 'userId')),
+    );
+  });
+
+  test(
+    'start() registers the session listener only once across retries',
+    () async {
+      when(() => pushTokens.ensureStarted()).thenThrow(StateError('boom'));
+      await service.start();
+      await service.start();
+      when(() => pushTokens.getToken()).thenAnswer((_) async => 'fcm-token');
+
+      when(() => sessionCubit.state).thenReturn(authenticated);
+      sessionStates.add(authenticated);
+      await pumpEventQueue();
+
+      verify(() => deviceTokens.syncToken('fcm-token', userId: '1')).called(1);
+    },
+  );
 }

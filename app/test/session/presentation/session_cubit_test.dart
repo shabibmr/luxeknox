@@ -22,7 +22,8 @@ class MockLoginUseCase extends Mock implements LoginUseCase {}
 
 class MockLogoutUseCase extends Mock implements LogoutUseCase {}
 
-class MockLoginWithGoogleUseCase extends Mock implements LoginWithGoogleUseCase {}
+class MockLoginWithGoogleUseCase extends Mock
+    implements LoginWithGoogleUseCase {}
 
 void main() {
   late MockRestoreSessionUseCase mockRestoreUseCase;
@@ -111,6 +112,25 @@ void main() {
       expect(cubit.state, const SessionUnauthenticated());
     });
 
+    test('retryable 503 is retried and a later success authenticates', () {
+      fakeAsync((async) {
+        var calls = 0;
+        when(() => mockRestoreUseCase(const NoParams())).thenAnswer((_) async {
+          calls++;
+          return calls < 2
+              ? const Left(UnknownFailure(retryable: true))
+              : const Right((tPrincipal, tCapabilities));
+        });
+        final cubit = createCubit();
+
+        cubit.restore();
+        async.elapse(const Duration(seconds: 2));
+
+        expect(calls, 2);
+        expect(cubit.state, isA<SessionAuthenticated>());
+      });
+    });
+
     test('NetworkFailure is retried and a later success authenticates', () {
       fakeAsync((async) {
         var calls = 0;
@@ -161,20 +181,23 @@ void main() {
       verify(() => mockRestoreUseCase(const NoParams())).called(1);
     });
 
-    test('a sign-out during restore is not overridden by a late success', () async {
-      final pending = Completer<Either<Failure, (Principal, Capabilities)>>();
-      when(
-        () => mockRestoreUseCase(const NoParams()),
-      ).thenAnswer((_) => pending.future);
-      final cubit = createCubit();
+    test(
+      'a sign-out during restore is not overridden by a late success',
+      () async {
+        final pending = Completer<Either<Failure, (Principal, Capabilities)>>();
+        when(
+          () => mockRestoreUseCase(const NoParams()),
+        ).thenAnswer((_) => pending.future);
+        final cubit = createCubit();
 
-      final restoring = cubit.restore();
-      cubit.onSignedOut();
-      pending.complete(const Right((tPrincipal, tCapabilities)));
-      await restoring;
+        final restoring = cubit.restore();
+        cubit.onSignedOut();
+        pending.complete(const Right((tPrincipal, tCapabilities)));
+        await restoring;
 
-      expect(cubit.state, const SessionUnauthenticated());
-    });
+        expect(cubit.state, const SessionUnauthenticated());
+      },
+    );
 
     blocTest<SessionCubit, SessionState>(
       'login success emits [SessionAuthenticated]',
