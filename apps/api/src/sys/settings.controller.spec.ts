@@ -11,12 +11,12 @@ describe('SettingsController', () => {
       getTimezone: vi.fn().mockResolvedValue('Asia/Kolkata'),
       getCurrency: vi.fn().mockResolvedValue('INR'),
       listSettings: vi.fn().mockResolvedValue([
-        { id: 1, setting_key: 'timezone', setting_value: 'Asia/Kolkata', category: 'GENERAL' },
-        { id: 2, setting_key: 'currency', setting_value: 'INR', category: 'BILLING' },
+        { id: 1, setting_key: 'timezone', setting_value: 'Asia/Kolkata', category: 'general' },
+        { id: 2, setting_key: 'currency', setting_value: 'INR', category: 'billing' },
       ]),
       updateSettings: vi.fn().mockResolvedValue([
         { id: 1, setting_key: 'timezone', setting_value: 'Asia/Kolkata', category: 'GENERAL' },
-        { id: 2, setting_key: 'currency', setting_value: 'USD', category: 'BILLING' },
+        { id: 2, setting_key: 'currency', setting_value: 'USD', category: 'billing' },
       ]),
     };
 
@@ -38,7 +38,7 @@ describe('SettingsController', () => {
 
   describe('getAllSettings', () => {
     it('returns settings list wrapped in data', async () => {
-      const result = await controller.getAllSettings('GENERAL');
+      const result = await controller.getAllSettings('general');
 
       expect(result).toEqual({
         data: [
@@ -46,8 +46,12 @@ describe('SettingsController', () => {
           { id: 2, setting_key: 'currency', setting_value: 'INR', category: 'BILLING' },
         ],
       });
-      expect(mockSettingsService.listSettings).toHaveBeenCalledWith('GENERAL');
+      expect(mockSettingsService.listSettings).toHaveBeenCalledWith('general');
     });
+  });
+
+  it('rejects unsupported category query values', async () => {
+    await expect(controller.getAllSettings('not-a-category')).rejects.toBeInstanceOf(BadRequestError);
   });
 
   describe('putSettings', () => {
