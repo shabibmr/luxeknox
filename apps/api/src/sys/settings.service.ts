@@ -18,6 +18,8 @@ export class SettingsService {
 
   // In-memory cache to avoid repeated database lookups for invariant system settings
   private cache: Map<string, string> | null = null;
+  private cacheLoadedAt = 0;
+  private readonly cacheTtlMs = 30_000;
 
   constructor(
     private readonly settingsRepository: SettingsRepository,
@@ -197,7 +199,7 @@ export class SettingsService {
    * Retrieves a single setting value by key from the warmed cache.
    */
   async getSetting(key: string): Promise<string | null> {
-    if (!this.cache) {
+    if (!this.cache || Date.now() - this.cacheLoadedAt > this.cacheTtlMs) {
       await this.refreshCache();
     }
     return this.cache!.get(key) ?? null;
@@ -285,5 +287,6 @@ export class SettingsService {
       if (!map.has(definition.setting_key)) map.set(definition.setting_key, definition.default_value);
     }
     this.cache = map;
+    this.cacheLoadedAt = Date.now();
   }
 }
