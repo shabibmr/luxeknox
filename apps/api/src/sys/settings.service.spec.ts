@@ -262,6 +262,7 @@ describe('SettingsService', () => {
       mockRepository.upsertMany = vi.fn().mockResolvedValue([]);
       mockRepository.findAll = vi.fn().mockResolvedValue([
         { id: 1, setting_key: 'timezone', setting_value: 'Asia/Dubai', description: null, created_at: new Date(), updated_at: new Date() },
+        { id: 2, setting_key: 'currency', setting_value: 'INR', description: null, created_at: new Date(), updated_at: new Date() },
       ]);
 
       const updated = await service.updateSettings([
@@ -271,7 +272,7 @@ describe('SettingsService', () => {
       expect(mockRepository.upsertMany).toHaveBeenCalledWith([
         { setting_key: 'timezone', setting_value: 'Asia/Dubai' },
       ]);
-      expect(updated[0].setting_value).toBe('Asia/Dubai');
+      expect(updated.find((setting) => setting.setting_key === 'timezone')?.setting_value).toBe('Asia/Dubai');
 
       const tz = await service.getTimezone();
       expect(tz).toBe('Asia/Dubai');
