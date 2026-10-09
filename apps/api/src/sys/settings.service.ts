@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { AuditService } from '../platform/audit/audit.service';
 import { SettingsRepository } from './settings.repository';
 import { BadRequestError } from '../platform/errors/app-error';
 import { type SettingDto, SETTING_CATALOGUE, getSettingDefinition, parseSettingCategory } from './settings.dto';
@@ -19,10 +18,7 @@ export class SettingsService {
   private cacheLoadedAt = 0;
   private readonly cacheTtlMs = 30_000;
 
-  constructor(
-    private readonly settingsRepository: SettingsRepository,
-    private readonly auditService?: AuditService,
-  ) {}
+  constructor(private readonly settingsRepository: SettingsRepository) {}
 
   /**
    * Gym canonical operating time zone (default: 'UTC').
@@ -257,17 +253,9 @@ export class SettingsService {
       throw new BadRequestError('Settings update contains invalid values.', validationErrors);
     }
 
-    const beforeValues = new Map((await this.settingsRepository.findAll()).map((row) => [row.setting_key, row.setting_value]));
     await this.settingsRepository.upsertMany(items);
     await this.refreshCache();
-    if (this.auditService) {
-      await this.auditService.recordAudit({
-        action: 'SETTINGS_UPDATED',
-        entityName: 'gym_settings',
-        beforeState: Object.fromEntries(items.map((item) => [item.setting_key, beforeValues.get(item.setting_key) ?? null])),
-        afterState: Object.fromEntries(items.map((item) => [item.setting_key, item.setting_value])),
-      });
-    }
+
     return this.listSettings();
   }
 
