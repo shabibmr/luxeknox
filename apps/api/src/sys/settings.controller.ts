@@ -70,13 +70,6 @@ export class SettingsController {
     description: 'Forbidden: missing settings.read permission',
   })
   async getAllSettings(@Query('category') category?: string): Promise<SettingsListDto> {
-    if (category && !settingCategorySchema.safeParse(category).success) {
-      // Also support legacy aliases in the service during upgrade.
-      const normalized = category.trim().toLowerCase();
-      if (!['schedule', 'attendance', 'security', 'gym'].includes(normalized)) {
-        throw new BadRequestError(`Unsupported settings category "${category}".`);
-      }
-    }
     const data = await this.settingsService.listSettings(category);
     return { data };
   }
