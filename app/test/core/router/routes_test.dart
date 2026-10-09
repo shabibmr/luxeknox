@@ -132,6 +132,18 @@ void main() {
     test('deep-link builders substitute path parameters', () {
       expect(Routes.memberScheduleById('42'), '/schedule/42');
       expect(Routes.memberProgressGoalById('7'), '/progress/goal/7');
+      expect(
+        Routes.trainerMemberGoalById('3', '8'),
+        '/trainer/members/3/goals/goal/8',
+      );
+      expect(
+        Routes.adminMemberGoalById('9', '8'),
+        '/admin/members/9/goals/goal/8',
+      );
+      expect(
+        Routes.adminMemberGoalsAddMeasurementById('9'),
+        '/admin/members/9/goals/add-measurement',
+      );
       expect(Routes.adminMemberById('9'), '/admin/members/9');
       expect(Routes.adminMemberGoalsById('9'), '/admin/members/9/goals');
       expect(Routes.adminPaymentById('15'), '/admin/payments/15');

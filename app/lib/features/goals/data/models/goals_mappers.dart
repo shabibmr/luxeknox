@@ -57,6 +57,7 @@ extension GoalModelMapper on api.Goal {
       targetDate: targetDate?.toDateTime(),
       status: goalStatusToDomain(status),
       metric: metric?.toDomain(),
+      history: histories?.map((h) => h.toDomain()).toList() ?? const [],
     );
   }
 }

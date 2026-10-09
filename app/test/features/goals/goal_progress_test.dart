@@ -37,4 +37,29 @@ void main() {
       expect(isGoalAchievedStatus(GoalStatus.abandoned), isFalse);
     });
   });
+
+  group('goalDirection', () {
+    test('increase when target is above baseline', () {
+      expect(
+        goalDirection(baseline: 70, target: 80),
+        GoalDirection.increase,
+      );
+    });
+
+    test('decrease when target is below baseline', () {
+      expect(
+        goalDirection(baseline: 90, target: 75),
+        GoalDirection.decrease,
+      );
+    });
+
+    test('hold when target equals baseline', () {
+      expect(goalDirection(baseline: 80, target: 80), GoalDirection.hold);
+    });
+
+    test('null when either endpoint is missing', () {
+      expect(goalDirection(baseline: null, target: 80), isNull);
+      expect(goalDirection(baseline: 80, target: null), isNull);
+    });
+  });
 }

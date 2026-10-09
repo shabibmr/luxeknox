@@ -13,7 +13,6 @@ import '../../../../session/presentation/session_cubit.dart';
 import '../cubit/goals_list_cubit.dart';
 import '../goals_strings.dart';
 import '../widgets/goal_progress_bar.dart';
-import 'goal_detail_screen.dart';
 import 'goal_form_screen.dart';
 import 'progress_notes_screen.dart';
 import 'progress_photos_screen.dart';
@@ -43,9 +42,7 @@ class ProgressHubScreen extends StatelessWidget {
     final session = getIt<SessionCubit>().state;
     if (session is! SessionAuthenticated) return false;
     final caps = session.capabilities;
-    return caps.can('goals.create') ||
-        caps.can('goals.update') ||
-        caps.can('goals.write');
+    return caps.can('goals.write');
   }
 
   @override
@@ -108,8 +105,17 @@ class _ProgressHubBody extends StatelessWidget {
                   label: const Text(GoalsStrings.measurementsLink),
                   onPressed: () {
                     if (isTrainerContext) {
+                      final isAdmin = GoRouterState.of(
+                        context,
+                      ).uri.path.startsWith('/admin');
                       context.push(
-                        Routes.trainerMemberGoalsAddMeasurementById(memberId),
+                        isAdmin
+                            ? Routes.adminMemberGoalsAddMeasurementById(
+                                memberId,
+                              )
+                            : Routes.trainerMemberGoalsAddMeasurementById(
+                                memberId,
+                              ),
                       );
                     } else {
                       context.go(Routes.memberProgressMeasurements);
@@ -152,8 +158,17 @@ class _ProgressHubBody extends StatelessWidget {
                   label: const Text(GoalsStrings.chartsLink),
                   onPressed: () {
                     if (isTrainerContext) {
+                      final isAdmin = GoRouterState.of(
+                        context,
+                      ).uri.path.startsWith('/admin');
                       context.push(
-                        Routes.trainerMemberGoalsAddMeasurementById(memberId),
+                        isAdmin
+                            ? Routes.adminMemberGoalsAddMeasurementById(
+                                memberId,
+                              )
+                            : Routes.trainerMemberGoalsAddMeasurementById(
+                                memberId,
+                              ),
                       );
                     } else {
                       context.go(Routes.memberProgressMeasurements);
@@ -230,21 +245,23 @@ class _ProgressHubBody extends StatelessWidget {
                             return Card(
                               child: InkWell(
                                 onTap: () async {
-                                  if (isTrainerContext) {
-                                    await Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            GoalDetailScreen(goalId: goal.id),
-                                      ),
-                                    );
-                                    if (context.mounted) {
-                                      context.read<GoalsListCubit>().load(
-                                        memberId,
-                                      );
-                                    }
-                                  } else {
-                                    context.go(
-                                      Routes.memberProgressGoalById(goal.id),
+                                  final location = isTrainerContext
+                                      ? (GoRouterState.of(
+                                              context,
+                                            ).uri.path.startsWith('/admin')
+                                            ? Routes.adminMemberGoalById(
+                                                memberId,
+                                                goal.id,
+                                              )
+                                            : Routes.trainerMemberGoalById(
+                                                memberId,
+                                                goal.id,
+                                              ))
+                                      : Routes.memberProgressGoalById(goal.id);
+                                  await context.push(location);
+                                  if (context.mounted && isTrainerContext) {
+                                    context.read<GoalsListCubit>().load(
+                                      memberId,
                                     );
                                   }
                                 },

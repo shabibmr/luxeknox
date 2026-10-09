@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_loading.dart';
 import '../../../people/presentation/widgets/member_trainer_header.dart';
 import '../../domain/entities/goal_metric.dart';
 import '../../domain/entities/goal_status.dart';
+import '../widgets/achievement_chip.dart';
 import '../cubit/goal_form_cubit.dart';
 import '../goals_strings.dart';
 import '../widgets/goal_metric_search_sheet.dart';
@@ -48,6 +49,7 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
   DateTime? _targetDate;
   GoalStatus _status = GoalStatus.inProgress;
   var _seeded = false;
+  var _reopenHint = false;
 
   @override
   void dispose() {
@@ -78,6 +80,7 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
     _startDate = g.startDate;
     _targetDate = g.targetDate;
     _status = g.status;
+    _reopenHint = g.status == GoalStatus.abandoned;
     _seeded = true;
   }
 
@@ -169,6 +172,82 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
     );
   }
 
+  List<Widget> _statusControls(bool submitting) {
+    if (!widget.isEdit) {
+      return [
+        DropdownButtonFormField<GoalStatus>(
+          // ignore: deprecated_member_use
+          value: _status,
+          decoration: const InputDecoration(labelText: GoalsStrings.statusLabel),
+          items: [
+            for (final s in GoalStatus.values)
+              DropdownMenuItem(
+                value: s,
+                child: Text(GoalsStrings.statusLabelFor(s)),
+              ),
+          ],
+          onChanged: submitting
+              ? null
+              : (value) {
+                  if (value != null) setState(() => _status = value);
+                },
+        ),
+      ];
+    }
+    final choices = switch (_status) {
+      GoalStatus.achieved => const <GoalStatus>[],
+      GoalStatus.abandoned => const [
+        GoalStatus.abandoned,
+        GoalStatus.inProgress,
+      ],
+      GoalStatus.inProgress => const [
+        GoalStatus.inProgress,
+        GoalStatus.abandoned,
+      ],
+    };
+    if (_status == GoalStatus.achieved) {
+      return [
+        const AchievementChip(status: GoalStatus.achieved),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          onPressed: submitting
+              ? null
+              : () {
+                  setState(() => _status = GoalStatus.abandoned);
+                  _submit();
+                },
+          child: const Text(GoalsStrings.abandonGoal),
+        ),
+      ];
+    }
+    return [
+      DropdownButtonFormField<GoalStatus>(
+        // ignore: deprecated_member_use
+        value: _status,
+        decoration: const InputDecoration(labelText: GoalsStrings.statusLabel),
+        items: [
+          for (final status in choices)
+            DropdownMenuItem(
+              value: status,
+              child: Text(GoalsStrings.statusLabelFor(status)),
+            ),
+        ],
+        onChanged: submitting
+            ? null
+            : (value) {
+                if (value != null) setState(() => _status = value);
+              },
+      ),
+      if (_reopenHint) ...[
+        const SizedBox(height: 8),
+        Text(
+          GoalsStrings.reopenMayAchieve,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    ];
+  }
+
   Widget _buildReadyForm(BuildContext context, GoalFormState ready) {
     if (!_seeded && ready.existing != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -183,7 +262,7 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
       children: [
         GoalMetricSearchField(
           value: _metric,
-          enabled: !submitting,
+          enabled: !widget.isEdit && !submitting,
           onChanged: (metric) => setState(() {
             _metric = metric;
             _metricId = metric?.id;
@@ -192,6 +271,7 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
         const SizedBox(height: 12),
         TextField(
           controller: _baselineController,
+          readOnly: widget.isEdit,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: const InputDecoration(
             labelText: GoalsStrings.baselineLabel,
@@ -208,48 +288,22 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text(GoalsStrings.startDateLabel),
-          subtitle: Text(
-            _startDate == null
-                ? '—'
-                : _startDate!.toIso8601String().split('T').first,
-          ),
+          subtitle: Text(GoalsStrings.calendarDate(_startDate)),
           trailing: IconButton(
             icon: const Icon(Icons.calendar_today),
-            onPressed: () => _pickDate(start: true),
+            onPressed: widget.isEdit ? null : () => _pickDate(start: true),
           ),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text(GoalsStrings.targetDateLabel),
-          subtitle: Text(
-            _targetDate == null
-                ? '—'
-                : _targetDate!.toIso8601String().split('T').first,
-          ),
+          subtitle: Text(GoalsStrings.calendarDate(_targetDate)),
           trailing: IconButton(
             icon: const Icon(Icons.calendar_today),
             onPressed: () => _pickDate(start: false),
           ),
         ),
-        DropdownButtonFormField<GoalStatus>(
-          // ignore: deprecated_member_use
-          value: _status,
-          decoration: const InputDecoration(
-            labelText: GoalsStrings.statusLabel,
-          ),
-          items: [
-            for (final s in GoalStatus.values)
-              DropdownMenuItem(
-                value: s,
-                child: Text(GoalsStrings.statusLabelFor(s)),
-              ),
-          ],
-          onChanged: submitting
-              ? null
-              : (v) {
-                  if (v != null) setState(() => _status = v);
-                },
-        ),
+        ..._statusControls(submitting),
         if (error != null) ...[
           const SizedBox(height: 8),
           Text(

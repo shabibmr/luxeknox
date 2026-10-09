@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import 'goal_history.dart';
 import 'goal_metric.dart';
 import 'goal_status.dart';
 
@@ -15,6 +16,7 @@ class MemberGoal extends Equatable {
     this.targetDate,
     required this.status,
     this.metric,
+    this.history = const [],
   });
 
   final String id;
@@ -27,6 +29,7 @@ class MemberGoal extends Equatable {
   final DateTime? targetDate;
   final GoalStatus status;
   final GoalMetric? metric;
+  final List<GoalHistoryEntry> history;
 
   @override
   List<Object?> get props => [
@@ -40,5 +43,6 @@ class MemberGoal extends Equatable {
     targetDate,
     status,
     metric,
+    history,
   ];
 }

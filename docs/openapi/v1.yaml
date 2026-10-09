@@ -9244,6 +9244,13 @@ components:
           enum: [in_progress, achieved, abandoned]
         metric:
           $ref: "#/components/schemas/GoalMetric"
+        histories:
+          type: array
+          items:
+            $ref: "#/components/schemas/GoalHistory"
+          description: >
+            Present on GET /goals/{id}. Newest recorded_date first.
+            Omitted on GET /members/{id}/goals. Not required.
     GoalWrite:
       type: object
       properties:

@@ -16,6 +16,7 @@ import '../../features/diet/presentation/screens/diet_plan_versions_screen.dart'
 
 import '../../features/foods/presentation/screens/food_detail_screen.dart';
 import '../../features/foods/presentation/screens/food_library_screen.dart';
+import '../../features/goals/presentation/screens/goal_detail_screen.dart';
 import '../../features/goals/presentation/screens/measurements_screen.dart';
 import '../../features/goals/presentation/screens/progress_hub_screen.dart';
 import '../../features/membership/presentation/screens/trainer_membership_summary_screen.dart';
@@ -162,10 +163,23 @@ StatefulShellRoute createTrainerBranchRoute() {
                     },
                     routes: [
                       GoRoute(
+                        path: 'goal/:goalId',
+                        builder: (context, state) {
+                          return GoalDetailScreen(
+                            goalId: state.pathParameters['goalId']!,
+                          );
+                        },
+                      ),
+                      GoRoute(
                         path: 'add-measurement',
                         builder: (context, state) {
                           final id = state.pathParameters['id'] ?? '';
-                          return MeasurementsScreen(memberId: id);
+                          final metric = state.uri.queryParameters['metric'];
+                          return MeasurementsScreen(
+                            memberId: id,
+                            focusMetricId: metric,
+                            returnToCaller: metric != null,
+                          );
                         },
                       ),
                     ],

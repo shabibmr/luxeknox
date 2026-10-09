@@ -32,10 +32,13 @@ class Routes {
   // ========== Member App Routes ==========
   // Home Stack
   static const String memberHome = '/home';
+  static const String memberHomeWorkoutToday = '/home/workout/today';
+  static const String memberHomeWorkoutPlan = '/home/workout/plan/:id';
   static const String memberHomeWorkoutActive = '/home/workout/active';
   static const String memberHomeWorkoutHistory = '/home/workout/history';
   static const String memberHomeWorkoutExerciseDetail =
       '/home/workout/exercises/:id';
+  static const String memberHomeDietPlan = '/home/diet/plan/:id';
   static const String memberHomeDietMeal = '/home/diet/meal/:id';
   static const String memberHomeDietLog = '/home/diet/log';
   static const String memberHomeDietHistory = '/home/diet/history';
@@ -231,6 +234,12 @@ class Routes {
   static String memberHomeWorkoutExerciseById(String id) =>
       '/home/workout/exercises/$id';
 
+  static String memberHomeWorkoutPlanById(String id) =>
+      '/home/workout/plan/$id';
+
+  static String memberHomeDietPlanById(String id) =>
+      '/home/diet/plan/$id';
+
   static String memberHomeDietMealById(String id) => '/home/diet/meal/$id';
 
   static String memberNotificationById(String id) => '/notifications/$id';
@@ -252,6 +261,15 @@ class Routes {
 
   static String trainerMemberGoalsAddMeasurementById(String id) =>
       '/trainer/members/$id/goals/add-measurement';
+
+  static String trainerMemberGoalById(String memberId, String goalId) =>
+      '/trainer/members/$memberId/goals/goal/$goalId';
+
+  static String adminMemberGoalById(String memberId, String goalId) =>
+      '/admin/members/$memberId/goals/goal/$goalId';
+
+  static String adminMemberGoalsAddMeasurementById(String id) =>
+      '/admin/members/$id/goals/add-measurement';
 
   static String trainerScheduleById(String id) => '/trainer/schedule/$id';
 

@@ -13,17 +13,38 @@ class AchievementChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final achieved = isGoalAchievedStatus(status);
+    final abandoned = status == GoalStatus.abandoned;
     final scheme = Theme.of(context).colorScheme;
-    return AppStatusChip(
+    final chip = AppStatusChip(
       label: GoalsStrings.statusLabelFor(status),
       color: achieved
           ? scheme.primaryContainer
-          : scheme.surfaceContainerHighest,
+          : abandoned
+              ? scheme.errorContainer
+              : scheme.surfaceContainerHighest,
       foregroundColor: achieved
           ? scheme.onPrimaryContainer
-          : scheme.onSurfaceVariant,
-      icon: achieved ? Icons.emoji_events : Icons.flag_outlined,
+          : abandoned
+              ? scheme.onErrorContainer
+              : scheme.onSurfaceVariant,
+      icon: achieved
+          ? Icons.emoji_events
+          : abandoned
+              ? Icons.block
+              : Icons.flag_outlined,
       tinted: false,
+    );
+    if (!achieved) return chip;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        chip,
+        const SizedBox(height: 4),
+        Text(
+          GoalsStrings.achievedServerCaption,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
     );
   }
 }

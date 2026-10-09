@@ -1,5 +1,6 @@
 import '../domain/entities/goal_metric_category.dart';
 import '../domain/entities/goal_status.dart';
+import '../domain/helpers/goal_progress.dart';
 import '../domain/entities/photo_pose.dart';
 import '../domain/entities/progress_note_type.dart';
 
@@ -23,6 +24,16 @@ abstract final class GoalsStrings {
   static const dietPlanLink = 'Diet Plan';
 
   static const goalDetailTitle = 'Goal';
+  static const goalNotAvailable = 'This goal is not available.';
+  static const directionIncrease = 'Increase';
+  static const directionDecrease = 'Decrease';
+  static const directionHold = 'Hold';
+  static const noCheckInsYet = 'No check-ins yet.';
+  static const achievedServerCaption =
+      'Set by the server when the current value meets the target.';
+  static const abandonGoal = 'Abandon goal';
+  static const reopenMayAchieve =
+      'If the current value already meets the target, the server will mark this goal achieved.';
   static const checkInTitle = 'Check in';
   static const checkInValueLabel = 'Recorded value';
   static const checkInDateLabel = 'Date';
@@ -121,6 +132,20 @@ abstract final class GoalsStrings {
   static const noteSaveFailed = 'Could not save note';
   static const noteTypeMember = 'Member note';
   static const noteTypeTrainer = 'Trainer assessment';
+
+  static String calendarDate(DateTime? date) {
+    if (date == null) return '—';
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
+  }
+
+  static String directionLabel(GoalDirection? direction) => switch (direction) {
+    GoalDirection.increase => directionIncrease,
+    GoalDirection.decrease => directionDecrease,
+    GoalDirection.hold => directionHold,
+    null => '—',
+  };
 
   static String statusLabelFor(GoalStatus status) => switch (status) {
     GoalStatus.inProgress => statusInProgress,
