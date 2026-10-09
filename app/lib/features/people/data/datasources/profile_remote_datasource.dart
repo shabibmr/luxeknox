@@ -3,9 +3,12 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 abstract class ProfileRemoteDataSource {
-  Future<api.MemberHealth> getHealth(int memberId);
+  Future<api.MemberHealthHistoryPage> listHealthHistory(int memberId);
 
-  Future<api.MemberHealth> putHealth(int memberId, api.MemberHealthWrite write);
+  Future<api.MemberHealthRecord> createHealthRecord(
+    int memberId,
+    api.MemberHealthWrite write,
+  );
 
   Future<api.MedicalHistoryPage> listMedicalHistories(int memberId);
 
@@ -75,17 +78,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
-  Future<api.MemberHealth> getHealth(int memberId) async {
-    return _unwrap(await _healthApi.getMemberHealth(id: memberId));
+  Future<api.MemberHealthHistoryPage> listHealthHistory(int memberId) async {
+    return _unwrap(await _healthApi.listMemberHealthHistory(id: memberId));
   }
 
   @override
-  Future<api.MemberHealth> putHealth(
+  Future<api.MemberHealthRecord> createHealthRecord(
     int memberId,
     api.MemberHealthWrite write,
   ) async {
     return _unwrap(
-      await _healthApi.putMemberHealth(id: memberId, memberHealthWrite: write),
+      await _healthApi.createMemberHealthRecord(id: memberId, memberHealthWrite: write),
     );
   }
 
