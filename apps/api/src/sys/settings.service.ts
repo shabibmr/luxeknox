@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SettingsRepository } from './settings.repository';
-import { type SettingDto, resolveSettingCategory } from './settings.dto';
+import { BadRequestError } from '../platform/errors/app-error';
+import { type SettingDto, SETTING_CATALOGUE, getSettingDefinition, parseSettingCategory, resolveSettingCategory } from './settings.dto';
 
 /**
  * SettingsService provides typed access to system settings configured in `gym_settings`.
@@ -212,16 +213,26 @@ export class SettingsService {
    * Returns settings list optionally filtered by category.
    */
   async listSettings(category?: string): Promise<SettingDto[]> {
-    const rows = await this.settingsRepository.findAll();
-    const settings: SettingDto[] = rows.map((row) => ({
-      id: row.id,
-      setting_key: row.setting_key,
-      setting_value: row.setting_value,
-      category: resolveSettingCategory(row.setting_key),
-    }));
-    if (category) {
-      return settings.filter((s) => s.category.toUpperCase() === category.toUpperCase());
+    const parsedCategory = category ? parseSettingCategory(category) : undefined;
+    if (category && !parsedCategory) {
+      throw new BadRequestError(`Unsupported settings category "${category}".`);
     }
+
+    const rows = await this.settingsRepository.findAll();
+    const stored = new Map(rows.map((row) => [row.setting_key, row]));
+    // Defaults are visible even before the seed job runs. Persisted values always win.
+    const settings: SettingDto[] = SETTING_CATALOGUE
+      .filter((definition) => !parsedCategory || definition.category === parsedCategory)
+      .map((definition) => {
+        const row = stored.get(definition.setting_key);
+        return {
+          ...(row ? { id: row.id } : {}),
+          setting_key: definition.setting_key,
+          setting_value: row?.setting_value ?? definition.default_value,
+          category: definition.category,
+        };
+      });
+
     return settings;
   }
 
@@ -229,6 +240,19 @@ export class SettingsService {
    * Upserts one or multiple settings and refreshes the cache.
    */
   async updateSettings(items: Array<{ setting_key: string; setting_value: string }>): Promise<SettingDto[]> {
+    const validationErrors: Array<{ setting_key: string; message: string }> = [];
+    for (const item of items) {
+      const definition = getSettingDefinition(item.setting_key);
+      if (!definition) {
+        validationErrors.push({ setting_key: item.setting_key, message: 'Unknown or unsupported setting key.' });
+      } else if (!definition.validate(item.setting_value)) {
+        validationErrors.push({ setting_key: item.setting_key, message: 'Invalid value for this setting.' });
+      }
+    }
+    if (validationErrors.length > 0) {
+      throw new BadRequestError('Settings update contains invalid values.', validationErrors);
+    }
+
     await this.settingsRepository.upsertMany(items);
     await this.refreshCache();
     return this.listSettings();
@@ -242,6 +266,10 @@ export class SettingsService {
     const map = new Map<string, string>();
     for (const row of rows) {
       map.set(row.setting_key, row.setting_value);
+    }
+    // Keep default-only keys available to typed consumers before database seeding.
+    for (const definition of SETTING_CATALOGUE) {
+      if (!map.has(definition.setting_key)) map.set(definition.setting_key, definition.default_value);
     }
     this.cache = map;
   }
