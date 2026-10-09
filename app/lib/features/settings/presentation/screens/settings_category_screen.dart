@@ -106,9 +106,42 @@ class _SettingsCategoryBody extends StatelessWidget {
                       child: OutlinedButton(
                         onPressed: state.saving
                             ? null
-                            : () => context
-                                .read<SettingsCategoryCubit>()
-                                .load(category),
+                            : () async {
+                                if (!state.dirty) {
+                                  context
+                                      .read<SettingsCategoryCubit>()
+                                      .load(category);
+                                  return;
+                                }
+                                final shouldDiscard = await showDialog<bool>(
+                                  context: context,
+                                  builder: (dialogContext) => AlertDialog(
+                                    title: const Text('Discard changes?'),
+                                    content: const Text(
+                                      'Your unsaved settings changes will be lost.',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(dialogContext)
+                                                .pop(false),
+                                        child: const Text('Keep editing'),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () =>
+                                            Navigator.of(dialogContext)
+                                                .pop(true),
+                                        child: const Text('Discard changes'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (context.mounted && shouldDiscard == true) {
+                                  context
+                                      .read<SettingsCategoryCubit>()
+                                      .load(category);
+                                }
+                              },
                         child: const Text(SettingsStrings.discard),
                       ),
                     ),
