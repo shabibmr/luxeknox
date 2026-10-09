@@ -13,7 +13,10 @@ import { type SettingDto, SETTING_CATALOGUE, getSettingDefinition, parseSettingC
  */
 @Injectable()
 export class SettingsService {
-  // In-memory cache to avoid repeated database lookups for invariant system settings
+  // Each API instance caches settings for at most 30 seconds. A successful
+  // write refreshes this instance immediately; other instances converge on the
+  // database value when their TTL expires. This is the documented consistency
+  // bound until a shared invalidation mechanism is introduced.
   private cache: Map<string, string> | null = null;
   private cacheLoadedAt = 0;
   private readonly cacheTtlMs = 30_000;
