@@ -26,6 +26,20 @@ extension SettingCategoryX on SettingCategory {
     SettingCategory.measurement => 'measurement',
   };
 
+  /// Whether this category currently has at least one backend-supported setting.
+  /// Keep empty categories out of the admin navigation until their settings have
+  /// a persisted definition and runtime consumer.
+  bool get isImplemented => switch (this) {
+    SettingCategory.general ||
+    SettingCategory.membership ||
+    SettingCategory.attendanceGate ||
+    SettingCategory.bookingRules ||
+    SettingCategory.billing ||
+    SettingCategory.diet ||
+    SettingCategory.measurement => true,
+    SettingCategory.workout || SettingCategory.notification => false,
+  };
+
   /// URL category segment.
   String get category => wireName;
 
