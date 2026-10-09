@@ -214,6 +214,29 @@ describe('SettingsService', () => {
       expect(cached.timezone).toBe('Asia/Kolkata');
       expect(mockRepository.findAll).toHaveBeenCalledTimes(1);
     });
+
+    it('expires cached values after the 30-second consistency window', async () => {
+      vi.useFakeTimers();
+      try {
+        await service.getSetting('timezone');
+        mockRepository.findAll = vi.fn().mockResolvedValue([
+          {
+            id: 1,
+            setting_key: 'timezone',
+            setting_value: 'Asia/Dubai',
+            description: 'Timezone',
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        ]);
+
+        vi.advanceTimersByTime(30_001);
+        expect(await service.getSetting('timezone')).toBe('Asia/Dubai');
+        expect(mockRepository.findAll).toHaveBeenCalledTimes(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 
   describe('listSettings', () => {
