@@ -1,3 +1,4 @@
+import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/features/people/domain/entities/emergency_contact.dart';
 import 'package:luxeknox/features/people/domain/entities/health_info.dart';
 import 'package:luxeknox/features/people/domain/entities/medical_record.dart';
@@ -6,11 +7,11 @@ import 'package:luxeknox/features/people/domain/usecases/create_emergency_contac
 import 'package:luxeknox/features/people/domain/usecases/create_medical_record_usecase.dart';
 import 'package:luxeknox/features/people/domain/usecases/delete_emergency_contact_usecase.dart';
 import 'package:luxeknox/features/people/domain/usecases/delete_medical_record_usecase.dart';
-import 'package:luxeknox/features/people/domain/usecases/get_health_info_usecase.dart';
+import 'package:luxeknox/features/people/domain/usecases/create_health_record_usecase.dart';
 import 'package:luxeknox/features/people/domain/usecases/list_emergency_contacts_usecase.dart';
+import 'package:luxeknox/features/people/domain/usecases/list_health_history_usecase.dart';
 import 'package:luxeknox/features/people/domain/usecases/list_medical_records_usecase.dart';
 import 'package:luxeknox/features/people/domain/usecases/update_emergency_contact_usecase.dart';
-import 'package:luxeknox/features/people/domain/usecases/update_health_info_usecase.dart';
 import 'package:luxeknox/features/people/domain/usecases/update_medical_record_usecase.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -21,7 +22,12 @@ class MockProfileRepository extends Mock implements ProfileRepository {}
 void main() {
   late MockProfileRepository mockRepository;
 
-  const tHealthInfo = HealthInfo(id: 1, memberId: 1, bloodGroup: 'O+');
+  final tHealthInfo = HealthInfo(
+    id: 1,
+    memberId: 1,
+    bloodGroup: 'O+',
+    recordedAt: DateTime(2026, 1, 1),
+  );
 
   const tMedicalRecord = MedicalRecord(
     id: 1,
@@ -42,28 +48,28 @@ void main() {
   });
 
   group('Health UseCases', () {
-    test('GetHealthInfoUseCase calls repository.getHealthInfo', () async {
+    test('ListHealthHistoryUseCase calls repository.listHealthHistory', () async {
       when(
-        () => mockRepository.getHealthInfo(1),
-      ).thenAnswer((_) async => const Right(tHealthInfo));
+        () => mockRepository.listHealthHistory(1),
+      ).thenAnswer((_) async => Right([tHealthInfo]));
 
-      final useCase = GetHealthInfoUseCase(mockRepository);
+      final useCase = ListHealthHistoryUseCase(mockRepository);
       final result = await useCase(1);
 
-      expect(result, const Right(tHealthInfo));
-      verify(() => mockRepository.getHealthInfo(1)).called(1);
+      expect(result.getOrElse((_) => const []), [tHealthInfo]);
+      verify(() => mockRepository.listHealthHistory(1)).called(1);
     });
 
-    test('UpdateHealthInfoUseCase calls repository.updateHealthInfo', () async {
+    test('CreateHealthRecordUseCase calls repository.createHealthRecord', () async {
       when(
-        () => mockRepository.updateHealthInfo(tHealthInfo),
-      ).thenAnswer((_) async => const Right(tHealthInfo));
+        () => mockRepository.createHealthRecord(tHealthInfo),
+      ).thenAnswer((_) async => Right(tHealthInfo));
 
-      final useCase = UpdateHealthInfoUseCase(mockRepository);
+      final useCase = CreateHealthRecordUseCase(mockRepository);
       final result = await useCase(tHealthInfo);
 
-      expect(result, const Right(tHealthInfo));
-      verify(() => mockRepository.updateHealthInfo(tHealthInfo)).called(1);
+      expect(result, Right<Failure, HealthInfo>(tHealthInfo));
+      verify(() => mockRepository.createHealthRecord(tHealthInfo)).called(1);
     });
   });
 
