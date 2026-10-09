@@ -307,7 +307,7 @@ describe('SettingsService', () => {
   describe('settings catalogue contract', () => {
     it('keeps seeded keys and default values aligned with the runtime catalogue', () => {
       const seeded = new Map(
-        SEED_GYM_SETTINGS.map((setting) => [setting.setting_key, setting.setting_value]),
+        SEED_GYM_SETTINGS.map((setting) => [setting.setting_key, setting.setting_value] as const),
       );
 
       expect([...seeded.keys()].sort()).toEqual(
