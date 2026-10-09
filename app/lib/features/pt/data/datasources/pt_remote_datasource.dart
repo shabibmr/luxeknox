@@ -13,7 +13,10 @@ abstract class PtRemoteDataSource {
     required String weekdays,
     int? excludeSubscriptionId,
   });
-  Future<api.PtPurchaseResult> purchase(api.PtPurchaseRequest request);
+  Future<api.PtPurchaseResult> purchase({
+    required api.PtPurchaseRequest request,
+    String? idempotencyKey,
+  });
   Future<api.PtPurchaseResult> renew(int id, api.PtRenewRequest request);
   Future<api.PtSubscription> reassignTrainer(
     int id,
@@ -74,8 +77,17 @@ class PtRemoteDataSourceImpl implements PtRemoteDataSource {
   );
 
   @override
-  Future<api.PtPurchaseResult> purchase(api.PtPurchaseRequest request) async =>
-      _unwrap(await _api.purchasePtSubscription(ptPurchaseRequest: request));
+  Future<api.PtPurchaseResult> purchase({
+    required api.PtPurchaseRequest request,
+    String? idempotencyKey,
+  }) async => _unwrap(
+    await _api.purchasePtSubscription(
+      ptPurchaseRequest: request,
+      headers: idempotencyKey == null
+          ? null
+          : {'Idempotency-Key': idempotencyKey},
+    ),
+  );
 
   @override
   Future<api.PtPurchaseResult> renew(

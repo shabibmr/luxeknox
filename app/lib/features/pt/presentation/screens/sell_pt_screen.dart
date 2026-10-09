@@ -86,7 +86,9 @@ class _SellPtView extends StatelessWidget {
             Navigator.of(context).maybePop(true);
           }
         } else if (state.failure != null &&
-            state.status == LoadStatus.success) {
+            state.status == LoadStatus.success &&
+            // A grid failure is already shown inline with a retry button.
+            state.gridStatus != LoadStatus.failure) {
           messenger.showSnackBar(
             SnackBar(content: Text(failureMessage(state.failure!))),
           );
@@ -241,12 +243,18 @@ class _Form extends StatelessWidget {
           onTap: () async {
             final now = DateTime.now();
             final first = DateTime(now.year, now.month, now.day);
-            final last = state.isReplan
+            final end = state.isReplan
                 ? state.replanning!.endDate
                 : first.add(const Duration(days: 365));
+            // showDatePicker asserts first <= initial <= last.
+            final last = end.isBefore(first) ? first : end;
+            final current = state.startDate ?? first;
+            final initial = current.isBefore(first)
+                ? first
+                : (current.isAfter(last) ? last : current);
             final picked = await showDatePicker(
               context: context,
-              initialDate: state.startDate ?? first,
+              initialDate: initial,
               firstDate: first,
               lastDate: last,
             );

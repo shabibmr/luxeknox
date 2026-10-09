@@ -82,6 +82,7 @@ class PurchasePtParams extends Equatable {
     required this.weekdays,
     required this.slotStart,
     required this.payment,
+    this.idempotencyKey,
   });
 
   final int memberId;
@@ -91,6 +92,9 @@ class PurchasePtParams extends Equatable {
   final List<int> weekdays;
   final String slotStart;
   final PtPayment payment;
+
+  /// Not part of [props]: it identifies the user's intent, not the request.
+  final String? idempotencyKey;
 
   @override
   List<Object?> get props => [
@@ -119,6 +123,7 @@ class PurchasePtUseCase implements UseCase<PtSubscription, PurchasePtParams> {
         weekdays: p.weekdays,
         slotStart: p.slotStart,
         payment: p.payment,
+        idempotencyKey: p.idempotencyKey,
       );
 }
 

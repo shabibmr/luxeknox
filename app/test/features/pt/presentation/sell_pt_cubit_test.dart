@@ -341,4 +341,65 @@ void main() {
 
     expect(cubit.state.canSubmit, isTrue);
   });
+
+  group('purchase idempotency key', () {
+    Future<SellPtCubit> ready() async {
+      final cubit = build();
+      await cubit.init(42);
+      pickThreeDays(cubit);
+      await Future<void>.delayed(Duration.zero);
+      cubit.selectSlot(7, '17:00:00');
+      return cubit;
+    }
+
+    List<String?> keys() => verify(
+      () => purchase(captureAny()),
+    ).captured.cast<PurchasePtParams>().map((p) => p.idempotencyKey).toList();
+
+    test('a retry of the same sale reuses the key', () async {
+      when(
+        () => purchase(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      final cubit = await ready();
+      await cubit.submit();
+      await cubit.submit();
+
+      final sent = keys();
+      expect(sent, hasLength(2));
+      expect(sent.first, isNotNull);
+      expect(sent.first, sent.last);
+    });
+
+    test('a changed sale mints a new key', () async {
+      when(
+        () => purchase(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      final cubit = await ready();
+      await cubit.submit();
+      cubit.setDiscount('50.00');
+      await cubit.submit();
+
+      final sent = keys();
+      expect(sent.first, isNot(sent.last));
+    });
+  });
+
+  test('a successful grid reload clears an earlier grid failure', () async {
+    var first = true;
+    when(() => getGrid(any())).thenAnswer((_) async {
+      if (first) {
+        first = false;
+        return const Left(NetworkFailure());
+      }
+      return Right(grid);
+    });
+    final cubit = build();
+    await cubit.init(42);
+    pickThreeDays(cubit);
+    await Future<void>.delayed(Duration.zero);
+    expect(cubit.state.failure, isA<NetworkFailure>());
+
+    await cubit.loadGrid();
+    expect(cubit.state.failure, isNull);
+  });
 }

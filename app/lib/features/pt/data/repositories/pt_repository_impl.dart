@@ -77,9 +77,11 @@ class PtRepositoryImpl implements PtRepository {
     required List<int> weekdays,
     required String slotStart,
     required PtPayment payment,
+    String? idempotencyKey,
   }) => _guard(() async {
     final result = await _remote.purchase(
-      api.PtPurchaseRequest(
+      idempotencyKey: idempotencyKey,
+      request: api.PtPurchaseRequest(
         (b) => b
           ..memberId = memberId
           ..ptProductId = ptProductId

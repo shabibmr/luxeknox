@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/idempotency/idempotency_key.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../payments/domain/entities/payment_method.dart';
@@ -103,6 +104,12 @@ class SellPtCubit extends Cubit<SellPtState> {
   final GetMemberUseCase? _getMember;
 
   Future<void> Function()? _lastInit;
+
+  /// One key per sale intent: a retry of an identical request (e.g. after a
+  /// timeout) reuses it so the server replays the first result instead of
+  /// rejecting the duplicate. Any change to the request mints a new key.
+  PurchasePtParams? _lastPurchase;
+  String? _purchaseKey;
 
   /// Re-runs whichever init (sell or re-plan) last started this cubit.
   Future<void> retry() => _lastInit?.call() ?? Future.value();
@@ -302,8 +309,13 @@ class SellPtCubit extends Cubit<SellPtState> {
       (failure) => emit(
         state.copyWith(gridStatus: LoadStatus.failure, failure: failure),
       ),
-      (grid) =>
-          emit(state.copyWith(gridStatus: LoadStatus.success, grid: grid)),
+      (grid) => emit(
+        state.copyWith(
+          gridStatus: LoadStatus.success,
+          grid: grid,
+          failure: null,
+        ),
+      ),
     );
   }
 
@@ -351,24 +363,40 @@ class SellPtCubit extends Cubit<SellPtState> {
               reason: state.reason,
             ),
           )
-        : await _purchase(
-            PurchasePtParams(
-              memberId: state.memberId,
-              ptProductId: state.product!.id,
-              trainerId: state.trainerId!,
-              startDate: state.startDate!,
-              weekdays: state.weekdays,
-              slotStart: state.slotStart!,
-              payment: PtPayment(
-                paymentMethodId: int.parse(state.paymentMethodId!),
-                discountAmount: state.discount,
-              ),
-            ),
-          );
+        : await _purchase(_purchaseParams());
     if (isClosed) return;
     result.fold(
       (failure) => emit(state.copyWith(submitting: false, failure: failure)),
       (sub) => emit(state.copyWith(submitting: false, result: sub)),
+    );
+  }
+
+  PurchasePtParams _purchaseParams() {
+    final base = PurchasePtParams(
+      memberId: state.memberId,
+      ptProductId: state.product!.id,
+      trainerId: state.trainerId!,
+      startDate: state.startDate!,
+      weekdays: state.weekdays,
+      slotStart: state.slotStart!,
+      payment: PtPayment(
+        paymentMethodId: int.parse(state.paymentMethodId!),
+        discountAmount: state.discount,
+      ),
+    );
+    if (base != _lastPurchase || _purchaseKey == null) {
+      _purchaseKey = newIdempotencyKey();
+    }
+    _lastPurchase = base;
+    return PurchasePtParams(
+      memberId: base.memberId,
+      ptProductId: base.ptProductId,
+      trainerId: base.trainerId,
+      startDate: base.startDate,
+      weekdays: base.weekdays,
+      slotStart: base.slotStart,
+      payment: base.payment,
+      idempotencyKey: _purchaseKey,
     );
   }
 
