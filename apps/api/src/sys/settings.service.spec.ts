@@ -47,7 +47,7 @@ describe('SettingsService', () => {
     mockRepository = {
       findAll: vi.fn().mockResolvedValue(mockSettings),
     };
-    service = new SettingsService(mockRepository as SettingsRepository, { recordAudit: vi.fn().mockResolvedValue(undefined) } as any);
+    service = new SettingsService(mockRepository as SettingsRepository);
   });
 
   describe('getTimezone', () => {
