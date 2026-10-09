@@ -7,13 +7,13 @@ import '../entities/health_info.dart';
 import '../repositories/profile_repository.dart';
 
 @lazySingleton
-class GetHealthInfoUseCase implements UseCase<HealthInfo, int> {
-  const GetHealthInfoUseCase(this._repository);
+class ListHealthHistoryUseCase implements UseCase<List<HealthInfo>, int> {
+  const ListHealthHistoryUseCase(this._repository);
 
   final ProfileRepository _repository;
 
   @override
-  Future<Either<Failure, HealthInfo>> call(int memberId) {
-    return _repository.getHealthInfo(memberId);
+  Future<Either<Failure, List<HealthInfo>>> call(int memberId) {
+    return _repository.listHealthHistory(memberId);
   }
 }

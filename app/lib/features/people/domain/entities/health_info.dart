@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-/// Mirrors `MemberHealth` (screen 04: Health Information).
+/// Mirrors `MemberHealthRecord` (screen 04: Health Information).
 class HealthInfo extends Equatable {
   final int id;
   final int memberId;
@@ -12,6 +12,7 @@ class HealthInfo extends Equatable {
   final String? physicianName;
   final String? physicianPhone;
   final DateTime? updatedAt;
+  final DateTime recordedAt;
 
   const HealthInfo({
     required this.id,
@@ -24,6 +25,7 @@ class HealthInfo extends Equatable {
     this.physicianName,
     this.physicianPhone,
     this.updatedAt,
+    required this.recordedAt,
   });
 
   HealthInfo copyWith({
@@ -37,6 +39,7 @@ class HealthInfo extends Equatable {
     String? physicianName,
     String? physicianPhone,
     DateTime? updatedAt,
+    DateTime? recordedAt,
   }) {
     return HealthInfo(
       id: id ?? this.id,
@@ -49,6 +52,7 @@ class HealthInfo extends Equatable {
       physicianName: physicianName ?? this.physicianName,
       physicianPhone: physicianPhone ?? this.physicianPhone,
       updatedAt: updatedAt ?? this.updatedAt,
+      recordedAt: recordedAt ?? this.recordedAt,
     );
   }
 
@@ -64,5 +68,6 @@ class HealthInfo extends Equatable {
     physicianName,
     physicianPhone,
     updatedAt,
+    recordedAt,
   ];
 }
