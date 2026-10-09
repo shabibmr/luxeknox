@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SettingsService } from './settings.service';
+import { BadRequestError } from '../platform/errors/app-error';
 import { Public } from '../auth/public.decorator';
 import { RequirePermission } from '../rbac/require-permission.decorator';
 import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
@@ -73,7 +74,7 @@ export class SettingsController {
       // Also support legacy aliases in the service during upgrade.
       const normalized = category.trim().toLowerCase();
       if (!['schedule', 'attendance', 'security', 'gym'].includes(normalized)) {
-        throw new (await import('../platform/errors/app-error')).BadRequestError(`Unsupported settings category "${category}".`);
+        throw new BadRequestError(`Unsupported settings category "${category}".`);
       }
     }
     const data = await this.settingsService.listSettings(category);
