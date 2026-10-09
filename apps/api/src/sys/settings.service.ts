@@ -17,7 +17,6 @@ export class SettingsService {
   private cache: Map<string, string> | null = null;
   private cacheLoadedAt = 0;
   private readonly cacheTtlMs = 30_000;
-  private refreshInFlight: Promise<void> | null = null;
 
   constructor(private readonly settingsRepository: SettingsRepository) {}
 
