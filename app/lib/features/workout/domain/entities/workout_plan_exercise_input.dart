@@ -10,6 +10,7 @@ class WorkoutPlanExerciseInput extends Equatable {
     this.targetReps,
     this.targetWeightKg,
     this.restSeconds,
+    this.restBetweenExercisesSeconds,
     this.notes,
     this.exerciseName,
   });
@@ -21,6 +22,7 @@ class WorkoutPlanExerciseInput extends Equatable {
   final String? targetReps;
   final num? targetWeightKg;
   final int? restSeconds;
+  final int? restBetweenExercisesSeconds;
   final String? notes;
   final String? exerciseName;
 
@@ -32,6 +34,7 @@ class WorkoutPlanExerciseInput extends Equatable {
     String? targetReps,
     num? targetWeightKg,
     int? restSeconds,
+    int? restBetweenExercisesSeconds,
     String? notes,
     String? exerciseName,
   }) {
@@ -43,6 +46,8 @@ class WorkoutPlanExerciseInput extends Equatable {
       targetReps: targetReps ?? this.targetReps,
       targetWeightKg: targetWeightKg ?? this.targetWeightKg,
       restSeconds: restSeconds ?? this.restSeconds,
+      restBetweenExercisesSeconds:
+          restBetweenExercisesSeconds ?? this.restBetweenExercisesSeconds,
       notes: notes ?? this.notes,
       exerciseName: exerciseName ?? this.exerciseName,
     );
@@ -57,6 +62,7 @@ class WorkoutPlanExerciseInput extends Equatable {
     targetReps,
     targetWeightKg,
     restSeconds,
+    restBetweenExercisesSeconds,
     notes,
     exerciseName,
   ];

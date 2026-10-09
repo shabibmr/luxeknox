@@ -68,7 +68,8 @@ class WorkoutExerciseCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      exercise.exerciseName ?? 'Exercise #${exercise.exerciseId}',
+                      exercise.exerciseName ??
+                          'Exercise #${exercise.exerciseId}',
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -79,10 +80,7 @@ class WorkoutExerciseCard extends StatelessWidget {
                       runSpacing: 4,
                       children: [
                         if (subtitle.isNotEmpty)
-                          _MetricChip(
-                            icon: Icons.repeat,
-                            label: subtitle,
-                          ),
+                          _MetricChip(icon: Icons.repeat, label: subtitle),
                         if (exercise.targetWeightKg != null)
                           _MetricChip(
                             icon: Icons.fitness_center,
@@ -92,6 +90,12 @@ class WorkoutExerciseCard extends StatelessWidget {
                           _MetricChip(
                             icon: Icons.timer_outlined,
                             label: '${exercise.restSeconds}s rest',
+                          ),
+                        if (exercise.restBetweenExercisesSeconds != null)
+                          _MetricChip(
+                            icon: Icons.hourglass_bottom_outlined,
+                            label:
+                                '${exercise.restBetweenExercisesSeconds}s between exercises',
                           ),
                       ],
                     ),

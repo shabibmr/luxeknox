@@ -86,6 +86,7 @@ export const workoutPlanExercises = mysqlTable(
     target_reps: varchar('target_reps', { length: 32 }).notNull().default('10'),
     target_weight_kg: decimal('target_weight_kg', { precision: 6, scale: 2 }),
     rest_seconds: int('rest_seconds').notNull().default(60),
+    rest_between_exercises_seconds: int('rest_between_exercises_seconds'),
     notes: text('notes'),
   },
   (table) => [

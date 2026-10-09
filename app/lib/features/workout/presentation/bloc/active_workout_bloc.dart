@@ -119,11 +119,18 @@ abstract class ActiveWorkoutState with _$ActiveWorkoutState {
     return count + 1;
   }
 
-  int restSecondsFor(String exerciseId) {
+  /// [completedSetNumber] is the set that was just logged.
+  /// The last prescribed set uses rest between exercises when that is set.
+  int restSecondsFor(String exerciseId, {required int completedSetNumber}) {
     for (final e in planExercises) {
-      if (e.exerciseId == exerciseId) {
-        return e.restSeconds ?? 60;
+      if (e.exerciseId != exerciseId) continue;
+      final setRest = e.restSeconds ?? 60;
+      final finishedExercise =
+          e.targetSets != null && completedSetNumber >= e.targetSets!;
+      if (finishedExercise && e.restBetweenExercisesSeconds != null) {
+        return e.restBetweenExercisesSeconds!;
       }
+      return setRest;
     }
     return 60;
   }
@@ -285,7 +292,10 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
 
     final setNumber = current.nextSetNumberFor(event.exerciseId);
     final sessionId = current.session!.id;
-    final restSeconds = current.restSecondsFor(event.exerciseId);
+    final restSeconds = current.restSecondsFor(
+      event.exerciseId,
+      completedSetNumber: setNumber,
+    );
     emit(state.copyWith(logging: true, failure: null, message: null));
 
     final result = await _logSet(

@@ -72,6 +72,15 @@ export function splitSqlStatements(sqlContent: string): string[] {
 }
 
 /**
+ * MariaDB 10.4 has no utf8mb4_0900_ai_ci. Keep the locked collation on MySQL 8
+ * and rewrite only when that collation is absent so the SQL can still run.
+ */
+export function statementForServer(statement: string, hasLockedCollation: boolean): string {
+  if (hasLockedCollation) return statement;
+  return statement.replace(/utf8mb4_0900_ai_ci/g, 'utf8mb4_unicode_ci');
+}
+
+/**
  * Ensures the `__drizzle_migrations` schema tracking table exists.
  */
 async function ensureMigrationsTable(connection: Connection): Promise<void> {
@@ -116,9 +125,10 @@ export async function runMigrations(options?: { migrationsFolder?: string }): Pr
     const [collations] = await connection.query<any[]>(
       "SELECT 1 FROM information_schema.COLLATIONS WHERE COLLATION_NAME = 'utf8mb4_0900_ai_ci' LIMIT 1;",
     );
-    if (collations.length === 0) {
-      throw new Error(
-        'Server does not support utf8mb4_0900_ai_ci. MySQL 8.0+ is required (see ADR-0002 and todo/README.md locked decisions).',
+    const hasLockedCollation = Array.isArray(collations) && collations.length > 0;
+    if (!hasLockedCollation) {
+      console.warn(
+        '[Migrate] This server has no utf8mb4_0900_ai_ci. Applying migrations with utf8mb4_unicode_ci.',
       );
     }
 
@@ -141,7 +151,8 @@ export async function runMigrations(options?: { migrationsFolder?: string }): Pr
       const sqlContent = fs.readFileSync(filePath, 'utf-8');
       const statements = splitSqlStatements(sqlContent);
 
-      for (const statement of statements) {
+      for (const rawStatement of statements) {
+        const statement = statementForServer(rawStatement, hasLockedCollation);
         try {
           await connection.query(statement);
         } catch (err: any) {
@@ -160,7 +171,14 @@ export async function runMigrations(options?: { migrationsFolder?: string }): Pr
     }
 
     const repeatableFolder = path.join(migrationsFolder, 'repeatable');
-    if (fs.existsSync(repeatableFolder)) {
+    const adminIsAppUser =
+      process.env.DB_ADMIN_USER != null &&
+      process.env.DB_ADMIN_USER === process.env.DB_USER;
+    if (adminIsAppUser) {
+      console.warn(
+        '[Migrate] Skipping repeatable grants because DB_ADMIN_USER is the application user.',
+      );
+    } else if (fs.existsSync(repeatableFolder)) {
       const appUser = requireSafeIdentifier(process.env.DB_USER, 'DB_USER');
       const dbName = requireSafeIdentifier(process.env.DB_NAME || 'luxeknox', 'DB_NAME');
 

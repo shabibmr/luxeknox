@@ -353,6 +353,7 @@ export class WorkoutPlanService {
             target_reps: e.target_reps,
             target_weight_kg: e.target_weight_kg,
             rest_seconds: e.rest_seconds,
+            rest_between_exercises_seconds: e.rest_between_exercises_seconds ?? null,
             notes: e.notes,
           })),
         );
@@ -415,6 +416,7 @@ export class WorkoutPlanService {
             target_reps: e.target_reps ?? '10',
             target_weight_kg: e.target_weight_kg ? String(e.target_weight_kg) : null,
             rest_seconds: e.rest_seconds ?? 60,
+            rest_between_exercises_seconds: e.rest_between_exercises_seconds ?? null,
             notes: e.notes ?? null,
           })),
         );

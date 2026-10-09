@@ -31,8 +31,9 @@ class WorkoutPlanBuilderScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<WorkoutPlanBuilderCubit>()
-        ..init(planId: planId, isTemplate: isTemplate, memberId: memberId),
+      create: (_) =>
+          getIt<WorkoutPlanBuilderCubit>()
+            ..init(planId: planId, isTemplate: isTemplate, memberId: memberId),
       child: _BuilderBody(planId: planId, isPureTemplate: isTemplate == true),
     );
   }
@@ -81,10 +82,7 @@ class _BuilderBody extends StatelessWidget {
         }
         return UnsavedChangesScope(
           hasUnsavedChanges: state.dirty && !state.saving,
-          child: _BuilderForm(
-            state: state,
-            isPureTemplate: isPureTemplate,
-          ),
+          child: _BuilderForm(state: state, isPureTemplate: isPureTemplate),
         );
       },
     );
@@ -400,6 +398,24 @@ class _BuilderFormState extends State<_BuilderForm> {
                   );
                 },
                 onMoveDay: (index) => _promptMoveDay(day, index),
+                onRestChanged: (index, restSeconds) {
+                  context
+                      .read<WorkoutPlanBuilderCubit>()
+                      .setExerciseRestSeconds(
+                        dayNumber: day,
+                        indexInDay: index,
+                        restSeconds: restSeconds,
+                      );
+                },
+                onExerciseRestChanged: (index, restSeconds) {
+                  context
+                      .read<WorkoutPlanBuilderCubit>()
+                      .setExerciseRestBetweenExercises(
+                        dayNumber: day,
+                        indexInDay: index,
+                        restBetweenExercisesSeconds: restSeconds,
+                      );
+                },
               ),
               const SizedBox(height: 12),
             ],

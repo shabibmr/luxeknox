@@ -8647,6 +8647,9 @@ components:
           nullable: true
         rest_seconds:
           type: integer
+        rest_between_exercises_seconds:
+          type: integer
+          nullable: true
         notes:
           type: string
           nullable: true
@@ -8778,6 +8781,8 @@ components:
               target_weight_kg:
                 type: number
               rest_seconds:
+                type: integer
+              rest_between_exercises_seconds:
                 type: integer
               notes:
                 type: string

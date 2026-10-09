@@ -11,6 +11,7 @@ class WorkoutPlanExercise extends Equatable {
     this.targetReps,
     this.targetWeightKg,
     this.restSeconds,
+    this.restBetweenExercisesSeconds,
     this.notes,
   });
 
@@ -23,6 +24,7 @@ class WorkoutPlanExercise extends Equatable {
   final String? targetReps;
   final num? targetWeightKg;
   final int? restSeconds;
+  final int? restBetweenExercisesSeconds;
   final String? notes;
 
   @override
@@ -36,6 +38,7 @@ class WorkoutPlanExercise extends Equatable {
     targetReps,
     targetWeightKg,
     restSeconds,
+    restBetweenExercisesSeconds,
     notes,
   ];
 }

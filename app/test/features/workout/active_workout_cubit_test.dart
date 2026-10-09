@@ -126,6 +126,33 @@ void main() {
     return bloc;
   }
 
+  test('last prescribed set uses rest between exercises', () {
+    const state = ActiveWorkoutState(
+      plan: WorkoutPlan(
+        id: '3',
+        title: 'Push',
+        isTemplate: false,
+        status: WorkoutPlanStatus.active,
+        rowVersion: 1,
+        exercises: [
+          WorkoutPlanExercise(
+            exerciseId: '100',
+            dayNumber: 1,
+            orderIndex: 0,
+            targetSets: 3,
+            restSeconds: 45,
+            restBetweenExercisesSeconds: 120,
+          ),
+        ],
+      ),
+    );
+
+    expect(state.restSecondsFor('100', completedSetNumber: 1), 45);
+    expect(state.restSecondsFor('100', completedSetNumber: 2), 45);
+    expect(state.restSecondsFor('100', completedSetNumber: 3), 120);
+    expect(state.restSecondsFor('missing', completedSetNumber: 1), 60);
+  });
+
   blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
     'starts session, logs set (starts rest), completes',
     build: () {

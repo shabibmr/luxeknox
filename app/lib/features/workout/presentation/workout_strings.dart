@@ -49,6 +49,11 @@ abstract final class WorkoutStrings {
   static const repsLabel = 'Reps';
   static const weightLabel = 'Weight (kg)';
   static const restLabel = 'Rest (s)';
+  static const restBetweenSetsLabel = 'Rest between sets';
+  static const restDefaultHint = 'Empty uses 60s';
+  static const restBetweenExercisesLabel = 'Rest between exercises';
+  static const restBetweenExercisesHint = 'Empty uses rest between sets';
+  static const restTooLong = 'Max 3600s';
   static const rpeLabel = 'RPE';
 
   static const assignToMember = 'Assign to member';
