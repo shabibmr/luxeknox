@@ -112,7 +112,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(MemberDocumentWrite.serializer)
       ..add(MemberDocumentWriteDocumentTypeEnum.serializer)
       ..add(MemberDossier.serializer)
-      ..add(MemberHealth.serializer)
+      ..add(MemberHealthHistoryPage.serializer)
+      ..add(MemberHealthRecord.serializer)
       ..add(MemberHealthWrite.serializer)
       ..add(MemberPage.serializer)
       ..add(MemberPhoto.serializer)
@@ -333,6 +334,9 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(MemberDocument)]),
           () => ListBuilder<MemberDocument>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(MemberHealthRecord)]),
+          () => ListBuilder<MemberHealthRecord>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(MemberPhoto)]),
           () => ListBuilder<MemberPhoto>())

@@ -1097,10 +1097,10 @@ paths:
           $ref: "#/components/responses/Error422"
         "429":
           $ref: "#/components/responses/Error429"
-  /members/{id}/health:
+  /members/{id}/health/history:
     get:
-      operationId: getMemberHealth
-      summary: Current health row
+      operationId: listMemberHealthHistory
+      summary: Member health history list
       tags: [HEALTH]
       x-status: mvp
       x-parity: required
@@ -1109,13 +1109,15 @@ paths:
         - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MemberHealth"
+                $ref: "#/components/schemas/MemberHealthHistoryPage"
         "400":
           $ref: "#/components/responses/Error400"
         "401":
@@ -1130,9 +1132,9 @@ paths:
           $ref: "#/components/responses/Error422"
         "429":
           $ref: "#/components/responses/Error429"
-    put:
-      operationId: putMemberHealth
-      summary: Replace current health row
+    post:
+      operationId: createMemberHealthRecord
+      summary: Record a new member health row
       tags: [HEALTH]
       x-status: mvp
       x-parity: required
@@ -1148,12 +1150,12 @@ paths:
             schema:
               $ref: "#/components/schemas/MemberHealthWrite"
       responses:
-        "200":
+        "201":
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MemberHealth"
+                $ref: "#/components/schemas/MemberHealthRecord"
         "400":
           $ref: "#/components/responses/Error400"
         "401":
@@ -7203,9 +7205,9 @@ components:
             $ref: "#/components/schemas/Employee"
         meta:
           $ref: "#/components/schemas/PageMeta"
-    MemberHealth:
+    MemberHealthRecord:
       type: object
-      required: [id, member_id]
+      required: [id, member_id, recorded_at]
       properties:
         id:
           $ref: "#/components/schemas/Id"
@@ -7232,8 +7234,9 @@ components:
         physician_phone:
           type: string
           nullable: true
-        updated_at:
-          $ref: "#/components/schemas/DateTime"
+        recorded_at:
+          type: string
+          format: date-time
     MemberHealthWrite:
       type: object
       properties:
@@ -7251,6 +7254,16 @@ components:
           type: string
         physician_phone:
           type: string
+    MemberHealthHistoryPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberHealthRecord"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
     HealthCondition:
       type: object
       required: [id, condition_name]

@@ -102,7 +102,8 @@ doc/MemberDocument.md
 doc/MemberDocumentPage.md
 doc/MemberDocumentWrite.md
 doc/MemberDossier.md
-doc/MemberHealth.md
+doc/MemberHealthHistoryPage.md
+doc/MemberHealthRecord.md
 doc/MemberHealthWrite.md
 doc/MemberPage.md
 doc/MemberPhoto.md
@@ -349,7 +350,8 @@ lib/src/model/member_document.dart
 lib/src/model/member_document_page.dart
 lib/src/model/member_document_write.dart
 lib/src/model/member_dossier.dart
-lib/src/model/member_health.dart
+lib/src/model/member_health_history_page.dart
+lib/src/model/member_health_record.dart
 lib/src/model/member_health_write.dart
 lib/src/model/member_page.dart
 lib/src/model/member_photo.dart
@@ -469,3 +471,5 @@ lib/src/model/workout_session_page.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
+test/member_health_history_page_test.dart
+test/member_health_record_test.dart

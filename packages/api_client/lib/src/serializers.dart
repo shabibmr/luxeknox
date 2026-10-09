@@ -106,7 +106,8 @@ import 'package:api_client/src/model/member_document.dart';
 import 'package:api_client/src/model/member_document_page.dart';
 import 'package:api_client/src/model/member_document_write.dart';
 import 'package:api_client/src/model/member_dossier.dart';
-import 'package:api_client/src/model/member_health.dart';
+import 'package:api_client/src/model/member_health_history_page.dart';
+import 'package:api_client/src/model/member_health_record.dart';
 import 'package:api_client/src/model/member_health_write.dart';
 import 'package:api_client/src/model/member_page.dart';
 import 'package:api_client/src/model/member_photo.dart';
@@ -320,7 +321,8 @@ part 'serializers.g.dart';
   MemberDocumentPage,
   MemberDocumentWrite,
   MemberDossier,
-  MemberHealth,
+  MemberHealthHistoryPage,
+  MemberHealthRecord,
   MemberHealthWrite,
   MemberPage,
   MemberPhoto,
@@ -519,6 +521,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(ErrorDetail)]),
         () => ListBuilder<ErrorDetail>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(MemberHealthRecord)]),
+        () => ListBuilder<MemberHealthRecord>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(AttendanceHistory)]),
