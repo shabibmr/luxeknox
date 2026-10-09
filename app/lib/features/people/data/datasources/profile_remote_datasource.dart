@@ -79,7 +79,9 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   @override
   Future<api.MemberHealthHistoryPage> listHealthHistory(int memberId) async {
-    return _unwrap(await _healthApi.listMemberHealthHistory(id: memberId));
+    return _unwrap(
+      await _healthApi.listMemberHealthHistory(id: memberId, limit: 100),
+    );
   }
 
   @override
