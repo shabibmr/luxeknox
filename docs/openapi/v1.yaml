@@ -6183,7 +6183,7 @@ paths:
   /settings:
     get:
       operationId: getSettings
-      summary: All settings or one category
+      summary: All catalogue settings or one category
       tags: [SYS]
       x-status: module-0
       x-permission: settings.read
@@ -6214,7 +6214,7 @@ paths:
           $ref: "#/components/responses/Error429"
     put:
       operationId: putSettings
-      summary: Upsert known setting keys
+      summary: Update known setting keys
       tags: [SYS]
       x-status: mvp
       x-parity: required
