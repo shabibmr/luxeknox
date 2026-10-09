@@ -72,6 +72,6 @@ All items in §5 have since been implemented; line references below describe the
 5. ✅ **S2 + S3 + S4 + B8**: clean up `redirect_logic`; the existing `redirect_logic_test.dart` covers it.
 6. ✅ **E3, E4, E5, E7, S9, S10, S12-S14**: small cleanups.
    ✅ **E6**: `DeviceTokenRegistrar.syncToken` skips the POST when a stored `<userId>|<token>` marker matches, and concurrent calls share one in-flight future. The marker is cleared on logout and before any registration attempt.
-7. ✅ **S8**: decided that Firestore `config/app` holds the host only and the client appends `/v1`, because this client is built against the v1 API. The contract is documented on `ApiBaseUrlResolver.normalize`. No data change needed.
+7. ✅ **S8**: decided that Firestore `config/app` holds the host only and the client appends `/v1`, because this client is built against the v1 API. The contract is documented on `ApiBaseUrlResolver.normalize`. No data change is required because `normalize` accepts either form, but the live Firestore value has not been read to confirm it. See `launch-flow-remediation-plan.md`.
 
 Known unrelated failures: 3 tests in `test/core/router/exercise_routes_test.dart` (they fail on the base commit too).

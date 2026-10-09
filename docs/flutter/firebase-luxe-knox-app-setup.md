@@ -20,10 +20,10 @@
 ## Remote app config (`API_BASE_URL`)
 
 - Document: `config/app`
-- Field: `API_BASE_URL` (string). Production value must be `https://api.luxeknox.com/v1` (Nest global prefix). Dev example: `https://api.dev.luxeknox.com/v1`.
+- Field: `API_BASE_URL` (string). Store the API **host only**: `https://api.luxeknox.com` (dev: `https://api.dev.luxeknox.com`). The client appends the Nest `/v1` prefix itself; a value already ending in `/v1` is accepted and canonicalized to the same URL.
 - Rules: public **read** on `config/app` only; writes denied; all other docs deny
 - App flow: SharedPreferences cache → Firestore fetch (refresh cache) → `--dart-define=API_BASE_URL` / default fallback
-- The resolver normalizes absolute URLs so a missing `/v1` suffix is appended (guards against mis-seeded Firestore values)
+- `ApiBaseUrlResolver.normalize` is applied on every path (Firestore, cache, and the `--dart-define` fallback, including when Firebase is unconfigured); `/v1` is appended unless the value already ends in a version segment
 - Code: `app/lib/core/config/resolve_remote_app_config.dart` (runs in `main` before DI)
 
 ## Console
