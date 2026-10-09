@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/core/usecase/usecase.dart';
 import 'package:luxeknox/features/payments/domain/entities/payment_method.dart';
@@ -232,5 +235,110 @@ void main() {
 
     cubit.setStartDate(DateTime(2026, 10, 12));
     expect(cubit.state.slotChosen, isFalse);
+  });
+
+  void pickThreeDays(SellPtCubit cubit) => cubit
+    ..selectProduct(product)
+    ..setStartDate(DateTime(2026, 10, 5))
+    ..toggleWeekday(1)
+    ..toggleWeekday(3)
+    ..toggleWeekday(5);
+
+  test('a stale grid response is discarded', () async {
+    final slow = Completer<Either<Failure, PtScheduleGrid>>();
+    final other = PtScheduleGrid(
+      startDate: DateTime(2026, 10, 12),
+      endDate: DateTime(2026, 11, 9),
+      weekdays: const [1, 3, 5],
+      hours: const ['17:00:00'],
+      trainers: const [PtGridTrainer(id: 8, name: 'Other T')],
+      cells: const [],
+    );
+    var calls = 0;
+    when(() => getGrid(any())).thenAnswer((_) {
+      calls++;
+      return calls == 1 ? slow.future : Future.value(Right(other));
+    });
+    final cubit = build();
+    await cubit.init(42);
+    pickThreeDays(cubit); // request 1 (slow)
+    cubit.setStartDate(DateTime(2026, 10, 12)); // request 2 (fast)
+    await Future<void>.delayed(Duration.zero);
+    slow.complete(Right(grid)); // old response lands last
+    await Future<void>.delayed(Duration.zero);
+
+    expect(cubit.state.grid, other);
+  });
+
+  test('replan loads the product when the caller passed none', () async {
+    final cubit = build();
+    await cubit.initReplan(sold, const []);
+
+    expect(cubit.state.status, LoadStatus.success);
+    expect(cubit.state.product, product);
+    verify(() => getProducts(any())).called(1);
+  });
+
+  test('replan fails visibly when the product cannot be found', () async {
+    when(
+      () => getProducts(any()),
+    ).thenAnswer((_) async => const Right(<PtProduct>[]));
+    final cubit = build();
+    await cubit.initReplan(sold, const []);
+
+    expect(cubit.state.status, LoadStatus.failure);
+    expect(cubit.state.failure, isA<NotFoundFailure>());
+  });
+
+  test('retry after a failed replan init re-runs the replan init', () async {
+    when(
+      () => getProducts(any()),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
+    final cubit = build();
+    await cubit.initReplan(sold, const []);
+    expect(cubit.state.failure, isA<NetworkFailure>());
+
+    when(
+      () => getProducts(any()),
+    ).thenAnswer((_) async => const Right([product]));
+    await cubit.retry();
+    expect(cubit.state.status, LoadStatus.success);
+    expect(cubit.state.isReplan, isTrue);
+  });
+
+  test('a replan with nothing changed cannot be submitted', () async {
+    final cubit = build();
+    await cubit.initReplan(sold, const [product]);
+    expect(cubit.state.slotChosen, isTrue);
+    expect(cubit.state.canSubmit, isFalse);
+
+    cubit.selectSlot(7, '17:00:00'); // same slot
+    expect(cubit.state.canSubmit, isFalse);
+
+    cubit.setStartDate(DateTime(2026, 10, 12)); // clears the slot
+    expect(cubit.state.canSubmit, isFalse);
+  });
+
+  test('a replan with a different hour can be submitted', () async {
+    final moved = PtScheduleGrid(
+      startDate: DateTime(2026, 10, 5),
+      endDate: DateTime(2026, 11, 2),
+      weekdays: const [1, 3, 5],
+      hours: const ['18:00:00'],
+      trainers: const [PtGridTrainer(id: 7, name: 'Rina S')],
+      cells: const [
+        PtGridCell(
+          trainerId: 7,
+          slotStart: '18:00:00',
+          status: PtGridCellStatus.free,
+        ),
+      ],
+    );
+    when(() => getGrid(any())).thenAnswer((_) async => Right(moved));
+    final cubit = build();
+    await cubit.initReplan(sold, const [product]);
+    cubit.selectSlot(7, '18:00:00');
+
+    expect(cubit.state.canSubmit, isTrue);
   });
 }

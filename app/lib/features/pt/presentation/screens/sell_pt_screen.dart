@@ -125,10 +125,7 @@ class _SellPtView extends StatelessWidget {
             LoadStatus.initial || LoadStatus.loading => const AppLoading(),
             LoadStatus.failure => AppErrorView(
               message: failureMessage(state.failure!),
-              onRetry: () => context.read<SellPtCubit>().init(
-                state.memberId,
-                memberName: state.memberName,
-              ),
+              onRetry: context.read<SellPtCubit>().retry,
             ),
             LoadStatus.success => _Form(
               state: state,

@@ -60,11 +60,26 @@ abstract class SellPtState with _$SellPtState {
 
   bool get slotChosen => trainerId != null && slotStart != null;
 
+  /// A re-plan is only submittable when the trainer, weekdays or hour differ
+  /// from the existing subscription; otherwise there is nothing to apply.
+  bool get replanChanged {
+    final r = replanning;
+    if (r == null) return true;
+    final a = [...weekdays]..sort();
+    final b = [...r.weekdays]..sort();
+    return trainerId != r.trainerId ||
+        a.join(',') != b.join(',') ||
+        _hourOf(slotStart) != _hourOf(r.slotStart);
+  }
+
+  static String? _hourOf(String? slot) =>
+      slot == null || slot.length < 2 ? slot : slot.substring(0, 2);
+
   bool get canSubmit =>
       !submitting &&
       canLoadGrid &&
       slotChosen &&
-      (isReplan || paymentMethodId != null);
+      (isReplan ? replanChanged : paymentMethodId != null);
 }
 
 /// Drives the "Add Personal Training" flow (package → weekdays → grid → pay)
@@ -87,7 +102,13 @@ class SellPtCubit extends Cubit<SellPtState> {
   final ReplanPtUseCase _replan;
   final GetMemberUseCase? _getMember;
 
+  Future<void> Function()? _lastInit;
+
+  /// Re-runs whichever init (sell or re-plan) last started this cubit.
+  Future<void> retry() => _lastInit?.call() ?? Future.value();
+
   Future<void> init(int memberId, {String? memberName}) async {
+    _lastInit = () => init(memberId, memberName: memberName);
     emit(
       SellPtState(
         memberId: memberId,
@@ -147,9 +168,38 @@ class SellPtCubit extends Cubit<SellPtState> {
     List<PtProduct> products, {
     String? memberName,
   }) async {
-    final product = products
+    _lastInit = () =>
+        initReplan(subscription, products, memberName: memberName);
+    var available = products;
+    var product = available
         .where((p) => p.id == subscription.ptProductId)
         .firstOrNull;
+    if (product == null) {
+      // The caller's list may be empty (its fetch failed) or stale.
+      emit(
+        SellPtState(
+          memberId: subscription.memberId,
+          memberName: memberName,
+          status: LoadStatus.loading,
+          replanning: subscription,
+        ),
+      );
+      final fetched = await _getProducts(const NoParams());
+      if (isClosed) return;
+      available = fetched.getOrElse((_) => available);
+      product = available
+          .where((p) => p.id == subscription.ptProductId)
+          .firstOrNull;
+      if (product == null) {
+        emit(
+          state.copyWith(
+            status: LoadStatus.failure,
+            failure: fetched.fold((f) => f, (_) => const NotFoundFailure()),
+          ),
+        );
+        return;
+      }
+    }
     final today = _today();
     final effective = subscription.startDate.isAfter(today)
         ? subscription.startDate
@@ -160,7 +210,7 @@ class SellPtCubit extends Cubit<SellPtState> {
         memberName: memberName,
         status: LoadStatus.success,
         replanning: subscription,
-        products: products,
+        products: available,
         product: product,
         startDate: effective,
         weekdays: [...subscription.weekdays],
@@ -243,16 +293,11 @@ class SellPtCubit extends Cubit<SellPtState> {
   Future<void> loadGrid() async {
     if (!state.canLoadGrid) return;
     emit(state.copyWith(gridStatus: LoadStatus.loading, failure: null));
-    final result = await _getGrid(
-      GetPtScheduleGridParams(
-        memberId: state.memberId,
-        ptProductId: state.product!.id,
-        startDate: state.startDate!,
-        weekdays: state.weekdays,
-        excludeSubscriptionId: state.replanning?.id,
-      ),
-    );
-    if (isClosed) return;
+    final params = _gridParams();
+    final result = await _getGrid(params);
+    // The selection changed while this request was in flight: its grid belongs
+    // to a different query, and a newer load (or none) is responsible now.
+    if (isClosed || !state.canLoadGrid || params != _gridParams()) return;
     result.fold(
       (failure) => emit(
         state.copyWith(gridStatus: LoadStatus.failure, failure: failure),
@@ -261,6 +306,14 @@ class SellPtCubit extends Cubit<SellPtState> {
           emit(state.copyWith(gridStatus: LoadStatus.success, grid: grid)),
     );
   }
+
+  GetPtScheduleGridParams _gridParams() => GetPtScheduleGridParams(
+    memberId: state.memberId,
+    ptProductId: state.product!.id,
+    startDate: state.startDate!,
+    weekdays: state.weekdays,
+    excludeSubscriptionId: state.replanning?.id,
+  );
 
   void selectSlot(int trainerId, String slotStart) {
     final cell = state.grid?.cell(trainerId, slotStart);
