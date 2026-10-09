@@ -1,4 +1,4 @@
-import { bigint, double, mysqlTable, text, uniqueIndex, varchar } from 'drizzle-orm/mysql-core';
+import { bigint, double, index, mysqlTable, text, varchar } from 'drizzle-orm/mysql-core';
 import { utcDatetime } from '../utc-datetime';
 import { members } from './members';
 
@@ -16,10 +16,10 @@ export const memberHealth = mysqlTable(
     dietary_preferences: text('dietary_preferences'),
     physician_name: varchar('physician_name', { length: 150 }),
     physician_phone: varchar('physician_phone', { length: 32 }),
+    recorded_at: utcDatetime('recorded_at').notNull(),
     created_at: utcDatetime('created_at').notNull(),
-    updated_at: utcDatetime('updated_at'),
   },
-  (table) => [uniqueIndex('member_health_member_id_unique').on(table.member_id)],
+  (table) => [index('member_health_member_id_idx').on(table.member_id)],
 );
 
 export type MemberHealth = typeof memberHealth.$inferSelect;
