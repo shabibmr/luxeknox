@@ -352,7 +352,11 @@ void main() {
           initialState: const DietPlanBuilderState(),
         );
         when(
-          () => cubit.init(planId: any(named: 'planId')),
+          () => cubit.init(
+            planId: any(named: 'planId'),
+            isTemplate: any(named: 'isTemplate'),
+            memberId: any(named: 'memberId'),
+          ),
         ).thenAnswer((_) async {});
         return cubit;
       });

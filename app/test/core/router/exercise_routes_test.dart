@@ -4,7 +4,9 @@ import 'package:luxeknox/core/pagination/cursor_page.dart';
 import 'package:luxeknox/core/router/app_router.dart';
 import 'package:luxeknox/core/usecase/usecase.dart';
 import 'package:luxeknox/features/dashboard/domain/usecases/get_dashboard_usecase.dart';
+import 'package:luxeknox/features/dashboard/presentation/cubit/dashboard_agenda_cubit.dart';
 import 'package:luxeknox/features/dashboard/presentation/cubit/dashboard_cubit.dart';
+import 'package:luxeknox/features/scheduling/domain/usecases/schedule_usecases.dart';
 import 'package:luxeknox/features/exercises/domain/entities/exercise.dart';
 import 'package:luxeknox/features/exercises/domain/usecases/get_exercise_usecase.dart';
 import 'package:luxeknox/features/exercises/domain/usecases/get_exercises_usecase.dart';
@@ -27,6 +29,8 @@ class MockGetExercisesUseCase extends Mock implements GetExercisesUseCase {}
 class MockGetExerciseUseCase extends Mock implements GetExerciseUseCase {}
 
 class MockGetDashboardUseCase extends Mock implements GetDashboardUseCase {}
+
+class MockListSchedulesUseCase extends Mock implements ListSchedulesUseCase {}
 
 class MockSessionCubit extends MockCubit<SessionState>
     implements SessionCubit {}
@@ -62,6 +66,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(const GetExercisesParams());
+    registerFallbackValue(const ListSchedulesParams());
   });
 
   setUp(() {
@@ -85,13 +90,21 @@ void main() {
     );
 
     // DashboardScreen is the member/trainer home route, which the shells
-    // here keep mounted alongside the exercise routes under test.
+    // here keep mounted alongside the exercise routes under test. It
+    // resolves both DashboardCubit and DashboardAgendaCubit from getIt.
     final mockGetDashboardUseCase = MockGetDashboardUseCase();
     when(
       () => mockGetDashboardUseCase(const NoParams()),
     ).thenAnswer((_) async => const Left(NetworkFailure()));
     getIt.registerFactory<DashboardCubit>(
       () => DashboardCubit(mockGetDashboardUseCase),
+    );
+    final mockListSchedulesUseCase = MockListSchedulesUseCase();
+    when(
+      () => mockListSchedulesUseCase(any()),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
+    getIt.registerFactory<DashboardAgendaCubit>(
+      () => DashboardAgendaCubit(mockListSchedulesUseCase),
     );
   });
 
