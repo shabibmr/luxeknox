@@ -1070,6 +1070,11 @@ class GOALApi {
   /// Returns a [Future] containing a [Response] with a [GoalMetricPage] as data
   /// Throws [DioException] if API call or serialization fails
   Future<Response<GoalMetricPage>> listGoalMetrics({ 
+    int? limit,
+    String? cursor,
+    String? q,
+    String? category,
+    bool? isActive,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -1096,9 +1101,18 @@ class GOALApi {
       validateStatus: validateStatus,
     );
 
+    final _queryParameters = <String, dynamic>{
+      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (cursor != null) r'cursor': encodeQueryParameter(_serializers, cursor, const FullType(String)),
+      if (q != null) r'q': encodeQueryParameter(_serializers, q, const FullType(String)),
+      if (category != null) r'category': encodeQueryParameter(_serializers, category, const FullType(String)),
+      if (isActive != null) r'is_active': isActive ? 'true' : 'false',
+    };
+
     final _response = await _dio.request<Object>(
       _path,
       options: _options,
+      queryParameters: _queryParameters,
       cancelToken: cancelToken,
       onSendProgress: onSendProgress,
       onReceiveProgress: onReceiveProgress,

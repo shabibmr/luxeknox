@@ -7,9 +7,11 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../people/presentation/widgets/member_trainer_header.dart';
+import '../../domain/entities/goal_metric.dart';
 import '../../domain/entities/goal_status.dart';
 import '../cubit/goal_form_cubit.dart';
 import '../goals_strings.dart';
+import '../widgets/goal_metric_search_sheet.dart';
 
 class GoalFormScreen extends StatelessWidget {
   const GoalFormScreen({super.key, required this.memberId, this.goalId});
@@ -39,6 +41,7 @@ class _GoalFormBody extends StatefulWidget {
 
 class _GoalFormBodyState extends State<_GoalFormBody> {
   String? _metricId;
+  GoalMetric? _metric;
   final _baselineController = TextEditingController();
   final _targetController = TextEditingController();
   DateTime? _startDate;
@@ -57,6 +60,15 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
     if (_seeded || state.existing == null) return;
     final g = state.existing!;
     _metricId = g.metricId;
+    _metric = g.metric;
+    if (_metric == null) {
+      for (final metric in state.metrics) {
+        if (metric.id == g.metricId) {
+          _metric = metric;
+          break;
+        }
+      }
+    }
     if (g.baselineValue != null) {
       _baselineController.text = '${g.baselineValue}';
     }
@@ -164,26 +176,18 @@ class _GoalFormBodyState extends State<_GoalFormBody> {
         setState(() => _seedFrom(ready));
       });
     }
-    final metrics = ready.metrics;
     final submitting = ready.submitting;
     final error = ready.failure == null ? null : failureMessage(ready.failure!);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        DropdownButtonFormField<String>(
-          // ignore: deprecated_member_use
-          value: _metricId,
-          decoration: const InputDecoration(
-            labelText: GoalsStrings.metricLabel,
-          ),
-          items: [
-            for (final m in metrics)
-              DropdownMenuItem(
-                value: m.id,
-                child: Text('${m.name} (${m.unitOfMeasure})'),
-              ),
-          ],
-          onChanged: submitting ? null : (v) => setState(() => _metricId = v),
+        GoalMetricSearchField(
+          value: _metric,
+          enabled: !submitting,
+          onChanged: (metric) => setState(() {
+            _metric = metric;
+            _metricId = metric?.id;
+          }),
         ),
         const SizedBox(height: 12),
         TextField(

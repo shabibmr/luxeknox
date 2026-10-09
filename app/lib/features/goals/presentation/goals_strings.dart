@@ -45,6 +45,12 @@ abstract final class GoalsStrings {
   static const goalSaveFailed = 'Could not save goal';
   static const metricRequired = 'Select a metric';
   static const pickMetric = 'Choose metric';
+  static const searchMetrics = 'Search metrics';
+  static const addNewMetric = 'Add new goal metric';
+  static const metricTypeLabel = 'Type';
+  static const allMetricTypes = 'All types';
+  static const noMetricsFound = 'No metrics match';
+  static const selectMetricHint = 'Search and select a metric';
 
   static const statusInProgress = 'In progress';
   static const statusAchieved = 'Achieved';

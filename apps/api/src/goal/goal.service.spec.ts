@@ -68,6 +68,7 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
       findManyFiltered: vi.fn().mockResolvedValue({ rows: [sampleMetric], total: 1 }),
       findById: vi.fn().mockResolvedValue(sampleMetric),
       create: vi.fn().mockImplementation(async (data) => ({ id: 1, ...data })),
+      insertMetric: vi.fn().mockResolvedValue(1),
       update: vi.fn().mockImplementation(async (id, data) => ({ ...sampleMetric, ...data })),
       updateById: vi.fn().mockImplementation(async (id, data) => ({ ...sampleMetric, ...data })),
     };
@@ -222,8 +223,15 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
         mockAdminUser,
       );
 
-      expect(created.name).toBe('Body Weight');
-      expect(metricRepo.create).toHaveBeenCalled();
+      expect(created.id).toBe(sampleMetric.id);
+      expect(metricRepo.insertMetric).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Body Weight',
+          unit_of_measure: 'kg',
+          category: 'body_composition',
+        }),
+      );
+      expect(metricRepo.findById).toHaveBeenCalledWith(1);
       expect(auditService.recordAudit).toHaveBeenCalledWith(
         expect.objectContaining({ entityName: 'goal_metrics', action: 'create' }),
       );

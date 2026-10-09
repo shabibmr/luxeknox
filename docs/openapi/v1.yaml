@@ -5145,6 +5145,19 @@ paths:
       x-permission: goals.read
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Q"
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [body_composition, circumference, strength]
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
       responses:
         "200":
           description: OK
@@ -5172,7 +5185,8 @@ paths:
       tags: [GOAL]
       x-status: mvp
       x-parity: required
-      x-permission: goals.write
+      x-permission: goals.create
+      description: Trainers and staff with goals.create, goals.update, or goals.write may create a metric.
       security:
         - bearerAuth: []
       requestBody:
@@ -5209,7 +5223,8 @@ paths:
       tags: [GOAL]
       x-status: mvp
       x-parity: required
-      x-permission: goals.write
+      x-permission: goals.update
+      description: Trainers and staff with goals.create, goals.update, or goals.write may update a metric.
       security:
         - bearerAuth: []
       parameters:

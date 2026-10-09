@@ -3,7 +3,13 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 abstract class GoalsRemoteDataSource {
-  Future<api.GoalMetricPage> listGoalMetrics();
+  Future<api.GoalMetricPage> listGoalMetrics({
+    String? q,
+    String? category,
+    bool? isActive,
+    int? limit,
+    String? cursor,
+  });
 
   Future<api.GoalMetric> createGoalMetric(api.GoalMetricWrite write);
 
@@ -71,8 +77,22 @@ class GoalsRemoteDataSourceImpl implements GoalsRemoteDataSource {
   }
 
   @override
-  Future<api.GoalMetricPage> listGoalMetrics() async {
-    return _unwrap(await _goalApi.listGoalMetrics());
+  Future<api.GoalMetricPage> listGoalMetrics({
+    String? q,
+    String? category,
+    bool? isActive,
+    int? limit,
+    String? cursor,
+  }) async {
+    return _unwrap(
+      await _goalApi.listGoalMetrics(
+        q: q,
+        category: category,
+        isActive: isActive,
+        limit: limit,
+        cursor: cursor,
+      ),
+    );
   }
 
   @override

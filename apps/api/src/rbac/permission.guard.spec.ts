@@ -2,6 +2,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Reflector } from '@nestjs/core';
 import type { ExecutionContext } from '@nestjs/common';
 import { PermissionGuard } from './permission.guard';
+import {
+  REQUIRE_ANY_PERMISSIONS_KEY,
+  REQUIRE_PERMISSIONS_KEY,
+} from './require-permission.decorator';
 import { PermissionCache } from './permission-cache';
 import { AuthGuard, type AuthenticatedUser } from '../auth/auth.guard';
 import { SessionCache } from '../auth/session.cache';
@@ -372,6 +376,37 @@ describe('AuthGuard & PermissionGuard', () => {
       const err = await permissionGuard.canActivate(ctx).catch((e) => e);
       expect(err).toBeInstanceOf(ForbiddenError);
       expect(err.message).toContain("missing required permission 'members.create'");
+    });
+
+    it('allows a trainer with goals.write to pass an any-of goal metric route', async () => {
+      vi.spyOn(reflector, 'getAllAndOverride').mockImplementation((key: unknown) => {
+        if (key === REQUIRE_ANY_PERMISSIONS_KEY) {
+          return ['goals.create', 'goals.update', 'goals.write'];
+        }
+        if (key === REQUIRE_PERMISSIONS_KEY) {
+          return [];
+        }
+        return false;
+      });
+
+      vi.spyOn(permissionCache, 'getPermissionsForRole').mockResolvedValueOnce(
+        new Set(['goals.read', 'goals.write']),
+      );
+
+      const ctx = createMockExecutionContext({
+        path: '/v1/goal-metrics',
+        user: {
+          id: 5,
+          email: 'trainer@example.com',
+          phoneNumber: null,
+          userType: 'trainer',
+          roleId: 3,
+          profileId: 5,
+          sessionId: 13,
+        },
+      });
+
+      await expect(permissionGuard.canActivate(ctx)).resolves.toBe(true);
     });
   });
 });

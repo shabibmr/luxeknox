@@ -6,7 +6,10 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { isPublicRequest } from '../auth/public-paths';
-import { REQUIRE_PERMISSIONS_KEY } from './require-permission.decorator';
+import {
+  REQUIRE_ANY_PERMISSIONS_KEY,
+  REQUIRE_PERMISSIONS_KEY,
+} from './require-permission.decorator';
 import { PermissionCache, WILDCARD_SLUG } from './permission-cache';
 import { ForbiddenError, UnauthorizedError } from '../platform/errors/app-error';
 
@@ -29,9 +32,16 @@ export class PermissionGuard implements CanActivate {
       REQUIRE_PERMISSIONS_KEY,
       [context.getHandler(), context.getClass()],
     );
+    const anyPermissions = this.reflector.getAllAndOverride<string[]>(
+      REQUIRE_ANY_PERMISSIONS_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    const allOf = requiredPermissions ?? [];
+    const anyOf = anyPermissions ?? [];
 
     // If route has no required permissions specified, allow access (authenticated user)
-    if (!requiredPermissions || requiredPermissions.length === 0) {
+    if (allOf.length === 0 && anyOf.length === 0) {
       return true;
     }
 
@@ -48,14 +58,21 @@ export class PermissionGuard implements CanActivate {
       return true;
     }
 
-    // 5. Verify all required permissions are granted
-    for (const required of requiredPermissions) {
+    // Verify every required permission is granted.
+    for (const required of allOf) {
       if (!userPermissions.has(required)) {
         throw new ForbiddenError(
           `Forbidden: missing required permission '${required}'`,
           [{ requiredPermission: required }],
         );
       }
+    }
+
+    if (anyOf.length > 0 && !anyOf.some((slug) => userPermissions.has(slug))) {
+      throw new ForbiddenError(
+        `Forbidden: missing required permission '${anyOf.join("' or '")}'`,
+        [{ requiredPermission: anyOf[0] }],
+      );
     }
 
     return true;
