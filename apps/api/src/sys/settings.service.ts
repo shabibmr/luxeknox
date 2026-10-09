@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { AuditService } from '../platform/audit/audit.service';
 import { AuditService } from '../platform/audit/audit.service';
 import { SettingsRepository } from './settings.repository';
 import { BadRequestError } from '../platform/errors/app-error';
@@ -14,8 +15,6 @@ import { type SettingDto, SETTING_CATALOGUE, getSettingDefinition, parseSettingC
  */
 @Injectable()
 export class SettingsService {
-  private readonly logger = new Logger(SettingsService.name);
-
   // In-memory cache to avoid repeated database lookups for invariant system settings
   private cache: Map<string, string> | null = null;
   private cacheLoadedAt = 0;
