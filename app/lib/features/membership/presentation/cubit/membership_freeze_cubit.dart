@@ -102,7 +102,8 @@ class MembershipFreezeCubit extends Cubit<MembershipFreezeState> {
         state.copyWith(
           status: LoadStatus.success,
           failure: null,
-          items: [...page.items]..sort((a, b) => b.startDate.compareTo(a.startDate)),
+          items: [...page.items]
+            ..sort((a, b) => b.startDate.compareTo(a.startDate)),
         ),
       ),
     );

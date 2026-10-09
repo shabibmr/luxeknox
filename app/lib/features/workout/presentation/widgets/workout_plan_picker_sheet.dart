@@ -18,19 +18,13 @@ Future<WorkoutPlan?> showWorkoutPlanPickerSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (_) => WorkoutPlanPickerSheet(
-      memberId: memberId,
-      listPlans: listPlans,
-    ),
+    builder: (_) =>
+        WorkoutPlanPickerSheet(memberId: memberId, listPlans: listPlans),
   );
 }
 
 class WorkoutPlanPickerSheet extends StatelessWidget {
-  const WorkoutPlanPickerSheet({
-    super.key,
-    this.memberId,
-    this.listPlans,
-  });
+  const WorkoutPlanPickerSheet({super.key, this.memberId, this.listPlans});
 
   final String? memberId;
   final ListWorkoutPlansUseCase? listPlans;
@@ -75,8 +69,11 @@ class WorkoutPlanPickerSheet extends StatelessWidget {
         return result.map(
           (page) => CursorPage(
             items: page.items
-                .where((p) =>
-                    p.title.toLowerCase().contains(query.trim().toLowerCase()))
+                .where(
+                  (p) => p.title.toLowerCase().contains(
+                    query.trim().toLowerCase(),
+                  ),
+                )
                 .toList(),
             nextCursor: page.nextCursor,
             hasMore: page.hasMore,
@@ -89,8 +86,7 @@ class WorkoutPlanPickerSheet extends StatelessWidget {
             plan.targetGoal!,
           if (plan.difficulty != null && plan.difficulty!.isNotEmpty)
             plan.difficulty!,
-          if (plan.exercises.isNotEmpty)
-            '${plan.exercises.length} exercises',
+          if (plan.exercises.isNotEmpty) '${plan.exercises.length} exercises',
         ];
         return ListTile(
           title: Text(plan.title),

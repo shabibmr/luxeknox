@@ -78,36 +78,37 @@ void main() {
     expect(selected!.fullName, 'Alice Walker');
   });
 
-  testWidgets('MemberPickerField displays selected member and triggers picker', (
-    tester,
-  ) async {
-    ProfileSummary? selectedMember;
+  testWidgets(
+    'MemberPickerField displays selected member and triggers picker',
+    (tester) async {
+      ProfileSummary? selectedMember;
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: StatefulBuilder(
-            builder: (context, setState) {
-              return MemberPickerField(
-                selectedMember: selectedMember,
-                listMembers: listMembers,
-                onChanged: (m) => setState(() => selectedMember = m),
-              );
-            },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return MemberPickerField(
+                  selectedMember: selectedMember,
+                  listMembers: listMembers,
+                  onChanged: (m) => setState(() => selectedMember = m),
+                );
+              },
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    expect(find.text('Select a member'), findsOneWidget);
+      expect(find.text('Select a member'), findsOneWidget);
 
-    await tester.tap(find.byType(MemberPickerField));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byType(MemberPickerField));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Bob Builder'), findsOneWidget);
-    await tester.tap(find.text('Bob Builder'));
-    await tester.pumpAndSettle();
+      expect(find.text('Bob Builder'), findsOneWidget);
+      await tester.tap(find.text('Bob Builder'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Bob Builder (M-1002)'), findsOneWidget);
-  });
+      expect(find.text('Bob Builder (M-1002)'), findsOneWidget);
+    },
+  );
 }

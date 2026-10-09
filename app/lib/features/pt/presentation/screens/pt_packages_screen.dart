@@ -130,14 +130,7 @@ class _PtPackageFormState extends State<_PtPackageForm> {
 
   @override
   void dispose() {
-    for (final c in [
-      _name,
-      _description,
-      _duration,
-      _sessions,
-      _price,
-      _tax,
-    ]) {
+    for (final c in [_name, _description, _duration, _sessions, _price, _tax]) {
       c.dispose();
     }
     super.dispose();
@@ -167,8 +160,9 @@ class _PtPackageFormState extends State<_PtPackageForm> {
     final suffix = DateTime.now().millisecondsSinceEpoch
         .toRadixString(36)
         .toUpperCase();
-    final shortSuffix =
-        suffix.length > 6 ? suffix.substring(suffix.length - 6) : suffix;
+    final shortSuffix = suffix.length > 6
+        ? suffix.substring(suffix.length - 6)
+        : suffix;
     return slug.isEmpty ? 'PT-$shortSuffix' : '$slug-$shortSuffix';
   }
 

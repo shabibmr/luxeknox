@@ -27,8 +27,7 @@ Membership? preferActiveMembership(List<Membership> items) {
 bool canSellMembership({
   required UserType userType,
   required bool canCreateMembership,
-}) =>
-    userType == UserType.admin && canCreateMembership;
+}) => userType == UserType.admin && canCreateMembership;
 
 /// PT can be added only while the gym membership is active and unexpired, and
 /// only one PT runs at a time (renew instead). Selling is admin/staff only.
@@ -43,7 +42,11 @@ bool canSellPt({
   if (pt?.current != null) return false;
   if (membership == null || membership.status.name != 'active') return false;
   final today = now ?? DateTime.now();
-  final end = DateTime(membership.endDate.year, membership.endDate.month, membership.endDate.day);
+  final end = DateTime(
+    membership.endDate.year,
+    membership.endDate.month,
+    membership.endDate.day,
+  );
   return !end.isBefore(DateTime(today.year, today.month, today.day));
 }
 
@@ -52,7 +55,8 @@ bool canManagePt({required UserType userType, required bool canManage}) =>
     userType == UserType.admin && canManage;
 
 /// Trainers see goals/plans read-only once their PT with the member has ended.
-bool trainerHubReadOnly(MemberPtSummary? pt) => pt?.trainerAccess == TrainerAccess.readOnly;
+bool trainerHubReadOnly(MemberPtSummary? pt) =>
+    pt?.trainerAccess == TrainerAccess.readOnly;
 
 String formatCalendarDate(DateTime date) {
   final y = date.year.toString().padLeft(4, '0');

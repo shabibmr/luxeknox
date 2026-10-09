@@ -51,8 +51,9 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
   }
 
   static bool _isValidEmail(String email) {
-    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-        .hasMatch(email);
+    return RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    ).hasMatch(email);
   }
 
   bool _validateStep0(AddMemberWizardState state) {
@@ -97,10 +98,7 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
     return emailErr == null && phoneErr == null;
   }
 
-  void _onStepContinue(
-    AddMemberWizardCubit cubit,
-    AddMemberWizardState state,
-  ) {
+  void _onStepContinue(AddMemberWizardCubit cubit, AddMemberWizardState state) {
     if (state.step == 0) {
       if (!_validateStep0(state)) return;
       cubit.nextStep();
@@ -199,9 +197,7 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
                         if (_firstNameError != null) {
                           setState(() => _firstNameError = null);
                         }
-                        cubit.updateInput(
-                          (i) => i.copyWith(firstName: value),
-                        );
+                        cubit.updateInput((i) => i.copyWith(firstName: value));
                       },
                     ),
                     TextField(
@@ -297,7 +293,9 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
                       '${PeopleStrings.firstName}: ${state.input.firstName}',
                     ),
                     Text('${PeopleStrings.lastName}: ${state.input.lastName}'),
-                    Text('${PeopleStrings.gender}: ${state.input.gender ?? '-'}'),
+                    Text(
+                      '${PeopleStrings.gender}: ${state.input.gender ?? '-'}',
+                    ),
                     Text('${PeopleStrings.email}: ${state.input.email ?? '-'}'),
                     Text(
                       '${PeopleStrings.phoneNumber}: '

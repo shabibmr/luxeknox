@@ -45,16 +45,11 @@ void main() {
 
       final useCase = LoginUseCase(mockRepository);
       final result = await useCase(
-        const LoginParams(
-          identifier: 'admin',
-          password: 'password123',
-        ),
+        const LoginParams(identifier: 'admin', password: 'password123'),
       );
 
       expect(result, const Right((tPrincipal, tCapabilities)));
-      verify(
-        () => mockRepository.login('admin', 'password123'),
-      ).called(1);
+      verify(() => mockRepository.login('admin', 'password123')).called(1);
     });
 
     test('LogoutUseCase calls repository.logout', () async {

@@ -18,8 +18,8 @@ abstract class FirebaseAuthService {
 @LazySingleton(as: FirebaseAuthService)
 class FirebaseAuthServiceImpl implements FirebaseAuthService {
   FirebaseAuthServiceImpl()
-      : firebaseAuth = null,
-        _googleSignIn = GoogleSignIn();
+    : firebaseAuth = null,
+      _googleSignIn = GoogleSignIn();
 
   @visibleForTesting
   FirebaseAuthServiceImpl.forTesting({

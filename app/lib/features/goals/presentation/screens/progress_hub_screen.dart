@@ -170,9 +170,7 @@ class _ProgressHubBody extends StatelessWidget {
                       context.push(
                         isAdminShell
                             ? Routes.adminMembersWorkoutHistoryById(memberId)
-                            : Routes.trainerMembersWorkoutHistoryById(
-                                memberId,
-                              ),
+                            : Routes.trainerMembersWorkoutHistoryById(memberId),
                       );
                     } else {
                       context.go(Routes.memberHomeWorkoutHistory);

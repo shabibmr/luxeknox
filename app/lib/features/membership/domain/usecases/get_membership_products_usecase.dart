@@ -9,7 +9,12 @@ import '../entities/membership_product.dart';
 import '../repositories/membership_repository.dart';
 
 class GetMembershipProductsParams extends Equatable {
-  const GetMembershipProductsParams({this.q, this.limit, this.offset, this.activeOnly = false});
+  const GetMembershipProductsParams({
+    this.q,
+    this.limit,
+    this.offset,
+    this.activeOnly = false,
+  });
 
   final String? q;
   final int? limit;

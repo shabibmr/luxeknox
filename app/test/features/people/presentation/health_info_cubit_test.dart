@@ -40,7 +40,9 @@ void main() {
 
   group('HealthInfoCubit.load', () {
     test('emits success with info when usecase succeeds', () async {
-      when(() => mockGetHealth(5)).thenAnswer((_) async => const Right(tHealthInfo));
+      when(
+        () => mockGetHealth(5),
+      ).thenAnswer((_) async => const Right(tHealthInfo));
 
       await cubit.load(5);
 
@@ -49,20 +51,25 @@ void main() {
       expect(cubit.state.failure, isNull);
     });
 
-    test('emits success with empty HealthInfo when usecase returns NotFoundFailure', () async {
-      when(() => mockGetHealth(5))
-          .thenAnswer((_) async => const Left(NotFoundFailure()));
+    test(
+      'emits success with empty HealthInfo when usecase returns NotFoundFailure',
+      () async {
+        when(
+          () => mockGetHealth(5),
+        ).thenAnswer((_) async => const Left(NotFoundFailure()));
 
-      await cubit.load(5);
+        await cubit.load(5);
 
-      expect(cubit.state.status, LoadStatus.success);
-      expect(cubit.state.info, const HealthInfo(id: 0, memberId: 5));
-      expect(cubit.state.failure, isNull);
-    });
+        expect(cubit.state.status, LoadStatus.success);
+        expect(cubit.state.info, const HealthInfo(id: 0, memberId: 5));
+        expect(cubit.state.failure, isNull);
+      },
+    );
 
     test('emits failure when usecase returns NetworkFailure', () async {
-      when(() => mockGetHealth(5))
-          .thenAnswer((_) async => const Left(NetworkFailure()));
+      when(
+        () => mockGetHealth(5),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
 
       await cubit.load(5);
 
@@ -73,21 +80,26 @@ void main() {
   });
 
   group('HealthInfoCubit.save', () {
-    test('emits success with updated info and message when save succeeds', () async {
-      when(() => mockUpdateHealth(any()))
-          .thenAnswer((_) async => const Right(tHealthInfo));
+    test(
+      'emits success with updated info and message when save succeeds',
+      () async {
+        when(
+          () => mockUpdateHealth(any()),
+        ).thenAnswer((_) async => const Right(tHealthInfo));
 
-      await cubit.save(tHealthInfo);
+        await cubit.save(tHealthInfo);
 
-      expect(cubit.state.status, LoadStatus.success);
-      expect(cubit.state.info, tHealthInfo);
-      expect(cubit.state.message, 'saved');
-      expect(cubit.state.failure, isNull);
-    });
+        expect(cubit.state.status, LoadStatus.success);
+        expect(cubit.state.info, tHealthInfo);
+        expect(cubit.state.message, 'saved');
+        expect(cubit.state.failure, isNull);
+      },
+    );
 
     test('emits failure when save fails', () async {
-      when(() => mockUpdateHealth(any()))
-          .thenAnswer((_) async => const Left(ValidationFailure(['Invalid height'])));
+      when(() => mockUpdateHealth(any())).thenAnswer(
+        (_) async => const Left(ValidationFailure(['Invalid height'])),
+      );
 
       await cubit.save(tHealthInfo);
 

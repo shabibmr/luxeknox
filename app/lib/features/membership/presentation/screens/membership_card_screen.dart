@@ -66,7 +66,9 @@ class _MembershipCardBody extends StatelessWidget {
                 ),
               ListTile(
                 title: const Text(MembershipStrings.startDateLabel),
-                subtitle: Text(start == null ? '—' : formatMembershipDate(start!)),
+                subtitle: Text(
+                  start == null ? '—' : formatMembershipDate(start!),
+                ),
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: dialogContext,
@@ -105,7 +107,8 @@ class _MembershipCardBody extends StatelessWidget {
               child: const Text(MembershipStrings.cancel),
             ),
             TextButton(
-              onPressed: start != null &&
+              onPressed:
+                  start != null &&
                       end != null &&
                       reasonController.text.trim().isNotEmpty
                   ? () => Navigator.of(dialogContext).pop(true)
@@ -148,9 +151,9 @@ class _MembershipCardBody extends StatelessWidget {
           final message = state.failure == null
               ? 'Freeze request submitted.'
               : failureMessage(state.failure!);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message)));
         },
         child: BlocBuilder<MembershipCardCubit, MembershipCardState>(
           builder: (context, state) => _buildBody(context, state),
@@ -290,9 +293,7 @@ class _MembershipCardBody extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Expanded(
-            child: Text(label, overflow: TextOverflow.ellipsis),
-          ),
+          Expanded(child: Text(label, overflow: TextOverflow.ellipsis)),
           const SizedBox(width: 8),
           Flexible(
             child: Text(

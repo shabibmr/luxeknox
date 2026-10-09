@@ -102,10 +102,8 @@ final class CreateMembershipSubmitted extends CreateMembershipEvent {
 @injectable
 class CreateMembershipBloc
     extends Bloc<CreateMembershipEvent, CreateMembershipState> {
-  CreateMembershipBloc(
-    this._createMembership,
-    this._getProducts,
-  ) : super(const CreateMembershipState()) {
+  CreateMembershipBloc(this._createMembership, this._getProducts)
+    : super(const CreateMembershipState()) {
     on<CreateMembershipStarted>(_onStarted);
     on<CreateMembershipMemberSelected>(_onMemberSelected);
     on<CreateMembershipProductSelected>(_onProductSelected);

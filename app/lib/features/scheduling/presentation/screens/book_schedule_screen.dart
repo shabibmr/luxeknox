@@ -214,7 +214,8 @@ class _BookPtBodyState extends State<_BookPtBody> {
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
-                      onPressed: submitting ||
+                      onPressed:
+                          submitting ||
                               _selected == null ||
                               !context.can('schedules.book')
                           ? null
@@ -287,10 +288,11 @@ class _BookClassBody extends StatelessWidget {
                 onRetry: () => context.read<ScheduleCalendarCubit>().load(),
               );
             }
-            final open = state.items
-                .where((s) => s.status == ScheduleSessionStatus.scheduled)
-                .toList()
-              ..sort((a, b) => a.startTime.compareTo(b.startTime));
+            final open =
+                state.items
+                    .where((s) => s.status == ScheduleSessionStatus.scheduled)
+                    .toList()
+                  ..sort((a, b) => a.startTime.compareTo(b.startTime));
             if (open.isEmpty) {
               return const AppEmptyView(message: SchedulingStrings.noneFound);
             }

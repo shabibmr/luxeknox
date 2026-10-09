@@ -15,8 +15,14 @@ abstract class PtRemoteDataSource {
   });
   Future<api.PtPurchaseResult> purchase(api.PtPurchaseRequest request);
   Future<api.PtPurchaseResult> renew(int id, api.PtRenewRequest request);
-  Future<api.PtSubscription> reassignTrainer(int id, api.PtReassignTrainerRequest request);
-  Future<api.PtSubscription> changeSlot(int id, api.PtChangeSlotRequest request);
+  Future<api.PtSubscription> reassignTrainer(
+    int id,
+    api.PtReassignTrainerRequest request,
+  );
+  Future<api.PtSubscription> changeSlot(
+    int id,
+    api.PtChangeSlotRequest request,
+  );
   Future<api.MemberPtSummary> memberSummary(int memberId);
 }
 
@@ -72,15 +78,25 @@ class PtRemoteDataSourceImpl implements PtRemoteDataSource {
       _unwrap(await _api.purchasePtSubscription(ptPurchaseRequest: request));
 
   @override
-  Future<api.PtPurchaseResult> renew(int id, api.PtRenewRequest request) async =>
+  Future<api.PtPurchaseResult> renew(
+    int id,
+    api.PtRenewRequest request,
+  ) async =>
       _unwrap(await _api.renewPtSubscription(id: id, ptRenewRequest: request));
 
   @override
-  Future<api.PtSubscription> reassignTrainer(int id, api.PtReassignTrainerRequest request) async =>
-      _unwrap(await _api.reassignPtTrainer(id: id, ptReassignTrainerRequest: request));
+  Future<api.PtSubscription> reassignTrainer(
+    int id,
+    api.PtReassignTrainerRequest request,
+  ) async => _unwrap(
+    await _api.reassignPtTrainer(id: id, ptReassignTrainerRequest: request),
+  );
 
   @override
-  Future<api.PtSubscription> changeSlot(int id, api.PtChangeSlotRequest request) async =>
+  Future<api.PtSubscription> changeSlot(
+    int id,
+    api.PtChangeSlotRequest request,
+  ) async =>
       _unwrap(await _api.changePtSlot(id: id, ptChangeSlotRequest: request));
 
   @override

@@ -36,7 +36,9 @@ void main() {
     historyCubit = MockMembershipHistoryCubit();
     sessionCubit = MockSessionCubit();
 
-    when(() => historyCubit.load(memberId: any(named: 'memberId'))).thenAnswer((_) async {});
+    when(
+      () => historyCubit.load(memberId: any(named: 'memberId')),
+    ).thenAnswer((_) async {});
 
     whenListen(
       sessionCubit,

@@ -157,14 +157,8 @@ void main() {
         Routes.trainerPlansDietVersionsById('5'),
         '/trainer/plans/diets/5/versions',
       );
-      expect(
-        Routes.adminDietPlansDetailById('5'),
-        '/admin/diet-plans/5',
-      );
-      expect(
-        Routes.adminDietPlansEditById('5'),
-        '/admin/diet-plans/5/edit',
-      );
+      expect(Routes.adminDietPlansDetailById('5'), '/admin/diet-plans/5');
+      expect(Routes.adminDietPlansEditById('5'), '/admin/diet-plans/5/edit');
       expect(
         Routes.adminDietPlansVersionsById('5'),
         '/admin/diet-plans/5/versions',

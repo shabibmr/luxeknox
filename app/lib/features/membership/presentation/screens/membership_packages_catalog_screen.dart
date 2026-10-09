@@ -25,7 +25,8 @@ class MembershipPackagesCatalogScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<MembershipPackagesCatalogCubit>()..load(activeOnly: readOnly),
+      create: (_) =>
+          getIt<MembershipPackagesCatalogCubit>()..load(activeOnly: readOnly),
       child: _CatalogBody(readOnly: readOnly),
     );
   }
@@ -46,7 +47,9 @@ class _CatalogBody extends StatelessWidget {
       ),
     );
     if (saved == true && context.mounted) {
-      await context.read<MembershipPackagesCatalogCubit>().load(activeOnly: readOnly);
+      await context.read<MembershipPackagesCatalogCubit>().load(
+        activeOnly: readOnly,
+      );
     }
   }
 
@@ -104,14 +107,18 @@ class _CatalogBody extends StatelessWidget {
         message: state.failure == null
             ? MembershipStrings.noneFound
             : failureMessage(state.failure!),
-        onRetry: () => context.read<MembershipPackagesCatalogCubit>().load(activeOnly: readOnly),
+        onRetry: () => context.read<MembershipPackagesCatalogCubit>().load(
+          activeOnly: readOnly,
+        ),
       );
     }
     if (noItems) {
       return const AppEmptyView(message: MembershipStrings.noneFound);
     }
     return RefreshIndicator(
-      onRefresh: () => context.read<MembershipPackagesCatalogCubit>().load(activeOnly: readOnly),
+      onRefresh: () => context.read<MembershipPackagesCatalogCubit>().load(
+        activeOnly: readOnly,
+      ),
       child: ListView.builder(
         itemCount: state.items.length,
         itemBuilder: (context, index) {

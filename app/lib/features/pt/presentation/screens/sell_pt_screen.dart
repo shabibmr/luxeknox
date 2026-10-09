@@ -8,7 +8,8 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
-import '../../../people/presentation/member_dossier_pt.dart' show formatCalendarDate;
+import '../../../people/presentation/member_dossier_pt.dart'
+    show formatCalendarDate;
 import '../../domain/entities/pt_product.dart';
 import '../../domain/entities/pt_schedule_grid.dart';
 import '../../domain/entities/pt_subscription.dart';
@@ -73,20 +74,29 @@ class _SellPtView extends StatelessWidget {
         final messenger = ScaffoldMessenger.of(context);
         if (state.result != null) {
           messenger.showSnackBar(
-            SnackBar(content: Text(state.isReplan ? PtStrings.replanned : PtStrings.sold)),
+            SnackBar(
+              content: Text(
+                state.isReplan ? PtStrings.replanned : PtStrings.sold,
+              ),
+            ),
           );
           if (context.canPop()) {
             context.pop(true);
           } else {
             Navigator.of(context).maybePop(true);
           }
-        } else if (state.failure != null && state.status == LoadStatus.success) {
-          messenger.showSnackBar(SnackBar(content: Text(failureMessage(state.failure!))));
+        } else if (state.failure != null &&
+            state.status == LoadStatus.success) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(failureMessage(state.failure!))),
+          );
         }
       },
       builder: (context, state) {
         final theme = Theme.of(context);
-        final effectiveMemberId = state.memberId > 0 ? state.memberId : memberId;
+        final effectiveMemberId = state.memberId > 0
+            ? state.memberId
+            : memberId;
         final displayName = state.memberName ?? state.member?.fullName;
 
         return Scaffold(
@@ -98,7 +108,9 @@ class _SellPtView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(state.isReplan ? PtStrings.replanTitle : PtStrings.sellTitle),
+                Text(
+                  state.isReplan ? PtStrings.replanTitle : PtStrings.sellTitle,
+                ),
                 if (displayName != null && displayName.isNotEmpty)
                   Text(
                     'For $displayName',
@@ -114,14 +126,14 @@ class _SellPtView extends StatelessWidget {
             LoadStatus.failure => AppErrorView(
               message: failureMessage(state.failure!),
               onRetry: () => context.read<SellPtCubit>().init(
-                    state.memberId,
-                    memberName: state.memberName,
-                  ),
+                state.memberId,
+                memberName: state.memberName,
+              ),
             ),
             LoadStatus.success => _Form(
-                state: state,
-                onBack: () => _onBack(context, effectiveMemberId),
-              ),
+              state: state,
+              onBack: () => _onBack(context, effectiveMemberId),
+            ),
           },
         );
       },
@@ -140,7 +152,10 @@ class _Form extends StatelessWidget {
     final cubit = context.read<SellPtCubit>();
     final theme = Theme.of(context);
     final product = state.product;
-    final displayName = state.memberName ?? state.member?.fullName ?? 'Member #${state.memberId}';
+    final displayName =
+        state.memberName ??
+        state.member?.fullName ??
+        'Member #${state.memberId}';
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -164,7 +179,9 @@ class _Form extends StatelessWidget {
                     children: [
                       Text(
                         displayName,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       if (state.member != null) ...[
                         const SizedBox(height: 2),
@@ -187,12 +204,16 @@ class _Form extends StatelessWidget {
         if (!state.isReplan)
           DropdownButtonFormField<int>(
             initialValue: product?.id,
-            decoration: const InputDecoration(labelText: PtStrings.summaryPackage),
+            decoration: const InputDecoration(
+              labelText: PtStrings.summaryPackage,
+            ),
             items: [
               for (final p in state.products)
                 DropdownMenuItem(
                   value: p.id,
-                  child: Text('${p.name} · ${p.sessionsPerWeek}×/week · ${p.durationDays} days · ${p.basePrice}'),
+                  child: Text(
+                    '${p.name} · ${p.sessionsPerWeek}×/week · ${p.durationDays} days · ${p.basePrice}',
+                  ),
                 ),
             ],
             onChanged: (id) {
@@ -211,13 +232,21 @@ class _Form extends StatelessWidget {
         const SizedBox(height: 8),
         ListTile(
           contentPadding: EdgeInsets.zero,
-          title: Text(state.isReplan ? PtStrings.effectiveFrom : PtStrings.startDate),
-          subtitle: Text(state.startDate == null ? '—' : formatCalendarDate(state.startDate!)),
+          title: Text(
+            state.isReplan ? PtStrings.effectiveFrom : PtStrings.startDate,
+          ),
+          subtitle: Text(
+            state.startDate == null
+                ? '—'
+                : formatCalendarDate(state.startDate!),
+          ),
           trailing: const Icon(Icons.calendar_today_outlined),
           onTap: () async {
             final now = DateTime.now();
             final first = DateTime(now.year, now.month, now.day);
-            final last = state.isReplan ? state.replanning!.endDate : first.add(const Duration(days: 365));
+            final last = state.isReplan
+                ? state.replanning!.endDate
+                : first.add(const Duration(days: 365));
             final picked = await showDatePicker(
               context: context,
               initialDate: state.startDate ?? first,
@@ -235,7 +264,10 @@ class _Form extends StatelessWidget {
         Text(
           product == null
               ? PtStrings.pickDaysHint
-              : PtStrings.daysChosen(state.weekdays.length, state.sessionsPerWeek!),
+              : PtStrings.daysChosen(
+                  state.weekdays.length,
+                  state.sessionsPerWeek!,
+                ),
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
@@ -246,7 +278,9 @@ class _Form extends StatelessWidget {
               FilterChip(
                 label: Text(ptWeekdayShortNames[d]),
                 selected: state.weekdays.contains(d),
-                onSelected: product == null ? null : (_) => cubit.toggleWeekday(d),
+                onSelected: product == null
+                    ? null
+                    : (_) => cubit.toggleWeekday(d),
               ),
           ],
         ),
@@ -259,7 +293,9 @@ class _Form extends StatelessWidget {
         const SizedBox(height: 8),
         if (!state.canLoadGrid)
           Card(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -293,7 +329,9 @@ class _Form extends StatelessWidget {
           )
         else if (state.gridStatus == LoadStatus.failure)
           AppErrorView(
-            message: state.failure == null ? '' : failureMessage(state.failure!),
+            message: state.failure == null
+                ? ''
+                : failureMessage(state.failure!),
             onRetry: cubit.loadGrid,
           )
         else if (state.grid != null)
@@ -310,11 +348,16 @@ class _Form extends StatelessWidget {
           Text(PtStrings.stepPay, style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
           if (state.paymentMethods.isEmpty)
-            Text(PtStrings.noPaymentMethods, style: TextStyle(color: theme.colorScheme.error))
+            Text(
+              PtStrings.noPaymentMethods,
+              style: TextStyle(color: theme.colorScheme.error),
+            )
           else
             DropdownButtonFormField<String>(
               initialValue: state.paymentMethodId,
-              decoration: const InputDecoration(labelText: PtStrings.paymentMethod),
+              decoration: const InputDecoration(
+                labelText: PtStrings.paymentMethod,
+              ),
               items: [
                 for (final m in state.paymentMethods)
                   DropdownMenuItem(value: m.id, child: Text(m.methodName)),
@@ -348,8 +391,16 @@ class _Form extends StatelessWidget {
               child: FilledButton(
                 onPressed: state.canSubmit ? cubit.submit : null,
                 child: state.submitting
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(state.isReplan ? PtStrings.confirmReplan : PtStrings.confirmSell),
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(
+                        state.isReplan
+                            ? PtStrings.confirmReplan
+                            : PtStrings.confirmSell,
+                      ),
               ),
             ),
           ],
@@ -366,18 +417,28 @@ class _Summary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!state.slotChosen || state.product == null) return const SizedBox.shrink();
-    final trainer = state.grid?.trainers.where((t) => t.id == state.trainerId).firstOrNull;
+    if (!state.slotChosen || state.product == null) {
+      return const SizedBox.shrink();
+    }
+    final trainer = state.grid?.trainers
+        .where((t) => t.id == state.trainerId)
+        .firstOrNull;
     final end = state.isReplan
         ? state.replanning!.endDate
         : state.startDate!.add(Duration(days: state.product!.durationDays));
-    final memberName = state.memberName ?? state.member?.fullName ?? 'Member #${state.memberId}';
+    final memberName =
+        state.memberName ??
+        state.member?.fullName ??
+        'Member #${state.memberId}';
 
     Widget row(String k, String v) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          SizedBox(width: 96, child: Text(k, style: Theme.of(context).textTheme.bodySmall)),
+          SizedBox(
+            width: 96,
+            child: Text(k, style: Theme.of(context).textTheme.bodySmall),
+          ),
           Expanded(child: Text(v)),
         ],
       ),
@@ -388,19 +449,25 @@ class _Summary extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(PtStrings.stepConfirm, style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              PtStrings.stepConfirm,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
             const SizedBox(height: 8),
             row('Member', memberName),
             row(PtStrings.summaryPackage, state.product!.name),
-            row(PtStrings.summaryPeriod, '${formatCalendarDate(state.startDate!)} → ${formatCalendarDate(end)}'),
+            row(
+              PtStrings.summaryPeriod,
+              '${formatCalendarDate(state.startDate!)} → ${formatCalendarDate(end)}',
+            ),
             row(PtStrings.summaryDays, ptWeekdaysLabel(state.weekdays)),
             row(PtStrings.summaryHour, ptHourLabel(state.slotStart!)),
             row(PtStrings.summaryTrainer, trainer?.name ?? '—'),
-            if (!state.isReplan) row(PtStrings.summaryAmount, state.product!.basePrice),
+            if (!state.isReplan)
+              row(PtStrings.summaryAmount, state.product!.basePrice),
           ],
         ),
       ),
     );
   }
 }
-

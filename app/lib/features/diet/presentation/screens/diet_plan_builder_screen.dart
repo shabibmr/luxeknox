@@ -17,11 +17,7 @@ import '../../../people/presentation/widgets/member_picker_sheet.dart';
 import '../../../people/presentation/widgets/member_trainer_header.dart';
 
 class DietPlanBuilderScreen extends StatelessWidget {
-  const DietPlanBuilderScreen({
-    super.key,
-    this.planId,
-    this.detailPathBuilder,
-  });
+  const DietPlanBuilderScreen({super.key, this.planId, this.detailPathBuilder});
 
   final String? planId;
   final String Function(String id)? detailPathBuilder;
@@ -30,10 +26,7 @@ class DietPlanBuilderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<DietPlanBuilderCubit>()..init(planId: planId),
-      child: _BuilderBody(
-        planId: planId,
-        detailPathBuilder: detailPathBuilder,
-      ),
+      child: _BuilderBody(planId: planId, detailPathBuilder: detailPathBuilder),
     );
   }
 }
@@ -166,7 +159,8 @@ class _BuilderFormState extends State<_BuilderForm> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text(DietStrings.saved)));
-      final target = widget.detailPathBuilder?.call(ready.planId!) ??
+      final target =
+          widget.detailPathBuilder?.call(ready.planId!) ??
           Routes.trainerPlansDietById(ready.planId!);
       context.go(target);
     }
@@ -226,8 +220,9 @@ class _BuilderFormState extends State<_BuilderForm> {
             if (!state.isTemplate) ...[
               const SizedBox(height: 12),
               MemberPickerField(
-                selectedMemberId:
-                    state.memberId.isEmpty ? null : state.memberId,
+                selectedMemberId: state.memberId.isEmpty
+                    ? null
+                    : state.memberId,
                 onChanged: (member) {
                   final id = member?.id.toString() ?? '';
                   _memberId.text = id;

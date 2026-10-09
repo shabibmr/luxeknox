@@ -75,9 +75,9 @@ class _FoodPickerViewState extends State<_FoodPickerView> {
   }
 
   void _load([String? text]) {
-    context
-        .read<FoodPickerCubit>()
-        .load(search: text ?? _searchController.text);
+    context.read<FoodPickerCubit>().load(
+      search: text ?? _searchController.text,
+    );
   }
 
   void _onSearchChanged(String value) {
@@ -123,7 +123,9 @@ class _FoodPickerViewState extends State<_FoodPickerView> {
                   children: [
                     FilterChip(
                       avatar: Icon(
-                        _verifiedOnly ? Icons.verified : Icons.verified_outlined,
+                        _verifiedOnly
+                            ? Icons.verified
+                            : Icons.verified_outlined,
                         size: 16,
                         color: _verifiedOnly ? Colors.blue : null,
                       ),

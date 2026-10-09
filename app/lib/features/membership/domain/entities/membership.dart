@@ -63,4 +63,3 @@ extension MembershipIterableX on Iterable<Membership> {
     return firstWhere((m) => m.isActiveOrFrozen, orElse: () => first);
   }
 }
-

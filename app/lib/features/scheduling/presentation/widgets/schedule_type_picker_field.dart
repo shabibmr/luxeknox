@@ -49,8 +49,7 @@ class ScheduleTypePickerField extends StatelessWidget {
       itemId: (t) => t.id,
       itemLabel: (t) => t.name,
       load: () async {
-        final useCase =
-            listScheduleTypes ?? getIt<ListScheduleTypesUseCase>();
+        final useCase = listScheduleTypes ?? getIt<ListScheduleTypesUseCase>();
         final result = await useCase(const NoParams());
         return result.fold(
           (failure) => throw failureMessage(failure),

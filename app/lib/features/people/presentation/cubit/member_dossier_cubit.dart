@@ -109,9 +109,9 @@ class MemberDossierCubit extends Cubit<MemberDossierState> {
     );
     final trainerFuture = person.assignedTrainerId == null
         ? Future<TrainerProfile?>.value(null)
-        : _getTrainer(person.assignedTrainerId!).then(
-            (r) => r.fold((_) => null, (t) => t),
-          );
+        : _getTrainer(
+            person.assignedTrainerId!,
+          ).then((r) => r.fold((_) => null, (t) => t));
     final ptFuture = _getPtSummary(person.id);
 
     final membershipsResult = await membershipsFuture;
@@ -183,14 +183,23 @@ class MemberDossierCubit extends Cubit<MemberDossierState> {
   }
 
   /// Renew the current (or just-ended) PT with the same trainer and slot.
-  Future<void> renewPt({required int subscriptionId, required PtPayment payment}) async {
+  Future<void> renewPt({
+    required int subscriptionId,
+    required PtPayment payment,
+  }) async {
     final memberId = state.person?.id;
     emit(state.copyWith(renewingPt: true, failure: null, message: null));
-    final result = await _renewPt(RenewPtParams(subscriptionId: subscriptionId, payment: payment));
+    final result = await _renewPt(
+      RenewPtParams(subscriptionId: subscriptionId, payment: payment),
+    );
     if (isClosed) return;
     await result.fold(
       (failure) async => emit(
-        state.copyWith(renewingPt: false, status: LoadStatus.failure, failure: failure),
+        state.copyWith(
+          renewingPt: false,
+          status: LoadStatus.failure,
+          failure: failure,
+        ),
       ),
       (_) async {
         if (memberId != null) await reloadPt(memberId);

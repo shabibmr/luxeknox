@@ -166,7 +166,9 @@ class _StartPanelState extends State<_StartPanel> {
             FilledButton.icon(
               icon: const Icon(Icons.playlist_play),
               label: Text(
-                (_selectedPlan != null || (_selectedPlanId != null && _selectedPlanId!.isNotEmpty))
+                (_selectedPlan != null ||
+                        (_selectedPlanId != null &&
+                            _selectedPlanId!.isNotEmpty))
                     ? WorkoutStrings.startSession
                     : 'Choose a Workout Plan to Start',
               ),

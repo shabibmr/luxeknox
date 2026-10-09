@@ -42,7 +42,10 @@ class MembershipRepositoryImpl implements MembershipRepository {
       );
       return Right(
         CursorPage<MembershipProduct>(
-          items: page.data.map((m) => m.toDomain()).where((m) => !activeOnly || m.isActive).toList(),
+          items: page.data
+              .map((m) => m.toDomain())
+              .where((m) => !activeOnly || m.isActive)
+              .toList(),
           nextCursor: page.meta.nextCursor,
           hasMore: page.meta.hasMore,
         ),

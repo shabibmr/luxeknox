@@ -29,7 +29,9 @@ class MembershipPackagesCatalogCubit
 
   Future<void> load({bool activeOnly = false}) async {
     emit(state.copyWith(status: LoadStatus.loading, failure: null));
-    final result = await _getProducts(GetMembershipProductsParams(activeOnly: activeOnly));
+    final result = await _getProducts(
+      GetMembershipProductsParams(activeOnly: activeOnly),
+    );
     if (isClosed) return;
     result.fold(
       (failure) =>
