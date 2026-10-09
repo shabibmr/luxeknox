@@ -7,6 +7,7 @@ import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
 import {
   type SettingsListDto,
   type SettingsWriteDto,
+  settingCategorySchema,
   settingsWriteSchema,
 } from './settings.dto';
 
@@ -52,7 +53,7 @@ export class SettingsController {
   @ApiQuery({
     name: 'category',
     required: false,
-    enum: ['GENERAL', 'BILLING', 'SCHEDULE', 'ATTENDANCE', 'WORKOUT', 'DIET', 'NOTIFICATION', 'SECURITY'],
+    enum: ['general', 'membership', 'attendance_gate', 'booking_rules', 'billing', 'workout', 'diet', 'notification', 'measurement'],
     description: 'Filter settings by category',
   })
   @ApiResponse({
@@ -68,6 +69,13 @@ export class SettingsController {
     description: 'Forbidden: missing settings.read permission',
   })
   async getAllSettings(@Query('category') category?: string): Promise<SettingsListDto> {
+    if (category && !settingCategorySchema.safeParse(category).success) {
+      // Also support legacy aliases in the service during upgrade.
+      const normalized = category.trim().toLowerCase();
+      if (!['schedule', 'attendance', 'security', 'gym'].includes(normalized)) {
+        throw new (await import('../platform/errors/app-error')).BadRequestError(`Unsupported settings category "${category}".`);
+      }
+    }
     const data = await this.settingsService.listSettings(category);
     return { data };
   }
