@@ -7,7 +7,6 @@ import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
 import {
   type SettingsListDto,
   type SettingsWriteDto,
-  settingCategorySchema,
   settingsWriteSchema,
 } from './settings.dto';
 
@@ -69,10 +68,6 @@ export class SettingsController {
     description: 'Forbidden: missing settings.read permission',
   })
   async getAllSettings(@Query('category') category?: string): Promise<SettingsListDto> {
-    if (category && !settingCategorySchema.safeParse(category).success) {
-      const legacy = ['schedule', 'attendance', 'security', 'gym'].includes(category.trim().toLowerCase());
-      if (!legacy) throw new BadRequestError(`Unsupported settings category "${category}".`);
-    }
     const data = await this.settingsService.listSettings(category);
     return { data };
   }
