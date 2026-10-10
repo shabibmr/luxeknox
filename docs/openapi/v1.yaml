@@ -4633,7 +4633,7 @@ paths:
           $ref: "#/components/responses/Error429"
   /workout-sessions/{id}/sets/{setId}:
     patch:
-      operationId: updateWorkoutSessionSet
+      operationId: updateWorkoutSet
       summary: Edit a logged set
       tags: [WORK]
       x-status: mvp
@@ -4672,7 +4672,7 @@ paths:
         "429":
           $ref: "#/components/responses/Error429"
     delete:
-      operationId: deleteWorkoutSessionSet
+      operationId: deleteWorkoutSet
       summary: Delete a logged set
       tags: [WORK]
       x-status: mvp

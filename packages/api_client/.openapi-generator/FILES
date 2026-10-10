@@ -473,4 +473,3 @@ lib/src/model/workout_set_update.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
-test/workout_set_update_test.dart

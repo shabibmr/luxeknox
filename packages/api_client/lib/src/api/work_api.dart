@@ -518,7 +518,7 @@ class WORKApi {
   ///
   /// Returns a [Future]
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<void>> deleteWorkoutSessionSet({ 
+  Future<Response<void>> deleteWorkoutSet({ 
     required int id,
     required int setId,
     CancelToken? cancelToken,
@@ -1955,7 +1955,7 @@ class WORKApi {
   ///
   /// Returns a [Future] containing a [Response] with a [WorkoutSessionExercise] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<WorkoutSessionExercise>> updateWorkoutSessionSet({ 
+  Future<Response<WorkoutSessionExercise>> updateWorkoutSet({ 
     required int id,
     required int setId,
     required WorkoutSetUpdate workoutSetUpdate,

@@ -14,7 +14,7 @@ Method | HTTP request | Description
 [**completeWorkoutSession**](WORKApi.md#completeworkoutsession) | **POST** /workout-sessions/{id}/complete | Complete a session
 [**createExercise**](WORKApi.md#createexercise) | **POST** /exercises | Create an exercise
 [**createWorkoutPlan**](WORKApi.md#createworkoutplan) | **POST** /workout-plans | Create a plan (also creates version 1)
-[**deleteWorkoutSessionSet**](WORKApi.md#deleteworkoutsessionset) | **DELETE** /workout-sessions/{id}/sets/{setId} | Delete a logged set
+[**deleteWorkoutSet**](WORKApi.md#deleteworkoutset) | **DELETE** /workout-sessions/{id}/sets/{setId} | Delete a logged set
 [**getActiveWorkoutSession**](WORKApi.md#getactiveworkoutsession) | **GET** /workout-sessions/active | Get the member&#39;s active (in-progress) workout session
 [**getExercise**](WORKApi.md#getexercise) | **GET** /exercises/{id} | Exercise detail
 [**getPersonalRecords**](WORKApi.md#getpersonalrecords) | **GET** /workout-sessions/personal-records | Member personal records across completed sessions
@@ -30,7 +30,7 @@ Method | HTTP request | Description
 [**startWorkoutSession**](WORKApi.md#startworkoutsession) | **POST** /workout-sessions | Start a live session
 [**updateExercise**](WORKApi.md#updateexercise) | **PATCH** /exercises/{id} | Update or deactivate an exercise
 [**updateWorkoutPlan**](WORKApi.md#updateworkoutplan) | **PATCH** /workout-plans/{id} | Update plan metadata (requires row_version)
-[**updateWorkoutSessionSet**](WORKApi.md#updateworkoutsessionset) | **PATCH** /workout-sessions/{id}/sets/{setId} | Edit a logged set
+[**updateWorkoutSet**](WORKApi.md#updateworkoutset) | **PATCH** /workout-sessions/{id}/sets/{setId} | Edit a logged set
 
 
 # **archiveWorkoutPlan**
@@ -240,8 +240,8 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **deleteWorkoutSessionSet**
-> deleteWorkoutSessionSet(id, setId)
+# **deleteWorkoutSet**
+> deleteWorkoutSet(id, setId)
 
 Delete a logged set
 
@@ -254,9 +254,9 @@ final int id = 789; // int |
 final int setId = 789; // int | 
 
 try {
-    api.deleteWorkoutSessionSet(id, setId);
+    api.deleteWorkoutSet(id, setId);
 } on DioException catch (e) {
-    print('Exception when calling WORKApi->deleteWorkoutSessionSet: $e\n');
+    print('Exception when calling WORKApi->deleteWorkoutSet: $e\n');
 }
 ```
 
@@ -927,8 +927,8 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateWorkoutSessionSet**
-> WorkoutSessionExercise updateWorkoutSessionSet(id, setId, workoutSetUpdate)
+# **updateWorkoutSet**
+> WorkoutSessionExercise updateWorkoutSet(id, setId, workoutSetUpdate)
 
 Edit a logged set
 
@@ -942,10 +942,10 @@ final int setId = 789; // int |
 final WorkoutSetUpdate workoutSetUpdate = ; // WorkoutSetUpdate | 
 
 try {
-    final response = api.updateWorkoutSessionSet(id, setId, workoutSetUpdate);
+    final response = api.updateWorkoutSet(id, setId, workoutSetUpdate);
     print(response);
 } on DioException catch (e) {
-    print('Exception when calling WORKApi->updateWorkoutSessionSet: $e\n');
+    print('Exception when calling WORKApi->updateWorkoutSet: $e\n');
 }
 ```
 
