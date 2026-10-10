@@ -58,18 +58,25 @@ describe('Foods E2E', () => {
       }
     });
 
-    it('POST /foods returns 403 for trainer and member', async () => {
-      for (const token of [trainerToken, memberToken]) {
-        const res = await fetch(`${testApp.baseUrl}/foods`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ name: uniqueName('forbidden'), serving_unit: 'g' }),
-        });
-        expect(res.status).toBe(403);
-      }
+    it('POST /foods succeeds for trainer', async () => {
+      const res = await fetch(`${testApp.baseUrl}/foods`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${trainerToken}` },
+        body: JSON.stringify({ name: uniqueName('trainer_created'), serving_unit: 'g' }),
+      });
+      expect(res.status).toBe(201);
     });
 
-    it('PATCH /foods/:id returns 403 for trainer and member', async () => {
+    it('POST /foods returns 403 for member', async () => {
+      const res = await fetch(`${testApp.baseUrl}/foods`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
+        body: JSON.stringify({ name: uniqueName('forbidden'), serving_unit: 'g' }),
+      });
+      expect(res.status).toBe(403);
+    });
+
+    it('PATCH /foods/:id succeeds for trainer and returns 403 for member', async () => {
       const createRes = await fetch(`${testApp.baseUrl}/foods`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
@@ -81,14 +88,19 @@ describe('Foods E2E', () => {
       });
       const created = (await createRes.json()) as any;
 
-      for (const token of [trainerToken, memberToken]) {
-        const res = await fetch(`${testApp.baseUrl}/foods/${created.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ is_active: false }),
-        });
-        expect(res.status).toBe(403);
-      }
+      const trainerPatch = await fetch(`${testApp.baseUrl}/foods/${created.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${trainerToken}` },
+        body: JSON.stringify({ serving_unit: 'ml' }),
+      });
+      expect(trainerPatch.status).toBe(200);
+
+      const memberPatch = await fetch(`${testApp.baseUrl}/foods/${created.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
+        body: JSON.stringify({ is_active: false }),
+      });
+      expect(memberPatch.status).toBe(403);
     });
   });
 
@@ -164,7 +176,7 @@ describe('Foods E2E', () => {
   });
 
   describe('browse visibility (verified+active)', () => {
-    it('hides unverified and inactive foods from trainer/member list and get', async () => {
+    it('hides unverified and inactive foods from member list and get', async () => {
       const unverifiedRes = await fetch(`${testApp.baseUrl}/foods`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
@@ -201,27 +213,34 @@ describe('Foods E2E', () => {
       });
       const visible = (await visibleRes.json()) as any;
 
-      for (const token of [trainerToken, memberToken]) {
-        const listRes = await fetch(`${testApp.baseUrl}/foods?q=e2e_food_`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        expect(listRes.status).toBe(200);
-        const list = (await listRes.json()) as any;
-        const ids = list.data.map((row: any) => row.id);
-        expect(ids).toContain(visible.id);
-        expect(ids).not.toContain(unverified.id);
-        expect(ids).not.toContain(inactive.id);
+      const listRes = await fetch(`${testApp.baseUrl}/foods?q=e2e_food_`, {
+        headers: { Authorization: `Bearer ${memberToken}` },
+      });
+      expect(listRes.status).toBe(200);
+      const list = (await listRes.json()) as any;
+      const ids = list.data.map((row: any) => row.id);
+      expect(ids).toContain(visible.id);
+      expect(ids).not.toContain(unverified.id);
+      expect(ids).not.toContain(inactive.id);
 
-        const getUnverified = await fetch(`${testApp.baseUrl}/foods/${unverified.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        expect(getUnverified.status).toBe(404);
+      const getUnverified = await fetch(`${testApp.baseUrl}/foods/${unverified.id}`, {
+        headers: { Authorization: `Bearer ${memberToken}` },
+      });
+      expect(getUnverified.status).toBe(404);
 
-        const getInactive = await fetch(`${testApp.baseUrl}/foods/${inactive.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        expect(getInactive.status).toBe(404);
-      }
+      const getInactive = await fetch(`${testApp.baseUrl}/foods/${inactive.id}`, {
+        headers: { Authorization: `Bearer ${memberToken}` },
+      });
+      expect(getInactive.status).toBe(404);
+
+      const trainerListRes = await fetch(`${testApp.baseUrl}/foods?q=e2e_food_`, {
+        headers: { Authorization: `Bearer ${trainerToken}` },
+      });
+      expect(trainerListRes.status).toBe(200);
+      const trainerIds = ((await trainerListRes.json()) as any).data.map((row: any) => row.id);
+      expect(trainerIds).toContain(visible.id);
+      expect(trainerIds).toContain(unverified.id);
+      expect(trainerIds).toContain(inactive.id);
 
       const adminGet = await fetch(`${testApp.baseUrl}/foods/${unverified.id}`, {
         headers: { Authorization: `Bearer ${adminToken}` },

@@ -94,7 +94,7 @@ Out of inventory (sibling, not V2 catalogue UI): `app/lib/features/diet/presenta
 | Role | Library | Create `+` | Detail edit | Form |
 | :--- | :--- | :--- | :--- | :--- |
 | Admin | More → Food Library (`/admin/diet-library`) | shown if `context.can('diet.create')` | shown if `context.can('diet.update')` | denied body if missing |
-| Trainer | `/trainer/plans/foods` | hidden (no `diet.create`) | hidden (no `diet.update`) | — |
+| Trainer | `/trainer/plans/foods` | shown if `context.can('diet.create')` | shown if `context.can('diet.update')` | denied body if missing |
 | Member | **no route** | — | — | — |
 
 Cited call sites:
