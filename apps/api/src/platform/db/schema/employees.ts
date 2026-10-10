@@ -20,7 +20,7 @@ export const employees = mysqlTable(
     first_name: varchar('first_name', { length: 100 }).notNull(),
     last_name: varchar('last_name', { length: 100 }).notNull(),
     gender: varchar('gender', { length: 32 }),
-    job_title: varchar('job_title', { length: 150 }).notNull(),
+    job_title: varchar('job_title', { length: 150 }),
     department: varchar('department', { length: 150 }),
     hire_date: date('hire_date', { mode: 'string' }),
     status: mysqlEnum('status', EMPLOYEE_STATUSES).notNull().default('active'),

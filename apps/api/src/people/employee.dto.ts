@@ -8,7 +8,7 @@ export const employeeCreateSchema = z.object({
   first_name: z.string().trim().min(1).max(100),
   last_name: z.string().trim().min(1).max(100),
   gender: z.string().trim().min(1, 'gender is required').max(32),
-  job_title: z.string().trim().min(1).max(150),
+  job_title: z.string().trim().max(150).optional().nullable(),
   department: z.string().trim().max(150).optional().nullable(),
   hire_date: z.string().trim().min(1).optional().nullable(),
   /** Optional; defaults to the seeded `employee` role when omitted. */
@@ -19,7 +19,7 @@ export type EmployeeCreateDto = z.infer<typeof employeeCreateSchema>;
 
 export const employeeUpdateSchema = z
   .object({
-    job_title: z.string().trim().min(1).max(150).optional(),
+    job_title: z.string().trim().max(150).optional().nullable(),
     department: z.string().trim().max(150).optional().nullable(),
     hire_date: z.string().trim().min(1).optional().nullable(),
     first_name: z.string().trim().min(1).max(100).optional(),

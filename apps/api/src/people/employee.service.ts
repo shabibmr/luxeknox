@@ -72,7 +72,7 @@ export class EmployeeService {
         first_name: dto.first_name,
         last_name: dto.last_name,
         gender: dto.gender,
-        job_title: dto.job_title,
+        job_title: dto.job_title ?? null,
         department: dto.department,
         hire_date: dto.hire_date,
         status: 'active',

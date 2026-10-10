@@ -127,6 +127,29 @@ void main() {
     verify(() => createEmployee(any())).called(1);
   });
 
+  test('submit succeeds when jobTitle is omitted/empty', () async {
+    when(
+      () => createEmployee(any()),
+    ).thenAnswer((_) async => const Right(created));
+    await cubit.initCreate();
+
+    cubit.updateCreateInput(
+      (i) => i.copyWith(
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        gender: 'female',
+        email: 'ada@example.com',
+        jobTitle: '',
+        roleId: 3,
+      ),
+    );
+
+    final ok = await cubit.submit();
+    expect(ok, isTrue);
+    expect(cubit.state.saved, created);
+    verify(() => createEmployee(any())).called(1);
+  });
+
   test('double-submit while in flight is ignored', () async {
     when(() => createEmployee(any())).thenAnswer((_) async {
       await Future<void>.delayed(const Duration(milliseconds: 50));

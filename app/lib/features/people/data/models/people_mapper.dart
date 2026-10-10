@@ -257,6 +257,7 @@ String? _dateTimeToWireDate(DateTime? dateTime) {
 }
 
 Map<String, dynamic> employeeCreateBodyFromInput(NewEmployeeInput input) {
+  final jobTitleTrimmed = input.jobTitle.trim();
   return <String, dynamic>{
     'email': input.email,
     'phone_number': input.phoneNumber,
@@ -264,7 +265,7 @@ Map<String, dynamic> employeeCreateBodyFromInput(NewEmployeeInput input) {
     'first_name': input.firstName,
     'last_name': input.lastName,
     'gender': input.gender,
-    'job_title': input.jobTitle,
+    'job_title': jobTitleTrimmed.isEmpty ? null : jobTitleTrimmed,
     'department': input.department,
     'hire_date': _dateTimeToWireDate(input.hireDate),
     // Omit when unset so API defaults to the seeded employee role.
@@ -275,7 +276,7 @@ Map<String, dynamic> employeeCreateBodyFromInput(NewEmployeeInput input) {
 /// Always includes optional keys so null clears department / hire_date.
 Map<String, dynamic> employeeUpdateBodyFromInput(EmployeeUpdateInput input) {
   return <String, dynamic>{
-    if (input.jobTitle != null) 'job_title': input.jobTitle,
+    'job_title': input.jobTitle,
     if (input.gender != null) 'gender': input.gender,
     'department': input.department,
     'hire_date': _dateTimeToWireDate(input.hireDate),
