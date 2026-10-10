@@ -37,7 +37,6 @@ export const ptProductWriteSchema = z.object({
   code: z.string().trim().min(1, 'code is required').max(32),
   description: z.string().optional(),
   duration_days: z.number().int().positive(),
-  sessions_per_week: z.number().int().min(1).max(7),
   base_price: moneyString,
   tax_percentage: moneyString.optional(),
   is_active: z.boolean().optional(),

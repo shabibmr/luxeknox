@@ -156,22 +156,15 @@ export class PtScheduleService {
     const product = await this.productRepository.findById(query.pt_product_id);
     if (!product) throw new NotFoundError('PT package not found');
 
-    // Re-planning an existing PT: the period ends with the subscription, and the weekday
-    // count is the subscription's own (the package may have been edited since).
+    // Re-planning an existing PT: the period ends with the subscription — the member's
+    // chosen weekdays can change freely and are not tied to the package.
     let endDate = addDays(query.start_date, product.duration_days);
-    let sessionsPerWeek = product.sessions_per_week;
     if (query.exclude_subscription_id) {
       const sub = await this.subscriptionRepository.findById(query.exclude_subscription_id);
       if (!sub || sub.member_id !== query.member_id) {
         throw new NotFoundError('PT subscription not found');
       }
       endDate = sub.end_date;
-      sessionsPerWeek = sub.weekdays.length;
-    }
-    if (query.weekdays.length !== sessionsPerWeek) {
-      throw new BusinessRuleError(
-        `This PT has ${sessionsPerWeek} session(s) per week; choose exactly that many weekdays`,
-      );
     }
     const dates = enumerateOccurrenceDates(query.start_date, endDate, query.weekdays);
     const tz = await this.settingsService.getTimezone();

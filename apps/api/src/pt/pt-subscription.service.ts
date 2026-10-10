@@ -115,7 +115,6 @@ export class PtSubscriptionService {
     actor: AuthenticatedUser,
   ): Promise<{ subscription: PtSubscriptionView; payment: PaymentDto }> {
     const product = await this.requireActiveProduct(dto.pt_product_id);
-    this.assertWeekdayCount(product, dto.weekdays);
     await this.scheduleService.requireMember(dto.member_id);
     await this.scheduleService.requireEligibleTrainer(dto.trainer_id);
 
@@ -164,11 +163,6 @@ export class PtSubscriptionService {
     }
 
     const product = await this.requireActiveProduct(dto.pt_product_id ?? current.pt_product_id);
-    if (product.sessions_per_week !== current.weekdays.length) {
-      throw new BusinessRuleError(
-        'The selected package has a different number of sessions per week; sell a new PT and pick a new slot instead',
-      );
-    }
     await this.scheduleService.requireEligibleTrainer(current.trainer_id);
 
     const today = await this.today();
@@ -226,12 +220,6 @@ export class PtSubscriptionService {
 
   async changeSlot(id: number, dto: PtChangeSlotDto, actor: AuthenticatedUser): Promise<PtSubscriptionView> {
     const sub = await this.requireOpenSubscription(id);
-    // The subscription's own count, not the package's: the package may have been edited since.
-    if (dto.weekdays.length !== sub.weekdays.length) {
-      throw new BusinessRuleError(
-        `This PT has ${sub.weekdays.length} session(s) per week; choose exactly that many weekdays`,
-      );
-    }
     const effective = await this.resolveEffectiveDate(sub, dto.effective_date);
     const oldTrainerId = this.trainerOn(sub, await this.repository.listChanges(sub.id), effective);
     const trainerId = dto.trainer_id ?? oldTrainerId;
@@ -589,14 +577,6 @@ export class PtSubscriptionService {
     return product;
   }
 
-  private assertWeekdayCount(product: PtProduct, weekdays: number[]): void {
-    if (weekdays.length !== product.sessions_per_week) {
-      throw new BusinessRuleError(
-        `This package has ${product.sessions_per_week} session(s) per week; choose exactly that many weekdays`,
-      );
-    }
-  }
-
   /** PT can only be added while the member's gym membership is active and not past its end date. */
   private async requireActiveMembership(memberId: number, today: string): Promise<number> {
     const membership = await this.membershipRepository.findActiveOrFrozenForMember(memberId);
@@ -673,7 +653,7 @@ export class PtSubscriptionService {
     return {
       ...sub,
       product_name: product?.name ?? '',
-      sessions_per_week: product?.sessions_per_week ?? sub.weekdays.length,
+      sessions_per_week: sub.weekdays.length,
       trainer_name: trainer ? `${trainer.first_name} ${trainer.last_name}`.trim() : '',
       slot_label: slotLabel(sub.slot_start),
     };

@@ -7540,7 +7540,7 @@ components:
           $ref: "#/components/schemas/PageMeta"
     PtProduct:
       type: object
-      required: [id, name, code, duration_days, sessions_per_week, base_price, is_active]
+      required: [id, name, code, duration_days, base_price, is_active]
       properties:
         id:
           $ref: "#/components/schemas/Id"
@@ -7553,10 +7553,6 @@ components:
           nullable: true
         duration_days:
           type: integer
-        sessions_per_week:
-          type: integer
-          minimum: 1
-          maximum: 7
         base_price:
           $ref: "#/components/schemas/Money"
         tax_percentage:
@@ -7565,7 +7561,7 @@ components:
           type: boolean
     PtProductWrite:
       type: object
-      required: [name, code, duration_days, sessions_per_week, base_price]
+      required: [name, code, duration_days, base_price]
       properties:
         name:
           type: string
@@ -7575,10 +7571,6 @@ components:
           type: string
         duration_days:
           type: integer
-        sessions_per_week:
-          type: integer
-          minimum: 1
-          maximum: 7
         base_price:
           $ref: "#/components/schemas/Money"
         tax_percentage:

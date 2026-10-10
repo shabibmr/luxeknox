@@ -49,15 +49,12 @@ abstract class SellPtState with _$SellPtState {
 
   bool get isReplan => replanning != null;
 
-  /// A re-plan keeps the subscription's own weekday count; the package may have been edited since.
-  int? get sessionsPerWeek =>
-      replanning?.weekdays.length ?? product?.sessionsPerWeek;
-
-  bool get weekdaysComplete =>
-      product != null && weekdays.length == sessionsPerWeek;
+  /// How many days a week the member trains is chosen per member, not fixed
+  /// by the package — any count from 1 to 7 is valid.
+  bool get weekdaysChosen => product != null && weekdays.isNotEmpty;
 
   bool get canLoadGrid =>
-      product != null && startDate != null && weekdaysComplete;
+      product != null && startDate != null && weekdaysChosen;
 
   bool get slotChosen => trainerId != null && slotStart != null;
 
@@ -248,13 +245,9 @@ class SellPtCubit extends Cubit<SellPtState> {
   }
 
   void selectProduct(PtProduct product) {
-    final keep = state.weekdays.length <= product.sessionsPerWeek
-        ? state.weekdays
-        : <int>[];
     emit(
       state.copyWith(
         product: product,
-        weekdays: keep,
         grid: null,
         trainerId: null,
         slotStart: null,
@@ -276,12 +269,11 @@ class SellPtCubit extends Cubit<SellPtState> {
   }
 
   void toggleWeekday(int day) {
-    final perWeek = state.sessionsPerWeek;
-    if (state.product == null || perWeek == null) return;
+    if (state.product == null) return;
     final days = [...state.weekdays];
     if (days.contains(day)) {
       days.remove(day);
-    } else if (days.length < perWeek) {
+    } else if (days.length < 7) {
       days.add(day);
     } else {
       return;

@@ -27,11 +27,6 @@ void main() {
       // TODO
     });
 
-    // int sessionsPerWeek
-    test('to test the property `sessionsPerWeek`', () async {
-      // TODO
-    });
-
     // DECIMAL(12,2) as a two-decimal string. Never a JSON number.
     // String basePrice
     test('to test the property `basePrice`', () async {

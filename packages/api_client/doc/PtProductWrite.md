@@ -12,7 +12,6 @@ Name | Type | Description | Notes
 **code** | **String** |  | 
 **description** | **String** |  | [optional] 
 **durationDays** | **int** |  | 
-**sessionsPerWeek** | **int** |  | 
 **basePrice** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | 
 **taxPercentage** | **String** |  | [optional] 
 **isActive** | **bool** |  | [optional] 

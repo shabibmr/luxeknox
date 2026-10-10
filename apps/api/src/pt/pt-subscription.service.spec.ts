@@ -29,7 +29,6 @@ const product = {
   name: 'PT Monthly 3x',
   code: 'PT3',
   duration_days: 28,
-  sessions_per_week: 3,
   base_price: '3000.00',
   tax_percentage: '0.00',
   is_active: true,
@@ -259,8 +258,8 @@ describe('PT subscriptions', () => {
       expect(memberRepo.updateMember).toHaveBeenCalledWith(42, expect.objectContaining({ assigned_trainer_id: 7 }));
     });
 
-    it('requires exactly sessions_per_week weekdays', async () => {
-      await expect(purchase({ weekdays: [1, 3] })).rejects.toThrow(/3 session\(s\) per week/);
+    it('accepts a weekday count chosen independently of any fixed package rate', async () => {
+      await expect(purchase({ weekdays: [1, 3] })).resolves.toBeDefined();
     });
 
     it('rejects when the slot is taken on any date in the period, naming who holds it', async () => {
@@ -342,8 +341,7 @@ describe('PT subscriptions', () => {
       status: 'active',
       row_version: 1,
     };
-    // The package was edited to 2×/week after this PT was sold.
-    productRepo.findById.mockResolvedValue({ ...product, sessions_per_week: 2 });
+    productRepo.findById.mockResolvedValue(product);
     // Busy after the PT ends: must not mark the slot occupied.
     scheduleRepo.findBusyForTrainer.mockImplementation(async (_id: number, _from: Date, to: Date) =>
       to < new Date('2026-10-20T00:00:00.000Z')
@@ -487,8 +485,7 @@ describe('PT subscriptions', () => {
       );
     });
 
-    it('checks the weekday count against the subscription, not the edited package', async () => {
-      productRepo.findById.mockResolvedValue({ ...product, sessions_per_week: 2 });
+    it('allows the weekday count to change freely on a re-plan', async () => {
       await expect(
         service.changeSlot(
           900,
@@ -498,7 +495,7 @@ describe('PT subscriptions', () => {
       ).resolves.toBeDefined();
       await expect(
         service.changeSlot(900, { weekdays: [1, 3], slot_start: '18:00', effective_date: '2026-10-12' }, admin),
-      ).rejects.toThrow(/3 session\(s\) per week/);
+      ).resolves.toBeDefined();
     });
 
     it('accepts a trainer of the opposite gender', async () => {

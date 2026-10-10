@@ -72,7 +72,7 @@ class _PtPackagesView extends StatelessWidget {
                 return ListTile(
                   title: Text('${p.name} (${p.code})'),
                   subtitle: Text(
-                    '${p.sessionsPerWeek}×/week · ${p.durationDays} days · ${p.basePrice}'
+                    '${p.durationDays} days · ${p.basePrice}'
                     '${p.isActive ? '' : ' · ${PtStrings.archived}'}',
                   ),
                   trailing: Switch(
@@ -120,9 +120,6 @@ class _PtPackageFormState extends State<_PtPackageForm> {
   late final _duration = TextEditingController(
     text: widget.product?.durationDays.toString(),
   );
-  late final _sessions = TextEditingController(
-    text: widget.product?.sessionsPerWeek.toString(),
-  );
   late final _price = TextEditingController(text: widget.product?.basePrice);
   late final _tax = TextEditingController(
     text: widget.product?.taxPercentage ?? '0.00',
@@ -130,7 +127,7 @@ class _PtPackageFormState extends State<_PtPackageForm> {
 
   @override
   void dispose() {
-    for (final c in [_name, _description, _duration, _sessions, _price, _tax]) {
+    for (final c in [_name, _description, _duration, _price, _tax]) {
       c.dispose();
     }
     super.dispose();
@@ -139,12 +136,9 @@ class _PtPackageFormState extends State<_PtPackageForm> {
   String? _required(String? v) =>
       (v == null || v.trim().isEmpty) ? PtStrings.required : null;
 
-  String? _int(String? v, {int min = 1, int? max}) {
+  String? _int(String? v) {
     final n = int.tryParse(v?.trim() ?? '');
-    if (n == null) return PtStrings.invalidNumber;
-    if (n < min || (max != null && n > max)) {
-      return max != null ? PtStrings.sessionsRange : PtStrings.invalidNumber;
-    }
+    if (n == null || n < 1) return PtStrings.invalidNumber;
     return null;
   }
 
@@ -177,7 +171,6 @@ class _PtPackageFormState extends State<_PtPackageForm> {
           ? null
           : _description.text.trim(),
       durationDays: int.parse(_duration.text.trim()),
-      sessionsPerWeek: int.parse(_sessions.text.trim()),
       basePrice: _price.text.trim(),
       taxPercentage: _tax.text.trim().isEmpty ? null : _tax.text.trim(),
       isActive: widget.product?.isActive ?? true,
@@ -220,14 +213,6 @@ class _PtPackageFormState extends State<_PtPackageForm> {
                   ),
                   keyboardType: TextInputType.number,
                   validator: (v) => _int(v),
-                ),
-                TextFormField(
-                  controller: _sessions,
-                  decoration: const InputDecoration(
-                    labelText: PtStrings.sessionsPerWeek,
-                  ),
-                  keyboardType: TextInputType.number,
-                  validator: (v) => _int(v, max: 7),
                 ),
                 AppCurrencyField(
                   controller: _price,

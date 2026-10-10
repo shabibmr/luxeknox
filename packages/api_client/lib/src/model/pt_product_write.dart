@@ -14,8 +14,7 @@ part 'pt_product_write.g.dart';
 /// * [name] 
 /// * [code] 
 /// * [description] 
-/// * [durationDays] 
-/// * [sessionsPerWeek] 
+/// * [durationDays]
 /// * [basePrice] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
 /// * [taxPercentage] 
 /// * [isActive] 
@@ -32,9 +31,6 @@ abstract class PtProductWrite implements Built<PtProductWrite, PtProductWriteBui
 
   @BuiltValueField(wireName: r'duration_days')
   int get durationDays;
-
-  @BuiltValueField(wireName: r'sessions_per_week')
-  int get sessionsPerWeek;
 
   /// DECIMAL(12,2) as a two-decimal string. Never a JSON number.
   @BuiltValueField(wireName: r'base_price')
@@ -89,11 +85,6 @@ class _$PtProductWriteSerializer implements PrimitiveSerializer<PtProductWrite> 
     yield r'duration_days';
     yield serializers.serialize(
       object.durationDays,
-      specifiedType: const FullType(int),
-    );
-    yield r'sessions_per_week';
-    yield serializers.serialize(
-      object.sessionsPerWeek,
       specifiedType: const FullType(int),
     );
     yield r'base_price';
@@ -166,13 +157,6 @@ class _$PtProductWriteSerializer implements PrimitiveSerializer<PtProductWrite> 
             specifiedType: const FullType(int),
           ) as int;
           result.durationDays = valueDes;
-          break;
-        case r'sessions_per_week':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(int),
-          ) as int;
-          result.sessionsPerWeek = valueDes;
           break;
         case r'base_price':
           final valueDes = serializers.deserialize(

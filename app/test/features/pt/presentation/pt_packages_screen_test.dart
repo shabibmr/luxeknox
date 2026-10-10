@@ -23,7 +23,6 @@ void main() {
     name: 'PT Premium',
     code: 'PT-PREM-1M',
     durationDays: 30,
-    sessionsPerWeek: 3,
     basePrice: '5000.00',
     isActive: true,
   );
@@ -64,7 +63,6 @@ void main() {
             name: p.name,
             code: p.code,
             durationDays: p.durationDays,
-            sessionsPerWeek: p.sessionsPerWeek,
             basePrice: p.basePrice,
             isActive: p.isActive,
           ),
@@ -106,10 +104,6 @@ void main() {
         '30',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, PtStrings.sessionsPerWeek),
-        '3',
-      );
-      await tester.enterText(
         find.widgetWithText(TextFormField, PtStrings.price),
         '4999.00',
       );
@@ -126,7 +120,6 @@ void main() {
       expect(saved.code, startsWith('SUPER-PT-3X-'));
       expect(saved.code.length, lessThanOrEqualTo(32));
       expect(saved.durationDays, 30);
-      expect(saved.sessionsPerWeek, 3);
       expect(saved.basePrice, '4999.00');
     },
   );

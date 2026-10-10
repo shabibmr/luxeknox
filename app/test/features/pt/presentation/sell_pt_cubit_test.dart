@@ -37,7 +37,6 @@ void main() {
     name: 'PT Monthly 3x',
     code: 'PT3',
     durationDays: 28,
-    sessionsPerWeek: 3,
     basePrice: '3000.00',
     isActive: true,
   );
@@ -46,7 +45,6 @@ void main() {
     name: 'Old',
     code: 'OLD',
     durationDays: 28,
-    sessionsPerWeek: 2,
     basePrice: '1000.00',
     isActive: false,
   );
@@ -158,26 +156,26 @@ void main() {
   );
 
   test(
-    'weekdays are capped at the package sessions per week and the grid loads once complete',
+    'weekdays are chosen freely per member and the grid loads once at least one day is picked',
     () async {
       final cubit = build();
       await cubit.init(42);
       cubit.selectProduct(product);
       cubit.setStartDate(DateTime(2026, 10, 5));
       cubit.toggleWeekday(1);
-      cubit.toggleWeekday(3);
-      verifyNever(() => getGrid(any()));
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.grid, grid);
 
+      cubit.toggleWeekday(3);
       cubit.toggleWeekday(5);
-      cubit.toggleWeekday(6); // ignored — already 3 of 3
+      cubit.toggleWeekday(6); // a 4th day is accepted — no package-fixed cap
       await Future<void>.delayed(Duration.zero);
 
-      expect(cubit.state.weekdays, [1, 3, 5]);
-      expect(cubit.state.grid, grid);
+      expect(cubit.state.weekdays, [1, 3, 5, 6]);
       final params =
-          verify(() => getGrid(captureAny())).captured.single
+          verify(() => getGrid(captureAny())).captured.last
               as GetPtScheduleGridParams;
-      expect(params.weekdays, [1, 3, 5]);
+      expect(params.weekdays, [1, 3, 5, 6]);
       expect(params.memberId, 42);
     },
   );
@@ -404,7 +402,10 @@ void main() {
     });
     final cubit = build();
     await cubit.init(42);
-    pickThreeDays(cubit);
+    cubit
+      ..selectProduct(product)
+      ..setStartDate(DateTime(2026, 10, 5))
+      ..toggleWeekday(1);
     await Future<void>.delayed(Duration.zero);
     expect(cubit.state.failure, isA<NetworkFailure>());
 

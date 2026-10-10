@@ -18,8 +18,6 @@ class _$PtProduct extends PtProduct {
   @override
   final int durationDays;
   @override
-  final int sessionsPerWeek;
-  @override
   final String basePrice;
   @override
   final String? taxPercentage;
@@ -35,7 +33,6 @@ class _$PtProduct extends PtProduct {
       required this.code,
       this.description,
       required this.durationDays,
-      required this.sessionsPerWeek,
       required this.basePrice,
       this.taxPercentage,
       required this.isActive})
@@ -56,7 +53,6 @@ class _$PtProduct extends PtProduct {
         code == other.code &&
         description == other.description &&
         durationDays == other.durationDays &&
-        sessionsPerWeek == other.sessionsPerWeek &&
         basePrice == other.basePrice &&
         taxPercentage == other.taxPercentage &&
         isActive == other.isActive;
@@ -70,7 +66,6 @@ class _$PtProduct extends PtProduct {
     _$hash = $jc(_$hash, code.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
     _$hash = $jc(_$hash, durationDays.hashCode);
-    _$hash = $jc(_$hash, sessionsPerWeek.hashCode);
     _$hash = $jc(_$hash, basePrice.hashCode);
     _$hash = $jc(_$hash, taxPercentage.hashCode);
     _$hash = $jc(_$hash, isActive.hashCode);
@@ -86,7 +81,6 @@ class _$PtProduct extends PtProduct {
           ..add('code', code)
           ..add('description', description)
           ..add('durationDays', durationDays)
-          ..add('sessionsPerWeek', sessionsPerWeek)
           ..add('basePrice', basePrice)
           ..add('taxPercentage', taxPercentage)
           ..add('isActive', isActive))
@@ -117,10 +111,6 @@ class PtProductBuilder implements Builder<PtProduct, PtProductBuilder> {
   int? get durationDays => _$this._durationDays;
   set durationDays(int? durationDays) => _$this._durationDays = durationDays;
 
-  int? _sessionsPerWeek;
-  int? get sessionsPerWeek => _$this._sessionsPerWeek;
-  set sessionsPerWeek(int? sessionsPerWeek) =>
-      _$this._sessionsPerWeek = sessionsPerWeek;
 
   String? _basePrice;
   String? get basePrice => _$this._basePrice;
@@ -147,7 +137,6 @@ class PtProductBuilder implements Builder<PtProduct, PtProductBuilder> {
       _code = $v.code;
       _description = $v.description;
       _durationDays = $v.durationDays;
-      _sessionsPerWeek = $v.sessionsPerWeek;
       _basePrice = $v.basePrice;
       _taxPercentage = $v.taxPercentage;
       _isActive = $v.isActive;
@@ -180,8 +169,6 @@ class PtProductBuilder implements Builder<PtProduct, PtProductBuilder> {
           description: description,
           durationDays: BuiltValueNullFieldError.checkNotNull(
               durationDays, r'PtProduct', 'durationDays'),
-          sessionsPerWeek: BuiltValueNullFieldError.checkNotNull(
-              sessionsPerWeek, r'PtProduct', 'sessionsPerWeek'),
           basePrice: BuiltValueNullFieldError.checkNotNull(
               basePrice, r'PtProduct', 'basePrice'),
           taxPercentage: taxPercentage,

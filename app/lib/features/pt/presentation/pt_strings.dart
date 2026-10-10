@@ -7,7 +7,6 @@ abstract final class PtStrings {
   static const code = 'Code';
   static const description = 'Description';
   static const durationDays = 'Duration (days)';
-  static const sessionsPerWeek = 'Sessions per week';
   static const price = 'Price';
   static const taxPercentage = 'Tax %';
   static const active = 'Active';
@@ -18,7 +17,6 @@ abstract final class PtStrings {
   static const required = 'Required';
   static const invalidMoney = 'Use a two-decimal amount, e.g. 2999.00';
   static const invalidNumber = 'Enter a whole number';
-  static const sessionsRange = 'Between 1 and 7';
 
   static const sellTitle = 'Add Personal Training';
   static const replanTitle = 'Change trainer / slot';
@@ -31,10 +29,9 @@ abstract final class PtStrings {
   static const back = 'Back';
   static const startDate = 'Start date';
   static const effectiveFrom = 'Effective from';
-  static const pickDaysHint =
-      'Pick exactly the number of days this package includes.';
-  static String daysChosen(int chosen, int total) =>
-      '$chosen of $total days chosen';
+  static const pickDaysHint = 'Choose which days this member will train.';
+  static String daysChosen(int chosen) =>
+      chosen == 1 ? '1 day chosen' : '$chosen days chosen';
   static const gridHint =
       'All active trainers are shown. A slot is free only if it is '
       'open on every training day of the whole period.';

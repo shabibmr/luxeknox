@@ -74,7 +74,6 @@ export class PtProductService {
       code: dto.code,
       description: dto.description ?? null,
       duration_days: dto.duration_days,
-      sessions_per_week: dto.sessions_per_week,
       base_price: roundMoney(dto.base_price),
       tax_percentage: dto.tax_percentage ? roundMoney(dto.tax_percentage) : '0.00',
       is_active: dto.is_active ?? true,
@@ -109,7 +108,6 @@ export class PtProductService {
     if (dto.code !== undefined) values.code = dto.code;
     if (dto.description !== undefined) values.description = dto.description;
     if (dto.duration_days !== undefined) values.duration_days = dto.duration_days;
-    if (dto.sessions_per_week !== undefined) values.sessions_per_week = dto.sessions_per_week;
     if (dto.base_price !== undefined) values.base_price = roundMoney(dto.base_price);
     if (dto.tax_percentage !== undefined) values.tax_percentage = roundMoney(dto.tax_percentage);
     if (dto.is_active !== undefined) values.is_active = dto.is_active;

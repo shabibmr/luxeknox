@@ -211,7 +211,7 @@ class _Form extends StatelessWidget {
                 DropdownMenuItem(
                   value: p.id,
                   child: Text(
-                    '${p.name} · ${p.sessionsPerWeek}×/week · ${p.durationDays} days · ${p.basePrice}',
+                    '${p.name} · ${p.durationDays} days · ${p.basePrice}',
                   ),
                 ),
             ],
@@ -269,10 +269,7 @@ class _Form extends StatelessWidget {
         Text(
           product == null
               ? PtStrings.pickDaysHint
-              : PtStrings.daysChosen(
-                  state.weekdays.length,
-                  state.sessionsPerWeek!,
-                ),
+              : PtStrings.daysChosen(state.weekdays.length),
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
@@ -311,7 +308,7 @@ class _Form extends StatelessWidget {
                     child: Text(
                       product == null
                           ? 'Select a PT package and choose training days above to view available trainers and hours.'
-                          : 'Select ${state.sessionsPerWeek} training days above to view available trainers and hours.',
+                          : 'Choose at least one training day above to view available trainers and hours.',
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),

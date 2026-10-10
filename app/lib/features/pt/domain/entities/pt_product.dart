@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
 /// A sellable Personal Training package. Independent of the gym membership
-/// package: it fixes the PT duration, how many sessions per week (i.e. how many
-/// weekdays the member's recurring slot covers) and the price.
+/// package: it fixes the PT duration and the price. How many days a week the
+/// member trains is chosen per member when the package is sold, not fixed here.
 ///
 /// [basePrice] / [taxPercentage] are decimal strings (FR-API-005).
 class PtProduct extends Equatable {
@@ -12,7 +12,6 @@ class PtProduct extends Equatable {
     required this.code,
     this.description,
     required this.durationDays,
-    required this.sessionsPerWeek,
     required this.basePrice,
     this.taxPercentage,
     required this.isActive,
@@ -23,7 +22,6 @@ class PtProduct extends Equatable {
   final String code;
   final String? description;
   final int durationDays;
-  final int sessionsPerWeek;
   final String basePrice;
   final String? taxPercentage;
   final bool isActive;
@@ -33,7 +31,6 @@ class PtProduct extends Equatable {
     String? code,
     String? description,
     int? durationDays,
-    int? sessionsPerWeek,
     String? basePrice,
     String? taxPercentage,
     bool? isActive,
@@ -44,7 +41,6 @@ class PtProduct extends Equatable {
       code: code ?? this.code,
       description: description ?? this.description,
       durationDays: durationDays ?? this.durationDays,
-      sessionsPerWeek: sessionsPerWeek ?? this.sessionsPerWeek,
       basePrice: basePrice ?? this.basePrice,
       taxPercentage: taxPercentage ?? this.taxPercentage,
       isActive: isActive ?? this.isActive,
@@ -58,7 +54,6 @@ class PtProduct extends Equatable {
     code,
     description,
     durationDays,
-    sessionsPerWeek,
     basePrice,
     taxPercentage,
     isActive,

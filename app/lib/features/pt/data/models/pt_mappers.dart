@@ -13,7 +13,6 @@ extension PtProductApiX on api.PtProduct {
     code: code,
     description: description,
     durationDays: durationDays,
-    sessionsPerWeek: sessionsPerWeek,
     basePrice: basePrice,
     taxPercentage: taxPercentage,
     isActive: isActive,
@@ -27,7 +26,6 @@ extension PtProductDomainX on PtProduct {
       ..code = code
       ..description = description
       ..durationDays = durationDays
-      ..sessionsPerWeek = sessionsPerWeek
       ..basePrice = basePrice
       ..taxPercentage = taxPercentage
       ..isActive = isActive,
