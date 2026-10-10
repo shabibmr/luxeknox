@@ -62,7 +62,7 @@ class _$SettingsCategoryStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsCategoryState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? items = null,Object? saving = null,Object? saved = null,Object? failure = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? items = null,Object? originalItems = null,Object? saving = null,Object? saved = null,Object? failure = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
@@ -155,7 +155,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  List<AppSetting> items,  bool saving,  bool saved,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  List<AppSetting> items,  List<AppSetting> originalItems,  bool saving,  bool saved,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SettingsCategoryState() when $default != null:
 return $default(_that.status,_that.items,_that.originalItems,_that.saving,_that.saved,_that.failure);case _:
@@ -176,7 +176,7 @@ return $default(_that.status,_that.items,_that.originalItems,_that.saving,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  List<AppSetting> items,  bool saving,  bool saved,  Failure? failure)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  List<AppSetting> items,  List<AppSetting> originalItems,  bool saving,  bool saved,  Failure? failure)  $default,) {final _that = this;
 switch (_that) {
 case _SettingsCategoryState():
 return $default(_that.status,_that.items,_that.originalItems,_that.saving,_that.saved,_that.failure);case _:
@@ -196,10 +196,10 @@ return $default(_that.status,_that.items,_that.originalItems,_that.saving,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  List<AppSetting> items,  bool saving,  bool saved,  Failure? failure)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  List<AppSetting> items,  List<AppSetting> originalItems,  bool saving,  bool saved,  Failure? failure)?  $default,) {final _that = this;
 switch (_that) {
 case _SettingsCategoryState() when $default != null:
-return $default(_that.status,_that.items,_that.saving,_that.saved,_that.failure);case _:
+return $default(_that.status,_that.items,_that.originalItems,_that.saving,_that.saved,_that.failure);case _:
   return null;
 
 }
@@ -210,21 +210,23 @@ return $default(_that.status,_that.items,_that.saving,_that.saved,_that.failure)
 /// @nodoc
 
 
-class _SettingsCategoryState implements SettingsCategoryState {
-  const _SettingsCategoryState({this.status = LoadStatus.initial, final  List<AppSetting> items = const <AppSetting>[], List<AppSetting> originalItems = const <AppSetting>[], this.saving = false, this.saved = false, this.failure}): _items = items, _originalItems = originalItems;
+class _SettingsCategoryState extends SettingsCategoryState {
+  const _SettingsCategoryState({this.status = LoadStatus.initial, final  List<AppSetting> items = const <AppSetting>[], final  List<AppSetting> originalItems = const <AppSetting>[], this.saving = false, this.saved = false, this.failure}): _items = items,_originalItems = originalItems,super._();
   
 
 @override@JsonKey() final  LoadStatus status;
  final  List<AppSetting> _items;
-@override@JsonKey() List<AppSetting> get originalItems {
-  if (_originalItems is EqualUnmodifiableListView) return _originalItems;
-  return EqualUnmodifiableListView(_originalItems);
-}
- final List<AppSetting> _originalItems;
 @override@JsonKey() List<AppSetting> get items {
   if (_items is EqualUnmodifiableListView) return _items;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_items);
+}
+
+ final  List<AppSetting> _originalItems;
+@override@JsonKey() List<AppSetting> get originalItems {
+  if (_originalItems is EqualUnmodifiableListView) return _originalItems;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_originalItems);
 }
 
 @override@JsonKey() final  bool saving;
@@ -250,7 +252,7 @@ int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality(
 
 @override
 String toString() {
-  return 'SettingsCategoryState(status: $status, items: $items, saving: $saving, saved: $saved, failure: $failure)';
+  return 'SettingsCategoryState(status: $status, items: $items, originalItems: $originalItems, saving: $saving, saved: $saved, failure: $failure)';
 }
 
 
@@ -261,7 +263,7 @@ abstract mixin class _$SettingsCategoryStateCopyWith<$Res> implements $SettingsC
   factory _$SettingsCategoryStateCopyWith(_SettingsCategoryState value, $Res Function(_SettingsCategoryState) _then) = __$SettingsCategoryStateCopyWithImpl;
 @override @useResult
 $Res call({
- LoadStatus status, List<AppSetting> items, bool saving, bool saved, Failure? failure
+ LoadStatus status, List<AppSetting> items, List<AppSetting> originalItems, bool saving, bool saved, Failure? failure
 });
 
 
@@ -278,10 +280,11 @@ class __$SettingsCategoryStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsCategoryState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? items = null,Object? saving = null,Object? saved = null,Object? failure = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? items = null,Object? originalItems = null,Object? saving = null,Object? saved = null,Object? failure = freezed,}) {
   return _then(_SettingsCategoryState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
+as List<AppSetting>,originalItems: null == originalItems ? _self._originalItems : originalItems // ignore: cast_nullable_to_non_nullable
 as List<AppSetting>,saving: null == saving ? _self.saving : saving // ignore: cast_nullable_to_non_nullable
 as bool,saved: null == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable
 as bool,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
