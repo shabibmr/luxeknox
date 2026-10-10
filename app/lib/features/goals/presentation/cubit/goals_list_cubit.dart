@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
@@ -25,18 +26,27 @@ class GoalsListCubit extends Cubit<GoalsListState> {
   final ListMemberGoalsUseCase _listGoals;
 
   Future<void> load(String memberId) async {
+    debugPrint('[GoalsProbe] load start member=$memberId');
     emit(state.copyWith(status: LoadStatus.loading, failure: null));
     final result = await _listGoals(MemberIdParams(memberId));
     result.fold(
-      (failure) =>
-          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
-      (page) => emit(
-        state.copyWith(
-          status: LoadStatus.success,
-          failure: null,
-          items: page.items,
-        ),
-      ),
+      (failure) {
+        debugPrint('[GoalsProbe] load failure=$failure');
+        emit(state.copyWith(status: LoadStatus.failure, failure: failure));
+      },
+      (page) {
+        debugPrint(
+          '[GoalsProbe] load ok count=${page.items.length} '
+          'statuses=${page.items.map((g) => g.status.name).toList()}',
+        );
+        emit(
+          state.copyWith(
+            status: LoadStatus.success,
+            failure: null,
+            items: page.items,
+          ),
+        );
+      },
     );
   }
 }

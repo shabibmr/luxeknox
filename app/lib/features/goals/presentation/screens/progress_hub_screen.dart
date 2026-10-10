@@ -258,7 +258,12 @@ class _ProgressHubBody extends StatelessWidget {
                                                 goal.id,
                                               ))
                                       : Routes.memberProgressGoalById(goal.id);
+                                  debugPrint(
+                                    '[GoalsProbe] tap goal=${goal.id} '
+                                    'status=${goal.status} -> $location',
+                                  );
                                   await context.push(location);
+                                  debugPrint('[GoalsProbe] returned from $location');
                                   if (context.mounted && isTrainerContext) {
                                     context.read<GoalsListCubit>().load(
                                       memberId,
