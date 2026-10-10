@@ -43,6 +43,7 @@ function buildService(overrides: {
   planRepo?: Partial<Record<string, unknown>>;
   memberRepo?: Partial<Record<string, unknown>>;
   eventBus?: Partial<Record<string, unknown>>;
+  ptAccess?: Partial<Record<string, unknown>> | null;
 } = {}) {
   const sessionRepo = {
     findSessions: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
@@ -81,15 +82,24 @@ function buildService(overrides: {
     normalizeParams: vi.fn().mockResolvedValue({ limit: 20, offset: 0 }),
   };
 
+  const ptAccess =
+    overrides.ptAccess === null
+      ? undefined
+      : {
+          assertTrainerCanWrite: vi.fn().mockResolvedValue(undefined),
+          ...overrides.ptAccess,
+        };
+
   const service = new WorkoutSessionService(
     sessionRepo as any,
     planRepo as any,
     memberRepo as any,
     eventBus as any,
     paginationHelper as any,
+    ptAccess as any,
   );
 
-  return { service, sessionRepo, planRepo, memberRepo, eventBus };
+  return { service, sessionRepo, planRepo, memberRepo, eventBus, ptAccess };
 }
 
 describe('WorkoutSessionService', () => {
@@ -136,6 +146,38 @@ describe('WorkoutSessionService', () => {
       });
 
       await expect(service.start({}, memberActor)).rejects.toThrow(ConflictError);
+    });
+
+    it('rejects trainer without active PT from starting a session', async () => {
+      const { service, sessionRepo, ptAccess } = buildService();
+      (ptAccess!.assertTrainerCanWrite as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new BusinessRuleError('Read-only'),
+      );
+
+      await expect(
+        service.start({ member_id: 30 }, trainerActor),
+      ).rejects.toThrow(BusinessRuleError);
+
+      expect(sessionRepo.insertSession).not.toHaveBeenCalled();
+    });
+
+    it('calls assertTrainerCanWrite with the actor and member_id when a trainer starts a session', async () => {
+      const { service, sessionRepo, ptAccess } = buildService();
+
+      sessionRepo.insertSession.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        workout_plan_id: null,
+        workout_plan_version_id: null,
+        trainer_id: 20,
+        started_at: new Date(),
+        completed_at: null,
+        total_volume_kg: '0.00',
+      });
+
+      await service.start({ member_id: 30 }, trainerActor);
+
+      expect(ptAccess!.assertTrainerCanWrite).toHaveBeenCalledWith(trainerActor, 30);
     });
   });
 
@@ -210,6 +252,69 @@ describe('WorkoutSessionService', () => {
         ),
       ).rejects.toThrow(BusinessRuleError);
     });
+
+    it('rejects trainer without active PT from logging a set', async () => {
+      const { service, sessionRepo, ptAccess } = buildService();
+
+      sessionRepo.findSessionById.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        completed_at: null,
+      });
+      (ptAccess!.assertTrainerCanWrite as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new BusinessRuleError('Read-only'),
+      );
+
+      await expect(
+        service.logSet(
+          50,
+          {
+            exercise_id: 1,
+            set_number: 1,
+            reps_completed: 10,
+            weight_lifted_kg: 60,
+            is_completed: true,
+          },
+          trainerActor,
+        ),
+      ).rejects.toThrow(BusinessRuleError);
+
+      expect(sessionRepo.insertSessionExercise).not.toHaveBeenCalled();
+    });
+
+    it('calls assertTrainerCanWrite with the actor and session member_id when a trainer logs a set', async () => {
+      const { service, sessionRepo, ptAccess } = buildService();
+
+      sessionRepo.findSessionById.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        completed_at: null,
+      });
+      sessionRepo.insertSessionExercise.mockResolvedValue({
+        id: 501,
+        workout_session_id: 50,
+        exercise_id: 1,
+        set_number: 1,
+        reps_completed: 10,
+        weight_lifted_kg: '60.00',
+        rpe_score: null,
+        is_completed: true,
+      });
+
+      await service.logSet(
+        50,
+        {
+          exercise_id: 1,
+          set_number: 1,
+          reps_completed: 10,
+          weight_lifted_kg: 60,
+          is_completed: true,
+        },
+        trainerActor,
+      );
+
+      expect(ptAccess!.assertTrainerCanWrite).toHaveBeenCalledWith(trainerActor, 30);
+    });
   });
 
   describe('session completion and volume calculation (WRK-015)', () => {
@@ -275,6 +380,51 @@ describe('WorkoutSessionService', () => {
           }),
         }),
       );
+    });
+
+    it('rejects trainer without active PT from completing a session', async () => {
+      const { service, sessionRepo, ptAccess } = buildService();
+
+      sessionRepo.findSessionById.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        started_at: new Date(),
+        completed_at: null,
+      });
+      (ptAccess!.assertTrainerCanWrite as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new BusinessRuleError('Read-only'),
+      );
+
+      await expect(
+        service.complete(50, {}, trainerActor),
+      ).rejects.toThrow(BusinessRuleError);
+
+      expect(sessionRepo.completeSession).not.toHaveBeenCalled();
+    });
+
+    it('calls assertTrainerCanWrite with the actor and session member_id when a trainer completes a session', async () => {
+      const { service, sessionRepo, ptAccess } = buildService();
+
+      const startTime = new Date(Date.now() - 10 * 60 * 1000);
+      sessionRepo.findSessionById
+        .mockResolvedValueOnce({
+          id: 50,
+          member_id: 30,
+          started_at: startTime,
+          completed_at: null,
+        })
+        .mockResolvedValueOnce({
+          id: 50,
+          member_id: 30,
+          started_at: startTime,
+          completed_at: new Date(),
+          total_volume_kg: '0.00',
+          sets: [],
+        });
+
+      await service.complete(50, {}, trainerActor);
+
+      expect(ptAccess!.assertTrainerCanWrite).toHaveBeenCalledWith(trainerActor, 30);
     });
   });
 

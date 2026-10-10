@@ -11,6 +11,7 @@ import { PaginationHelper, createPaginatedResponse } from '../platform/http/pagi
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { MemberRepository } from '../people/member.repository';
 import { assertMemberAccess } from '../people/row-scope';
+import { PtAccessService } from '../pt/pt-access.service';
 import { WorkoutPlanRepository } from './workout-plan.repository';
 import {
   WorkoutSessionRepository,
@@ -33,6 +34,7 @@ export class WorkoutSessionService {
     private readonly memberRepo: MemberRepository,
     private readonly eventBus: DomainEventBus,
     private readonly paginationHelper: PaginationHelper,
+    private readonly ptAccess?: PtAccessService,
   ) {}
 
   async listSessions(
@@ -83,6 +85,7 @@ export class WorkoutSessionService {
     }
 
     await assertMemberAccess(this.memberRepo, actor, memberId);
+    await this.ptAccess?.assertTrainerCanWrite(actor, memberId);
 
     const activeSession = await this.sessionRepo.findActiveSessionForMember(memberId);
     if (activeSession) {
@@ -148,6 +151,7 @@ export class WorkoutSessionService {
     }
 
     await assertMemberAccess(this.memberRepo, actor, session.member_id);
+    await this.ptAccess?.assertTrainerCanWrite(actor, session.member_id);
 
     if (session.completed_at !== null) {
       throw new BusinessRuleError('Cannot log sets for a completed workout session');
@@ -176,6 +180,7 @@ export class WorkoutSessionService {
     }
 
     await assertMemberAccess(this.memberRepo, actor, session.member_id);
+    await this.ptAccess?.assertTrainerCanWrite(actor, session.member_id);
 
     if (session.completed_at !== null) {
       return session;
