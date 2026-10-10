@@ -242,6 +242,8 @@ Class | Method | HTTP request | Description
 [*WORKApi*](doc/WORKApi.md) | [**completeWorkoutSession**](doc/WORKApi.md#completeworkoutsession) | **POST** /workout-sessions/{id}/complete | Complete a session
 [*WORKApi*](doc/WORKApi.md) | [**createExercise**](doc/WORKApi.md#createexercise) | **POST** /exercises | Create an exercise
 [*WORKApi*](doc/WORKApi.md) | [**createWorkoutPlan**](doc/WORKApi.md#createworkoutplan) | **POST** /workout-plans | Create a plan (also creates version 1)
+[*WORKApi*](doc/WORKApi.md) | [**deleteWorkoutSessionSet**](doc/WORKApi.md#deleteworkoutsessionset) | **DELETE** /workout-sessions/{id}/sets/{setId} | Delete a logged set
+[*WORKApi*](doc/WORKApi.md) | [**getActiveWorkoutSession**](doc/WORKApi.md#getactiveworkoutsession) | **GET** /workout-sessions/active | Get the member's active (in-progress) workout session
 [*WORKApi*](doc/WORKApi.md) | [**getExercise**](doc/WORKApi.md#getexercise) | **GET** /exercises/{id} | Exercise detail
 [*WORKApi*](doc/WORKApi.md) | [**getPersonalRecords**](doc/WORKApi.md#getpersonalrecords) | **GET** /workout-sessions/personal-records | Member personal records across completed sessions
 [*WORKApi*](doc/WORKApi.md) | [**getWorkoutPlan**](doc/WORKApi.md#getworkoutplan) | **GET** /workout-plans/{id} | Plan with current version line items
@@ -256,6 +258,7 @@ Class | Method | HTTP request | Description
 [*WORKApi*](doc/WORKApi.md) | [**startWorkoutSession**](doc/WORKApi.md#startworkoutsession) | **POST** /workout-sessions | Start a live session
 [*WORKApi*](doc/WORKApi.md) | [**updateExercise**](doc/WORKApi.md#updateexercise) | **PATCH** /exercises/{id} | Update or deactivate an exercise
 [*WORKApi*](doc/WORKApi.md) | [**updateWorkoutPlan**](doc/WORKApi.md#updateworkoutplan) | **PATCH** /workout-plans/{id} | Update plan metadata (requires row_version)
+[*WORKApi*](doc/WORKApi.md) | [**updateWorkoutSessionSet**](doc/WORKApi.md#updateworkoutsessionset) | **PATCH** /workout-sessions/{id}/sets/{setId} | Edit a logged set
 
 
 ## Documentation For Models
@@ -469,6 +472,7 @@ Class | Method | HTTP request | Description
  - [WorkoutSessionCreate](doc/WorkoutSessionCreate.md)
  - [WorkoutSessionExercise](doc/WorkoutSessionExercise.md)
  - [WorkoutSessionPage](doc/WorkoutSessionPage.md)
+ - [WorkoutSetUpdate](doc/WorkoutSetUpdate.md)
  - [WorkoutSetWrite](doc/WorkoutSetWrite.md)
 
 

@@ -224,6 +224,7 @@ import 'package:api_client/src/model/workout_session.dart';
 import 'package:api_client/src/model/workout_session_create.dart';
 import 'package:api_client/src/model/workout_session_exercise.dart';
 import 'package:api_client/src/model/workout_session_page.dart';
+import 'package:api_client/src/model/workout_set_update.dart';
 import 'package:api_client/src/model/workout_set_write.dart';
 
 part 'serializers.g.dart';
@@ -439,6 +440,7 @@ part 'serializers.g.dart';
   WorkoutSessionCreate,
   WorkoutSessionExercise,
   WorkoutSessionPage,
+  WorkoutSetUpdate,
   WorkoutSetWrite,
 ])
 Serializers serializers = (_$serializers.toBuilder()

@@ -239,5 +239,6 @@ export 'package:api_client/src/model/workout_session.dart';
 export 'package:api_client/src/model/workout_session_create.dart';
 export 'package:api_client/src/model/workout_session_exercise.dart';
 export 'package:api_client/src/model/workout_session_page.dart';
+export 'package:api_client/src/model/workout_set_update.dart';
 export 'package:api_client/src/model/workout_set_write.dart';
 

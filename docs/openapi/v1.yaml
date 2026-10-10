@@ -4490,6 +4490,39 @@ paths:
           $ref: "#/components/responses/Error422"
         "429":
           $ref: "#/components/responses/Error429"
+  /workout-sessions/active:
+    get:
+      operationId: getActiveWorkoutSession
+      summary: Get the member's active (in-progress) workout session
+      tags: [WORK]
+      x-status: mvp
+      x-parity: required
+      x-permission: workouts.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: member_id, in: query, schema: { type: integer, format: int64 } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutSession"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
   /workout-sessions/personal-records:
     get:
       operationId: getPersonalRecords
@@ -4584,6 +4617,75 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkoutSessionExercise"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /workout-sessions/{id}/sets/{setId}:
+    patch:
+      operationId: updateWorkoutSessionSet
+      summary: Edit a logged set
+      tags: [WORK]
+      x-status: mvp
+      x-parity: required
+      x-permission: workouts.write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - { name: setId, in: path, required: true, schema: { type: integer, format: int64 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkoutSetUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutSessionExercise"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    delete:
+      operationId: deleteWorkoutSessionSet
+      summary: Delete a logged set
+      tags: [WORK]
+      x-status: mvp
+      x-parity: required
+      x-permission: workouts.write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - { name: setId, in: path, required: true, schema: { type: integer, format: int64 } }
+      responses:
+        "204":
+          description: No content
         "400":
           $ref: "#/components/responses/Error400"
         "401":
@@ -8864,6 +8966,17 @@ components:
           $ref: "#/components/schemas/Id"
         set_number:
           type: integer
+        reps_completed:
+          type: integer
+        weight_lifted_kg:
+          type: number
+        rpe_score:
+          type: number
+        is_completed:
+          type: boolean
+    WorkoutSetUpdate:
+      type: object
+      properties:
         reps_completed:
           type: integer
         weight_lifted_kg:

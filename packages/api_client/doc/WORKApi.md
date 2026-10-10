@@ -14,6 +14,8 @@ Method | HTTP request | Description
 [**completeWorkoutSession**](WORKApi.md#completeworkoutsession) | **POST** /workout-sessions/{id}/complete | Complete a session
 [**createExercise**](WORKApi.md#createexercise) | **POST** /exercises | Create an exercise
 [**createWorkoutPlan**](WORKApi.md#createworkoutplan) | **POST** /workout-plans | Create a plan (also creates version 1)
+[**deleteWorkoutSessionSet**](WORKApi.md#deleteworkoutsessionset) | **DELETE** /workout-sessions/{id}/sets/{setId} | Delete a logged set
+[**getActiveWorkoutSession**](WORKApi.md#getactiveworkoutsession) | **GET** /workout-sessions/active | Get the member&#39;s active (in-progress) workout session
 [**getExercise**](WORKApi.md#getexercise) | **GET** /exercises/{id} | Exercise detail
 [**getPersonalRecords**](WORKApi.md#getpersonalrecords) | **GET** /workout-sessions/personal-records | Member personal records across completed sessions
 [**getWorkoutPlan**](WORKApi.md#getworkoutplan) | **GET** /workout-plans/{id} | Plan with current version line items
@@ -28,6 +30,7 @@ Method | HTTP request | Description
 [**startWorkoutSession**](WORKApi.md#startworkoutsession) | **POST** /workout-sessions | Start a live session
 [**updateExercise**](WORKApi.md#updateexercise) | **PATCH** /exercises/{id} | Update or deactivate an exercise
 [**updateWorkoutPlan**](WORKApi.md#updateworkoutplan) | **PATCH** /workout-plans/{id} | Update plan metadata (requires row_version)
+[**updateWorkoutSessionSet**](WORKApi.md#updateworkoutsessionset) | **PATCH** /workout-sessions/{id}/sets/{setId} | Edit a logged set
 
 
 # **archiveWorkoutPlan**
@@ -233,6 +236,89 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **deleteWorkoutSessionSet**
+> deleteWorkoutSessionSet(id, setId)
+
+Delete a logged set
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getWORKApi();
+final int id = 789; // int | 
+final int setId = 789; // int | 
+
+try {
+    api.deleteWorkoutSessionSet(id, setId);
+} on DioException catch (e) {
+    print('Exception when calling WORKApi->deleteWorkoutSessionSet: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **setId** | **int**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getActiveWorkoutSession**
+> WorkoutSession getActiveWorkoutSession(memberId)
+
+Get the member's active (in-progress) workout session
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getWORKApi();
+final int memberId = 789; // int | 
+
+try {
+    final response = api.getActiveWorkoutSession(memberId);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling WORKApi->getActiveWorkoutSession: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **memberId** | **int**|  | [optional] 
+
+### Return type
+
+[**WorkoutSession**](WorkoutSession.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -829,6 +915,51 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**WorkoutPlan**](WorkoutPlan.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **updateWorkoutSessionSet**
+> WorkoutSessionExercise updateWorkoutSessionSet(id, setId, workoutSetUpdate)
+
+Edit a logged set
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getWORKApi();
+final int id = 789; // int | 
+final int setId = 789; // int | 
+final WorkoutSetUpdate workoutSetUpdate = ; // WorkoutSetUpdate | 
+
+try {
+    final response = api.updateWorkoutSessionSet(id, setId, workoutSetUpdate);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling WORKApi->updateWorkoutSessionSet: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **setId** | **int**|  | 
+ **workoutSetUpdate** | [**WorkoutSetUpdate**](WorkoutSetUpdate.md)|  | 
+
+### Return type
+
+[**WorkoutSessionExercise**](WorkoutSessionExercise.md)
 
 ### Authorization
 

@@ -229,6 +229,7 @@ doc/WorkoutSession.md
 doc/WorkoutSessionCreate.md
 doc/WorkoutSessionExercise.md
 doc/WorkoutSessionPage.md
+doc/WorkoutSetUpdate.md
 doc/WorkoutSetWrite.md
 lib/api_client.dart
 lib/src/api.dart
@@ -468,8 +469,8 @@ lib/src/model/workout_session.dart
 lib/src/model/workout_session_create.dart
 lib/src/model/workout_session_exercise.dart
 lib/src/model/workout_session_page.dart
+lib/src/model/workout_set_update.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
-test/member_health_history_page_test.dart
-test/member_health_record_test.dart
+test/workout_set_update_test.dart

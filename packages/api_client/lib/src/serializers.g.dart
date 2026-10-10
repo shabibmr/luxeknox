@@ -242,6 +242,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(WorkoutSessionCreate.serializer)
       ..add(WorkoutSessionExercise.serializer)
       ..add(WorkoutSessionPage.serializer)
+      ..add(WorkoutSetUpdate.serializer)
       ..add(WorkoutSetWrite.serializer)
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Attendance)]),
