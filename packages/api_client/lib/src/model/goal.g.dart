@@ -87,6 +87,8 @@ class _$Goal extends Goal {
   final GoalStatusEnum status;
   @override
   final GoalMetric? metric;
+  @override
+  final BuiltList<GoalHistory>? histories;
 
   factory _$Goal([void Function(GoalBuilder)? updates]) =>
       (GoalBuilder()..update(updates))._build();
@@ -101,7 +103,8 @@ class _$Goal extends Goal {
       this.startDate,
       this.targetDate,
       required this.status,
-      this.metric})
+      this.metric,
+      this.histories})
       : super._();
   @override
   Goal rebuild(void Function(GoalBuilder) updates) =>
@@ -123,7 +126,8 @@ class _$Goal extends Goal {
         startDate == other.startDate &&
         targetDate == other.targetDate &&
         status == other.status &&
-        metric == other.metric;
+        metric == other.metric &&
+        histories == other.histories;
   }
 
   @override
@@ -139,6 +143,7 @@ class _$Goal extends Goal {
     _$hash = $jc(_$hash, targetDate.hashCode);
     _$hash = $jc(_$hash, status.hashCode);
     _$hash = $jc(_$hash, metric.hashCode);
+    _$hash = $jc(_$hash, histories.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -155,7 +160,8 @@ class _$Goal extends Goal {
           ..add('startDate', startDate)
           ..add('targetDate', targetDate)
           ..add('status', status)
-          ..add('metric', metric))
+          ..add('metric', metric)
+          ..add('histories', histories))
         .toString();
   }
 }
@@ -204,6 +210,12 @@ class GoalBuilder implements Builder<Goal, GoalBuilder> {
   GoalMetricBuilder get metric => _$this._metric ??= GoalMetricBuilder();
   set metric(GoalMetricBuilder? metric) => _$this._metric = metric;
 
+  ListBuilder<GoalHistory>? _histories;
+  ListBuilder<GoalHistory> get histories =>
+      _$this._histories ??= ListBuilder<GoalHistory>();
+  set histories(ListBuilder<GoalHistory>? histories) =>
+      _$this._histories = histories;
+
   GoalBuilder() {
     Goal._defaults(this);
   }
@@ -221,6 +233,7 @@ class GoalBuilder implements Builder<Goal, GoalBuilder> {
       _targetDate = $v.targetDate;
       _status = $v.status;
       _metric = $v.metric?.toBuilder();
+      _histories = $v.histories?.toBuilder();
       _$v = null;
     }
     return this;
@@ -257,12 +270,15 @@ class GoalBuilder implements Builder<Goal, GoalBuilder> {
             status: BuiltValueNullFieldError.checkNotNull(
                 status, r'Goal', 'status'),
             metric: _metric?.build(),
+            histories: _histories?.build(),
           );
     } catch (_) {
       late String _$failedField;
       try {
         _$failedField = 'metric';
         _metric?.build();
+        _$failedField = 'histories';
+        _histories?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(r'Goal', _$failedField, e.toString());
       }

@@ -46,25 +46,32 @@ void main() {
       verifyNever(() => mockFirebaseAuth.signInWithCredential(any()));
     });
 
-    test('returns UserCredential on successful native Google sign in', () async {
-      final mockAccount = MockGoogleSignInAccount();
-      final mockAuth = MockGoogleSignInAuthentication();
-      final mockCredential = MockUserCredential();
+    test(
+      'returns UserCredential on successful native Google sign in',
+      () async {
+        final mockAccount = MockGoogleSignInAccount();
+        final mockAuth = MockGoogleSignInAuthentication();
+        final mockCredential = MockUserCredential();
 
-      when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => mockAccount);
-      when(() => mockAccount.authentication).thenAnswer((_) async => mockAuth);
-      when(() => mockAuth.accessToken).thenReturn('test-access-token');
-      when(() => mockAuth.idToken).thenReturn('test-id-token');
-      when(
-        () => mockFirebaseAuth.signInWithCredential(any()),
-      ).thenAnswer((_) async => mockCredential);
+        when(
+          () => mockGoogleSignIn.signIn(),
+        ).thenAnswer((_) async => mockAccount);
+        when(
+          () => mockAccount.authentication,
+        ).thenAnswer((_) async => mockAuth);
+        when(() => mockAuth.accessToken).thenReturn('test-access-token');
+        when(() => mockAuth.idToken).thenReturn('test-id-token');
+        when(
+          () => mockFirebaseAuth.signInWithCredential(any()),
+        ).thenAnswer((_) async => mockCredential);
 
-      final result = await service.signInWithGoogle();
+        final result = await service.signInWithGoogle();
 
-      expect(result, equals(mockCredential));
-      verify(() => mockGoogleSignIn.signIn()).called(1);
-      verify(() => mockFirebaseAuth.signInWithCredential(any())).called(1);
-    });
+        expect(result, equals(mockCredential));
+        verify(() => mockGoogleSignIn.signIn()).called(1);
+        verify(() => mockFirebaseAuth.signInWithCredential(any())).called(1);
+      },
+    );
 
     test('signOut signs out from both FirebaseAuth and GoogleSignIn', () async {
       when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async => {});

@@ -23,6 +23,8 @@ class _$WorkoutPlanExercisesWriteExercisesInner
   @override
   final int? restSeconds;
   @override
+  final int? restBetweenExercisesSeconds;
+  @override
   final String? notes;
 
   factory _$WorkoutPlanExercisesWriteExercisesInner(
@@ -39,6 +41,7 @@ class _$WorkoutPlanExercisesWriteExercisesInner
       this.targetReps,
       this.targetWeightKg,
       this.restSeconds,
+      this.restBetweenExercisesSeconds,
       this.notes})
       : super._();
   @override
@@ -62,6 +65,7 @@ class _$WorkoutPlanExercisesWriteExercisesInner
         targetReps == other.targetReps &&
         targetWeightKg == other.targetWeightKg &&
         restSeconds == other.restSeconds &&
+        restBetweenExercisesSeconds == other.restBetweenExercisesSeconds &&
         notes == other.notes;
   }
 
@@ -75,6 +79,7 @@ class _$WorkoutPlanExercisesWriteExercisesInner
     _$hash = $jc(_$hash, targetReps.hashCode);
     _$hash = $jc(_$hash, targetWeightKg.hashCode);
     _$hash = $jc(_$hash, restSeconds.hashCode);
+    _$hash = $jc(_$hash, restBetweenExercisesSeconds.hashCode);
     _$hash = $jc(_$hash, notes.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -91,6 +96,7 @@ class _$WorkoutPlanExercisesWriteExercisesInner
           ..add('targetReps', targetReps)
           ..add('targetWeightKg', targetWeightKg)
           ..add('restSeconds', restSeconds)
+          ..add('restBetweenExercisesSeconds', restBetweenExercisesSeconds)
           ..add('notes', notes))
         .toString();
   }
@@ -131,6 +137,11 @@ class WorkoutPlanExercisesWriteExercisesInnerBuilder
   int? get restSeconds => _$this._restSeconds;
   set restSeconds(int? restSeconds) => _$this._restSeconds = restSeconds;
 
+  int? _restBetweenExercisesSeconds;
+  int? get restBetweenExercisesSeconds => _$this._restBetweenExercisesSeconds;
+  set restBetweenExercisesSeconds(int? restBetweenExercisesSeconds) =>
+      _$this._restBetweenExercisesSeconds = restBetweenExercisesSeconds;
+
   String? _notes;
   String? get notes => _$this._notes;
   set notes(String? notes) => _$this._notes = notes;
@@ -149,6 +160,7 @@ class WorkoutPlanExercisesWriteExercisesInnerBuilder
       _targetReps = $v.targetReps;
       _targetWeightKg = $v.targetWeightKg;
       _restSeconds = $v.restSeconds;
+      _restBetweenExercisesSeconds = $v.restBetweenExercisesSeconds;
       _notes = $v.notes;
       _$v = null;
     }
@@ -182,6 +194,7 @@ class WorkoutPlanExercisesWriteExercisesInnerBuilder
           targetReps: targetReps,
           targetWeightKg: targetWeightKg,
           restSeconds: restSeconds,
+          restBetweenExercisesSeconds: restBetweenExercisesSeconds,
           notes: notes,
         );
     replace(_$result);

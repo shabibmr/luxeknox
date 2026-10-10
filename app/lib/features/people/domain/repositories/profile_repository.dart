@@ -8,9 +8,9 @@ import '../entities/medical_record.dart';
 /// Health information, medical history, and emergency contacts — screens
 /// 04, 05, 06.
 abstract class ProfileRepository {
-  Future<Either<Failure, HealthInfo>> getHealthInfo(int memberId);
+  Future<Either<Failure, List<HealthInfo>>> listHealthHistory(int memberId);
 
-  Future<Either<Failure, HealthInfo>> updateHealthInfo(HealthInfo info);
+  Future<Either<Failure, HealthInfo>> createHealthRecord(HealthInfo info);
 
   Future<Either<Failure, List<MedicalRecord>>> listMedicalRecords(int memberId);
 

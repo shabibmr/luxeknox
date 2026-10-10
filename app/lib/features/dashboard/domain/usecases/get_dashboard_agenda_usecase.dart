@@ -11,10 +11,7 @@ import '../../../../session/domain/entities/user_type.dart';
 const int kDashboardAgendaDaySpan = 8;
 
 class DashboardAgendaResult extends Equatable {
-  const DashboardAgendaResult({
-    required this.today,
-    required this.upcoming,
-  });
+  const DashboardAgendaResult({required this.today, required this.upcoming});
 
   final List<ScheduleSession> today;
   final List<ScheduleSession> upcoming;

@@ -18,28 +18,33 @@ class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileRemoteDataSource _remote;
 
   @override
-  Future<Either<Failure, HealthInfo>> getHealthInfo(int memberId) async {
+  Future<Either<Failure, List<HealthInfo>>> listHealthHistory(
+    int memberId,
+  ) async {
     try {
-      final health = await _remote.getHealth(memberId);
-      return Right(healthInfoFromApi(health));
+      final page = await _remote.listHealthHistory(memberId);
+      final records = page.data.map(healthInfoFromApi).toList()
+        ..sort((a, b) {
+          final byDate = b.recordedAt.compareTo(a.recordedAt);
+          if (byDate != 0) return byDate;
+          return b.id.compareTo(a.id);
+        });
+      return Right(records);
     } catch (e) {
-      final failure = mapThrownToFailure(e);
-      // No health row yet: show an empty form; the first save creates it.
-      if (failure is NotFoundFailure) {
-        return Right(HealthInfo(id: 0, memberId: memberId));
-      }
-      return Left(failure);
+      return Left(mapThrownToFailure(e));
     }
   }
 
   @override
-  Future<Either<Failure, HealthInfo>> updateHealthInfo(HealthInfo info) async {
+  Future<Either<Failure, HealthInfo>> createHealthRecord(
+    HealthInfo info,
+  ) async {
     try {
-      final updated = await _remote.putHealth(
+      final created = await _remote.createHealthRecord(
         info.memberId,
         healthInfoToWrite(info),
       );
-      return Right(healthInfoFromApi(updated));
+      return Right(healthInfoFromApi(created));
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

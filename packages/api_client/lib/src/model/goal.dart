@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:built_collection/built_collection.dart';
+import 'package:api_client/src/model/goal_history.dart';
 import 'package:api_client/src/model/goal_metric.dart';
 import 'package:api_client/src/model/date.dart';
 import 'package:built_value/built_value.dart';
@@ -24,6 +25,7 @@ part 'goal.g.dart';
 /// * [targetDate] 
 /// * [status] 
 /// * [metric] 
+/// * [histories] 
 @BuiltValue()
 abstract class Goal implements Built<Goal, GoalBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -56,6 +58,9 @@ abstract class Goal implements Built<Goal, GoalBuilder> {
 
   @BuiltValueField(wireName: r'metric')
   GoalMetric? get metric;
+
+  @BuiltValueField(wireName: r'histories')
+  BuiltList<GoalHistory>? get histories;
 
   Goal._();
 
@@ -140,6 +145,13 @@ class _$GoalSerializer implements PrimitiveSerializer<Goal> {
       yield serializers.serialize(
         object.metric,
         specifiedType: const FullType(GoalMetric),
+      );
+    }
+    if (object.histories != null) {
+      yield r'histories';
+      yield serializers.serialize(
+        object.histories,
+        specifiedType: const FullType(BuiltList, [FullType(GoalHistory)]),
       );
     }
   }
@@ -240,6 +252,16 @@ class _$GoalSerializer implements PrimitiveSerializer<Goal> {
           ) as GoalMetric?;
           if (valueDes == null) continue;
           result.metric.replace(valueDes);
+          break;
+        case r'histories':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [
+              FullType(GoalHistory),
+            ]),
+          ) as BuiltList<GoalHistory>?;
+          if (valueDes == null) continue;
+          result.histories.replace(valueDes);
           break;
         default:
           unhandled.add(key);

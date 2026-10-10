@@ -58,6 +58,7 @@ export const workoutPlanExerciseItemSchema = z.object({
   target_reps: z.string().trim().optional().default('10'),
   target_weight_kg: z.number().positive().optional(),
   rest_seconds: z.number().int().nonnegative().optional().default(60),
+  rest_between_exercises_seconds: z.number().int().nonnegative().optional(),
   notes: z.string().optional(),
 });
 

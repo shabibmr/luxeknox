@@ -78,9 +78,19 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
               state.title.isNotEmpty ||
               state.exercises.isNotEmpty));
 
-  Future<void> init({String? planId}) async {
+  Future<void> init({
+    String? planId,
+    bool? isTemplate,
+    String? memberId,
+  }) async {
     if (planId == null) {
-      emit(const WorkoutPlanBuilderState(status: LoadStatus.success));
+      emit(
+        WorkoutPlanBuilderState(
+          status: LoadStatus.success,
+          isTemplate: isTemplate ?? false,
+          memberId: memberId ?? '',
+        ),
+      );
       return;
     }
     emit(
@@ -116,6 +126,7 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
                   targetReps: e.targetReps,
                   targetWeightKg: e.targetWeightKg,
                   restSeconds: e.restSeconds,
+                  restBetweenExercisesSeconds: e.restBetweenExercisesSeconds,
                   notes: e.notes,
                   exerciseName: e.exerciseName,
                 ),
@@ -170,6 +181,102 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
   void setMemberId(String value) {
     if (!_canEdit) return;
     _touch(state.copyWith(memberId: value));
+  }
+
+  /// Rest after each set of one exercise. Null keeps the server default (60s).
+  /// Values outside 0–3600 are ignored.
+  void setExerciseRestSeconds({
+    required int dayNumber,
+    required int indexInDay,
+    required int? restSeconds,
+  }) {
+    if (restSeconds != null && (restSeconds < 0 || restSeconds > 3600)) {
+      return;
+    }
+    _replaceDayExercise(
+      dayNumber: dayNumber,
+      indexInDay: indexInDay,
+      update: (current) {
+        if (current.restSeconds == restSeconds) return current;
+        return _copyExercise(
+          current,
+          restSeconds: restSeconds,
+          clearRestSeconds: restSeconds == null,
+        );
+      },
+    );
+  }
+
+  /// Rest after the last set of one exercise, before the next exercise.
+  /// Null keeps using [setExerciseRestSeconds] for that transition.
+  void setExerciseRestBetweenExercises({
+    required int dayNumber,
+    required int indexInDay,
+    required int? restBetweenExercisesSeconds,
+  }) {
+    if (restBetweenExercisesSeconds != null &&
+        (restBetweenExercisesSeconds < 0 ||
+            restBetweenExercisesSeconds > 3600)) {
+      return;
+    }
+    _replaceDayExercise(
+      dayNumber: dayNumber,
+      indexInDay: indexInDay,
+      update: (current) {
+        if (current.restBetweenExercisesSeconds ==
+            restBetweenExercisesSeconds) {
+          return current;
+        }
+        return _copyExercise(
+          current,
+          restBetweenExercisesSeconds: restBetweenExercisesSeconds,
+          clearRestBetweenExercises: restBetweenExercisesSeconds == null,
+        );
+      },
+    );
+  }
+
+  WorkoutPlanExerciseInput _copyExercise(
+    WorkoutPlanExerciseInput current, {
+    int? restSeconds,
+    int? restBetweenExercisesSeconds,
+    bool clearRestSeconds = false,
+    bool clearRestBetweenExercises = false,
+  }) {
+    return WorkoutPlanExerciseInput(
+      exerciseId: current.exerciseId,
+      dayNumber: current.dayNumber,
+      orderIndex: current.orderIndex,
+      targetSets: current.targetSets,
+      targetReps: current.targetReps,
+      targetWeightKg: current.targetWeightKg,
+      restSeconds: clearRestSeconds ? null : restSeconds ?? current.restSeconds,
+      restBetweenExercisesSeconds: clearRestBetweenExercises
+          ? null
+          : restBetweenExercisesSeconds ?? current.restBetweenExercisesSeconds,
+      notes: current.notes,
+      exerciseName: current.exerciseName,
+    );
+  }
+
+  void _replaceDayExercise({
+    required int dayNumber,
+    required int indexInDay,
+    required WorkoutPlanExerciseInput Function(WorkoutPlanExerciseInput current)
+    update,
+  }) {
+    if (!_canEdit) return;
+    final byDay = state.exercisesByDay;
+    final dayList = List<WorkoutPlanExerciseInput>.from(
+      byDay[dayNumber] ?? const [],
+    );
+    if (indexInDay < 0 || indexInDay >= dayList.length) return;
+    final current = dayList[indexInDay];
+    final next = update(current);
+    if (next == current) return;
+    dayList[indexInDay] = next;
+    final others = state.exercises.where((e) => e.dayNumber != dayNumber);
+    _touch(state.copyWith(exercises: [...others, ...dayList]));
   }
 
   void addExercise(Exercise exercise, {int dayNumber = 1}) {
@@ -408,6 +515,7 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
                     targetReps: e.targetReps,
                     targetWeightKg: e.targetWeightKg,
                     restSeconds: e.restSeconds,
+                    restBetweenExercisesSeconds: e.restBetweenExercisesSeconds,
                     notes: e.notes,
                     exerciseName: e.exerciseName,
                   ),

@@ -45,35 +45,41 @@ class FcmMessagingService {
 
   /// Initializes messaging (no-op when Firebase options are placeholders).
   ///
-  /// Runs unawaited from `main`, so failures are caught here; the service is
-  /// then reset so a later [start] can try again.
+  /// Runs unawaited from `main`. Each step is guarded on its own: a failing
+  /// step is reported and skipped, and never tears down the listeners that are
+  /// already registered. Listeners go up before any network call.
   Future<void> start() async {
     if (_started) return;
     _started = true;
+    if (_subscriptions.isEmpty) _listenSession();
+
     try {
-      await _start();
+      await _pushTokens.ensureStarted();
     } catch (e, st) {
+      // Nothing but the session listener is registered yet; allow a retry.
       _crashReporter.recordError(e, st);
-      dispose();
       _started = false;
+      return;
     }
-  }
-
-  Future<void> _start() async {
-    _listenSession();
-
-    await _pushTokens.ensureStarted();
     if (!_pushTokens.isLive) return;
 
-    // Session may have become authenticated while ensureStarted() was pending
-    // (the stream listener then saw a null token); sync now that it is live.
-    await _syncTokenIfAuthenticated();
-
-    await _initLocalNotifications();
     _listenForeground();
     _listenOpens();
     _listenTokenRefresh();
-    await _handleInitialMessage();
+    await _guarded(_initLocalNotifications);
+
+    // Session may have become authenticated while ensureStarted() was pending
+    // (the stream listener then saw a null token); sync now that it is live.
+    unawaited(_syncTokenIfAuthenticated());
+    await _guarded(_handleInitialMessage);
+  }
+
+  Future<void> _guarded(Future<void> Function() step) async {
+    try {
+      await step();
+    } catch (e, st) {
+      _crashReporter.recordError(e, st);
+    }
   }
 
   Future<void> _initLocalNotifications() async {
@@ -137,11 +143,14 @@ class FcmMessagingService {
   /// Best effort: a failed sync is retried on the next login or token refresh.
   /// The registrar skips the request when the token and user are unchanged.
   Future<void> _syncTokenIfAuthenticated([String? refreshedToken]) async {
-    final state = _sessionCubit.state;
-    if (state is! SessionAuthenticated) return;
+    if (_sessionCubit.state is! SessionAuthenticated) return;
     try {
       final token = refreshedToken ?? await _pushTokens.getToken();
       if (token == null || token.isEmpty) return;
+      // Read after the await: the user may have switched while the token was
+      // being fetched, and the marker must be recorded for the current user.
+      final state = _sessionCubit.state;
+      if (state is! SessionAuthenticated) return;
       await _deviceTokens.syncToken(token, userId: state.principal.userId);
     } catch (e, st) {
       _crashReporter.recordError(e, st);

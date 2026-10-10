@@ -16,6 +16,7 @@ import '../../features/diet/presentation/screens/diet_plan_versions_screen.dart'
 
 import '../../features/foods/presentation/screens/food_detail_screen.dart';
 import '../../features/foods/presentation/screens/food_library_screen.dart';
+import '../../features/goals/presentation/screens/goal_detail_screen.dart';
 import '../../features/goals/presentation/screens/measurements_screen.dart';
 import '../../features/goals/presentation/screens/progress_hub_screen.dart';
 import '../../features/membership/presentation/screens/trainer_membership_summary_screen.dart';
@@ -26,7 +27,7 @@ import '../../features/reports/presentation/screens/report_viewer_screen.dart';
 import '../../features/payments/presentation/payment_ledger_role.dart';
 import '../../features/payments/presentation/screens/payments_ledger_screen.dart';
 import '../../features/people/presentation/screens/edit_trainer_profile_screen.dart';
-import '../../features/people/presentation/screens/health_info_screen.dart';
+import '../../features/people/presentation/screens/health_detail_screen.dart';
 import '../../features/people/presentation/screens/member_dossier_screen.dart';
 import '../../features/people/presentation/screens/members_directory_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
@@ -148,7 +149,7 @@ StatefulShellRoute createTrainerBranchRoute() {
                           title: ShellStrings.memberHealth,
                         );
                       }
-                      return HealthInfoScreen(memberId: id);
+                      return HealthDetailScreen(memberId: id);
                     },
                   ),
                   GoRoute(
@@ -162,10 +163,23 @@ StatefulShellRoute createTrainerBranchRoute() {
                     },
                     routes: [
                       GoRoute(
+                        path: 'goal/:goalId',
+                        builder: (context, state) {
+                          return GoalDetailScreen(
+                            goalId: state.pathParameters['goalId']!,
+                          );
+                        },
+                      ),
+                      GoRoute(
                         path: 'add-measurement',
                         builder: (context, state) {
                           final id = state.pathParameters['id'] ?? '';
-                          return MeasurementsScreen(memberId: id);
+                          final metric = state.uri.queryParameters['metric'];
+                          return MeasurementsScreen(
+                            memberId: id,
+                            focusMetricId: metric,
+                            returnToCaller: metric != null,
+                          );
                         },
                       ),
                     ],
@@ -330,7 +344,17 @@ StatefulShellRoute createTrainerBranchRoute() {
               ),
               GoRoute(
                 path: 'workouts/create',
-                builder: (context, state) => const WorkoutPlanBuilderScreen(),
+                builder: (context, state) {
+                  final memberId = state.uri.queryParameters['memberId'];
+                  final isTemplateParam = state.uri.queryParameters['isTemplate'];
+                  final isTemplate = isTemplateParam != null
+                      ? isTemplateParam == 'true'
+                      : (memberId == null);
+                  return WorkoutPlanBuilderScreen(
+                    isTemplate: isTemplate,
+                    memberId: memberId,
+                  );
+                },
               ),
               GoRoute(
                 path: 'workouts/history',
@@ -369,7 +393,17 @@ StatefulShellRoute createTrainerBranchRoute() {
               ),
               GoRoute(
                 path: 'diets/create',
-                builder: (context, state) => const DietPlanBuilderScreen(),
+                builder: (context, state) {
+                  final memberId = state.uri.queryParameters['memberId'];
+                  final isTemplateParam = state.uri.queryParameters['isTemplate'];
+                  final isTemplate = isTemplateParam != null
+                      ? isTemplateParam == 'true'
+                      : (memberId == null);
+                  return DietPlanBuilderScreen(
+                    isTemplate: isTemplate,
+                    memberId: memberId,
+                  );
+                },
               ),
               GoRoute(
                 path: 'diets/history',

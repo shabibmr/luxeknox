@@ -30,7 +30,13 @@ class PtGridCell extends Equatable {
   final List<DateTime> conflictDates;
 
   @override
-  List<Object?> get props => [trainerId, slotStart, status, occupiedBy, conflictDates];
+  List<Object?> get props => [
+    trainerId,
+    slotStart,
+    status,
+    occupiedBy,
+    conflictDates,
+  ];
 }
 
 /// Hours × active trainers for one PT period and weekday pattern. A cell is
@@ -60,10 +66,21 @@ class PtScheduleGrid extends Equatable {
   }
 
   @override
-  List<Object?> get props => [startDate, endDate, weekdays, hours, trainers, cells];
+  List<Object?> get props => [
+    startDate,
+    endDate,
+    weekdays,
+    hours,
+    trainers,
+    cells,
+  ];
 }
 
 /// "17:00:00" → "17:00-18:00".
+/// Canonical `HH:mm` of a slot start (`17:00:00` → `17:00`); safe on short input.
+String ptSlotKey(String slotStart) =>
+    slotStart.length >= 5 ? slotStart.substring(0, 5) : slotStart;
+
 String ptHourLabel(String slotStart) {
   final h = int.parse(slotStart.split(':').first);
   String two(int v) => v.toString().padLeft(2, '0');

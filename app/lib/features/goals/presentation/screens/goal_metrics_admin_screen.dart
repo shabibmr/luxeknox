@@ -8,9 +8,9 @@ import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/goal_metric.dart';
-import '../../domain/entities/goal_metric_category.dart';
 import '../cubit/goal_metrics_admin_cubit.dart';
 import '../goals_strings.dart';
+import '../widgets/goal_metric_editor_dialog.dart';
 
 class GoalMetricsAdminScreen extends StatelessWidget {
   const GoalMetricsAdminScreen({super.key});
@@ -28,111 +28,13 @@ class _GoalMetricsAdminBody extends StatelessWidget {
   const _GoalMetricsAdminBody();
 
   Future<void> _openForm(BuildContext context, {GoalMetric? existing}) async {
-    final nameController = TextEditingController(text: existing?.name ?? '');
-    var unit = existing?.unitOfMeasure ?? GoalsStrings.unitKg;
-    var category = existing?.category ?? GoalMetricCategory.bodyComposition;
-    var isActive = existing?.isActive ?? true;
-    const units = [
-      GoalsStrings.unitKg,
-      GoalsStrings.unitLbs,
-      GoalsStrings.unitCm,
-      GoalsStrings.unitIn,
-      GoalsStrings.unitPercent,
-    ];
-
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setLocal) {
-            return AlertDialog(
-              title: Text(
-                existing == null
-                    ? GoalsStrings.createMetric
-                    : GoalsStrings.editMetric,
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: GoalsStrings.metricNameLabel,
-                      ),
-                    ),
-                    DropdownButtonFormField<String>(
-                      // ignore: deprecated_member_use
-                      value: unit,
-                      decoration: const InputDecoration(
-                        labelText: GoalsStrings.metricUnitLabel,
-                      ),
-                      items: [
-                        for (final u in units)
-                          DropdownMenuItem(value: u, child: Text(u)),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) setLocal(() => unit = v);
-                      },
-                    ),
-                    DropdownButtonFormField<GoalMetricCategory>(
-                      // ignore: deprecated_member_use
-                      value: category,
-                      decoration: const InputDecoration(
-                        labelText: GoalsStrings.metricCategoryLabel,
-                      ),
-                      items: [
-                        for (final c in GoalMetricCategory.values)
-                          DropdownMenuItem(
-                            value: c,
-                            child: Text(GoalsStrings.categoryLabelFor(c)),
-                          ),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) setLocal(() => category = v);
-                      },
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text(GoalsStrings.metricActiveLabel),
-                      value: isActive,
-                      onChanged: (v) => setLocal(() => isActive = v),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text(GoalsStrings.cancel),
-                ),
-                FilledButton(
-                  onPressed: () async {
-                    final name = nameController.text.trim();
-                    if (name.isEmpty) return;
-                    final ok = await context.read<GoalMetricsAdminCubit>().save(
-                      id: existing?.id,
-                      name: name,
-                      unitOfMeasure: unit,
-                      category: category,
-                      isActive: isActive,
-                    );
-                    if (ctx.mounted) Navigator.of(ctx).pop(ok);
-                  },
-                  child: const Text(GoalsStrings.save),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-    nameController.dispose();
-    if (saved == true && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text(GoalsStrings.metricSaved)));
-    }
+    final saved = await showGoalMetricEditorDialog(context, existing: existing);
+    if (saved == null || !context.mounted) return;
+    await context.read<GoalMetricsAdminCubit>().load();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text(GoalsStrings.metricSaved)));
   }
 
   @override

@@ -134,6 +134,77 @@ void main() {
   );
 
   blocTest<WorkoutPlanBuilderCubit, WorkoutPlanBuilderState>(
+    'setExerciseRestSeconds stores rest, ignores out of range, and can clear',
+    build: buildCubit,
+    act: (cubit) async {
+      await cubit.init();
+      cubit.addExercise(exerciseA, dayNumber: 1);
+      cubit.addExercise(exerciseB, dayNumber: 1);
+      cubit.setExerciseRestSeconds(
+        dayNumber: 1,
+        indexInDay: 0,
+        restSeconds: 90,
+      );
+      cubit.setExerciseRestSeconds(
+        dayNumber: 1,
+        indexInDay: 0,
+        restSeconds: 9000,
+      );
+      cubit.setExerciseRestSeconds(
+        dayNumber: 1,
+        indexInDay: 0,
+        restSeconds: null,
+      );
+    },
+    expect: () => [
+      isA<WorkoutPlanBuilderState>().having((s) => s.dirty, 'dirty', false),
+      isA<WorkoutPlanBuilderState>().having(
+        (s) => s.exercises.length,
+        'count',
+        1,
+      ),
+      isA<WorkoutPlanBuilderState>().having(
+        (s) => s.exercises.length,
+        'count',
+        2,
+      ),
+      isA<WorkoutPlanBuilderState>().having(
+        (s) => s.exercises.first.restSeconds,
+        'rest',
+        90,
+      ),
+      isA<WorkoutPlanBuilderState>().having(
+        (s) => s.exercises.first.restSeconds,
+        'cleared',
+        isNull,
+      ),
+    ],
+  );
+
+  blocTest<WorkoutPlanBuilderCubit, WorkoutPlanBuilderState>(
+    'setExerciseRestBetweenExercises stores a separate rest value',
+    build: buildCubit,
+    act: (cubit) async {
+      await cubit.init();
+      cubit.addExercise(exerciseA, dayNumber: 1);
+      cubit.setExerciseRestSeconds(
+        dayNumber: 1,
+        indexInDay: 0,
+        restSeconds: 45,
+      );
+      cubit.setExerciseRestBetweenExercises(
+        dayNumber: 1,
+        indexInDay: 0,
+        restBetweenExercisesSeconds: 120,
+      );
+    },
+    verify: (cubit) {
+      expect(cubit.state.exercises.single.restSeconds, 45);
+      expect(cubit.state.exercises.single.restBetweenExercisesSeconds, 120);
+    },
+  );
+
+  blocTest<WorkoutPlanBuilderCubit, WorkoutPlanBuilderState>(
     'save create then replaceExercises orchestration',
     build: () {
       when(

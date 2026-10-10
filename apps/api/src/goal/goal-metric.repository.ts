@@ -77,6 +77,12 @@ export class GoalMetricRepository extends BaseRepository<
     };
   }
 
+  async insertMetric(values: NewGoalMetric): Promise<number> {
+    const result = await this.create(values);
+    const header = Array.isArray(result) ? result[0] : result;
+    return Number(header?.insertId ?? 0);
+  }
+
   async updateById(id: number, values: Partial<NewGoalMetric>): Promise<GoalMetric | null> {
     await this.update(eq(goalMetrics.id, id), values);
     return this.findById(id);

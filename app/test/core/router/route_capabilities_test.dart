@@ -112,10 +112,7 @@ void main() {
         RouteCapabilities.requiredSlug(Routes.adminDietPlansDetailById('9')),
         isNull,
       );
-      expect(
-        RouteCapabilities.requiredSlug(Routes.adminDietPlans),
-        isNull,
-      );
+      expect(RouteCapabilities.requiredSlug(Routes.adminDietPlans), isNull);
     });
 
     test('matches category prefixes for reports and settings', () {

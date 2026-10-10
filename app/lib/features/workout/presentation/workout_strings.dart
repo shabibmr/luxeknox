@@ -49,6 +49,11 @@ abstract final class WorkoutStrings {
   static const repsLabel = 'Reps';
   static const weightLabel = 'Weight (kg)';
   static const restLabel = 'Rest (s)';
+  static const restBetweenSetsLabel = 'Rest between sets';
+  static const restDefaultHint = 'Empty uses 60s';
+  static const restBetweenExercisesLabel = 'Rest between exercises';
+  static const restBetweenExercisesHint = 'Empty uses rest between sets';
+  static const restTooLong = 'Max 3600s';
   static const rpeLabel = 'RPE';
 
   static const assignToMember = 'Assign to member';
@@ -58,6 +63,17 @@ abstract final class WorkoutStrings {
   static const assignCancel = 'Cancel';
   static const assigned = 'Template assigned';
   static const viewVersions = 'Versions';
+  static const todayWorkoutTitle = "Today's workout";
+  static const totalDaysLabel = 'Days';
+  static const totalExercisesLabel = 'Exercises';
+  static const totalSetsLabel = 'Sets';
+  static const startTodayWorkout = "Start today's workout";
+  static const startDayWorkout = 'Start day session';
+  static const noActivePlanAssigned = 'No active workout plan assigned';
+  static const choosePlanOrStartEmpty =
+      'Choose a workout plan to start or contact your trainer.';
+  static const viewFullPlan = 'View full plan';
+  static const viewDetails = 'View details';
   static const noVersions = 'No versions yet.';
   static const versionExercises = 'exercises';
   static const changelogEmpty = 'No changelog';

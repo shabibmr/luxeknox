@@ -20,18 +20,24 @@ class DietPlanBuilderScreen extends StatelessWidget {
   const DietPlanBuilderScreen({
     super.key,
     this.planId,
+    this.isTemplate,
+    this.memberId,
     this.detailPathBuilder,
   });
 
   final String? planId;
+  final bool? isTemplate;
+  final String? memberId;
   final String Function(String id)? detailPathBuilder;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<DietPlanBuilderCubit>()..init(planId: planId),
+      create: (_) => getIt<DietPlanBuilderCubit>()
+        ..init(planId: planId, isTemplate: isTemplate, memberId: memberId),
       child: _BuilderBody(
         planId: planId,
+        isPureTemplate: isTemplate == true,
         detailPathBuilder: detailPathBuilder,
       ),
     );
@@ -39,9 +45,14 @@ class DietPlanBuilderScreen extends StatelessWidget {
 }
 
 class _BuilderBody extends StatelessWidget {
-  const _BuilderBody({this.planId, this.detailPathBuilder});
+  const _BuilderBody({
+    this.planId,
+    this.isPureTemplate = false,
+    this.detailPathBuilder,
+  });
 
   final String? planId;
+  final bool isPureTemplate;
   final String Function(String id)? detailPathBuilder;
 
   @override
@@ -74,6 +85,7 @@ class _BuilderBody extends StatelessWidget {
           hasUnsavedChanges: state.dirty && !state.saving,
           child: _BuilderForm(
             state: state,
+            isPureTemplate: isPureTemplate,
             detailPathBuilder: detailPathBuilder,
           ),
         );
@@ -83,9 +95,14 @@ class _BuilderBody extends StatelessWidget {
 }
 
 class _BuilderForm extends StatefulWidget {
-  const _BuilderForm({required this.state, this.detailPathBuilder});
+  const _BuilderForm({
+    required this.state,
+    this.isPureTemplate = false,
+    this.detailPathBuilder,
+  });
 
   final DietPlanBuilderState state;
+  final bool isPureTemplate;
   final String Function(String id)? detailPathBuilder;
 
   @override
@@ -166,7 +183,8 @@ class _BuilderFormState extends State<_BuilderForm> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text(DietStrings.saved)));
-      final target = widget.detailPathBuilder?.call(ready.planId!) ??
+      final target =
+          widget.detailPathBuilder?.call(ready.planId!) ??
           Routes.trainerPlansDietById(ready.planId!);
       context.go(target);
     }
@@ -216,18 +234,21 @@ class _BuilderFormState extends State<_BuilderForm> {
                   : null,
               onChanged: cubit.setTitle,
             ),
-            const SizedBox(height: 12),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text(DietStrings.isTemplateLabel),
-              value: state.isTemplate,
-              onChanged: cubit.setIsTemplate,
-            ),
+            if (!widget.isPureTemplate) ...[
+              const SizedBox(height: 12),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text(DietStrings.isTemplateLabel),
+                value: state.isTemplate,
+                onChanged: cubit.setIsTemplate,
+              ),
+            ],
             if (!state.isTemplate) ...[
               const SizedBox(height: 12),
               MemberPickerField(
-                selectedMemberId:
-                    state.memberId.isEmpty ? null : state.memberId,
+                selectedMemberId: state.memberId.isEmpty
+                    ? null
+                    : state.memberId,
                 onChanged: (member) {
                   final id = member?.id.toString() ?? '';
                   _memberId.text = id;

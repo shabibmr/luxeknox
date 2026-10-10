@@ -106,21 +106,18 @@ class GoalMetricsAdminCubit extends Cubit<GoalMetricsAdminState> {
             ),
           );
 
-    return result.fold(
-      (failure) {
-        emit(
-          current.copyWith(
-            submitting: false,
-            status: LoadStatus.failure,
-            failure: failure,
-          ),
-        );
-        return false;
-      },
-      (_) async {
-        await load();
-        return true;
-      },
-    );
+    final failure = result.fold<Failure?>((f) => f, (_) => null);
+    if (failure != null) {
+      emit(
+        current.copyWith(
+          submitting: false,
+          status: LoadStatus.failure,
+          failure: failure,
+        ),
+      );
+      return false;
+    }
+    await load();
+    return true;
   }
 }

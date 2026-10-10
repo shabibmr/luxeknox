@@ -130,4 +130,17 @@ void main() {
       'https://api.luxeknox.com/v1',
     );
   });
+
+  test('normalize is stable and handles blank, whitespace and versions', () {
+    const host = 'https://api.luxeknox.com';
+    expect(ApiBaseUrlResolver.normalize(host), '$host/v1');
+    expect(ApiBaseUrlResolver.normalize('  $host/v1  '), '$host/v1');
+    expect(
+      ApiBaseUrlResolver.normalize(ApiBaseUrlResolver.normalize(host)),
+      '$host/v1',
+    );
+    expect(ApiBaseUrlResolver.normalize('/'), '');
+    expect(ApiBaseUrlResolver.normalize('  '), '');
+    expect(ApiBaseUrlResolver.normalize('$host/v2'), '$host/v2');
+  });
 }

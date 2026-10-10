@@ -18,19 +18,19 @@ class ApiBaseUrlResolver {
   final AppConfigRemoteSource _source;
   final String _fallbackUrl;
 
-  /// Trims the URL and ensures the Nest global prefix `/v1` is present on
-  /// absolute API base URLs. Returns an empty string for a blank URL.
+  /// Canonicalizes an API base URL to `<host>/v1`. Returns an empty string
+  /// for a blank value (including `/` or only slashes).
   ///
-  /// Contract: Firestore `config/app` holds the API host only
-  /// (`https://api.luxeknox.com`). This client is built against the v1 API, so
-  /// it owns the version and appends `/v1` itself. A value that already ends in
-  /// `/v1` is accepted unchanged.
+  /// Contract: Firestore `config/app` and `API_BASE_URL` hold the API host
+  /// only (`https://api.luxeknox.com`). This client is built against the v1
+  /// API, so it owns the version and appends `/v1` itself. A value already
+  /// ending in `/v1` is canonicalized to the same result, so the output is
+  /// stable. Any other version suffix (`/v2`) is left untouched rather than
+  /// producing `/v2/v1`.
   static String normalize(String raw) {
-    final trimmed = raw.trim();
-    if (trimmed.isEmpty) return trimmed;
-
-    final withoutTrailingSlash = trimmed.replaceFirst(RegExp(r'/+$'), '');
-    if (withoutTrailingSlash.endsWith('/v1')) {
+    final withoutTrailingSlash = raw.trim().replaceFirst(RegExp(r'/+$'), '');
+    if (withoutTrailingSlash.isEmpty) return '';
+    if (RegExp(r'/v\d+$').hasMatch(withoutTrailingSlash)) {
       return withoutTrailingSlash;
     }
     return '$withoutTrailingSlash/v1';

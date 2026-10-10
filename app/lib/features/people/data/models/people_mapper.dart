@@ -350,7 +350,7 @@ Role roleFromApi(api.Role role) {
   );
 }
 
-HealthInfo healthInfoFromApi(api.MemberHealth health) {
+HealthInfo healthInfoFromApi(api.MemberHealthRecord health) {
   return HealthInfo(
     id: health.id,
     memberId: health.memberId,
@@ -361,7 +361,7 @@ HealthInfo healthInfoFromApi(api.MemberHealth health) {
     dietaryPreferences: health.dietaryPreferences,
     physicianName: health.physicianName,
     physicianPhone: health.physicianPhone,
-    updatedAt: health.updatedAt,
+    recordedAt: health.recordedAt,
   );
 }
 

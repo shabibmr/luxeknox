@@ -304,7 +304,9 @@ class _EditProfileFormState extends State<_EditProfileForm> {
               : () {
                   if ((_gender ?? '').trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text(PeopleStrings.genderRequired)),
+                      const SnackBar(
+                        content: Text(PeopleStrings.genderRequired),
+                      ),
                     );
                     return;
                   }

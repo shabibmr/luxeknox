@@ -36,7 +36,9 @@ void main() {
     freezeCubit = MockMembershipFreezeCubit();
     sessionCubit = MockSessionCubit();
 
-    when(() => freezeCubit.load(memberId: any(named: 'memberId'))).thenAnswer((_) async {});
+    when(
+      () => freezeCubit.load(memberId: any(named: 'memberId')),
+    ).thenAnswer((_) async {});
 
     whenListen(
       sessionCubit,
@@ -61,41 +63,42 @@ void main() {
     );
   }
 
-  testWidgets('renders freeze requests in read-only mode with formatted dates', (
-    tester,
-  ) async {
-    final freeze1 = MembershipFreeze(
-      id: 'f-1',
-      membershipId: 'mem-1',
-      startDate: DateTime.utc(2026, 3, 1),
-      endDate: DateTime.utc(2026, 3, 15),
-      reason: 'Medical recovery',
-      status: FreezeStatus.approved,
-      reviewedByUserId: 'admin-1',
-      reviewedAt: DateTime.utc(2026, 2, 28),
-    );
-
-    whenListen(
-      freezeCubit,
-      const Stream<MembershipFreezeState>.empty(),
-      initialState: MembershipFreezeState(
-        status: LoadStatus.success,
+  testWidgets(
+    'renders freeze requests in read-only mode with formatted dates',
+    (tester) async {
+      final freeze1 = MembershipFreeze(
+        id: 'f-1',
         membershipId: 'mem-1',
-        items: [freeze1],
-      ),
-    );
+        startDate: DateTime.utc(2026, 3, 1),
+        endDate: DateTime.utc(2026, 3, 15),
+        reason: 'Medical recovery',
+        status: FreezeStatus.approved,
+        reviewedByUserId: 'admin-1',
+        reviewedAt: DateTime.utc(2026, 2, 28),
+      );
 
-    await tester.pumpWidget(createWidgetUnderTest());
-    await tester.pumpAndSettle();
+      whenListen(
+        freezeCubit,
+        const Stream<MembershipFreezeState>.empty(),
+        initialState: MembershipFreezeState(
+          status: LoadStatus.success,
+          membershipId: 'mem-1',
+          items: [freeze1],
+        ),
+      );
 
-    expect(find.text(MembershipStrings.freezesTitle), findsOneWidget);
-    expect(find.text('2026-03-01 → 2026-03-15'), findsOneWidget);
-    expect(find.text('Approved · Medical recovery'), findsOneWidget);
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
 
-    // Read-only member view should not have approve or reject buttons
-    expect(find.text(MembershipStrings.approve), findsNothing);
-    expect(find.text(MembershipStrings.reject), findsNothing);
-  });
+      expect(find.text(MembershipStrings.freezesTitle), findsOneWidget);
+      expect(find.text('2026-03-01 → 2026-03-15'), findsOneWidget);
+      expect(find.text('Approved · Medical recovery'), findsOneWidget);
+
+      // Read-only member view should not have approve or reject buttons
+      expect(find.text(MembershipStrings.approve), findsNothing);
+      expect(find.text(MembershipStrings.reject), findsNothing);
+    },
+  );
 
   testWidgets('displays no active membership when membershipId is null', (
     tester,

@@ -98,9 +98,7 @@ class _MembershipHistoryListBody extends StatelessWidget {
                       'New end date: ${formatMembershipDate(entry.newEndDate!)}',
                     )
                   : null,
-              trailing: Text(
-                formatMembershipDate(entry.timestamp),
-              ),
+              trailing: Text(formatMembershipDate(entry.timestamp)),
             );
           },
         );

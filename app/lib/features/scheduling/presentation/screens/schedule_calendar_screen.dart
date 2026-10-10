@@ -113,15 +113,9 @@ class _ScheduleCalendarBodyState extends State<_ScheduleCalendarBody> {
           ],
           PopupMenuButton<ScheduleSessionStatus>(
             tooltip: 'Filter status',
-            onSelected: (value) =>
-                setState(() => _statusFilter = value),
+            onSelected: (value) => setState(() => _statusFilter = value),
             itemBuilder: (_) => ScheduleSessionStatus.values
-                .map(
-                  (s) => PopupMenuItem(
-                    value: s,
-                    child: Text(s.name),
-                  ),
-                )
+                .map((s) => PopupMenuItem(value: s, child: Text(s.name)))
                 .toList(),
           ),
           if (_statusFilter != null)

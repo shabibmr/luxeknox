@@ -144,10 +144,7 @@ void main() {
   group('canSellMembership', () {
     test('admin with memberships.create can sell', () {
       expect(
-        canSellMembership(
-          userType: UserType.admin,
-          canCreateMembership: true,
-        ),
+        canSellMembership(userType: UserType.admin, canCreateMembership: true),
         isTrue,
       );
     });
@@ -161,10 +158,7 @@ void main() {
         isFalse,
       );
       expect(
-        canSellMembership(
-          userType: UserType.admin,
-          canCreateMembership: false,
-        ),
+        canSellMembership(userType: UserType.admin, canCreateMembership: false),
         isFalse,
       );
     });

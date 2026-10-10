@@ -26,7 +26,7 @@ build_app() {
   pushd app >/dev/null
   flutter pub get
   flutter build web --release \
-    --dart-define=API_BASE_URL="${API_BASE_URL:-https://api.luxeknox.com/v1}" \
+    --dart-define=API_BASE_URL="${API_BASE_URL:-https://api.luxeknox.com}" \
     --dart-define=ENV=production
   popd >/dev/null
 }

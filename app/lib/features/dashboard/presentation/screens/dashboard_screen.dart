@@ -172,12 +172,36 @@ class _MemberQuickActions extends StatelessWidget {
     if (role != UserType.member) return const SizedBox.shrink();
 
     final actions = [
-      (Icons.calendar_month_outlined, DashboardStrings.schedule, Routes.memberSchedule),
-      (Icons.event_available_outlined, DashboardStrings.attendance, Routes.memberProfileAttendanceSummary),
-      (Icons.fitness_center_outlined, DashboardStrings.workout, Routes.memberHomeWorkoutActive),
-      (Icons.restaurant_outlined, DashboardStrings.diet, Routes.memberHomeDietLog),
-      (Icons.trending_up_outlined, DashboardStrings.progress, Routes.memberProgress),
-      (Icons.payments_outlined, DashboardStrings.payments, Routes.memberProfilePayments),
+      (
+        Icons.calendar_month_outlined,
+        DashboardStrings.schedule,
+        Routes.memberSchedule,
+      ),
+      (
+        Icons.event_available_outlined,
+        DashboardStrings.attendance,
+        Routes.memberProfileAttendanceSummary,
+      ),
+      (
+        Icons.fitness_center_outlined,
+        DashboardStrings.workout,
+        Routes.memberHomeWorkoutToday,
+      ),
+      (
+        Icons.restaurant_outlined,
+        DashboardStrings.diet,
+        Routes.memberHomeDietLog,
+      ),
+      (
+        Icons.trending_up_outlined,
+        DashboardStrings.progress,
+        Routes.memberProgress,
+      ),
+      (
+        Icons.payments_outlined,
+        DashboardStrings.payments,
+        Routes.memberProfilePayments,
+      ),
     ];
 
     return Padding(
@@ -298,4 +322,3 @@ class _EmptyNotice extends StatelessWidget {
     );
   }
 }
-

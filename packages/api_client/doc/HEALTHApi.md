@@ -13,17 +13,17 @@ Method | HTTP request | Description
 [**createHealthCondition**](HEALTHApi.md#createhealthcondition) | **POST** /health-conditions | Create a condition
 [**createMedicalHistory**](HEALTHApi.md#createmedicalhistory) | **POST** /members/{id}/medical-histories | Add a medical history row
 [**createMemberDocument**](HEALTHApi.md#creatememberdocument) | **POST** /members/{id}/documents | Attach a document metadata row
+[**createMemberHealthRecord**](HEALTHApi.md#creatememberhealthrecord) | **POST** /members/{id}/health/history | Record a new member health row
 [**createMemberPhoto**](HEALTHApi.md#creatememberphoto) | **POST** /members/{id}/photos | Add a gallery photo
 [**deleteEmergencyContact**](HEALTHApi.md#deleteemergencycontact) | **DELETE** /users/{id}/emergency-contacts/{contactId} | Remove an emergency contact
 [**deleteMedicalHistory**](HEALTHApi.md#deletemedicalhistory) | **DELETE** /members/{id}/medical-histories/{historyId} | Soft-remove a medical history row
 [**deleteMemberDocument**](HEALTHApi.md#deletememberdocument) | **DELETE** /members/{id}/documents/{documentId} | Delete a document row
-[**getMemberHealth**](HEALTHApi.md#getmemberhealth) | **GET** /members/{id}/health | Current health row
 [**listEmergencyContacts**](HEALTHApi.md#listemergencycontacts) | **GET** /users/{id}/emergency-contacts | Emergency contacts for a user
 [**listHealthConditions**](HEALTHApi.md#listhealthconditions) | **GET** /health-conditions | Condition catalog
 [**listMedicalHistories**](HEALTHApi.md#listmedicalhistories) | **GET** /members/{id}/medical-histories | Medical history list
 [**listMemberDocuments**](HEALTHApi.md#listmemberdocuments) | **GET** /members/{id}/documents | Member documents
+[**listMemberHealthHistory**](HEALTHApi.md#listmemberhealthhistory) | **GET** /members/{id}/health/history | Member health history list
 [**listMemberPhotos**](HEALTHApi.md#listmemberphotos) | **GET** /members/{id}/photos | Member gallery
-[**putMemberHealth**](HEALTHApi.md#putmemberhealth) | **PUT** /members/{id}/health | Replace current health row
 [**setMemberAvatar**](HEALTHApi.md#setmemberavatar) | **POST** /members/{id}/photos/{photoId}/avatar | Set current avatar from a gallery shot
 [**updateEmergencyContact**](HEALTHApi.md#updateemergencycontact) | **PATCH** /users/{id}/emergency-contacts/{contactId} | Update an emergency contact
 [**updateHealthCondition**](HEALTHApi.md#updatehealthcondition) | **PATCH** /health-conditions/{id} | Update a condition
@@ -201,6 +201,49 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **createMemberHealthRecord**
+> MemberHealthRecord createMemberHealthRecord(id, memberHealthWrite)
+
+Record a new member health row
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getHEALTHApi();
+final int id = 789; // int | 
+final MemberHealthWrite memberHealthWrite = ; // MemberHealthWrite | 
+
+try {
+    final response = api.createMemberHealthRecord(id, memberHealthWrite);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling HEALTHApi->createMemberHealthRecord: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **memberHealthWrite** | [**MemberHealthWrite**](MemberHealthWrite.md)|  | 
+
+### Return type
+
+[**MemberHealthRecord**](MemberHealthRecord.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **createMemberPhoto**
 > MemberPhoto createMemberPhoto(id, memberPhotoWrite)
 
@@ -358,47 +401,6 @@ Name | Type | Description  | Notes
 ### Return type
 
 void (empty response body)
-
-### Authorization
-
-[bearerAuth](../README.md#bearerAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getMemberHealth**
-> MemberHealth getMemberHealth(id)
-
-Current health row
-
-### Example
-```dart
-import 'package:api_client/api.dart';
-
-final api = ApiClient().getHEALTHApi();
-final int id = 789; // int | 
-
-try {
-    final response = api.getMemberHealth(id);
-    print(response);
-} on DioException catch (e) {
-    print('Exception when calling HEALTHApi->getMemberHealth: $e\n');
-}
-```
-
-### Parameters
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **id** | **int**|  | 
-
-### Return type
-
-[**MemberHealth**](MemberHealth.md)
 
 ### Authorization
 
@@ -581,6 +583,51 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **listMemberHealthHistory**
+> MemberHealthHistoryPage listMemberHealthHistory(id, limit, offset)
+
+Member health history list
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getHEALTHApi();
+final int id = 789; // int | 
+final int limit = 56; // int | Default from gym_settings pagination.default_page_size.
+final int offset = 56; // int | Admin tables that need page numbers.
+
+try {
+    final response = api.listMemberHealthHistory(id, limit, offset);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling HEALTHApi->listMemberHealthHistory: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **limit** | **int**| Default from gym_settings pagination.default_page_size. | [optional] 
+ **offset** | **int**| Admin tables that need page numbers. | [optional] 
+
+### Return type
+
+[**MemberHealthHistoryPage**](MemberHealthHistoryPage.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listMemberPhotos**
 > MemberPhotoPage listMemberPhotos(id)
 
@@ -618,49 +665,6 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **putMemberHealth**
-> MemberHealth putMemberHealth(id, memberHealthWrite)
-
-Replace current health row
-
-### Example
-```dart
-import 'package:api_client/api.dart';
-
-final api = ApiClient().getHEALTHApi();
-final int id = 789; // int | 
-final MemberHealthWrite memberHealthWrite = ; // MemberHealthWrite | 
-
-try {
-    final response = api.putMemberHealth(id, memberHealthWrite);
-    print(response);
-} on DioException catch (e) {
-    print('Exception when calling HEALTHApi->putMemberHealth: $e\n');
-}
-```
-
-### Parameters
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **id** | **int**|  | 
- **memberHealthWrite** | [**MemberHealthWrite**](MemberHealthWrite.md)|  | 
-
-### Return type
-
-[**MemberHealth**](MemberHealth.md)
-
-### Authorization
-
-[bearerAuth](../README.md#bearerAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

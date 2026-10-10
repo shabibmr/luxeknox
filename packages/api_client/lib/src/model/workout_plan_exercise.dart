@@ -21,6 +21,7 @@ part 'workout_plan_exercise.g.dart';
 /// * [targetReps] 
 /// * [targetWeightKg] 
 /// * [restSeconds] 
+/// * [restBetweenExercisesSeconds] 
 /// * [notes] 
 /// * [exercise] 
 @BuiltValue()
@@ -51,6 +52,9 @@ abstract class WorkoutPlanExercise implements Built<WorkoutPlanExercise, Workout
 
   @BuiltValueField(wireName: r'rest_seconds')
   int? get restSeconds;
+
+  @BuiltValueField(wireName: r'rest_between_exercises_seconds')
+  int? get restBetweenExercisesSeconds;
 
   @BuiltValueField(wireName: r'notes')
   String? get notes;
@@ -131,6 +135,13 @@ class _$WorkoutPlanExerciseSerializer implements PrimitiveSerializer<WorkoutPlan
       yield r'rest_seconds';
       yield serializers.serialize(
         object.restSeconds,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.restBetweenExercisesSeconds != null) {
+      yield r'rest_between_exercises_seconds';
+      yield serializers.serialize(
+        object.restBetweenExercisesSeconds,
         specifiedType: const FullType(int),
       );
     }
@@ -237,6 +248,14 @@ class _$WorkoutPlanExerciseSerializer implements PrimitiveSerializer<WorkoutPlan
           ) as int?;
           if (valueDes == null) continue;
           result.restSeconds = valueDes;
+          break;
+        case r'rest_between_exercises_seconds':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.restBetweenExercisesSeconds = valueDes;
           break;
         case r'notes':
           final valueDes = serializers.deserialize(

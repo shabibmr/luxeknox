@@ -37,7 +37,10 @@ class PtScheduleGridView extends StatelessWidget {
                 children: [
                   Icon(Icons.people_outline, color: theme.colorScheme.error),
                   const SizedBox(width: 8),
-                  Text('No eligible trainers found', style: theme.textTheme.titleSmall),
+                  Text(
+                    'No eligible trainers found',
+                    style: theme.textTheme.titleSmall,
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -62,7 +65,10 @@ class PtScheduleGridView extends StatelessWidget {
                 children: [
                   Icon(Icons.schedule, color: theme.colorScheme.error),
                   const SizedBox(width: 8),
-                  Text('No matching time slots', style: theme.textTheme.titleSmall),
+                  Text(
+                    'No matching time slots',
+                    style: theme.textTheme.titleSmall,
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -112,13 +118,17 @@ class PtScheduleGridView extends StatelessWidget {
                       height: _cellHeight,
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(ptHourLabel(hour), style: theme.textTheme.bodyMedium),
+                        child: Text(
+                          ptHourLabel(hour),
+                          style: theme.textTheme.bodyMedium,
+                        ),
                       ),
                     ),
                     for (final t in grid.trainers)
                       _Cell(
                         cell: grid.cell(t.id, hour),
-                        selected: selectedTrainerId == t.id && selectedSlot == hour,
+                        selected:
+                            selectedTrainerId == t.id && selectedSlot == hour,
                         onTap: () => onSelect(t.id, hour),
                         width: _cellWidth,
                         height: _cellHeight,
@@ -154,7 +164,11 @@ class _Cell extends StatelessWidget {
     final status = cell?.status ?? PtGridCellStatus.unavailable;
     final (Color bg, Color fg, String label) = switch (status) {
       _ when selected => (scheme.primary, scheme.onPrimary, PtStrings.selected),
-      PtGridCellStatus.free => (scheme.primaryContainer, scheme.onPrimaryContainer, PtStrings.free),
+      PtGridCellStatus.free => (
+        scheme.primaryContainer,
+        scheme.onPrimaryContainer,
+        PtStrings.free,
+      ),
       PtGridCellStatus.occupied => (
         scheme.errorContainer,
         scheme.onErrorContainer,
@@ -192,7 +206,9 @@ class _Cell extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(color: fg),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelMedium?.copyWith(color: fg),
                   ),
                 ),
               ),
@@ -216,7 +232,10 @@ class _Legend extends StatelessWidget {
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(3)),
+          decoration: BoxDecoration(
+            color: c,
+            borderRadius: BorderRadius.circular(3),
+          ),
         ),
         const SizedBox(width: 4),
         Text(label, style: Theme.of(context).textTheme.labelSmall),

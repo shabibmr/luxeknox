@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/idempotency/idempotency_key.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../payments/domain/entities/payment_method.dart';
@@ -49,16 +50,35 @@ abstract class SellPtState with _$SellPtState {
   bool get isReplan => replanning != null;
 
   /// A re-plan keeps the subscription's own weekday count; the package may have been edited since.
-  int? get sessionsPerWeek => replanning?.weekdays.length ?? product?.sessionsPerWeek;
+  int? get sessionsPerWeek =>
+      replanning?.weekdays.length ?? product?.sessionsPerWeek;
 
-  bool get weekdaysComplete => product != null && weekdays.length == sessionsPerWeek;
+  bool get weekdaysComplete =>
+      product != null && weekdays.length == sessionsPerWeek;
 
-  bool get canLoadGrid => product != null && startDate != null && weekdaysComplete;
+  bool get canLoadGrid =>
+      product != null && startDate != null && weekdaysComplete;
 
   bool get slotChosen => trainerId != null && slotStart != null;
 
+  /// A re-plan is only submittable when the trainer, weekdays or hour differ
+  /// from the existing subscription; otherwise there is nothing to apply.
+  bool get replanChanged {
+    final r = replanning;
+    if (r == null) return true;
+    final a = [...weekdays]..sort();
+    final b = [...r.weekdays]..sort();
+    final slot = slotStart;
+    return trainerId != r.trainerId ||
+        a.join(',') != b.join(',') ||
+        (slot == null ? null : ptSlotKey(slot)) != ptSlotKey(r.slotStart);
+  }
+
   bool get canSubmit =>
-      !submitting && canLoadGrid && slotChosen && (isReplan || paymentMethodId != null);
+      !submitting &&
+      canLoadGrid &&
+      slotChosen &&
+      (isReplan ? replanChanged : paymentMethodId != null);
 }
 
 /// Drives the "Add Personal Training" flow (package → weekdays → grid → pay)
@@ -81,7 +101,19 @@ class SellPtCubit extends Cubit<SellPtState> {
   final ReplanPtUseCase _replan;
   final GetMemberUseCase? _getMember;
 
+  Future<void> Function()? _lastInit;
+
+  /// One key per sale intent: a retry of an identical request (e.g. after a
+  /// timeout) reuses it so the server replays the first result instead of
+  /// rejecting the duplicate. Any change to the request mints a new key.
+  PurchasePtParams? _lastPurchase;
+  String? _purchaseKey;
+
+  /// Re-runs whichever init (sell or re-plan) last started this cubit.
+  Future<void> retry() => _lastInit?.call() ?? Future.value();
+
   Future<void> init(int memberId, {String? memberName}) async {
+    _lastInit = () => init(memberId, memberName: memberName);
     emit(
       SellPtState(
         memberId: memberId,
@@ -103,35 +135,42 @@ class SellPtCubit extends Cubit<SellPtState> {
     Person? person;
     String? resolvedName = memberName;
     if (memberResult != null) {
-      memberResult.fold(
-        (_) => null,
-        (p) {
-          person = p;
-          resolvedName ??= p.fullName;
-        },
-      );
+      memberResult.fold((_) => null, (p) {
+        person = p;
+        resolvedName ??= p.fullName;
+      });
     }
 
-    products.fold(
-      (failure) => emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
-      (items) {
-        final active = items.where((p) => p.isActive).toList();
-        final paymentMethods = methods.fold(
-          (_) => <PaymentMethod>[],
-          (m) => m.where((x) => x.isActive).toList(),
-        );
-        emit(
-          state.copyWith(
-            status: LoadStatus.success,
-            products: active,
-            paymentMethods: paymentMethods,
-            paymentMethodId: paymentMethods.length == 1 ? paymentMethods.first.id : null,
-            member: person,
-            memberName: resolvedName,
-          ),
-        );
-      },
+    // A sale cannot proceed without payment methods, so a failed load is
+    // surfaced (with retry) rather than shown as "none configured".
+    final loadFailure = products.fold<Failure?>(
+      (f) => f,
+      (_) => methods.fold<Failure?>((f) => f, (_) => null),
     );
+    if (loadFailure != null) {
+      emit(state.copyWith(status: LoadStatus.failure, failure: loadFailure));
+      return;
+    }
+
+    products.fold((_) => null, (items) {
+      final active = items.where((p) => p.isActive).toList();
+      final paymentMethods = methods.fold(
+        (_) => <PaymentMethod>[],
+        (m) => m.where((x) => x.isActive).toList(),
+      );
+      emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          products: active,
+          paymentMethods: paymentMethods,
+          paymentMethodId: paymentMethods.length == 1
+              ? paymentMethods.first.id
+              : null,
+          member: person,
+          memberName: resolvedName,
+        ),
+      );
+    });
   }
 
   /// Re-plan an existing PT from [effectiveDate]; package and period are fixed,
@@ -141,16 +180,49 @@ class SellPtCubit extends Cubit<SellPtState> {
     List<PtProduct> products, {
     String? memberName,
   }) async {
-    final product = products.where((p) => p.id == subscription.ptProductId).firstOrNull;
+    _lastInit = () =>
+        initReplan(subscription, products, memberName: memberName);
+    var available = products;
+    var product = available
+        .where((p) => p.id == subscription.ptProductId)
+        .firstOrNull;
+    if (product == null) {
+      // The caller's list may be empty (its fetch failed) or stale.
+      emit(
+        SellPtState(
+          memberId: subscription.memberId,
+          memberName: memberName,
+          status: LoadStatus.loading,
+          replanning: subscription,
+        ),
+      );
+      final fetched = await _getProducts(const NoParams());
+      if (isClosed) return;
+      available = fetched.getOrElse((_) => available);
+      product = available
+          .where((p) => p.id == subscription.ptProductId)
+          .firstOrNull;
+      if (product == null) {
+        emit(
+          state.copyWith(
+            status: LoadStatus.failure,
+            failure: fetched.fold((f) => f, (_) => const NotFoundFailure()),
+          ),
+        );
+        return;
+      }
+    }
     final today = _today();
-    final effective = subscription.startDate.isAfter(today) ? subscription.startDate : today;
+    final effective = subscription.startDate.isAfter(today)
+        ? subscription.startDate
+        : today;
     emit(
       SellPtState(
         memberId: subscription.memberId,
         memberName: memberName,
         status: LoadStatus.success,
         replanning: subscription,
-        products: products,
+        products: available,
         product: product,
         startDate: effective,
         weekdays: [...subscription.weekdays],
@@ -163,7 +235,12 @@ class SellPtCubit extends Cubit<SellPtState> {
       if (!isClosed) {
         res.fold(
           (_) => null,
-          (p) => emit(state.copyWith(member: p, memberName: state.memberName ?? p.fullName)),
+          (p) => emit(
+            state.copyWith(
+              member: p,
+              memberName: state.memberName ?? p.fullName,
+            ),
+          ),
         );
       }
     }
@@ -171,13 +248,30 @@ class SellPtCubit extends Cubit<SellPtState> {
   }
 
   void selectProduct(PtProduct product) {
-    final keep = state.weekdays.length <= product.sessionsPerWeek ? state.weekdays : <int>[];
-    emit(state.copyWith(product: product, weekdays: keep, grid: null, trainerId: null, slotStart: null));
+    final keep = state.weekdays.length <= product.sessionsPerWeek
+        ? state.weekdays
+        : <int>[];
+    emit(
+      state.copyWith(
+        product: product,
+        weekdays: keep,
+        grid: null,
+        trainerId: null,
+        slotStart: null,
+      ),
+    );
     _maybeLoadGrid();
   }
 
   void setStartDate(DateTime date) {
-    emit(state.copyWith(startDate: DateTime(date.year, date.month, date.day), grid: null, trainerId: null, slotStart: null));
+    emit(
+      state.copyWith(
+        startDate: DateTime(date.year, date.month, date.day),
+        grid: null,
+        trainerId: null,
+        slotStart: null,
+      ),
+    );
     _maybeLoadGrid();
   }
 
@@ -193,7 +287,14 @@ class SellPtCubit extends Cubit<SellPtState> {
       return;
     }
     days.sort();
-    emit(state.copyWith(weekdays: days, grid: null, trainerId: null, slotStart: null));
+    emit(
+      state.copyWith(
+        weekdays: days,
+        grid: null,
+        trainerId: null,
+        slotStart: null,
+      ),
+    );
     _maybeLoadGrid();
   }
 
@@ -204,21 +305,32 @@ class SellPtCubit extends Cubit<SellPtState> {
   Future<void> loadGrid() async {
     if (!state.canLoadGrid) return;
     emit(state.copyWith(gridStatus: LoadStatus.loading, failure: null));
-    final result = await _getGrid(
-      GetPtScheduleGridParams(
-        memberId: state.memberId,
-        ptProductId: state.product!.id,
-        startDate: state.startDate!,
-        weekdays: state.weekdays,
-        excludeSubscriptionId: state.replanning?.id,
+    final params = _gridParams();
+    final result = await _getGrid(params);
+    // The selection changed while this request was in flight: its grid belongs
+    // to a different query, and a newer load (or none) is responsible now.
+    if (isClosed || !state.canLoadGrid || params != _gridParams()) return;
+    result.fold(
+      (failure) => emit(
+        state.copyWith(gridStatus: LoadStatus.failure, failure: failure),
+      ),
+      (grid) => emit(
+        state.copyWith(
+          gridStatus: LoadStatus.success,
+          grid: grid,
+          failure: null,
+        ),
       ),
     );
-    if (isClosed) return;
-    result.fold(
-      (failure) => emit(state.copyWith(gridStatus: LoadStatus.failure, failure: failure)),
-      (grid) => emit(state.copyWith(gridStatus: LoadStatus.success, grid: grid)),
-    );
   }
+
+  GetPtScheduleGridParams _gridParams() => GetPtScheduleGridParams(
+    memberId: state.memberId,
+    ptProductId: state.product!.id,
+    startDate: state.startDate!,
+    weekdays: state.weekdays,
+    excludeSubscriptionId: state.replanning?.id,
+  );
 
   void selectSlot(int trainerId, String slotStart) {
     final cell = state.grid?.cell(trainerId, slotStart);
@@ -226,13 +338,20 @@ class SellPtCubit extends Cubit<SellPtState> {
     emit(state.copyWith(trainerId: trainerId, slotStart: slotStart));
   }
 
-  void setPaymentMethod(String? id) => emit(state.copyWith(paymentMethodId: id));
+  void setPaymentMethod(String? id) =>
+      emit(state.copyWith(paymentMethodId: id));
 
-  void setDiscount(String? value) =>
-      emit(state.copyWith(discount: (value == null || value.trim().isEmpty) ? null : value.trim()));
+  void setDiscount(String? value) => emit(
+    state.copyWith(
+      discount: (value == null || value.trim().isEmpty) ? null : value.trim(),
+    ),
+  );
 
-  void setReason(String? value) =>
-      emit(state.copyWith(reason: (value == null || value.trim().isEmpty) ? null : value.trim()));
+  void setReason(String? value) => emit(
+    state.copyWith(
+      reason: (value == null || value.trim().isEmpty) ? null : value.trim(),
+    ),
+  );
 
   Future<void> submit() async {
     if (!state.canSubmit) return;
@@ -249,24 +368,40 @@ class SellPtCubit extends Cubit<SellPtState> {
               reason: state.reason,
             ),
           )
-        : await _purchase(
-            PurchasePtParams(
-              memberId: state.memberId,
-              ptProductId: state.product!.id,
-              trainerId: state.trainerId!,
-              startDate: state.startDate!,
-              weekdays: state.weekdays,
-              slotStart: state.slotStart!,
-              payment: PtPayment(
-                paymentMethodId: int.parse(state.paymentMethodId!),
-                discountAmount: state.discount,
-              ),
-            ),
-          );
+        : await _purchase(_purchaseParams());
     if (isClosed) return;
     result.fold(
       (failure) => emit(state.copyWith(submitting: false, failure: failure)),
       (sub) => emit(state.copyWith(submitting: false, result: sub)),
+    );
+  }
+
+  PurchasePtParams _purchaseParams() {
+    final base = PurchasePtParams(
+      memberId: state.memberId,
+      ptProductId: state.product!.id,
+      trainerId: state.trainerId!,
+      startDate: state.startDate!,
+      weekdays: state.weekdays,
+      slotStart: state.slotStart!,
+      payment: PtPayment(
+        paymentMethodId: int.parse(state.paymentMethodId!),
+        discountAmount: state.discount,
+      ),
+    );
+    if (base != _lastPurchase || _purchaseKey == null) {
+      _purchaseKey = newIdempotencyKey();
+    }
+    _lastPurchase = base;
+    return PurchasePtParams(
+      memberId: base.memberId,
+      ptProductId: base.ptProductId,
+      trainerId: base.trainerId,
+      startDate: base.startDate,
+      weekdays: base.weekdays,
+      slotStart: base.slotStart,
+      payment: base.payment,
+      idempotencyKey: _purchaseKey,
     );
   }
 

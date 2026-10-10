@@ -300,6 +300,7 @@ describe('WorkoutPlanService', () => {
               target_reps: '10',
               target_weight_kg: '50.00',
               rest_seconds: 60,
+              rest_between_exercises_seconds: 90,
               notes: 'Focus on form',
             },
           ],
@@ -344,6 +345,7 @@ describe('WorkoutPlanService', () => {
             exercise_id: 1,
             day_number: 1,
             order_index: 0,
+            rest_between_exercises_seconds: 90,
           }),
         ]),
       );
@@ -450,6 +452,7 @@ describe('WorkoutPlanService', () => {
               target_reps: '5',
               target_weight_kg: 100,
               rest_seconds: 120,
+              rest_between_exercises_seconds: 180,
             },
           ],
         },
@@ -474,6 +477,7 @@ describe('WorkoutPlanService', () => {
           workout_plan_version_id: 152,
           exercise_id: 2,
           target_sets: 4,
+          rest_between_exercises_seconds: 180,
         }),
       ]);
 

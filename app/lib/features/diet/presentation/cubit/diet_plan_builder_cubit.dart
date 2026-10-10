@@ -66,10 +66,20 @@ class DietPlanBuilderCubit extends Cubit<DietPlanBuilderState> {
     return 'meal-$_mealKeySeq';
   }
 
-  Future<void> init({String? planId}) async {
+  Future<void> init({
+    String? planId,
+    bool? isTemplate,
+    String? memberId,
+  }) async {
     if (planId == null) {
       _formReady = true;
-      emit(const DietPlanBuilderState(status: LoadStatus.success));
+      emit(
+        DietPlanBuilderState(
+          status: LoadStatus.success,
+          isTemplate: isTemplate ?? false,
+          memberId: memberId ?? '',
+        ),
+      );
       return;
     }
     _formReady = false;

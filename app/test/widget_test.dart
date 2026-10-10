@@ -2,6 +2,7 @@ import 'package:luxeknox/core/di/injector.dart';
 import 'package:luxeknox/core/router/app_router.dart';
 import 'package:luxeknox/main.dart';
 import 'package:luxeknox/session/presentation/session_cubit.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,4 +31,15 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     },
   );
+
+  test('startSessionRestore triggers SessionCubit.restore', () {
+    final sessionCubit = MockSessionCubit();
+    when(() => sessionCubit.restore()).thenAnswer((_) async {});
+    getIt.registerSingleton<SessionCubit>(sessionCubit);
+    addTearDown(getIt.reset);
+
+    startSessionRestore();
+
+    verify(() => sessionCubit.restore()).called(1);
+  });
 }

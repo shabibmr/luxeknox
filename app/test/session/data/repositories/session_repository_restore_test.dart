@@ -41,10 +41,12 @@ void main() {
     });
 
     test('returns Principal and Capabilities when getMe succeeds', () async {
-      when(() => tokenStorage.readAccessToken())
-          .thenAnswer((_) async => 'valid-access-token');
-      when(() => tokenStorage.readRefreshToken())
-          .thenAnswer((_) async => 'valid-refresh-token');
+      when(
+        () => tokenStorage.readAccessToken(),
+      ).thenAnswer((_) async => 'valid-access-token');
+      when(
+        () => tokenStorage.readRefreshToken(),
+      ).thenAnswer((_) async => 'valid-refresh-token');
 
       final json = {
         'user': {
@@ -78,58 +80,99 @@ void main() {
       final result = await repository.restore();
 
       expect(result.isRight(), isTrue);
-      final (principal, capabilities) = result.getOrElse((_) => throw Exception());
+      final (principal, capabilities) = result.getOrElse(
+        (_) => throw Exception(),
+      );
       expect(principal.userId, '1');
       expect(principal.userType, UserType.member);
       expect(capabilities.can('workout.read'), isTrue);
       verifyNever(() => tokenStorage.clear());
     });
 
-    test('retains token storage and does NOT clear tokens on NetworkFailure', () async {
-      when(() => tokenStorage.readAccessToken())
-          .thenAnswer((_) async => 'valid-access-token');
-      when(() => tokenStorage.readRefreshToken())
-          .thenAnswer((_) async => 'valid-refresh-token');
+    test(
+      'retains token storage and does NOT clear tokens on NetworkFailure',
+      () async {
+        when(
+          () => tokenStorage.readAccessToken(),
+        ).thenAnswer((_) async => 'valid-access-token');
+        when(
+          () => tokenStorage.readRefreshToken(),
+        ).thenAnswer((_) async => 'valid-refresh-token');
 
-      when(() => remote.getMe()).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/auth/me'),
-          type: DioExceptionType.connectionError,
-          error: 'No internet connection',
-        ),
-      );
-
-      final result = await repository.restore();
-
-      expect(result.isLeft(), isTrue);
-      expect(result.getLeft().toNullable(), isA<NetworkFailure>());
-      // Crucial assertion: token storage must NOT be cleared on network loss!
-      verifyNever(() => tokenStorage.clear());
-    });
-
-    test('clears token storage when getMe fails with AuthFailure (401)', () async {
-      when(() => tokenStorage.readAccessToken())
-          .thenAnswer((_) async => 'stale-access-token');
-      when(() => tokenStorage.readRefreshToken())
-          .thenAnswer((_) async => 'stale-refresh-token');
-      when(() => tokenStorage.clear()).thenAnswer((_) async {});
-
-      when(() => remote.getMe()).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/auth/me'),
-          response: Response(
+        when(() => remote.getMe()).thenThrow(
+          DioException(
             requestOptions: RequestOptions(path: '/auth/me'),
-            statusCode: 401,
+            type: DioExceptionType.connectionError,
+            error: 'No internet connection',
           ),
-          type: DioExceptionType.badResponse,
-        ),
-      );
+        );
 
-      final result = await repository.restore();
+        final result = await repository.restore();
 
-      expect(result.isLeft(), isTrue);
-      expect(result.getLeft().toNullable(), isA<AuthFailure>());
-      verify(() => tokenStorage.clear()).called(1);
-    });
+        expect(result.isLeft(), isTrue);
+        expect(result.getLeft().toNullable(), isA<NetworkFailure>());
+        // Crucial assertion: token storage must NOT be cleared on network loss!
+        verifyNever(() => tokenStorage.clear());
+      },
+    );
+
+    test(
+      'clears token storage when getMe fails with AuthFailure (401)',
+      () async {
+        when(
+          () => tokenStorage.readAccessToken(),
+        ).thenAnswer((_) async => 'stale-access-token');
+        when(
+          () => tokenStorage.readRefreshToken(),
+        ).thenAnswer((_) async => 'stale-refresh-token');
+        when(() => tokenStorage.clear()).thenAnswer((_) async {});
+
+        when(() => remote.getMe()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/auth/me'),
+            response: Response(
+              requestOptions: RequestOptions(path: '/auth/me'),
+              statusCode: 401,
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+
+        final result = await repository.restore();
+
+        expect(result.isLeft(), isTrue);
+        expect(result.getLeft().toNullable(), isA<AuthFailure>());
+        verify(() => tokenStorage.clear()).called(1);
+      },
+    );
+
+    test(
+      'does NOT clear tokens a login stored while restore was running',
+      () async {
+        var reads = 0;
+        when(
+          () => tokenStorage.readAccessToken(),
+        ).thenAnswer((_) async => reads++ < 2 ? 'old-access' : 'new-access');
+        when(
+          () => tokenStorage.readRefreshToken(),
+        ).thenAnswer((_) async => reads < 2 ? 'old-refresh' : 'new-refresh');
+        when(() => tokenStorage.clear()).thenAnswer((_) async {});
+        when(() => remote.getMe()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/auth/me'),
+            response: Response(
+              requestOptions: RequestOptions(path: '/auth/me'),
+              statusCode: 401,
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+
+        final result = await repository.restore();
+
+        expect(result.getLeft().toNullable(), isA<AuthFailure>());
+        verifyNever(() => tokenStorage.clear());
+      },
+    );
   });
 }

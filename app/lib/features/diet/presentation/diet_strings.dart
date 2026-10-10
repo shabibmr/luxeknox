@@ -114,6 +114,8 @@ abstract final class DietStrings {
   static const verifiedBadge = 'Verified';
   static const unverifiedBadge = 'Unverified';
   static const verifiedOnlyToggle = 'Verified only';
+  static const viewPlan = 'View diet plan';
+  static const viewHistory = 'View diet history';
 
   static String statusLabel(DietPlanStatus status) => switch (status) {
     DietPlanStatus.draft => statusDraft,

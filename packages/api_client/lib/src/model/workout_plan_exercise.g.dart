@@ -26,6 +26,8 @@ class _$WorkoutPlanExercise extends WorkoutPlanExercise {
   @override
   final int? restSeconds;
   @override
+  final int? restBetweenExercisesSeconds;
+  @override
   final String? notes;
   @override
   final Exercise? exercise;
@@ -44,6 +46,7 @@ class _$WorkoutPlanExercise extends WorkoutPlanExercise {
       this.targetReps,
       this.targetWeightKg,
       this.restSeconds,
+      this.restBetweenExercisesSeconds,
       this.notes,
       this.exercise})
       : super._();
@@ -69,6 +72,7 @@ class _$WorkoutPlanExercise extends WorkoutPlanExercise {
         targetReps == other.targetReps &&
         targetWeightKg == other.targetWeightKg &&
         restSeconds == other.restSeconds &&
+        restBetweenExercisesSeconds == other.restBetweenExercisesSeconds &&
         notes == other.notes &&
         exercise == other.exercise;
   }
@@ -85,6 +89,7 @@ class _$WorkoutPlanExercise extends WorkoutPlanExercise {
     _$hash = $jc(_$hash, targetReps.hashCode);
     _$hash = $jc(_$hash, targetWeightKg.hashCode);
     _$hash = $jc(_$hash, restSeconds.hashCode);
+    _$hash = $jc(_$hash, restBetweenExercisesSeconds.hashCode);
     _$hash = $jc(_$hash, notes.hashCode);
     _$hash = $jc(_$hash, exercise.hashCode);
     _$hash = $jf(_$hash);
@@ -103,6 +108,7 @@ class _$WorkoutPlanExercise extends WorkoutPlanExercise {
           ..add('targetReps', targetReps)
           ..add('targetWeightKg', targetWeightKg)
           ..add('restSeconds', restSeconds)
+          ..add('restBetweenExercisesSeconds', restBetweenExercisesSeconds)
           ..add('notes', notes)
           ..add('exercise', exercise))
         .toString();
@@ -151,6 +157,11 @@ class WorkoutPlanExerciseBuilder
   int? get restSeconds => _$this._restSeconds;
   set restSeconds(int? restSeconds) => _$this._restSeconds = restSeconds;
 
+  int? _restBetweenExercisesSeconds;
+  int? get restBetweenExercisesSeconds => _$this._restBetweenExercisesSeconds;
+  set restBetweenExercisesSeconds(int? restBetweenExercisesSeconds) =>
+      _$this._restBetweenExercisesSeconds = restBetweenExercisesSeconds;
+
   String? _notes;
   String? get notes => _$this._notes;
   set notes(String? notes) => _$this._notes = notes;
@@ -175,6 +186,7 @@ class WorkoutPlanExerciseBuilder
       _targetReps = $v.targetReps;
       _targetWeightKg = $v.targetWeightKg;
       _restSeconds = $v.restSeconds;
+      _restBetweenExercisesSeconds = $v.restBetweenExercisesSeconds;
       _notes = $v.notes;
       _exercise = $v.exercise?.toBuilder();
       _$v = null;
@@ -216,6 +228,7 @@ class WorkoutPlanExerciseBuilder
             targetReps: targetReps,
             targetWeightKg: targetWeightKg,
             restSeconds: restSeconds,
+            restBetweenExercisesSeconds: restBetweenExercisesSeconds,
             notes: notes,
             exercise: _exercise?.build(),
           );

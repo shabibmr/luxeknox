@@ -83,21 +83,22 @@ class _ScheduleDetailBody extends StatelessWidget {
 
     final alternatives = result.fold(
       (failure) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failureMessage(failure))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failureMessage(failure))));
         return <ScheduleSession>[];
       },
-      (page) => page.items
-          .where(
-            (s) =>
-                s.id != session.id &&
-                s.scheduleTypeId == session.scheduleTypeId &&
-                s.status == ScheduleSessionStatus.scheduled &&
-                !s.isFull,
-          )
-          .toList()
-        ..sort((a, b) => a.startTime.compareTo(b.startTime)),
+      (page) =>
+          page.items
+              .where(
+                (s) =>
+                    s.id != session.id &&
+                    s.scheduleTypeId == session.scheduleTypeId &&
+                    s.status == ScheduleSessionStatus.scheduled &&
+                    !s.isFull,
+              )
+              .toList()
+            ..sort((a, b) => a.startTime.compareTo(b.startTime)),
     );
 
     if (alternatives.isEmpty) return;
@@ -109,8 +110,7 @@ class _ScheduleDetailBody extends StatelessWidget {
       alternatives: alternatives,
     );
     if (!context.mounted) return;
-    final target =
-        context.read<ScheduleDetailCubit>().state.movedToScheduleId;
+    final target = context.read<ScheduleDetailCubit>().state.movedToScheduleId;
     if (moved == true && target != null) {
       context.go(Routes.memberScheduleById(target));
     }
@@ -351,107 +351,111 @@ class _ScheduleDetailBody extends StatelessWidget {
                           subtitle: Text(session.notes!),
                         ),
                     ] else ...[
-                    Text(
-                      SchedulingStrings.roster,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    ...session.participants
-                        .where((p) => p.bookingStatus == BookingStatus.booked)
-                        .map(
-                          (p) => ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: Text('Member #${p.memberId}'),
-                            subtitle: p.attended == null
-                                ? null
-                                : Text(
-                                    p.attended!
-                                        ? AttendanceStrings.markAttended
-                                        : AttendanceStrings.markNoShow,
-                                  ),
-                            trailing: role.canManageLifecycle
-                                ? Wrap(
-                                    spacing: 4,
-                                    children: [
-                                      TextButton(
-                                        onPressed: actionInFlight
-                                            ? null
-                                            : () => context
-                                                  .read<ScheduleDetailCubit>()
-                                                  .markAttendance(
-                                                    participantId: p.id,
-                                                    attended: true,
-                                                  ),
-                                        child: const Text(
-                                          AttendanceStrings.markAttended,
-                                        ),
-                                      ),
-                                      TextButton(
-                                        onPressed: actionInFlight
-                                            ? null
-                                            : () => context
-                                                  .read<ScheduleDetailCubit>()
-                                                  .markAttendance(
-                                                    participantId: p.id,
-                                                    attended: false,
-                                                  ),
-                                        child: const Text(
-                                          AttendanceStrings.markNoShow,
-                                        ),
-                                      ),
-                                      if (role.showBookActions)
+                      Text(
+                        SchedulingStrings.roster,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      ...session.participants
+                          .where((p) => p.bookingStatus == BookingStatus.booked)
+                          .map(
+                            (p) => ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text('Member #${p.memberId}'),
+                              subtitle: p.attended == null
+                                  ? null
+                                  : Text(
+                                      p.attended!
+                                          ? AttendanceStrings.markAttended
+                                          : AttendanceStrings.markNoShow,
+                                    ),
+                              trailing: role.canManageLifecycle
+                                  ? Wrap(
+                                      spacing: 4,
+                                      children: [
                                         TextButton(
                                           onPressed: actionInFlight
                                               ? null
                                               : () => context
                                                     .read<ScheduleDetailCubit>()
-                                                    .unbook(p.memberId),
+                                                    .markAttendance(
+                                                      participantId: p.id,
+                                                      attended: true,
+                                                    ),
                                           child: const Text(
-                                            SchedulingStrings.unbook,
+                                            AttendanceStrings.markAttended,
                                           ),
                                         ),
-                                    ],
-                                  )
-                                : role.showBookActions
-                                ? TextButton(
-                                    onPressed: actionInFlight
-                                        ? null
-                                        : () => context
-                                              .read<ScheduleDetailCubit>()
-                                              .unbook(p.memberId),
-                                    child: const Text(SchedulingStrings.unbook),
-                                  )
-                                : null,
+                                        TextButton(
+                                          onPressed: actionInFlight
+                                              ? null
+                                              : () => context
+                                                    .read<ScheduleDetailCubit>()
+                                                    .markAttendance(
+                                                      participantId: p.id,
+                                                      attended: false,
+                                                    ),
+                                          child: const Text(
+                                            AttendanceStrings.markNoShow,
+                                          ),
+                                        ),
+                                        if (role.showBookActions)
+                                          TextButton(
+                                            onPressed: actionInFlight
+                                                ? null
+                                                : () => context
+                                                      .read<
+                                                        ScheduleDetailCubit
+                                                      >()
+                                                      .unbook(p.memberId),
+                                            child: const Text(
+                                              SchedulingStrings.unbook,
+                                            ),
+                                          ),
+                                      ],
+                                    )
+                                  : role.showBookActions
+                                  ? TextButton(
+                                      onPressed: actionInFlight
+                                          ? null
+                                          : () => context
+                                                .read<ScheduleDetailCubit>()
+                                                .unbook(p.memberId),
+                                      child: const Text(
+                                        SchedulingStrings.unbook,
+                                      ),
+                                    )
+                                  : null,
+                            ),
                           ),
-                        ),
-                    const SizedBox(height: 8),
-                    Text(
-                      SchedulingStrings.waitlist,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    ...session.participants
-                        .where(
-                          (p) => p.bookingStatus == BookingStatus.waitlisted,
-                        )
-                        .map(
-                          (p) => ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: Text('Member #${p.memberId}'),
-                            trailing: role.showBookActions
-                                ? TextButton(
-                                    onPressed: actionInFlight
-                                        ? null
-                                        : () => context
-                                              .read<ScheduleDetailCubit>()
-                                              .unbook(p.memberId),
-                                    child: const Text(
-                                      SchedulingStrings.leaveWaitlist,
-                                    ),
-                                  )
-                                : null,
+                      const SizedBox(height: 8),
+                      Text(
+                        SchedulingStrings.waitlist,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      ...session.participants
+                          .where(
+                            (p) => p.bookingStatus == BookingStatus.waitlisted,
+                          )
+                          .map(
+                            (p) => ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text('Member #${p.memberId}'),
+                              trailing: role.showBookActions
+                                  ? TextButton(
+                                      onPressed: actionInFlight
+                                          ? null
+                                          : () => context
+                                                .read<ScheduleDetailCubit>()
+                                                .unbook(p.memberId),
+                                      child: const Text(
+                                        SchedulingStrings.leaveWaitlist,
+                                      ),
+                                    )
+                                  : null,
+                            ),
                           ),
-                        ),
-
-                    ],                    const SizedBox(height: 24),
+                    ],
+                    const SizedBox(height: 24),
                     if (role.showBookActions &&
                         context.can('schedules.book') &&
                         memberBooking == null)

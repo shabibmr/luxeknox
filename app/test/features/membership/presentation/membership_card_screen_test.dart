@@ -87,36 +87,37 @@ void main() {
     );
   }
 
-  testWidgets('renders active membership details, quota, and navigation links', (
-    tester,
-  ) async {
-    whenListen(
-      cardCubit,
-      const Stream<MembershipCardState>.empty(),
-      initialState: MembershipCardState(
-        status: LoadStatus.success,
-        membership: activeMembership,
-      ),
-    );
+  testWidgets(
+    'renders active membership details, quota, and navigation links',
+    (tester) async {
+      whenListen(
+        cardCubit,
+        const Stream<MembershipCardState>.empty(),
+        initialState: MembershipCardState(
+          status: LoadStatus.success,
+          membership: activeMembership,
+        ),
+      );
 
-    await tester.pumpWidget(createWidgetUnderTest());
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
 
-    expect(find.text('Gold Annual'), findsOneWidget);
-    expect(find.text(MembershipStrings.statusActive), findsOneWidget);
-    expect(find.text('All-inclusive annual gym access'), findsOneWidget);
-    expect(find.text(MembershipStrings.remainingDays), findsOneWidget);
-    expect(find.text(MembershipStrings.remainingPtSessions), findsOneWidget);
-    expect(find.text('4'), findsOneWidget);
-    expect(find.text(MembershipStrings.maxFreezeDaysLabel), findsOneWidget);
-    expect(find.text('30'), findsOneWidget);
-    expect(find.text('Pool, Sauna'), findsOneWidget);
+      expect(find.text('Gold Annual'), findsOneWidget);
+      expect(find.text(MembershipStrings.statusActive), findsOneWidget);
+      expect(find.text('All-inclusive annual gym access'), findsOneWidget);
+      expect(find.text(MembershipStrings.remainingDays), findsOneWidget);
+      expect(find.text(MembershipStrings.remainingPtSessions), findsOneWidget);
+      expect(find.text('4'), findsOneWidget);
+      expect(find.text(MembershipStrings.maxFreezeDaysLabel), findsOneWidget);
+      expect(find.text('30'), findsOneWidget);
+      expect(find.text('Pool, Sauna'), findsOneWidget);
 
-    expect(find.text(MembershipStrings.historyTitle), findsOneWidget);
-    expect(find.text(MembershipStrings.freezesTitle), findsOneWidget);
-    expect(find.text(MembershipStrings.catalogTitle), findsOneWidget);
-    expect(find.text(MembershipStrings.requestFreeze), findsOneWidget);
-  });
+      expect(find.text(MembershipStrings.historyTitle), findsOneWidget);
+      expect(find.text(MembershipStrings.freezesTitle), findsOneWidget);
+      expect(find.text(MembershipStrings.catalogTitle), findsOneWidget);
+      expect(find.text(MembershipStrings.requestFreeze), findsOneWidget);
+    },
+  );
 
   testWidgets('opens freeze request dialog with max freeze days quota', (
     tester,
@@ -137,12 +138,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AlertDialog), findsOneWidget);
-    expect(find.text('${MembershipStrings.maxFreezeDaysLabel}: 30'), findsOneWidget);
+    expect(
+      find.text('${MembershipStrings.maxFreezeDaysLabel}: 30'),
+      findsOneWidget,
+    );
     expect(find.text(MembershipStrings.reasonLabel), findsOneWidget);
     expect(find.text(MembershipStrings.confirm), findsOneWidget);
   });
 
-  testWidgets('shows empty view when no active membership on file', (tester) async {
+  testWidgets('shows empty view when no active membership on file', (
+    tester,
+  ) async {
     whenListen(
       cardCubit,
       const Stream<MembershipCardState>.empty(),

@@ -62,7 +62,11 @@ export class GoalMetricService {
       updated_at: now,
     };
 
-    const created = await this.repository.create(newMetric);
+    const id = await this.repository.insertMetric(newMetric);
+    const created = id > 0 ? await this.repository.findById(id) : null;
+    if (!created) {
+      throw new NotFoundError('Goal metric was not found after creation');
+    }
 
     await this.auditService.recordAudit({
       actorUserId: actor.id,

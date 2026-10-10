@@ -118,6 +118,18 @@ void main() {
       expect(failure, isA<RateLimitFailure>());
     });
 
+    test('502/503/504 -> retryable UnknownFailure', () {
+      for (final status in [502, 503, 504]) {
+        final failure = mapDioErrorToFailure(_httpError(status: status));
+        expect(failure, const UnknownFailure(retryable: true));
+        expect(failure.isTransient, isTrue);
+      }
+      expect(
+        mapDioErrorToFailure(_httpError(status: 500)).isTransient,
+        isFalse,
+      );
+    });
+
     test('unrecognized code falls back to HTTP status', () {
       final failure = mapDioErrorToFailure(
         _httpError(status: 404, body: {'code': 'something_unmapped'}),

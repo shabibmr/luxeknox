@@ -41,10 +41,12 @@ class MembershipDetailScreen extends StatelessWidget {
           create: (_) => getIt<MembershipDetailCubit>()..load(membershipId),
         ),
         BlocProvider(
-          create: (_) => getIt<MembershipFreezeCubit>()..load(membershipId: membershipId),
+          create: (_) =>
+              getIt<MembershipFreezeCubit>()..load(membershipId: membershipId),
         ),
         BlocProvider(
-          create: (_) => getIt<MembershipHistoryCubit>()..load(membershipId: membershipId),
+          create: (_) =>
+              getIt<MembershipHistoryCubit>()..load(membershipId: membershipId),
         ),
       ],
       child: _MembershipDetailView(membershipId: membershipId),
@@ -438,9 +440,7 @@ class _MembershipDetailView extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Expanded(
-            child: Text(label, overflow: TextOverflow.ellipsis),
-          ),
+          Expanded(child: Text(label, overflow: TextOverflow.ellipsis)),
           const SizedBox(width: 8),
           Flexible(
             child: Text(

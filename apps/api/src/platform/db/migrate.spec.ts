@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { splitSqlStatements } from './migrate';
+import { splitSqlStatements, statementForServer } from './migrate';
 
 describe('splitSqlStatements', () => {
   it('splits simple statements on semicolons', () => {
@@ -30,5 +30,13 @@ SELECT 2;
     const sql = "CREATE TABLE t (name VARCHAR(10)) COLLATE utf8mb4_0900_ai_ci;";
     const statements = splitSqlStatements(sql);
     expect(statements[0]).toBe('CREATE TABLE t (name VARCHAR(10)) COLLATE utf8mb4_0900_ai_ci');
+  });
+
+  it('keeps utf8mb4_0900_ai_ci on MySQL 8 and rewrites it only when that collation is missing', () => {
+    const sql = 'CREATE TABLE t (name VARCHAR(10)) COLLATE utf8mb4_0900_ai_ci';
+    expect(statementForServer(sql, true)).toBe(sql);
+    expect(statementForServer(sql, false)).toBe(
+      'CREATE TABLE t (name VARCHAR(10)) COLLATE utf8mb4_unicode_ci',
+    );
   });
 });

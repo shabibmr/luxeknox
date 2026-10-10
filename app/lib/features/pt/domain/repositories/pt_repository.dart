@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/failures.dart';
@@ -6,12 +7,23 @@ import '../entities/pt_schedule_grid.dart';
 import '../entities/pt_subscription.dart';
 
 /// Payment captured together with a PT sale/renewal (single tender).
-class PtPayment {
-  const PtPayment({required this.paymentMethodId, this.discountAmount, this.transactionReference});
+class PtPayment extends Equatable {
+  const PtPayment({
+    required this.paymentMethodId,
+    this.discountAmount,
+    this.transactionReference,
+  });
 
   final int paymentMethodId;
   final String? discountAmount;
   final String? transactionReference;
+
+  @override
+  List<Object?> get props => [
+    paymentMethodId,
+    discountAmount,
+    transactionReference,
+  ];
 }
 
 abstract class PtRepository {
@@ -37,9 +49,15 @@ abstract class PtRepository {
     required List<int> weekdays,
     required String slotStart,
     required PtPayment payment,
+
+    /// Reuse on retries of the same sale so the server replays the result.
+    String? idempotencyKey,
   });
 
-  Future<Either<Failure, PtSubscription>> renew(int subscriptionId, {required PtPayment payment});
+  Future<Either<Failure, PtSubscription>> renew(
+    int subscriptionId, {
+    required PtPayment payment,
+  });
 
   Future<Either<Failure, PtSubscription>> reassignTrainer(
     int subscriptionId, {

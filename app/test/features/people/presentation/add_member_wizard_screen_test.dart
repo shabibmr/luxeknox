@@ -119,7 +119,9 @@ void main() {
     expect(find.text(PeopleStrings.password), findsNothing);
   });
 
-  testWidgets('validates required fields before proceeding to step 1', (tester) async {
+  testWidgets('validates required fields before proceeding to step 1', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(800, 1200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -128,7 +130,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap Next with empty fields
-    await tester.tap(find.widgetWithText(FilledButton, PeopleStrings.next).first);
+    await tester.tap(
+      find.widgetWithText(FilledButton, PeopleStrings.next).first,
+    );
     await tester.pumpAndSettle();
 
     // Validation messages should be displayed
@@ -148,7 +152,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // First and last name errors cleared, but gender error persists on next
-    await tester.tap(find.widgetWithText(FilledButton, PeopleStrings.next).first);
+    await tester.tap(
+      find.widgetWithText(FilledButton, PeopleStrings.next).first,
+    );
     await tester.pumpAndSettle();
 
     expect(find.text(PeopleStrings.firstNameRequired), findsNothing);
@@ -160,7 +166,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // Now tap Next -> should advance to Step 1 (Contact & account)
-    await tester.tap(find.widgetWithText(FilledButton, PeopleStrings.next).first);
+    await tester.tap(
+      find.widgetWithText(FilledButton, PeopleStrings.next).first,
+    );
     await tester.pumpAndSettle();
 
     // In step 1, tap Next with empty email and phone

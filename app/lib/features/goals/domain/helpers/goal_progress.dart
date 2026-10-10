@@ -23,3 +23,14 @@ double goalProgressFraction({
 
 /// True only when the server status is `achieved` (FR-GOAL-004).
 bool isGoalAchievedStatus(GoalStatus status) => status == GoalStatus.achieved;
+
+/// Display direction from baseline to target. Does not decide achievement.
+enum GoalDirection { increase, decrease, hold }
+
+/// Null when either endpoint is missing. Equal values are [GoalDirection.hold].
+GoalDirection? goalDirection({required num? baseline, required num? target}) {
+  if (baseline == null || target == null) return null;
+  if (target > baseline) return GoalDirection.increase;
+  if (target < baseline) return GoalDirection.decrease;
+  return GoalDirection.hold;
+}

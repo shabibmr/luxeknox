@@ -145,6 +145,10 @@ Failure mapDioErrorToFailure(DioException err) {
       return BusinessRuleFailure(message ?? '');
     case 429:
       return const RateLimitFailure();
+    case 502:
+    case 503:
+    case 504:
+      return const UnknownFailure(retryable: true);
     default:
       return const UnknownFailure();
   }

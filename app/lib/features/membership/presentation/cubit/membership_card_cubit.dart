@@ -70,4 +70,3 @@ class MembershipCardCubit extends Cubit<MembershipCardState> {
     );
   }
 }
-

@@ -176,8 +176,9 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
   }
 
   static bool _isValidEmail(String email) {
-    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-        .hasMatch(email);
+    return RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    ).hasMatch(email);
   }
 
   bool _validateCreate(EmployeeFormState state) {
@@ -349,9 +350,9 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                       if (_firstNameError != null) {
                         setState(() => _firstNameError = null);
                       }
-                      context
-                          .read<EmployeeFormCubit>()
-                          .updateCreateInput((i) => i.copyWith(firstName: v));
+                      context.read<EmployeeFormCubit>().updateCreateInput(
+                        (i) => i.copyWith(firstName: v),
+                      );
                     },
                   ),
                   TextField(
@@ -366,9 +367,9 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                       if (_lastNameError != null) {
                         setState(() => _lastNameError = null);
                       }
-                      context
-                          .read<EmployeeFormCubit>()
-                          .updateCreateInput((i) => i.copyWith(lastName: v));
+                      context.read<EmployeeFormCubit>().updateCreateInput(
+                        (i) => i.copyWith(lastName: v),
+                      );
                     },
                   ),
                   TextField(
@@ -384,9 +385,9 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                       if (_emailError != null) {
                         setState(() => _emailError = null);
                       }
-                      context
-                          .read<EmployeeFormCubit>()
-                          .updateCreateInput((i) => i.copyWith(email: v));
+                      context.read<EmployeeFormCubit>().updateCreateInput(
+                        (i) => i.copyWith(email: v),
+                      );
                     },
                   ),
                   TextField(

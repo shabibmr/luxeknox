@@ -6,7 +6,13 @@ import '../entities/goal_metric.dart';
 import '../entities/goal_metric_category.dart';
 
 abstract class GoalMetricsRepository {
-  Future<Either<Failure, CursorPage<GoalMetric>>> listMetrics();
+  Future<Either<Failure, CursorPage<GoalMetric>>> listMetrics({
+    String? query,
+    GoalMetricCategory? category,
+    bool? isActive,
+    String? cursor,
+    int? limit,
+  });
 
   Future<Either<Failure, GoalMetric>> createMetric({
     required String name,

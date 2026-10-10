@@ -20,13 +20,24 @@ Future<void> resolveRemoteAppConfig() async {
 }
 
 Future<String> _resolveApiBaseUrl(String fallbackUrl) async {
-  if (!DefaultFirebaseOptions.isConfigured) return fallbackUrl;
+  if (!DefaultFirebaseOptions.isConfigured) {
+    return ApiBaseUrlResolver.normalize(fallbackUrl);
+  }
 
-  // Prefs don't need Firebase, so both start together.
-  final (_, prefs) = await (
-    _initFirebase(),
-    SharedPreferences.getInstance(),
-  ).wait;
+  // Prefs don't need Firebase, so both start together. Neither may abort
+  // launch: a prefs failure falls back to the dart-define URL.
+  final SharedPreferences prefs;
+  try {
+    prefs = (await (_initFirebase(), SharedPreferences.getInstance()).wait).$2;
+  } catch (e, st) {
+    developer.log(
+      'SharedPreferences unavailable; using fallback API_BASE_URL',
+      name: 'AppConfig',
+      error: e,
+      stackTrace: st,
+    );
+    return ApiBaseUrlResolver.normalize(fallbackUrl);
+  }
   return ApiBaseUrlResolver(
     store: RemoteApiBaseUrlStore(prefs),
     source: FirestoreAppConfigSource(),

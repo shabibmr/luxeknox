@@ -51,6 +51,7 @@ extension WorkoutPlanExerciseModelMapper on api.WorkoutPlanExercise {
       targetReps: targetReps,
       targetWeightKg: targetWeightKg,
       restSeconds: restSeconds,
+      restBetweenExercisesSeconds: restBetweenExercisesSeconds,
       notes: notes,
     );
   }
@@ -101,6 +102,7 @@ api.WorkoutPlanExercisesWrite toWorkoutPlanExercisesWrite({
               ..targetReps = e.targetReps
               ..targetWeightKg = e.targetWeightKg
               ..restSeconds = e.restSeconds
+              ..restBetweenExercisesSeconds = e.restBetweenExercisesSeconds
               ..notes = e.notes,
           ),
         ),

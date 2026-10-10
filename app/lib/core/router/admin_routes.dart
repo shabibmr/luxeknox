@@ -8,6 +8,7 @@ import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_library_screen.dart';
 import '../../features/foods/presentation/screens/food_library_screen.dart';
 import '../../features/goals/presentation/screens/goal_metrics_admin_screen.dart';
+import '../../features/goals/presentation/screens/goal_detail_screen.dart';
 import '../../features/goals/presentation/screens/measurements_screen.dart';
 import '../../features/goals/presentation/screens/progress_hub_screen.dart';
 import '../../features/notifications/presentation/screens/broadcast_screen.dart';
@@ -159,6 +160,14 @@ StatefulShellRoute createAdminBranchRoute() {
                       );
                     },
                     routes: [
+                      GoRoute(
+                        path: 'goal/:goalId',
+                        builder: (context, state) {
+                          return GoalDetailScreen(
+                            goalId: state.pathParameters['goalId']!,
+                          );
+                        },
+                      ),
                       GoRoute(
                         path: 'add-measurement',
                         builder: (context, state) {

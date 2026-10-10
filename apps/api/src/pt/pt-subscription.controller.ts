@@ -1,7 +1,8 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.guard';
+import { UseIdempotency } from '../platform/idempotency/idempotency.interceptor';
 import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
 import { RequirePermission } from '../rbac/require-permission.decorator';
 import {
@@ -45,6 +46,12 @@ export class PtSubscriptionController {
 
   @Post('pt-subscriptions')
   @RequirePermission('pt_subscriptions.create')
+  @UseIdempotency()
+  @ApiHeader({
+    name: 'Idempotency-Key',
+    required: false,
+    description: 'Replays the original result if a timed-out sale is retried',
+  })
   @ApiOperation({
     operationId: 'purchasePtSubscription',
     summary: 'Sell PT: assign trainer + fixed weekly slot, take payment, generate sessions',

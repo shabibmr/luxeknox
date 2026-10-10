@@ -12,28 +12,39 @@ import '../../domain/entities/workout_plan.dart';
 import '../../domain/entities/workout_plan_exercise.dart';
 import '../../domain/entities/workout_plan_status.dart';
 import '../cubit/workout_plan_detail_cubit.dart';
-import '../widgets/plan_status_chip.dart';
+import '../widgets/workout_day_section.dart';
+import '../widgets/workout_plan_header_card.dart';
+import '../widgets/workout_stats_overview.dart';
 import '../workout_strings.dart';
 import '../../../people/presentation/widgets/member_picker_sheet.dart';
 
 class WorkoutPlanDetailScreen extends StatelessWidget {
-  const WorkoutPlanDetailScreen({super.key, required this.planId});
+  const WorkoutPlanDetailScreen({
+    super.key,
+    required this.planId,
+    this.isViewOnly = false,
+  });
 
   final String planId;
+  final bool isViewOnly;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<WorkoutPlanDetailCubit>()..load(planId),
-      child: _WorkoutPlanDetailBody(planId: planId),
+      child: _WorkoutPlanDetailBody(planId: planId, isViewOnly: isViewOnly),
     );
   }
 }
 
 class _WorkoutPlanDetailBody extends StatelessWidget {
-  const _WorkoutPlanDetailBody({required this.planId});
+  const _WorkoutPlanDetailBody({
+    required this.planId,
+    required this.isViewOnly,
+  });
 
   final String planId;
+  final bool isViewOnly;
 
   Future<void> _assign(BuildContext context) async {
     final member = await showMemberPickerSheet(context);
@@ -75,7 +86,7 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
           appBar: AppBar(
             title: const Text(WorkoutStrings.detailTitle),
             actions: [
-              if (plan != null) ...[
+              if (plan != null && !isViewOnly) ...[
                 IconButton(
                   tooltip: WorkoutStrings.viewVersions,
                   icon: const Icon(Icons.history),
@@ -94,12 +105,12 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
                           Routes.trainerPlansWorkoutEditById(plan.id),
                         ),
                 ),
-                if (plan.isTemplate)
-                  IconButton(
-                    tooltip: WorkoutStrings.assignToMember,
-                    icon: const Icon(Icons.person_add_alt_1_outlined),
-                    onPressed: inFlight ? null : () => _assign(context),
-                  ),
+                // Rule 2: Every plan acts as a template; any plan can be copied to a new member
+                IconButton(
+                  tooltip: WorkoutStrings.assignToMember,
+                  icon: const Icon(Icons.person_add_alt_1_outlined),
+                  onPressed: inFlight ? null : () => _assign(context),
+                ),
                 if (plan.status == WorkoutPlanStatus.draft)
                   IconButton(
                     tooltip: WorkoutStrings.publish,
@@ -159,7 +170,7 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
                     : const SizedBox.shrink()
               : Stack(
                   children: [
-                    _DetailContent(plan: plan),
+                    _DetailContent(plan: plan, isViewOnly: isViewOnly),
                     if (inFlight)
                       const ColoredBox(
                         color: Color(0x33000000),
@@ -167,6 +178,20 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
                       ),
                   ],
                 ),
+          bottomNavigationBar: (plan != null && isViewOnly)
+              ? SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.play_arrow),
+                      label: const Text(WorkoutStrings.startSession),
+                      onPressed: () => context.push(
+                        '${Routes.memberHomeWorkoutActive}?workoutPlanId=${plan.id}',
+                      ),
+                    ),
+                  ),
+                )
+              : null,
         );
       },
     );
@@ -174,13 +199,13 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
 }
 
 class _DetailContent extends StatelessWidget {
-  const _DetailContent({required this.plan});
+  const _DetailContent({required this.plan, required this.isViewOnly});
 
   final WorkoutPlan plan;
+  final bool isViewOnly;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final byDay = <int, List<WorkoutPlanExercise>>{};
     for (final e in plan.exercises) {
       byDay.putIfAbsent(e.dayNumber, () => []).add(e);
@@ -190,81 +215,53 @@ class _DetailContent extends StatelessWidget {
     }
     final days = byDay.keys.toList()..sort();
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Row(
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
-            Expanded(
-              child: Text(plan.title, style: theme.textTheme.headlineSmall),
-            ),
-            PlanStatusChip(status: plan.status),
-          ],
-        ),
-        if (plan.isTemplate) ...[
-          const SizedBox(height: 8),
-          Text(
-            WorkoutStrings.isTemplateLabel,
-            style: theme.textTheme.labelLarge,
-          ),
-        ],
-        if (plan.description != null && plan.description!.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Text(plan.description!),
-        ],
-        const SizedBox(height: 16),
-        if (plan.targetGoal != null)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text(WorkoutStrings.targetGoalLabel),
-            subtitle: Text(plan.targetGoal!),
-          ),
-        if (plan.difficulty != null)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text(WorkoutStrings.difficultyLabel),
-            subtitle: Text(plan.difficulty!),
-          ),
-        if (plan.durationWeeks != null)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text(WorkoutStrings.durationWeeksLabel),
-            subtitle: Text('${plan.durationWeeks}'),
-          ),
-        if (plan.memberId != null)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text(WorkoutStrings.memberIdLabel),
-            subtitle: Text('#${plan.memberId}'),
-          ),
-        const Divider(height: 32),
-        Text(
-          WorkoutStrings.exercisesSection,
-          style: theme.textTheme.titleMedium,
-        ),
-        const SizedBox(height: 8),
-        if (days.isEmpty)
-          const Text(WorkoutStrings.emptyDay)
-        else
-          for (final day in days) ...[
+            WorkoutPlanHeaderCard(plan: plan),
+            const SizedBox(height: 12),
+            WorkoutStatsOverview(exercises: plan.exercises),
+            const SizedBox(height: 16),
             Text(
-              WorkoutStrings.dayHeader(day),
-              style: theme.textTheme.titleSmall,
+              WorkoutStrings.exercisesSection,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            for (final e in byDay[day]!)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(e.exerciseName ?? 'Exercise #${e.exerciseId}'),
-                subtitle: Text(
-                  WorkoutStrings.exerciseSubtitle(
-                    sets: e.targetSets,
-                    reps: e.targetReps,
+            const SizedBox(height: 8),
+            if (days.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  WorkoutStrings.emptyDay,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                 ),
-              ),
-            const SizedBox(height: 8),
+              )
+            else
+              for (final day in days)
+                WorkoutDaySection(
+                  dayNumber: day,
+                  exercises: byDay[day]!,
+                  onExerciseTap: (e) {
+                    if (isViewOnly) {
+                      context.push(Routes.memberHomeWorkoutExerciseById(e.exerciseId));
+                    }
+                  },
+                  onStartDay: isViewOnly
+                      ? () => context.push(
+                          '${Routes.memberHomeWorkoutActive}?workoutPlanId=${plan.id}',
+                        )
+                      : null,
+                ),
+            const SizedBox(height: 24),
           ],
-      ],
+        ),
+      ),
     );
   }
 }

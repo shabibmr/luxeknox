@@ -141,8 +141,16 @@ class SessionRepositoryImpl implements SessionRepository {
       final meResult = await getMe();
       // Only clear stored tokens if authentication explicitly failed
       // (i.e. revoked/expired tokens), never on network or server errors.
+      // A restore abandoned by its timeout can fail late; if a login stored
+      // new tokens meanwhile, they must survive.
       if (meResult.fold((failure) => failure is AuthFailure, (_) => false)) {
-        await _tokenStorage.clear();
+        final (currentAccess, currentRefresh) = await (
+          _tokenStorage.readAccessToken(),
+          _tokenStorage.readRefreshToken(),
+        ).wait;
+        if (currentAccess == accessToken && currentRefresh == refreshToken) {
+          await _tokenStorage.clear();
+        }
       }
       return meResult;
     } catch (e) {

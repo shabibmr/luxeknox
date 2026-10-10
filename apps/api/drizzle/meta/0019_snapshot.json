@@ -5194,6 +5194,13 @@
           "autoincrement": false,
           "default": 60
         },
+        "rest_between_exercises_seconds": {
+          "name": "rest_between_exercises_seconds",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "notes": {
           "name": "notes",
           "type": "text",

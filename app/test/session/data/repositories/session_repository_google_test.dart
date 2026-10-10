@@ -41,47 +41,54 @@ void main() {
       verifyNever(() => remote.loginWithFirebase(any()));
     });
 
-    test('signs out of Firebase when the backend rejects the account', () async {
-      final user = MockUser();
-      final credential = MockUserCredential();
-      when(() => credential.user).thenReturn(user);
-      when(() => user.getIdToken()).thenAnswer((_) async => 'id-token');
-      when(() => firebaseAuth.signInWithGoogle())
-          .thenAnswer((_) async => credential);
-      when(() => firebaseAuth.signOut()).thenAnswer((_) async {});
-      when(() => remote.loginWithFirebase('id-token')).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/auth/firebase'),
-          response: Response(
+    test(
+      'signs out of Firebase when the backend rejects the account',
+      () async {
+        final user = MockUser();
+        final credential = MockUserCredential();
+        when(() => credential.user).thenReturn(user);
+        when(() => user.getIdToken()).thenAnswer((_) async => 'id-token');
+        when(
+          () => firebaseAuth.signInWithGoogle(),
+        ).thenAnswer((_) async => credential);
+        when(() => firebaseAuth.signOut()).thenAnswer((_) async {});
+        when(() => remote.loginWithFirebase('id-token')).thenThrow(
+          DioException(
             requestOptions: RequestOptions(path: '/auth/firebase'),
-            statusCode: 401,
+            response: Response(
+              requestOptions: RequestOptions(path: '/auth/firebase'),
+              statusCode: 401,
+            ),
+            type: DioExceptionType.badResponse,
           ),
-          type: DioExceptionType.badResponse,
-        ),
-      );
+        );
 
-      final result = await repository.loginWithGoogle();
+        final result = await repository.loginWithGoogle();
 
-      expect(result.getLeft().toNullable(), isA<AuthFailure>());
-      verify(() => firebaseAuth.signOut()).called(1);
-      verifyNever(() => tokenStorage.writeAccessToken(any()));
-    });
+        expect(result.getLeft().toNullable(), isA<AuthFailure>());
+        verify(() => firebaseAuth.signOut()).called(1);
+        verifyNever(() => tokenStorage.writeAccessToken(any()));
+      },
+    );
 
-    test('signs out and returns UnknownFailure when Firebase gives no ID token',
-        () async {
-      final user = MockUser();
-      final credential = MockUserCredential();
-      when(() => credential.user).thenReturn(user);
-      when(() => user.getIdToken()).thenAnswer((_) async => null);
-      when(() => firebaseAuth.signInWithGoogle())
-          .thenAnswer((_) async => credential);
-      when(() => firebaseAuth.signOut()).thenAnswer((_) async {});
+    test(
+      'signs out and returns UnknownFailure when Firebase gives no ID token',
+      () async {
+        final user = MockUser();
+        final credential = MockUserCredential();
+        when(() => credential.user).thenReturn(user);
+        when(() => user.getIdToken()).thenAnswer((_) async => null);
+        when(
+          () => firebaseAuth.signInWithGoogle(),
+        ).thenAnswer((_) async => credential);
+        when(() => firebaseAuth.signOut()).thenAnswer((_) async {});
 
-      final result = await repository.loginWithGoogle();
+        final result = await repository.loginWithGoogle();
 
-      expect(result.getLeft().toNullable(), isA<UnknownFailure>());
-      verify(() => firebaseAuth.signOut()).called(1);
-      verifyNever(() => remote.loginWithFirebase(any()));
-    });
+        expect(result.getLeft().toNullable(), isA<UnknownFailure>());
+        verify(() => firebaseAuth.signOut()).called(1);
+        verifyNever(() => remote.loginWithFirebase(any()));
+      },
+    );
   });
 }

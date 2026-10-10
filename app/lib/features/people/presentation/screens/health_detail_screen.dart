@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
@@ -7,30 +8,30 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/health_info.dart';
-import '../../domain/usecases/get_health_info_usecase.dart';
-import '../../domain/usecases/update_health_info_usecase.dart';
-import '../cubit/health_info_cubit.dart';
+import '../../domain/usecases/create_health_record_usecase.dart';
+import '../../domain/usecases/list_health_history_usecase.dart';
+import '../cubit/health_history_cubit.dart';
 import '../people_strings.dart';
 
-class HealthInfoScreen extends StatelessWidget {
-  const HealthInfoScreen({super.key, required this.memberId});
+class HealthDetailScreen extends StatelessWidget {
+  const HealthDetailScreen({super.key, required this.memberId});
 
   final int memberId;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => HealthInfoCubit(
-        getIt<GetHealthInfoUseCase>(),
-        getIt<UpdateHealthInfoUseCase>(),
+      create: (_) => HealthHistoryCubit(
+        getIt<ListHealthHistoryUseCase>(),
+        getIt<CreateHealthRecordUseCase>(),
       )..load(memberId),
-      child: _HealthInfoBody(memberId: memberId),
+      child: _HealthDetailBody(memberId: memberId),
     );
   }
 }
 
-class _HealthInfoBody extends StatelessWidget {
-  const _HealthInfoBody({required this.memberId});
+class _HealthDetailBody extends StatelessWidget {
+  const _HealthDetailBody({required this.memberId});
 
   final int memberId;
 
@@ -38,14 +39,14 @@ class _HealthInfoBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(PeopleStrings.health)),
-      body: BlocConsumer<HealthInfoCubit, HealthInfoState>(
+      body: BlocConsumer<HealthHistoryCubit, HealthHistoryState>(
         listener: (context, state) {
           if (state.message != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text(PeopleStrings.healthSaved)),
             );
           } else if (state.status == LoadStatus.failure &&
-              state.info != null &&
+              state.records.isNotEmpty &&
               state.failure != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(failureMessage(state.failure!))),
@@ -53,17 +54,23 @@ class _HealthInfoBody extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (state.info == null && state.status == LoadStatus.failure) {
+          final cubit = context.read<HealthHistoryCubit>();
+          if (cubit.current == null && state.status == LoadStatus.failure) {
             return AppErrorView(
               message: failureMessage(state.failure!),
-              onRetry: () => context.read<HealthInfoCubit>().load(memberId),
+              onRetry: () => cubit.load(memberId),
             );
           }
-          final info = state.info;
-          if (info == null) {
+          final current = cubit.current;
+          if (current == null) {
             return const AppLoading();
           }
-          return _HealthForm(key: ValueKey(info.id), info: info);
+          return _HealthForm(
+            key: ValueKey((current.id, current.recordedAt)),
+            info: current,
+            canGoPrevious: cubit.canGoPrevious,
+            canGoNext: cubit.canGoNext,
+          );
         },
       ),
     );
@@ -71,9 +78,16 @@ class _HealthInfoBody extends StatelessWidget {
 }
 
 class _HealthForm extends StatefulWidget {
-  const _HealthForm({super.key, required this.info});
+  const _HealthForm({
+    super.key,
+    required this.info,
+    required this.canGoPrevious,
+    required this.canGoNext,
+  });
 
   final HealthInfo info;
+  final bool canGoPrevious;
+  final bool canGoNext;
 
   @override
   State<_HealthForm> createState() => _HealthFormState();
@@ -126,6 +140,28 @@ class _HealthFormState extends State<_HealthForm> {
               ),
             ),
           ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TextButton(
+              onPressed: widget.canGoPrevious
+                  ? () => context.read<HealthHistoryCubit>().previous()
+                  : null,
+              child: const Text(PeopleStrings.previous),
+            ),
+            Text(
+              '${PeopleStrings.recordedOn} '
+              '${DateFormat.yMMMd().format(widget.info.recordedAt)}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            TextButton(
+              onPressed: widget.canGoNext
+                  ? () => context.read<HealthHistoryCubit>().next()
+                  : null,
+              child: const Text(PeopleStrings.next),
+            ),
+          ],
+        ),
         TextField(
           controller: _blood,
           decoration: const InputDecoration(
@@ -169,8 +205,11 @@ class _HealthFormState extends State<_HealthForm> {
         const SizedBox(height: 16),
         FilledButton(
           onPressed: () {
-            context.read<HealthInfoCubit>().save(
-              widget.info.copyWith(
+            context.read<HealthHistoryCubit>().save(
+              HealthInfo(
+                id: widget.info.id,
+                memberId: widget.info.memberId,
+                recordedAt: widget.info.recordedAt,
                 bloodGroup: _optional(_blood.text),
                 heightCm: double.tryParse(_height.text.trim()),
                 baselineWeightKg: double.tryParse(_weight.text.trim()),

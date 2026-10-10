@@ -126,6 +126,38 @@ void main() {
     verifyRegistered(1);
   });
 
+  test('overlapping syncs for different tokens end with the newest', () async {
+    final slow = Completer<Either<Failure, NotificationDevice>>();
+    when(
+      () => repository.registerDevice(
+        deviceToken: 't1',
+        platform: any(named: 'platform'),
+      ),
+    ).thenAnswer((_) => slow.future);
+    when(
+      () => repository.registerDevice(
+        deviceToken: 't2',
+        platform: any(named: 'platform'),
+      ),
+    ).thenAnswer((_) async => Right(device('t2')));
+
+    final first = service.syncToken('t1', userId: '1');
+    final second = service.syncToken('t2', userId: '1');
+    await pumpEventQueue();
+    // t2 must wait for t1 instead of racing it.
+    verifyNever(
+      () => repository.registerDevice(
+        deviceToken: 't2',
+        platform: any(named: 'platform'),
+      ),
+    );
+    slow.complete(Right(device('t1')));
+    await Future.wait([first, second]);
+
+    expect(store.token, 't2');
+    expect(store.registration, '1|t2');
+  });
+
   test('registers again after logout clears the device id', () async {
     await service.syncToken('t1', userId: '1');
     await store.clearDeviceId();

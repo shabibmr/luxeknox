@@ -295,7 +295,7 @@ Plan body is stored on a **version**. Creating a plan also creates version `1`. 
 
 * **Purpose**: Ordered list of exercises in a plan split **for one version**.
 * **Supporting Screens**: Workout Plan Details, Workout Plan Builder.
-* **Key Attributes**: `id`, `workout_plan_version_id` (FK), `day_number` (e.g. Day 1 = Chest/Triceps), `exercise_id` (FK), `order_index`, `target_sets`, `target_reps`, `target_weight_kg`, `rest_seconds`, `notes`.
+* **Key Attributes**: `id`, `workout_plan_version_id` (FK), `day_number` (e.g. Day 1 = Chest/Triceps), `exercise_id` (FK), `order_index`, `target_sets`, `target_reps`, `target_weight_kg`, `rest_seconds`, `rest_between_exercises_seconds`, `notes`.
 
 ### `workout_sessions`
 

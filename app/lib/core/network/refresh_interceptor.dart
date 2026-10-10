@@ -138,7 +138,9 @@ class RefreshInterceptor extends Interceptor {
       // Refresh couldn't complete (offline, server error). The session may
       // still be valid, so don't sign out, and report the refresh failure
       // instead of the 401 so callers don't treat it as an auth failure.
-      handler.next(err.copyWith(error: FailureDioException(refreshFailure, err)));
+      handler.next(
+        err.copyWith(error: FailureDioException(refreshFailure, err)),
+      );
       return;
     }
 

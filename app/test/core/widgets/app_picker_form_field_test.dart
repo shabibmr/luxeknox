@@ -21,7 +21,9 @@ void main() {
       expect(find.text('Choose option'), findsOneWidget);
     });
 
-    testWidgets('displays formatted label when value is present', (tester) async {
+    testWidgets('displays formatted label when value is present', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -38,7 +40,9 @@ void main() {
       expect(find.text('Formatted: selected_val'), findsOneWidget);
     });
 
-    testWidgets('tapping field triggers onPick and calls onChanged', (tester) async {
+    testWidgets('tapping field triggers onPick and calls onChanged', (
+      tester,
+    ) async {
       String? selected;
 
       await tester.pumpWidget(

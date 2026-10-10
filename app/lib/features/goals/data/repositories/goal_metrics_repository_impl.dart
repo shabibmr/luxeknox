@@ -19,9 +19,22 @@ class GoalMetricsRepositoryImpl implements GoalMetricsRepository {
   int? _parseId(String id) => int.tryParse(id);
 
   @override
-  Future<Either<Failure, CursorPage<GoalMetric>>> listMetrics() async {
+  Future<Either<Failure, CursorPage<GoalMetric>>> listMetrics({
+    String? query,
+    GoalMetricCategory? category,
+    bool? isActive,
+    String? cursor,
+    int? limit,
+  }) async {
     try {
-      final page = await _remote.listGoalMetrics();
+      final text = query?.trim();
+      final page = await _remote.listGoalMetrics(
+        q: (text == null || text.isEmpty) ? null : text,
+        category: category?.wire,
+        isActive: isActive,
+        limit: limit,
+        cursor: cursor,
+      );
       return Right(
         CursorPage(
           items: page.data.map((m) => m.toDomain()).toList(),

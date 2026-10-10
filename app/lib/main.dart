@@ -13,12 +13,14 @@ import 'features/notifications/data/services/fcm_messaging_service.dart';
 import 'l10n/app_localizations.dart';
 import 'session/presentation/session_cubit.dart';
 
+/// Starts before the first frame; the splash shows until it resolves.
+void startSessionRestore() => unawaited(getIt<SessionCubit>().restore());
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await resolveRemoteAppConfig();
   configureDependencies();
-  // Start before the first frame; the splash shows until it resolves.
-  unawaited(getIt<SessionCubit>().restore());
+  startSessionRestore();
   runApp(const LuxeKnoxApp());
   unawaited(getIt<FcmMessagingService>().start());
 }
