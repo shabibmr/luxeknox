@@ -485,6 +485,10 @@ import '../../features/workout/domain/usecases/complete_workout_session_usecase.
     as _i57;
 import '../../features/workout/domain/usecases/create_workout_plan_usecase.dart'
     as _i701;
+import '../../features/workout/domain/usecases/delete_workout_set_usecase.dart'
+    as _i799;
+import '../../features/workout/domain/usecases/get_active_workout_session_usecase.dart'
+    as _i896;
 import '../../features/workout/domain/usecases/get_workout_plan_usecase.dart'
     as _i391;
 import '../../features/workout/domain/usecases/list_workout_plan_versions_usecase.dart'
@@ -503,6 +507,8 @@ import '../../features/workout/domain/usecases/start_workout_session_usecase.dar
     as _i557;
 import '../../features/workout/domain/usecases/update_workout_plan_usecase.dart'
     as _i134;
+import '../../features/workout/domain/usecases/update_workout_set_usecase.dart'
+    as _i48;
 import '../../features/workout/presentation/bloc/active_workout_bloc.dart'
     as _i354;
 import '../../features/workout/presentation/cubit/exercise_picker_cubit.dart'
@@ -1126,6 +1132,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i14.WorkoutSessionRepository>(),
       ),
     );
+    gh.lazySingleton<_i799.DeleteWorkoutSetUseCase>(
+      () => _i799.DeleteWorkoutSetUseCase(gh<_i14.WorkoutSessionRepository>()),
+    );
+    gh.lazySingleton<_i896.GetActiveWorkoutSessionUseCase>(
+      () => _i896.GetActiveWorkoutSessionUseCase(
+        gh<_i14.WorkoutSessionRepository>(),
+      ),
+    );
     gh.lazySingleton<_i736.ListWorkoutSessionsUseCase>(
       () =>
           _i736.ListWorkoutSessionsUseCase(gh<_i14.WorkoutSessionRepository>()),
@@ -1136,6 +1150,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i557.StartWorkoutSessionUseCase>(
       () =>
           _i557.StartWorkoutSessionUseCase(gh<_i14.WorkoutSessionRepository>()),
+    );
+    gh.lazySingleton<_i48.UpdateWorkoutSetUseCase>(
+      () => _i48.UpdateWorkoutSetUseCase(gh<_i14.WorkoutSessionRepository>()),
     );
     gh.lazySingleton<_i211.DocumentRepository>(
       () => _i869.DocumentRepositoryImpl(

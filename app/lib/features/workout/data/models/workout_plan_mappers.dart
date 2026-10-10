@@ -196,3 +196,18 @@ api.WorkoutSetWrite toWorkoutSetWrite({
       ..isCompleted = isCompleted,
   );
 }
+
+api.WorkoutSetUpdate toWorkoutSetUpdate({
+  int? repsCompleted,
+  num? weightLiftedKg,
+  num? rpeScore,
+  bool? isCompleted,
+}) {
+  return api.WorkoutSetUpdate(
+    (b) => b
+      ..repsCompleted = repsCompleted
+      ..weightLiftedKg = weightLiftedKg
+      ..rpeScore = rpeScore
+      ..isCompleted = isCompleted,
+  );
+}

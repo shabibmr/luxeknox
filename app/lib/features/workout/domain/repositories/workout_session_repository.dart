@@ -33,4 +33,17 @@ abstract class WorkoutSessionRepository {
     String? notes,
     int? clientFeedbackRating,
   });
+
+  Future<Either<Failure, WorkoutSession?>> getActiveSession(String memberId);
+
+  Future<Either<Failure, WorkoutSessionSet>> updateSet(
+    String sessionId,
+    String setId, {
+    int? reps,
+    num? weightKg,
+    num? rpe,
+    bool? isCompleted,
+  });
+
+  Future<Either<Failure, Unit>> deleteSet(String sessionId, String setId);
 }

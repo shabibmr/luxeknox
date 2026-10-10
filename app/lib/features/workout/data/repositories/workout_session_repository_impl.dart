@@ -123,4 +123,73 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
       return Left(mapThrownToFailure(e));
     }
   }
+
+  @override
+  Future<Either<Failure, WorkoutSession?>> getActiveSession(
+    String memberId,
+  ) async {
+    final intId = _parseId(memberId);
+    if (intId == null) {
+      return const Left(ValidationFailure(['Invalid member id']));
+    }
+    try {
+      final session = await _remoteDataSource.getActiveSession(memberId: intId);
+      return Right(session.toDomain());
+    } catch (e) {
+      final failure = mapThrownToFailure(e);
+      if (failure is NotFoundFailure) {
+        return const Right(null);
+      }
+      return Left(failure);
+    }
+  }
+
+  @override
+  Future<Either<Failure, WorkoutSessionSet>> updateSet(
+    String sessionId,
+    String setId, {
+    int? reps,
+    num? weightKg,
+    num? rpe,
+    bool? isCompleted,
+  }) async {
+    final sid = _parseId(sessionId);
+    final stid = _parseId(setId);
+    if (sid == null || stid == null) {
+      return const Left(ValidationFailure(['Invalid session or set id']));
+    }
+    try {
+      final updated = await _remoteDataSource.updateSet(
+        sid,
+        stid,
+        toWorkoutSetUpdate(
+          repsCompleted: reps,
+          weightLiftedKg: weightKg,
+          rpeScore: rpe,
+          isCompleted: isCompleted,
+        ),
+      );
+      return Right(updated.toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> deleteSet(
+    String sessionId,
+    String setId,
+  ) async {
+    final sid = _parseId(sessionId);
+    final stid = _parseId(setId);
+    if (sid == null || stid == null) {
+      return const Left(ValidationFailure(['Invalid session or set id']));
+    }
+    try {
+      await _remoteDataSource.deleteSet(sid, stid);
+      return const Right(unit);
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
 }

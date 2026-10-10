@@ -22,6 +22,16 @@ abstract class WorkoutSessionRemoteDataSource {
     String? notes,
     int? clientFeedbackRating,
   });
+
+  Future<api.WorkoutSession> getActiveSession({int? memberId});
+
+  Future<api.WorkoutSessionExercise> updateSet(
+    int sessionId,
+    int setId,
+    api.WorkoutSetUpdate update,
+  );
+
+  Future<void> deleteSet(int sessionId, int setId);
 }
 
 @LazySingleton(as: WorkoutSessionRemoteDataSource)
@@ -127,5 +137,30 @@ class WorkoutSessionRemoteDataSourceImpl
         stackTrace: stackTrace,
       );
     }
+  }
+
+  @override
+  Future<api.WorkoutSession> getActiveSession({int? memberId}) async {
+    return _unwrap(await _workApi.getActiveWorkoutSession(memberId: memberId));
+  }
+
+  @override
+  Future<api.WorkoutSessionExercise> updateSet(
+    int sessionId,
+    int setId,
+    api.WorkoutSetUpdate update,
+  ) async {
+    return _unwrap(
+      await _workApi.updateWorkoutSet(
+        id: sessionId,
+        setId: setId,
+        workoutSetUpdate: update,
+      ),
+    );
+  }
+
+  @override
+  Future<void> deleteSet(int sessionId, int setId) async {
+    await _workApi.deleteWorkoutSet(id: sessionId, setId: setId);
   }
 }
