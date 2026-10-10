@@ -58,7 +58,8 @@ void main() {
         (b) => b
           ..email = 'fallback@example.com'
           ..firstName = 'F'
-          ..lastName = 'L',
+          ..lastName = 'L'
+          ..gender = 'male',
       ),
     );
     registerFallbackValue(
@@ -89,6 +90,7 @@ void main() {
       firstName: 'Jane',
       lastName: 'Doe',
       email: 'jane@example.com',
+      gender: 'female',
     );
 
     test('returns Right(TrainerProfile) on success', () async {

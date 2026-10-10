@@ -15,6 +15,7 @@ Name | Type | Description | Notes
 **targetReps** | **String** |  | [optional] 
 **targetWeightKg** | **num** |  | [optional] 
 **restSeconds** | **int** |  | [optional] 
+**restBetweenExercisesSeconds** | **int** |  | [optional] 
 **notes** | **String** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

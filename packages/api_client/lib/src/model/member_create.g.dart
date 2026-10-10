@@ -18,7 +18,7 @@ class _$MemberCreate extends MemberCreate {
   @override
   final String lastName;
   @override
-  final String? gender;
+  final String gender;
   @override
   final Date? dateOfBirth;
   @override
@@ -37,7 +37,7 @@ class _$MemberCreate extends MemberCreate {
       this.password,
       required this.firstName,
       required this.lastName,
-      this.gender,
+      required this.gender,
       this.dateOfBirth,
       this.address,
       this.assignedTrainerId,
@@ -190,7 +190,8 @@ class MemberCreateBuilder
               firstName, r'MemberCreate', 'firstName'),
           lastName: BuiltValueNullFieldError.checkNotNull(
               lastName, r'MemberCreate', 'lastName'),
-          gender: gender,
+          gender: BuiltValueNullFieldError.checkNotNull(
+              gender, r'MemberCreate', 'gender'),
           dateOfBirth: dateOfBirth,
           address: address,
           assignedTrainerId: assignedTrainerId,

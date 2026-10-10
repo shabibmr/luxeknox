@@ -12,8 +12,8 @@ Name | Type | Description | Notes
 **userId** | **int** |  | 
 **firstName** | **String** |  | 
 **lastName** | **String** |  | 
-**gender** | **String** |  | [optional] 
-**jobTitle** | **String** |  | 
+**gender** | **String** | Male or female. Null only for employees created before gender was required. | [optional] 
+**jobTitle** | **String** |  | [optional] 
 **department** | **String** |  | [optional] 
 **hireDate** | [**Date**](Date.md) |  | [optional] 
 **status** | [**EmployeeStatus**](EmployeeStatus.md) |  | 

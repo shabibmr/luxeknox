@@ -8,6 +8,7 @@ import 'package:api_client/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**identifier** | **String** | Email or phone number (Nest unified field). | [optional] 
 **email** | **String** |  | [optional] 
 **phoneNumber** | **String** | E.164 | [optional] 
 **password** | **String** |  | 

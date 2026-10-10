@@ -127,17 +127,17 @@ Class | Method | HTTP request | Description
 [*HEALTHApi*](doc/HEALTHApi.md) | [**createHealthCondition**](doc/HEALTHApi.md#createhealthcondition) | **POST** /health-conditions | Create a condition
 [*HEALTHApi*](doc/HEALTHApi.md) | [**createMedicalHistory**](doc/HEALTHApi.md#createmedicalhistory) | **POST** /members/{id}/medical-histories | Add a medical history row
 [*HEALTHApi*](doc/HEALTHApi.md) | [**createMemberDocument**](doc/HEALTHApi.md#creatememberdocument) | **POST** /members/{id}/documents | Attach a document metadata row
+[*HEALTHApi*](doc/HEALTHApi.md) | [**createMemberHealthRecord**](doc/HEALTHApi.md#creatememberhealthrecord) | **POST** /members/{id}/health/history | Record a new member health row
 [*HEALTHApi*](doc/HEALTHApi.md) | [**createMemberPhoto**](doc/HEALTHApi.md#creatememberphoto) | **POST** /members/{id}/photos | Add a gallery photo
 [*HEALTHApi*](doc/HEALTHApi.md) | [**deleteEmergencyContact**](doc/HEALTHApi.md#deleteemergencycontact) | **DELETE** /users/{id}/emergency-contacts/{contactId} | Remove an emergency contact
 [*HEALTHApi*](doc/HEALTHApi.md) | [**deleteMedicalHistory**](doc/HEALTHApi.md#deletemedicalhistory) | **DELETE** /members/{id}/medical-histories/{historyId} | Soft-remove a medical history row
 [*HEALTHApi*](doc/HEALTHApi.md) | [**deleteMemberDocument**](doc/HEALTHApi.md#deletememberdocument) | **DELETE** /members/{id}/documents/{documentId} | Delete a document row
-[*HEALTHApi*](doc/HEALTHApi.md) | [**getMemberHealth**](doc/HEALTHApi.md#getmemberhealth) | **GET** /members/{id}/health | Current health row
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listEmergencyContacts**](doc/HEALTHApi.md#listemergencycontacts) | **GET** /users/{id}/emergency-contacts | Emergency contacts for a user
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listHealthConditions**](doc/HEALTHApi.md#listhealthconditions) | **GET** /health-conditions | Condition catalog
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listMedicalHistories**](doc/HEALTHApi.md#listmedicalhistories) | **GET** /members/{id}/medical-histories | Medical history list
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listMemberDocuments**](doc/HEALTHApi.md#listmemberdocuments) | **GET** /members/{id}/documents | Member documents
+[*HEALTHApi*](doc/HEALTHApi.md) | [**listMemberHealthHistory**](doc/HEALTHApi.md#listmemberhealthhistory) | **GET** /members/{id}/health/history | Member health history list
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listMemberPhotos**](doc/HEALTHApi.md#listmemberphotos) | **GET** /members/{id}/photos | Member gallery
-[*HEALTHApi*](doc/HEALTHApi.md) | [**putMemberHealth**](doc/HEALTHApi.md#putmemberhealth) | **PUT** /members/{id}/health | Replace current health row
 [*HEALTHApi*](doc/HEALTHApi.md) | [**setMemberAvatar**](doc/HEALTHApi.md#setmemberavatar) | **POST** /members/{id}/photos/{photoId}/avatar | Set current avatar from a gallery shot
 [*HEALTHApi*](doc/HEALTHApi.md) | [**updateEmergencyContact**](doc/HEALTHApi.md#updateemergencycontact) | **PATCH** /users/{id}/emergency-contacts/{contactId} | Update an emergency contact
 [*HEALTHApi*](doc/HEALTHApi.md) | [**updateHealthCondition**](doc/HEALTHApi.md#updatehealthcondition) | **PATCH** /health-conditions/{id} | Update a condition
@@ -234,9 +234,9 @@ Class | Method | HTTP request | Description
 [*SCHEDApi*](doc/SCHEDApi.md) | [**updateSchedule**](doc/SCHEDApi.md#updateschedule) | **PATCH** /schedules/{id} | Update a schedule (requires row_version)
 [*SCHEDApi*](doc/SCHEDApi.md) | [**updateScheduleType**](doc/SCHEDApi.md#updatescheduletype) | **PATCH** /schedule-types/{id} | Update a schedule type
 [*SYSApi*](doc/SYSApi.md) | [**getPublicSettings**](doc/SYSApi.md#getpublicsettings) | **GET** /settings/public | Timezone, currency, hours, page size
-[*SYSApi*](doc/SYSApi.md) | [**getSettings**](doc/SYSApi.md#getsettings) | **GET** /settings | All settings or one category
+[*SYSApi*](doc/SYSApi.md) | [**getSettings**](doc/SYSApi.md#getsettings) | **GET** /settings | All catalogue settings or one category
 [*SYSApi*](doc/SYSApi.md) | [**listAuditLogs**](doc/SYSApi.md#listauditlogs) | **GET** /audit-logs | Append-only admin audit (no update/delete)
-[*SYSApi*](doc/SYSApi.md) | [**putSettings**](doc/SYSApi.md#putsettings) | **PUT** /settings | Upsert known setting keys
+[*SYSApi*](doc/SYSApi.md) | [**putSettings**](doc/SYSApi.md#putsettings) | **PUT** /settings | Update known setting keys
 [*WORKApi*](doc/WORKApi.md) | [**archiveWorkoutPlan**](doc/WORKApi.md#archiveworkoutplan) | **POST** /workout-plans/{id}/archive | Archive a workout plan
 [*WORKApi*](doc/WORKApi.md) | [**assignWorkoutPlan**](doc/WORKApi.md#assignworkoutplan) | **POST** /workout-plans/{id}/assign | Copy a template onto a member (new plan + version 1)
 [*WORKApi*](doc/WORKApi.md) | [**completeWorkoutSession**](doc/WORKApi.md#completeworkoutsession) | **POST** /workout-sessions/{id}/complete | Complete a session
@@ -352,7 +352,8 @@ Class | Method | HTTP request | Description
  - [MemberDocumentPage](doc/MemberDocumentPage.md)
  - [MemberDocumentWrite](doc/MemberDocumentWrite.md)
  - [MemberDossier](doc/MemberDossier.md)
- - [MemberHealth](doc/MemberHealth.md)
+ - [MemberHealthHistoryPage](doc/MemberHealthHistoryPage.md)
+ - [MemberHealthRecord](doc/MemberHealthRecord.md)
  - [MemberHealthWrite](doc/MemberHealthWrite.md)
  - [MemberPage](doc/MemberPage.md)
  - [MemberPhoto](doc/MemberPhoto.md)

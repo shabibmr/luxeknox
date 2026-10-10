@@ -14,7 +14,7 @@ part 'pt_product_write.g.dart';
 /// * [name] 
 /// * [code] 
 /// * [description] 
-/// * [durationDays]
+/// * [durationDays] 
 /// * [basePrice] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
 /// * [taxPercentage] 
 /// * [isActive] 

@@ -15,8 +15,8 @@ Method | HTTP request | Description
 [**createMeasurement**](GOALApi.md#createmeasurement) | **POST** /members/{id}/measurements | Record a measurement session
 [**createMemberGoal**](GOALApi.md#createmembergoal) | **POST** /members/{id}/goals | Create a goal
 [**createProgressNote**](GOALApi.md#createprogressnote) | **POST** /members/{id}/progress-notes | Add a progress note
-[**createProgressPhoto**](GOALApi.md#createprogressphoto) | **POST** /members/{id}/progress-photos | Add a progress photo (deferred)
-[**deleteProgressPhoto**](GOALApi.md#deleteprogressphoto) | **DELETE** /progress-photos/{id} | Delete a progress photo (deferred)
+[**createProgressPhoto**](GOALApi.md#createprogressphoto) | **POST** /members/{id}/progress-photos | Add a progress photo
+[**deleteProgressPhoto**](GOALApi.md#deleteprogressphoto) | **DELETE** /progress-photos/{id} | Delete a progress photo
 [**getGoal**](GOALApi.md#getgoal) | **GET** /goals/{id} | Goal detail
 [**getMeasurement**](GOALApi.md#getmeasurement) | **GET** /measurements/{id} | Measurement session with values
 [**getMeasurementChart**](GOALApi.md#getmeasurementchart) | **GET** /members/{id}/measurements/chart | Longitudinal metric chart series
@@ -24,7 +24,7 @@ Method | HTTP request | Description
 [**listMeasurements**](GOALApi.md#listmeasurements) | **GET** /members/{id}/measurements | Measurement sessions
 [**listMemberGoals**](GOALApi.md#listmembergoals) | **GET** /members/{id}/goals | Member goals
 [**listProgressNotes**](GOALApi.md#listprogressnotes) | **GET** /members/{id}/progress-notes | Coach / member notes
-[**listProgressPhotos**](GOALApi.md#listprogressphotos) | **GET** /members/{id}/progress-photos | Progress photos (deferred)
+[**listProgressPhotos**](GOALApi.md#listprogressphotos) | **GET** /members/{id}/progress-photos | Progress photos
 [**updateGoal**](GOALApi.md#updategoal) | **PATCH** /goals/{id} | Update a goal
 [**updateGoalMetric**](GOALApi.md#updategoalmetric) | **PATCH** /goal-metrics/{id} | Update a metric
 
@@ -121,6 +121,8 @@ Name | Type | Description  | Notes
 > GoalMetric createGoalMetric(goalMetricWrite)
 
 Create a metric
+
+Trainers and staff with goals.create, goals.update, or goals.write may create a metric.
 
 ### Example
 ```dart
@@ -290,7 +292,7 @@ Name | Type | Description  | Notes
 # **createProgressPhoto**
 > ProgressPhoto createProgressPhoto(id, progressPhotoWrite)
 
-Add a progress photo (deferred)
+Add a progress photo
 
 ### Example
 ```dart
@@ -333,7 +335,7 @@ Name | Type | Description  | Notes
 # **deleteProgressPhoto**
 > deleteProgressPhoto(id)
 
-Delete a progress photo (deferred)
+Delete a progress photo
 
 ### Example
 ```dart
@@ -500,7 +502,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **listGoalMetrics**
-> GoalMetricPage listGoalMetrics()
+> GoalMetricPage listGoalMetrics(limit, cursor, q, category, isActive)
 
 Measurement type catalog
 
@@ -509,9 +511,14 @@ Measurement type catalog
 import 'package:api_client/api.dart';
 
 final api = ApiClient().getGOALApi();
+final int limit = 56; // int | Default from gym_settings pagination.default_page_size.
+final String cursor = cursor_example; // String | Opaque cursor on (created_at, id) for feeds.
+final String q = q_example; // String | Case-insensitive search (FR-API-014).
+final String category = category_example; // String | 
+final bool isActive = true; // bool | 
 
 try {
-    final response = api.listGoalMetrics();
+    final response = api.listGoalMetrics(limit, cursor, q, category, isActive);
     print(response);
 } on DioException catch (e) {
     print('Exception when calling GOALApi->listGoalMetrics: $e\n');
@@ -519,7 +526,14 @@ try {
 ```
 
 ### Parameters
-This endpoint does not need any parameter.
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **limit** | **int**| Default from gym_settings pagination.default_page_size. | [optional] 
+ **cursor** | **String**| Opaque cursor on (created_at, id) for feeds. | [optional] 
+ **q** | **String**| Case-insensitive search (FR-API-014). | [optional] 
+ **category** | **String**|  | [optional] 
+ **isActive** | **bool**|  | [optional] 
 
 ### Return type
 
@@ -668,7 +682,7 @@ Name | Type | Description  | Notes
 # **listProgressPhotos**
 > ProgressPhotoPage listProgressPhotos(id)
 
-Progress photos (deferred)
+Progress photos
 
 ### Example
 ```dart
@@ -753,6 +767,8 @@ Name | Type | Description  | Notes
 > GoalMetric updateGoalMetric(id, goalMetricWrite)
 
 Update a metric
+
+Trainers and staff with goals.create, goals.update, or goals.write may update a metric.
 
 ### Example
 ```dart

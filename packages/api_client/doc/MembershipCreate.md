@@ -11,6 +11,7 @@ Name | Type | Description | Notes
 **memberId** | **int** |  | 
 **productId** | **int** |  | 
 **startDate** | [**Date**](Date.md) |  | 
+**paymentMethodId** | **int** |  | 
 **lockerNumber** | **String** |  | [optional] 
 **autoRenew** | **bool** |  | [optional] 
 

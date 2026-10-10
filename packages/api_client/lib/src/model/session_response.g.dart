@@ -12,6 +12,10 @@ class _$SessionResponse extends SessionResponse {
   @override
   final String refreshToken;
   @override
+  final String? tokenType;
+  @override
+  final int? expiresIn;
+  @override
   final Principal principal;
 
   factory _$SessionResponse([void Function(SessionResponseBuilder)? updates]) =>
@@ -20,6 +24,8 @@ class _$SessionResponse extends SessionResponse {
   _$SessionResponse._(
       {required this.accessToken,
       required this.refreshToken,
+      this.tokenType,
+      this.expiresIn,
       required this.principal})
       : super._();
   @override
@@ -35,6 +41,8 @@ class _$SessionResponse extends SessionResponse {
     return other is SessionResponse &&
         accessToken == other.accessToken &&
         refreshToken == other.refreshToken &&
+        tokenType == other.tokenType &&
+        expiresIn == other.expiresIn &&
         principal == other.principal;
   }
 
@@ -43,6 +51,8 @@ class _$SessionResponse extends SessionResponse {
     var _$hash = 0;
     _$hash = $jc(_$hash, accessToken.hashCode);
     _$hash = $jc(_$hash, refreshToken.hashCode);
+    _$hash = $jc(_$hash, tokenType.hashCode);
+    _$hash = $jc(_$hash, expiresIn.hashCode);
     _$hash = $jc(_$hash, principal.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -53,6 +63,8 @@ class _$SessionResponse extends SessionResponse {
     return (newBuiltValueToStringHelper(r'SessionResponse')
           ..add('accessToken', accessToken)
           ..add('refreshToken', refreshToken)
+          ..add('tokenType', tokenType)
+          ..add('expiresIn', expiresIn)
           ..add('principal', principal))
         .toString();
   }
@@ -70,6 +82,14 @@ class SessionResponseBuilder
   String? get refreshToken => _$this._refreshToken;
   set refreshToken(String? refreshToken) => _$this._refreshToken = refreshToken;
 
+  String? _tokenType;
+  String? get tokenType => _$this._tokenType;
+  set tokenType(String? tokenType) => _$this._tokenType = tokenType;
+
+  int? _expiresIn;
+  int? get expiresIn => _$this._expiresIn;
+  set expiresIn(int? expiresIn) => _$this._expiresIn = expiresIn;
+
   PrincipalBuilder? _principal;
   PrincipalBuilder get principal => _$this._principal ??= PrincipalBuilder();
   set principal(PrincipalBuilder? principal) => _$this._principal = principal;
@@ -83,6 +103,8 @@ class SessionResponseBuilder
     if ($v != null) {
       _accessToken = $v.accessToken;
       _refreshToken = $v.refreshToken;
+      _tokenType = $v.tokenType;
+      _expiresIn = $v.expiresIn;
       _principal = $v.principal.toBuilder();
       _$v = null;
     }
@@ -111,6 +133,8 @@ class SessionResponseBuilder
                 accessToken, r'SessionResponse', 'accessToken'),
             refreshToken: BuiltValueNullFieldError.checkNotNull(
                 refreshToken, r'SessionResponse', 'refreshToken'),
+            tokenType: tokenType,
+            expiresIn: expiresIn,
             principal: principal.build(),
           );
     } catch (_) {

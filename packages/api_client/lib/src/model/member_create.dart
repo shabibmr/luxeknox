@@ -40,7 +40,7 @@ abstract class MemberCreate implements Built<MemberCreate, MemberCreateBuilder> 
   String get lastName;
 
   @BuiltValueField(wireName: r'gender')
-  String? get gender;
+  String get gender;
 
   @BuiltValueField(wireName: r'date_of_birth')
   Date? get dateOfBirth;
@@ -108,13 +108,11 @@ class _$MemberCreateSerializer implements PrimitiveSerializer<MemberCreate> {
       object.lastName,
       specifiedType: const FullType(String),
     );
-    if (object.gender != null) {
-      yield r'gender';
-      yield serializers.serialize(
-        object.gender,
-        specifiedType: const FullType(String),
-      );
-    }
+    yield r'gender';
+    yield serializers.serialize(
+      object.gender,
+      specifiedType: const FullType(String),
+    );
     if (object.dateOfBirth != null) {
       yield r'date_of_birth';
       yield serializers.serialize(
@@ -185,8 +183,9 @@ class _$MemberCreateSerializer implements PrimitiveSerializer<MemberCreate> {
         case r'password':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.password = valueDes;
           break;
         case r'first_name':
@@ -206,9 +205,8 @@ class _$MemberCreateSerializer implements PrimitiveSerializer<MemberCreate> {
         case r'gender':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
+            specifiedType: const FullType(String),
+          ) as String;
           result.gender = valueDes;
           break;
         case r'date_of_birth':

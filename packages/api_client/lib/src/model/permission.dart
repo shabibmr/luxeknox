@@ -3,7 +3,6 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:api_client/src/model/permission_action.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -25,8 +24,7 @@ abstract class Permission implements Built<Permission, PermissionBuilder> {
   String get module;
 
   @BuiltValueField(wireName: r'action')
-  PermissionAction get action;
-  // enum actionEnum {  create,  read,  update,  delete,  approve,  export,  broadcast,  };
+  String get action;
 
   @BuiltValueField(wireName: r'slug')
   String get slug;
@@ -67,7 +65,7 @@ class _$PermissionSerializer implements PrimitiveSerializer<Permission> {
     yield r'action';
     yield serializers.serialize(
       object.action,
-      specifiedType: const FullType(PermissionAction),
+      specifiedType: const FullType(String),
     );
     yield r'slug';
     yield serializers.serialize(
@@ -114,8 +112,8 @@ class _$PermissionSerializer implements PrimitiveSerializer<Permission> {
         case r'action':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(PermissionAction),
-          ) as PermissionAction;
+            specifiedType: const FullType(String),
+          ) as String;
           result.action = valueDes;
           break;
         case r'slug':

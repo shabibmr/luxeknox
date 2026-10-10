@@ -10,9 +10,9 @@ All URIs are relative to *http://localhost:3000/v1*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**getPublicSettings**](SYSApi.md#getpublicsettings) | **GET** /settings/public | Timezone, currency, hours, page size
-[**getSettings**](SYSApi.md#getsettings) | **GET** /settings | All settings or one category
+[**getSettings**](SYSApi.md#getsettings) | **GET** /settings | All catalogue settings or one category
 [**listAuditLogs**](SYSApi.md#listauditlogs) | **GET** /audit-logs | Append-only admin audit (no update/delete)
-[**putSettings**](SYSApi.md#putsettings) | **PUT** /settings | Upsert known setting keys
+[**putSettings**](SYSApi.md#putsettings) | **PUT** /settings | Update known setting keys
 
 
 # **getPublicSettings**
@@ -55,7 +55,7 @@ No authorization required
 # **getSettings**
 > SettingsList getSettings(category)
 
-All settings or one category
+All catalogue settings or one category
 
 ### Example
 ```dart
@@ -151,7 +151,7 @@ Name | Type | Description  | Notes
 # **putSettings**
 > SettingsList putSettings(settingsWrite)
 
-Upsert known setting keys
+Update known setting keys
 
 ### Example
 ```dart

@@ -6676,23 +6676,17 @@ components:
         phone_number:
           type: string
           description: E.164
-        phoneNumber:
-          type: string
-          description: E.164 camelCase alias accepted by Nest.
         password:
           type: string
           format: password
-      description: Supply identifier, email, phone_number, or phoneNumber (at least one) plus password.
+      description: Supply identifier, email, or phone_number (at least one) plus password.
     RefreshRequest:
       type: object
       properties:
         refresh_token:
           type: string
           description: Opaque `gk_rt_…`
-        refreshToken:
-          type: string
-          description: Opaque `gk_rt_…` camelCase alias accepted by Nest.
-      description: Provide refresh_token or refreshToken (must start with gk_rt_).
+      description: Provide refresh_token (must start with gk_rt_).
     LogoutRequest:
       type: object
       properties:
@@ -6749,36 +6743,16 @@ components:
             type: string
     SessionResponse:
       type: object
-      required: [accessToken, refreshToken, tokenType, expiresIn, principal]
-      description: Nest returns camelCase primary fields plus optional snake_case aliases.
+      required: [access_token, refresh_token, principal]
       properties:
-        accessToken:
-          type: string
-          description: Opaque access token (primary Nest field).
         access_token:
           type: string
-          description: Snake_case alias of accessToken.
-        refreshToken:
-          type: string
-          description: Opaque refresh token (primary Nest field).
         refresh_token:
           type: string
-          description: Snake_case alias of refreshToken.
-        tokenType:
-          type: string
-          enum: [Bearer]
         token_type:
           type: string
-          enum: [Bearer]
-          description: Snake_case alias of tokenType.
-        expiresIn:
-          type: integer
-          enum: [1800]
-          description: Access token TTL in seconds.
         expires_in:
           type: integer
-          enum: [1800]
-          description: Snake_case alias of expiresIn.
         principal:
           $ref: "#/components/schemas/Principal"
     MeResponse:
@@ -6864,7 +6838,7 @@ components:
         module:
           type: string
         action:
-          $ref: "#/components/schemas/PermissionAction"
+          type: string
         slug:
           type: string
     RolePage:
@@ -7170,7 +7144,6 @@ components:
           type: string
         gender:
           type: string
-          enum: [male, female]
         job_title:
           type: string
           nullable: true
@@ -7186,6 +7159,8 @@ components:
         first_name:
           type: string
         last_name:
+          type: string
+        gender:
           type: string
         job_title:
           type: string

@@ -8,14 +8,19 @@ import 'package:built_value/serializer.dart';
 
 part 'login_request.g.dart';
 
-/// Supply email or phone_number, not both required together — at least one identifier.
+/// Supply identifier, email, or phone_number (at least one) plus password.
 ///
 /// Properties:
+/// * [identifier] - Email or phone number (Nest unified field).
 /// * [email] 
 /// * [phoneNumber] - E.164
 /// * [password] 
 @BuiltValue()
 abstract class LoginRequest implements Built<LoginRequest, LoginRequestBuilder> {
+  /// Email or phone number (Nest unified field).
+  @BuiltValueField(wireName: r'identifier')
+  String? get identifier;
+
   @BuiltValueField(wireName: r'email')
   String? get email;
 
@@ -49,6 +54,13 @@ class _$LoginRequestSerializer implements PrimitiveSerializer<LoginRequest> {
     LoginRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
+    if (object.identifier != null) {
+      yield r'identifier';
+      yield serializers.serialize(
+        object.identifier,
+        specifiedType: const FullType(String),
+      );
+    }
     if (object.email != null) {
       yield r'email';
       yield serializers.serialize(
@@ -91,6 +103,14 @@ class _$LoginRequestSerializer implements PrimitiveSerializer<LoginRequest> {
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
+        case r'identifier':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.identifier = valueDes;
+          break;
         case r'email':
           final valueDes = serializers.deserialize(
             value,

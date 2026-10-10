@@ -471,5 +471,3 @@ lib/src/model/workout_session_page.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
-test/member_health_history_page_test.dart
-test/member_health_record_test.dart

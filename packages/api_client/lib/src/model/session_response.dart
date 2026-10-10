@@ -14,6 +14,8 @@ part 'session_response.g.dart';
 /// Properties:
 /// * [accessToken] 
 /// * [refreshToken] 
+/// * [tokenType] 
+/// * [expiresIn] 
 /// * [principal] 
 @BuiltValue()
 abstract class SessionResponse implements Built<SessionResponse, SessionResponseBuilder> {
@@ -22,6 +24,12 @@ abstract class SessionResponse implements Built<SessionResponse, SessionResponse
 
   @BuiltValueField(wireName: r'refresh_token')
   String get refreshToken;
+
+  @BuiltValueField(wireName: r'token_type')
+  String? get tokenType;
+
+  @BuiltValueField(wireName: r'expires_in')
+  int? get expiresIn;
 
   @BuiltValueField(wireName: r'principal')
   Principal get principal;
@@ -59,6 +67,20 @@ class _$SessionResponseSerializer implements PrimitiveSerializer<SessionResponse
       object.refreshToken,
       specifiedType: const FullType(String),
     );
+    if (object.tokenType != null) {
+      yield r'token_type';
+      yield serializers.serialize(
+        object.tokenType,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.expiresIn != null) {
+      yield r'expires_in';
+      yield serializers.serialize(
+        object.expiresIn,
+        specifiedType: const FullType(int),
+      );
+    }
     yield r'principal';
     yield serializers.serialize(
       object.principal,
@@ -100,6 +122,22 @@ class _$SessionResponseSerializer implements PrimitiveSerializer<SessionResponse
             specifiedType: const FullType(String),
           ) as String;
           result.refreshToken = valueDes;
+          break;
+        case r'token_type':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.tokenType = valueDes;
+          break;
+        case r'expires_in':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.expiresIn = valueDes;
           break;
         case r'principal':
           final valueDes = serializers.deserialize(

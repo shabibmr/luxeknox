@@ -12,7 +12,7 @@ class _$Permission extends Permission {
   @override
   final String module;
   @override
-  final PermissionAction action;
+  final String action;
   @override
   final String slug;
 
@@ -75,9 +75,9 @@ class PermissionBuilder implements Builder<Permission, PermissionBuilder> {
   String? get module => _$this._module;
   set module(String? module) => _$this._module = module;
 
-  PermissionAction? _action;
-  PermissionAction? get action => _$this._action;
-  set action(PermissionAction? action) => _$this._action = action;
+  String? _action;
+  String? get action => _$this._action;
+  set action(String? action) => _$this._action = action;
 
   String? _slug;
   String? get slug => _$this._slug;

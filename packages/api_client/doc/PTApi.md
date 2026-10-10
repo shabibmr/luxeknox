@@ -326,7 +326,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **purchasePtSubscription**
-> PtPurchaseResult purchasePtSubscription(ptPurchaseRequest)
+> PtPurchaseResult purchasePtSubscription(ptPurchaseRequest, idempotencyKey)
 
 Sell PT — assign trainer + fixed weekly slot, take payment, generate sessions
 
@@ -336,9 +336,10 @@ import 'package:api_client/api.dart';
 
 final api = ApiClient().getPTApi();
 final PtPurchaseRequest ptPurchaseRequest = ; // PtPurchaseRequest | 
+final String idempotencyKey = idempotencyKey_example; // String | Required in practice on payments, check-in, booking, freeze (FR-API-008).
 
 try {
-    final response = api.purchasePtSubscription(ptPurchaseRequest);
+    final response = api.purchasePtSubscription(ptPurchaseRequest, idempotencyKey);
     print(response);
 } on DioException catch (e) {
     print('Exception when calling PTApi->purchasePtSubscription: $e\n');
@@ -350,6 +351,7 @@ try {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **ptPurchaseRequest** | [**PtPurchaseRequest**](PtPurchaseRequest.md)|  | 
+ **idempotencyKey** | **String**| Required in practice on payments, check-in, booking, freeze (FR-API-008). | [optional] 
 
 ### Return type
 

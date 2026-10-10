@@ -17,7 +17,7 @@ part 'employee.g.dart';
 /// * [userId] 
 /// * [firstName] 
 /// * [lastName] 
-/// * [gender] 
+/// * [gender] - Male or female. Null only for employees created before gender was required.
 /// * [jobTitle] 
 /// * [department] 
 /// * [hireDate] 
@@ -37,6 +37,7 @@ abstract class Employee implements Built<Employee, EmployeeBuilder> {
   @BuiltValueField(wireName: r'last_name')
   String get lastName;
 
+  /// Male or female. Null only for employees created before gender was required.
   @BuiltValueField(wireName: r'gender')
   String? get gender;
 
@@ -110,7 +111,7 @@ class _$EmployeeSerializer implements PrimitiveSerializer<Employee> {
       yield r'job_title';
       yield serializers.serialize(
         object.jobTitle,
-        specifiedType: const FullType.nullable(String),
+        specifiedType: const FullType(String),
       );
     }
     if (object.department != null) {

@@ -673,6 +673,7 @@ class PTApi {
   ///
   /// Parameters:
   /// * [ptPurchaseRequest] 
+  /// * [idempotencyKey] - Required in practice on payments, check-in, booking, freeze (FR-API-008).
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -684,6 +685,7 @@ class PTApi {
   /// Throws [DioException] if API call or serialization fails
   Future<Response<PtPurchaseResult>> purchasePtSubscription({ 
     required PtPurchaseRequest ptPurchaseRequest,
+    String? idempotencyKey,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -695,6 +697,7 @@ class PTApi {
     final _options = Options(
       method: r'POST',
       headers: <String, dynamic>{
+        if (idempotencyKey != null) r'Idempotency-Key': idempotencyKey,
         ...?headers,
       },
       extra: <String, dynamic>{

@@ -8,12 +8,12 @@ part of 'refresh_request.dart';
 
 class _$RefreshRequest extends RefreshRequest {
   @override
-  final String refreshToken;
+  final String? refreshToken;
 
   factory _$RefreshRequest([void Function(RefreshRequestBuilder)? updates]) =>
       (RefreshRequestBuilder()..update(updates))._build();
 
-  _$RefreshRequest._({required this.refreshToken}) : super._();
+  _$RefreshRequest._({this.refreshToken}) : super._();
   @override
   RefreshRequest rebuild(void Function(RefreshRequestBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -80,8 +80,7 @@ class RefreshRequestBuilder
   _$RefreshRequest _build() {
     final _$result = _$v ??
         _$RefreshRequest._(
-          refreshToken: BuiltValueNullFieldError.checkNotNull(
-              refreshToken, r'RefreshRequest', 'refreshToken'),
+          refreshToken: refreshToken,
         );
     replace(_$result);
     return _$result;

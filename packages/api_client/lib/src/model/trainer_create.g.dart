@@ -18,7 +18,7 @@ class _$TrainerCreate extends TrainerCreate {
   @override
   final String lastName;
   @override
-  final String? gender;
+  final String gender;
   @override
   final String? bio;
   @override
@@ -37,7 +37,7 @@ class _$TrainerCreate extends TrainerCreate {
       this.password,
       required this.firstName,
       required this.lastName,
-      this.gender,
+      required this.gender,
       this.bio,
       this.specializations,
       this.hourlyRate,
@@ -195,7 +195,8 @@ class TrainerCreateBuilder
                 firstName, r'TrainerCreate', 'firstName'),
             lastName: BuiltValueNullFieldError.checkNotNull(
                 lastName, r'TrainerCreate', 'lastName'),
-            gender: gender,
+            gender: BuiltValueNullFieldError.checkNotNull(
+                gender, r'TrainerCreate', 'gender'),
             bio: bio,
             specializations: _specializations?.build(),
             hourlyRate: hourlyRate,
