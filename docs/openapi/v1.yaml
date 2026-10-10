@@ -7836,7 +7836,7 @@ components:
           $ref: "#/components/schemas/MembershipProduct"
     MembershipCreate:
       type: object
-      required: [member_id, product_id, start_date]
+      required: [member_id, product_id, start_date, payment_method_id]
       properties:
         member_id:
           $ref: "#/components/schemas/Id"
@@ -7844,6 +7844,8 @@ components:
           $ref: "#/components/schemas/Id"
         start_date:
           $ref: "#/components/schemas/Date"
+        payment_method_id:
+          $ref: "#/components/schemas/Id"
         locker_number:
           type: string
         auto_renew:

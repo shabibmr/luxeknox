@@ -145,6 +145,32 @@ class _CreateMembershipForm extends StatelessWidget {
                 },
         ),
         const SizedBox(height: 16),
+        if (state.paymentMethods.isEmpty)
+          Text(
+            MembershipStrings.noPaymentMethods,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          )
+        else
+          DropdownButtonFormField<String>(
+            initialValue: state.selectedPaymentMethodId,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: MembershipStrings.paymentMethodLabel,
+              hintText: MembershipStrings.selectPaymentMethodHint,
+            ),
+            items: [
+              for (final m in state.paymentMethods)
+                DropdownMenuItem(value: m.id, child: Text(m.methodName)),
+            ],
+            onChanged: state.submitting
+                ? null
+                : (value) {
+                    if (value != null) {
+                      bloc.add(CreateMembershipPaymentMethodSelected(value));
+                    }
+                  },
+          ),
+        const SizedBox(height: 16),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text(MembershipStrings.startDateLabel),

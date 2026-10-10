@@ -16,6 +16,10 @@ class MembershipStrings {
   static const String packagesTooltip = 'Packages catalog';
   static const String memberLabel = 'Member';
   static const String packageLabel = 'Package';
+  static const String paymentMethodLabel = 'Payment method';
+  static const String selectPaymentMethodHint = 'Select payment method';
+  static const String noPaymentMethods =
+      'No active payment methods — add one under Payments.';
   static const String selectMemberHint = 'Search for a member';
   static const String selectPackageHint = 'Select package';
   static const String autoRenewLabel = 'Auto-renew';

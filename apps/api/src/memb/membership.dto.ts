@@ -7,6 +7,7 @@ export const membershipCreateSchema = z.object({
   member_id: z.number().int().positive(),
   product_id: z.number().int().positive(),
   start_date: dateString,
+  payment_method_id: z.number().int().positive(),
   locker_number: z.string().trim().min(1).optional(),
   auto_renew: z.boolean().optional(),
 });

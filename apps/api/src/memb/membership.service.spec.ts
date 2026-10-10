@@ -74,6 +74,7 @@ describe('MembershipService', () => {
   let memberRepository: Record<string, ReturnType<typeof vi.fn>>;
   let auditService: { recordAudit: ReturnType<typeof vi.fn> };
   let domainEventBus: { emit: ReturnType<typeof vi.fn> };
+  let paymentService: { create: ReturnType<typeof vi.fn> };
   let paginationHelper: PaginationHelper;
   let service: MembershipService;
 
@@ -100,6 +101,7 @@ describe('MembershipService', () => {
     memberRepository = { findById: vi.fn().mockImplementation(async (id: number) => ({ id, user_id: 10 })) };
     auditService = { recordAudit: vi.fn().mockResolvedValue(undefined) };
     domainEventBus = { emit: vi.fn().mockResolvedValue(undefined) };
+    paymentService = { create: vi.fn().mockResolvedValue({ id: 50 }) };
     paginationHelper = new PaginationHelper({
       getDefaultPageSize: vi.fn().mockResolvedValue(20),
     } as any);
@@ -111,6 +113,7 @@ describe('MembershipService', () => {
       paginationHelper,
       auditService as unknown as AuditService,
       domainEventBus as unknown as DomainEventBus,
+      paymentService as any,
       { transaction: vi.fn((cb: any) => cb({})) } as unknown as DrizzleDb<any>,
     );
   });
@@ -122,7 +125,10 @@ describe('MembershipService', () => {
       repository.findActiveOrFrozenForMember.mockResolvedValue(makeMembership());
 
       await expect(
-        service.create({ member_id: 100, product_id: 1, start_date: '2026-02-01' }, ADMIN_USER),
+        service.create(
+          { member_id: 100, product_id: 1, start_date: '2026-02-01', payment_method_id: 1 },
+          ADMIN_USER,
+        ),
       ).rejects.toThrow(BusinessRuleError);
       expect(repository.insertMembership).not.toHaveBeenCalled();
     });
@@ -134,7 +140,13 @@ describe('MembershipService', () => {
 
       await expect(
         service.create(
-          { member_id: 100, product_id: 1, start_date: '2026-02-01', locker_number: 'L1' },
+          {
+            member_id: 100,
+            product_id: 1,
+            start_date: '2026-02-01',
+            payment_method_id: 1,
+            locker_number: 'L1',
+          },
           ADMIN_USER,
         ),
       ).rejects.toThrow(ConflictError);
@@ -146,7 +158,10 @@ describe('MembershipService', () => {
       repository.insertMembership.mockResolvedValue(5);
       repository.findByIdWithProduct.mockResolvedValue({ ...makeMembership({ id: 5 }), product: makeProduct() });
 
-      await service.create({ member_id: 100, product_id: 1, start_date: '2026-01-01' }, ADMIN_USER);
+      await service.create(
+        { member_id: 100, product_id: 1, start_date: '2026-01-01', payment_method_id: 9 },
+        ADMIN_USER,
+      );
 
       expect(repository.insertMembership).toHaveBeenCalledWith(
         expect.objectContaining({ end_date: '2026-01-31', status: 'active', row_version: 1 }),
@@ -155,6 +170,15 @@ describe('MembershipService', () => {
         expect.objectContaining({ membership_id: 5, action: 'created' }),
       );
       expect(auditService.recordAudit).toHaveBeenCalledTimes(1);
+      expect(paymentService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          member_id: 100,
+          membership_id: 5,
+          payment_method_id: 9,
+          subtotal: '1299.00',
+        }),
+        ADMIN_USER,
+      );
     });
   });
 

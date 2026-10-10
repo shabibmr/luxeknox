@@ -141,6 +141,7 @@ describe('MEM-012: Membership Integration with Schedule and Payment Dependencies
       paginationHelper as any,
       auditService as any,
       domainEventBus as any,
+      { create: vi.fn() } as any,
       {} as any,
     );
 

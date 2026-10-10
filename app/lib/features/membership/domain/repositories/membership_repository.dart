@@ -41,6 +41,7 @@ abstract class MembershipRepository {
     required String memberId,
     required String productId,
     required DateTime startDate,
+    required String paymentMethodId,
     String? lockerNumber,
     bool? autoRenew,
   });
