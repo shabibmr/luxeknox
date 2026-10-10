@@ -186,7 +186,7 @@ EmployeeSummary employeeSummaryFromApi(api.Employee employee) {
     id: employee.id,
     userId: employee.userId,
     fullName: name.isNotEmpty ? name : 'Employee #${employee.id}',
-    jobTitle: employee.jobTitle,
+    jobTitle: employee.jobTitle ?? '',
     department: employee.department,
     gender: employee.gender,
     status: _apiEmployeeStatusWire(employee.status),

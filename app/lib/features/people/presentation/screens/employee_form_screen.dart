@@ -438,8 +438,12 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.security),
                     title: const Text(PeopleStrings.manageRoles),
+                    subtitle: !context.can('roles.update')
+                        ? const Text(PeopleStrings.noPermission)
+                        : null,
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: submitting
+                    enabled: !submitting && context.can('roles.update'),
+                    onTap: submitting || !context.can('roles.update')
                         ? null
                         : () => context.push(
                             Routes.adminEmployeeRolesById('${loaded.id}'),

@@ -102,7 +102,6 @@ class PtProductWriteBuilder
   int? get durationDays => _$this._durationDays;
   set durationDays(int? durationDays) => _$this._durationDays = durationDays;
 
-
   String? _basePrice;
   String? get basePrice => _$this._basePrice;
   set basePrice(String? basePrice) => _$this._basePrice = basePrice;

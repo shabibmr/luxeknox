@@ -18,7 +18,7 @@ class _$Employee extends Employee {
   @override
   final String? gender;
   @override
-  final String jobTitle;
+  final String? jobTitle;
   @override
   final String? department;
   @override
@@ -37,7 +37,7 @@ class _$Employee extends Employee {
       required this.firstName,
       required this.lastName,
       this.gender,
-      required this.jobTitle,
+      this.jobTitle,
       this.department,
       this.hireDate,
       required this.status,
@@ -189,8 +189,7 @@ class EmployeeBuilder implements Builder<Employee, EmployeeBuilder> {
           lastName: BuiltValueNullFieldError.checkNotNull(
               lastName, r'Employee', 'lastName'),
           gender: gender,
-          jobTitle: BuiltValueNullFieldError.checkNotNull(
-              jobTitle, r'Employee', 'jobTitle'),
+          jobTitle: jobTitle,
           department: department,
           hireDate: hireDate,
           status: BuiltValueNullFieldError.checkNotNull(

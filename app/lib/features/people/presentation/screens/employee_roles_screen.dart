@@ -76,7 +76,7 @@ class _EmployeeRolesBody extends StatelessWidget {
                 employee.fullName,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
-              Text(employee.jobTitle),
+              if (employee.jobTitle.isNotEmpty) Text(employee.jobTitle),
               const SizedBox(height: 16),
               ListTile(
                 title: const Text(PeopleStrings.currentRole),
