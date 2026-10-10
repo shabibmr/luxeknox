@@ -15,23 +15,41 @@ abstract class FirebaseAuthService {
   Future<void> signOut();
 }
 
+/// Native Google Sign-In plugin. Web uses Firebase popup instead: constructing
+/// [GoogleSignIn] on web starts an unawaited init that asserts when the OAuth
+/// `client_id` meta tag is missing, which breaks password-admin staff flows
+/// (including selling PT) that never use Google signup.
+GoogleSignIn? googleSignInForPlatform({
+  bool? isWeb,
+  TargetPlatform? platform,
+}) {
+  final web = isWeb ?? kIsWeb;
+  final target = platform ?? defaultTargetPlatform;
+  if (web) return null;
+  if (target != TargetPlatform.android && target != TargetPlatform.iOS) {
+    return null;
+  }
+  return GoogleSignIn();
+}
+
 @LazySingleton(as: FirebaseAuthService)
 class FirebaseAuthServiceImpl implements FirebaseAuthService {
   FirebaseAuthServiceImpl()
     : firebaseAuth = null,
-      _googleSignIn = GoogleSignIn();
+      _googleSignIn = googleSignInForPlatform();
 
   @visibleForTesting
   FirebaseAuthServiceImpl.forTesting({
     this.firebaseAuth,
     GoogleSignIn? googleSignIn,
-  }) : _googleSignIn = googleSignIn ?? GoogleSignIn();
+  }) : _googleSignIn = googleSignIn;
 
   final FirebaseAuth? firebaseAuth;
 
   // One instance for the service's lifetime. signIn and signOut must act on the
   // same GoogleSignIn, otherwise sign-out clears a different client's session.
-  final GoogleSignIn _googleSignIn;
+  // Null when the plugin is skipped (web / desktop / missing client_id).
+  final GoogleSignIn? _googleSignIn;
 
   FirebaseAuth get _auth => firebaseAuth ?? FirebaseAuth.instance;
 
@@ -42,7 +60,12 @@ class FirebaseAuthServiceImpl implements FirebaseAuthService {
         final googleProvider = GoogleAuthProvider();
         return await _auth.signInWithPopup(googleProvider);
       } else {
-        final googleUser = await _googleSignIn.signIn();
+        final google = _googleSignIn;
+        if (google == null) {
+          // No native client_id / plugin — password login must still work.
+          return null;
+        }
+        final googleUser = await google.signIn();
         if (googleUser == null) {
           // User cancelled the native sign-in dialog
           return null;
@@ -68,9 +91,10 @@ class FirebaseAuthServiceImpl implements FirebaseAuthService {
 
   @override
   Future<void> signOut() async {
+    final google = _googleSignIn;
     await Future.wait([
       if (firebaseAuth != null || Firebase.apps.isNotEmpty) _auth.signOut(),
-      if (!kIsWeb) _googleSignIn.signOut(),
+      if (google != null) google.signOut(),
     ]);
   }
 }

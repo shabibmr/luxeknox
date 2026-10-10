@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:luxeknox/features/auth/data/services/firebase_auth_service.dart';
@@ -81,6 +82,39 @@ void main() {
 
       verify(() => mockFirebaseAuth.signOut()).called(1);
       verify(() => mockGoogleSignIn.signOut()).called(1);
+    });
+
+    test(
+      'skips GoogleSignIn when client_id / native plugin is unavailable',
+      () async {
+        service = FirebaseAuthServiceImpl.forTesting(
+          firebaseAuth: mockFirebaseAuth,
+        );
+
+        expect(await service.signInWithGoogle(), isNull);
+
+        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async => {});
+        await service.signOut();
+        verify(() => mockFirebaseAuth.signOut()).called(1);
+        verifyNever(() => mockGoogleSignIn.signOut());
+      },
+    );
+  });
+
+  group('googleSignInForPlatform', () {
+    test('skips plugin on web so missing OAuth client_id is not asserted', () {
+      expect(googleSignInForPlatform(isWeb: true), isNull);
+    });
+
+    test('skips plugin on Windows and Linux', () {
+      expect(
+        googleSignInForPlatform(isWeb: false, platform: TargetPlatform.windows),
+        isNull,
+      );
+      expect(
+        googleSignInForPlatform(isWeb: false, platform: TargetPlatform.linux),
+        isNull,
+      );
     });
   });
 }
