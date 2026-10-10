@@ -78,7 +78,7 @@ export const SETTING_CATALOGUE: readonly SettingDefinition[] = [
   { setting_key: 'attendance_daily_checkin_cap', category: 'attendance_gate', default_value: '2', description: 'Maximum gate check-ins per member per day', validate: integer(1, 100) },
   { setting_key: 'attendance_auto_checkout_hours', category: 'attendance_gate', default_value: '12', description: 'Hours before an open gate visit is checked out automatically', validate: integer(1, 168) },
   { setting_key: 'diet_adherence_formula', category: 'diet', default_value: 'calorie_ratio', description: 'Diet adherence calculation formula', validate: (value) => value === 'calorie_ratio' },
-  { setting_key: 'mandatory_measurement_metrics', category: 'measurement', default_value: '[]', description: 'Metric IDs required in measurement sessions (JSON array)', validate: (value) => { try { const parsed: unknown = JSON.parse(value); return Array.isArray(parsed) && parsed.every((item) => Number.isSafeInteger(item) && Number(item) > 0); } catch { return false; } },
+  { setting_key: 'mandatory_measurement_metrics', category: 'measurement', default_value: '[]', description: 'Metric IDs required in measurement sessions (JSON array)', validate: (value) => { try { const parsed: unknown = JSON.parse(value); return Array.isArray(parsed) && parsed.every((item) => Number.isSafeInteger(item) && Number(item) > 0); } catch { return false; } } },
 ] as const;
 
 const settingDefinitions = new Map(SETTING_CATALOGUE.map((definition) => [definition.setting_key, definition]));
