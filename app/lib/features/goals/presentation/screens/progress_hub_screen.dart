@@ -75,7 +75,13 @@ class _ProgressHubBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final isTrainerContext = canCreateGoals;
 
-    return Scaffold(
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (e) => debugPrint(
+        '[GoalsProbe] pointerDown at=${e.position} '
+        'route=${GoRouterState.of(context).uri.path}',
+      ),
+      child: Scaffold(
       appBar: AppBar(title: const Text(GoalsStrings.hubTitle)),
       floatingActionButton: canCreateGoals
           ? FloatingActionButton(
@@ -315,6 +321,7 @@ class _ProgressHubBody extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
