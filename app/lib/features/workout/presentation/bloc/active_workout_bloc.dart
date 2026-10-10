@@ -11,9 +11,12 @@ import '../../domain/entities/workout_plan_exercise.dart';
 import '../../domain/entities/workout_session.dart';
 import '../../domain/entities/workout_session_set.dart';
 import '../../domain/usecases/complete_workout_session_usecase.dart';
+import '../../domain/usecases/delete_workout_set_usecase.dart';
+import '../../domain/usecases/get_active_workout_session_usecase.dart';
 import '../../domain/usecases/get_workout_plan_usecase.dart';
 import '../../domain/usecases/log_workout_set_usecase.dart';
 import '../../domain/usecases/start_workout_session_usecase.dart';
+import '../../domain/usecases/update_workout_set_usecase.dart';
 import '../cubit/rest_timer_cubit.dart';
 
 part 'active_workout_bloc.freezed.dart';
@@ -75,6 +78,32 @@ final class ActiveWorkoutSetLogged extends ActiveWorkoutEvent {
   ];
 }
 
+final class ActiveWorkoutSetEdited extends ActiveWorkoutEvent {
+  const ActiveWorkoutSetEdited({
+    required this.setId,
+    this.reps,
+    this.weightKg,
+    this.rpe,
+  });
+
+  final String setId;
+  final int? reps;
+  final num? weightKg;
+  final num? rpe;
+
+  @override
+  List<Object?> get props => [setId, reps, weightKg, rpe];
+}
+
+final class ActiveWorkoutSetDeleted extends ActiveWorkoutEvent {
+  const ActiveWorkoutSetDeleted(this.setId);
+
+  final String setId;
+
+  @override
+  List<Object?> get props => [setId];
+}
+
 final class ActiveWorkoutCompletionRequested extends ActiveWorkoutEvent {
   const ActiveWorkoutCompletionRequested({
     this.notes,
@@ -110,6 +139,7 @@ abstract class ActiveWorkoutState with _$ActiveWorkoutState {
     @Default(false) bool logging,
     @Default(false) bool completed,
     int? loggedSetCount,
+    @Default(false) bool resumed,
   }) = _ActiveWorkoutState;
 
   List<WorkoutPlanExercise> get planExercises => plan?.exercises ?? const [];
@@ -143,12 +173,17 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
     this._logSet,
     this._completeSession,
     this._getPlan,
+    this._getActive,
+    this._updateSet,
+    this._deleteSet,
     this.restTimer,
   ) : super(const ActiveWorkoutState()) {
     on<ActiveWorkoutConfigured>(_onConfigured);
     on<ActiveWorkoutStarted>(_onStarted);
     on<ActiveWorkoutExerciseSelected>(_onExerciseSelected);
     on<ActiveWorkoutSetLogged>(_onSetLogged, transformer: sequential());
+    on<ActiveWorkoutSetEdited>(_onSetEdited, transformer: sequential());
+    on<ActiveWorkoutSetDeleted>(_onSetDeleted, transformer: sequential());
     on<ActiveWorkoutCompletionRequested>(_onComplete);
     on<ActiveWorkoutReset>(_onReset);
   }
@@ -157,6 +192,9 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
   final LogWorkoutSetUseCase _logSet;
   final CompleteWorkoutSessionUseCase _completeSession;
   final GetWorkoutPlanUseCase _getPlan;
+  final GetActiveWorkoutSessionUseCase _getActive;
+  final UpdateWorkoutSetUseCase _updateSet;
+  final DeleteWorkoutSetUseCase _deleteSet;
   final RestTimerCubit restTimer;
 
   String? _memberId;
@@ -181,6 +219,7 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
         logging: false,
         completed: false,
         loggedSetCount: null,
+        resumed: false,
       ),
     );
   }
@@ -217,8 +256,39 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
         completed: false,
         loggedSetCount: null,
         initialPlanId: resolvedPlanId,
+        resumed: false,
       ),
     );
+
+    final activeResult = await _getActive(
+      GetActiveWorkoutSessionParams(memberId: memberId),
+    );
+    final activeSession = activeResult.fold((_) => null, (s) => s);
+
+    if (activeSession != null) {
+      final plan = await _loadPlan(activeSession.workoutPlanId);
+      final firstExerciseId = plan?.exercises.isNotEmpty == true
+          ? plan!.exercises.first.exerciseId
+          : null;
+      emit(
+        state.copyWith(
+          status: LoadStatus.success,
+          failure: null,
+          message: null,
+          session: activeSession,
+          loggedSets: List.of(activeSession.sets),
+          plan: plan,
+          selectedExerciseId: firstExerciseId,
+          logging: false,
+          completed: false,
+          loggedSetCount: null,
+          initialPlanId: resolvedPlanId,
+          resumed: true,
+        ),
+      );
+      return;
+    }
+
     final result = await _startSession(
       StartWorkoutSessionParams(
         memberId: memberId,
@@ -235,15 +305,12 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
             message: null,
             session: null,
             initialPlanId: resolvedPlanId,
+            resumed: false,
           ),
         );
       },
       (session) async {
-        WorkoutPlan? plan;
-        if (resolvedPlanId != null) {
-          final planResult = await _getPlan(resolvedPlanId);
-          plan = planResult.fold((_) => null, (p) => p);
-        }
+        final plan = await _loadPlan(resolvedPlanId);
         final firstExerciseId = plan?.exercises.isNotEmpty == true
             ? plan!.exercises.first.exerciseId
             : null;
@@ -260,10 +327,17 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
             completed: false,
             loggedSetCount: null,
             initialPlanId: resolvedPlanId,
+            resumed: false,
           ),
         );
       },
     );
+  }
+
+  Future<WorkoutPlan?> _loadPlan(String? planId) async {
+    if (planId == null) return null;
+    final planResult = await _getPlan(planId);
+    return planResult.fold((_) => null, (p) => p);
   }
 
   void _onExerciseSelected(
@@ -331,6 +405,99 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
           ),
         );
         restTimer.start(restSeconds);
+      },
+    );
+  }
+
+  Future<void> _onSetEdited(
+    ActiveWorkoutSetEdited event,
+    Emitter<ActiveWorkoutState> emit,
+  ) async {
+    final current = state;
+    if (current.session == null || current.completed) return;
+    if (current.status == LoadStatus.loading) return;
+
+    emit(state.copyWith(logging: true, failure: null, message: null));
+
+    final result = await _updateSet(
+      UpdateWorkoutSetParams(
+        sessionId: current.session!.id,
+        setId: event.setId,
+        reps: event.reps,
+        weightKg: event.weightKg,
+        rpe: event.rpe,
+      ),
+    );
+
+    result.fold(
+      (failure) {
+        emit(
+          state.copyWith(
+            logging: false,
+            status: LoadStatus.failure,
+            failure: failure,
+            message: null,
+          ),
+        );
+      },
+      (updated) {
+        final sets = [
+          for (final s in state.loggedSets) s.id == updated.id ? updated : s,
+        ];
+        emit(
+          state.copyWith(
+            status: LoadStatus.success,
+            logging: false,
+            failure: null,
+            message: null,
+            loggedSets: sets,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _onSetDeleted(
+    ActiveWorkoutSetDeleted event,
+    Emitter<ActiveWorkoutState> emit,
+  ) async {
+    final current = state;
+    if (current.session == null || current.completed) return;
+    if (current.status == LoadStatus.loading) return;
+
+    emit(state.copyWith(logging: true, failure: null, message: null));
+
+    final result = await _deleteSet(
+      DeleteWorkoutSetParams(
+        sessionId: current.session!.id,
+        setId: event.setId,
+      ),
+    );
+
+    result.fold(
+      (failure) {
+        emit(
+          state.copyWith(
+            logging: false,
+            status: LoadStatus.failure,
+            failure: failure,
+            message: null,
+          ),
+        );
+      },
+      (_) {
+        final sets = state.loggedSets
+            .where((s) => s.id != event.setId)
+            .toList();
+        emit(
+          state.copyWith(
+            status: LoadStatus.success,
+            logging: false,
+            failure: null,
+            message: null,
+            loggedSets: sets,
+          ),
+        );
       },
     );
   }

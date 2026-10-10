@@ -1705,15 +1705,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i617.UpgradeMembershipUseCase>(),
       ),
     );
-    gh.factory<_i354.ActiveWorkoutBloc>(
-      () => _i354.ActiveWorkoutBloc(
-        gh<_i557.StartWorkoutSessionUseCase>(),
-        gh<_i88.LogWorkoutSetUseCase>(),
-        gh<_i57.CompleteWorkoutSessionUseCase>(),
-        gh<_i391.GetWorkoutPlanUseCase>(),
-        gh<_i255.RestTimerCubit>(),
-      ),
-    );
     gh.factory<_i402.ReportCubit>(
       () => _i402.ReportCubit(
         gh<_i46.GetReportUseCase>(),
@@ -1728,6 +1719,18 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i369.EmployeesDirectoryCubit>(
       () => _i369.EmployeesDirectoryCubit(gh<_i1004.ListEmployeesUseCase>()),
+    );
+    gh.factory<_i354.ActiveWorkoutBloc>(
+      () => _i354.ActiveWorkoutBloc(
+        gh<_i557.StartWorkoutSessionUseCase>(),
+        gh<_i88.LogWorkoutSetUseCase>(),
+        gh<_i57.CompleteWorkoutSessionUseCase>(),
+        gh<_i391.GetWorkoutPlanUseCase>(),
+        gh<_i896.GetActiveWorkoutSessionUseCase>(),
+        gh<_i48.UpdateWorkoutSetUseCase>(),
+        gh<_i799.DeleteWorkoutSetUseCase>(),
+        gh<_i255.RestTimerCubit>(),
+      ),
     );
     gh.factory<_i888.EmployeeFormCubit>(
       () => _i888.EmployeeFormCubit(

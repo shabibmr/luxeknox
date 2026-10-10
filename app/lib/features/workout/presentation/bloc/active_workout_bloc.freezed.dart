@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 mixin _$ActiveWorkoutState {
 
  LoadStatus get status; WorkoutSession? get session; List<WorkoutSessionSet> get loggedSets; WorkoutPlan? get plan; String? get selectedExerciseId; String? get initialPlanId;/// Non-failure text such as a missing member id. API errors use [failure].
- String? get message; Failure? get failure; bool get logging; bool get completed; int? get loggedSetCount;
+ String? get message; Failure? get failure; bool get logging; bool get completed; int? get loggedSetCount; bool get resumed;
 /// Create a copy of ActiveWorkoutState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +26,16 @@ $ActiveWorkoutStateCopyWith<ActiveWorkoutState> get copyWith => _$ActiveWorkoutS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActiveWorkoutState&&(identical(other.status, status) || other.status == status)&&(identical(other.session, session) || other.session == session)&&const DeepCollectionEquality().equals(other.loggedSets, loggedSets)&&(identical(other.plan, plan) || other.plan == plan)&&(identical(other.selectedExerciseId, selectedExerciseId) || other.selectedExerciseId == selectedExerciseId)&&(identical(other.initialPlanId, initialPlanId) || other.initialPlanId == initialPlanId)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.logging, logging) || other.logging == logging)&&(identical(other.completed, completed) || other.completed == completed)&&(identical(other.loggedSetCount, loggedSetCount) || other.loggedSetCount == loggedSetCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActiveWorkoutState&&(identical(other.status, status) || other.status == status)&&(identical(other.session, session) || other.session == session)&&const DeepCollectionEquality().equals(other.loggedSets, loggedSets)&&(identical(other.plan, plan) || other.plan == plan)&&(identical(other.selectedExerciseId, selectedExerciseId) || other.selectedExerciseId == selectedExerciseId)&&(identical(other.initialPlanId, initialPlanId) || other.initialPlanId == initialPlanId)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.logging, logging) || other.logging == logging)&&(identical(other.completed, completed) || other.completed == completed)&&(identical(other.loggedSetCount, loggedSetCount) || other.loggedSetCount == loggedSetCount)&&(identical(other.resumed, resumed) || other.resumed == resumed));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,session,const DeepCollectionEquality().hash(loggedSets),plan,selectedExerciseId,initialPlanId,message,failure,logging,completed,loggedSetCount);
+int get hashCode => Object.hash(runtimeType,status,session,const DeepCollectionEquality().hash(loggedSets),plan,selectedExerciseId,initialPlanId,message,failure,logging,completed,loggedSetCount,resumed);
 
 @override
 String toString() {
-  return 'ActiveWorkoutState(status: $status, session: $session, loggedSets: $loggedSets, plan: $plan, selectedExerciseId: $selectedExerciseId, initialPlanId: $initialPlanId, message: $message, failure: $failure, logging: $logging, completed: $completed, loggedSetCount: $loggedSetCount)';
+  return 'ActiveWorkoutState(status: $status, session: $session, loggedSets: $loggedSets, plan: $plan, selectedExerciseId: $selectedExerciseId, initialPlanId: $initialPlanId, message: $message, failure: $failure, logging: $logging, completed: $completed, loggedSetCount: $loggedSetCount, resumed: $resumed)';
 }
 
 
@@ -46,7 +46,7 @@ abstract mixin class $ActiveWorkoutStateCopyWith<$Res>  {
   factory $ActiveWorkoutStateCopyWith(ActiveWorkoutState value, $Res Function(ActiveWorkoutState) _then) = _$ActiveWorkoutStateCopyWithImpl;
 @useResult
 $Res call({
- LoadStatus status, WorkoutSession? session, List<WorkoutSessionSet> loggedSets, WorkoutPlan? plan, String? selectedExerciseId, String? initialPlanId, String? message, Failure? failure, bool logging, bool completed, int? loggedSetCount
+ LoadStatus status, WorkoutSession? session, List<WorkoutSessionSet> loggedSets, WorkoutPlan? plan, String? selectedExerciseId, String? initialPlanId, String? message, Failure? failure, bool logging, bool completed, int? loggedSetCount, bool resumed
 });
 
 
@@ -63,7 +63,7 @@ class _$ActiveWorkoutStateCopyWithImpl<$Res>
 
 /// Create a copy of ActiveWorkoutState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? session = freezed,Object? loggedSets = null,Object? plan = freezed,Object? selectedExerciseId = freezed,Object? initialPlanId = freezed,Object? message = freezed,Object? failure = freezed,Object? logging = null,Object? completed = null,Object? loggedSetCount = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? session = freezed,Object? loggedSets = null,Object? plan = freezed,Object? selectedExerciseId = freezed,Object? initialPlanId = freezed,Object? message = freezed,Object? failure = freezed,Object? logging = null,Object? completed = null,Object? loggedSetCount = freezed,Object? resumed = null,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,session: freezed == session ? _self.session : session // ignore: cast_nullable_to_non_nullable
@@ -76,7 +76,8 @@ as String?,failure: freezed == failure ? _self.failure : failure // ignore: cast
 as Failure?,logging: null == logging ? _self.logging : logging // ignore: cast_nullable_to_non_nullable
 as bool,completed: null == completed ? _self.completed : completed // ignore: cast_nullable_to_non_nullable
 as bool,loggedSetCount: freezed == loggedSetCount ? _self.loggedSetCount : loggedSetCount // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,resumed: null == resumed ? _self.resumed : resumed // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -161,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  WorkoutSession? session,  List<WorkoutSessionSet> loggedSets,  WorkoutPlan? plan,  String? selectedExerciseId,  String? initialPlanId,  String? message,  Failure? failure,  bool logging,  bool completed,  int? loggedSetCount)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  WorkoutSession? session,  List<WorkoutSessionSet> loggedSets,  WorkoutPlan? plan,  String? selectedExerciseId,  String? initialPlanId,  String? message,  Failure? failure,  bool logging,  bool completed,  int? loggedSetCount,  bool resumed)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ActiveWorkoutState() when $default != null:
-return $default(_that.status,_that.session,_that.loggedSets,_that.plan,_that.selectedExerciseId,_that.initialPlanId,_that.message,_that.failure,_that.logging,_that.completed,_that.loggedSetCount);case _:
+return $default(_that.status,_that.session,_that.loggedSets,_that.plan,_that.selectedExerciseId,_that.initialPlanId,_that.message,_that.failure,_that.logging,_that.completed,_that.loggedSetCount,_that.resumed);case _:
   return orElse();
 
 }
@@ -182,10 +183,10 @@ return $default(_that.status,_that.session,_that.loggedSets,_that.plan,_that.sel
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  WorkoutSession? session,  List<WorkoutSessionSet> loggedSets,  WorkoutPlan? plan,  String? selectedExerciseId,  String? initialPlanId,  String? message,  Failure? failure,  bool logging,  bool completed,  int? loggedSetCount)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  WorkoutSession? session,  List<WorkoutSessionSet> loggedSets,  WorkoutPlan? plan,  String? selectedExerciseId,  String? initialPlanId,  String? message,  Failure? failure,  bool logging,  bool completed,  int? loggedSetCount,  bool resumed)  $default,) {final _that = this;
 switch (_that) {
 case _ActiveWorkoutState():
-return $default(_that.status,_that.session,_that.loggedSets,_that.plan,_that.selectedExerciseId,_that.initialPlanId,_that.message,_that.failure,_that.logging,_that.completed,_that.loggedSetCount);case _:
+return $default(_that.status,_that.session,_that.loggedSets,_that.plan,_that.selectedExerciseId,_that.initialPlanId,_that.message,_that.failure,_that.logging,_that.completed,_that.loggedSetCount,_that.resumed);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +203,10 @@ return $default(_that.status,_that.session,_that.loggedSets,_that.plan,_that.sel
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  WorkoutSession? session,  List<WorkoutSessionSet> loggedSets,  WorkoutPlan? plan,  String? selectedExerciseId,  String? initialPlanId,  String? message,  Failure? failure,  bool logging,  bool completed,  int? loggedSetCount)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  WorkoutSession? session,  List<WorkoutSessionSet> loggedSets,  WorkoutPlan? plan,  String? selectedExerciseId,  String? initialPlanId,  String? message,  Failure? failure,  bool logging,  bool completed,  int? loggedSetCount,  bool resumed)?  $default,) {final _that = this;
 switch (_that) {
 case _ActiveWorkoutState() when $default != null:
-return $default(_that.status,_that.session,_that.loggedSets,_that.plan,_that.selectedExerciseId,_that.initialPlanId,_that.message,_that.failure,_that.logging,_that.completed,_that.loggedSetCount);case _:
+return $default(_that.status,_that.session,_that.loggedSets,_that.plan,_that.selectedExerciseId,_that.initialPlanId,_that.message,_that.failure,_that.logging,_that.completed,_that.loggedSetCount,_that.resumed);case _:
   return null;
 
 }
@@ -217,7 +218,7 @@ return $default(_that.status,_that.session,_that.loggedSets,_that.plan,_that.sel
 
 
 class _ActiveWorkoutState extends ActiveWorkoutState {
-  const _ActiveWorkoutState({this.status = LoadStatus.initial, this.session, final  List<WorkoutSessionSet> loggedSets = const <WorkoutSessionSet>[], this.plan, this.selectedExerciseId, this.initialPlanId, this.message, this.failure, this.logging = false, this.completed = false, this.loggedSetCount}): _loggedSets = loggedSets,super._();
+  const _ActiveWorkoutState({this.status = LoadStatus.initial, this.session, final  List<WorkoutSessionSet> loggedSets = const <WorkoutSessionSet>[], this.plan, this.selectedExerciseId, this.initialPlanId, this.message, this.failure, this.logging = false, this.completed = false, this.loggedSetCount, this.resumed = false}): _loggedSets = loggedSets,super._();
   
 
 @override@JsonKey() final  LoadStatus status;
@@ -238,6 +239,7 @@ class _ActiveWorkoutState extends ActiveWorkoutState {
 @override@JsonKey() final  bool logging;
 @override@JsonKey() final  bool completed;
 @override final  int? loggedSetCount;
+@override@JsonKey() final  bool resumed;
 
 /// Create a copy of ActiveWorkoutState
 /// with the given fields replaced by the non-null parameter values.
@@ -249,16 +251,16 @@ _$ActiveWorkoutStateCopyWith<_ActiveWorkoutState> get copyWith => __$ActiveWorko
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ActiveWorkoutState&&(identical(other.status, status) || other.status == status)&&(identical(other.session, session) || other.session == session)&&const DeepCollectionEquality().equals(other._loggedSets, _loggedSets)&&(identical(other.plan, plan) || other.plan == plan)&&(identical(other.selectedExerciseId, selectedExerciseId) || other.selectedExerciseId == selectedExerciseId)&&(identical(other.initialPlanId, initialPlanId) || other.initialPlanId == initialPlanId)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.logging, logging) || other.logging == logging)&&(identical(other.completed, completed) || other.completed == completed)&&(identical(other.loggedSetCount, loggedSetCount) || other.loggedSetCount == loggedSetCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ActiveWorkoutState&&(identical(other.status, status) || other.status == status)&&(identical(other.session, session) || other.session == session)&&const DeepCollectionEquality().equals(other._loggedSets, _loggedSets)&&(identical(other.plan, plan) || other.plan == plan)&&(identical(other.selectedExerciseId, selectedExerciseId) || other.selectedExerciseId == selectedExerciseId)&&(identical(other.initialPlanId, initialPlanId) || other.initialPlanId == initialPlanId)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.logging, logging) || other.logging == logging)&&(identical(other.completed, completed) || other.completed == completed)&&(identical(other.loggedSetCount, loggedSetCount) || other.loggedSetCount == loggedSetCount)&&(identical(other.resumed, resumed) || other.resumed == resumed));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,session,const DeepCollectionEquality().hash(_loggedSets),plan,selectedExerciseId,initialPlanId,message,failure,logging,completed,loggedSetCount);
+int get hashCode => Object.hash(runtimeType,status,session,const DeepCollectionEquality().hash(_loggedSets),plan,selectedExerciseId,initialPlanId,message,failure,logging,completed,loggedSetCount,resumed);
 
 @override
 String toString() {
-  return 'ActiveWorkoutState(status: $status, session: $session, loggedSets: $loggedSets, plan: $plan, selectedExerciseId: $selectedExerciseId, initialPlanId: $initialPlanId, message: $message, failure: $failure, logging: $logging, completed: $completed, loggedSetCount: $loggedSetCount)';
+  return 'ActiveWorkoutState(status: $status, session: $session, loggedSets: $loggedSets, plan: $plan, selectedExerciseId: $selectedExerciseId, initialPlanId: $initialPlanId, message: $message, failure: $failure, logging: $logging, completed: $completed, loggedSetCount: $loggedSetCount, resumed: $resumed)';
 }
 
 
@@ -269,7 +271,7 @@ abstract mixin class _$ActiveWorkoutStateCopyWith<$Res> implements $ActiveWorkou
   factory _$ActiveWorkoutStateCopyWith(_ActiveWorkoutState value, $Res Function(_ActiveWorkoutState) _then) = __$ActiveWorkoutStateCopyWithImpl;
 @override @useResult
 $Res call({
- LoadStatus status, WorkoutSession? session, List<WorkoutSessionSet> loggedSets, WorkoutPlan? plan, String? selectedExerciseId, String? initialPlanId, String? message, Failure? failure, bool logging, bool completed, int? loggedSetCount
+ LoadStatus status, WorkoutSession? session, List<WorkoutSessionSet> loggedSets, WorkoutPlan? plan, String? selectedExerciseId, String? initialPlanId, String? message, Failure? failure, bool logging, bool completed, int? loggedSetCount, bool resumed
 });
 
 
@@ -286,7 +288,7 @@ class __$ActiveWorkoutStateCopyWithImpl<$Res>
 
 /// Create a copy of ActiveWorkoutState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? session = freezed,Object? loggedSets = null,Object? plan = freezed,Object? selectedExerciseId = freezed,Object? initialPlanId = freezed,Object? message = freezed,Object? failure = freezed,Object? logging = null,Object? completed = null,Object? loggedSetCount = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? session = freezed,Object? loggedSets = null,Object? plan = freezed,Object? selectedExerciseId = freezed,Object? initialPlanId = freezed,Object? message = freezed,Object? failure = freezed,Object? logging = null,Object? completed = null,Object? loggedSetCount = freezed,Object? resumed = null,}) {
   return _then(_ActiveWorkoutState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,session: freezed == session ? _self.session : session // ignore: cast_nullable_to_non_nullable
@@ -299,7 +301,8 @@ as String?,failure: freezed == failure ? _self.failure : failure // ignore: cast
 as Failure?,logging: null == logging ? _self.logging : logging // ignore: cast_nullable_to_non_nullable
 as bool,completed: null == completed ? _self.completed : completed // ignore: cast_nullable_to_non_nullable
 as bool,loggedSetCount: freezed == loggedSetCount ? _self.loggedSetCount : loggedSetCount // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,resumed: null == resumed ? _self.resumed : resumed // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
