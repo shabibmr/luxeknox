@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
@@ -349,18 +350,29 @@ class SellPtCubit extends Cubit<SellPtState> {
     if (!state.canSubmit) return;
     emit(state.copyWith(submitting: true, failure: null));
     final replanning = state.replanning;
-    final result = replanning != null
-        ? await _replan(
-            ReplanPtParams(
-              subscription: replanning,
-              trainerId: state.trainerId!,
-              weekdays: state.weekdays,
-              slotStart: state.slotStart!,
-              effectiveDate: state.startDate!,
-              reason: state.reason,
-            ),
-          )
-        : await _purchase(_purchaseParams());
+    final Either<Failure, PtSubscription> result;
+    try {
+      result = replanning != null
+          ? await _replan(
+              ReplanPtParams(
+                subscription: replanning,
+                trainerId: state.trainerId!,
+                weekdays: state.weekdays,
+                slotStart: state.slotStart!,
+                effectiveDate: state.startDate!,
+                reason: state.reason,
+              ),
+            )
+          : await _purchase(_purchaseParams());
+    } catch (_) {
+      // An unexpected throw must not leave the screen spinning forever.
+      if (!isClosed) {
+        emit(
+          state.copyWith(submitting: false, failure: const UnknownFailure()),
+        );
+      }
+      return;
+    }
     if (isClosed) return;
     result.fold(
       (failure) => emit(state.copyWith(submitting: false, failure: failure)),
