@@ -182,6 +182,20 @@ void main() {
     expect(state.restSecondsFor('missing', completedSetNumber: 1), 60);
   });
 
+  test('nextSetNumberFor uses max set number after a middle delete', () {
+    final state = ActiveWorkoutState(
+      loggedSets: [
+        loggedSet(id: 'set1', exerciseId: '100', setNumber: 1),
+        loggedSet(id: 'set3', exerciseId: '100', setNumber: 3),
+        loggedSet(id: 'other', exerciseId: '200', setNumber: 9),
+      ],
+    );
+
+    expect(state.nextSetNumberFor('100'), 4);
+    expect(state.nextSetNumberFor('200'), 10);
+    expect(state.nextSetNumberFor('missing'), 1);
+  });
+
   blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
     'starts session, logs set (starts rest), completes',
     build: () {
@@ -376,6 +390,79 @@ void main() {
           .having((s) => s.logging, 'logging', false)
           .having((s) => s.status, 'status', LoadStatus.success),
     ],
+  );
+
+  blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
+    'getActive failure does not start a new session',
+    build: () {
+      when(
+        () => getActive(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      return buildBloc();
+    },
+    act: (bloc) async {
+      bloc.add(const ActiveWorkoutStarted(workoutPlanId: '3'));
+      await bloc.stream.firstWhere((s) => s.status == LoadStatus.failure);
+    },
+    verify: (_) {
+      verifyNever(() => startSession(any()));
+    },
+    expect: () => [
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.initial),
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.loading)
+          .having((s) => s.session, 'session', isNull),
+      isA<ActiveWorkoutState>()
+          .having((s) => s.status, 'status', LoadStatus.failure)
+          .having((s) => s.failure, 'failure', isA<NetworkFailure>())
+          .having((s) => s.session, 'session', isNull)
+          .having((s) => s.resumed, 'resumed', false),
+    ],
+  );
+
+  blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
+    'logs after deleting a middle set with max set number plus one',
+    build: () {
+      final activeSession = WorkoutSession(
+        id: 's1',
+        memberId: '7',
+        workoutPlanId: '3',
+        startedAt: DateTime.utc(2026, 1, 1),
+        sets: [
+          loggedSet(id: 'set1', exerciseId: '100', setNumber: 1),
+          loggedSet(id: 'set2', exerciseId: '100', setNumber: 2),
+          loggedSet(id: 'set3', exerciseId: '100', setNumber: 3),
+        ],
+      );
+      when(
+        () => getActive(any()),
+      ).thenAnswer((_) async => Right(activeSession));
+      when(() => getPlan('3')).thenAnswer((_) async => Right(plan()));
+      when(() => deleteSet(any())).thenAnswer((_) async => const Right(unit));
+      when(() => logSet(any())).thenAnswer(
+        (_) async => Right(loggedSet(id: 'set4', exerciseId: '100', setNumber: 4)),
+      );
+      return buildBloc();
+    },
+    act: (bloc) async {
+      bloc.add(const ActiveWorkoutStarted());
+      await bloc.stream.firstWhere(
+        (s) => s.status == LoadStatus.success && s.session != null,
+      );
+      bloc.add(const ActiveWorkoutSetDeleted('set2'));
+      await bloc.stream.firstWhere((s) => s.loggedSets.length == 2);
+      bloc.add(
+        const ActiveWorkoutSetLogged(exerciseId: '100', repsCompleted: 8),
+      );
+      await bloc.stream.firstWhere((s) => s.loggedSets.length == 3);
+    },
+    verify: (_) {
+      final captured =
+          verify(() => logSet(captureAny())).captured.single
+              as LogWorkoutSetParams;
+      expect(captured.setNumber, 4);
+    },
   );
 
   blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(

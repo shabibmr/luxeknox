@@ -145,8 +145,12 @@ abstract class ActiveWorkoutState with _$ActiveWorkoutState {
   List<WorkoutPlanExercise> get planExercises => plan?.exercises ?? const [];
 
   int nextSetNumberFor(String exerciseId) {
-    final count = loggedSets.where((s) => s.exerciseId == exerciseId).length;
-    return count + 1;
+    var maxNumber = 0;
+    for (final s in loggedSets) {
+      if (s.exerciseId != exerciseId) continue;
+      if (s.setNumber > maxNumber) maxNumber = s.setNumber;
+    }
+    return maxNumber + 1;
   }
 
   /// [completedSetNumber] is the set that was just logged.
@@ -263,6 +267,20 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
     final activeResult = await _getActive(
       GetActiveWorkoutSessionParams(memberId: memberId),
     );
+    final activeFailure = activeResult.fold<Failure?>((f) => f, (_) => null);
+    if (activeFailure != null) {
+      emit(
+        state.copyWith(
+          status: LoadStatus.failure,
+          failure: activeFailure,
+          message: null,
+          session: null,
+          initialPlanId: resolvedPlanId,
+          resumed: false,
+        ),
+      );
+      return;
+    }
     final activeSession = activeResult.fold((_) => null, (s) => s);
 
     if (activeSession != null) {
