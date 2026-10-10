@@ -18,6 +18,17 @@ import '../goal_view_actions.dart';
 import '../goals_strings.dart';
 import '../widgets/goal_progress_bar.dart';
 
+/// Route `extra` for the dossier goals hub routes.
+class ProgressHubArgs {
+  const ProgressHubArgs({
+    required this.canCreateGoals,
+    required this.isAssignedTrainer,
+  });
+
+  final bool canCreateGoals;
+  final bool isAssignedTrainer;
+}
+
 class ProgressHubScreen extends StatelessWidget {
   const ProgressHubScreen({
     super.key,

@@ -168,9 +168,11 @@ StatefulShellRoute createTrainerBranchRoute() {
                     path: 'goals',
                     builder: (context, state) {
                       final id = state.pathParameters['id'] ?? '';
+                      final args = state.extra as ProgressHubArgs?;
                       return ProgressHubScreen(
                         memberId: id,
-                        canCreateGoals: true,
+                        canCreateGoals: args?.canCreateGoals ?? true,
+                        isAssignedTrainer: args?.isAssignedTrainer,
                       );
                     },
                     routes: [

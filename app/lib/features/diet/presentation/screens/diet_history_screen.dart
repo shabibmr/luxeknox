@@ -49,6 +49,16 @@ class _DietHistoryBody extends StatelessWidget {
       appBar: AppBar(
         title: Text(_title),
         actions: [
+          if (role != DietHistoryRole.member && memberId != null)
+            TextButton.icon(
+              icon: const Icon(Icons.add),
+              label: const Text(DietStrings.addPlanForMember),
+              onPressed: () => context.push(
+                role == DietHistoryRole.admin
+                    ? Routes.adminDietPlansCreateForMember(memberId!)
+                    : Routes.trainerPlansDietsCreateForMember(memberId!),
+              ),
+            ),
           if (role == DietHistoryRole.member)
             TextButton.icon(
               icon: const Icon(Icons.add),

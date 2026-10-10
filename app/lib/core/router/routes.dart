@@ -214,6 +214,7 @@ class Routes {
   static const String adminSchedules = '/admin/schedules';
   static const String adminSchedulesCreate = '/admin/schedules/create';
   static const String adminSchedulesEdit = '/admin/schedules/:id/edit';
+  static const String adminWorkoutPlansCreate = '/admin/workout-plans/create';
   static const String adminWorkoutLibrary = '/admin/workout-library';
   static const String adminDietLibrary = '/admin/diet-library';
   static const String adminDietPlans = '/admin/diet-plans';
@@ -255,8 +256,7 @@ class Routes {
   static String memberHomeWorkoutPlanById(String id) =>
       '/home/workout/plan/$id';
 
-  static String memberHomeDietPlanById(String id) =>
-      '/home/diet/plan/$id';
+  static String memberHomeDietPlanById(String id) => '/home/diet/plan/$id';
 
   static String memberHomeDietMealById(String id) => '/home/diet/meal/$id';
 
@@ -375,6 +375,26 @@ class Routes {
       '/admin/members/$id/diet-history';
 
   static String adminMemberGoalsById(String id) => '/admin/members/$id/goals';
+
+  static String adminWorkoutPlansCreateForMember(String memberId) => Uri(
+    path: adminWorkoutPlansCreate,
+    queryParameters: {'memberId': memberId, 'isTemplate': 'false'},
+  ).toString();
+
+  static String adminDietPlansCreateForMember(String memberId) => Uri(
+    path: adminDietPlansCreate,
+    queryParameters: {'memberId': memberId, 'isTemplate': 'false'},
+  ).toString();
+
+  static String trainerPlansDietsCreateForMember(String memberId) => Uri(
+    path: trainerPlansDietsCreate,
+    queryParameters: {'memberId': memberId, 'isTemplate': 'false'},
+  ).toString();
+
+  static String trainerPlansWorkoutsCreateForMember(String memberId) => Uri(
+    path: trainerPlansWorkoutsCreate,
+    queryParameters: {'memberId': memberId, 'isTemplate': 'false'},
+  ).toString();
 
   static String trainerMembersWorkoutHistoryById(String id) =>
       '/trainer/members/$id/workout-history';

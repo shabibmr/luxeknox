@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_picker_form_field.dart';
@@ -11,6 +12,7 @@ import '../../../../core/widgets/app_picker_sheet.dart';
 import '../../../../session/domain/entities/user_type.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../../foods/domain/entities/food.dart';
+import '../../../foods/presentation/screens/food_form_screen.dart';
 import '../cubit/food_picker_cubit.dart';
 import '../diet_strings.dart';
 
@@ -89,6 +91,13 @@ class _FoodPickerViewState extends State<_FoodPickerView> {
     });
   }
 
+  Future<void> _createFood() async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(builder: (_) => const FoodFormScreen()),
+    );
+    if (created == true && mounted) _load();
+  }
+
   List<Food> _visibleItems(List<Food> items) {
     if (_verifiedOnly) {
       return items.where((f) => f.isVerified).toList();
@@ -137,6 +146,13 @@ class _FoodPickerViewState extends State<_FoodPickerView> {
                         });
                       },
                     ),
+                    const Spacer(),
+                    if (context.can('diet.create'))
+                      TextButton.icon(
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text(DietStrings.createFood),
+                        onPressed: _createFood,
+                      ),
                   ],
                 ),
           itemBuilder: (context, food) {

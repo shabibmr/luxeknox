@@ -81,6 +81,8 @@ abstract final class DietStrings {
   static const historyTitleMember = 'My diet history';
   static const historyTitleTrainer = 'Client diet history';
   static const historyTitleAdmin = 'Member diet history';
+  static const addPlanForMember = 'Add diet plan';
+  static const createFood = 'New food';
   static const logToday = 'Log today';
   static const logDateLabel = 'Date';
   static const caloriesConsumedLabel = 'Calories consumed (kcal)';

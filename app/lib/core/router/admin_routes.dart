@@ -71,6 +71,7 @@ import '../../features/diet/presentation/screens/diet_plan_detail_screen.dart';
 import '../../features/diet/presentation/screens/diet_plan_list_screen.dart';
 import '../../features/diet/presentation/screens/diet_plan_versions_screen.dart';
 import '../../features/workout/presentation/screens/workout_history_screen.dart';
+import '../../features/workout/presentation/screens/workout_plan_builder_screen.dart';
 import '../../features/workout/presentation/workout_history_role.dart';
 
 import '../l10n/shell_strings.dart';
@@ -175,9 +176,11 @@ StatefulShellRoute createAdminBranchRoute() {
                     path: 'goals',
                     builder: (context, state) {
                       final id = state.pathParameters['id'] ?? '';
+                      final args = state.extra as ProgressHubArgs?;
                       return ProgressHubScreen(
                         memberId: id,
-                        canCreateGoals: true,
+                        canCreateGoals: args?.canCreateGoals ?? true,
+                        isAssignedTrainer: args?.isAssignedTrainer,
                       );
                     },
                     routes: [
@@ -186,8 +189,9 @@ StatefulShellRoute createAdminBranchRoute() {
                         builder: (context, state) {
                           final id = state.pathParameters['id'] ?? '';
                           return BlocProvider(
-                            create: (_) => getIt<ProgressOverviewCubit>()
-                              ..load(id, includeCircumference: true),
+                            create: (_) =>
+                                getIt<ProgressOverviewCubit>()
+                                  ..load(id, includeCircumference: true),
                             child: ProgressOverviewScreen(
                               memberId: id,
                               isTrainerContext: true,
@@ -278,8 +282,7 @@ StatefulShellRoute createAdminBranchRoute() {
                             path: 'edit',
                             builder: (context, state) {
                               final id = state.pathParameters['id'] ?? '';
-                              final goalId =
-                                  state.pathParameters['goalId']!;
+                              final goalId = state.pathParameters['goalId']!;
                               return GoalFormScreen(
                                 memberId: id,
                                 goalId: goalId,
@@ -371,6 +374,19 @@ StatefulShellRoute createAdminBranchRoute() {
           GoRoute(
             path: Routes.adminMore,
             builder: (context, state) => const SizedBox.shrink(),
+          ),
+          GoRoute(
+            path: Routes.adminWorkoutPlansCreate,
+            builder: (context, state) {
+              final memberId = state.uri.queryParameters['memberId'];
+              return WorkoutPlanBuilderScreen(
+                isTemplate: false,
+                memberId: memberId,
+                afterSavePath: memberId == null
+                    ? Routes.adminMembers
+                    : Routes.adminMembersWorkoutHistoryById(memberId),
+              );
+            },
           ),
           GoRoute(
             path: Routes.adminWorkoutLibrary,
@@ -502,10 +518,19 @@ StatefulShellRoute createAdminBranchRoute() {
             routes: [
               GoRoute(
                 path: 'create',
-                builder: (context, state) => DietPlanBuilderScreen(
-                  detailPathBuilder: (id) =>
-                      Routes.adminDietPlansDetailById(id),
-                ),
+                builder: (context, state) {
+                  final memberId = state.uri.queryParameters['memberId'];
+                  final isTemplateParam =
+                      state.uri.queryParameters['isTemplate'];
+                  return DietPlanBuilderScreen(
+                    isTemplate: isTemplateParam != null
+                        ? isTemplateParam == 'true'
+                        : null,
+                    memberId: memberId,
+                    detailPathBuilder: (id) =>
+                        Routes.adminDietPlansDetailById(id),
+                  );
+                },
               ),
               GoRoute(
                 path: ':id',
@@ -543,8 +568,8 @@ StatefulShellRoute createAdminBranchRoute() {
           GoRoute(
             path: Routes.adminMemberGoals,
             builder: (context, state) => BlocProvider(
-              create: (_) => getIt<AdminMemberGoalsCubit>()
-                ..load(status: 'in_progress'),
+              create: (_) =>
+                  getIt<AdminMemberGoalsCubit>()..load(status: 'in_progress'),
               child: const AdminMemberGoalsScreen(),
             ),
           ),
@@ -581,8 +606,9 @@ StatefulShellRoute createAdminBranchRoute() {
                   session is SessionAuthenticated &&
                   session.capabilities.can('progress_photos.moderate');
               return BlocProvider(
-                create: (_) => getIt<AdminProgressPhotosVaultCubit>()
-                  ..load(canModerate: canModerate),
+                create: (_) =>
+                    getIt<AdminProgressPhotosVaultCubit>()
+                      ..load(canModerate: canModerate),
                 child: const AdminProgressPhotosVaultScreen(),
               );
             },

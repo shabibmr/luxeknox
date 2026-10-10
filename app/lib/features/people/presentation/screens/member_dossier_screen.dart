@@ -675,13 +675,13 @@ class _PersonalTrainingSection extends StatelessWidget {
                   sessionProfileId: session.principal.profileId,
                   assignedTrainerId: person.assignedTrainerId,
                 );
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => ProgressHubScreen(
-                  memberId: person.id.toString(),
-                  canCreateGoals: !readOnly,
-                  isAssignedTrainer: assigned,
-                ),
+            context.push(
+              isAdminShell
+                  ? Routes.adminMemberGoalsById(person.id.toString())
+                  : Routes.trainerMemberGoalsById(person.id.toString()),
+              extra: ProgressHubArgs(
+                canCreateGoals: !readOnly,
+                isAssignedTrainer: assigned,
               ),
             );
           },
