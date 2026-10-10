@@ -42,7 +42,7 @@ export class EmployeeResponseDto {
   @ApiProperty({ type: String }) first_name!: string;
   @ApiProperty({ type: String }) last_name!: string;
   @ApiProperty({ type: String, nullable: true }) gender!: string | null;
-  @ApiProperty({ type: String }) job_title!: string;
+  @ApiProperty({ type: String, nullable: true }) job_title!: string | null;
   @ApiProperty({ type: String, nullable: true }) department!: string | null;
   @ApiProperty({ type: String, nullable: true }) hire_date!: string | null;
   @ApiProperty({ type: String }) status!: string;

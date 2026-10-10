@@ -312,6 +312,9 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(Goal)]),
           () => ListBuilder<Goal>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(GoalHistory)]),
+          () => ListBuilder<GoalHistory>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(GoalMetric)]),
           () => ListBuilder<GoalMetric>())
       ..addBuilderFactory(

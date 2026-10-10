@@ -7,6 +7,9 @@ import '../../../../core/bloc/event_transformers.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/usecase/usecase.dart';
+import '../../../payments/domain/entities/payment_method.dart';
+import '../../../payments/domain/usecases/get_payment_methods_usecase.dart';
 import '../../../people/domain/entities/profile_summary.dart';
 import '../../domain/entities/membership.dart';
 import '../../domain/entities/membership_product.dart';
@@ -21,9 +24,11 @@ abstract class CreateMembershipState with _$CreateMembershipState {
     @Default(LoadStatus.initial) LoadStatus status,
     Failure? failure,
     @Default(<MembershipProduct>[]) List<MembershipProduct> products,
+    @Default(<PaymentMethod>[]) List<PaymentMethod> paymentMethods,
     ProfileSummary? selectedMember,
     String? selectedMemberId,
     String? selectedProductId,
+    String? selectedPaymentMethodId,
     DateTime? startDate,
     String? lockerNumber,
     @Default(false) bool autoRenew,
@@ -68,6 +73,15 @@ final class CreateMembershipProductSelected extends CreateMembershipEvent {
   List<Object?> get props => [productId];
 }
 
+final class CreateMembershipPaymentMethodSelected extends CreateMembershipEvent {
+  const CreateMembershipPaymentMethodSelected(this.paymentMethodId);
+
+  final String paymentMethodId;
+
+  @override
+  List<Object?> get props => [paymentMethodId];
+}
+
 final class CreateMembershipStartDateChanged extends CreateMembershipEvent {
   const CreateMembershipStartDateChanged(this.startDate);
 
@@ -102,11 +116,15 @@ final class CreateMembershipSubmitted extends CreateMembershipEvent {
 @injectable
 class CreateMembershipBloc
     extends Bloc<CreateMembershipEvent, CreateMembershipState> {
-  CreateMembershipBloc(this._createMembership, this._getProducts)
-    : super(const CreateMembershipState()) {
+  CreateMembershipBloc(
+    this._createMembership,
+    this._getProducts,
+    this._getPaymentMethods,
+  ) : super(const CreateMembershipState()) {
     on<CreateMembershipStarted>(_onStarted);
     on<CreateMembershipMemberSelected>(_onMemberSelected);
     on<CreateMembershipProductSelected>(_onProductSelected);
+    on<CreateMembershipPaymentMethodSelected>(_onPaymentMethodSelected);
     on<CreateMembershipStartDateChanged>(_onStartDateChanged);
     on<CreateMembershipLockerChanged>(_onLockerChanged);
     on<CreateMembershipAutoRenewChanged>(_onAutoRenewChanged);
@@ -115,6 +133,7 @@ class CreateMembershipBloc
 
   final CreateMembershipUseCase _createMembership;
   final GetMembershipProductsUseCase _getProducts;
+  final GetPaymentMethodsUseCase _getPaymentMethods;
 
   Future<void> _onStarted(
     CreateMembershipStarted event,
@@ -124,14 +143,24 @@ class CreateMembershipBloc
       state.copyWith(status: LoadStatus.loading, failure: null, created: null),
     );
 
-    final productsResult = await _getProducts(
-      const GetMembershipProductsParams(),
-    );
+    final productsFuture = _getProducts(const GetMembershipProductsParams());
+    final methodsFuture = _getPaymentMethods(const NoParams());
+    final productsResult = await productsFuture;
+    final methodsResult = await methodsFuture;
     if (isClosed) return;
 
     Failure? failure;
     List<MembershipProduct> products = const [];
     productsResult.fold((f) => failure = f, (page) => products = page.items);
+    if (failure != null) {
+      emit(state.copyWith(status: LoadStatus.failure, failure: failure));
+      return;
+    }
+
+    List<PaymentMethod> paymentMethods = const [];
+    methodsResult.fold((f) => failure = f, (items) {
+      paymentMethods = items.where((m) => m.isActive).toList();
+    });
     if (failure != null) {
       emit(state.copyWith(status: LoadStatus.failure, failure: failure));
       return;
@@ -143,6 +172,10 @@ class CreateMembershipBloc
         status: LoadStatus.success,
         failure: null,
         products: activeProducts.isEmpty ? products : activeProducts,
+        paymentMethods: paymentMethods,
+        selectedPaymentMethodId: paymentMethods.length == 1
+            ? paymentMethods.first.id
+            : state.selectedPaymentMethodId,
         selectedMemberId: event.memberId ?? state.selectedMemberId,
         selectedMember: event.memberId != null ? null : state.selectedMember,
         startDate: state.startDate ?? DateTime.now(),
@@ -179,6 +212,20 @@ class CreateMembershipBloc
     );
   }
 
+  void _onPaymentMethodSelected(
+    CreateMembershipPaymentMethodSelected event,
+    Emitter<CreateMembershipState> emit,
+  ) {
+    if (state.submitting) return;
+    emit(
+      state.copyWith(
+        selectedPaymentMethodId: event.paymentMethodId,
+        fieldError: null,
+        submitError: null,
+      ),
+    );
+  }
+
   void _onStartDateChanged(
     CreateMembershipStartDateChanged event,
     Emitter<CreateMembershipState> emit,
@@ -209,6 +256,7 @@ class CreateMembershipBloc
   ) async {
     final memberId = state.selectedMemberId;
     final productId = state.selectedProductId;
+    final paymentMethodId = state.selectedPaymentMethodId;
     final startDate = state.startDate;
     if (memberId == null || memberId.isEmpty) {
       emit(state.copyWith(fieldError: 'Select a member'));
@@ -222,12 +270,17 @@ class CreateMembershipBloc
       emit(state.copyWith(fieldError: 'Pick a start date'));
       return;
     }
+    if (paymentMethodId == null || paymentMethodId.isEmpty) {
+      emit(state.copyWith(fieldError: 'Select a payment method'));
+      return;
+    }
 
     final locker = state.lockerNumber?.trim();
     final params = CreateMembershipParams(
       memberId: memberId,
       productId: productId,
       startDate: startDate,
+      paymentMethodId: paymentMethodId,
       lockerNumber: locker == null || locker.isEmpty ? null : locker,
       autoRenew: state.autoRenew,
     );

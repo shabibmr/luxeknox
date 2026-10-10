@@ -41,7 +41,7 @@ abstract class Employee implements Built<Employee, EmployeeBuilder> {
   String? get gender;
 
   @BuiltValueField(wireName: r'job_title')
-  String get jobTitle;
+  String? get jobTitle;
 
   @BuiltValueField(wireName: r'department')
   String? get department;
@@ -106,11 +106,13 @@ class _$EmployeeSerializer implements PrimitiveSerializer<Employee> {
         specifiedType: const FullType(String),
       );
     }
-    yield r'job_title';
-    yield serializers.serialize(
-      object.jobTitle,
-      specifiedType: const FullType(String),
-    );
+    if (object.jobTitle != null) {
+      yield r'job_title';
+      yield serializers.serialize(
+        object.jobTitle,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
     if (object.department != null) {
       yield r'department';
       yield serializers.serialize(
@@ -197,8 +199,9 @@ class _$EmployeeSerializer implements PrimitiveSerializer<Employee> {
         case r'job_title':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.jobTitle = valueDes;
           break;
         case r'department':

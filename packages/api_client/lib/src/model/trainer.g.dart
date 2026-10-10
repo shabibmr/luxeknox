@@ -31,6 +31,10 @@ class _$Trainer extends Trainer {
   final bool isActive;
   @override
   final int? assignedActiveCount;
+  @override
+  final String? email;
+  @override
+  final String? phoneNumber;
 
   factory _$Trainer([void Function(TrainerBuilder)? updates]) =>
       (TrainerBuilder()..update(updates))._build();
@@ -47,7 +51,9 @@ class _$Trainer extends Trainer {
       this.rating,
       this.maxClientsCapacity,
       required this.isActive,
-      this.assignedActiveCount})
+      this.assignedActiveCount,
+      this.email,
+      this.phoneNumber})
       : super._();
   @override
   Trainer rebuild(void Function(TrainerBuilder) updates) =>
@@ -71,7 +77,9 @@ class _$Trainer extends Trainer {
         rating == other.rating &&
         maxClientsCapacity == other.maxClientsCapacity &&
         isActive == other.isActive &&
-        assignedActiveCount == other.assignedActiveCount;
+        assignedActiveCount == other.assignedActiveCount &&
+        email == other.email &&
+        phoneNumber == other.phoneNumber;
   }
 
   @override
@@ -89,6 +97,8 @@ class _$Trainer extends Trainer {
     _$hash = $jc(_$hash, maxClientsCapacity.hashCode);
     _$hash = $jc(_$hash, isActive.hashCode);
     _$hash = $jc(_$hash, assignedActiveCount.hashCode);
+    _$hash = $jc(_$hash, email.hashCode);
+    _$hash = $jc(_$hash, phoneNumber.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -107,7 +117,9 @@ class _$Trainer extends Trainer {
           ..add('rating', rating)
           ..add('maxClientsCapacity', maxClientsCapacity)
           ..add('isActive', isActive)
-          ..add('assignedActiveCount', assignedActiveCount))
+          ..add('assignedActiveCount', assignedActiveCount)
+          ..add('email', email)
+          ..add('phoneNumber', phoneNumber))
         .toString();
   }
 }
@@ -167,6 +179,14 @@ class TrainerBuilder implements Builder<Trainer, TrainerBuilder> {
   set assignedActiveCount(int? assignedActiveCount) =>
       _$this._assignedActiveCount = assignedActiveCount;
 
+  String? _email;
+  String? get email => _$this._email;
+  set email(String? email) => _$this._email = email;
+
+  String? _phoneNumber;
+  String? get phoneNumber => _$this._phoneNumber;
+  set phoneNumber(String? phoneNumber) => _$this._phoneNumber = phoneNumber;
+
   TrainerBuilder() {
     Trainer._defaults(this);
   }
@@ -186,6 +206,8 @@ class TrainerBuilder implements Builder<Trainer, TrainerBuilder> {
       _maxClientsCapacity = $v.maxClientsCapacity;
       _isActive = $v.isActive;
       _assignedActiveCount = $v.assignedActiveCount;
+      _email = $v.email;
+      _phoneNumber = $v.phoneNumber;
       _$v = null;
     }
     return this;
@@ -225,6 +247,8 @@ class TrainerBuilder implements Builder<Trainer, TrainerBuilder> {
             isActive: BuiltValueNullFieldError.checkNotNull(
                 isActive, r'Trainer', 'isActive'),
             assignedActiveCount: assignedActiveCount,
+            email: email,
+            phoneNumber: phoneNumber,
           );
     } catch (_) {
       late String _$failedField;

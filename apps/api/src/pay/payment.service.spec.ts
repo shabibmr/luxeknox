@@ -108,6 +108,7 @@ describe('PaymentService', () => {
       paginationHelper as any,
       auditService as any,
       domainEventBus as any,
+      { create: vi.fn() } as any,
       {} as any,
     );
 

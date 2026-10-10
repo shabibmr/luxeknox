@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
+import { PaymentService } from '../pay/payment.service';
 import { AuditService } from '../platform/audit/audit.service';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
@@ -17,7 +18,6 @@ import {
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { MemberRepository } from '../people/member.repository';
-import { Inject } from '@nestjs/common';
 import { MembershipProductRepository } from './membership-product.repository';
 import {
   type MembershipCreateDto,
@@ -59,6 +59,8 @@ export class MembershipService {
     private readonly paginationHelper: PaginationHelper,
     private readonly auditService: AuditService,
     private readonly domainEventBus: DomainEventBus,
+    @Inject(forwardRef(() => PaymentService))
+    private readonly paymentService: PaymentService,
     @Inject(DRIZZLE_DB_TOKEN)
     private readonly db: DrizzleDb<any>,
   ) {}
@@ -201,6 +203,16 @@ export class MembershipService {
         entityId: membershipId,
         afterState: { member_id: dto.member_id, product_id: dto.product_id, end_date: endDate },
       });
+
+      await this.paymentService.create(
+        {
+          member_id: dto.member_id,
+          membership_id: membershipId,
+          payment_method_id: dto.payment_method_id,
+          subtotal: product.base_price,
+        },
+        actor,
+      );
 
       return membershipId;
     });

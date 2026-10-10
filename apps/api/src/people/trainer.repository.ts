@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, like, or, type SQL } from 'drizzle-orm';
+import { and, count, eq, inArray, like, or, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
 import { trainers, type NewTrainer, type Trainer } from '../platform/db/schema/trainers';
 import { members } from '../platform/db/schema/members';
+import { users } from '../platform/db/schema/users';
 
 export interface TrainerFilterParams {
   q?: string;
@@ -70,6 +71,22 @@ export class TrainerRepository extends BaseRepository<typeof trainers, Trainer, 
       rows: rows as Trainer[],
       total: Number(countRows[0]?.value ?? 0),
     };
+  }
+
+  async findContactsByUserIds(
+    userIds: number[],
+  ): Promise<Map<number, { email: string | null; phone_number: string | null }>> {
+    const result = new Map<number, { email: string | null; phone_number: string | null }>();
+    if (userIds.length === 0) return result;
+    const db = this.getDb() as any;
+    const rows = await db
+      .select({ id: users.id, email: users.email, phone_number: users.phone_number })
+      .from(users)
+      .where(inArray(users.id, userIds));
+    for (const r of rows) {
+      result.set(r.id, { email: r.email ?? null, phone_number: r.phone_number ?? null });
+    }
+    return result;
   }
 
   async updateTrainer(id: number, values: Partial<NewTrainer>): Promise<void> {

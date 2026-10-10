@@ -124,6 +124,9 @@ class _TrainerProfileForm extends StatefulWidget {
 class _TrainerProfileFormState extends State<_TrainerProfileForm> {
   late final _firstName = TextEditingController(text: widget.profile.firstName);
   late final _lastName = TextEditingController(text: widget.profile.lastName);
+  late final _email = TextEditingController(
+    text: widget.profile.email ?? '',
+  );
   late final _phone = TextEditingController(
     text: widget.profile.phoneNumber ?? '',
   );
@@ -144,6 +147,7 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
   void dispose() {
     _firstName.dispose();
     _lastName.dispose();
+    _email.dispose();
     _phone.dispose();
     _bio.dispose();
     _specializations.dispose();
@@ -155,6 +159,7 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
   bool get _isDirty {
     if (_firstName.text != widget.profile.firstName) return true;
     if (_lastName.text != widget.profile.lastName) return true;
+    if (_email.text != (widget.profile.email ?? '')) return true;
     if (_phone.text != (widget.profile.phoneNumber ?? '')) return true;
     if (_gender != widget.profile.gender) return true;
     if (_bio.text != (widget.profile.bio ?? '')) return true;
@@ -215,6 +220,12 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
             decoration: const InputDecoration(
               labelText: PeopleStrings.lastName,
             ),
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _email,
+            decoration: const InputDecoration(labelText: PeopleStrings.email),
+            keyboardType: TextInputType.emailAddress,
             onChanged: (_) => setState(() {}),
           ),
           TextField(
@@ -280,6 +291,7 @@ class _TrainerProfileFormState extends State<_TrainerProfileForm> {
                 widget.profile.copyWith(
                   firstName: _firstName.text.trim(),
                   lastName: _lastName.text.trim(),
+                  email: _optional(_email.text),
                   phoneNumber: _optional(_phone.text),
                   gender: _gender,
                   bio: _optional(_bio.text),

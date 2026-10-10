@@ -388,9 +388,6 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
     if (input.email.trim().isEmpty) {
       return PeopleStrings.emailRequired;
     }
-    if (input.jobTitle.trim().isEmpty) {
-      return PeopleStrings.jobTitleRequired;
-    }
     if ((input.gender?.trim() ?? '').isEmpty) {
       return PeopleStrings.genderRequired;
     }
@@ -398,10 +395,6 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
   }
 
   String? _validateEdit(EmployeeUpdateInput input) {
-    final title = input.jobTitle?.trim() ?? '';
-    if (title.isEmpty) {
-      return PeopleStrings.jobTitleRequired;
-    }
     if ((input.gender?.trim() ?? '').isEmpty) {
       return PeopleStrings.genderRequired;
     }

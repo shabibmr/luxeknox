@@ -50,5 +50,6 @@ docs/openapi/v1.json
 research_notes/
 **/failures/
 
-# Firebase Admin SDK private keys (never commit)
-*firebase-adminsdk*.json
+# Python
+__pycache__/
+*.py[cod]

@@ -14,6 +14,8 @@ class _$MembershipCreate extends MembershipCreate {
   @override
   final Date startDate;
   @override
+  final int paymentMethodId;
+  @override
   final String? lockerNumber;
   @override
   final bool? autoRenew;
@@ -26,6 +28,7 @@ class _$MembershipCreate extends MembershipCreate {
       {required this.memberId,
       required this.productId,
       required this.startDate,
+      required this.paymentMethodId,
       this.lockerNumber,
       this.autoRenew})
       : super._();
@@ -44,6 +47,7 @@ class _$MembershipCreate extends MembershipCreate {
         memberId == other.memberId &&
         productId == other.productId &&
         startDate == other.startDate &&
+        paymentMethodId == other.paymentMethodId &&
         lockerNumber == other.lockerNumber &&
         autoRenew == other.autoRenew;
   }
@@ -54,6 +58,7 @@ class _$MembershipCreate extends MembershipCreate {
     _$hash = $jc(_$hash, memberId.hashCode);
     _$hash = $jc(_$hash, productId.hashCode);
     _$hash = $jc(_$hash, startDate.hashCode);
+    _$hash = $jc(_$hash, paymentMethodId.hashCode);
     _$hash = $jc(_$hash, lockerNumber.hashCode);
     _$hash = $jc(_$hash, autoRenew.hashCode);
     _$hash = $jf(_$hash);
@@ -66,6 +71,7 @@ class _$MembershipCreate extends MembershipCreate {
           ..add('memberId', memberId)
           ..add('productId', productId)
           ..add('startDate', startDate)
+          ..add('paymentMethodId', paymentMethodId)
           ..add('lockerNumber', lockerNumber)
           ..add('autoRenew', autoRenew))
         .toString();
@@ -88,6 +94,11 @@ class MembershipCreateBuilder
   Date? get startDate => _$this._startDate;
   set startDate(Date? startDate) => _$this._startDate = startDate;
 
+  int? _paymentMethodId;
+  int? get paymentMethodId => _$this._paymentMethodId;
+  set paymentMethodId(int? paymentMethodId) =>
+      _$this._paymentMethodId = paymentMethodId;
+
   String? _lockerNumber;
   String? get lockerNumber => _$this._lockerNumber;
   set lockerNumber(String? lockerNumber) => _$this._lockerNumber = lockerNumber;
@@ -106,6 +117,7 @@ class MembershipCreateBuilder
       _memberId = $v.memberId;
       _productId = $v.productId;
       _startDate = $v.startDate;
+      _paymentMethodId = $v.paymentMethodId;
       _lockerNumber = $v.lockerNumber;
       _autoRenew = $v.autoRenew;
       _$v = null;
@@ -135,6 +147,8 @@ class MembershipCreateBuilder
               productId, r'MembershipCreate', 'productId'),
           startDate: BuiltValueNullFieldError.checkNotNull(
               startDate, r'MembershipCreate', 'startDate'),
+          paymentMethodId: BuiltValueNullFieldError.checkNotNull(
+              paymentMethodId, r'MembershipCreate', 'paymentMethodId'),
           lockerNumber: lockerNumber,
           autoRenew: autoRenew,
         );

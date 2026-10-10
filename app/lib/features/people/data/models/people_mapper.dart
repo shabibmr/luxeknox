@@ -143,12 +143,15 @@ TrainerProfile trainerProfileFromApi(api.Trainer trainer) {
     maxClientsCapacity: trainer.maxClientsCapacity,
     assignedActiveCount: trainer.assignedActiveCount,
     isActive: trainer.isActive,
+    phoneNumber: trainer.phoneNumber,
+    email: trainer.email,
   );
 }
 
 api.TrainerUpdate trainerUpdateFromProfile(TrainerProfile trainer) {
   return api.TrainerUpdate(
     (b) => b
+      ..email = trainer.email
       ..phoneNumber = trainer.phoneNumber
       ..firstName = trainer.firstName
       ..lastName = trainer.lastName
@@ -183,7 +186,7 @@ EmployeeSummary employeeSummaryFromApi(api.Employee employee) {
     id: employee.id,
     userId: employee.userId,
     fullName: name.isNotEmpty ? name : 'Employee #${employee.id}',
-    jobTitle: employee.jobTitle,
+    jobTitle: employee.jobTitle ?? '',
     department: employee.department,
     gender: employee.gender,
     status: _apiEmployeeStatusWire(employee.status),
@@ -257,6 +260,7 @@ String? _dateTimeToWireDate(DateTime? dateTime) {
 }
 
 Map<String, dynamic> employeeCreateBodyFromInput(NewEmployeeInput input) {
+  final jobTitleTrimmed = input.jobTitle.trim();
   return <String, dynamic>{
     'email': input.email,
     'phone_number': input.phoneNumber,
@@ -264,7 +268,7 @@ Map<String, dynamic> employeeCreateBodyFromInput(NewEmployeeInput input) {
     'first_name': input.firstName,
     'last_name': input.lastName,
     'gender': input.gender,
-    'job_title': input.jobTitle,
+    'job_title': jobTitleTrimmed.isEmpty ? null : jobTitleTrimmed,
     'department': input.department,
     'hire_date': _dateTimeToWireDate(input.hireDate),
     // Omit when unset so API defaults to the seeded employee role.
@@ -275,7 +279,7 @@ Map<String, dynamic> employeeCreateBodyFromInput(NewEmployeeInput input) {
 /// Always includes optional keys so null clears department / hire_date.
 Map<String, dynamic> employeeUpdateBodyFromInput(EmployeeUpdateInput input) {
   return <String, dynamic>{
-    if (input.jobTitle != null) 'job_title': input.jobTitle,
+    'job_title': input.jobTitle,
     if (input.gender != null) 'gender': input.gender,
     'department': input.department,
     'hire_date': _dateTimeToWireDate(input.hireDate),

@@ -7156,6 +7156,12 @@ components:
           type: boolean
         assigned_active_count:
           type: integer
+        email:
+          type: string
+          nullable: true
+        phone_number:
+          type: string
+          nullable: true
     TrainerCreate:
       type: object
       required: [first_name, last_name, email, gender]
@@ -7186,6 +7192,9 @@ components:
     TrainerUpdate:
       type: object
       properties:
+        email:
+          type: string
+          format: email
         phone_number:
           type: string
         first_name:
@@ -7221,7 +7230,7 @@ components:
       enum: [active, on_probation, suspended, terminated]
     Employee:
       type: object
-      required: [id, user_id, first_name, last_name, job_title, status, role_id]
+      required: [id, user_id, first_name, last_name, status, role_id]
       properties:
         id:
           $ref: "#/components/schemas/Id"
@@ -7237,6 +7246,7 @@ components:
           description: Male or female. Null only for employees created before gender was required.
         job_title:
           type: string
+          nullable: true
         department:
           type: string
           nullable: true
@@ -7248,7 +7258,7 @@ components:
           $ref: "#/components/schemas/Id"
     EmployeeCreate:
       type: object
-      required: [email, first_name, last_name, job_title, gender]
+      required: [email, first_name, last_name, gender]
       properties:
         email:
           type: string
@@ -7265,6 +7275,7 @@ components:
           enum: [male, female]
         job_title:
           type: string
+          nullable: true
         department:
           type: string
         hire_date:
@@ -7927,7 +7938,7 @@ components:
           $ref: "#/components/schemas/MembershipProduct"
     MembershipCreate:
       type: object
-      required: [member_id, product_id, start_date]
+      required: [member_id, product_id, start_date, payment_method_id]
       properties:
         member_id:
           $ref: "#/components/schemas/Id"
@@ -7935,6 +7946,8 @@ components:
           $ref: "#/components/schemas/Id"
         start_date:
           $ref: "#/components/schemas/Date"
+        payment_method_id:
+          $ref: "#/components/schemas/Id"
         locker_number:
           type: string
         auto_renew:

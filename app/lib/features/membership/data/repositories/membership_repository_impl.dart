@@ -141,13 +141,15 @@ class MembershipRepositoryImpl implements MembershipRepository {
     required String memberId,
     required String productId,
     required DateTime startDate,
+    required String paymentMethodId,
     String? lockerNumber,
     bool? autoRenew,
   }) async {
     final memberIntId = _parseId(memberId);
     final productIntId = _parseId(productId);
-    if (memberIntId == null || productIntId == null) {
-      return const Left(ValidationFailure(['Invalid member or product id']));
+    final methodIntId = _parseId(paymentMethodId);
+    if (memberIntId == null || productIntId == null || methodIntId == null) {
+      return const Left(ValidationFailure(['Invalid member, product, or payment method id']));
     }
     try {
       final create = api.MembershipCreate((b) {
@@ -155,6 +157,7 @@ class MembershipRepositoryImpl implements MembershipRepository {
           ..memberId = memberIntId
           ..productId = productIntId
           ..startDate = dateTimeToApiDate(startDate)
+          ..paymentMethodId = methodIntId
           ..lockerNumber = lockerNumber
           ..autoRenew = autoRenew;
       });

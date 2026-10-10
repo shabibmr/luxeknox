@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { MembershipProductRepository } from '../memb/membership-product.repository';
 import { MembershipRepository } from '../memb/membership.repository';
@@ -48,6 +48,7 @@ export class PaymentService {
     private readonly memberRepository: MemberRepository,
     private readonly membershipRepository: MembershipRepository,
     private readonly productRepository: MembershipProductRepository,
+    @Inject(forwardRef(() => MembershipService))
     private readonly membershipService: MembershipService,
     private readonly settingsService: SettingsService,
     private readonly auditService: AuditService,

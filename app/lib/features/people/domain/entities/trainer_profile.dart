@@ -16,6 +16,7 @@ class TrainerProfile extends Equatable {
     this.assignedActiveCount,
     this.isActive = true,
     this.phoneNumber,
+    this.email,
   });
 
   final int id;
@@ -31,6 +32,7 @@ class TrainerProfile extends Equatable {
   final int? assignedActiveCount;
   final bool isActive;
   final String? phoneNumber;
+  final String? email;
 
   String get fullName => '$firstName $lastName';
 
@@ -48,6 +50,7 @@ class TrainerProfile extends Equatable {
     int? assignedActiveCount,
     bool? isActive,
     String? phoneNumber,
+    String? email,
   }) {
     return TrainerProfile(
       id: id ?? this.id,
@@ -63,6 +66,7 @@ class TrainerProfile extends Equatable {
       assignedActiveCount: assignedActiveCount ?? this.assignedActiveCount,
       isActive: isActive ?? this.isActive,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      email: email ?? this.email,
     );
   }
 
@@ -81,5 +85,6 @@ class TrainerProfile extends Equatable {
     assignedActiveCount,
     isActive,
     phoneNumber,
+    email,
   ];
 }

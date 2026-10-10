@@ -13,6 +13,7 @@ import { RoleRepository } from './role.repository';
 import type { RolePermissionsWriteDto, RoleWriteDto } from './role.dto';
 
 export interface RoleWithPermissions extends Role {
+  is_system_role: boolean;
   permissions: Permission[];
 }
 
@@ -37,7 +38,12 @@ export class RoleService {
 
   private async withPermissions(role: Role): Promise<RoleWithPermissions> {
     const permissions = await this.permissionRepository.findManyByRoleId(role.id);
-    return { ...role, permissions };
+    return {
+      ...role,
+      is_system: Boolean(role.is_system),
+      is_system_role: Boolean(role.is_system),
+      permissions,
+    };
   }
 
   async list(rawQuery: Record<string, unknown>): Promise<PaginatedResponse<RoleWithPermissions>> {

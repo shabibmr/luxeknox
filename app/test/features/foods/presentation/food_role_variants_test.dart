@@ -28,7 +28,7 @@ class MockSessionCubit extends MockCubit<SessionState>
 /// S1 — role-variant widget tests for Vertical 2 (Food Library), reusing
 /// the vertical-1 `L8` acceptance-gate pattern. Renders the Food Library
 /// and Food Details screens under a member, trainer, and admin principal
-/// and asserts that admin-only controls (add/edit) appear only for admin.
+/// and asserts that add/edit appear for diet.create / diet.update.
 void main() {
   const tFood = Food(
     id: 'food-1',
@@ -63,7 +63,7 @@ void main() {
   );
 
   const readOnlyCapabilities = Capabilities(slugs: ['diet.read']);
-  const adminCapabilities = Capabilities(
+  const staffWriteCapabilities = Capabilities(
     slugs: ['diet.read', 'diet.create', 'diet.update'],
   );
 
@@ -131,17 +131,17 @@ void main() {
       expect(find.text('Chicken Breast'), findsOneWidget);
     });
 
-    testWidgets('trainer sees browse only, no add button', (tester) async {
+    testWidgets('trainer sees the add button', (tester) async {
       await tester.pumpWidget(
         wrapWithSession(
           const FoodLibraryScreen(),
           trainerPrincipal,
-          readOnlyCapabilities,
+          staffWriteCapabilities,
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.add), findsNothing);
+      expect(find.byIcon(Icons.add), findsOneWidget);
       expect(find.text('Chicken Breast'), findsOneWidget);
     });
 
@@ -150,7 +150,7 @@ void main() {
         wrapWithSession(
           const FoodLibraryScreen(),
           adminPrincipal,
-          adminCapabilities,
+          staffWriteCapabilities,
         ),
       );
       await tester.pumpAndSettle();
@@ -175,17 +175,17 @@ void main() {
       expect(find.text('Chicken Breast'), findsOneWidget);
     });
 
-    testWidgets('trainer sees details only, no edit button', (tester) async {
+    testWidgets('trainer sees the edit button', (tester) async {
       await tester.pumpWidget(
         wrapWithSession(
           const FoodDetailScreen(foodId: 'food-1'),
           trainerPrincipal,
-          readOnlyCapabilities,
+          staffWriteCapabilities,
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.edit), findsNothing);
+      expect(find.byIcon(Icons.edit), findsOneWidget);
       expect(find.text('Chicken Breast'), findsOneWidget);
     });
 
@@ -194,7 +194,7 @@ void main() {
         wrapWithSession(
           const FoodDetailScreen(foodId: 'food-1'),
           adminPrincipal,
-          adminCapabilities,
+          staffWriteCapabilities,
         ),
       );
       await tester.pumpAndSettle();

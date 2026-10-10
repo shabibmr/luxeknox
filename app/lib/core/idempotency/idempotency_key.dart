@@ -7,6 +7,6 @@ import 'dart:math';
 /// mint a new key.
 String newIdempotencyKey() {
   final now = DateTime.now().toUtc().microsecondsSinceEpoch;
-  final rand = Random.secure().nextInt(1 << 32);
+  final rand = Random.secure().nextInt(0x100000000);
   return '$now-$rand';
 }

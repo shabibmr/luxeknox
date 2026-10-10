@@ -1616,6 +1616,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i632.CreateMembershipBloc(
         gh<_i65.CreateMembershipUseCase>(),
         gh<_i359.GetMembershipProductsUseCase>(),
+        gh<_i789.GetPaymentMethodsUseCase>(),
       ),
     );
     gh.factory<_i551.EditTrainerProfileCubit>(

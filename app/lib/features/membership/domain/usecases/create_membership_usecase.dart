@@ -12,6 +12,7 @@ class CreateMembershipParams extends Equatable {
     required this.memberId,
     required this.productId,
     required this.startDate,
+    required this.paymentMethodId,
     this.lockerNumber,
     this.autoRenew,
   });
@@ -19,6 +20,7 @@ class CreateMembershipParams extends Equatable {
   final String memberId;
   final String productId;
   final DateTime startDate;
+  final String paymentMethodId;
   final String? lockerNumber;
   final bool? autoRenew;
 
@@ -27,6 +29,7 @@ class CreateMembershipParams extends Equatable {
     memberId,
     productId,
     startDate,
+    paymentMethodId,
     lockerNumber,
     autoRenew,
   ];
@@ -45,6 +48,7 @@ class CreateMembershipUseCase
       memberId: params.memberId,
       productId: params.productId,
       startDate: params.startDate,
+      paymentMethodId: params.paymentMethodId,
       lockerNumber: params.lockerNumber,
       autoRenew: params.autoRenew,
     );

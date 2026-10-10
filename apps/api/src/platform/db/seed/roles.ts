@@ -142,6 +142,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'diets.write',
       'diets.templates_write',
       'diet.read',
+      'diet.create',
+      'diet.update',
       'goals.read',
       'goals.write',
       'goals.create',

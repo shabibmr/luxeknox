@@ -25,6 +25,7 @@ describe('TrainerService outbound shaping', () => {
   let repository: {
     findById: ReturnType<typeof vi.fn>;
     countAssignedMembers: ReturnType<typeof vi.fn>;
+    findContactsByUserIds: ReturnType<typeof vi.fn>;
   };
   let memberRepository: { findById: ReturnType<typeof vi.fn> };
 
@@ -47,6 +48,7 @@ describe('TrainerService outbound shaping', () => {
     repository = {
       findById: vi.fn().mockResolvedValue(trainerRow),
       countAssignedMembers: vi.fn().mockResolvedValue(2),
+      findContactsByUserIds: vi.fn().mockResolvedValue(new Map()),
     };
     memberRepository = {
       findById: vi.fn().mockResolvedValue({

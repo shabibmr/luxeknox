@@ -60,7 +60,7 @@ export interface EmployeeProfileInput {
   first_name: string;
   last_name: string;
   gender?: string | null;
-  job_title: string;
+  job_title?: string | null;
   department?: string | null;
   hire_date?: string | null;
   status?: 'active' | 'on_probation' | 'suspended' | 'terminated';
@@ -238,7 +238,7 @@ export class PersonFactory {
         first_name: input.profile.first_name,
         last_name: input.profile.last_name,
         gender: input.profile.gender ?? null,
-        job_title: input.profile.job_title,
+        job_title: input.profile.job_title ?? null,
         department: input.profile.department ?? null,
         hire_date: input.profile.hire_date ?? null,
         status: input.profile.status ?? 'active',

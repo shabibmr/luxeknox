@@ -10,10 +10,10 @@ import '../../domain/entities/food.dart';
 import '../cubit/food_form_cubit.dart';
 import '../foods_strings.dart';
 
-/// Create/edit form, reached only from an admin-gated entry point (the
-/// library's add button, the detail screen's edit button). Also guards
-/// itself in case it's ever reached directly, since a route can be
-/// deep-linked around its caller's check.
+/// Create/edit form, reached from the library add button or detail
+/// edit button (`diet.create` / `diet.update`). Also guards itself in
+/// case it's ever reached directly, since a route can be deep-linked
+/// around its caller's check.
 class FoodFormScreen extends StatelessWidget {
   const FoodFormScreen({super.key, this.food});
 

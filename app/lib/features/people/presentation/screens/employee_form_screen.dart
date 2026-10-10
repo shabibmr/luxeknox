@@ -186,13 +186,11 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
     final last = _lastName.text.trim();
     final email = _email.text.trim();
     final gender = state.createInput.gender?.trim() ?? '';
-    final jobTitle = _jobTitle.text.trim();
 
     String? firstErr;
     String? lastErr;
     String? emailErr;
     String? genderErr;
-    String? jobTitleErr;
 
     if (first.isEmpty) firstErr = PeopleStrings.firstNameRequired;
     if (last.isEmpty) lastErr = PeopleStrings.lastNameRequired;
@@ -202,29 +200,22 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
       emailErr = PeopleStrings.invalidEmail;
     }
     if (gender.isEmpty) genderErr = PeopleStrings.genderRequired;
-    if (jobTitle.isEmpty) jobTitleErr = PeopleStrings.jobTitleRequired;
 
     setState(() {
       _firstNameError = firstErr;
       _lastNameError = lastErr;
       _emailError = emailErr;
       _genderError = genderErr;
-      _jobTitleError = jobTitleErr;
+      _jobTitleError = null;
     });
 
     return firstErr == null &&
         lastErr == null &&
         emailErr == null &&
-        genderErr == null &&
-        jobTitleErr == null;
+        genderErr == null;
   }
 
   bool _validateEdit() {
-    final jobTitle = _jobTitle.text.trim();
-    if (jobTitle.isEmpty) {
-      setState(() => _jobTitleError = PeopleStrings.jobTitleRequired);
-      return false;
-    }
     return true;
   }
 
@@ -257,7 +248,7 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
       }
       cubit.updateEditInput(
         (input) => input.copyWith(
-          jobTitle: _jobTitle.text.trim(),
+          jobTitle: _optional(_jobTitle.text),
           department: _optional(_department.text),
         ),
       );
@@ -447,8 +438,12 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.security),
                     title: const Text(PeopleStrings.manageRoles),
+                    subtitle: !context.can('roles.update')
+                        ? const Text(PeopleStrings.noPermission)
+                        : null,
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: submitting
+                    enabled: !submitting && context.can('roles.update'),
+                    onTap: submitting || !context.can('roles.update')
                         ? null
                         : () => context.push(
                             Routes.adminEmployeeRolesById('${loaded.id}'),
@@ -482,17 +477,37 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                   decoration: InputDecoration(
                     labelText: PeopleStrings.jobTitle,
                     errorText: _jobTitleError,
+                    suffixIcon:
+                        !state.isCreate && _jobTitle.text.trim().isNotEmpty
+                        ? IconButton(
+                            tooltip: 'Clear job title',
+                            onPressed: submitting
+                                ? null
+                                : () {
+                                    _jobTitle.clear();
+                                    context
+                                        .read<EmployeeFormCubit>()
+                                        .updateEditInput(
+                                          (i) => i.copyWith(jobTitle: null),
+                                        );
+                                    setState(() {});
+                                  },
+                            icon: const Icon(Icons.clear),
+                          )
+                        : null,
                   ),
                   onChanged: (v) {
                     if (_jobTitleError != null) {
                       setState(() => _jobTitleError = null);
                     }
                     final cubit = context.read<EmployeeFormCubit>();
+                    final value = _optional(v);
                     if (cubit.state.isCreate) {
                       cubit.updateCreateInput((i) => i.copyWith(jobTitle: v));
                     } else {
-                      cubit.updateEditInput((i) => i.copyWith(jobTitle: v));
+                      cubit.updateEditInput((i) => i.copyWith(jobTitle: value));
                     }
+                    setState(() {});
                   },
                 ),
                 TextField(

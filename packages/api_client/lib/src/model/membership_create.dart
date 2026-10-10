@@ -15,6 +15,7 @@ part 'membership_create.g.dart';
 /// * [memberId] 
 /// * [productId] 
 /// * [startDate] 
+/// * [paymentMethodId] 
 /// * [lockerNumber] 
 /// * [autoRenew] 
 @BuiltValue()
@@ -27,6 +28,9 @@ abstract class MembershipCreate implements Built<MembershipCreate, MembershipCre
 
   @BuiltValueField(wireName: r'start_date')
   Date get startDate;
+
+  @BuiltValueField(wireName: r'payment_method_id')
+  int get paymentMethodId;
 
   @BuiltValueField(wireName: r'locker_number')
   String? get lockerNumber;
@@ -71,6 +75,11 @@ class _$MembershipCreateSerializer implements PrimitiveSerializer<MembershipCrea
     yield serializers.serialize(
       object.startDate,
       specifiedType: const FullType(Date),
+    );
+    yield r'payment_method_id';
+    yield serializers.serialize(
+      object.paymentMethodId,
+      specifiedType: const FullType(int),
     );
     if (object.lockerNumber != null) {
       yield r'locker_number';
@@ -129,6 +138,13 @@ class _$MembershipCreateSerializer implements PrimitiveSerializer<MembershipCrea
             specifiedType: const FullType(Date),
           ) as Date;
           result.startDate = valueDes;
+          break;
+        case r'payment_method_id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.paymentMethodId = valueDes;
           break;
         case r'locker_number':
           final valueDes = serializers.deserialize(
