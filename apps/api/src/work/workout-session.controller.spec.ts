@@ -26,6 +26,9 @@ describe('WorkoutSessionController', () => {
       logSet: vi.fn().mockResolvedValue({ id: 501, set_number: 1 }),
       complete: vi.fn().mockResolvedValue({ id: 50, completed_at: new Date() }),
       getPersonalRecords: vi.fn().mockResolvedValue([]),
+      getActive: vi.fn().mockResolvedValue({ id: 50, member_id: 30 }),
+      updateSet: vi.fn().mockResolvedValue({ id: 501, set_number: 1 }),
+      deleteSet: vi.fn().mockResolvedValue(undefined),
     };
     controller = new WorkoutSessionController(service as WorkoutSessionService);
   });
@@ -87,5 +90,38 @@ describe('WorkoutSessionController', () => {
 
     expect(service.getPersonalRecords).toHaveBeenCalledWith(30, 1, ADMIN_USER);
     expect(result).toEqual([]);
+  });
+
+  it('requires workouts.read on GET /workout-sessions/active and delegates to service', async () => {
+    expect(
+      Reflect.getMetadata(REQUIRE_PERMISSIONS_KEY, WorkoutSessionController.prototype.getActive),
+    ).toEqual(['workouts.read']);
+
+    const result = await controller.getActive('30', ADMIN_USER);
+
+    expect(service.getActive).toHaveBeenCalledWith(30, ADMIN_USER);
+    expect(result.id).toBe(50);
+  });
+
+  it('requires workouts.write on PATCH /workout-sessions/:id/sets/:setId and delegates to service', async () => {
+    expect(
+      Reflect.getMetadata(REQUIRE_PERMISSIONS_KEY, WorkoutSessionController.prototype.updateSet),
+    ).toEqual(['workouts.write']);
+
+    const dto = { reps_completed: 12 };
+    const result = await controller.updateSet(50, 501, dto, ADMIN_USER);
+
+    expect(service.updateSet).toHaveBeenCalledWith(50, 501, dto, ADMIN_USER);
+    expect(result.id).toBe(501);
+  });
+
+  it('requires workouts.write on DELETE /workout-sessions/:id/sets/:setId and delegates to service', async () => {
+    expect(
+      Reflect.getMetadata(REQUIRE_PERMISSIONS_KEY, WorkoutSessionController.prototype.deleteSet),
+    ).toEqual(['workouts.write']);
+
+    await controller.deleteSet(50, 501, ADMIN_USER);
+
+    expect(service.deleteSet).toHaveBeenCalledWith(50, 501, ADMIN_USER);
   });
 });

@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -18,9 +20,11 @@ import {
   workoutSessionCompleteSchema,
   workoutSessionCreateSchema,
   workoutSessionFilterQuerySchema,
+  workoutSetUpdateSchema,
   workoutSetWriteSchema,
   type WorkoutSessionCompleteDto,
   type WorkoutSessionCreateDto,
+  type WorkoutSetUpdateDto,
   type WorkoutSetWriteDto,
 } from './workout-plan.dto';
 
@@ -50,6 +54,17 @@ export class WorkoutSessionController {
     @CurrentUser() currentUser: AuthenticatedUser,
   ) {
     return this.service.start(dto, currentUser);
+  }
+
+  @Get('active')
+  @RequirePermission('workouts.read')
+  @ApiOperation({ operationId: 'getActiveWorkoutSession', summary: 'Get the member\'s active (in-progress) workout session' })
+  async getActive(
+    @Query('member_id') memberIdStr: string | undefined,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    const memberId = memberIdStr ? parseInt(memberIdStr, 10) : undefined;
+    return this.service.getActive(memberId, currentUser);
   }
 
   @Get('personal-records')
@@ -87,6 +102,34 @@ export class WorkoutSessionController {
     @CurrentUser() currentUser: AuthenticatedUser,
   ) {
     return this.service.logSet(id, dto, currentUser);
+  }
+
+  @Patch(':id/sets/:setId')
+  @RequirePermission('workouts.write')
+  @ApiOperation({ operationId: 'updateWorkoutSet', summary: 'Edit a logged set' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiParam({ name: 'setId', type: Number })
+  async updateSet(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('setId', ParseIntPipe) setId: number,
+    @Body(new ZodValidationPipe(workoutSetUpdateSchema)) dto: WorkoutSetUpdateDto,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    return this.service.updateSet(id, setId, dto, currentUser);
+  }
+
+  @Delete(':id/sets/:setId')
+  @HttpCode(204)
+  @RequirePermission('workouts.write')
+  @ApiOperation({ operationId: 'deleteWorkoutSet', summary: 'Delete a logged set' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiParam({ name: 'setId', type: Number })
+  async deleteSet(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('setId', ParseIntPipe) setId: number,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    await this.service.deleteSet(id, setId, currentUser);
   }
 
   @Post(':id/complete')

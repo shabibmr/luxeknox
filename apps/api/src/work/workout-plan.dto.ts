@@ -91,6 +91,15 @@ export const workoutSetWriteSchema = z.object({
 
 export type WorkoutSetWriteDto = z.infer<typeof workoutSetWriteSchema>;
 
+export const workoutSetUpdateSchema = workoutSetWriteSchema
+  .omit({ exercise_id: true, set_number: true })
+  .partial()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field is required',
+  });
+
+export type WorkoutSetUpdateDto = z.infer<typeof workoutSetUpdateSchema>;
+
 export const workoutSessionCompleteSchema = z.object({
   client_feedback_rating: z.number().int().min(1).max(5).optional(),
   notes: z.string().optional(),

@@ -22,6 +22,7 @@ import type {
   WorkoutSessionCompleteDto,
   WorkoutSessionCreateDto,
   WorkoutSessionFilterQueryDto,
+  WorkoutSetUpdateDto,
   WorkoutSetWriteDto,
 } from './workout-plan.dto';
 import type { WorkoutSessionExercise } from '../platform/db/schema/workout';
@@ -223,6 +224,95 @@ export class WorkoutSessionService {
     });
 
     return (await this.sessionRepo.findSessionById(sessionId))!;
+  }
+
+  async getActive(
+    memberId: number | undefined,
+    actor: AuthenticatedUser,
+  ): Promise<WorkoutSessionWithSets> {
+    let effectiveMemberId = memberId;
+    if (actor.userType === 'member') {
+      effectiveMemberId = actor.profileId ?? undefined;
+    }
+
+    if (!effectiveMemberId) {
+      throw new BadRequestError('member_id is required');
+    }
+
+    await assertMemberAccess(this.memberRepo, actor, effectiveMemberId);
+
+    const active = await this.sessionRepo.findActiveSessionForMember(effectiveMemberId);
+    if (!active) {
+      throw new NotFoundError('No active workout session');
+    }
+
+    return (await this.sessionRepo.findSessionById(active.id))!;
+  }
+
+  async updateSet(
+    sessionId: number,
+    setId: number,
+    dto: WorkoutSetUpdateDto,
+    actor: AuthenticatedUser,
+  ): Promise<WorkoutSessionExercise> {
+    const session = await this.sessionRepo.findSessionById(sessionId);
+    if (!session) {
+      throw new NotFoundError('Workout session not found');
+    }
+
+    await assertMemberAccess(this.memberRepo, actor, session.member_id);
+    await this.ptAccess?.assertTrainerCanWrite(actor, session.member_id);
+
+    if (session.completed_at !== null) {
+      throw new BusinessRuleError('Cannot modify sets of a completed workout session');
+    }
+
+    const existing = await this.sessionRepo.findSetInSession(sessionId, setId);
+    if (!existing) {
+      throw new NotFoundError('Workout set not found');
+    }
+
+    const patch: Partial<
+      Pick<
+        WorkoutSessionExercise,
+        'reps_completed' | 'weight_lifted_kg' | 'rpe_score' | 'is_completed'
+      >
+    > = {};
+    if (dto.reps_completed !== undefined) {
+      patch.reps_completed = dto.reps_completed;
+    }
+    if (dto.weight_lifted_kg !== undefined) {
+      patch.weight_lifted_kg = String(dto.weight_lifted_kg);
+    }
+    if (dto.rpe_score !== undefined) {
+      patch.rpe_score = String(dto.rpe_score);
+    }
+    if (dto.is_completed !== undefined) {
+      patch.is_completed = dto.is_completed;
+    }
+
+    return this.sessionRepo.updateSessionExercise(setId, patch);
+  }
+
+  async deleteSet(sessionId: number, setId: number, actor: AuthenticatedUser): Promise<void> {
+    const session = await this.sessionRepo.findSessionById(sessionId);
+    if (!session) {
+      throw new NotFoundError('Workout session not found');
+    }
+
+    await assertMemberAccess(this.memberRepo, actor, session.member_id);
+    await this.ptAccess?.assertTrainerCanWrite(actor, session.member_id);
+
+    if (session.completed_at !== null) {
+      throw new BusinessRuleError('Cannot modify sets of a completed workout session');
+    }
+
+    const existing = await this.sessionRepo.findSetInSession(sessionId, setId);
+    if (!existing) {
+      throw new NotFoundError('Workout set not found');
+    }
+
+    await this.sessionRepo.deleteSessionExercise(setId);
   }
 
   async getPersonalRecords(

@@ -54,6 +54,9 @@ function buildService(overrides: {
     findSetsBySessionId: vi.fn().mockResolvedValue([]),
     completeSession: vi.fn(),
     findPersonalRecords: vi.fn().mockResolvedValue([]),
+    findSetInSession: vi.fn(),
+    updateSessionExercise: vi.fn(),
+    deleteSessionExercise: vi.fn(),
     ...overrides.sessionRepo,
   };
 
@@ -456,6 +459,147 @@ describe('WorkoutSessionService', () => {
       await expect(service.getPersonalRecords(40, 1, memberActor)).rejects.toThrow(
         NotFoundError,
       );
+    });
+  });
+
+  describe('active session lookup', () => {
+    it('getActive returns session with sets for member\'s own profile', async () => {
+      const { service, sessionRepo } = buildService();
+
+      sessionRepo.findActiveSessionForMember.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        completed_at: null,
+      });
+      sessionRepo.findSessionById.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        completed_at: null,
+        sets: [{ id: 501, set_number: 1 }],
+      });
+
+      // member_id arg is ignored for member actors; own profile used instead.
+      const session = await service.getActive(999, memberActor);
+
+      expect(sessionRepo.findActiveSessionForMember).toHaveBeenCalledWith(30);
+      expect(sessionRepo.findSessionById).toHaveBeenCalledWith(50);
+      expect(session.id).toBe(50);
+      expect(session.sets).toHaveLength(1);
+    });
+
+    it('getActive 404s when none', async () => {
+      const { service } = buildService();
+
+      await expect(service.getActive(30, memberActor)).rejects.toThrow(NotFoundError);
+    });
+
+    it('getActive lets assigned trainer read even without active PT', async () => {
+      const { service, sessionRepo, ptAccess } = buildService();
+
+      sessionRepo.findActiveSessionForMember.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        completed_at: null,
+      });
+      sessionRepo.findSessionById.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        completed_at: null,
+        sets: [],
+      });
+
+      const session = await service.getActive(30, trainerActor);
+
+      expect(session.id).toBe(50);
+      expect(ptAccess!.assertTrainerCanWrite).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('set edit and delete', () => {
+    it('updateSet updates reps/weight and returns row', async () => {
+      const { service, sessionRepo } = buildService();
+
+      sessionRepo.findSessionById.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        completed_at: null,
+      });
+      sessionRepo.findSetInSession.mockResolvedValue({
+        id: 501,
+        workout_session_id: 50,
+        reps_completed: 10,
+        weight_lifted_kg: '60.00',
+      });
+      sessionRepo.updateSessionExercise.mockResolvedValue({
+        id: 501,
+        workout_session_id: 50,
+        reps_completed: 12,
+        weight_lifted_kg: '65.00',
+      });
+
+      const updated = await service.updateSet(
+        50,
+        501,
+        { reps_completed: 12, weight_lifted_kg: 65 },
+        memberActor,
+      );
+
+      expect(sessionRepo.findSetInSession).toHaveBeenCalledWith(50, 501);
+      expect(sessionRepo.updateSessionExercise).toHaveBeenCalledWith(
+        501,
+        expect.objectContaining({ reps_completed: 12, weight_lifted_kg: '65' }),
+      );
+      expect(updated.reps_completed).toBe(12);
+    });
+
+    it('updateSet 404s when set belongs to another session', async () => {
+      const { service, sessionRepo } = buildService();
+
+      sessionRepo.findSessionById.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        completed_at: null,
+      });
+      sessionRepo.findSetInSession.mockResolvedValue(null);
+
+      await expect(
+        service.updateSet(50, 999, { reps_completed: 1 }, memberActor),
+      ).rejects.toThrow(NotFoundError);
+      expect(sessionRepo.updateSessionExercise).not.toHaveBeenCalled();
+    });
+
+    it('updateSet rejects trainer without active PT', async () => {
+      const { service, sessionRepo, ptAccess } = buildService();
+
+      sessionRepo.findSessionById.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        completed_at: null,
+      });
+      (ptAccess!.assertTrainerCanWrite as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new BusinessRuleError('Read-only'),
+      );
+
+      await expect(
+        service.updateSet(50, 501, { reps_completed: 12 }, trainerActor),
+      ).rejects.toThrow(BusinessRuleError);
+      expect(sessionRepo.findSetInSession).not.toHaveBeenCalled();
+      expect(sessionRepo.updateSessionExercise).not.toHaveBeenCalled();
+    });
+
+    it('deleteSet rejects completed session', async () => {
+      const { service, sessionRepo } = buildService();
+
+      sessionRepo.findSessionById.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        completed_at: new Date(),
+      });
+
+      await expect(service.deleteSet(50, 501, memberActor)).rejects.toThrow(
+        BusinessRuleError,
+      );
+      expect(sessionRepo.deleteSessionExercise).not.toHaveBeenCalled();
     });
   });
 });

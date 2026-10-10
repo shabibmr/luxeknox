@@ -154,6 +154,53 @@ export class WorkoutSessionRepository extends BaseRepository<
     }));
   }
 
+  async findSetInSession(
+    sessionId: number,
+    setId: number,
+  ): Promise<WorkoutSessionExercise | null> {
+    const db = this.getDb() as any;
+    const [row] = await db
+      .select()
+      .from(workoutSessionExercises)
+      .where(
+        and(
+          eq(workoutSessionExercises.id, setId),
+          eq(workoutSessionExercises.workout_session_id, sessionId),
+        ),
+      )
+      .limit(1);
+
+    return row || null;
+  }
+
+  async updateSessionExercise(
+    setId: number,
+    patch: Partial<
+      Pick<
+        NewWorkoutSessionExercise,
+        'reps_completed' | 'weight_lifted_kg' | 'rpe_score' | 'is_completed'
+      >
+    >,
+  ): Promise<WorkoutSessionExercise> {
+    const db = this.getDb() as any;
+    await db
+      .update(workoutSessionExercises)
+      .set(patch)
+      .where(eq(workoutSessionExercises.id, setId));
+
+    const [updated] = await db
+      .select()
+      .from(workoutSessionExercises)
+      .where(eq(workoutSessionExercises.id, setId))
+      .limit(1);
+    return updated;
+  }
+
+  async deleteSessionExercise(setId: number): Promise<void> {
+    const db = this.getDb() as any;
+    await db.delete(workoutSessionExercises).where(eq(workoutSessionExercises.id, setId));
+  }
+
   async completeSession(
     id: number,
     completedAt: Date,
