@@ -20,6 +20,8 @@ Name | Type | Description | Notes
 **maxClientsCapacity** | **int** |  | [optional] 
 **isActive** | **bool** |  | 
 **assignedActiveCount** | **int** |  | [optional] 
+**email** | **String** |  | [optional] 
+**phoneNumber** | **String** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

@@ -12,6 +12,7 @@ part 'trainer_update.g.dart';
 /// TrainerUpdate
 ///
 /// Properties:
+/// * [email] 
 /// * [phoneNumber] 
 /// * [firstName] 
 /// * [lastName] 
@@ -23,6 +24,9 @@ part 'trainer_update.g.dart';
 /// * [isActive] 
 @BuiltValue()
 abstract class TrainerUpdate implements Built<TrainerUpdate, TrainerUpdateBuilder> {
+  @BuiltValueField(wireName: r'email')
+  String? get email;
+
   @BuiltValueField(wireName: r'phone_number')
   String? get phoneNumber;
 
@@ -74,6 +78,13 @@ class _$TrainerUpdateSerializer implements PrimitiveSerializer<TrainerUpdate> {
     TrainerUpdate object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
+    if (object.email != null) {
+      yield r'email';
+      yield serializers.serialize(
+        object.email,
+        specifiedType: const FullType(String),
+      );
+    }
     if (object.phoneNumber != null) {
       yield r'phone_number';
       yield serializers.serialize(
@@ -160,6 +171,14 @@ class _$TrainerUpdateSerializer implements PrimitiveSerializer<TrainerUpdate> {
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
+        case r'email':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.email = valueDes;
+          break;
         case r'phone_number':
           final valueDes = serializers.deserialize(
             value,

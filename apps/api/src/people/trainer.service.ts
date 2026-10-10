@@ -25,6 +25,8 @@ export interface TrainerResponse extends Omit<Trainer, 'specializations' | 'hour
   specializations: string[] | null;
   hourly_rate: string | null;
   assigned_active_count: number;
+  email: string | null;
+  phone_number: string | null;
 }
 
 @Injectable()
@@ -48,6 +50,7 @@ export class TrainerService {
     row: Trainer,
     assignedCount: number,
     actor: AuthenticatedUser,
+    contact?: { email: string | null; phone_number: string | null },
   ): TrainerResponse {
     const hideRate = actor.userType === 'member';
     return {
@@ -65,6 +68,8 @@ export class TrainerService {
       created_at: row.created_at,
       updated_at: row.updated_at,
       assigned_active_count: assignedCount,
+      email: hideRate ? null : (contact?.email ?? null),
+      phone_number: hideRate ? null : (contact?.phone_number ?? null),
     };
   }
 
@@ -85,7 +90,10 @@ export class TrainerService {
     });
 
     const counts = await this.repository.countAssignedMembersForIds(rows.map((r) => r.id));
-    const items = rows.map((row) => this.toResponse(row, counts.get(row.id) ?? 0, actor));
+    const contacts = await this.repository.findContactsByUserIds(rows.map((r) => r.user_id));
+    const items = rows.map((row) =>
+      this.toResponse(row, counts.get(row.id) ?? 0, actor, contacts.get(row.user_id)),
+    );
 
     return createPaginatedResponse({
       items,
@@ -127,7 +135,10 @@ export class TrainerService {
       afterState: created.profile,
     });
 
-    return this.toResponse(created.profile, 0, actor);
+    const contact = (await this.repository.findContactsByUserIds([created.profile.user_id])).get(
+      created.profile.user_id,
+    );
+    return this.toResponse(created.profile, 0, actor, contact);
   }
 
   async getById(id: number, actor: AuthenticatedUser): Promise<TrainerResponse> {
@@ -147,7 +158,10 @@ export class TrainerService {
     }
 
     const assigned = await this.repository.countAssignedMembers(id);
-    return this.toResponse(trainer, assigned, actor);
+    const contact = (await this.repository.findContactsByUserIds([trainer.user_id])).get(
+      trainer.user_id,
+    );
+    return this.toResponse(trainer, assigned, actor, contact);
   }
 
   async update(
@@ -188,10 +202,10 @@ export class TrainerService {
 
       await this.repository.updateTrainer(id, patch);
 
-      if (dto.phone_number !== undefined) {
+      if (dto.email !== undefined || dto.phone_number !== undefined) {
         await this.personFactory.patchUserCredentials(
           before.user_id,
-          { phone_number: dto.phone_number },
+          { email: dto.email, phone_number: dto.phone_number },
           this.repository.getDb() as any,
         );
       }
@@ -212,7 +226,10 @@ export class TrainerService {
     });
 
     const assigned = await this.repository.countAssignedMembers(id);
-    return this.toResponse(after, assigned, actor);
+    const contact = (await this.repository.findContactsByUserIds([after.user_id])).get(
+      after.user_id,
+    );
+    return this.toResponse(after, assigned, actor, contact);
   }
 
   async listMembers(

@@ -143,12 +143,15 @@ TrainerProfile trainerProfileFromApi(api.Trainer trainer) {
     maxClientsCapacity: trainer.maxClientsCapacity,
     assignedActiveCount: trainer.assignedActiveCount,
     isActive: trainer.isActive,
+    phoneNumber: trainer.phoneNumber,
+    email: trainer.email,
   );
 }
 
 api.TrainerUpdate trainerUpdateFromProfile(TrainerProfile trainer) {
   return api.TrainerUpdate(
     (b) => b
+      ..email = trainer.email
       ..phoneNumber = trainer.phoneNumber
       ..firstName = trainer.firstName
       ..lastName = trainer.lastName

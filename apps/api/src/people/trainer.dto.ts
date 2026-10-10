@@ -22,6 +22,7 @@ export type TrainerCreateDto = z.infer<typeof trainerCreateSchema>;
 
 export const trainerUpdateSchema = z
   .object({
+    email: z.string().trim().email().max(255).optional(),
     phone_number: z.string().trim().min(1).max(32).optional().nullable(),
     first_name: z.string().trim().min(1).max(100).optional(),
     last_name: z.string().trim().min(1).max(100).optional(),

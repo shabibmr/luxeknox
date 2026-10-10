@@ -8,6 +8,8 @@ part of 'trainer_update.dart';
 
 class _$TrainerUpdate extends TrainerUpdate {
   @override
+  final String? email;
+  @override
   final String? phoneNumber;
   @override
   final String? firstName;
@@ -30,7 +32,8 @@ class _$TrainerUpdate extends TrainerUpdate {
       (TrainerUpdateBuilder()..update(updates))._build();
 
   _$TrainerUpdate._(
-      {this.phoneNumber,
+      {this.email,
+      this.phoneNumber,
       this.firstName,
       this.lastName,
       this.gender,
@@ -51,6 +54,7 @@ class _$TrainerUpdate extends TrainerUpdate {
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
     return other is TrainerUpdate &&
+        email == other.email &&
         phoneNumber == other.phoneNumber &&
         firstName == other.firstName &&
         lastName == other.lastName &&
@@ -65,6 +69,7 @@ class _$TrainerUpdate extends TrainerUpdate {
   @override
   int get hashCode {
     var _$hash = 0;
+    _$hash = $jc(_$hash, email.hashCode);
     _$hash = $jc(_$hash, phoneNumber.hashCode);
     _$hash = $jc(_$hash, firstName.hashCode);
     _$hash = $jc(_$hash, lastName.hashCode);
@@ -81,6 +86,7 @@ class _$TrainerUpdate extends TrainerUpdate {
   @override
   String toString() {
     return (newBuiltValueToStringHelper(r'TrainerUpdate')
+          ..add('email', email)
           ..add('phoneNumber', phoneNumber)
           ..add('firstName', firstName)
           ..add('lastName', lastName)
@@ -97,6 +103,10 @@ class _$TrainerUpdate extends TrainerUpdate {
 class TrainerUpdateBuilder
     implements Builder<TrainerUpdate, TrainerUpdateBuilder> {
   _$TrainerUpdate? _$v;
+
+  String? _email;
+  String? get email => _$this._email;
+  set email(String? email) => _$this._email = email;
 
   String? _phoneNumber;
   String? get phoneNumber => _$this._phoneNumber;
@@ -144,6 +154,7 @@ class TrainerUpdateBuilder
   TrainerUpdateBuilder get _$this {
     final $v = _$v;
     if ($v != null) {
+      _email = $v.email;
       _phoneNumber = $v.phoneNumber;
       _firstName = $v.firstName;
       _lastName = $v.lastName;
@@ -176,6 +187,7 @@ class TrainerUpdateBuilder
     try {
       _$result = _$v ??
           _$TrainerUpdate._(
+            email: email,
             phoneNumber: phoneNumber,
             firstName: firstName,
             lastName: lastName,

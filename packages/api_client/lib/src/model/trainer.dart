@@ -24,6 +24,8 @@ part 'trainer.g.dart';
 /// * [maxClientsCapacity] 
 /// * [isActive] 
 /// * [assignedActiveCount] 
+/// * [email] 
+/// * [phoneNumber] 
 @BuiltValue()
 abstract class Trainer implements Built<Trainer, TrainerBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -62,6 +64,12 @@ abstract class Trainer implements Built<Trainer, TrainerBuilder> {
 
   @BuiltValueField(wireName: r'assigned_active_count')
   int? get assignedActiveCount;
+
+  @BuiltValueField(wireName: r'email')
+  String? get email;
+
+  @BuiltValueField(wireName: r'phone_number')
+  String? get phoneNumber;
 
   Trainer._();
 
@@ -158,6 +166,20 @@ class _$TrainerSerializer implements PrimitiveSerializer<Trainer> {
       yield serializers.serialize(
         object.assignedActiveCount,
         specifiedType: const FullType(int),
+      );
+    }
+    if (object.email != null) {
+      yield r'email';
+      yield serializers.serialize(
+        object.email,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.phoneNumber != null) {
+      yield r'phone_number';
+      yield serializers.serialize(
+        object.phoneNumber,
+        specifiedType: const FullType(String),
       );
     }
   }
@@ -273,6 +295,22 @@ class _$TrainerSerializer implements PrimitiveSerializer<Trainer> {
           ) as int?;
           if (valueDes == null) continue;
           result.assignedActiveCount = valueDes;
+          break;
+        case r'email':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.email = valueDes;
+          break;
+        case r'phone_number':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.phoneNumber = valueDes;
           break;
         default:
           unhandled.add(key);

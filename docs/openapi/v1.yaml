@@ -7054,6 +7054,12 @@ components:
           type: boolean
         assigned_active_count:
           type: integer
+        email:
+          type: string
+          nullable: true
+        phone_number:
+          type: string
+          nullable: true
     TrainerCreate:
       type: object
       required: [first_name, last_name, email, gender]
@@ -7084,6 +7090,9 @@ components:
     TrainerUpdate:
       type: object
       properties:
+        email:
+          type: string
+          format: email
         phone_number:
           type: string
         first_name:
