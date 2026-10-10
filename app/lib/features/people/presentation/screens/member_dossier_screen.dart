@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
@@ -717,6 +718,6 @@ class _PersonalTrainingSection extends StatelessWidget {
 
   String _scheduleLabel(ScheduleSession? session) {
     if (session == null) return PeopleStrings.noUpcomingSession;
-    return '${session.title} · ${session.startTime.toLocal()}';
+    return '${session.title} · ${DateFormat('EEE, MMM d • HH:mm').format(session.startTime.toLocal())}';
   }
 }
