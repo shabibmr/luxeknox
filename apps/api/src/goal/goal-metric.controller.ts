@@ -13,7 +13,6 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import {
-  RequireAnyPermission,
   RequirePermission,
 } from '../rbac/require-permission.decorator';
 import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
@@ -42,7 +41,7 @@ export class GoalMetricController {
   }
 
   @Post()
-  @RequireAnyPermission('goals.create', 'goals.update', 'goals.write')
+  @RequirePermission('goals.create')
   @HttpCode(201)
   @ApiOperation({ operationId: 'createGoalMetric', summary: 'Create a metric' })
   async create(
@@ -53,7 +52,7 @@ export class GoalMetricController {
   }
 
   @Patch(':id')
-  @RequireAnyPermission('goals.create', 'goals.update', 'goals.write')
+  @RequirePermission('goals.create')
   @ApiParam({ name: 'id', type: Number })
   @ApiOperation({ operationId: 'updateGoalMetric', summary: 'Update a metric' })
   async update(

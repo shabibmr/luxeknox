@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { AuditService } from '../platform/audit/audit.service';
 import type { GoalMetric, NewGoalMetric } from '../platform/db/schema/goals';
-import { NotFoundError } from '../platform/errors/app-error';
+import { ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import type {
@@ -51,7 +51,14 @@ export class GoalMetricService {
     return metric;
   }
 
+  private assertAdmin(actor: AuthenticatedUser): void {
+    if (actor.userType !== 'admin') {
+      throw new ForbiddenError('Only admins may manage goal metrics');
+    }
+  }
+
   async create(dto: GoalMetricWriteDto, actor: AuthenticatedUser): Promise<GoalMetric> {
+    this.assertAdmin(actor);
     const now = new Date();
     const newMetric: NewGoalMetric = {
       name: dto.name,
@@ -84,6 +91,7 @@ export class GoalMetricService {
     dto: GoalMetricUpdateDto,
     actor: AuthenticatedUser,
   ): Promise<GoalMetric> {
+    this.assertAdmin(actor);
     const existing = await this.getById(id);
 
     const updateData: Partial<NewGoalMetric> = {

@@ -4,7 +4,6 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/presentation/load_status.dart';
-import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/goal_metric.dart';
 import '../../domain/entities/measurement.dart';
 import '../../domain/usecases/goal_metrics_usecases.dart';
@@ -18,8 +17,10 @@ abstract class MeasurementsState with _$MeasurementsState {
     @Default(LoadStatus.initial) LoadStatus status,
     @Default(<MeasurementSession>[]) List<MeasurementSession> sessions,
     @Default(<GoalMetric>[]) List<GoalMetric> metrics,
+    @Default(<String>[]) List<String> mandatoryMetricIds,
     @Default(false) bool submitting,
     @Default(false) bool hasMore,
+    @Default(false) bool loadingMore,
     String? nextCursor,
     Failure? failure,
   }) = _MeasurementsState;
@@ -38,15 +39,10 @@ class MeasurementsCubit extends Cubit<MeasurementsState> {
   final ListGoalMetricsUseCase _listMetrics;
 
   String? _memberId;
-  List<String> _mandatoryMetricIds = const [];
   bool _loaded = false;
 
-  Future<void> load(
-    String memberId, {
-    List<String> mandatoryMetricIds = const [],
-  }) async {
+  Future<void> load(String memberId) async {
     _memberId = memberId;
-    _mandatoryMetricIds = mandatoryMetricIds;
     emit(
       state.copyWith(
         status: LoadStatus.loading,
@@ -55,7 +51,7 @@ class MeasurementsCubit extends Cubit<MeasurementsState> {
       ),
     );
 
-    final metricsResult = await _listMetrics(const NoParams());
+    final metricsResult = await _listMetrics(const ListGoalMetricsParams());
     final sessionsResult = await _listMeasurements(
       ListMeasurementsParams(memberId: memberId, limit: 50),
     );
@@ -83,6 +79,39 @@ class MeasurementsCubit extends Cubit<MeasurementsState> {
             submitting: false,
             sessions: page.items,
             metrics: loadedMetrics ?? state.metrics,
+            mandatoryMetricIds: page.mandatoryMetricIds,
+            hasMore: page.hasMore,
+            nextCursor: page.nextCursor,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> loadMore() async {
+    final memberId = _memberId;
+    if (memberId == null ||
+        !_loaded ||
+        !state.hasMore ||
+        state.nextCursor == null ||
+        state.loadingMore) {
+      return;
+    }
+    emit(state.copyWith(loadingMore: true));
+    final sessionsResult = await _listMeasurements(
+      ListMeasurementsParams(
+        memberId: memberId,
+        cursor: state.nextCursor,
+        limit: 50,
+      ),
+    );
+    sessionsResult.fold(
+      (failure) => emit(state.copyWith(loadingMore: false, failure: failure)),
+      (page) {
+        emit(
+          state.copyWith(
+            loadingMore: false,
+            sessions: [...state.sessions, ...page.items],
             hasMore: page.hasMore,
             nextCursor: page.nextCursor,
           ),
@@ -117,7 +146,7 @@ class MeasurementsCubit extends Cubit<MeasurementsState> {
         recordedAt: recordedAt,
         notes: notes,
         values: values,
-        mandatoryMetricIds: _mandatoryMetricIds,
+        mandatoryMetricIds: current.mandatoryMetricIds,
       ),
     );
     return result.fold(
@@ -132,7 +161,7 @@ class MeasurementsCubit extends Cubit<MeasurementsState> {
         return false;
       },
       (_) async {
-        await load(memberId, mandatoryMetricIds: _mandatoryMetricIds);
+        await load(memberId);
         return true;
       },
     );

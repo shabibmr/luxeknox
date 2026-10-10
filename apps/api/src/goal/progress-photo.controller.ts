@@ -83,4 +83,15 @@ export class ProgressPhotoController {
   ) {
     await this.service.deletePhoto(id, currentUser);
   }
+
+  @Get('progress-photos')
+  @RequirePermission('goals.read')
+  @ApiOperation({ operationId: 'listAllProgressPhotos', summary: 'Progress photos vault' })
+  async listAllPhotos(
+    @Query() rawQuery: Record<string, unknown>,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    const filter = progressPhotoFilterQuerySchema.parse(rawQuery);
+    return this.service.listAllPhotos(rawQuery, filter, currentUser);
+  }
 }

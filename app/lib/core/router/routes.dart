@@ -61,8 +61,11 @@ class Routes {
 
   // Progress Stack
   static const String memberProgress = '/progress';
+  static const String memberProgressOverview = '/progress/overview';
   static const String memberProgressGoalDetail = '/progress/goal/:id';
   static const String memberProgressMeasurements = '/progress/measurements';
+  static const String memberProgressMeasurementsHistory =
+      '/progress/measurements/history';
   static const String memberProgressPhotos = '/progress/photos';
   static const String memberProgressNotes = '/progress/notes';
 
@@ -96,8 +99,12 @@ class Routes {
   static const String trainerMembersDetail = '/trainer/members/:id';
   static const String trainerMembersHealth = '/trainer/members/:id/health';
   static const String trainerMembersGoals = '/trainer/members/:id/goals';
-  static const String trainerMembersGoalsAddMeasurement =
-      '/trainer/members/:id/goals/add-measurement';
+  static const String trainerMembersGoalsMeasurements =
+      '/trainer/members/:id/goals/measurements';
+  static const String trainerMembersGoalsMeasurementsHistory =
+      '/trainer/members/:id/goals/measurements/history';
+  static const String trainerMembersGoalsMeasurementsNew =
+      '/trainer/members/:id/goals/measurements/new';
   static const String trainerMembersMembership =
       '/trainer/members/:id/membership';
   static const String trainerMembersAttendance =
@@ -169,6 +176,10 @@ class Routes {
   static const String adminMembersDietHistory =
       '/admin/members/:id/diet-history';
   static const String adminMembersGoals = '/admin/members/:id/goals';
+  static const String adminMembersGoalsMeasurements =
+      '/admin/members/:id/goals/measurements';
+  static const String adminMembersGoalsMeasurementsHistory =
+      '/admin/members/:id/goals/measurements/history';
 
   // Memberships Stack
   static const String adminMemberships = '/admin/memberships';
@@ -211,6 +222,11 @@ class Routes {
   static const String adminDietPlansEdit = '/admin/diet-plans/:id/edit';
   static const String adminDietPlansVersions = '/admin/diet-plans/:id/versions';
   static const String adminGoalMetrics = '/admin/goal-metrics';
+  static const String adminMemberGoals = '/admin/member-goals';
+  static const String adminProgress = '/admin/progress';
+  static const String adminMeasurements = '/admin/measurements';
+  static const String adminMeasurementsHistory = '/admin/measurements/history';
+  static const String adminProgressPhotos = '/admin/progress-photos';
   static const String adminNotificationsBroadcast =
       '/admin/notifications/broadcast';
   static const String adminReportsHub = '/admin/reports';
@@ -261,17 +277,65 @@ class Routes {
   static String trainerMemberGoalsById(String id) =>
       '/trainer/members/$id/goals';
 
-  static String trainerMemberGoalsAddMeasurementById(String id) =>
-      '/trainer/members/$id/goals/add-measurement';
+  static String trainerMemberGoalsOverviewById(String id) =>
+      '/trainer/members/$id/goals/overview';
+
+  static String trainerMemberGoalsMeasurementsById(String id) =>
+      '/trainer/members/$id/goals/measurements';
+
+  static String trainerMemberGoalsMeasurementsHistoryById(String id) =>
+      '/trainer/members/$id/goals/measurements/history';
+
+  static String trainerMemberGoalsMeasurementsNewById(String id) =>
+      '/trainer/members/$id/goals/measurements/new';
+
+  static String trainerMemberGoalsPhotosById(String id) =>
+      '/trainer/members/$id/goals/photos';
+
+  static String trainerMemberGoalsNotesById(String id) =>
+      '/trainer/members/$id/goals/notes';
+
+  static String trainerMemberGoalsTimelineById(String id) =>
+      '/trainer/members/$id/goals/timeline';
+
+  static String trainerMemberGoalsNewById(String id) =>
+      '/trainer/members/$id/goals/new';
 
   static String trainerMemberGoalById(String memberId, String goalId) =>
       '/trainer/members/$memberId/goals/goal/$goalId';
 
+  static String trainerMemberGoalEditById(String memberId, String goalId) =>
+      '/trainer/members/$memberId/goals/goal/$goalId/edit';
+
   static String adminMemberGoalById(String memberId, String goalId) =>
       '/admin/members/$memberId/goals/goal/$goalId';
 
-  static String adminMemberGoalsAddMeasurementById(String id) =>
-      '/admin/members/$id/goals/add-measurement';
+  static String adminMemberGoalEditById(String memberId, String goalId) =>
+      '/admin/members/$memberId/goals/goal/$goalId/edit';
+
+  static String adminMemberGoalsOverviewById(String id) =>
+      '/admin/members/$id/goals/overview';
+
+  static String adminMemberGoalsMeasurementsById(String id) =>
+      '/admin/members/$id/goals/measurements';
+
+  static String adminMemberGoalsMeasurementsHistoryById(String id) =>
+      '/admin/members/$id/goals/measurements/history';
+
+  static String adminMemberGoalsMeasurementsNewById(String id) =>
+      '/admin/members/$id/goals/measurements/new';
+
+  static String adminMemberGoalsPhotosById(String id) =>
+      '/admin/members/$id/goals/photos';
+
+  static String adminMemberGoalsNotesById(String id) =>
+      '/admin/members/$id/goals/notes';
+
+  static String adminMemberGoalsTimelineById(String id) =>
+      '/admin/members/$id/goals/timeline';
+
+  static String adminMemberGoalsNewById(String id) =>
+      '/admin/members/$id/goals/new';
 
   static String trainerScheduleById(String id) => '/trainer/schedule/$id';
 

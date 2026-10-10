@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
@@ -7,10 +8,10 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
-import '../../../../session/domain/entities/user_type.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/entities/progress_note_type.dart';
 import '../cubit/progress_notes_cubit.dart';
+import '../goal_view_actions.dart';
 import '../goals_strings.dart';
 
 class ProgressNotesScreen extends StatelessWidget {
@@ -27,19 +28,6 @@ class ProgressNotesScreen extends StatelessWidget {
     return null;
   }
 
-  ProgressNoteType _defaultNoteType() {
-    final session = getIt<SessionCubit>().state;
-    if (session is! SessionAuthenticated) {
-      return ProgressNoteType.memberNote;
-    }
-    return switch (session.principal.userType) {
-      UserType.trainer ||
-      UserType.employee ||
-      UserType.admin => ProgressNoteType.trainerAssessment,
-      UserType.member => ProgressNoteType.memberNote,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final id = _resolveMemberId();
@@ -50,18 +38,31 @@ class ProgressNotesScreen extends StatelessWidget {
       );
     }
 
+    final shell = goalDetailShellForPath(GoRouterState.of(context).uri.path);
+    final allowedTypes = allowedNoteTypesForShell(shell);
+    final defaultType = defaultNoteTypeForShell(shell);
+
     return BlocProvider(
       create: (_) => getIt<ProgressNotesCubit>()..load(id),
-      child: _ProgressNotesBody(memberId: id, defaultType: _defaultNoteType()),
+      child: _ProgressNotesBody(
+        memberId: id,
+        defaultType: defaultType,
+        allowedTypes: allowedTypes,
+      ),
     );
   }
 }
 
 class _ProgressNotesBody extends StatelessWidget {
-  const _ProgressNotesBody({required this.memberId, required this.defaultType});
+  const _ProgressNotesBody({
+    required this.memberId,
+    required this.defaultType,
+    required this.allowedTypes,
+  });
 
   final String memberId;
   final ProgressNoteType defaultType;
+  final List<ProgressNoteType> allowedTypes;
 
   Future<void> _compose(BuildContext context) async {
     final controller = TextEditingController();
@@ -87,23 +88,34 @@ class _ProgressNotesBody extends StatelessWidget {
                     GoalsStrings.composeNote,
                     style: Theme.of(ctx).textTheme.titleMedium,
                   ),
-                  DropdownButtonFormField<ProgressNoteType>(
-                    // ignore: deprecated_member_use
-                    value: type,
-                    decoration: const InputDecoration(
-                      labelText: GoalsStrings.statusLabel,
+                  if (allowedTypes.length > 1)
+                    DropdownButtonFormField<ProgressNoteType>(
+                      key: const Key('progress-notes-type'),
+                      // ignore: deprecated_member_use
+                      value: type,
+                      decoration: const InputDecoration(
+                        labelText: GoalsStrings.statusLabel,
+                      ),
+                      items: [
+                        for (final t in allowedTypes)
+                          DropdownMenuItem(
+                            value: t,
+                            child: Text(GoalsStrings.noteTypeLabelFor(t)),
+                          ),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) setLocal(() => type = v);
+                      },
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8, bottom: 4),
+                      child: Text(
+                        key: const Key('progress-notes-type-locked'),
+                        GoalsStrings.noteTypeLabelFor(type),
+                        style: Theme.of(ctx).textTheme.bodyMedium,
+                      ),
                     ),
-                    items: [
-                      for (final t in ProgressNoteType.values)
-                        DropdownMenuItem(
-                          value: t,
-                          child: Text(GoalsStrings.noteTypeLabelFor(t)),
-                        ),
-                    ],
-                    onChanged: (v) {
-                      if (v != null) setLocal(() => type = v);
-                    },
-                  ),
                   TextField(
                     controller: controller,
                     maxLines: 4,
@@ -143,6 +155,7 @@ class _ProgressNotesBody extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text(GoalsStrings.notesTitle)),
       floatingActionButton: FloatingActionButton(
+        key: const Key('progress-notes-compose'),
         tooltip: GoalsStrings.composeNote,
         onPressed: () => _compose(context),
         child: const Icon(Icons.note_add_outlined),

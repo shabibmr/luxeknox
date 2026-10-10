@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MeasurementsState {
 
- LoadStatus get status; List<MeasurementSession> get sessions; List<GoalMetric> get metrics; bool get submitting; bool get hasMore; String? get nextCursor; Failure? get failure;
+ LoadStatus get status; List<MeasurementSession> get sessions; List<GoalMetric> get metrics; List<String> get mandatoryMetricIds; bool get submitting; bool get hasMore; bool get loadingMore; String? get nextCursor; Failure? get failure;
 /// Create a copy of MeasurementsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $MeasurementsStateCopyWith<MeasurementsState> get copyWith => _$MeasurementsStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MeasurementsState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.sessions, sessions)&&const DeepCollectionEquality().equals(other.metrics, metrics)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MeasurementsState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.sessions, sessions)&&const DeepCollectionEquality().equals(other.metrics, metrics)&&const DeepCollectionEquality().equals(other.mandatoryMetricIds, mandatoryMetricIds)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(sessions),const DeepCollectionEquality().hash(metrics),submitting,hasMore,nextCursor,failure);
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(sessions),const DeepCollectionEquality().hash(metrics),const DeepCollectionEquality().hash(mandatoryMetricIds),submitting,hasMore,loadingMore,nextCursor,failure);
 
 @override
 String toString() {
-  return 'MeasurementsState(status: $status, sessions: $sessions, metrics: $metrics, submitting: $submitting, hasMore: $hasMore, nextCursor: $nextCursor, failure: $failure)';
+  return 'MeasurementsState(status: $status, sessions: $sessions, metrics: $metrics, mandatoryMetricIds: $mandatoryMetricIds, submitting: $submitting, hasMore: $hasMore, loadingMore: $loadingMore, nextCursor: $nextCursor, failure: $failure)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $MeasurementsStateCopyWith<$Res>  {
   factory $MeasurementsStateCopyWith(MeasurementsState value, $Res Function(MeasurementsState) _then) = _$MeasurementsStateCopyWithImpl;
 @useResult
 $Res call({
- LoadStatus status, List<MeasurementSession> sessions, List<GoalMetric> metrics, bool submitting, bool hasMore, String? nextCursor, Failure? failure
+ LoadStatus status, List<MeasurementSession> sessions, List<GoalMetric> metrics, List<String> mandatoryMetricIds, bool submitting, bool hasMore, bool loadingMore, String? nextCursor, Failure? failure
 });
 
 
@@ -62,13 +62,15 @@ class _$MeasurementsStateCopyWithImpl<$Res>
 
 /// Create a copy of MeasurementsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? sessions = null,Object? metrics = null,Object? submitting = null,Object? hasMore = null,Object? nextCursor = freezed,Object? failure = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? sessions = null,Object? metrics = null,Object? mandatoryMetricIds = null,Object? submitting = null,Object? hasMore = null,Object? loadingMore = null,Object? nextCursor = freezed,Object? failure = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,sessions: null == sessions ? _self.sessions : sessions // ignore: cast_nullable_to_non_nullable
 as List<MeasurementSession>,metrics: null == metrics ? _self.metrics : metrics // ignore: cast_nullable_to_non_nullable
-as List<GoalMetric>,submitting: null == submitting ? _self.submitting : submitting // ignore: cast_nullable_to_non_nullable
+as List<GoalMetric>,mandatoryMetricIds: null == mandatoryMetricIds ? _self.mandatoryMetricIds : mandatoryMetricIds // ignore: cast_nullable_to_non_nullable
+as List<String>,submitting: null == submitting ? _self.submitting : submitting // ignore: cast_nullable_to_non_nullable
 as bool,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
+as bool,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable
 as bool,nextCursor: freezed == nextCursor ? _self.nextCursor : nextCursor // ignore: cast_nullable_to_non_nullable
 as String?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
 as Failure?,
@@ -156,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  List<MeasurementSession> sessions,  List<GoalMetric> metrics,  bool submitting,  bool hasMore,  String? nextCursor,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  List<MeasurementSession> sessions,  List<GoalMetric> metrics,  List<String> mandatoryMetricIds,  bool submitting,  bool hasMore,  bool loadingMore,  String? nextCursor,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MeasurementsState() when $default != null:
-return $default(_that.status,_that.sessions,_that.metrics,_that.submitting,_that.hasMore,_that.nextCursor,_that.failure);case _:
+return $default(_that.status,_that.sessions,_that.metrics,_that.mandatoryMetricIds,_that.submitting,_that.hasMore,_that.loadingMore,_that.nextCursor,_that.failure);case _:
   return orElse();
 
 }
@@ -177,10 +179,10 @@ return $default(_that.status,_that.sessions,_that.metrics,_that.submitting,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  List<MeasurementSession> sessions,  List<GoalMetric> metrics,  bool submitting,  bool hasMore,  String? nextCursor,  Failure? failure)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  List<MeasurementSession> sessions,  List<GoalMetric> metrics,  List<String> mandatoryMetricIds,  bool submitting,  bool hasMore,  bool loadingMore,  String? nextCursor,  Failure? failure)  $default,) {final _that = this;
 switch (_that) {
 case _MeasurementsState():
-return $default(_that.status,_that.sessions,_that.metrics,_that.submitting,_that.hasMore,_that.nextCursor,_that.failure);case _:
+return $default(_that.status,_that.sessions,_that.metrics,_that.mandatoryMetricIds,_that.submitting,_that.hasMore,_that.loadingMore,_that.nextCursor,_that.failure);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +199,10 @@ return $default(_that.status,_that.sessions,_that.metrics,_that.submitting,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  List<MeasurementSession> sessions,  List<GoalMetric> metrics,  bool submitting,  bool hasMore,  String? nextCursor,  Failure? failure)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  List<MeasurementSession> sessions,  List<GoalMetric> metrics,  List<String> mandatoryMetricIds,  bool submitting,  bool hasMore,  bool loadingMore,  String? nextCursor,  Failure? failure)?  $default,) {final _that = this;
 switch (_that) {
 case _MeasurementsState() when $default != null:
-return $default(_that.status,_that.sessions,_that.metrics,_that.submitting,_that.hasMore,_that.nextCursor,_that.failure);case _:
+return $default(_that.status,_that.sessions,_that.metrics,_that.mandatoryMetricIds,_that.submitting,_that.hasMore,_that.loadingMore,_that.nextCursor,_that.failure);case _:
   return null;
 
 }
@@ -212,7 +214,7 @@ return $default(_that.status,_that.sessions,_that.metrics,_that.submitting,_that
 
 
 class _MeasurementsState implements MeasurementsState {
-  const _MeasurementsState({this.status = LoadStatus.initial, final  List<MeasurementSession> sessions = const <MeasurementSession>[], final  List<GoalMetric> metrics = const <GoalMetric>[], this.submitting = false, this.hasMore = false, this.nextCursor, this.failure}): _sessions = sessions,_metrics = metrics;
+  const _MeasurementsState({this.status = LoadStatus.initial, final  List<MeasurementSession> sessions = const <MeasurementSession>[], final  List<GoalMetric> metrics = const <GoalMetric>[], final  List<String> mandatoryMetricIds = const <String>[], this.submitting = false, this.hasMore = false, this.loadingMore = false, this.nextCursor, this.failure}): _sessions = sessions,_metrics = metrics,_mandatoryMetricIds = mandatoryMetricIds;
   
 
 @override@JsonKey() final  LoadStatus status;
@@ -230,8 +232,16 @@ class _MeasurementsState implements MeasurementsState {
   return EqualUnmodifiableListView(_metrics);
 }
 
+ final  List<String> _mandatoryMetricIds;
+@override@JsonKey() List<String> get mandatoryMetricIds {
+  if (_mandatoryMetricIds is EqualUnmodifiableListView) return _mandatoryMetricIds;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_mandatoryMetricIds);
+}
+
 @override@JsonKey() final  bool submitting;
 @override@JsonKey() final  bool hasMore;
+@override@JsonKey() final  bool loadingMore;
 @override final  String? nextCursor;
 @override final  Failure? failure;
 
@@ -245,16 +255,16 @@ _$MeasurementsStateCopyWith<_MeasurementsState> get copyWith => __$MeasurementsS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MeasurementsState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._sessions, _sessions)&&const DeepCollectionEquality().equals(other._metrics, _metrics)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MeasurementsState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._sessions, _sessions)&&const DeepCollectionEquality().equals(other._metrics, _metrics)&&const DeepCollectionEquality().equals(other._mandatoryMetricIds, _mandatoryMetricIds)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_sessions),const DeepCollectionEquality().hash(_metrics),submitting,hasMore,nextCursor,failure);
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_sessions),const DeepCollectionEquality().hash(_metrics),const DeepCollectionEquality().hash(_mandatoryMetricIds),submitting,hasMore,loadingMore,nextCursor,failure);
 
 @override
 String toString() {
-  return 'MeasurementsState(status: $status, sessions: $sessions, metrics: $metrics, submitting: $submitting, hasMore: $hasMore, nextCursor: $nextCursor, failure: $failure)';
+  return 'MeasurementsState(status: $status, sessions: $sessions, metrics: $metrics, mandatoryMetricIds: $mandatoryMetricIds, submitting: $submitting, hasMore: $hasMore, loadingMore: $loadingMore, nextCursor: $nextCursor, failure: $failure)';
 }
 
 
@@ -265,7 +275,7 @@ abstract mixin class _$MeasurementsStateCopyWith<$Res> implements $MeasurementsS
   factory _$MeasurementsStateCopyWith(_MeasurementsState value, $Res Function(_MeasurementsState) _then) = __$MeasurementsStateCopyWithImpl;
 @override @useResult
 $Res call({
- LoadStatus status, List<MeasurementSession> sessions, List<GoalMetric> metrics, bool submitting, bool hasMore, String? nextCursor, Failure? failure
+ LoadStatus status, List<MeasurementSession> sessions, List<GoalMetric> metrics, List<String> mandatoryMetricIds, bool submitting, bool hasMore, bool loadingMore, String? nextCursor, Failure? failure
 });
 
 
@@ -282,13 +292,15 @@ class __$MeasurementsStateCopyWithImpl<$Res>
 
 /// Create a copy of MeasurementsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? sessions = null,Object? metrics = null,Object? submitting = null,Object? hasMore = null,Object? nextCursor = freezed,Object? failure = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? sessions = null,Object? metrics = null,Object? mandatoryMetricIds = null,Object? submitting = null,Object? hasMore = null,Object? loadingMore = null,Object? nextCursor = freezed,Object? failure = freezed,}) {
   return _then(_MeasurementsState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,sessions: null == sessions ? _self._sessions : sessions // ignore: cast_nullable_to_non_nullable
 as List<MeasurementSession>,metrics: null == metrics ? _self._metrics : metrics // ignore: cast_nullable_to_non_nullable
-as List<GoalMetric>,submitting: null == submitting ? _self.submitting : submitting // ignore: cast_nullable_to_non_nullable
+as List<GoalMetric>,mandatoryMetricIds: null == mandatoryMetricIds ? _self._mandatoryMetricIds : mandatoryMetricIds // ignore: cast_nullable_to_non_nullable
+as List<String>,submitting: null == submitting ? _self.submitting : submitting // ignore: cast_nullable_to_non_nullable
 as bool,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
+as bool,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable
 as bool,nextCursor: freezed == nextCursor ? _self.nextCursor : nextCursor // ignore: cast_nullable_to_non_nullable
 as String?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
 as Failure?,

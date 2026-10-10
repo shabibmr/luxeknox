@@ -94,6 +94,7 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'goals.create',
       'goals.update',
       'goals.remarks',
+      'progress_photos.moderate',
       'notifications.read',
       'notifications.send',
       'notifications.update',
@@ -218,8 +219,8 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
       'diets.read',
       'diet.read',
       'goals.read',
-      // Members are read-only on workouts/diets/goals; goals.remarks is the
-      // one write path (progress notes), gated separately in progress-note.controller.
+      'goals.write',
+      // Members write own measurements, photos, and check-ins; goals.remarks is progress notes.
       'goals.remarks',
       'notifications.read',
       'notifications.update',

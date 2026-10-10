@@ -1,4 +1,5 @@
 import '../domain/entities/goal_status.dart';
+import '../domain/entities/progress_note_type.dart';
 
 enum GoalDetailShell { member, trainer, admin }
 
@@ -18,6 +19,39 @@ GoalDetailShell goalDetailShellForPath(String path) {
   if (path.startsWith('/admin/members/')) return GoalDetailShell.admin;
   if (path.startsWith('/trainer/members/')) return GoalDetailShell.trainer;
   return GoalDetailShell.member;
+}
+
+/// FR-GOAL-009: upload only on the member shell for own photos with write.
+bool canUploadProgressPhoto({
+  required GoalDetailShell shell,
+  required bool isOwner,
+  required bool canWriteGoals,
+}) {
+  return shell == GoalDetailShell.member && isOwner && canWriteGoals;
+}
+
+/// Owner may delete own; admin deletes only with `progress_photos.moderate`.
+bool canDeleteProgressPhoto({
+  required bool isOwner,
+  required bool canModerate,
+}) {
+  return isOwner || canModerate;
+}
+
+/// Compose types accepted by the service for this shell (not [UserType]).
+List<ProgressNoteType> allowedNoteTypesForShell(GoalDetailShell shell) {
+  return switch (shell) {
+    GoalDetailShell.member => const [ProgressNoteType.memberNote],
+    GoalDetailShell.trainer => const [ProgressNoteType.trainerAssessment],
+    GoalDetailShell.admin => const [
+      ProgressNoteType.trainerAssessment,
+      ProgressNoteType.memberNote,
+    ],
+  };
+}
+
+ProgressNoteType defaultNoteTypeForShell(GoalDetailShell shell) {
+  return allowedNoteTypesForShell(shell).first;
 }
 
 /// Role gates for goal detail (ADR-0006 §7). Uses shell + `goals.write` +

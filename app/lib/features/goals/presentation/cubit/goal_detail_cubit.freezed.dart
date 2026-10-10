@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$GoalDetailState {
 
- LoadStatus get status; MemberGoal? get goal; bool get submitting; Failure? get failure;
+ LoadStatus get status; MemberGoal? get goal; List<ProgressNote> get coachNotes; LoadStatus get notesStatus; bool get submitting; Failure? get failure;
 /// Create a copy of GoalDetailState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $GoalDetailStateCopyWith<GoalDetailState> get copyWith => _$GoalDetailStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GoalDetailState&&(identical(other.status, status) || other.status == status)&&(identical(other.goal, goal) || other.goal == goal)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GoalDetailState&&(identical(other.status, status) || other.status == status)&&(identical(other.goal, goal) || other.goal == goal)&&const DeepCollectionEquality().equals(other.coachNotes, coachNotes)&&(identical(other.notesStatus, notesStatus) || other.notesStatus == notesStatus)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,goal,submitting,failure);
+int get hashCode => Object.hash(runtimeType,status,goal,const DeepCollectionEquality().hash(coachNotes),notesStatus,submitting,failure);
 
 @override
 String toString() {
-  return 'GoalDetailState(status: $status, goal: $goal, submitting: $submitting, failure: $failure)';
+  return 'GoalDetailState(status: $status, goal: $goal, coachNotes: $coachNotes, notesStatus: $notesStatus, submitting: $submitting, failure: $failure)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $GoalDetailStateCopyWith<$Res>  {
   factory $GoalDetailStateCopyWith(GoalDetailState value, $Res Function(GoalDetailState) _then) = _$GoalDetailStateCopyWithImpl;
 @useResult
 $Res call({
- LoadStatus status, MemberGoal? goal, bool submitting, Failure? failure
+ LoadStatus status, MemberGoal? goal, List<ProgressNote> coachNotes, LoadStatus notesStatus, bool submitting, Failure? failure
 });
 
 
@@ -62,11 +62,13 @@ class _$GoalDetailStateCopyWithImpl<$Res>
 
 /// Create a copy of GoalDetailState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? goal = freezed,Object? submitting = null,Object? failure = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? goal = freezed,Object? coachNotes = null,Object? notesStatus = null,Object? submitting = null,Object? failure = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,goal: freezed == goal ? _self.goal : goal // ignore: cast_nullable_to_non_nullable
-as MemberGoal?,submitting: null == submitting ? _self.submitting : submitting // ignore: cast_nullable_to_non_nullable
+as MemberGoal?,coachNotes: null == coachNotes ? _self.coachNotes : coachNotes // ignore: cast_nullable_to_non_nullable
+as List<ProgressNote>,notesStatus: null == notesStatus ? _self.notesStatus : notesStatus // ignore: cast_nullable_to_non_nullable
+as LoadStatus,submitting: null == submitting ? _self.submitting : submitting // ignore: cast_nullable_to_non_nullable
 as bool,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
 as Failure?,
   ));
@@ -153,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  MemberGoal? goal,  bool submitting,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  MemberGoal? goal,  List<ProgressNote> coachNotes,  LoadStatus notesStatus,  bool submitting,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GoalDetailState() when $default != null:
-return $default(_that.status,_that.goal,_that.submitting,_that.failure);case _:
+return $default(_that.status,_that.goal,_that.coachNotes,_that.notesStatus,_that.submitting,_that.failure);case _:
   return orElse();
 
 }
@@ -174,10 +176,10 @@ return $default(_that.status,_that.goal,_that.submitting,_that.failure);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  MemberGoal? goal,  bool submitting,  Failure? failure)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  MemberGoal? goal,  List<ProgressNote> coachNotes,  LoadStatus notesStatus,  bool submitting,  Failure? failure)  $default,) {final _that = this;
 switch (_that) {
 case _GoalDetailState():
-return $default(_that.status,_that.goal,_that.submitting,_that.failure);case _:
+return $default(_that.status,_that.goal,_that.coachNotes,_that.notesStatus,_that.submitting,_that.failure);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +196,10 @@ return $default(_that.status,_that.goal,_that.submitting,_that.failure);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  MemberGoal? goal,  bool submitting,  Failure? failure)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  MemberGoal? goal,  List<ProgressNote> coachNotes,  LoadStatus notesStatus,  bool submitting,  Failure? failure)?  $default,) {final _that = this;
 switch (_that) {
 case _GoalDetailState() when $default != null:
-return $default(_that.status,_that.goal,_that.submitting,_that.failure);case _:
+return $default(_that.status,_that.goal,_that.coachNotes,_that.notesStatus,_that.submitting,_that.failure);case _:
   return null;
 
 }
@@ -209,11 +211,19 @@ return $default(_that.status,_that.goal,_that.submitting,_that.failure);case _:
 
 
 class _GoalDetailState implements GoalDetailState {
-  const _GoalDetailState({this.status = LoadStatus.initial, this.goal, this.submitting = false, this.failure});
+  const _GoalDetailState({this.status = LoadStatus.initial, this.goal, final  List<ProgressNote> coachNotes = const <ProgressNote>[], this.notesStatus = LoadStatus.initial, this.submitting = false, this.failure}): _coachNotes = coachNotes;
   
 
 @override@JsonKey() final  LoadStatus status;
 @override final  MemberGoal? goal;
+ final  List<ProgressNote> _coachNotes;
+@override@JsonKey() List<ProgressNote> get coachNotes {
+  if (_coachNotes is EqualUnmodifiableListView) return _coachNotes;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_coachNotes);
+}
+
+@override@JsonKey() final  LoadStatus notesStatus;
 @override@JsonKey() final  bool submitting;
 @override final  Failure? failure;
 
@@ -227,16 +237,16 @@ _$GoalDetailStateCopyWith<_GoalDetailState> get copyWith => __$GoalDetailStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GoalDetailState&&(identical(other.status, status) || other.status == status)&&(identical(other.goal, goal) || other.goal == goal)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GoalDetailState&&(identical(other.status, status) || other.status == status)&&(identical(other.goal, goal) || other.goal == goal)&&const DeepCollectionEquality().equals(other._coachNotes, _coachNotes)&&(identical(other.notesStatus, notesStatus) || other.notesStatus == notesStatus)&&(identical(other.submitting, submitting) || other.submitting == submitting)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,goal,submitting,failure);
+int get hashCode => Object.hash(runtimeType,status,goal,const DeepCollectionEquality().hash(_coachNotes),notesStatus,submitting,failure);
 
 @override
 String toString() {
-  return 'GoalDetailState(status: $status, goal: $goal, submitting: $submitting, failure: $failure)';
+  return 'GoalDetailState(status: $status, goal: $goal, coachNotes: $coachNotes, notesStatus: $notesStatus, submitting: $submitting, failure: $failure)';
 }
 
 
@@ -247,7 +257,7 @@ abstract mixin class _$GoalDetailStateCopyWith<$Res> implements $GoalDetailState
   factory _$GoalDetailStateCopyWith(_GoalDetailState value, $Res Function(_GoalDetailState) _then) = __$GoalDetailStateCopyWithImpl;
 @override @useResult
 $Res call({
- LoadStatus status, MemberGoal? goal, bool submitting, Failure? failure
+ LoadStatus status, MemberGoal? goal, List<ProgressNote> coachNotes, LoadStatus notesStatus, bool submitting, Failure? failure
 });
 
 
@@ -264,11 +274,13 @@ class __$GoalDetailStateCopyWithImpl<$Res>
 
 /// Create a copy of GoalDetailState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? goal = freezed,Object? submitting = null,Object? failure = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? goal = freezed,Object? coachNotes = null,Object? notesStatus = null,Object? submitting = null,Object? failure = freezed,}) {
   return _then(_GoalDetailState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,goal: freezed == goal ? _self.goal : goal // ignore: cast_nullable_to_non_nullable
-as MemberGoal?,submitting: null == submitting ? _self.submitting : submitting // ignore: cast_nullable_to_non_nullable
+as MemberGoal?,coachNotes: null == coachNotes ? _self._coachNotes : coachNotes // ignore: cast_nullable_to_non_nullable
+as List<ProgressNote>,notesStatus: null == notesStatus ? _self.notesStatus : notesStatus // ignore: cast_nullable_to_non_nullable
+as LoadStatus,submitting: null == submitting ? _self.submitting : submitting // ignore: cast_nullable_to_non_nullable
 as bool,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
 as Failure?,
   ));

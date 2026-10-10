@@ -26,10 +26,16 @@ import '../../features/diet/presentation/diet_history_role.dart';
 import '../../features/diet/presentation/screens/diet_daily_log_screen.dart';
 import '../../features/diet/presentation/screens/diet_history_screen.dart';
 import '../../features/diet/presentation/screens/diet_meal_detail_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../di/injector.dart';
+import '../../features/goals/presentation/cubit/measurements_cubit.dart';
+import '../../features/goals/presentation/cubit/progress_overview_cubit.dart';
 import '../../features/goals/presentation/screens/goal_detail_screen.dart';
+import '../../features/goals/presentation/screens/measurements_history_screen.dart';
 import '../../features/goals/presentation/screens/measurements_screen.dart';
 import '../../features/goals/presentation/screens/progress_hub_screen.dart';
 import '../../features/goals/presentation/screens/progress_notes_screen.dart';
+import '../../features/goals/presentation/screens/progress_overview_screen.dart';
 import '../../features/goals/presentation/screens/progress_photos_screen.dart';
 import '../../features/notifications/presentation/screens/notification_detail_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_inbox_screen.dart';
@@ -253,13 +259,46 @@ StatefulShellRoute createMemberBranchRoute() {
             builder: (context, state) => const ProgressHubScreen(),
             routes: [
               GoRoute(
+                path: 'overview',
+                builder: (context, state) {
+                  final profileId =
+                      sessionProfileId(context)?.toString() ?? '';
+                  return BlocProvider(
+                    create: (_) => getIt<ProgressOverviewCubit>()
+                      ..load(profileId),
+                    child: ProgressOverviewScreen(memberId: profileId),
+                  );
+                },
+              ),
+              GoRoute(
                 path: 'goal/:id',
                 builder: (context, state) =>
                     GoalDetailScreen(goalId: state.pathParameters['id']!),
               ),
               GoRoute(
                 path: 'measurements',
-                builder: (context, state) => const MeasurementsScreen(),
+                builder: (context, state) {
+                  final profileId =
+                      sessionProfileId(context)?.toString() ?? '';
+                  return BlocProvider(
+                    create: (_) => getIt<MeasurementsCubit>()..load(profileId),
+                    child: MeasurementsScreen(memberId: profileId),
+                  );
+                },
+                routes: [
+                  GoRoute(
+                    path: 'history',
+                    builder: (context, state) {
+                      final profileId =
+                          sessionProfileId(context)?.toString() ?? '';
+                      return BlocProvider(
+                        create: (_) =>
+                            getIt<MeasurementsCubit>()..load(profileId),
+                        child: MeasurementsHistoryScreen(memberId: profileId),
+                      );
+                    },
+                  ),
+                ],
               ),
               GoRoute(
                 path: 'photos',

@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
-import '../../../../core/widgets/app_chart_types.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
-import '../../../../core/widgets/app_line_chart.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/entities/goal_metric.dart';
@@ -17,73 +14,96 @@ import '../../domain/entities/measurement.dart';
 import '../cubit/measurements_cubit.dart';
 import '../goals_strings.dart';
 
-class MeasurementsScreen extends StatelessWidget {
+class MeasurementsScreen extends StatefulWidget {
   const MeasurementsScreen({
     super.key,
     this.memberId,
-    this.mandatoryMetricIds = const [],
     this.focusMetricId,
     this.returnToCaller = false,
   });
 
   final String? memberId;
-  final List<String> mandatoryMetricIds;
   final String? focusMetricId;
   final bool returnToCaller;
 
+  @override
+  State<MeasurementsScreen> createState() => _MeasurementsScreenState();
+}
+
+class _LatestMetricCardData {
+  const _LatestMetricCardData({
+    required this.metric,
+    required this.latestValue,
+  });
+
+  final GoalMetric metric;
+  final num? latestValue;
+}
+
+class _MeasurementsScreenState extends State<MeasurementsScreen> {
+  static const _targetMetricNames = [
+    'Weight',
+    'Body Fat %',
+    'Chest',
+    'Waist',
+    'Biceps',
+    'Thighs',
+  ];
+
+  var _sheetOpen = false;
+  var _openedFocusSheet = false;
+
   String? _resolveMemberId() {
-    if (memberId != null) return memberId;
-    final session = getIt<SessionCubit>().state;
-    if (session is SessionAuthenticated) {
-      return session.principal.profileId;
+    if (widget.memberId != null && widget.memberId!.isNotEmpty) {
+      return widget.memberId;
+    }
+    if (getIt.isRegistered<SessionCubit>()) {
+      final session = getIt<SessionCubit>().state;
+      if (session is SessionAuthenticated) {
+        return session.principal.profileId;
+      }
     }
     return null;
   }
 
   @override
-  Widget build(BuildContext context) {
-    final id = _resolveMemberId();
-    if (id == null || id.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(title: const Text(GoalsStrings.measurementsTitle)),
-        body: const AppEmptyView(message: GoalsStrings.measurementsEmpty),
-      );
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final cubit = context.read<MeasurementsCubit>();
+      if (cubit.state.status == LoadStatus.initial) {
+        final id = _resolveMemberId();
+        if (id != null && id.isNotEmpty) {
+          cubit.load(id);
+        }
+      }
+    });
+  }
+
+  void _navigateToHistory(BuildContext context) {
+    String? currentPath;
+    try {
+      currentPath = GoRouterState.of(context).uri.path;
+    } catch (_) {}
+
+    if (currentPath != null && currentPath.endsWith('/measurements')) {
+      context.push('$currentPath/history');
+      return;
     }
 
-    return BlocProvider(
-      create: (_) =>
-          getIt<MeasurementsCubit>()
-            ..load(id, mandatoryMetricIds: mandatoryMetricIds),
-      child: _MeasurementsBody(
-        memberId: id,
-        mandatoryMetricIds: mandatoryMetricIds,
-        focusMetricId: focusMetricId,
-        returnToCaller: returnToCaller,
-      ),
-    );
+    final id = widget.memberId ?? _resolveMemberId();
+    if (currentPath != null && currentPath.contains('/trainer/') && id != null) {
+      context.push('/trainer/members/$id/goals/measurements/history');
+      return;
+    }
+    if (currentPath != null && currentPath.contains('/admin/') && id != null) {
+      context.push('/admin/members/$id/goals/measurements/history');
+      return;
+    }
+
+    context.push('/progress/measurements/history');
   }
-}
-
-class _MeasurementsBody extends StatefulWidget {
-  const _MeasurementsBody({
-    required this.memberId,
-    required this.mandatoryMetricIds,
-    this.focusMetricId,
-    this.returnToCaller = false,
-  });
-
-  final String memberId;
-  final List<String> mandatoryMetricIds;
-  final String? focusMetricId;
-  final bool returnToCaller;
-
-  @override
-  State<_MeasurementsBody> createState() => _MeasurementsBodyState();
-}
-
-class _MeasurementsBodyState extends State<_MeasurementsBody> {
-  var _sheetOpen = false;
-  var _openedFocusSheet = false;
 
   List<GoalMetric> _orderedMetrics(List<GoalMetric> metrics) {
     final focus = widget.focusMetricId;
@@ -94,6 +114,43 @@ class _MeasurementsBodyState extends State<_MeasurementsBody> {
     final focused = ordered.removeAt(index);
     ordered.insert(0, focused);
     return ordered;
+  }
+
+  List<_LatestMetricCardData> _resolveLatestMetricCards(
+    MeasurementsState state,
+  ) {
+    final cards = <_LatestMetricCardData>[];
+    for (final target in _targetMetricNames) {
+      final targetLower = target.trim().toLowerCase();
+      GoalMetric? matchedMetric;
+      for (final m in state.metrics) {
+        if (m.name.trim().toLowerCase() == targetLower) {
+          matchedMetric = m;
+          break;
+        }
+      }
+      if (matchedMetric == null) continue;
+
+      final metric = matchedMetric;
+      final matchingSessions = state.sessions
+          .where((s) => s.values.any((v) => v.metricId == metric.id))
+          .toList()
+        ..sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
+
+      final num? latestValue = matchingSessions.isNotEmpty
+          ? matchingSessions.first.values
+              .firstWhere((v) => v.metricId == metric.id)
+              .value
+          : null;
+
+      cards.add(
+        _LatestMetricCardData(
+          metric: metric,
+          latestValue: latestValue,
+        ),
+      );
+    }
+    return cards;
   }
 
   Future<void> _openCreate(
@@ -142,7 +199,7 @@ class _MeasurementsBodyState extends State<_MeasurementsBody> {
                         decoration: InputDecoration(
                           labelText:
                               '${m.name} (${m.unitOfMeasure})'
-                              '${widget.mandatoryMetricIds.contains(m.id) ? ' *' : ''}',
+                              '${state.mandatoryMetricIds.contains(m.id) ? ' *' : ''}',
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -226,33 +283,18 @@ class _MeasurementsBodyState extends State<_MeasurementsBody> {
     }
   }
 
-  AppLineSeries _chartSeries(
-    MeasurementsState state,
-    String metricId,
-    String name,
-  ) {
-    final points = <MapEntry<DateTime, num>>[];
-    for (final session in state.sessions) {
-      for (final v in session.values) {
-        if (v.metricId == metricId) {
-          points.add(MapEntry(session.recordedAt, v.value));
-        }
-      }
-    }
-    points.sort((a, b) => a.key.compareTo(b.key));
-    return AppLineSeries(
-      name: name,
-      points: [
-        for (final p in points)
-          Offset(p.key.millisecondsSinceEpoch.toDouble(), p.value.toDouble()),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(GoalsStrings.measurementsTitle)),
+      appBar: AppBar(
+        title: const Text(GoalsStrings.measurementsTitle),
+        actions: [
+          TextButton(
+            onPressed: () => _navigateToHistory(context),
+            child: const Text(GoalsStrings.historyLink),
+          ),
+        ],
+      ),
       floatingActionButton: BlocBuilder<MeasurementsCubit, MeasurementsState>(
         builder: (context, state) {
           final showData =
@@ -290,17 +332,26 @@ class _MeasurementsBodyState extends State<_MeasurementsBody> {
           }
           if (state.status == LoadStatus.failure && !showData) {
             return AppErrorView(
-              message: failureMessage(state.failure!),
-              onRetry: () => context.read<MeasurementsCubit>().load(
-                widget.memberId,
-                mandatoryMetricIds: widget.mandatoryMetricIds,
-              ),
+              message: state.failure != null
+                  ? failureMessage(state.failure!)
+                  : '',
+              onRetry: () {
+                final id = _resolveMemberId();
+                if (id != null && id.isNotEmpty) {
+                  context.read<MeasurementsCubit>().load(id);
+                }
+              },
             );
           }
-          final sessions = state.sessions;
-          final metrics = state.metrics;
+
+          if (state.sessions.isEmpty && state.metrics.isEmpty) {
+            return const AppEmptyView(
+              message: GoalsStrings.measurementsEmpty,
+            );
+          }
+
           if (widget.focusMetricId != null &&
-              metrics.isNotEmpty &&
+              state.metrics.isNotEmpty &&
               !_openedFocusSheet) {
             _openedFocusSheet = true;
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -308,53 +359,57 @@ class _MeasurementsBodyState extends State<_MeasurementsBody> {
               _openCreate(context, state);
             });
           }
-          return sessions.isEmpty && metrics.isEmpty
-              ? const AppEmptyView(message: GoalsStrings.measurementsEmpty)
-              : ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    Text(
-                      GoalsStrings.chartsSection,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    for (final m in metrics.take(3)) ...[
-                      Text('${m.name} (${m.unitOfMeasure})'),
-                      AppLineChart(
-                        series: [_chartSeries(state, m.id, m.name)],
-                        height: 160,
-                        emptyMessage: GoalsStrings.chartsEmpty,
-                        xLabelFormatter: (x) => DateFormat('MMM d').format(
-                          DateTime.fromMillisecondsSinceEpoch(x.round()),
-                        ),
+
+          final cards = _resolveLatestMetricCards(state);
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    GoalsStrings.latestMeasurementsTitle,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  TextButton(
+                    onPressed: () => _navigateToHistory(context),
+                    child: const Text(GoalsStrings.viewHistory),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (cards.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text(GoalsStrings.measurementsEmpty),
+                  ),
+                )
+              else
+                for (final card in cards)
+                  Card(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    child: ListTile(
+                      title: Text(
+                        '${card.metric.name} (${card.metric.unitOfMeasure})',
                       ),
-                      const SizedBox(height: 12),
-                    ],
-                    const Divider(),
-                    Text(
-                      GoalsStrings.measurementsTitle,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    if (sessions.isEmpty)
-                      const Text(GoalsStrings.measurementsEmpty)
-                    else
-                      for (final s in sessions)
-                        Card(
-                          child: ListTile(
-                            title: Text(s.recordedAt.toIso8601String()),
-                            subtitle: Text(
-                              [
-                                if (s.notes != null && s.notes!.isNotEmpty)
-                                  s.notes!,
-                                for (final v in s.values)
-                                  '${v.metricId}: ${v.value}',
-                              ].join(' · '),
+                      trailing: Text(
+                        card.latestValue != null ? '${card.latestValue}' : '—',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
-                          ),
-                        ),
-                  ],
-                );
+                      ),
+                    ),
+                  ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.history),
+                label: const Text(GoalsStrings.viewHistory),
+                onPressed: () => _navigateToHistory(context),
+              ),
+            ],
+          );
         },
       ),
     );

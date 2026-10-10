@@ -7,10 +7,31 @@ import '../../features/auth/presentation/widgets/sign_out_tile.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_library_screen.dart';
 import '../../features/foods/presentation/screens/food_library_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../di/injector.dart';
+import '../../features/goals/presentation/cubit/admin_measurements_audit_cubit.dart';
+import '../../features/goals/presentation/cubit/admin_member_goals_cubit.dart';
+import '../../features/goals/presentation/cubit/admin_progress_aggregate_cubit.dart';
+import '../../features/goals/presentation/cubit/admin_progress_photos_vault_cubit.dart';
+import '../../features/goals/presentation/cubit/measurements_cubit.dart';
+import '../../features/goals/presentation/cubit/progress_overview_cubit.dart';
+import '../../features/goals/presentation/cubit/progress_timeline_cubit.dart';
+import '../../features/goals/presentation/goals_strings.dart';
+import '../../features/goals/presentation/screens/admin_measurements_audit_screen.dart';
+import '../../features/goals/presentation/screens/admin_member_goals_screen.dart';
+import '../../features/goals/presentation/screens/admin_progress_aggregate_screen.dart';
+import '../../features/goals/presentation/screens/admin_progress_photos_vault_screen.dart';
 import '../../features/goals/presentation/screens/goal_metrics_admin_screen.dart';
 import '../../features/goals/presentation/screens/goal_detail_screen.dart';
+import '../../features/goals/presentation/screens/goal_form_screen.dart';
+import '../../features/goals/presentation/screens/measurements_history_screen.dart';
 import '../../features/goals/presentation/screens/measurements_screen.dart';
 import '../../features/goals/presentation/screens/progress_hub_screen.dart';
+import '../../features/goals/presentation/screens/progress_notes_screen.dart';
+import '../../features/goals/presentation/screens/progress_overview_screen.dart';
+import '../../features/goals/presentation/screens/progress_photos_screen.dart';
+import '../../features/goals/presentation/screens/progress_timeline_screen.dart';
+import '../../session/presentation/session_cubit.dart';
 import '../../features/notifications/presentation/screens/broadcast_screen.dart';
 import '../../features/membership/presentation/screens/create_membership_screen.dart';
 import '../../features/membership/presentation/screens/membership_detail_screen.dart';
@@ -161,19 +182,111 @@ StatefulShellRoute createAdminBranchRoute() {
                     },
                     routes: [
                       GoRoute(
+                        path: 'overview',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'] ?? '';
+                          return BlocProvider(
+                            create: (_) => getIt<ProgressOverviewCubit>()
+                              ..load(id, includeCircumference: true),
+                            child: ProgressOverviewScreen(
+                              memberId: id,
+                              isTrainerContext: true,
+                            ),
+                          );
+                        },
+                      ),
+                      GoRoute(
+                        path: 'photos',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'] ?? '';
+                          final assigned = state.extra as bool? ?? false;
+                          return ProgressPhotosScreen(
+                            memberId: id,
+                            isAssignedTrainer: assigned,
+                          );
+                        },
+                      ),
+                      GoRoute(
+                        path: 'notes',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'] ?? '';
+                          return ProgressNotesScreen(memberId: id);
+                        },
+                      ),
+                      GoRoute(
+                        path: 'timeline',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'] ?? '';
+                          return BlocProvider(
+                            create: (_) =>
+                                getIt<ProgressTimelineCubit>()..load(id),
+                            child: ProgressTimelineScreen(memberId: id),
+                          );
+                        },
+                      ),
+                      GoRoute(
+                        path: 'measurements',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'] ?? '';
+                          return BlocProvider(
+                            create: (_) => getIt<MeasurementsCubit>()..load(id),
+                            child: MeasurementsScreen(memberId: id),
+                          );
+                        },
+                        routes: [
+                          GoRoute(
+                            path: 'history',
+                            builder: (context, state) {
+                              final id = state.pathParameters['id'] ?? '';
+                              return BlocProvider(
+                                create: (_) =>
+                                    getIt<MeasurementsCubit>()..load(id),
+                                child: MeasurementsHistoryScreen(memberId: id),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      GoRoute(
+                        path: 'measurements/new',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'] ?? '';
+                          final metric = state.uri.queryParameters['metric'];
+                          return MeasurementsScreen(
+                            memberId: id,
+                            focusMetricId: metric,
+                            returnToCaller: metric != null,
+                          );
+                        },
+                      ),
+                      GoRoute(
+                        path: 'new',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'] ?? '';
+                          return GoalFormScreen(memberId: id);
+                        },
+                      ),
+                      GoRoute(
                         path: 'goal/:goalId',
                         builder: (context, state) {
                           return GoalDetailScreen(
                             goalId: state.pathParameters['goalId']!,
                           );
                         },
-                      ),
-                      GoRoute(
-                        path: 'add-measurement',
-                        builder: (context, state) {
-                          final id = state.pathParameters['id'] ?? '';
-                          return MeasurementsScreen(memberId: id);
-                        },
+                        routes: [
+                          GoRoute(
+                            path: 'edit',
+                            builder: (context, state) {
+                              final id = state.pathParameters['id'] ?? '';
+                              final goalId =
+                                  state.pathParameters['goalId']!;
+                              return GoalFormScreen(
+                                memberId: id,
+                                goalId: goalId,
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -426,6 +539,53 @@ StatefulShellRoute createAdminBranchRoute() {
           GoRoute(
             path: Routes.adminGoalMetrics,
             builder: (context, state) => const GoalMetricsAdminScreen(),
+          ),
+          GoRoute(
+            path: Routes.adminMemberGoals,
+            builder: (context, state) => BlocProvider(
+              create: (_) => getIt<AdminMemberGoalsCubit>()
+                ..load(status: 'in_progress'),
+              child: const AdminMemberGoalsScreen(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.adminProgress,
+            builder: (context, state) => BlocProvider(
+              create: (_) => getIt<AdminProgressAggregateCubit>()..load(),
+              child: const AdminProgressAggregateScreen(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.adminMeasurements,
+            builder: (context, state) => BlocProvider(
+              create: (_) => getIt<AdminMeasurementsAuditCubit>()..load(),
+              child: const AdminMeasurementsAuditScreen(),
+            ),
+            routes: [
+              GoRoute(
+                path: 'history',
+                builder: (context, state) => BlocProvider(
+                  create: (_) => getIt<AdminMeasurementsAuditCubit>()..load(),
+                  child: const AdminMeasurementsAuditScreen(
+                    title: GoalsStrings.adminMeasurementsHistoryTitle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: Routes.adminProgressPhotos,
+            builder: (context, state) {
+              final session = getIt<SessionCubit>().state;
+              final canModerate =
+                  session is SessionAuthenticated &&
+                  session.capabilities.can('progress_photos.moderate');
+              return BlocProvider(
+                create: (_) => getIt<AdminProgressPhotosVaultCubit>()
+                  ..load(canModerate: canModerate),
+                child: const AdminProgressPhotosVaultScreen(),
+              );
+            },
           ),
           GoRoute(
             path: Routes.adminNotificationsBroadcast,

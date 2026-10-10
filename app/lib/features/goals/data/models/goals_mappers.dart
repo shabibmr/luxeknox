@@ -8,9 +8,11 @@ import '../../domain/entities/goal_status.dart';
 import '../../domain/entities/measurement.dart';
 import '../../domain/entities/member_goal.dart';
 import '../../domain/entities/photo_pose.dart';
+import '../../domain/entities/progress_aggregate.dart';
 import '../../domain/entities/progress_note.dart';
 import '../../domain/entities/progress_note_type.dart';
 import '../../domain/entities/progress_photo.dart';
+import '../../domain/entities/progress_photo_comparison.dart';
 
 GoalMetricCategory goalMetricCategoryToDomain(Object category) {
   final name = category is Enum ? category.name : category.toString();
@@ -40,6 +42,17 @@ extension GoalMetricModelMapper on api.GoalMetric {
       unitOfMeasure: unitOfMeasure,
       category: goalMetricCategoryToDomain(category),
       isActive: isActive,
+    );
+  }
+}
+
+extension ProgressAggregateModelMapper on api.ProgressAggregate {
+  ProgressAggregateCounts toDomain() {
+    return ProgressAggregateCounts(
+      activeGoals: activeGoals,
+      achievedGoals: achievedGoals,
+      membersMeasured30d: membersMeasured30d,
+      photos30d: photos30d,
     );
   }
 }
@@ -98,6 +111,17 @@ extension MeasurementModelMapper on api.Measurement {
   }
 }
 
+extension LongitudinalDataPointMapper on api.LongitudinalDataPoint {
+  ChartDataPoint toDomain() {
+    return ChartDataPoint(
+      recordedAt: recordedAt,
+      value: value,
+      metricName: metricName,
+      unitOfMeasure: unitOfMeasure,
+    );
+  }
+}
+
 extension ProgressPhotoModelMapper on api.ProgressPhoto {
   ProgressPhoto toDomain() {
     return ProgressPhoto(
@@ -109,6 +133,27 @@ extension ProgressPhotoModelMapper on api.ProgressPhoto {
       isPrivate: isPrivate ?? false,
     );
   }
+}
+
+extension ProgressPhotoComparisonModelMapper on api.ProgressPhotoComparison {
+  ProgressPhotoComparison toDomain() {
+    final byPose = comparisonByPose;
+    return ProgressPhotoComparison(
+      date1: date1.toDateTime(utc: true),
+      date2: date2.toDateTime(utc: true),
+      front: _posePairToDomain(byPose.front),
+      side: _posePairToDomain(byPose.side),
+      back: _posePairToDomain(byPose.back),
+    );
+  }
+}
+
+ProgressPhotoPosePair _posePairToDomain(api.ProgressPhotoComparisonPosePair? pair) {
+  if (pair == null) return const ProgressPhotoPosePair();
+  return ProgressPhotoPosePair(
+    date1: pair.date1?.toDomain(),
+    date2: pair.date2?.toDomain(),
+  );
 }
 
 extension ProgressNoteModelMapper on api.ProgressNote {

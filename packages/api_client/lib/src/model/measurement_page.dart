@@ -16,6 +16,7 @@ part 'measurement_page.g.dart';
 /// Properties:
 /// * [data] 
 /// * [meta] 
+/// * [mandatoryMetricIds] 
 @BuiltValue()
 abstract class MeasurementPage implements Built<MeasurementPage, MeasurementPageBuilder> {
   @BuiltValueField(wireName: r'data')
@@ -23,6 +24,9 @@ abstract class MeasurementPage implements Built<MeasurementPage, MeasurementPage
 
   @BuiltValueField(wireName: r'meta')
   PageMeta get meta;
+
+  @BuiltValueField(wireName: r'mandatory_metric_ids')
+  BuiltList<int>? get mandatoryMetricIds;
 
   MeasurementPage._();
 
@@ -57,6 +61,13 @@ class _$MeasurementPageSerializer implements PrimitiveSerializer<MeasurementPage
       object.meta,
       specifiedType: const FullType(PageMeta),
     );
+    if (object.mandatoryMetricIds != null) {
+      yield r'mandatory_metric_ids';
+      yield serializers.serialize(
+        object.mandatoryMetricIds,
+        specifiedType: const FullType(BuiltList, [FullType(int)]),
+      );
+    }
   }
 
   @override
@@ -93,6 +104,14 @@ class _$MeasurementPageSerializer implements PrimitiveSerializer<MeasurementPage
             specifiedType: const FullType(PageMeta),
           ) as PageMeta;
           result.meta.replace(valueDes);
+          break;
+        case r'mandatory_metric_ids':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(int)]),
+          ) as BuiltList<int>?;
+          if (valueDes == null) continue;
+          result.mandatoryMetricIds.replace(valueDes);
           break;
         default:
           unhandled.add(key);

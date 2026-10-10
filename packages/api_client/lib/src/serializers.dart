@@ -91,6 +91,7 @@ import 'package:api_client/src/model/mark_attendance_request.dart';
 import 'package:api_client/src/model/me_response.dart';
 import 'package:api_client/src/model/me_response_profile.dart';
 import 'package:api_client/src/model/measurement.dart';
+import 'package:api_client/src/model/measurement_chart_response.dart';
 import 'package:api_client/src/model/measurement_page.dart';
 import 'package:api_client/src/model/measurement_value.dart';
 import 'package:api_client/src/model/measurement_write.dart';
@@ -150,6 +151,7 @@ import 'package:api_client/src/model/permission_action.dart';
 import 'package:api_client/src/model/permission_page.dart';
 import 'package:api_client/src/model/personal_record.dart';
 import 'package:api_client/src/model/principal.dart';
+import 'package:api_client/src/model/progress_aggregate.dart';
 import 'package:api_client/src/model/progress_note.dart';
 import 'package:api_client/src/model/progress_note_page.dart';
 import 'package:api_client/src/model/progress_note_write.dart';
@@ -307,6 +309,7 @@ part 'serializers.g.dart';
   MeResponse,
   MeResponseProfile,
   Measurement,
+  MeasurementChartResponse,
   MeasurementPage,
   MeasurementValue,
   MeasurementWrite,
@@ -366,6 +369,7 @@ part 'serializers.g.dart';
   PermissionPage,
   PersonalRecord,
   Principal,
+  ProgressAggregate,
   ProgressNote,
   ProgressNotePage,
   ProgressNoteWrite,

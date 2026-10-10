@@ -12,7 +12,7 @@ part of 'goals_list_cubit.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$GoalsListState {
+mixin _$GoalsListState implements DiagnosticableTreeMixin {
 
  LoadStatus get status; List<MemberGoal> get items; Failure? get failure;
 /// Create a copy of GoalsListState
@@ -22,6 +22,12 @@ mixin _$GoalsListState {
 $GoalsListStateCopyWith<GoalsListState> get copyWith => _$GoalsListStateCopyWithImpl<GoalsListState>(this as GoalsListState, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'GoalsListState'))
+    ..add(DiagnosticsProperty('status', status))..add(DiagnosticsProperty('items', items))..add(DiagnosticsProperty('failure', failure));
+}
 
 @override
 bool operator ==(Object other) {
@@ -33,7 +39,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(items),failure);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'GoalsListState(status: $status, items: $items, failure: $failure)';
 }
 
@@ -207,7 +213,7 @@ return $default(_that.status,_that.items,_that.failure);case _:
 /// @nodoc
 
 
-class _GoalsListState implements GoalsListState {
+class _GoalsListState with DiagnosticableTreeMixin implements GoalsListState {
   const _GoalsListState({this.status = LoadStatus.initial, final  List<MemberGoal> items = const <MemberGoal>[], this.failure}): _items = items;
   
 
@@ -228,6 +234,12 @@ class _GoalsListState implements GoalsListState {
 _$GoalsListStateCopyWith<_GoalsListState> get copyWith => __$GoalsListStateCopyWithImpl<_GoalsListState>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'GoalsListState'))
+    ..add(DiagnosticsProperty('status', status))..add(DiagnosticsProperty('items', items))..add(DiagnosticsProperty('failure', failure));
+}
 
 @override
 bool operator ==(Object other) {
@@ -239,7 +251,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_items),failure);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'GoalsListState(status: $status, items: $items, failure: $failure)';
 }
 

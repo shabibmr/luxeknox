@@ -40,7 +40,7 @@ abstract class Role implements Built<Role, RoleBuilder> {
   factory Role([void updates(RoleBuilder b)]) = _$Role;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(RoleBuilder b) => b..isSystemRole = false;
+  static void _defaults(RoleBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
   static Serializer<Role> get serializer => _$RoleSerializer();
@@ -133,7 +133,6 @@ class _$RoleSerializer implements PrimitiveSerializer<Role> {
           result.description = valueDes;
           break;
         case r'is_system_role':
-        case r'is_system':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType(bool),

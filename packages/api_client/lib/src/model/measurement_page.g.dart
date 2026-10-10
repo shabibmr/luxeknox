@@ -11,11 +11,15 @@ class _$MeasurementPage extends MeasurementPage {
   final BuiltList<Measurement> data;
   @override
   final PageMeta meta;
+  @override
+  final BuiltList<int>? mandatoryMetricIds;
 
   factory _$MeasurementPage([void Function(MeasurementPageBuilder)? updates]) =>
       (MeasurementPageBuilder()..update(updates))._build();
 
-  _$MeasurementPage._({required this.data, required this.meta}) : super._();
+  _$MeasurementPage._(
+      {required this.data, required this.meta, this.mandatoryMetricIds})
+      : super._();
   @override
   MeasurementPage rebuild(void Function(MeasurementPageBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -26,7 +30,10 @@ class _$MeasurementPage extends MeasurementPage {
   @override
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
-    return other is MeasurementPage && data == other.data && meta == other.meta;
+    return other is MeasurementPage &&
+        data == other.data &&
+        meta == other.meta &&
+        mandatoryMetricIds == other.mandatoryMetricIds;
   }
 
   @override
@@ -34,6 +41,7 @@ class _$MeasurementPage extends MeasurementPage {
     var _$hash = 0;
     _$hash = $jc(_$hash, data.hashCode);
     _$hash = $jc(_$hash, meta.hashCode);
+    _$hash = $jc(_$hash, mandatoryMetricIds.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -42,7 +50,8 @@ class _$MeasurementPage extends MeasurementPage {
   String toString() {
     return (newBuiltValueToStringHelper(r'MeasurementPage')
           ..add('data', data)
-          ..add('meta', meta))
+          ..add('meta', meta)
+          ..add('mandatoryMetricIds', mandatoryMetricIds))
         .toString();
   }
 }
@@ -60,6 +69,12 @@ class MeasurementPageBuilder
   PageMetaBuilder get meta => _$this._meta ??= PageMetaBuilder();
   set meta(PageMetaBuilder? meta) => _$this._meta = meta;
 
+  ListBuilder<int>? _mandatoryMetricIds;
+  ListBuilder<int> get mandatoryMetricIds =>
+      _$this._mandatoryMetricIds ??= ListBuilder<int>();
+  set mandatoryMetricIds(ListBuilder<int>? mandatoryMetricIds) =>
+      _$this._mandatoryMetricIds = mandatoryMetricIds;
+
   MeasurementPageBuilder() {
     MeasurementPage._defaults(this);
   }
@@ -69,6 +84,7 @@ class MeasurementPageBuilder
     if ($v != null) {
       _data = $v.data.toBuilder();
       _meta = $v.meta.toBuilder();
+      _mandatoryMetricIds = $v.mandatoryMetricIds?.toBuilder();
       _$v = null;
     }
     return this;
@@ -94,6 +110,7 @@ class MeasurementPageBuilder
           _$MeasurementPage._(
             data: data.build(),
             meta: meta.build(),
+            mandatoryMetricIds: _mandatoryMetricIds?.build(),
           );
     } catch (_) {
       late String _$failedField;
@@ -102,6 +119,8 @@ class MeasurementPageBuilder
         data.build();
         _$failedField = 'meta';
         meta.build();
+        _$failedField = 'mandatoryMetricIds';
+        _mandatoryMetricIds?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'MeasurementPage', _$failedField, e.toString());

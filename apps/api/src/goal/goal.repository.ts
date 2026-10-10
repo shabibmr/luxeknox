@@ -1,10 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, gte, sql, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import {
   goalHistories,
   goalMetrics,
   goals,
+  measurements,
+  progressPhotos,
   type Goal,
   type GoalHistory,
   type GoalMetric,
@@ -145,5 +147,89 @@ export class GoalRepository extends BaseRepository<typeof goals, Goal, NewGoal> 
   async updateById(id: number, values: Partial<NewGoal>): Promise<Goal | null> {
     await this.update(eq(goals.id, id), values);
     return this.findById(id);
+  }
+
+  async findAll(
+    options?: { status?: string; metricId?: number; limit?: number; offset?: number },
+  ): Promise<{ rows: GoalWithMetric[]; total: number }> {
+    const conditions: SQL[] = [];
+
+    if (options?.status) {
+      conditions.push(eq(goals.status, options.status as any));
+    }
+    if (options?.metricId) {
+      conditions.push(eq(goals.metric_id, options.metricId));
+    }
+
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [countResult] = await this.db
+      .select({ count: count() })
+      .from(goals)
+      .where(where);
+
+    const query = this.db
+      .select({
+        goal: goals,
+        metric: goalMetrics,
+      })
+      .from(goals)
+      .innerJoin(goalMetrics, eq(goals.metric_id, goalMetrics.id))
+      .where(where)
+      .orderBy(desc(goals.created_at));
+
+    if (options?.limit) {
+      query.limit(options.limit);
+    }
+    if (options?.offset) {
+      query.offset(options.offset);
+    }
+
+    const results = await query;
+    const rows: GoalWithMetric[] = results.map((r) => ({
+      ...r.goal,
+      metric: r.metric,
+    }));
+
+    return {
+      rows,
+      total: countResult?.count ?? 0,
+    };
+  }
+
+  async getAggregateCounts(): Promise<{
+    active_goals: number;
+    achieved_goals: number;
+    members_measured_30d: number;
+    photos_30d: number;
+  }> {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const [activeGoalsResult] = await this.db
+      .select({ count: count() })
+      .from(goals)
+      .where(eq(goals.status, 'in_progress'));
+
+    const [achievedGoalsResult] = await this.db
+      .select({ count: count() })
+      .from(goals)
+      .where(eq(goals.status, 'achieved'));
+
+    const [membersMeasuredResult] = await this.db
+      .select({ count: sql<number>`count(distinct ${measurements.member_id})` })
+      .from(measurements)
+      .where(gte(measurements.recorded_at, thirtyDaysAgo));
+
+    const [photosResult] = await this.db
+      .select({ count: count() })
+      .from(progressPhotos)
+      .where(gte(progressPhotos.created_at, thirtyDaysAgo));
+
+    return {
+      active_goals: Number(activeGoalsResult?.count ?? 0),
+      achieved_goals: Number(achievedGoalsResult?.count ?? 0),
+      members_measured_30d: Number(membersMeasuredResult?.count ?? 0),
+      photos_30d: Number(photosResult?.count ?? 0),
+    };
   }
 }

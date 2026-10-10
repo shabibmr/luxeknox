@@ -6,6 +6,7 @@ import '../../../../core/error/map_thrown.dart';
 import '../../../../core/pagination/cursor_page.dart';
 import '../../domain/entities/photo_pose.dart';
 import '../../domain/entities/progress_photo.dart';
+import '../../domain/entities/progress_photo_comparison.dart';
 import '../../domain/repositories/progress_photos_repository.dart';
 import '../datasources/goals_remote_datasource.dart';
 import '../models/goals_mappers.dart';
@@ -17,6 +18,30 @@ class ProgressPhotosRepositoryImpl implements ProgressPhotosRepository {
   final GoalsRemoteDataSource _remote;
 
   int? _parseId(String id) => int.tryParse(id);
+
+  @override
+  Future<Either<Failure, CursorPage<ProgressPhoto>>> listAllPhotos({
+    int? limit,
+    String? cursor,
+    String? pose,
+  }) async {
+    try {
+      final page = await _remote.listAllProgressPhotos(
+        limit: limit,
+        cursor: cursor,
+        pose: pose,
+      );
+      return Right(
+        CursorPage(
+          items: page.data.map((p) => p.toDomain()).toList(),
+          nextCursor: page.meta.nextCursor,
+          hasMore: page.meta.hasMore,
+        ),
+      );
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
 
   @override
   Future<Either<Failure, CursorPage<ProgressPhoto>>> listPhotos({
@@ -37,6 +62,28 @@ class ProgressPhotosRepositoryImpl implements ProgressPhotosRepository {
           hasMore: page.meta.hasMore,
         ),
       );
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ProgressPhotoComparison>> comparePhotos({
+    required String memberId,
+    required DateTime date1,
+    required DateTime date2,
+  }) async {
+    final intId = _parseId(memberId);
+    if (intId == null) {
+      return const Left(ValidationFailure(['Invalid member id']));
+    }
+    try {
+      final result = await _remote.compareProgressPhotos(
+        memberId: intId,
+        date1: date1,
+        date2: date2,
+      );
+      return Right(result.toDomain());
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
@@ -11,6 +12,7 @@ import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/entities/photo_pose.dart';
 import '../../domain/entities/progress_photo.dart';
 import '../cubit/progress_photos_cubit.dart';
+import '../goal_view_actions.dart';
 import '../goals_strings.dart';
 
 class ProgressPhotosScreen extends StatelessWidget {
@@ -42,6 +44,19 @@ class ProgressPhotosScreen extends StatelessWidget {
     final canModerate =
         session is SessionAuthenticated &&
         session.capabilities.can('progress_photos.moderate');
+    final canWriteGoals =
+        session is SessionAuthenticated &&
+        session.capabilities.can('goals.write');
+    final shell = goalDetailShellForPath(GoRouterState.of(context).uri.path);
+    final canUpload = canUploadProgressPhoto(
+      shell: shell,
+      isOwner: isOwner,
+      canWriteGoals: canWriteGoals,
+    );
+    final canDelete = canDeleteProgressPhoto(
+      isOwner: isOwner,
+      canModerate: canModerate,
+    );
 
     if (id == null || id.isEmpty) {
       return Scaffold(
@@ -63,6 +78,8 @@ class ProgressPhotosScreen extends StatelessWidget {
         isOwner: isOwner,
         isAssignedTrainer: isAssignedTrainer,
         canModerate: canModerate,
+        canUpload: canUpload,
+        canDelete: canDelete,
       ),
     );
   }
@@ -74,12 +91,16 @@ class _ProgressPhotosBody extends StatefulWidget {
     required this.isOwner,
     required this.isAssignedTrainer,
     required this.canModerate,
+    required this.canUpload,
+    required this.canDelete,
   });
 
   final String memberId;
   final bool isOwner;
   final bool isAssignedTrainer;
   final bool canModerate;
+  final bool canUpload;
+  final bool canDelete;
 
   @override
   State<_ProgressPhotosBody> createState() => _ProgressPhotosBodyState();
@@ -87,7 +108,6 @@ class _ProgressPhotosBody extends StatefulWidget {
 
 class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
   var _compareMode = false;
-  PhotoPose _comparePose = PhotoPose.front;
   DateTime? _dateA;
   DateTime? _dateB;
 
@@ -179,18 +199,37 @@ class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
     }
   }
 
-  ProgressPhoto? _photoForDate(List<ProgressPhoto> photos, DateTime? date) {
-    if (date == null) return null;
-    final key =
-        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    for (final p in photos) {
-      if (p.pose != _comparePose || p.takenDate == null) continue;
-      final d = p.takenDate!;
-      final pk =
-          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-      if (pk == key) return p;
+  Future<void> _pickDate(bool isA) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: (isA ? _dateA : _dateB) ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      if (isA) {
+        _dateA = picked;
+      } else {
+        _dateB = picked;
+      }
+    });
+    final a = _dateA;
+    final b = _dateB;
+    if (a != null && b != null) {
+      await context.read<ProgressPhotosCubit>().compare(date1: a, date2: b);
     }
-    return null;
+  }
+
+  void _toggleCompareMode() {
+    setState(() => _compareMode = !_compareMode);
+    if (!_compareMode) {
+      context.read<ProgressPhotosCubit>().clearComparison();
+      setState(() {
+        _dateA = null;
+        _dateB = null;
+      });
+    }
   }
 
   @override
@@ -202,15 +241,18 @@ class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
           IconButton(
             tooltip: GoalsStrings.compareMode,
             icon: Icon(_compareMode ? Icons.grid_view : Icons.compare),
-            onPressed: () => setState(() => _compareMode = !_compareMode),
+            onPressed: _toggleCompareMode,
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: GoalsStrings.addPhoto,
-        onPressed: () => _addPhoto(context),
-        child: const Icon(Icons.add_a_photo_outlined),
-      ),
+      floatingActionButton: widget.canUpload
+          ? FloatingActionButton(
+              key: const Key('progress-photos-upload'),
+              tooltip: GoalsStrings.addPhoto,
+              onPressed: () => _addPhoto(context),
+              child: const Icon(Icons.add_a_photo_outlined),
+            )
+          : null,
       body: BlocConsumer<ProgressPhotosCubit, ProgressPhotosState>(
         listener: (context, state) {
           final showData =
@@ -239,11 +281,11 @@ class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
             );
           }
           final photos = state.photos;
-          if (photos.isEmpty) {
+          if (photos.isEmpty && !_compareMode) {
             return const AppEmptyView(message: GoalsStrings.photosEmpty);
           }
           return _compareMode
-              ? _buildCompare(context, photos)
+              ? _buildCompare(context, state)
               : _buildGallery(context, photos);
         },
       ),
@@ -299,23 +341,27 @@ class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
                               ),
                               if (p.isPrivate)
                                 const Icon(Icons.lock_outline, size: 16),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline),
-                                onPressed: () async {
-                                  final ok = await context
-                                      .read<ProgressPhotosCubit>()
-                                      .removePhoto(p.id);
-                                  if (ok && context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          GoalsStrings.photoDeleted,
+                              if (widget.canDelete)
+                                IconButton(
+                                  key: Key('progress-photos-delete-${p.id}'),
+                                  icon: const Icon(Icons.delete_outline),
+                                  onPressed: () async {
+                                    final ok = await context
+                                        .read<ProgressPhotosCubit>()
+                                        .removePhoto(p.id);
+                                    if (ok && context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            GoalsStrings.photoDeleted,
+                                          ),
                                         ),
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
+                                      );
+                                    }
+                                  },
+                                ),
                             ],
                           ),
                         ),
@@ -331,27 +377,8 @@ class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
     );
   }
 
-  Widget _buildCompare(BuildContext context, List<ProgressPhoto> photos) {
-    final a = _photoForDate(photos, _dateA);
-    final b = _photoForDate(photos, _dateB);
-
-    Future<void> pick(bool isA) async {
-      final picked = await showDatePicker(
-        context: context,
-        initialDate: (isA ? _dateA : _dateB) ?? DateTime.now(),
-        firstDate: DateTime(2000),
-        lastDate: DateTime.now().add(const Duration(days: 1)),
-      );
-      if (picked != null) {
-        setState(() {
-          if (isA) {
-            _dateA = picked;
-          } else {
-            _dateB = picked;
-          }
-        });
-      }
-    }
+  Widget _buildCompare(BuildContext context, ProgressPhotosState state) {
+    final comparison = state.comparison;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -360,30 +387,13 @@ class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
           GoalsStrings.compareTitle,
           style: Theme.of(context).textTheme.titleMedium,
         ),
-        DropdownButtonFormField<PhotoPose>(
-          // ignore: deprecated_member_use
-          value: _comparePose,
-          decoration: const InputDecoration(
-            labelText: GoalsStrings.comparePose,
-          ),
-          items: [
-            for (final p in PhotoPose.values)
-              DropdownMenuItem(
-                value: p,
-                child: Text(GoalsStrings.poseLabelFor(p)),
-              ),
-          ],
-          onChanged: (v) {
-            if (v != null) setState(() => _comparePose = v);
-          },
-        ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text(GoalsStrings.compareDateA),
           subtitle: Text(_dateA?.toIso8601String().split('T').first ?? '—'),
           trailing: IconButton(
             icon: const Icon(Icons.calendar_today),
-            onPressed: () => pick(true),
+            onPressed: () => _pickDate(true),
           ),
         ),
         ListTile(
@@ -392,25 +402,74 @@ class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
           subtitle: Text(_dateB?.toIso8601String().split('T').first ?? '—'),
           trailing: IconButton(
             icon: const Icon(Icons.calendar_today),
-            onPressed: () => pick(false),
+            onPressed: () => _pickDate(false),
           ),
         ),
         const SizedBox(height: 12),
-        if (a == null || b == null)
+        if (_dateA == null || _dateB == null)
+          const Text(GoalsStrings.compareEmpty)
+        else if (state.comparing)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (comparison == null)
           const Text(GoalsStrings.compareEmpty)
         else
-          Row(
-            children: [
-              Expanded(child: _compareTile(a)),
-              const SizedBox(width: 8),
-              Expanded(child: _compareTile(b)),
-            ],
-          ),
+          for (final pose in PhotoPose.values) ...[
+            Text(
+              GoalsStrings.poseLabelFor(pose),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _compareTile(
+                    comparison.pairFor(pose).date1,
+                    label: _formatDate(comparison.date1),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _compareTile(
+                    comparison.pairFor(pose).date2,
+                    label: _formatDate(comparison.date2),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
       ],
     );
   }
 
-  Widget _compareTile(ProgressPhoto photo) {
+  String _formatDate(DateTime d) =>
+      d.toIso8601String().split('T').first;
+
+  Widget _compareTile(ProgressPhoto? photo, {required String label}) {
+    if (photo == null) {
+      return Column(
+        children: [
+          AspectRatio(
+            aspectRatio: 3 / 4,
+            child: ColoredBox(
+              color: Colors.black12,
+              child: Center(
+                child: Text(
+                  GoalsStrings.compareNoPhoto,
+                  style: Theme.of(context).textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+          Text(label),
+        ],
+      );
+    }
     return Column(
       children: [
         AspectRatio(
@@ -424,7 +483,7 @@ class _ProgressPhotosBodyState extends State<_ProgressPhotosBody> {
             ),
           ),
         ),
-        Text(photo.takenDate?.toIso8601String().split('T').first ?? '—'),
+        Text(label),
       ],
     );
   }

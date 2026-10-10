@@ -7,6 +7,7 @@ import '../../../../core/pagination/cursor_page.dart';
 import '../../domain/entities/goal_history.dart';
 import '../../domain/entities/goal_status.dart';
 import '../../domain/entities/member_goal.dart';
+import '../../domain/entities/progress_aggregate.dart';
 import '../../domain/repositories/goals_repository.dart';
 import '../datasources/goals_remote_datasource.dart';
 import '../models/goals_mappers.dart';
@@ -18,6 +19,46 @@ class GoalsRepositoryImpl implements GoalsRepository {
   final GoalsRemoteDataSource _remote;
 
   int? _parseId(String id) => int.tryParse(id);
+
+  @override
+  Future<Either<Failure, CursorPage<MemberGoal>>> listAllGoals({
+    String? status,
+    String? metricId,
+    int? limit,
+    String? cursor,
+  }) async {
+    try {
+      final metricInt = metricId == null ? null : _parseId(metricId);
+      if (metricId != null && metricInt == null) {
+        return const Left(ValidationFailure(['Invalid metric id']));
+      }
+      final page = await _remote.listAllGoals(
+        status: status,
+        metricId: metricInt,
+        limit: limit,
+        cursor: cursor,
+      );
+      return Right(
+        CursorPage(
+          items: page.data.map((g) => g.toDomain()).toList(),
+          nextCursor: page.meta.nextCursor,
+          hasMore: page.meta.hasMore,
+        ),
+      );
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ProgressAggregateCounts>> getProgressAggregate() async {
+    try {
+      final agg = await _remote.getProgressAggregate();
+      return Right(agg.toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
 
   @override
   Future<Either<Failure, CursorPage<MemberGoal>>> listMemberGoals(

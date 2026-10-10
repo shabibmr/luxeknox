@@ -109,4 +109,13 @@ void main() {
     expect(appLineChartIsDataX(0.5, xs, 0.25), isFalse);
     expect(appLineChartIsDataX(1.0, xs, 0.25), isTrue);
   });
+
+  test('appLineChartAxisInterval caps steps for long epoch spans', () {
+    const dayMs = 86400000.0;
+    const secMs = 1000.0;
+    const start = 1700000000000.0;
+    final xs = [start, start + secMs, start + 30 * dayMs];
+    final span = xs.last - xs.first;
+    expect(appLineChartAxisInterval(xs), greaterThanOrEqualTo(span / 6));
+  });
 }

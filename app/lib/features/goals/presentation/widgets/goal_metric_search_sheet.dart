@@ -7,45 +7,23 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_picker_cubit.dart';
 import '../../../../core/widgets/app_picker_form_field.dart';
 import '../../../../core/widgets/app_picker_sheet.dart';
-import '../../../../session/domain/entities/capabilities.dart';
-import '../../../../session/presentation/session_cubit.dart';
 import '../../domain/entities/goal_metric.dart';
 import '../../domain/entities/goal_metric_category.dart';
-import '../../domain/repositories/goal_metrics_repository.dart';
+import '../../domain/usecases/goal_metrics_usecases.dart';
 import '../goals_strings.dart';
-import 'goal_metric_editor_dialog.dart';
-
-bool canManageGoalMetrics([Capabilities? capabilities]) {
-  final caps = capabilities ?? _sessionCapabilities();
-  if (caps == null) return false;
-  return caps.can('goals.create') ||
-      caps.can('goals.update') ||
-      caps.can('goals.write');
-}
-
-Capabilities? _sessionCapabilities() {
-  final session = getIt<SessionCubit>().state;
-  if (session is SessionAuthenticated) return session.capabilities;
-  return null;
-}
 
 /// Searchable metric picker. [category] filters by metric type.
-Future<GoalMetric?> showGoalMetricSearchSheet(
-  BuildContext context, {
-  bool allowCreate = true,
-}) {
+Future<GoalMetric?> showGoalMetricSearchSheet(BuildContext context) {
   return showModalBottomSheet<GoalMetric>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (_) => GoalMetricSearchSheet(allowCreate: allowCreate),
+    builder: (_) => const GoalMetricSearchSheet(),
   );
 }
 
 class GoalMetricSearchSheet extends StatefulWidget {
-  const GoalMetricSearchSheet({super.key, this.allowCreate = true});
-
-  final bool allowCreate;
+  const GoalMetricSearchSheet({super.key});
 
   @override
   State<GoalMetricSearchSheet> createState() => _GoalMetricSearchSheetState();
@@ -60,17 +38,19 @@ class _GoalMetricSearchSheetState extends State<GoalMetricSearchSheet> {
   @override
   void initState() {
     super.initState();
-    final repository = getIt<GoalMetricsRepository>();
+    final listMetrics = getIt<ListGoalMetricsUseCase>();
     _cubit = AppPickerCubit<GoalMetric>(
       fetcher: ({query, cursor}) {
         final typed = _searchController.text.trim();
         final text = typed.isNotEmpty ? typed : (query?.trim() ?? '');
-        return repository.listMetrics(
-          query: text.isEmpty ? null : text,
-          category: _category,
-          isActive: true,
-          cursor: cursor,
-          limit: 50,
+        return listMetrics(
+          ListGoalMetricsParams(
+            query: text.isEmpty ? null : text,
+            category: _category,
+            isActive: true,
+            cursor: cursor,
+            limit: 50,
+          ),
         );
       },
     );
@@ -101,16 +81,8 @@ class _GoalMetricSearchSheetState extends State<GoalMetricSearchSheet> {
     _cubit.load(query: text.isEmpty ? null : text);
   }
 
-  Future<void> _addNew() async {
-    final created = await showGoalMetricEditorDialog(context);
-    if (created != null && mounted) {
-      Navigator.of(context).pop(created);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final showCreate = widget.allowCreate && canManageGoalMetrics();
     return BlocBuilder<AppPickerCubit<GoalMetric>, AppPickerState<GoalMetric>>(
       bloc: _cubit,
       builder: (context, state) {
@@ -160,15 +132,6 @@ class _GoalMetricSearchSheetState extends State<GoalMetricSearchSheet> {
                     ),
                 ],
               ),
-              if (showCreate)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: _addNew,
-                    icon: const Icon(Icons.add),
-                    label: const Text(GoalsStrings.addNewMetric),
-                  ),
-                ),
             ],
           ),
           itemBuilder: (context, metric) => ListTile(
@@ -191,14 +154,12 @@ class GoalMetricSearchField extends StatelessWidget {
     this.value,
     this.onChanged,
     this.enabled = true,
-    this.allowCreate = true,
     this.errorText,
   });
 
   final GoalMetric? value;
   final ValueChanged<GoalMetric?>? onChanged;
   final bool enabled;
-  final bool allowCreate;
   final String? errorText;
 
   @override
@@ -210,7 +171,7 @@ class GoalMetricSearchField extends StatelessWidget {
       labelText: GoalsStrings.metricLabel,
       hintText: GoalsStrings.selectMetricHint,
       labelBuilder: (metric) => '${metric.name} (${metric.unitOfMeasure})',
-      onPick: (ctx) => showGoalMetricSearchSheet(ctx, allowCreate: allowCreate),
+      onPick: showGoalMetricSearchSheet,
       onChanged: onChanged ?? (_) {},
     );
   }

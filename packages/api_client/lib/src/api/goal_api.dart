@@ -19,10 +19,11 @@ import 'package:api_client/src/model/goal_metric_page.dart';
 import 'package:api_client/src/model/goal_metric_write.dart';
 import 'package:api_client/src/model/goal_page.dart';
 import 'package:api_client/src/model/goal_write.dart';
-import 'package:api_client/src/model/longitudinal_data_point.dart';
 import 'package:api_client/src/model/measurement.dart';
+import 'package:api_client/src/model/measurement_chart_response.dart';
 import 'package:api_client/src/model/measurement_page.dart';
 import 'package:api_client/src/model/measurement_write.dart';
+import 'package:api_client/src/model/progress_aggregate.dart';
 import 'package:api_client/src/model/progress_note.dart';
 import 'package:api_client/src/model/progress_note_page.dart';
 import 'package:api_client/src/model/progress_note_write.dart';
@@ -30,7 +31,6 @@ import 'package:api_client/src/model/progress_photo.dart';
 import 'package:api_client/src/model/progress_photo_comparison.dart';
 import 'package:api_client/src/model/progress_photo_page.dart';
 import 'package:api_client/src/model/progress_photo_write.dart';
-import 'package:built_collection/built_collection.dart';
 
 class GOALApi {
 
@@ -235,7 +235,7 @@ class GOALApi {
   }
 
   /// Create a metric
-  /// Trainers and staff with goals.create, goals.update, or goals.write may create a metric.
+  /// Admin with goals.create may create a metric.
   ///
   /// Parameters:
   /// * [goalMetricWrite] 
@@ -977,9 +977,9 @@ class GOALApi {
   /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
   /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
   ///
-  /// Returns a [Future] containing a [Response] with a [BuiltList<LongitudinalDataPoint>] as data
+  /// Returns a [Future] containing a [Response] with a [MeasurementChartResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<BuiltList<LongitudinalDataPoint>>> getMeasurementChart({ 
+  Future<Response<MeasurementChartResponse>> getMeasurementChart({ 
     required int id,
     required int metricId,
     DateTime? from,
@@ -1025,14 +1025,14 @@ class GOALApi {
       onReceiveProgress: onReceiveProgress,
     );
 
-    BuiltList<LongitudinalDataPoint>? _responseData;
+    MeasurementChartResponse? _responseData;
 
     try {
       final rawResponse = _response.data;
       _responseData = rawResponse == null ? null : _serializers.deserialize(
         rawResponse,
-        specifiedType: const FullType(BuiltList, [FullType(LongitudinalDataPoint)]),
-      ) as BuiltList<LongitudinalDataPoint>;
+        specifiedType: const FullType(MeasurementChartResponse),
+      ) as MeasurementChartResponse;
 
     } catch (error, stackTrace) {
       throw DioException(
@@ -1044,7 +1044,368 @@ class GOALApi {
       );
     }
 
-    return Response<BuiltList<LongitudinalDataPoint>>(
+    return Response<MeasurementChartResponse>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Progress aggregate counts
+  /// 
+  ///
+  /// Parameters:
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [ProgressAggregate] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<ProgressAggregate>> getProgressAggregate({ 
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/progress/aggregate';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    ProgressAggregate? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(ProgressAggregate),
+      ) as ProgressAggregate;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<ProgressAggregate>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Active goals across members
+  /// 
+  ///
+  /// Parameters:
+  /// * [limit] - Default from gym_settings pagination.default_page_size.
+  /// * [cursor] - Opaque cursor on (created_at, id) for feeds.
+  /// * [status] 
+  /// * [metricId] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [GoalPage] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<GoalPage>> listAllGoals({ 
+    int? limit,
+    String? cursor,
+    String? status,
+    int? metricId,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/goals';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (cursor != null) r'cursor': encodeQueryParameter(_serializers, cursor, const FullType(String)),
+      if (status != null) r'status': encodeQueryParameter(_serializers, status, const FullType(String)),
+      if (metricId != null) r'metric_id': encodeQueryParameter(_serializers, metricId, const FullType(int)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    GoalPage? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(GoalPage),
+      ) as GoalPage;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<GoalPage>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Measurement audit records across members
+  /// 
+  ///
+  /// Parameters:
+  /// * [limit] - Default from gym_settings pagination.default_page_size.
+  /// * [cursor] - Opaque cursor on (created_at, id) for feeds.
+  /// * [from] 
+  /// * [to] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [MeasurementPage] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<MeasurementPage>> listAllMeasurements({ 
+    int? limit,
+    String? cursor,
+    DateTime? from,
+    DateTime? to,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/measurements';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (cursor != null) r'cursor': encodeQueryParameter(_serializers, cursor, const FullType(String)),
+      if (from != null) r'from': encodeQueryParameter(_serializers, from, const FullType(DateTime)),
+      if (to != null) r'to': encodeQueryParameter(_serializers, to, const FullType(DateTime)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    MeasurementPage? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(MeasurementPage),
+      ) as MeasurementPage;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<MeasurementPage>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Progress photos vault
+  /// 
+  ///
+  /// Parameters:
+  /// * [limit] - Default from gym_settings pagination.default_page_size.
+  /// * [cursor] - Opaque cursor on (created_at, id) for feeds.
+  /// * [pose] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [ProgressPhotoPage] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<ProgressPhotoPage>> listAllProgressPhotos({ 
+    int? limit,
+    String? cursor,
+    String? pose,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/progress-photos';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (cursor != null) r'cursor': encodeQueryParameter(_serializers, cursor, const FullType(String)),
+      if (pose != null) r'pose': encodeQueryParameter(_serializers, pose, const FullType(String)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    ProgressPhotoPage? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(ProgressPhotoPage),
+      ) as ProgressPhotoPage;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<ProgressPhotoPage>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -1599,7 +1960,7 @@ class GOALApi {
   }
 
   /// Update a metric
-  /// Trainers and staff with goals.create, goals.update, or goals.write may update a metric.
+  /// Admin with goals.create may update a metric.
   ///
   /// Parameters:
   /// * [id] 

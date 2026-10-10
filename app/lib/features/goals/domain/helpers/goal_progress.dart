@@ -34,3 +34,32 @@ GoalDirection? goalDirection({required num? baseline, required num? target}) {
   if (target < baseline) return GoalDirection.decrease;
   return GoalDirection.hold;
 }
+
+/// Linear expected value from [baseline]→[target] across [startDate]→[targetDate].
+/// Null when any endpoint is missing or the date span is empty/inverted.
+num? projectedGoalValue({
+  required num? baseline,
+  required num? target,
+  required DateTime? startDate,
+  required DateTime? targetDate,
+  DateTime? asOf,
+}) {
+  if (baseline == null ||
+      target == null ||
+      startDate == null ||
+      targetDate == null) {
+    return null;
+  }
+  final start = DateTime(startDate.year, startDate.month, startDate.day);
+  final end = DateTime(targetDate.year, targetDate.month, targetDate.day);
+  final spanMs = end.difference(start).inMilliseconds;
+  if (spanMs <= 0) return null;
+
+  final now = asOf ?? DateTime.now();
+  final day = DateTime(now.year, now.month, now.day);
+  if (day.isBefore(start)) return baseline;
+  if (!day.isBefore(end)) return target;
+
+  final elapsed = day.difference(start).inMilliseconds / spanMs;
+  return baseline + (target - baseline) * elapsed;
+}

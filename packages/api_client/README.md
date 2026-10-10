@@ -116,6 +116,10 @@ Class | Method | HTTP request | Description
 [*GOALApi*](doc/GOALApi.md) | [**getGoal**](doc/GOALApi.md#getgoal) | **GET** /goals/{id} | Goal detail
 [*GOALApi*](doc/GOALApi.md) | [**getMeasurement**](doc/GOALApi.md#getmeasurement) | **GET** /measurements/{id} | Measurement session with values
 [*GOALApi*](doc/GOALApi.md) | [**getMeasurementChart**](doc/GOALApi.md#getmeasurementchart) | **GET** /members/{id}/measurements/chart | Longitudinal metric chart series
+[*GOALApi*](doc/GOALApi.md) | [**getProgressAggregate**](doc/GOALApi.md#getprogressaggregate) | **GET** /progress/aggregate | Progress aggregate counts
+[*GOALApi*](doc/GOALApi.md) | [**listAllGoals**](doc/GOALApi.md#listallgoals) | **GET** /goals | Active goals across members
+[*GOALApi*](doc/GOALApi.md) | [**listAllMeasurements**](doc/GOALApi.md#listallmeasurements) | **GET** /measurements | Measurement audit records across members
+[*GOALApi*](doc/GOALApi.md) | [**listAllProgressPhotos**](doc/GOALApi.md#listallprogressphotos) | **GET** /progress-photos | Progress photos vault
 [*GOALApi*](doc/GOALApi.md) | [**listGoalMetrics**](doc/GOALApi.md#listgoalmetrics) | **GET** /goal-metrics | Measurement type catalog
 [*GOALApi*](doc/GOALApi.md) | [**listMeasurements**](doc/GOALApi.md#listmeasurements) | **GET** /members/{id}/measurements | Measurement sessions
 [*GOALApi*](doc/GOALApi.md) | [**listMemberGoals**](doc/GOALApi.md#listmembergoals) | **GET** /members/{id}/goals | Member goals
@@ -243,7 +247,7 @@ Class | Method | HTTP request | Description
 [*WORKApi*](doc/WORKApi.md) | [**createExercise**](doc/WORKApi.md#createexercise) | **POST** /exercises | Create an exercise
 [*WORKApi*](doc/WORKApi.md) | [**createWorkoutPlan**](doc/WORKApi.md#createworkoutplan) | **POST** /workout-plans | Create a plan (also creates version 1)
 [*WORKApi*](doc/WORKApi.md) | [**deleteWorkoutSet**](doc/WORKApi.md#deleteworkoutset) | **DELETE** /workout-sessions/{id}/sets/{setId} | Delete a logged set
-[*WORKApi*](doc/WORKApi.md) | [**getActiveWorkoutSession**](doc/WORKApi.md#getactiveworkoutsession) | **GET** /workout-sessions/active | Get the member's active (in-progress) workout session
+[*WORKApi*](doc/WORKApi.md) | [**getActiveWorkoutSession**](doc/WORKApi.md#getactiveworkoutsession) | **GET** /workout-sessions/active | Get the member&#39;s active (in-progress) workout session
 [*WORKApi*](doc/WORKApi.md) | [**getExercise**](doc/WORKApi.md#getexercise) | **GET** /exercises/{id} | Exercise detail
 [*WORKApi*](doc/WORKApi.md) | [**getPersonalRecords**](doc/WORKApi.md#getpersonalrecords) | **GET** /workout-sessions/personal-records | Member personal records across completed sessions
 [*WORKApi*](doc/WORKApi.md) | [**getWorkoutPlan**](doc/WORKApi.md#getworkoutplan) | **GET** /workout-plans/{id} | Plan with current version line items
@@ -340,6 +344,7 @@ Class | Method | HTTP request | Description
  - [MeResponse](doc/MeResponse.md)
  - [MeResponseProfile](doc/MeResponseProfile.md)
  - [Measurement](doc/Measurement.md)
+ - [MeasurementChartResponse](doc/MeasurementChartResponse.md)
  - [MeasurementPage](doc/MeasurementPage.md)
  - [MeasurementValue](doc/MeasurementValue.md)
  - [MeasurementWrite](doc/MeasurementWrite.md)
@@ -399,6 +404,7 @@ Class | Method | HTTP request | Description
  - [PermissionPage](doc/PermissionPage.md)
  - [PersonalRecord](doc/PersonalRecord.md)
  - [Principal](doc/Principal.md)
+ - [ProgressAggregate](doc/ProgressAggregate.md)
  - [ProgressNote](doc/ProgressNote.md)
  - [ProgressNotePage](doc/ProgressNotePage.md)
  - [ProgressNoteWrite](doc/ProgressNoteWrite.md)

@@ -179,6 +179,14 @@ import '../../features/goals/domain/usecases/progress_notes_usecases.dart'
     as _i44;
 import '../../features/goals/domain/usecases/progress_photos_usecases.dart'
     as _i748;
+import '../../features/goals/presentation/cubit/admin_measurements_audit_cubit.dart'
+    as _i716;
+import '../../features/goals/presentation/cubit/admin_member_goals_cubit.dart'
+    as _i231;
+import '../../features/goals/presentation/cubit/admin_progress_aggregate_cubit.dart'
+    as _i868;
+import '../../features/goals/presentation/cubit/admin_progress_photos_vault_cubit.dart'
+    as _i793;
 import '../../features/goals/presentation/cubit/goal_detail_cubit.dart'
     as _i114;
 import '../../features/goals/presentation/cubit/goal_form_cubit.dart' as _i814;
@@ -189,8 +197,12 @@ import '../../features/goals/presentation/cubit/measurements_cubit.dart'
     as _i927;
 import '../../features/goals/presentation/cubit/progress_notes_cubit.dart'
     as _i188;
+import '../../features/goals/presentation/cubit/progress_overview_cubit.dart'
+    as _i311;
 import '../../features/goals/presentation/cubit/progress_photos_cubit.dart'
-    as _i634;
+    as _i635;
+import '../../features/goals/presentation/cubit/progress_timeline_cubit.dart'
+    as _i28;
 import '../../features/membership/data/datasources/membership_remote_datasource.dart'
     as _i133;
 import '../../features/membership/data/repositories/membership_repository_impl.dart'
@@ -402,7 +414,7 @@ import '../../features/people/presentation/cubit/employees_directory_cubit.dart'
 import '../../features/people/presentation/cubit/member_dossier_cubit.dart'
     as _i149;
 import '../../features/people/presentation/cubit/my_trainer_profile_cubit.dart'
-    as _i635;
+    as _i634;
 import '../../features/people/presentation/cubit/trainer_form_cubit.dart'
     as _i20;
 import '../../features/people/presentation/cubit/trainers_directory_cubit.dart'
@@ -724,6 +736,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i608.GoalsRepository>(
       () => _i159.GoalsRepositoryImpl(gh<_i812.GoalsRemoteDataSource>()),
     );
+    gh.lazySingleton<_i62.ListAllGoalsUseCase>(
+      () => _i62.ListAllGoalsUseCase(gh<_i608.GoalsRepository>()),
+    );
+    gh.lazySingleton<_i62.GetProgressAggregateUseCase>(
+      () => _i62.GetProgressAggregateUseCase(gh<_i608.GoalsRepository>()),
+    );
     gh.lazySingleton<_i62.ListMemberGoalsUseCase>(
       () => _i62.ListMemberGoalsUseCase(gh<_i608.GoalsRepository>()),
     );
@@ -787,6 +805,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i822.FoodRemoteDataSource>(
       () => _i822.FoodRemoteDataSourceImpl(gh<_i633.DIETApi>()),
+    );
+    gh.factory<_i868.AdminProgressAggregateCubit>(
+      () => _i868.AdminProgressAggregateCubit(
+        gh<_i62.GetProgressAggregateUseCase>(),
+      ),
     );
     gh.lazySingleton<_i1029.PeopleRemoteDataSource>(
       () => _i1029.PeopleRemoteDataSourceImpl(
@@ -914,20 +937,21 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i728.FoodRepository>(
       () => _i64.FoodRepositoryImpl(gh<_i822.FoodRemoteDataSource>()),
     );
-    gh.factory<_i114.GoalDetailCubit>(
-      () => _i114.GoalDetailCubit(
-        gh<_i62.GetGoalUseCase>(),
-        gh<_i62.CheckInGoalUseCase>(),
-      ),
-    );
     gh.lazySingleton<_i121.ProfileRepository>(
       () => _i887.ProfileRepositoryImpl(gh<_i327.ProfileRemoteDataSource>()),
+    );
+    gh.factory<_i231.AdminMemberGoalsCubit>(
+      () => _i231.AdminMemberGoalsCubit(gh<_i62.ListAllGoalsUseCase>()),
     );
     gh.lazySingleton<_i3.LogoutUseCase>(
       () => _i3.LogoutUseCase(
         gh<_i158.SessionRepository>(),
         gh<_i630.UnregisterDeviceOnLogoutUseCase>(),
       ),
+    );
+    gh.lazySingleton<_i587.ListAllMeasurementsUseCase>(
+      () =>
+          _i587.ListAllMeasurementsUseCase(gh<_i247.MeasurementsRepository>()),
     );
     gh.lazySingleton<_i587.ListMeasurementsUseCase>(
       () => _i587.ListMeasurementsUseCase(gh<_i247.MeasurementsRepository>()),
@@ -938,9 +962,19 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i587.CreateMeasurementUseCase>(
       () => _i587.CreateMeasurementUseCase(gh<_i247.MeasurementsRepository>()),
     );
+    gh.lazySingleton<_i587.GetMeasurementChartUseCase>(
+      () =>
+          _i587.GetMeasurementChartUseCase(gh<_i247.MeasurementsRepository>()),
+    );
     gh.lazySingleton<_i325.MembershipRepository>(
       () => _i920.MembershipRepositoryImpl(
         gh<_i133.MembershipRemoteDataSource>(),
+      ),
+    );
+    gh.factory<_i28.ProgressTimelineCubit>(
+      () => _i28.ProgressTimelineCubit(
+        gh<_i62.ListMemberGoalsUseCase>(),
+        gh<_i587.ListMeasurementsUseCase>(),
       ),
     );
     gh.lazySingleton<_i580.CreateEmergencyContactUseCase>(
@@ -1089,6 +1123,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i2.ListGoalMetricsUseCase>(),
       ),
     );
+    gh.factory<_i114.GoalDetailCubit>(
+      () => _i114.GoalDetailCubit(
+        gh<_i62.GetGoalUseCase>(),
+        gh<_i62.CheckInGoalUseCase>(),
+        gh<_i44.ListProgressNotesUseCase>(),
+      ),
+    );
     gh.lazySingleton<_i744.GetPublicSettingsUseCase>(
       () => _i744.GetPublicSettingsUseCase(gh<_i674.SettingsRepository>()),
     );
@@ -1113,6 +1154,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i69.LoginCubit>(
       () => _i69.LoginCubit(gh<_i893.SessionCubit>()),
     );
+    gh.lazySingleton<_i748.ListAllProgressPhotosUseCase>(
+      () => _i748.ListAllProgressPhotosUseCase(
+        gh<_i721.ProgressPhotosRepository>(),
+      ),
+    );
     gh.lazySingleton<_i748.ListProgressPhotosUseCase>(
       () =>
           _i748.ListProgressPhotosUseCase(gh<_i721.ProgressPhotosRepository>()),
@@ -1124,6 +1170,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i748.DeleteProgressPhotoUseCase>(
       () => _i748.DeleteProgressPhotoUseCase(
+        gh<_i721.ProgressPhotosRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i748.CompareProgressPhotosUseCase>(
+      () => _i748.CompareProgressPhotosUseCase(
         gh<_i721.ProgressPhotosRepository>(),
       ),
     );
@@ -1197,13 +1248,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i864.MarkNotificationReadUseCase>(),
       ),
     );
-    gh.factory<_i634.ProgressPhotosCubit>(
-      () => _i634.ProgressPhotosCubit(
-        gh<_i748.ListProgressPhotosUseCase>(),
-        gh<_i748.CreateProgressPhotoUseCase>(),
-        gh<_i748.DeleteProgressPhotoUseCase>(),
-      ),
-    );
     gh.factory<_i613.DietPlanListCubit>(
       () => _i613.DietPlanListCubit(gh<_i639.ListDietPlansUseCase>()),
     );
@@ -1227,6 +1271,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i820.PublishDietPlanUseCase>(),
         gh<_i998.ArchiveDietPlanUseCase>(),
         gh<_i529.AssignDietPlanUseCase>(),
+      ),
+    );
+    gh.factory<_i311.ProgressOverviewCubit>(
+      () => _i311.ProgressOverviewCubit(
+        gh<_i2.ListGoalMetricsUseCase>(),
+        gh<_i587.GetMeasurementChartUseCase>(),
+        gh<_i841.ListAttendancesUseCase>(),
+        gh<_i684.ListHealthHistoryUseCase>(),
       ),
     );
     gh.factory<_i814.GoalFormCubit>(
@@ -1380,6 +1432,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i370.GetMembershipsUseCase>(),
       ),
     );
+    gh.factory<_i716.AdminMeasurementsAuditCubit>(
+      () => _i716.AdminMeasurementsAuditCubit(
+        gh<_i587.ListAllMeasurementsUseCase>(),
+      ),
+    );
     gh.factory<_i710.FoodListBloc>(
       () => _i710.FoodListBloc(getFoodsUseCase: gh<_i687.GetFoodsUseCase>()),
     );
@@ -1446,8 +1503,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i725.AssignEmployeeRoleUseCase>(),
       ),
     );
-    gh.factory<_i635.MyTrainerProfileCubit>(
-      () => _i635.MyTrainerProfileCubit(gh<_i502.GetAssignedTrainerUseCase>()),
+    gh.factory<_i634.MyTrainerProfileCubit>(
+      () => _i634.MyTrainerProfileCubit(gh<_i502.GetAssignedTrainerUseCase>()),
     );
     gh.lazySingleton<_i1025.ListDietLogsUseCase>(
       () => _i1025.ListDietLogsUseCase(gh<_i771.DietLogRepository>()),
@@ -1569,10 +1626,22 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i391.GetWorkoutPlanUseCase>(),
       ),
     );
+    gh.factory<_i793.AdminProgressPhotosVaultCubit>(
+      () => _i793.AdminProgressPhotosVaultCubit(
+        gh<_i748.ListAllProgressPhotosUseCase>(),
+      ),
+    );
     gh.factory<_i309.MembershipCardCubit>(
       () => _i309.MembershipCardCubit(
         gh<_i370.GetMembershipsUseCase>(),
         gh<_i377.RequestMembershipFreezeUseCase>(),
+      ),
+    );
+    gh.factory<_i632.CreateMembershipBloc>(
+      () => _i632.CreateMembershipBloc(
+        gh<_i65.CreateMembershipUseCase>(),
+        gh<_i359.GetMembershipProductsUseCase>(),
+        gh<_i789.GetPaymentMethodsUseCase>(),
       ),
     );
     gh.factory<_i731.WorkoutPlanListCubit>(
@@ -1612,11 +1681,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i971.TrainersDirectoryCubit>(
       () => _i971.TrainersDirectoryCubit(gh<_i382.ListTrainersUseCase>()),
     );
-    gh.factory<_i632.CreateMembershipBloc>(
-      () => _i632.CreateMembershipBloc(
-        gh<_i65.CreateMembershipUseCase>(),
-        gh<_i359.GetMembershipProductsUseCase>(),
-        gh<_i789.GetPaymentMethodsUseCase>(),
+    gh.factory<_i635.ProgressPhotosCubit>(
+      () => _i635.ProgressPhotosCubit(
+        gh<_i748.ListProgressPhotosUseCase>(),
+        gh<_i748.CreateProgressPhotoUseCase>(),
+        gh<_i748.DeleteProgressPhotoUseCase>(),
+        gh<_i748.CompareProgressPhotosUseCase>(),
       ),
     );
     gh.factory<_i551.EditTrainerProfileCubit>(

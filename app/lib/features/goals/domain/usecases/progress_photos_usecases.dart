@@ -7,7 +7,43 @@ import '../../../../core/pagination/cursor_page.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../entities/photo_pose.dart';
 import '../entities/progress_photo.dart';
+import '../entities/progress_photo_comparison.dart';
 import '../repositories/progress_photos_repository.dart';
+
+class ListAllProgressPhotosParams extends Equatable {
+  const ListAllProgressPhotosParams({
+    this.limit,
+    this.cursor,
+    this.pose,
+  });
+
+  final int? limit;
+  final String? cursor;
+  final String? pose;
+
+  @override
+  List<Object?> get props => [limit, cursor, pose];
+}
+
+@lazySingleton
+class ListAllProgressPhotosUseCase
+    implements
+        UseCase<CursorPage<ProgressPhoto>, ListAllProgressPhotosParams> {
+  const ListAllProgressPhotosUseCase(this._repository);
+
+  final ProgressPhotosRepository _repository;
+
+  @override
+  Future<Either<Failure, CursorPage<ProgressPhoto>>> call(
+    ListAllProgressPhotosParams params,
+  ) {
+    return _repository.listAllPhotos(
+      limit: params.limit,
+      cursor: params.cursor,
+      pose: params.pose,
+    );
+  }
+}
 
 class ListProgressPhotosParams extends Equatable {
   const ListProgressPhotosParams({required this.memberId, this.cursor});
@@ -86,5 +122,40 @@ class DeleteProgressPhotoUseCase implements UseCase<Unit, String> {
   @override
   Future<Either<Failure, Unit>> call(String id) {
     return _repository.deletePhoto(id);
+  }
+}
+
+class CompareProgressPhotosParams extends Equatable {
+  const CompareProgressPhotosParams({
+    required this.memberId,
+    required this.date1,
+    required this.date2,
+  });
+
+  final String memberId;
+  final DateTime date1;
+  final DateTime date2;
+
+  @override
+  List<Object?> get props => [memberId, date1, date2];
+}
+
+@lazySingleton
+class CompareProgressPhotosUseCase
+    implements
+        UseCase<ProgressPhotoComparison, CompareProgressPhotosParams> {
+  const CompareProgressPhotosUseCase(this._repository);
+
+  final ProgressPhotosRepository _repository;
+
+  @override
+  Future<Either<Failure, ProgressPhotoComparison>> call(
+    CompareProgressPhotosParams params,
+  ) {
+    return _repository.comparePhotos(
+      memberId: params.memberId,
+      date1: params.date1,
+      date2: params.date2,
+    );
   }
 }

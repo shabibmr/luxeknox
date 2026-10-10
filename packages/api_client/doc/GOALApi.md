@@ -20,6 +20,10 @@ Method | HTTP request | Description
 [**getGoal**](GOALApi.md#getgoal) | **GET** /goals/{id} | Goal detail
 [**getMeasurement**](GOALApi.md#getmeasurement) | **GET** /measurements/{id} | Measurement session with values
 [**getMeasurementChart**](GOALApi.md#getmeasurementchart) | **GET** /members/{id}/measurements/chart | Longitudinal metric chart series
+[**getProgressAggregate**](GOALApi.md#getprogressaggregate) | **GET** /progress/aggregate | Progress aggregate counts
+[**listAllGoals**](GOALApi.md#listallgoals) | **GET** /goals | Active goals across members
+[**listAllMeasurements**](GOALApi.md#listallmeasurements) | **GET** /measurements | Measurement audit records across members
+[**listAllProgressPhotos**](GOALApi.md#listallprogressphotos) | **GET** /progress-photos | Progress photos vault
 [**listGoalMetrics**](GOALApi.md#listgoalmetrics) | **GET** /goal-metrics | Measurement type catalog
 [**listMeasurements**](GOALApi.md#listmeasurements) | **GET** /members/{id}/measurements | Measurement sessions
 [**listMemberGoals**](GOALApi.md#listmembergoals) | **GET** /members/{id}/goals | Member goals
@@ -122,7 +126,7 @@ Name | Type | Description  | Notes
 
 Create a metric
 
-Trainers and staff with goals.create, goals.update, or goals.write may create a metric.
+Admin with goals.create may create a metric.
 
 ### Example
 ```dart
@@ -455,7 +459,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getMeasurementChart**
-> BuiltList<LongitudinalDataPoint> getMeasurementChart(id, metricId, from, to)
+> MeasurementChartResponse getMeasurementChart(id, metricId, from, to)
 
 Longitudinal metric chart series
 
@@ -488,7 +492,183 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**BuiltList&lt;LongitudinalDataPoint&gt;**](LongitudinalDataPoint.md)
+[**MeasurementChartResponse**](MeasurementChartResponse.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getProgressAggregate**
+> ProgressAggregate getProgressAggregate()
+
+Progress aggregate counts
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getGOALApi();
+
+try {
+    final response = api.getProgressAggregate();
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling GOALApi->getProgressAggregate: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**ProgressAggregate**](ProgressAggregate.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listAllGoals**
+> GoalPage listAllGoals(limit, cursor, status, metricId)
+
+Active goals across members
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getGOALApi();
+final int limit = 56; // int | Default from gym_settings pagination.default_page_size.
+final String cursor = cursor_example; // String | Opaque cursor on (created_at, id) for feeds.
+final String status = status_example; // String | 
+final int metricId = 789; // int | 
+
+try {
+    final response = api.listAllGoals(limit, cursor, status, metricId);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling GOALApi->listAllGoals: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **limit** | **int**| Default from gym_settings pagination.default_page_size. | [optional] 
+ **cursor** | **String**| Opaque cursor on (created_at, id) for feeds. | [optional] 
+ **status** | **String**|  | [optional] 
+ **metricId** | **int**|  | [optional] 
+
+### Return type
+
+[**GoalPage**](GoalPage.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listAllMeasurements**
+> MeasurementPage listAllMeasurements(limit, cursor, from, to)
+
+Measurement audit records across members
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getGOALApi();
+final int limit = 56; // int | Default from gym_settings pagination.default_page_size.
+final String cursor = cursor_example; // String | Opaque cursor on (created_at, id) for feeds.
+final DateTime from = 2013-10-20T19:20:30+01:00; // DateTime | 
+final DateTime to = 2013-10-20T19:20:30+01:00; // DateTime | 
+
+try {
+    final response = api.listAllMeasurements(limit, cursor, from, to);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling GOALApi->listAllMeasurements: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **limit** | **int**| Default from gym_settings pagination.default_page_size. | [optional] 
+ **cursor** | **String**| Opaque cursor on (created_at, id) for feeds. | [optional] 
+ **from** | **DateTime**|  | [optional] 
+ **to** | **DateTime**|  | [optional] 
+
+### Return type
+
+[**MeasurementPage**](MeasurementPage.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listAllProgressPhotos**
+> ProgressPhotoPage listAllProgressPhotos(limit, cursor, pose)
+
+Progress photos vault
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getGOALApi();
+final int limit = 56; // int | Default from gym_settings pagination.default_page_size.
+final String cursor = cursor_example; // String | Opaque cursor on (created_at, id) for feeds.
+final String pose = pose_example; // String | 
+
+try {
+    final response = api.listAllProgressPhotos(limit, cursor, pose);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling GOALApi->listAllProgressPhotos: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **limit** | **int**| Default from gym_settings pagination.default_page_size. | [optional] 
+ **cursor** | **String**| Opaque cursor on (created_at, id) for feeds. | [optional] 
+ **pose** | **String**|  | [optional] 
+
+### Return type
+
+[**ProgressPhotoPage**](ProgressPhotoPage.md)
 
 ### Authorization
 
@@ -768,7 +948,7 @@ Name | Type | Description  | Notes
 
 Update a metric
 
-Trainers and staff with goals.create, goals.update, or goals.write may update a metric.
+Admin with goals.create may update a metric.
 
 ### Example
 ```dart

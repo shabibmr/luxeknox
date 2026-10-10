@@ -140,7 +140,7 @@ export class MeasurementService {
     rawQuery: Record<string, unknown>,
     filter: MeasurementFilterQueryDto,
     actor: AuthenticatedUser,
-  ): Promise<PaginatedResponse<MeasurementWithValues>> {
+  ): Promise<PaginatedResponse<MeasurementWithValues> & { mandatory_metric_ids: number[] }> {
     await assertMemberAccess(this.memberRepo, actor, memberId);
 
     const pagination = await this.paginationHelper.normalizeParams(rawQuery);
@@ -156,12 +156,19 @@ export class MeasurementService {
       to: toDate,
     });
 
-    return createPaginatedResponse({
+    const page = createPaginatedResponse({
       items: rows,
       total,
       limit: pagination.limit,
       offset,
     });
+
+    const mandatoryMetricIds = await this.settingsService.getMandatoryMeasurementMetricIds();
+
+    return {
+      ...page,
+      mandatory_metric_ids: mandatoryMetricIds,
+    };
   }
 
   async getMeasurementById(
@@ -183,12 +190,55 @@ export class MeasurementService {
     fromStr: string | undefined,
     toStr: string | undefined,
     actor: AuthenticatedUser,
-  ): Promise<LongitudinalDataPoint[]> {
+  ): Promise<{ data: LongitudinalDataPoint[]; mandatory_metric_ids: number[] }> {
     await assertMemberAccess(this.memberRepo, actor, memberId);
 
     const fromDate = fromStr ? new Date(fromStr) : undefined;
     const toDate = toStr ? new Date(toStr) : undefined;
 
-    return this.measurementRepo.findLongitudinalSeries(memberId, metricId, fromDate, toDate);
+    const series = await this.measurementRepo.findLongitudinalSeries(memberId, metricId, fromDate, toDate);
+    const mandatoryMetricIds = await this.settingsService.getMandatoryMeasurementMetricIds();
+
+    return {
+      data: series,
+      mandatory_metric_ids: mandatoryMetricIds,
+    };
+  }
+
+  async listAllMeasurements(
+    rawQuery: Record<string, unknown>,
+    filter: MeasurementFilterQueryDto,
+    actor: AuthenticatedUser,
+  ): Promise<PaginatedResponse<MeasurementWithValues> & { mandatory_metric_ids: number[] }> {
+    if (actor.userType !== 'admin') {
+      throw new ForbiddenError('Only admins may view gym-wide measurement audits');
+    }
+
+    const pagination = await this.paginationHelper.normalizeParams(rawQuery);
+    const offset = pagination.offset ?? 0;
+
+    const fromDate = filter.from ? new Date(filter.from) : undefined;
+    const toDate = filter.to ? new Date(filter.to) : undefined;
+
+    const { rows, total } = await this.measurementRepo.findAllAudit({
+      limit: pagination.limit,
+      offset,
+      from: fromDate,
+      to: toDate,
+    });
+
+    const page = createPaginatedResponse({
+      items: rows,
+      total,
+      limit: pagination.limit,
+      offset,
+    });
+
+    const mandatoryMetricIds = await this.settingsService.getMandatoryMeasurementMetricIds();
+
+    return {
+      ...page,
+      mandatory_metric_ids: mandatoryMetricIds,
+    };
   }
 }

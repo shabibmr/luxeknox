@@ -96,6 +96,7 @@ describe('ProgressService (GOA-010, GOA-011, GOA-012, GOA-014)', () => {
           created_at: new Date('2026-02-01T00:00:00Z'),
         },
       ]),
+      findAllFiltered: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
     };
 
     memberRepo = {
@@ -111,8 +112,21 @@ describe('ProgressService (GOA-010, GOA-011, GOA-012, GOA-014)', () => {
       recordAudit: vi.fn().mockResolvedValue(undefined),
     };
 
+    const permissionCache = {
+      hasPermission: vi.fn().mockImplementation(async (roleId: number, slug: string) => {
+        // By default roleId 1 (admin) has progress_photos.moderate
+        return roleId === 1 && slug === 'progress_photos.moderate';
+      }),
+    } as any;
+
     noteService = new ProgressNoteService(noteRepo, memberRepo, paginationHelper, auditService);
-    photoService = new ProgressPhotoService(photoRepo, memberRepo, paginationHelper, auditService);
+    photoService = new ProgressPhotoService(
+      photoRepo,
+      memberRepo,
+      paginationHelper,
+      auditService,
+      permissionCache,
+    );
   });
 
   describe('Progress Notes Stream & Authorization (GOA-010)', () => {
@@ -212,7 +226,72 @@ describe('ProgressService (GOA-010, GOA-011, GOA-012, GOA-014)', () => {
       ).rejects.toThrow(NotFoundError);
     });
 
-    it('allows owner member or admin to delete progress photo', async () => {
+    it('allows member to upload their own progress photo (FR-GOAL-009)', async () => {
+      const created = await photoService.createPhoto(
+        100,
+        {
+          photo_url: 'https://storage.luxeknox.com/photos/front_new.jpg',
+          pose: 'front',
+        },
+        mockMemberUser,
+      );
+      expect(created).toBeDefined();
+      expect(photoRepo.create).toHaveBeenCalled();
+    });
+
+    it('rejects trainer attempting to upload progress photo (FR-GOAL-009, P0.2.3)', async () => {
+      await expect(
+        photoService.createPhoto(
+          100,
+          {
+            photo_url: 'https://storage.luxeknox.com/photos/front.jpg',
+            pose: 'front',
+          },
+          mockTrainerUser,
+        ),
+      ).rejects.toThrow(ForbiddenError);
+    });
+
+    it('rejects admin attempting to upload progress photo (FR-GOAL-009, P0.2.3)', async () => {
+      await expect(
+        photoService.createPhoto(
+          100,
+          {
+            photo_url: 'https://storage.luxeknox.com/photos/front.jpg',
+            pose: 'front',
+          },
+          mockAdminUser,
+        ),
+      ).rejects.toThrow(ForbiddenError);
+    });
+
+    it('allows admin with progress_photos.moderate to view private photos and delete photo (P0.3.4)', async () => {
+      const res = await photoService.listPhotos(100, {}, {}, mockAdminUser);
+      expect(photoRepo.findManyByMemberId).toHaveBeenCalledWith(
+        100,
+        expect.objectContaining({ includePrivate: true }),
+      );
+
+      await photoService.deletePhoto(1, mockAdminUser);
+      expect(photoRepo.deleteById).toHaveBeenCalledWith(1);
+    });
+
+    it('omits private photos and blocks delete for admin WITHOUT progress_photos.moderate (P0.3.4)', async () => {
+      const unmoderatedAdmin: AuthenticatedUser = {
+        ...mockAdminUser,
+        roleId: 99, // role without progress_photos.moderate
+      };
+
+      await photoService.listPhotos(100, {}, {}, unmoderatedAdmin);
+      expect(photoRepo.findManyByMemberId).toHaveBeenCalledWith(
+        100,
+        expect.objectContaining({ includePrivate: false }),
+      );
+
+      await expect(photoService.deletePhoto(1, unmoderatedAdmin)).rejects.toThrow(ForbiddenError);
+    });
+
+    it('allows owner member to delete own progress photo', async () => {
       await photoService.deletePhoto(1, mockMemberUser);
       expect(photoRepo.deleteById).toHaveBeenCalledWith(1);
       expect(auditService.recordAudit).toHaveBeenCalledWith(
@@ -244,6 +323,42 @@ describe('ProgressService (GOA-010, GOA-011, GOA-012, GOA-014)', () => {
       expect(comparison.date2_photos).toHaveLength(1);
       expect(comparison.comparison_by_pose.front?.date1?.photo_url).toContain('front.jpg');
       expect(comparison.comparison_by_pose.front?.date2?.photo_url).toContain('front_feb.jpg');
+    });
+  });
+
+  describe('Progress Photos Vault (P0.5.3)', () => {
+    it('allows admin with progress_photos.moderate to view vault including private photos (P0.5.3)', async () => {
+      const res = await photoService.listAllPhotos({}, { pose: 'front' }, mockAdminUser);
+      expect(res.data).toBeDefined();
+      expect(photoRepo.findAllFiltered).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pose: 'front',
+          includePrivate: true,
+        }),
+      );
+    });
+
+    it('filters out private photos in vault for admin without progress_photos.moderate', async () => {
+      const unmoderatedAdmin: AuthenticatedUser = {
+        ...mockAdminUser,
+        roleId: 99,
+      };
+
+      await photoService.listAllPhotos({}, {}, unmoderatedAdmin);
+      expect(photoRepo.findAllFiltered).toHaveBeenCalledWith(
+        expect.objectContaining({
+          includePrivate: false,
+        }),
+      );
+    });
+
+    it('rejects trainer or member attempting to list progress photos vault', async () => {
+      await expect(photoService.listAllPhotos({}, {}, mockTrainerUser)).rejects.toThrow(
+        ForbiddenError,
+      );
+      await expect(photoService.listAllPhotos({}, {}, mockMemberUser)).rejects.toThrow(
+        ForbiddenError,
+      );
     });
   });
 });

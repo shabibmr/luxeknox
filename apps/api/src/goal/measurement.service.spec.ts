@@ -90,6 +90,7 @@ describe('MeasurementService (GOA-006, GOA-007, GOA-008, GOA-013)', () => {
         ],
       }),
       findManyByMemberId: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
+      findAllAudit: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
       findLongitudinalSeries: vi.fn().mockResolvedValue([
         {
           measurement_id: 1,
@@ -306,8 +307,10 @@ describe('MeasurementService (GOA-006, GOA-007, GOA-008, GOA-013)', () => {
     });
   });
 
-  describe('Longitudinal Chart Queries (GOA-013)', () => {
-    it('retrieves time series data points ordered chronologically', async () => {
+  describe('Longitudinal Chart Queries (GOA-013) & Mandatory Metrics Payload (P0.4)', () => {
+    it('retrieves time series data points ordered chronologically with mandatory_metric_ids (P0.4.1)', async () => {
+      settingsService.getMandatoryMeasurementMetricIds.mockResolvedValue([1, 2]);
+
       const chart = await measurementService.getLongitudinalChart(
         100,
         1,
@@ -316,15 +319,57 @@ describe('MeasurementService (GOA-006, GOA-007, GOA-008, GOA-013)', () => {
         mockMemberUser,
       );
 
-      expect(chart).toHaveLength(2);
-      expect(chart[0].value).toBe(80.0);
-      expect(chart[1].value).toBe(77.5);
+      expect(chart.data).toHaveLength(2);
+      expect(chart.data[0].value).toBe(80.0);
+      expect(chart.data[1].value).toBe(77.5);
+      expect(chart.mandatory_metric_ids).toEqual([1, 2]);
       expect(measurementRepo.findLongitudinalSeries).toHaveBeenCalledWith(
         100,
         1,
         expect.any(Date),
         expect.any(Date),
       );
+    });
+
+    it('includes mandatory_metric_ids [1, 2] on measurement list response (P0.4.1, P0.4.2)', async () => {
+      settingsService.getMandatoryMeasurementMetricIds.mockResolvedValue([1, 2]);
+
+      const res = await measurementService.listMeasurements(100, {}, {}, mockMemberUser);
+
+      expect(res.mandatory_metric_ids).toEqual([1, 2]);
+      expect(res.data).toBeDefined();
+      expect(res.meta).toBeDefined();
+    });
+  });
+
+  describe('Measurement Audit (P0.5.2)', () => {
+    it('allows admin to list gym-wide measurement audit logs with pagination and filters (P0.5.2)', async () => {
+      settingsService.getMandatoryMeasurementMetricIds.mockResolvedValue([1, 2]);
+
+      const res = await measurementService.listAllMeasurements(
+        {},
+        { from: '2026-01-01', to: '2026-02-01' },
+        mockAdminUser,
+      );
+
+      expect(res.data).toBeDefined();
+      expect(res.meta).toBeDefined();
+      expect(res.mandatory_metric_ids).toEqual([1, 2]);
+      expect(measurementRepo.findAllAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: expect.any(Date),
+          to: expect.any(Date),
+        }),
+      );
+    });
+
+    it('rejects trainer or member attempting to list gym-wide measurement audit logs', async () => {
+      await expect(
+        measurementService.listAllMeasurements({}, {}, mockTrainerUser),
+      ).rejects.toThrow(ForbiddenError);
+      await expect(
+        measurementService.listAllMeasurements({}, {}, mockMemberUser),
+      ).rejects.toThrow(ForbiddenError);
     });
   });
 });

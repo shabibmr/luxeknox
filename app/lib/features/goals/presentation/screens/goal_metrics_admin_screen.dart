@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
@@ -39,13 +40,16 @@ class _GoalMetricsAdminBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canManage = context.can('goals.create');
     return Scaffold(
       appBar: AppBar(title: const Text(GoalsStrings.metricsAdminTitle)),
-      floatingActionButton: FloatingActionButton(
-        tooltip: GoalsStrings.createMetric,
-        onPressed: () => _openForm(context),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: canManage
+          ? FloatingActionButton(
+              tooltip: GoalsStrings.createMetric,
+              onPressed: () => _openForm(context),
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: BlocConsumer<GoalMetricsAdminCubit, GoalMetricsAdminState>(
         listener: (context, state) {
           final showData =
@@ -82,8 +86,12 @@ class _GoalMetricsAdminBody extends StatelessWidget {
                         '${m.unitOfMeasure} · ${GoalsStrings.categoryLabelFor(m.category)}'
                         '${m.isActive ? '' : ' · inactive'}',
                       ),
-                      trailing: const Icon(Icons.edit_outlined),
-                      onTap: () => _openForm(context, existing: m),
+                      trailing: canManage
+                          ? const Icon(Icons.edit_outlined)
+                          : null,
+                      onTap: canManage
+                          ? () => _openForm(context, existing: m)
+                          : null,
                     );
                   },
                 );

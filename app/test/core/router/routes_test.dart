@@ -56,7 +56,7 @@ void main() {
         Routes.trainerMembersDetail,
         Routes.trainerMembersHealth,
         Routes.trainerMembersGoals,
-        Routes.trainerMembersGoalsAddMeasurement,
+        Routes.trainerMembersGoalsMeasurementsNew,
         Routes.trainerMembersWorkoutHistory,
         Routes.trainerMembersWorkoutActive,
         Routes.trainerSchedule,
@@ -113,6 +113,11 @@ void main() {
         Routes.adminDietPlansEdit,
         Routes.adminDietPlansVersions,
         Routes.adminGoalMetrics,
+        Routes.adminMemberGoals,
+        Routes.adminProgress,
+        Routes.adminMeasurements,
+        Routes.adminMeasurementsHistory,
+        Routes.adminProgressPhotos,
         Routes.adminNotificationsBroadcast,
         Routes.adminReportsHub,
         Routes.adminReports,
@@ -125,7 +130,7 @@ void main() {
       // set's length equals the number of entries listed.
       expect(
         allRoutes.length,
-        101,
+        106,
         reason: 'All route constants should be unique; duplicate values found',
       );
     });
@@ -142,8 +147,8 @@ void main() {
         '/admin/members/9/goals/goal/8',
       );
       expect(
-        Routes.adminMemberGoalsAddMeasurementById('9'),
-        '/admin/members/9/goals/add-measurement',
+        Routes.adminMemberGoalsMeasurementsNewById('9'),
+        '/admin/members/9/goals/measurements/new',
       );
       expect(Routes.adminMemberById('9'), '/admin/members/9');
       expect(Routes.adminMemberGoalsById('9'), '/admin/members/9/goals');

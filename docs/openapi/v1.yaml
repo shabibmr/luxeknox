@@ -5290,7 +5290,7 @@ paths:
       x-status: mvp
       x-parity: required
       x-permission: goals.create
-      description: Trainers and staff with goals.create, goals.update, or goals.write may create a metric.
+      description: Admin with goals.create may create a metric.
       security:
         - bearerAuth: []
       requestBody:
@@ -5327,8 +5327,8 @@ paths:
       tags: [GOAL]
       x-status: mvp
       x-parity: required
-      x-permission: goals.update
-      description: Trainers and staff with goals.create, goals.update, or goals.write may update a metric.
+      x-permission: goals.create
+      description: Admin with goals.create may update a metric.
       security:
         - bearerAuth: []
       parameters:
@@ -5541,6 +5541,81 @@ paths:
           $ref: "#/components/responses/Error422"
         "429":
           $ref: "#/components/responses/Error429"
+  /goals:
+    get:
+      operationId: listAllGoals
+      summary: Active goals across members
+      tags: [GOAL]
+      x-status: mvp
+      x-parity: required
+      x-permission: goals.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [in_progress, achieved, abandoned]
+        - name: metric_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoalPage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /progress/aggregate:
+    get:
+      operationId: getProgressAggregate
+      summary: Progress aggregate counts
+      tags: [GOAL]
+      x-status: mvp
+      x-parity: required
+      x-permission: goals.read
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressAggregate"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
   /members/{id}/measurements/chart:
     get:
       operationId: getMeasurementChart
@@ -5569,9 +5644,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/LongitudinalDataPoint"
+                $ref: "#/components/schemas/MeasurementChartResponse"
         "400":
           $ref: "#/components/responses/Error400"
         "401":
@@ -5678,6 +5751,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Measurement"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /measurements:
+    get:
+      operationId: listAllMeasurements
+      summary: Measurement audit records across members
+      tags: [GOAL]
+      x-status: mvp
+      x-parity: required
+      x-permission: goals.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeasurementPage"
         "400":
           $ref: "#/components/responses/Error400"
         "401":
@@ -5821,6 +5938,45 @@ paths:
       responses:
         "204":
           description: No content
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /progress-photos:
+    get:
+      operationId: listAllProgressPhotos
+      summary: Progress photos vault
+      tags: [GOAL]
+      x-status: mvp
+      x-parity: required
+      x-permission: goals.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+        - name: pose
+          in: query
+          schema:
+            type: string
+            enum: [front, side, back]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressPhotoPage"
         "400":
           $ref: "#/components/responses/Error400"
         "401":
@@ -9453,6 +9609,24 @@ components:
             $ref: "#/components/schemas/Measurement"
         meta:
           $ref: "#/components/schemas/PageMeta"
+        mandatory_metric_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+    MeasurementChartResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/LongitudinalDataPoint"
+        mandatory_metric_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
     LongitudinalDataPoint:
       type: object
       required: [measurement_id, recorded_at, metric_id, metric_name, unit_of_measure, value]
@@ -9542,6 +9716,18 @@ components:
           $ref: "#/components/schemas/ProgressPhoto"
         date2:
           $ref: "#/components/schemas/ProgressPhoto"
+    ProgressAggregate:
+      type: object
+      required: [active_goals, achieved_goals, members_measured_30d, photos_30d]
+      properties:
+        active_goals:
+          type: integer
+        achieved_goals:
+          type: integer
+        members_measured_30d:
+          type: integer
+        photos_30d:
+          type: integer
     ProgressNote:
       type: object
       required: [id, member_id, author_user_id, note_text, note_type, created_at]

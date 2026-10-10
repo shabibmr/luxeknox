@@ -80,6 +80,26 @@ void main() {
           builder: (_, _) => const Text('Goals'),
         ),
         GoRoute(
+          path: '/admin/member-goals',
+          builder: (_, _) => const Text('Member Goals page'),
+        ),
+        GoRoute(
+          path: '/admin/progress',
+          builder: (_, _) => const Text('Progress page'),
+        ),
+        GoRoute(
+          path: '/admin/measurements',
+          builder: (_, _) => const Text('Measurements page'),
+        ),
+        GoRoute(
+          path: '/admin/measurements/history',
+          builder: (_, _) => const Text('History page'),
+        ),
+        GoRoute(
+          path: '/admin/progress-photos',
+          builder: (_, _) => const Text('Photos page'),
+        ),
+        GoRoute(
           path: '/admin/notifications/broadcast',
           builder: (_, _) => const Text('Broadcast'),
         ),
@@ -100,8 +120,23 @@ void main() {
     expect(find.text('Workout Library'), findsOneWidget);
     expect(find.text('Trainers'), findsOneWidget);
 
-    await tester.tap(find.text('Workout Library'));
+    for (final label in [
+      'Member Goals',
+      'Progress',
+      'Measurements',
+      'Measurement History',
+      'Progress Photos',
+    ]) {
+      await tester.scrollUntilVisible(
+        find.text(label),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text(label), findsWidgets);
+    }
+
+    await tester.tap(find.text('Member Goals'));
     await tester.pumpAndSettle();
-    expect(find.text('Library'), findsOneWidget);
+    expect(find.text('Member Goals page'), findsOneWidget);
   });
 }

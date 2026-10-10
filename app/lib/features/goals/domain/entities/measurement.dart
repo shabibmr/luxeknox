@@ -44,3 +44,20 @@ class MeasurementSession extends Equatable {
     values,
   ];
 }
+
+class ChartDataPoint extends Equatable {
+  const ChartDataPoint({
+    required this.recordedAt,
+    required this.value,
+    required this.metricName,
+    required this.unitOfMeasure,
+  });
+
+  final DateTime recordedAt;
+  final num value;
+  final String metricName;
+  final String unitOfMeasure;
+
+  @override
+  List<Object?> get props => [recordedAt, value, metricName, unitOfMeasure];
+}

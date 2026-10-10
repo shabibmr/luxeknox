@@ -33,6 +33,7 @@ class GoalHistorySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chartRows = _chartOrder();
+    final origin = chartRows.isEmpty ? null : chartRows.first.recordedDate;
     final earlier = history.length > 1 ? history.skip(1) : const <GoalHistoryEntry>[];
     final unitSuffix = unit == null || unit!.isEmpty ? '' : ' $unit';
     return Column(
@@ -46,16 +47,18 @@ class GoalHistorySection extends StatelessWidget {
               points: [
                 for (final row in chartRows)
                   Offset(
-                    row.recordedDate.millisecondsSinceEpoch.toDouble(),
+                    row.recordedDate.difference(origin!).inDays.toDouble(),
                     row.recordedValue.toDouble(),
                   ),
               ],
             ),
           ],
           emptyMessage: GoalsStrings.chartsEmpty,
-          xLabelFormatter: (x) => DateFormat(
-            'MMM d',
-          ).format(DateTime.fromMillisecondsSinceEpoch(x.toInt())),
+          xLabelFormatter: origin == null
+              ? null
+              : (x) => DateFormat('MMM d').format(
+                  origin.add(Duration(days: x.round())),
+                ),
         ),
         if (history.isEmpty) ...[
           const SizedBox(height: 8),

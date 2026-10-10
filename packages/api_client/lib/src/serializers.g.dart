@@ -95,6 +95,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(MeResponse.serializer)
       ..add(MeResponseProfile.serializer)
       ..add(Measurement.serializer)
+      ..add(MeasurementChartResponse.serializer)
       ..add(MeasurementPage.serializer)
       ..add(MeasurementValue.serializer)
       ..add(MeasurementWrite.serializer)
@@ -160,6 +161,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PermissionPage.serializer)
       ..add(PersonalRecord.serializer)
       ..add(Principal.serializer)
+      ..add(ProgressAggregate.serializer)
       ..add(ProgressNote.serializer)
       ..add(ProgressNoteNoteTypeEnum.serializer)
       ..add(ProgressNotePage.serializer)
@@ -321,8 +323,18 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(HealthCondition)]),
           () => ListBuilder<HealthCondition>())
       ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(LongitudinalDataPoint)]),
+          () => ListBuilder<LongitudinalDataPoint>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(int)]),
+          () => ListBuilder<int>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Measurement)]),
           () => ListBuilder<Measurement>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(int)]),
+          () => ListBuilder<int>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(MeasurementValue)]),
           () => ListBuilder<MeasurementValue>())

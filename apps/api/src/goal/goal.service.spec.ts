@@ -172,6 +172,13 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
       })),
       addHistory: vi.fn().mockImplementation(async (data) => ({ id: 1, ...data })),
       listHistories: vi.fn().mockResolvedValue([]),
+      findAll: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
+      getAggregateCounts: vi.fn().mockResolvedValue({
+        active_goals: 5,
+        achieved_goals: 3,
+        members_measured_30d: 12,
+        photos_30d: 8,
+      }),
     };
 
     memberRepo = {
@@ -248,6 +255,40 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
         1,
         expect.objectContaining({ name: 'Incline Bench Press' }),
       );
+    });
+
+    it('rejects trainer attempting to create goal metric with 403 (P0.1.2)', async () => {
+      await expect(
+        metricService.create(
+          {
+            name: 'Pull Ups',
+            unit_of_measure: 'reps',
+            category: 'strength',
+            is_active: true,
+          },
+          mockTrainerUser,
+        ),
+      ).rejects.toThrow(ForbiddenError);
+    });
+
+    it('rejects trainer attempting to update goal metric with 403', async () => {
+      await expect(
+        metricService.update(1, { name: 'New Name' }, mockTrainerUser),
+      ).rejects.toThrow(ForbiddenError);
+    });
+
+    it('rejects member attempting to create goal metric with 403', async () => {
+      await expect(
+        metricService.create(
+          {
+            name: 'Pull Ups',
+            unit_of_measure: 'reps',
+            category: 'strength',
+            is_active: true,
+          },
+          mockMemberUser,
+        ),
+      ).rejects.toThrow(ForbiddenError);
     });
   });
 
@@ -432,6 +473,74 @@ describe('GoalService & GoalMetricService (GOA-003, GOA-004, GOA-005, GOA-009)',
           status: 'in_progress',
         }),
       );
+    });
+
+    it('rejects check-in when goal is not in_progress (P0.2.4)', async () => {
+      goalRepo.findById.mockResolvedValueOnce({
+        id: 1,
+        member_id: 100,
+        metric_id: 1,
+        baseline_value: 80,
+        target_value: 100,
+        current_value: 100,
+        status: 'achieved',
+        row_version: 1,
+      });
+
+      await expect(
+        goalService.checkIn(
+          1,
+          { recorded_value: 105, notes: 'Post-achievement check-in' },
+          mockMemberUser,
+        ),
+      ).rejects.toThrow(BusinessRuleError);
+    });
+
+    it('allows assigned trainer to check in on client goal (FR-GOAL-005, P0.2.4)', async () => {
+      const history = await goalService.checkIn(
+        1,
+        { recorded_value: 92, notes: 'Trainer check-in' },
+        mockTrainerUser,
+      );
+      expect(history).toBeDefined();
+      expect(ptAccess.assertTrainerCanWrite).toHaveBeenCalledWith(mockTrainerUser, 100);
+    });
+
+    it('allows admin to check in on any member goal (FR-GOAL-005, P0.2.4)', async () => {
+      const history = await goalService.checkIn(
+        1,
+        { recorded_value: 93, notes: 'Admin check-in' },
+        mockAdminUser,
+      );
+      expect(history).toBeDefined();
+    });
+  });
+
+  describe('Admin List & Aggregate Endpoints (P0.5.1 & P0.5.4)', () => {
+    it('allows admin to list gym-wide goals with pagination and filters (P0.5.1)', async () => {
+      const res = await goalService.listAllGoals({}, { status: 'in_progress' }, mockAdminUser);
+      expect(res.data).toBeDefined();
+      expect(goalRepo.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'in_progress' }),
+      );
+    });
+
+    it('rejects trainer or member attempting to list gym-wide goals', async () => {
+      await expect(goalService.listAllGoals({}, {}, mockTrainerUser)).rejects.toThrow(ForbiddenError);
+      await expect(goalService.listAllGoals({}, {}, mockMemberUser)).rejects.toThrow(ForbiddenError);
+    });
+
+    it('allows admin to retrieve progress aggregate counts (P0.5.4)', async () => {
+      const agg = await goalService.getProgressAggregate(mockAdminUser);
+      expect(agg.active_goals).toBe(5);
+      expect(agg.achieved_goals).toBe(3);
+      expect(agg.members_measured_30d).toBe(12);
+      expect(agg.photos_30d).toBe(8);
+    });
+
+    it('rejects trainer or member attempting to view aggregate counts', async () => {
+      await expect(goalService.getProgressAggregate(mockTrainerUser)).rejects.toThrow(ForbiddenError);
+      await expect(goalService.getProgressAggregate(mockMemberUser)).rejects.toThrow(ForbiddenError);
     });
   });
 });

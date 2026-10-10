@@ -78,75 +78,75 @@ Each task lists its direct `deps`. Do not start a task until every id in that li
   deps: A1.3, A1.4, A1.5
 
 #### A2 Measurements summary and history
-- [ ] A2.1 Latest-value block for Weight, Body Fat %, Chest, Waist, Biceps, Thighs by metric name
+- [x] A2.1 Latest-value block for Weight, Body Fat %, Chest, Waist, Biceps, Thighs by metric name
   deps: none
-- [ ] A2.2 Chart lists every metric returned, not `metrics.take(3)`
+- [x] A2.2 Chart lists every metric returned, not `metrics.take(3)`
   deps: none
-- [ ] A2.3 History child route on member, trainer, and admin dossier: session table + curve per metric
+- [x] A2.3 History child route on member, trainer, and admin dossier: session table + curve per metric
   deps: none
-- [ ] A2.4 Session list uses `hasMore` / next cursor
+- [x] A2.4 Session list uses `hasMore` / next cursor
   deps: A2.3
-- [ ] A2.5 Cubit created on the route
+- [x] A2.5 Cubit created on the route
   deps: A2.1, A2.3
-- [ ] A2.6 Widget test: empty metrics, three named metrics, second page
+- [x] A2.6 Widget test: empty metrics, three named metrics, second page
   deps: A2.1, A2.2, A2.4, A2.5
 
 #### A3 Trainer / admin dossier tracking
-- [ ] A3.1 Nested routes: `photos`, `notes`, `timeline`, `measurements/new`, `goal/:goalId/edit`, `new`
+- [x] A3.1 Nested routes: `photos`, `notes`, `timeline`, `measurements/new`, `goal/:goalId/edit`, `new`
   deps: none
-- [ ] A3.2 Photos and notes use those routes. Remove `Navigator.push` of the member screens from the hub
+- [x] A3.2 Photos and notes use those routes. Remove `Navigator.push` of the member screens from the hub
   deps: A3.1
-- [ ] A3.3 BMI from latest weight (kg) and health `height_cm`. Missing height is an empty state
+- [x] A3.3 BMI from latest weight (kg) and health `height_cm`. Missing height is an empty state
   deps: A1.3
-- [ ] A3.4 Timeline: goal histories and measurement sessions, newest first
+- [x] A3.4 Timeline: goal histories and measurement sessions, newest first
   deps: A3.1
-- [ ] A3.5 `GoalFormScreen` is only reached by `goals/new` and `goals/goal/:goalId/edit`
+- [x] A3.5 `GoalFormScreen` is only reached by `goals/new` and `goals/goal/:goalId/edit`
   deps: A3.1
 
 #### A4 Admin gym-wide screens
-- [ ] A4.1 More links: Member Goals, Progress aggregate, Measurements audit, History archive, Progress Photos vault
+- [x] A4.1 More links: Member Goals, Progress aggregate, Measurements audit, History archive, Progress Photos vault
   deps: P0.5.5
-- [ ] A4.2 Each screen calls the P0.5 endpoint for that list
+- [x] A4.2 Each screen calls the P0.5 endpoint for that list
   deps: A4.1
-- [ ] A4.3 Vault hides private photos unless `progress_photos.moderate`
+- [x] A4.3 Vault hides private photos unless `progress_photos.moderate`
   deps: A4.2, P0.3.2
-- [ ] A4.4 Goal Metrics screen unchanged in purpose (name, unit, category, active)
+- [x] A4.4 Goal Metrics screen unchanged in purpose (name, unit, category, active)
   deps: B2.3
-- [ ] A4.5 Widget test for the goals monitor empty and one row; vault with moderate on and off
+- [x] A4.5 Widget test for the goals monitor empty and one row; vault with moderate on and off
   deps: A4.2, A4.3
 
 #### A5 Goal detail extras
-- [ ] A5.1 Detail shows start date, target date, status, progress bar, histories
+- [x] A5.1 Detail shows start date, target date, status, progress bar, histories
   deps: none
-- [ ] A5.2 Coach notes section lists that member’s `trainer_assessment` notes
+- [x] A5.2 Coach notes section lists that member’s `trainer_assessment` notes
   deps: none
-- [ ] A5.3 Trainer and admin detail show projected (linear baseline→target over start→target date) and actual (`current_value`)
+- [x] A5.3 Trainer and admin detail show projected (linear baseline→target over start→target date) and actual (`current_value`)
   deps: A5.1
-- [ ] A5.4 **deferred** — priority. No `goals.priority` column and not in FR-GOAL-002. Do not add a form control
+- [x] A5.4 **deferred (closed)** — priority. No `goals.priority` column and not in FR-GOAL-002. Out of scope: do not add a form control or column
   deps: none
 
 #### A6 Member check-in
-- [ ] A6.1 Member detail shows check-in when status is `in_progress` and the goal is theirs
+- [x] A6.1 Member detail shows check-in when status is `in_progress` and the goal is theirs
   deps: P0.2.4, A5.1, C3.1
-- [ ] A6.2 Member detail hides edit and create
+- [x] A6.2 Member detail hides edit and create
   deps: C3.1, A3.5
-- [ ] A6.3 Cubit test: check-in success updates `current_value` and history
+- [x] A6.3 Cubit test: check-in success updates `current_value` and history
   deps: A6.1
 
 #### A7 Mandatory metrics in the form
-- [ ] A7.1 `MeasurementsCubit` stores `mandatory_metric_ids` from the payload
+- [x] A7.1 `MeasurementsCubit` stores `mandatory_metric_ids` from the payload
   deps: P0.4.1, A2.5
-- [ ] A7.2 Form marks those metrics required before submit
+- [x] A7.2 Form marks those metrics required before submit
   deps: A7.1
-- [ ] A7.3 Cubit test: ids from the payload replace the default `[]`
+- [x] A7.3 Cubit test: ids from the payload replace the default `[]`
   deps: A7.1
 
 #### A8 Photo comparison
-- [ ] A8.1 Compare calls `GET .../progress-photos/comparison` with two dates
+- [x] A8.1 Compare calls `GET .../progress-photos/comparison` with two dates
   deps: A3.2, P0.3.2
-- [ ] A8.2 Layout is front, side, and back for date1 and date2
+- [x] A8.2 Layout is front, side, and back for date1 and date2
   deps: A8.1
-- [ ] A8.3 Cubit test: query params and empty pose slots
+- [x] A8.3 Cubit test: query params and empty pose slots
   deps: A8.1, A8.2
 
 ---
@@ -178,37 +178,37 @@ Each task lists its direct `deps`. Do not start a task until every id in that li
 ### C Wrong behaviour
 
 #### C1 Photo actions
-- [ ] C1.1 Upload FAB only on the member shell, own member id, `goals.write`
+- [x] C1.1 Upload FAB only on the member shell, own member id, `goals.write`
   deps: P0.2.3, A8.2, C4.1
-- [ ] C1.2 Trainer photos: no upload, no delete
+- [x] C1.2 Trainer photos: no upload, no delete
   deps: P0.2.3, P0.3.3, A8.2
-- [ ] C1.3 Admin delete shown only with `progress_photos.moderate`
+- [x] C1.3 Admin delete shown only with `progress_photos.moderate`
   deps: P0.3.3, A8.2
-- [ ] C1.4 Role-variant widget test (extend `progress_photos_role_variants_test.dart`)
+- [x] C1.4 Role-variant widget test (extend `progress_photos_role_variants_test.dart`)
   deps: C1.1, C1.2, C1.3, C4.3
 
 #### C2 Note types
-- [ ] C2.1 Member compose offers `member_note` only
+- [x] C2.1 Member compose offers `member_note` only
   deps: C2.4
-- [ ] C2.2 Trainer compose offers `trainer_assessment` only
+- [x] C2.2 Trainer compose offers `trainer_assessment` only
   deps: C2.4
-- [ ] C2.3 Admin compose offers both
+- [x] C2.3 Admin compose offers both
   deps: C2.4
-- [ ] C2.4 Default type comes from the shell, not `UserType`
+- [x] C2.4 Default type comes from the shell, not `UserType`
   deps: A3.2
-- [ ] C2.5 Role-variant widget test
+- [x] C2.5 Role-variant widget test
   deps: C2.1, C2.2, C2.3
 
 #### C3 Detail actions and record route
 - [x] C3.1 `resolveGoalViewActions` uses shell + `goals.write` + assigned-trainer flag. Remove `isTrainerUser` / `UserType`
   deps: none
-- [ ] C3.2 Admin in-progress goal: edit, check-in, record measurement
+- [x] C3.2 Admin in-progress goal: edit, check-in, record measurement
   deps: C3.1
-- [ ] C3.3 Trainer: those actions only when assigned and `goals.write`
+- [x] C3.3 Trainer: those actions only when assigned and `goals.write`
   deps: C3.1, C4.1
-- [ ] C3.4 Record measurement route: member measurements, trainer `measurements/new`, admin `measurements/new`
+- [x] C3.4 Record measurement route: member measurements, trainer `measurements/new`, admin `measurements/new`
   deps: C3.1, A3.1
-- [ ] C3.5 Unit tests in `goal_view_actions_test.dart` plus a detail widget test per shell
+- [x] C3.5 Unit tests in `goal_view_actions_test.dart` plus a detail widget test per shell
   deps: C3.2, C3.3, C3.4, A6.1, A6.2
 
 #### C4 Assigned-trainer flag
@@ -223,11 +223,11 @@ Each task lists its direct `deps`. Do not start a task until every id in that li
 
 ### Done when
 
-- [ ] D1 Register sections P0, A, B, C are `[x]` except A5.4 (stays deferred)
+- [x] D1 Register sections P0, A, B, C are `[x]` (A5.4 closed as deferred / out of scope)
   deps: P0.1, P0.2, P0.3, P0.4, P0.5, A1, A2, A3, A4, A5.1, A5.2, A5.3, A6, A7, A8, B1, B2, B3, C1, C2, C3, C4
-- [ ] D2 `flutter test` for `app/test/features/goals` and the new router cases
+- [x] D2 `flutter test` for `app/test/features/goals` and the new router cases
   deps: A1.6, A2.6, A3.2, A3.3, A3.4, A3.5, A4.5, A5.2, A5.3, A6.3, A7.3, A8.3, B1.3, B2.3, B3.1, C1.4, C2.5, C3.5, C4.3
-- [ ] D3 API goal/progress service specs for P0.1–P0.5
+- [x] D3 API goal/progress service specs for P0.1–P0.5
   deps: P0.1, P0.2, P0.3, P0.4, P0.5
 
 ---

@@ -18,11 +18,12 @@ import '../../domain/helpers/assigned_trainer.dart';
 import '../cubit/goal_detail_cubit.dart';
 import '../goal_view_actions.dart';
 import '../goals_strings.dart';
+import '../widgets/goal_coach_notes_section.dart';
 import '../widgets/goal_history_section.dart';
 import '../widgets/goal_identity_facts.dart';
 import '../widgets/goal_latest_reading.dart';
 import '../widgets/goal_progress_bar.dart';
-import 'goal_form_screen.dart';
+import '../widgets/goal_projected_actual.dart';
 
 class GoalDetailScreen extends StatelessWidget {
   const GoalDetailScreen({
@@ -116,11 +117,17 @@ class _GoalDetailBodyState extends State<_GoalDetailBody> {
   }
 
   Future<void> _edit(BuildContext context, MemberGoal goal) async {
-    final saved = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => GoalFormScreen(memberId: goal.memberId, goalId: goal.id),
-      ),
-    );
+    final path = GoRouterState.of(context).uri.path;
+    final shell = goalDetailShellForPath(path);
+    final location = switch (shell) {
+      GoalDetailShell.admin =>
+        Routes.adminMemberGoalEditById(goal.memberId, goal.id),
+      GoalDetailShell.trainer =>
+        Routes.trainerMemberGoalEditById(goal.memberId, goal.id),
+      GoalDetailShell.member => null,
+    };
+    if (location == null) return;
+    final saved = await context.push<bool>(location);
     if (saved == true && context.mounted) {
       await context.read<GoalDetailCubit>().load(widget.goalId);
     }
@@ -131,10 +138,10 @@ class _GoalDetailBodyState extends State<_GoalDetailBody> {
     final shell = goalDetailShellForPath(path);
     final location = switch (shell) {
       GoalDetailShell.admin =>
-        '${Routes.adminMemberGoalsAddMeasurementById(goal.memberId)}'
+        '${Routes.adminMemberGoalsMeasurementsNewById(goal.memberId)}'
         '?metric=${goal.metricId}',
       GoalDetailShell.trainer =>
-        '${Routes.trainerMemberGoalsAddMeasurementById(goal.memberId)}'
+        '${Routes.trainerMemberGoalsMeasurementsNewById(goal.memberId)}'
         '?metric=${goal.metricId}',
       GoalDetailShell.member => Routes.memberProgressMeasurements,
     };
@@ -234,6 +241,10 @@ class _GoalDetailBodyState extends State<_GoalDetailBody> {
     if (goal == null) return const SizedBox.shrink();
     final history = goal.history;
     final unit = goal.metric?.unitOfMeasure;
+    final path = GoRouterState.of(context).uri.path;
+    final shell = goalDetailShellForPath(path);
+    final showProjected =
+        shell == GoalDetailShell.trainer || shell == GoalDetailShell.admin;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -242,6 +253,10 @@ class _GoalDetailBodyState extends State<_GoalDetailBody> {
         GoalProgressBar(key: const Key('goal-view-progress'), goal: goal),
         const SizedBox(height: 16),
         GoalIdentityFacts(goal: goal),
+        if (showProjected) ...[
+          const SizedBox(height: 16),
+          GoalProjectedActual(goal: goal),
+        ],
         const SizedBox(height: 16),
         GoalHistorySection(
           history: history,
@@ -252,6 +267,8 @@ class _GoalDetailBodyState extends State<_GoalDetailBody> {
           const SizedBox(height: 16),
           GoalLatestReading(entry: history.first, unit: unit),
         ],
+        const SizedBox(height: 16),
+        GoalCoachNotesSection(notes: state.coachNotes),
       ],
     );
   }

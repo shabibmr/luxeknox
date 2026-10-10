@@ -13,6 +13,9 @@ List<double> appLineChartUniqueXs(List<AppLineSeries> series) {
 }
 
 /// Minimum positive gap between consecutive [values], or `1` when undefined.
+///
+/// When [span] / minGap would exceed 6 axis steps, returns [span] / 6 so
+/// fl_chart does not walk epoch-scale ranges one tiny gap at a time.
 double appLineChartAxisInterval(List<double> values) {
   if (values.length < 2) return 1;
   var minGap = double.infinity;
@@ -20,7 +23,12 @@ double appLineChartAxisInterval(List<double> values) {
     final gap = values[i] - values[i - 1];
     if (gap > 0 && gap < minGap) minGap = gap;
   }
-  return minGap.isFinite ? minGap : 1;
+  if (!minGap.isFinite) return 1;
+  final span = values.last - values.first;
+  if (span > 0 && span / minGap > 6) {
+    return span / 6;
+  }
+  return minGap;
 }
 
 bool appLineChartIsDataX(double value, List<double> xs, double tolerance) {

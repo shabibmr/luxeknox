@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, inArray, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import {
   progressPhotos,
@@ -88,5 +88,44 @@ export class ProgressPhotoRepository extends BaseRepository<
 
   async deleteById(id: number): Promise<void> {
     await this.delete(eq(progressPhotos.id, id));
+  }
+
+  async findAllFiltered(
+    options?: ProgressPhotoFilterOptions,
+  ): Promise<{ rows: ProgressPhoto[]; total: number }> {
+    const conditions: SQL[] = [];
+
+    if (options?.pose) {
+      conditions.push(eq(progressPhotos.pose, options.pose as any));
+    }
+    if (options?.includePrivate === false) {
+      conditions.push(eq(progressPhotos.is_private, false));
+    }
+
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [countResult] = await this.db
+      .select({ count: count() })
+      .from(progressPhotos)
+      .where(where);
+
+    const query = this.db
+      .select()
+      .from(progressPhotos)
+      .where(where)
+      .orderBy(desc(progressPhotos.taken_date), desc(progressPhotos.created_at));
+
+    if (options?.limit) {
+      query.limit(options.limit);
+    }
+    if (options?.offset) {
+      query.offset(options.offset);
+    }
+
+    const rows = await query;
+    return {
+      rows,
+      total: countResult?.count ?? 0,
+    };
   }
 }

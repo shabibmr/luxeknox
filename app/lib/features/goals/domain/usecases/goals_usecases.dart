@@ -4,10 +4,11 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/pagination/cursor_page.dart';
-import '../../../../core/usecase/usecase.dart';
+import '../../../../core/usecase/usecase.dart' show NoParams, UseCase;
 import '../entities/goal_history.dart';
 import '../entities/goal_status.dart';
 import '../entities/member_goal.dart';
+import '../entities/progress_aggregate.dart';
 import '../repositories/goals_repository.dart';
 
 class MemberIdParams extends Equatable {
@@ -17,6 +18,56 @@ class MemberIdParams extends Equatable {
 
   @override
   List<Object?> get props => [memberId];
+}
+
+class ListAllGoalsParams extends Equatable {
+  const ListAllGoalsParams({
+    this.status,
+    this.metricId,
+    this.limit,
+    this.cursor,
+  });
+
+  final String? status;
+  final String? metricId;
+  final int? limit;
+  final String? cursor;
+
+  @override
+  List<Object?> get props => [status, metricId, limit, cursor];
+}
+
+@lazySingleton
+class ListAllGoalsUseCase
+    implements UseCase<CursorPage<MemberGoal>, ListAllGoalsParams> {
+  const ListAllGoalsUseCase(this._repository);
+
+  final GoalsRepository _repository;
+
+  @override
+  Future<Either<Failure, CursorPage<MemberGoal>>> call(
+    ListAllGoalsParams params,
+  ) {
+    return _repository.listAllGoals(
+      status: params.status,
+      metricId: params.metricId,
+      limit: params.limit,
+      cursor: params.cursor,
+    );
+  }
+}
+
+@lazySingleton
+class GetProgressAggregateUseCase
+    implements UseCase<ProgressAggregateCounts, NoParams> {
+  const GetProgressAggregateUseCase(this._repository);
+
+  final GoalsRepository _repository;
+
+  @override
+  Future<Either<Failure, ProgressAggregateCounts>> call(NoParams params) {
+    return _repository.getProgressAggregate();
+  }
 }
 
 @lazySingleton

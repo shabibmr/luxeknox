@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:luxeknox/features/goals/domain/entities/goal_status.dart';
+import 'package:luxeknox/features/goals/domain/entities/progress_note_type.dart';
 import 'package:luxeknox/features/goals/presentation/goal_view_actions.dart';
 
 void main() {
@@ -103,6 +104,61 @@ void main() {
     expect(
       goalDetailShellForPath('/progress/goal/1'),
       GoalDetailShell.member,
+    );
+  });
+
+  test('photo upload only on member shell with owner and write', () {
+    expect(
+      canUploadProgressPhoto(
+        shell: GoalDetailShell.member,
+        isOwner: true,
+        canWriteGoals: true,
+      ),
+      isTrue,
+    );
+    expect(
+      canUploadProgressPhoto(
+        shell: GoalDetailShell.trainer,
+        isOwner: false,
+        canWriteGoals: true,
+      ),
+      isFalse,
+    );
+    expect(
+      canUploadProgressPhoto(
+        shell: GoalDetailShell.admin,
+        isOwner: false,
+        canWriteGoals: true,
+      ),
+      isFalse,
+    );
+  });
+
+  test('photo delete for owner or moderate', () {
+    expect(canDeleteProgressPhoto(isOwner: true, canModerate: false), isTrue);
+    expect(canDeleteProgressPhoto(isOwner: false, canModerate: true), isTrue);
+    expect(canDeleteProgressPhoto(isOwner: false, canModerate: false), isFalse);
+  });
+
+  test('note types follow shell', () {
+    expect(
+      allowedNoteTypesForShell(GoalDetailShell.member),
+      [ProgressNoteType.memberNote],
+    );
+    expect(
+      allowedNoteTypesForShell(GoalDetailShell.trainer),
+      [ProgressNoteType.trainerAssessment],
+    );
+    expect(
+      allowedNoteTypesForShell(GoalDetailShell.admin),
+      [
+        ProgressNoteType.trainerAssessment,
+        ProgressNoteType.memberNote,
+      ],
+    );
+    expect(
+      defaultNoteTypeForShell(GoalDetailShell.admin),
+      ProgressNoteType.trainerAssessment,
     );
   });
 }

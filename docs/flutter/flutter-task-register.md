@@ -174,6 +174,8 @@ This file is the single executable register. Each vertical below is also maintai
 - [x] trainer assessments
 - [x] server-derived achievement
 
+Spec gaps (not this checklist): [`../progress-vertical/20-progress-vertical-gap-register.md`](../progress-vertical/20-progress-vertical-gap-register.md).
+
 <!-- ==================== FILE: 11-notifications.md ==================== -->
 # FILE: 11-notifications.md
 ## Notifications

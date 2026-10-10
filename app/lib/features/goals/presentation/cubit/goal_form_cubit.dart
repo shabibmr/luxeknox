@@ -4,7 +4,6 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/presentation/load_status.dart';
-import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/goal_metric.dart';
 import '../../domain/entities/goal_status.dart';
 import '../../domain/entities/member_goal.dart';
@@ -55,7 +54,7 @@ class GoalFormCubit extends Cubit<GoalFormState> {
         savedGoal: null,
       ),
     );
-    final metricsResult = await _listMetrics(const NoParams());
+    final metricsResult = await _listMetrics(const ListGoalMetricsParams());
     MemberGoal? existing;
     if (goalId != null) {
       final goalResult = await _getGoal(goalId);

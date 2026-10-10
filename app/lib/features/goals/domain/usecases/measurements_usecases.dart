@@ -6,7 +6,46 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/pagination/cursor_page.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../entities/measurement.dart';
+import '../entities/measurement_list_page.dart';
 import '../repositories/measurements_repository.dart';
+
+class ListAllMeasurementsParams extends Equatable {
+  const ListAllMeasurementsParams({
+    this.limit,
+    this.cursor,
+    this.from,
+    this.to,
+  });
+
+  final int? limit;
+  final String? cursor;
+  final DateTime? from;
+  final DateTime? to;
+
+  @override
+  List<Object?> get props => [limit, cursor, from, to];
+}
+
+@lazySingleton
+class ListAllMeasurementsUseCase
+    implements
+        UseCase<CursorPage<MeasurementSession>, ListAllMeasurementsParams> {
+  const ListAllMeasurementsUseCase(this._repository);
+
+  final MeasurementsRepository _repository;
+
+  @override
+  Future<Either<Failure, CursorPage<MeasurementSession>>> call(
+    ListAllMeasurementsParams params,
+  ) {
+    return _repository.listAllMeasurements(
+      limit: params.limit,
+      cursor: params.cursor,
+      from: params.from,
+      to: params.to,
+    );
+  }
+}
 
 class ListMeasurementsParams extends Equatable {
   const ListMeasurementsParams({
@@ -25,13 +64,13 @@ class ListMeasurementsParams extends Equatable {
 
 @lazySingleton
 class ListMeasurementsUseCase
-    implements UseCase<CursorPage<MeasurementSession>, ListMeasurementsParams> {
+    implements UseCase<MeasurementListPage, ListMeasurementsParams> {
   const ListMeasurementsUseCase(this._repository);
 
   final MeasurementsRepository _repository;
 
   @override
-  Future<Either<Failure, CursorPage<MeasurementSession>>> call(
+  Future<Either<Failure, MeasurementListPage>> call(
     ListMeasurementsParams params,
   ) {
     return _repository.listMeasurements(
@@ -96,6 +135,43 @@ class CreateMeasurementUseCase
       notes: params.notes,
       values: params.values,
       mandatoryMetricIds: params.mandatoryMetricIds,
+    );
+  }
+}
+
+class GetMeasurementChartParams extends Equatable {
+  const GetMeasurementChartParams({
+    required this.memberId,
+    required this.metricId,
+    this.from,
+    this.to,
+  });
+
+  final String memberId;
+  final String metricId;
+  final DateTime? from;
+  final DateTime? to;
+
+  @override
+  List<Object?> get props => [memberId, metricId, from, to];
+}
+
+@lazySingleton
+class GetMeasurementChartUseCase
+    implements UseCase<List<ChartDataPoint>, GetMeasurementChartParams> {
+  const GetMeasurementChartUseCase(this._repository);
+
+  final MeasurementsRepository _repository;
+
+  @override
+  Future<Either<Failure, List<ChartDataPoint>>> call(
+    GetMeasurementChartParams params,
+  ) {
+    return _repository.getMeasurementChart(
+      memberId: params.memberId,
+      metricId: params.metricId,
+      from: params.from,
+      to: params.to,
     );
   }
 }

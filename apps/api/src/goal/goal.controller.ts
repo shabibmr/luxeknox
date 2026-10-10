@@ -93,4 +93,22 @@ export class GoalController {
   ) {
     return this.service.checkIn(id, dto, currentUser);
   }
+
+  @Get('goals')
+  @RequirePermission('goals.read')
+  @ApiOperation({ operationId: 'listAllGoals', summary: 'Gym-wide goals monitor' })
+  async listAllGoals(
+    @Query() rawQuery: Record<string, unknown>,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    const filter = goalFilterQuerySchema.parse(rawQuery);
+    return this.service.listAllGoals(rawQuery, filter, currentUser);
+  }
+
+  @Get('progress/aggregate')
+  @RequirePermission('goals.read')
+  @ApiOperation({ operationId: 'getProgressAggregate', summary: 'Progress aggregate counts' })
+  async getProgressAggregate(@CurrentUser() currentUser: AuthenticatedUser) {
+    return this.service.getProgressAggregate(currentUser);
+  }
 }

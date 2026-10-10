@@ -87,6 +87,7 @@ doc/MarkAttendanceRequest.md
 doc/MeResponse.md
 doc/MeResponseProfile.md
 doc/Measurement.md
+doc/MeasurementChartResponse.md
 doc/MeasurementPage.md
 doc/MeasurementValue.md
 doc/MeasurementWrite.md
@@ -150,6 +151,7 @@ doc/PermissionAction.md
 doc/PermissionPage.md
 doc/PersonalRecord.md
 doc/Principal.md
+doc/ProgressAggregate.md
 doc/ProgressNote.md
 doc/ProgressNotePage.md
 doc/ProgressNoteWrite.md
@@ -336,6 +338,7 @@ lib/src/model/mark_attendance_request.dart
 lib/src/model/me_response.dart
 lib/src/model/me_response_profile.dart
 lib/src/model/measurement.dart
+lib/src/model/measurement_chart_response.dart
 lib/src/model/measurement_page.dart
 lib/src/model/measurement_value.dart
 lib/src/model/measurement_write.dart
@@ -395,6 +398,7 @@ lib/src/model/permission_action.dart
 lib/src/model/permission_page.dart
 lib/src/model/personal_record.dart
 lib/src/model/principal.dart
+lib/src/model/progress_aggregate.dart
 lib/src/model/progress_note.dart
 lib/src/model/progress_note_page.dart
 lib/src/model/progress_note_write.dart
@@ -473,3 +477,5 @@ lib/src/model/workout_set_update.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
+test/measurement_chart_response_test.dart
+test/progress_aggregate_test.dart

@@ -15,6 +15,13 @@ abstract class GoalsRemoteDataSource {
 
   Future<api.GoalMetric> updateGoalMetric(int id, api.GoalMetricWrite write);
 
+  Future<api.GoalPage> listAllGoals({
+    int? limit,
+    String? cursor,
+    String? status,
+    int? metricId,
+  });
+
   Future<api.GoalPage> listMemberGoals(int memberId);
 
   Future<api.Goal> getGoal(int id);
@@ -25,6 +32,13 @@ abstract class GoalsRemoteDataSource {
 
   Future<api.GoalHistory> checkInGoal(int id, api.GoalCheckInWrite write);
 
+  Future<api.MeasurementPage> listAllMeasurements({
+    int? limit,
+    String? cursor,
+    DateTime? from,
+    DateTime? to,
+  });
+
   Future<api.MeasurementPage> listMeasurements({
     required int memberId,
     int? limit,
@@ -33,10 +47,23 @@ abstract class GoalsRemoteDataSource {
 
   Future<api.Measurement> getMeasurement(int id);
 
+  Future<api.MeasurementChartResponse> getMeasurementChart({
+    required int memberId,
+    required int metricId,
+    DateTime? from,
+    DateTime? to,
+  });
+
   Future<api.Measurement> createMeasurement(
     int memberId,
     api.MeasurementWrite write,
   );
+
+  Future<api.ProgressPhotoPage> listAllProgressPhotos({
+    int? limit,
+    String? cursor,
+    String? pose,
+  });
 
   Future<api.ProgressPhotoPage> listProgressPhotos({required int memberId});
 
@@ -45,7 +72,15 @@ abstract class GoalsRemoteDataSource {
     api.ProgressPhotoWrite write,
   );
 
+  Future<api.ProgressPhotoComparison> compareProgressPhotos({
+    required int memberId,
+    required DateTime date1,
+    required DateTime date2,
+  });
+
   Future<void> deleteProgressPhoto(int id);
+
+  Future<api.ProgressAggregate> getProgressAggregate();
 
   Future<api.ProgressNotePage> listProgressNotes({
     required int memberId,
@@ -111,6 +146,23 @@ class GoalsRemoteDataSourceImpl implements GoalsRemoteDataSource {
   }
 
   @override
+  Future<api.GoalPage> listAllGoals({
+    int? limit,
+    String? cursor,
+    String? status,
+    int? metricId,
+  }) async {
+    return _unwrap(
+      await _goalApi.listAllGoals(
+        limit: limit,
+        cursor: cursor,
+        status: status,
+        metricId: metricId,
+      ),
+    );
+  }
+
+  @override
   Future<api.GoalPage> listMemberGoals(int memberId) async {
     return _unwrap(await _goalApi.listMemberGoals(id: memberId));
   }
@@ -141,6 +193,23 @@ class GoalsRemoteDataSourceImpl implements GoalsRemoteDataSource {
   }
 
   @override
+  Future<api.MeasurementPage> listAllMeasurements({
+    int? limit,
+    String? cursor,
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    return _unwrap(
+      await _goalApi.listAllMeasurements(
+        limit: limit,
+        cursor: cursor,
+        from: from,
+        to: to,
+      ),
+    );
+  }
+
+  @override
   Future<api.MeasurementPage> listMeasurements({
     required int memberId,
     int? limit,
@@ -161,12 +230,44 @@ class GoalsRemoteDataSourceImpl implements GoalsRemoteDataSource {
   }
 
   @override
+  Future<api.MeasurementChartResponse> getMeasurementChart({
+    required int memberId,
+    required int metricId,
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    return _unwrap(
+      await _goalApi.getMeasurementChart(
+        id: memberId,
+        metricId: metricId,
+        from: from,
+        to: to,
+      ),
+    );
+  }
+
+  @override
   Future<api.Measurement> createMeasurement(
     int memberId,
     api.MeasurementWrite write,
   ) async {
     return _unwrap(
       await _goalApi.createMeasurement(id: memberId, measurementWrite: write),
+    );
+  }
+
+  @override
+  Future<api.ProgressPhotoPage> listAllProgressPhotos({
+    int? limit,
+    String? cursor,
+    String? pose,
+  }) async {
+    return _unwrap(
+      await _goalApi.listAllProgressPhotos(
+        limit: limit,
+        cursor: cursor,
+        pose: pose,
+      ),
     );
   }
 
@@ -191,8 +292,28 @@ class GoalsRemoteDataSourceImpl implements GoalsRemoteDataSource {
   }
 
   @override
+  Future<api.ProgressPhotoComparison> compareProgressPhotos({
+    required int memberId,
+    required DateTime date1,
+    required DateTime date2,
+  }) async {
+    return _unwrap(
+      await _goalApi.compareProgressPhotos(
+        id: memberId,
+        date1: api.Date(date1.year, date1.month, date1.day),
+        date2: api.Date(date2.year, date2.month, date2.day),
+      ),
+    );
+  }
+
+  @override
   Future<void> deleteProgressPhoto(int id) async {
     await _goalApi.deleteProgressPhoto(id: id);
+  }
+
+  @override
+  Future<api.ProgressAggregate> getProgressAggregate() async {
+    return _unwrap(await _goalApi.getProgressAggregate());
   }
 
   @override

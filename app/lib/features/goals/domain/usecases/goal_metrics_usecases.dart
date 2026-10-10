@@ -9,16 +9,43 @@ import '../entities/goal_metric.dart';
 import '../entities/goal_metric_category.dart';
 import '../repositories/goal_metrics_repository.dart';
 
+class ListGoalMetricsParams extends Equatable {
+  const ListGoalMetricsParams({
+    this.query,
+    this.category,
+    this.isActive,
+    this.cursor,
+    this.limit,
+  });
+
+  final String? query;
+  final GoalMetricCategory? category;
+  final bool? isActive;
+  final String? cursor;
+  final int? limit;
+
+  @override
+  List<Object?> get props => [query, category, isActive, cursor, limit];
+}
+
 @lazySingleton
 class ListGoalMetricsUseCase
-    implements UseCase<CursorPage<GoalMetric>, NoParams> {
+    implements UseCase<CursorPage<GoalMetric>, ListGoalMetricsParams> {
   const ListGoalMetricsUseCase(this._repository);
 
   final GoalMetricsRepository _repository;
 
   @override
-  Future<Either<Failure, CursorPage<GoalMetric>>> call(NoParams params) {
-    return _repository.listMetrics();
+  Future<Either<Failure, CursorPage<GoalMetric>>> call(
+    ListGoalMetricsParams params,
+  ) {
+    return _repository.listMetrics(
+      query: params.query,
+      category: params.category,
+      isActive: params.isActive,
+      cursor: params.cursor,
+      limit: params.limit,
+    );
   }
 }
 

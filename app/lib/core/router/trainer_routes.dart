@@ -16,9 +16,20 @@ import '../../features/diet/presentation/screens/diet_plan_versions_screen.dart'
 
 import '../../features/foods/presentation/screens/food_detail_screen.dart';
 import '../../features/foods/presentation/screens/food_library_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../di/injector.dart';
+import '../../features/goals/presentation/cubit/measurements_cubit.dart';
+import '../../features/goals/presentation/cubit/progress_overview_cubit.dart';
+import '../../features/goals/presentation/cubit/progress_timeline_cubit.dart';
 import '../../features/goals/presentation/screens/goal_detail_screen.dart';
+import '../../features/goals/presentation/screens/goal_form_screen.dart';
+import '../../features/goals/presentation/screens/measurements_history_screen.dart';
 import '../../features/goals/presentation/screens/measurements_screen.dart';
 import '../../features/goals/presentation/screens/progress_hub_screen.dart';
+import '../../features/goals/presentation/screens/progress_notes_screen.dart';
+import '../../features/goals/presentation/screens/progress_overview_screen.dart';
+import '../../features/goals/presentation/screens/progress_photos_screen.dart';
+import '../../features/goals/presentation/screens/progress_timeline_screen.dart';
 import '../../features/membership/presentation/screens/trainer_membership_summary_screen.dart';
 import '../../features/notifications/presentation/screens/broadcast_screen.dart';
 import '../../features/notifications/presentation/screens/notification_detail_screen.dart';
@@ -164,15 +175,73 @@ StatefulShellRoute createTrainerBranchRoute() {
                     },
                     routes: [
                       GoRoute(
-                        path: 'goal/:goalId',
+                        path: 'overview',
                         builder: (context, state) {
-                          return GoalDetailScreen(
-                            goalId: state.pathParameters['goalId']!,
+                          final id = state.pathParameters['id'] ?? '';
+                          return BlocProvider(
+                            create: (_) => getIt<ProgressOverviewCubit>()
+                              ..load(id, includeCircumference: true),
+                            child: ProgressOverviewScreen(
+                              memberId: id,
+                              isTrainerContext: true,
+                            ),
                           );
                         },
                       ),
                       GoRoute(
-                        path: 'add-measurement',
+                        path: 'photos',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'] ?? '';
+                          final assigned = state.extra as bool? ?? false;
+                          return ProgressPhotosScreen(
+                            memberId: id,
+                            isAssignedTrainer: assigned,
+                          );
+                        },
+                      ),
+                      GoRoute(
+                        path: 'notes',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'] ?? '';
+                          return ProgressNotesScreen(memberId: id);
+                        },
+                      ),
+                      GoRoute(
+                        path: 'timeline',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'] ?? '';
+                          return BlocProvider(
+                            create: (_) =>
+                                getIt<ProgressTimelineCubit>()..load(id),
+                            child: ProgressTimelineScreen(memberId: id),
+                          );
+                        },
+                      ),
+                      GoRoute(
+                        path: 'measurements',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'] ?? '';
+                          return BlocProvider(
+                            create: (_) => getIt<MeasurementsCubit>()..load(id),
+                            child: MeasurementsScreen(memberId: id),
+                          );
+                        },
+                        routes: [
+                          GoRoute(
+                            path: 'history',
+                            builder: (context, state) {
+                              final id = state.pathParameters['id'] ?? '';
+                              return BlocProvider(
+                                create: (_) =>
+                                    getIt<MeasurementsCubit>()..load(id),
+                                child: MeasurementsHistoryScreen(memberId: id),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      GoRoute(
+                        path: 'measurements/new',
                         builder: (context, state) {
                           final id = state.pathParameters['id'] ?? '';
                           final metric = state.uri.queryParameters['metric'];
@@ -182,6 +251,35 @@ StatefulShellRoute createTrainerBranchRoute() {
                             returnToCaller: metric != null,
                           );
                         },
+                      ),
+                      GoRoute(
+                        path: 'new',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'] ?? '';
+                          return GoalFormScreen(memberId: id);
+                        },
+                      ),
+                      GoRoute(
+                        path: 'goal/:goalId',
+                        builder: (context, state) {
+                          return GoalDetailScreen(
+                            goalId: state.pathParameters['goalId']!,
+                          );
+                        },
+                        routes: [
+                          GoRoute(
+                            path: 'edit',
+                            builder: (context, state) {
+                              final id = state.pathParameters['id'] ?? '';
+                              final goalId =
+                                  state.pathParameters['goalId']!;
+                              return GoalFormScreen(
+                                memberId: id,
+                                goalId: goalId,
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),

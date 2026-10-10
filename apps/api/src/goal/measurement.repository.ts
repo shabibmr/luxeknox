@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, gte, lte, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, lte, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import {
   goalMetrics,
@@ -171,7 +171,7 @@ export class MeasurementRepository extends BaseRepository<
       })
       .from(measurementValues)
       .innerJoin(goalMetrics, eq(measurementValues.metric_id, goalMetrics.id))
-      .where(eq(measurements.member_id, memberId));
+      .where(inArray(measurementValues.measurement_id, sessionIds));
 
     const valuesBySession = new Map<number, MeasurementValueDetail[]>();
     for (const val of allValues) {
@@ -225,5 +225,75 @@ export class MeasurementRepository extends BaseRepository<
       .orderBy(asc(measurements.recorded_at));
 
     return rows;
+  }
+
+  async findAllAudit(
+    options?: { limit?: number; offset?: number; from?: Date; to?: Date },
+  ): Promise<{ rows: MeasurementWithValues[]; total: number }> {
+    const conditions: SQL[] = [];
+
+    if (options?.from) {
+      conditions.push(gte(measurements.recorded_at, options.from));
+    }
+    if (options?.to) {
+      conditions.push(lte(measurements.recorded_at, options.to));
+    }
+
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [countResult] = await this.db
+      .select({ count: count() })
+      .from(measurements)
+      .where(where);
+
+    const query = this.db
+      .select()
+      .from(measurements)
+      .where(where)
+      .orderBy(desc(measurements.recorded_at));
+
+    if (options?.limit) {
+      query.limit(options.limit);
+    }
+    if (options?.offset) {
+      query.offset(options.offset);
+    }
+
+    const sessions = await query;
+    if (sessions.length === 0) {
+      return { rows: [], total: countResult?.count ?? 0 };
+    }
+
+    const sessionIds = sessions.map((s) => s.id);
+
+    const allValues = await this.db
+      .select({
+        id: measurementValues.id,
+        measurement_id: measurementValues.measurement_id,
+        metric_id: measurementValues.metric_id,
+        value: measurementValues.value,
+        metric_name: goalMetrics.name,
+        unit_of_measure: goalMetrics.unit_of_measure,
+      })
+      .from(measurementValues)
+      .innerJoin(goalMetrics, eq(measurementValues.metric_id, goalMetrics.id))
+      .where(inArray(measurementValues.measurement_id, sessionIds));
+
+    const valuesBySession = new Map<number, MeasurementValueDetail[]>();
+    for (const val of allValues) {
+      const list = valuesBySession.get(val.measurement_id) ?? [];
+      list.push(val);
+      valuesBySession.set(val.measurement_id, list);
+    }
+
+    const rows: MeasurementWithValues[] = sessions.map((s) => ({
+      ...s,
+      values: valuesBySession.get(s.id) ?? [],
+    }));
+
+    return {
+      rows,
+      total: countResult?.count ?? 0,
+    };
   }
 }

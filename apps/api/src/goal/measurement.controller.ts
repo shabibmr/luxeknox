@@ -77,4 +77,15 @@ export class MeasurementController {
   ) {
     return this.service.getMeasurementById(id, currentUser);
   }
+
+  @Get('measurements')
+  @RequirePermission('goals.read')
+  @ApiOperation({ operationId: 'listAllMeasurements', summary: 'Measurement audit records across members' })
+  async listAllMeasurements(
+    @Query() rawQuery: Record<string, unknown>,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    const filter = measurementFilterQuerySchema.parse(rawQuery);
+    return this.service.listAllMeasurements(rawQuery, filter, currentUser);
+  }
 }

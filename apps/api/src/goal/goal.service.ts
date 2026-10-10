@@ -200,7 +200,14 @@ export class GoalService {
       throw new NotFoundError(`Goal with id ${goalId} not found`);
     }
 
+    if (goal.status !== 'in_progress') {
+      throw new BusinessRuleError('Can only check in on in-progress goals');
+    }
+
     await assertMemberAccess(this.memberRepo, actor, goal.member_id);
+    if (actor.userType === 'trainer') {
+      await this.ptAccess?.assertTrainerCanWrite(actor, goal.member_id);
+    }
 
     const now = new Date();
     const recordedDate = dto.recorded_date ?? now.toISOString().slice(0, 10);
@@ -232,5 +239,45 @@ export class GoalService {
     });
 
     return history;
+  }
+
+  async listAllGoals(
+    rawQuery: Record<string, unknown>,
+    filter: GoalFilterQueryDto,
+    actor: AuthenticatedUser,
+  ): Promise<PaginatedResponse<GoalWithMetric>> {
+    if (actor.userType !== 'admin') {
+      throw new ForbiddenError('Only admins may view gym-wide goals');
+    }
+
+    const pagination = await this.paginationHelper.normalizeParams(rawQuery);
+    const offset = pagination.offset ?? 0;
+
+    const { rows, total } = await this.goalRepo.findAll({
+      status: filter.status,
+      metricId: filter.metric_id,
+      limit: pagination.limit,
+      offset,
+    });
+
+    return createPaginatedResponse({
+      items: rows,
+      total,
+      limit: pagination.limit,
+      offset,
+    });
+  }
+
+  async getProgressAggregate(actor: AuthenticatedUser): Promise<{
+    active_goals: number;
+    achieved_goals: number;
+    members_measured_30d: number;
+    photos_30d: number;
+  }> {
+    if (actor.userType !== 'admin') {
+      throw new ForbiddenError('Only admins may view progress aggregate counts');
+    }
+
+    return this.goalRepo.getAggregateCounts();
   }
 }

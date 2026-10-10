@@ -7,6 +7,7 @@ import type { NewProgressPhoto, ProgressPhoto } from '../platform/db/schema/goal
 import { ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
+import { PermissionCache } from '../rbac/permission-cache';
 import type {
   ProgressPhotoComparisonQueryDto,
   ProgressPhotoFilterQueryDto,
@@ -33,6 +34,7 @@ export class ProgressPhotoService {
     private readonly memberRepo: MemberRepository,
     private readonly paginationHelper: PaginationHelper,
     private readonly auditService: AuditService,
+    private readonly permissionCache: PermissionCache,
   ) {}
 
   async canViewPrivatePhotos(actor: AuthenticatedUser, memberId: number): Promise<boolean> {
@@ -44,7 +46,7 @@ export class ProgressPhotoService {
       return member?.assigned_trainer_id === actor.profileId;
     }
     if (actor.userType === 'admin') {
-      return true;
+      return this.permissionCache.hasPermission(actor.roleId, 'progress_photos.moderate');
     }
     return false;
   }
@@ -83,8 +85,8 @@ export class ProgressPhotoService {
   ): Promise<ProgressPhoto> {
     await assertMemberAccess(this.memberRepo, actor, memberId);
 
-    if (actor.userType === 'member' && actor.profileId !== memberId) {
-      throw new ForbiddenError('Cannot upload photos for another member');
+    if (actor.userType !== 'member' || actor.profileId !== memberId) {
+      throw new ForbiddenError('Only the member may upload progress photos for themselves');
     }
 
     const now = new Date();
@@ -118,12 +120,16 @@ export class ProgressPhotoService {
       throw new NotFoundError(`Progress photo with id ${photoId} not found`);
     }
 
-    // Member can delete own, or admin can moderate/delete
+    // Member can delete own, or admin can delete if holding progress_photos.moderate
     const isOwner = actor.userType === 'member' && actor.profileId === photo.member_id;
-    const isAdmin = actor.userType === 'admin';
+    const canModerate =
+      actor.userType === 'admin' &&
+      (await this.permissionCache.hasPermission(actor.roleId, 'progress_photos.moderate'));
 
-    if (!isOwner && !isAdmin) {
-      throw new ForbiddenError('Only the owner or an admin may delete progress photos');
+    if (!isOwner && !canModerate) {
+      throw new ForbiddenError(
+        'Only the owner or an admin with moderate permission may delete progress photos',
+      );
     }
 
     await this.repository.deleteById(photoId);
@@ -177,5 +183,37 @@ export class ProgressPhotoService {
       date2_photos: date2Photos,
       comparison_by_pose: comparisonByPose,
     };
+  }
+
+  async listAllPhotos(
+    rawQuery: Record<string, unknown>,
+    filter: ProgressPhotoFilterQueryDto,
+    actor: AuthenticatedUser,
+  ): Promise<PaginatedResponse<ProgressPhoto>> {
+    if (actor.userType !== 'admin') {
+      throw new ForbiddenError('Only admins may view the progress photos vault');
+    }
+
+    const includePrivate = await this.permissionCache.hasPermission(
+      actor.roleId,
+      'progress_photos.moderate',
+    );
+
+    const pagination = await this.paginationHelper.normalizeParams(rawQuery);
+    const offset = pagination.offset ?? 0;
+
+    const { rows, total } = await this.repository.findAllFiltered({
+      pose: filter.pose,
+      includePrivate,
+      limit: pagination.limit,
+      offset,
+    });
+
+    return createPaginatedResponse({
+      items: rows,
+      total,
+      limit: pagination.limit,
+      offset,
+    });
   }
 }

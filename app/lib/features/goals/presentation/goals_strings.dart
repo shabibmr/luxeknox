@@ -16,12 +16,26 @@ abstract final class GoalsStrings {
   static const create = 'Create';
   static const add = 'Add';
 
+  static const overviewLink = 'Overview';
+  static const overviewTitle = 'Progress overview';
+  static const weightTrendTitle = 'Weight trend';
+  static const bodyCompositionTitle = 'Body composition';
+  static const circumferenceTitle = 'Circumference';
+  static const attendanceWeeklyTitle = 'Weekly attendance';
+  static const visitsPerWeek = 'Visits';
+
   static const measurementsLink = 'Measurements';
   static const photosLink = 'Progress photos';
   static const notesLink = 'Notes';
+  static const timelineLink = 'Timeline';
   static const chartsLink = 'Charts';
-  static const workoutPlanLink = 'Workout Plan';
-  static const dietPlanLink = 'Diet Plan';
+
+  static const bmiTitle = 'BMI';
+  static const bmiHeightMissing = 'Height is not on the health profile.';
+  static const timelineTitle = 'Progress timeline';
+  static const timelineEmpty = 'No goal check-ins or measurement sessions yet.';
+  static const timelineGoalCheckIn = 'Goal check-in';
+  static const timelineMeasurement = 'Measurement session';
 
   static const goalDetailTitle = 'Goal';
   static const goalNotAvailable = 'This goal is not available.';
@@ -57,7 +71,6 @@ abstract final class GoalsStrings {
   static const metricRequired = 'Select a metric';
   static const pickMetric = 'Choose metric';
   static const searchMetrics = 'Search metrics';
-  static const addNewMetric = 'Add new goal metric';
   static const metricTypeLabel = 'Type';
   static const allMetricTypes = 'All types';
   static const noMetricsFound = 'No metrics match';
@@ -78,6 +91,11 @@ abstract final class GoalsStrings {
   static const chartsEmpty = 'Not enough data to chart yet.';
   static const valueLabel = 'Value';
   static const recordedAtLabel = 'Recorded at';
+  static const historyLink = 'History';
+  static const historyTitle = 'Measurement history';
+  static const loadMore = 'Load more';
+  static const latestMeasurementsTitle = 'Latest measurements';
+  static const viewHistory = 'View history';
 
   static const metricsAdminTitle = 'Goal metrics';
   static const metricsEmpty = 'No metrics defined.';
@@ -91,6 +109,19 @@ abstract final class GoalsStrings {
   static const metricSaveFailed = 'Could not save metric';
   static const createMetric = 'Create metric';
   static const editMetric = 'Edit metric';
+
+  static const adminMemberGoalsTitle = 'Member Goals';
+  static const adminMemberGoalsEmpty = 'No active goals.';
+  static const adminProgressTitle = 'Progress';
+  static const adminProgressActiveGoals = 'Active goals';
+  static const adminProgressAchievedGoals = 'Achieved goals';
+  static const adminProgressMembersMeasured = 'Members measured (30d)';
+  static const adminProgressPhotos = 'Photos (30d)';
+  static const adminMeasurementsAuditTitle = 'Measurements';
+  static const adminMeasurementsHistoryTitle = 'Measurement History';
+  static const adminMeasurementsEmpty = 'No measurement sessions.';
+  static const adminPhotosVaultTitle = 'Progress Photos';
+  static const adminPhotosVaultEmpty = 'No progress photos.';
 
   static const categoryBodyComposition = 'Body composition';
   static const categoryCircumference = 'Circumference';
@@ -117,8 +148,8 @@ abstract final class GoalsStrings {
   static const compareMode = 'Comparison';
   static const compareDateA = 'Date A';
   static const compareDateB = 'Date B';
-  static const comparePose = 'Pose';
-  static const compareEmpty = 'Pick two dates with photos for this pose.';
+  static const compareEmpty = 'Pick two dates to compare.';
+  static const compareNoPhoto = 'No photo';
   static const poseFront = 'Front';
   static const poseSide = 'Side';
   static const poseBack = 'Back';
@@ -132,6 +163,11 @@ abstract final class GoalsStrings {
   static const noteSaveFailed = 'Could not save note';
   static const noteTypeMember = 'Member note';
   static const noteTypeTrainer = 'Trainer assessment';
+  static const coachNotesTitle = 'Coach notes';
+  static const coachNotesEmpty = 'No trainer assessments yet.';
+  static const projectedLabel = 'Projected';
+  static const actualLabel = 'Actual';
+  static const projectedActualTitle = 'Projected vs actual';
 
   static String calendarDate(DateTime? date) {
     if (date == null) return '—';

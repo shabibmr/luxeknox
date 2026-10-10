@@ -17,9 +17,6 @@ import '../cubit/goals_list_cubit.dart';
 import '../goal_view_actions.dart';
 import '../goals_strings.dart';
 import '../widgets/goal_progress_bar.dart';
-import 'goal_form_screen.dart';
-import 'progress_notes_screen.dart';
-import 'progress_photos_screen.dart';
 
 class ProgressHubScreen extends StatelessWidget {
   const ProgressHubScreen({
@@ -154,11 +151,15 @@ class _ProgressHubBodyState extends State<_ProgressHubBody> {
           ? FloatingActionButton(
               tooltip: GoalsStrings.goalFormCreateTitle,
               onPressed: () async {
-                final saved = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(
-                    builder: (_) => GoalFormScreen(memberId: widget.memberId),
-                  ),
-                );
+                final location = switch (shell) {
+                  GoalDetailShell.admin =>
+                    Routes.adminMemberGoalsNewById(widget.memberId),
+                  GoalDetailShell.trainer =>
+                    Routes.trainerMemberGoalsNewById(widget.memberId),
+                  GoalDetailShell.member => null,
+                };
+                if (location == null) return;
+                final saved = await context.push<bool>(location);
                 if (saved == true && context.mounted) {
                   context.read<GoalsListCubit>().load(widget.memberId);
                 }
@@ -211,13 +212,13 @@ class _ProgressHubBodyState extends State<_ProgressHubBody> {
                   onPressed: () {
                     if (shell == GoalDetailShell.admin) {
                       context.push(
-                        Routes.adminMemberGoalsAddMeasurementById(
+                        Routes.adminMemberGoalsMeasurementsById(
                           widget.memberId,
                         ),
                       );
                     } else if (shell == GoalDetailShell.trainer) {
                       context.push(
-                        Routes.trainerMemberGoalsAddMeasurementById(
+                        Routes.trainerMemberGoalsMeasurementsById(
                           widget.memberId,
                         ),
                       );
@@ -235,14 +236,12 @@ class _ProgressHubBodyState extends State<_ProgressHubBody> {
                       final assigned = shell == GoalDetailShell.trainer &&
                           _assignmentReady &&
                           _isAssignedTrainer;
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => ProgressPhotosScreen(
-                            memberId: widget.memberId,
-                            isAssignedTrainer: assigned,
-                          ),
-                        ),
-                      );
+                      final location = shell == GoalDetailShell.admin
+                          ? Routes.adminMemberGoalsPhotosById(widget.memberId)
+                          : Routes.trainerMemberGoalsPhotosById(
+                              widget.memberId,
+                            );
+                      context.push(location, extra: assigned);
                     } else {
                       context.go(Routes.memberProgressPhotos);
                     }
@@ -252,17 +251,31 @@ class _ProgressHubBodyState extends State<_ProgressHubBody> {
                   label: const Text(GoalsStrings.notesLink),
                   onPressed: () {
                     if (isDossierShell) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              ProgressNotesScreen(memberId: widget.memberId),
-                        ),
-                      );
+                      final location = shell == GoalDetailShell.admin
+                          ? Routes.adminMemberGoalsNotesById(widget.memberId)
+                          : Routes.trainerMemberGoalsNotesById(
+                              widget.memberId,
+                            );
+                      context.push(location);
                     } else {
                       context.go(Routes.memberProgressNotes);
                     }
                   },
                 ),
+                if (isDossierShell)
+                  ActionChip(
+                    label: const Text(GoalsStrings.timelineLink),
+                    onPressed: () {
+                      final location = shell == GoalDetailShell.admin
+                          ? Routes.adminMemberGoalsTimelineById(
+                              widget.memberId,
+                            )
+                          : Routes.trainerMemberGoalsTimelineById(
+                              widget.memberId,
+                            );
+                      context.push(location);
+                    },
+                  ),
               ],
             ),
           ),
@@ -320,19 +333,22 @@ class _ProgressHubBodyState extends State<_ProgressHubBody> {
                                           tooltip: GoalsStrings.edit,
                                           icon: const Icon(Icons.edit_outlined),
                                           onPressed: () async {
-                                            final saved =
-                                                await Navigator.of(
-                                                  context,
-                                                ).push<bool>(
-                                                  MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        GoalFormScreen(
-                                                          memberId:
-                                                              widget.memberId,
-                                                          goalId: goal.id,
-                                                        ),
-                                                  ),
-                                                );
+                                            final location = switch (shell) {
+                                              GoalDetailShell.admin =>
+                                                Routes.adminMemberGoalEditById(
+                                                  widget.memberId,
+                                                  goal.id,
+                                                ),
+                                              GoalDetailShell.trainer =>
+                                                Routes.trainerMemberGoalEditById(
+                                                  widget.memberId,
+                                                  goal.id,
+                                                ),
+                                              GoalDetailShell.member => null,
+                                            };
+                                            if (location == null) return;
+                                            final saved = await context
+                                                .push<bool>(location);
                                             if (saved == true &&
                                                 context.mounted) {
                                               context

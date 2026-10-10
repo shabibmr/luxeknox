@@ -84,6 +84,10 @@ abstract final class ShellStrings {
   static const dietLibrary = 'Food Library';
   static const dietPlans = 'Diet Plans';
   static const goalMetrics = 'Goal Metrics';
+  static const progressAggregate = 'Progress';
+  static const measurementsAudit = 'Measurements';
+  static const measurementsHistory = 'Measurement History';
+  static const progressPhotosVault = 'Progress Photos';
   static const notificationsBroadcast = 'Broadcast Notifications';
   static const reports = 'Reports';
   static const settings = 'Settings';

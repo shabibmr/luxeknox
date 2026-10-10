@@ -62,4 +62,69 @@ void main() {
       expect(goalDirection(baseline: 80, target: null), isNull);
     });
   });
+
+  group('projectedGoalValue', () {
+    final start = DateTime(2026, 1, 1);
+    final end = DateTime(2026, 1, 11);
+
+    test('midpoint is halfway from baseline to target', () {
+      expect(
+        projectedGoalValue(
+          baseline: 100,
+          target: 80,
+          startDate: start,
+          targetDate: end,
+          asOf: DateTime(2026, 1, 6),
+        ),
+        90,
+      );
+    });
+
+    test('before start returns baseline', () {
+      expect(
+        projectedGoalValue(
+          baseline: 100,
+          target: 80,
+          startDate: start,
+          targetDate: end,
+          asOf: DateTime(2025, 12, 31),
+        ),
+        100,
+      );
+    });
+
+    test('on or after target date returns target', () {
+      expect(
+        projectedGoalValue(
+          baseline: 100,
+          target: 80,
+          startDate: start,
+          targetDate: end,
+          asOf: DateTime(2026, 1, 11),
+        ),
+        80,
+      );
+    });
+
+    test('null when dates or values missing', () {
+      expect(
+        projectedGoalValue(
+          baseline: null,
+          target: 80,
+          startDate: start,
+          targetDate: end,
+        ),
+        isNull,
+      );
+      expect(
+        projectedGoalValue(
+          baseline: 100,
+          target: 80,
+          startDate: end,
+          targetDate: start,
+        ),
+        isNull,
+      );
+    });
+  });
 }

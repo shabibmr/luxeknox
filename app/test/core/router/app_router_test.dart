@@ -665,6 +665,29 @@ void main() {
         expect(find.text(ShellStrings.workoutLibrary), findsOneWidget);
       });
 
+      testWidgets('admin More lists progress vertical paths (D2)', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MoreHubScreen(onOpenPath: (_) {}),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        for (final label in [
+          ShellStrings.goalMetrics,
+          ShellStrings.memberGoals,
+          ShellStrings.progressAggregate,
+          ShellStrings.measurementsAudit,
+          ShellStrings.measurementsHistory,
+          ShellStrings.progressPhotosVault,
+        ]) {
+          await tester.scrollUntilVisible(find.text(label), 300);
+          expect(find.text(label), findsOneWidget);
+        }
+      });
+
       testWidgets('trainer Plans tab shows DestinationHubScreen', (
         tester,
       ) async {
@@ -860,6 +883,45 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(NotFoundScreen), findsOneWidget);
         expect(find.text(ShellStrings.notFoundTitle), findsOneWidget);
+      });
+    });
+
+    group('progress vertical D2', () {
+      test('member progress stack has no goals/new route', () {
+        const memberProgressPaths = [
+          Routes.memberProgress,
+          Routes.memberProgressOverview,
+          Routes.memberProgressGoalDetail,
+          Routes.memberProgressMeasurements,
+          Routes.memberProgressMeasurementsHistory,
+          Routes.memberProgressPhotos,
+          Routes.memberProgressNotes,
+        ];
+        expect(
+          memberProgressPaths.any((p) => p.contains('goals/new')),
+          isFalse,
+        );
+        expect(
+          Routes.trainerMemberGoalsNewById('10'),
+          '/trainer/members/10/goals/new',
+        );
+        expect(
+          Routes.adminMemberGoalsNewById('10'),
+          '/admin/members/10/goals/new',
+        );
+      });
+
+      testWidgets('member /progress/goals/new is not found', (tester) async {
+        final router = await pumpRouter(
+          tester,
+          const SessionAuthenticated(
+            principal: memberPrincipal,
+            capabilities: emptyCaps,
+          ),
+        );
+        router.go('/progress/goals/new');
+        await tester.pumpAndSettle();
+        expect(find.byType(NotFoundScreen), findsOneWidget);
       });
     });
   });

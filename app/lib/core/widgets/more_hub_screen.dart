@@ -64,6 +64,26 @@ class MoreHubScreen extends StatelessWidget {
       path: Routes.adminGoalMetrics,
     ),
     DestinationHubItem(
+      title: ShellStrings.memberGoals,
+      path: Routes.adminMemberGoals,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.progressAggregate,
+      path: Routes.adminProgress,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.measurementsAudit,
+      path: Routes.adminMeasurements,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.measurementsHistory,
+      path: Routes.adminMeasurementsHistory,
+    ),
+    DestinationHubItem(
+      title: ShellStrings.progressPhotosVault,
+      path: Routes.adminProgressPhotos,
+    ),
+    DestinationHubItem(
       title: ShellStrings.notificationsBroadcast,
       path: Routes.adminNotificationsBroadcast,
     ),

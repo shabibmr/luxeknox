@@ -5,6 +5,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/error/map_thrown.dart';
 import '../../../../core/pagination/cursor_page.dart';
 import '../../domain/entities/measurement.dart';
+import '../../domain/entities/measurement_list_page.dart';
 import '../../domain/helpers/mandatory_metrics.dart';
 import '../../domain/repositories/measurements_repository.dart';
 import '../datasources/goals_remote_datasource.dart';
@@ -19,7 +20,33 @@ class MeasurementsRepositoryImpl implements MeasurementsRepository {
   int? _parseId(String id) => int.tryParse(id);
 
   @override
-  Future<Either<Failure, CursorPage<MeasurementSession>>> listMeasurements({
+  Future<Either<Failure, CursorPage<MeasurementSession>>> listAllMeasurements({
+    int? limit,
+    String? cursor,
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    try {
+      final page = await _remote.listAllMeasurements(
+        limit: limit,
+        cursor: cursor,
+        from: from,
+        to: to,
+      );
+      return Right(
+        CursorPage(
+          items: page.data.map((m) => m.toDomain()).toList(),
+          nextCursor: page.meta.nextCursor,
+          hasMore: page.meta.hasMore,
+        ),
+      );
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MeasurementListPage>> listMeasurements({
     required String memberId,
     int? limit,
     String? cursor,
@@ -35,10 +62,13 @@ class MeasurementsRepositoryImpl implements MeasurementsRepository {
         cursor: cursor,
       );
       return Right(
-        CursorPage(
+        MeasurementListPage(
           items: page.data.map((m) => m.toDomain()).toList(),
           nextCursor: page.meta.nextCursor,
           hasMore: page.meta.hasMore,
+          mandatoryMetricIds:
+              page.mandatoryMetricIds?.map((id) => id.toString()).toList() ??
+              const [],
         ),
       );
     } catch (e) {
@@ -53,6 +83,31 @@ class MeasurementsRepositoryImpl implements MeasurementsRepository {
     try {
       final session = await _remote.getMeasurement(intId);
       return Right(session.toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ChartDataPoint>>> getMeasurementChart({
+    required String memberId,
+    required String metricId,
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    final intMemberId = _parseId(memberId);
+    final intMetricId = _parseId(metricId);
+    if (intMemberId == null || intMetricId == null) {
+      return const Left(ValidationFailure(['Invalid member or metric id']));
+    }
+    try {
+      final res = await _remote.getMeasurementChart(
+        memberId: intMemberId,
+        metricId: intMetricId,
+        from: from,
+        to: to,
+      );
+      return Right(res.data.map((p) => p.toDomain()).toList());
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

@@ -123,6 +123,7 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'GOAL', action: 'create', slug: 'goals.create', description: 'Create goals, metrics, measurements, progress notes or photos' },
   { module: 'GOAL', action: 'update', slug: 'goals.update', description: 'Update goals, metrics, check-ins, or delete progress photos' },
   { module: 'GOAL', action: 'remarks', slug: 'goals.remarks', description: 'Add a progress note / remark on a goal (read-only roles keep this)' },
+  { module: 'GOAL', action: 'photos_moderate', slug: 'progress_photos.moderate', description: 'Moderate progress photos (view private photos and delete photos)' },
 
   // NOTIF
   { module: 'NOTIF', action: 'read', slug: 'notifications.read', description: 'View notifications and alerts' },

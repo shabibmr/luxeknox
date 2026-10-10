@@ -6,6 +6,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/photo_pose.dart';
 import '../../domain/entities/progress_photo.dart';
+import '../../domain/entities/progress_photo_comparison.dart';
 import '../../domain/helpers/photo_privacy.dart';
 import '../../domain/usecases/progress_photos_usecases.dart';
 
@@ -17,18 +18,27 @@ abstract class ProgressPhotosState with _$ProgressPhotosState {
     @Default(LoadStatus.initial) LoadStatus status,
     @Default(<ProgressPhoto>[]) List<ProgressPhoto> photos,
     @Default(false) bool submitting,
+    @Default(false) bool comparing,
+    DateTime? compareDate1,
+    DateTime? compareDate2,
+    ProgressPhotoComparison? comparison,
     Failure? failure,
   }) = _ProgressPhotosState;
 }
 
 @injectable
 class ProgressPhotosCubit extends Cubit<ProgressPhotosState> {
-  ProgressPhotosCubit(this._listPhotos, this._createPhoto, this._deletePhoto)
-    : super(const ProgressPhotosState());
+  ProgressPhotosCubit(
+    this._listPhotos,
+    this._createPhoto,
+    this._deletePhoto,
+    this._comparePhotos,
+  ) : super(const ProgressPhotosState());
 
   final ListProgressPhotosUseCase _listPhotos;
   final CreateProgressPhotoUseCase _createPhoto;
   final DeleteProgressPhotoUseCase _deletePhoto;
+  final CompareProgressPhotosUseCase _comparePhotos;
 
   String? _memberId;
   bool _isOwner = true;
@@ -174,6 +184,66 @@ class ProgressPhotosCubit extends Cubit<ProgressPhotosState> {
         );
         return true;
       },
+    );
+  }
+
+  /// Loads front/side/back pairs for [date1] and [date2] from the API.
+  Future<void> compare({
+    required DateTime date1,
+    required DateTime date2,
+  }) async {
+    final memberId = _memberId;
+    if (memberId == null || !_loaded || state.comparing) return;
+
+    final d1 = DateTime.utc(date1.year, date1.month, date1.day);
+    final d2 = DateTime.utc(date2.year, date2.month, date2.day);
+
+    emit(
+      state.copyWith(
+        comparing: true,
+        failure: null,
+        compareDate1: d1,
+        compareDate2: d2,
+        comparison: null,
+      ),
+    );
+
+    final result = await _comparePhotos(
+      CompareProgressPhotosParams(
+        memberId: memberId,
+        date1: d1,
+        date2: d2,
+      ),
+    );
+
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          comparing: false,
+          failure: failure,
+          comparison: null,
+        ),
+      ),
+      (comparison) => emit(
+        state.copyWith(
+          comparing: false,
+          failure: null,
+          comparison: comparison,
+          compareDate1: comparison.date1,
+          compareDate2: comparison.date2,
+        ),
+      ),
+    );
+  }
+
+  void clearComparison() {
+    emit(
+      state.copyWith(
+        comparing: false,
+        compareDate1: null,
+        compareDate2: null,
+        comparison: null,
+      ),
     );
   }
 }

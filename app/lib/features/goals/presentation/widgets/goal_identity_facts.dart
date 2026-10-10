@@ -34,6 +34,10 @@ class GoalIdentityFacts extends StatelessWidget {
         GoalsStrings.targetDateLabel,
         GoalsStrings.calendarDate(goal.targetDate),
       ),
+      (
+        GoalsStrings.statusLabel,
+        GoalsStrings.statusLabelFor(goal.status),
+      ),
     ];
     return Column(
       key: const Key('goal-view-identity'),
