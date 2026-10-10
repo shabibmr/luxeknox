@@ -78,14 +78,13 @@ Slugs in `apps/api/src/platform/db/seed/permissions.ts` / `roles.ts`:
 | Slug | Admin | Trainer | Member |
 | :--- | :---: | :---: | :---: |
 | `diet.read` | ✓ | ✓ | ✓ |
-| `diet.create` | ✓ | — | — |
-| `diet.update` | ✓ | — | — |
+| `diet.create` | ✓ | ✓ | — |
+| `diet.update` | ✓ | ✓ | — |
 
 Implications:
 
-- Members and trainers: browse verified+active only.
-- Trainers **cannot** create or edit foods (unlike V1 exercises, where trainers have `exercises.create`).
-- Admins: full catalogue mutate + see unrestricted rows.
+- Members: browse verified+active only.
+- Trainers and admins: create/update foods; `diet.update` also sees unrestricted rows.
 
 **Flutter:** screens and foods tests gate on `diet.read` / `diet.create` / `diet.update` (aligned with seed).
 
@@ -181,7 +180,7 @@ Implications:
 
 1. Vertical 2 backend is a **complete soft-CRUD catalogue** aligned with V1: C/R/U + `PATCH is_active: false`; hard delete absent.
 2. Visibility is **stricter than V1**: public row = `is_active && is_verified`; gate permission `diet.update`.
-3. Mutate grants are **admin-only** (`diet.create` / `diet.update`); trainers only `diet.read` — deliberate vs V1 trainer create.
+3. Mutate grants are admin + trainer (`diet.create` / `diet.update`); members only `diet.read`.
 4. Nest + OpenAPI + seed + Flutter UI/tests agree on **`diet.*`**.
 5. Flutter maps `isActive`; deactivate PATCHes `is_active: false` and leaves verified unchanged; list DS forwards verified/active filters.
 6. Clean Architecture shape (five use cases, DIETApi, offset-as-string cursor, 840dp master–detail) mirrors Exercise Library.

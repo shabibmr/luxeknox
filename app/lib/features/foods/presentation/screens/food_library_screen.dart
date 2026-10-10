@@ -18,8 +18,8 @@ import '../widgets/food_list_item.dart';
 import 'food_detail_screen.dart';
 import 'food_form_screen.dart';
 
-/// Food Library screen (screen 36). Trainer gets browse/pick; admin also
-/// sees the add button. There is no dedicated member library route. At
+/// Food Library screen (screen 36). Add is shown for `diet.create`
+/// (admin and trainer). There is no dedicated member library route. At
 /// 840dp and above, selecting a food shows it in a side pane instead of
 /// pushing (mirrors exercises K11).
 class FoodLibraryScreen extends StatelessWidget {
