@@ -106,6 +106,8 @@ class Routes {
   static const String trainerMembersPayments = '/trainer/members/:id/payments';
   static const String trainerMembersWorkoutHistory =
       '/trainer/members/:id/workout-history';
+  static const String trainerMembersWorkoutActive =
+      '/trainer/members/:id/workout/active';
   static const String trainerMembersDietHistory =
       '/trainer/members/:id/diet-history';
 
@@ -312,6 +314,18 @@ class Routes {
 
   static String trainerMembersWorkoutHistoryById(String id) =>
       '/trainer/members/$id/workout-history';
+
+  static String trainerMembersWorkoutActiveById(
+    String id, {
+    String? workoutPlanId,
+  }) {
+    final path = '/trainer/members/$id/workout/active';
+    if (workoutPlanId == null || workoutPlanId.isEmpty) return path;
+    return Uri(
+      path: path,
+      queryParameters: {'workoutPlanId': workoutPlanId},
+    ).toString();
+  }
 
   static String trainerMembersDietHistoryById(String id) =>
       '/trainer/members/$id/diet-history';

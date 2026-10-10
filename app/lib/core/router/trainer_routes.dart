@@ -35,6 +35,7 @@ import '../../features/scheduling/presentation/screens/schedule_detail_screen.da
 import '../../features/scheduling/presentation/screens/schedule_history_screen.dart';
 import '../../features/scheduling/presentation/screens/todays_sessions_screen.dart';
 import '../../features/scheduling/presentation/screens/trainer_availability_screen.dart';
+import '../../features/workout/presentation/screens/active_workout_screen.dart';
 import '../../features/workout/presentation/screens/workout_history_screen.dart';
 import '../../features/workout/presentation/screens/workout_plan_builder_screen.dart';
 import '../../features/workout/presentation/screens/workout_plan_detail_screen.dart';
@@ -238,6 +239,21 @@ StatefulShellRoute createTrainerBranchRoute() {
                       return WorkoutHistoryScreen(
                         role: WorkoutHistoryRole.trainer,
                         memberId: memberId,
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'workout/active',
+                    builder: (context, state) {
+                      final memberId = state.pathParameters['id']!;
+                      final workoutPlanId =
+                          state.uri.queryParameters['workoutPlanId'];
+                      return ActiveWorkoutScreen(
+                        memberId: memberId,
+                        workoutPlanId: workoutPlanId,
+                        historyPath: Routes.trainerMembersWorkoutHistoryById(
+                          memberId,
+                        ),
                       );
                     },
                   ),

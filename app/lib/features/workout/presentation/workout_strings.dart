@@ -80,6 +80,10 @@ abstract final class WorkoutStrings {
 
   static const startSession = 'Start workout';
   static const startEmptySession = 'Start empty session';
+  static const startSessionWithMember = 'Start session with member';
+  static const editSet = 'Edit set';
+  static const deleteSet = 'Delete set';
+  static const resumedSession = 'Resumed session in progress';
   static const planIdLabel = 'Workout plan ID (optional)';
   static const exerciseIdLabel = 'Exercise ID';
   static const logSet = 'Log set';

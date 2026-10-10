@@ -11,6 +11,7 @@ import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/workout_plan.dart';
 import '../../domain/entities/workout_plan_exercise.dart';
 import '../../domain/entities/workout_session.dart';
+import '../../domain/entities/workout_session_set.dart';
 import '../../../exercises/domain/entities/exercise.dart';
 import '../bloc/active_workout_bloc.dart';
 import '../cubit/rest_timer_cubit.dart';
@@ -33,10 +34,31 @@ class _CompleteFeedback {
   final int? rating;
 }
 
+class _SetFieldsResult {
+  const _SetFieldsResult({this.reps, this.weightKg, this.rpe});
+
+  final int? reps;
+  final num? weightKg;
+  final num? rpe;
+}
+
 class ActiveWorkoutScreen extends StatefulWidget {
-  const ActiveWorkoutScreen({super.key, this.workoutPlanId});
+  const ActiveWorkoutScreen({
+    super.key,
+    this.workoutPlanId,
+    this.memberId,
+    this.historyPath,
+  });
 
   final String? workoutPlanId;
+
+  /// Member whose session this is. When omitted (member app), falls back to
+  /// the authenticated member's own profile id.
+  final String? memberId;
+
+  /// Where "View workout history" navigates once the session is complete.
+  /// When omitted, falls back to the member app's own history screen.
+  final String? historyPath;
 
   @override
   State<ActiveWorkoutScreen> createState() => _ActiveWorkoutScreenState();
@@ -57,11 +79,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     super.didChangeDependencies();
     if (_configured) return;
     _configured = true;
-    final memberId = sessionProfileId(context);
+    final memberId = widget.memberId ?? sessionProfileId(context)?.toString();
     if (memberId != null) {
       _bloc.add(
         ActiveWorkoutConfigured(
-          memberId: memberId.toString(),
+          memberId: memberId,
           workoutPlanId: widget.workoutPlanId,
         ),
       );
@@ -76,49 +98,73 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final memberId = widget.memberId ?? sessionProfileId(context)?.toString();
+    final historyPath = widget.historyPath ?? Routes.memberHomeWorkoutHistory;
     return MultiBlocProvider(
       providers: [
         BlocProvider<ActiveWorkoutBloc>.value(value: _bloc),
         BlocProvider<RestTimerCubit>.value(value: _bloc.restTimer),
       ],
-      child: const _ActiveWorkoutBody(),
+      child: _ActiveWorkoutBody(memberId: memberId, historyPath: historyPath),
     );
   }
 }
 
 class _ActiveWorkoutBody extends StatelessWidget {
-  const _ActiveWorkoutBody();
+  const _ActiveWorkoutBody({required this.memberId, required this.historyPath});
+
+  final String? memberId;
+  final String historyPath;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text(WorkoutStrings.activeTitle)),
-      body: BlocBuilder<ActiveWorkoutBloc, ActiveWorkoutState>(
-        builder: (context, state) {
-          final session = state.session;
-          if (state.completed && session != null) {
-            return _CompletedPanel(
-              session: session,
-              loggedSetCount: state.loggedSetCount ?? state.loggedSets.length,
-            );
-          }
-          if (session != null) {
-            return _InProgressPanel(state: state);
-          }
-          if (state.status == LoadStatus.loading) {
-            return const AppLoading();
-          }
-          return _StartPanel(state: state);
-        },
+    return BlocListener<ActiveWorkoutBloc, ActiveWorkoutState>(
+      listenWhen: (previous, current) =>
+          (!previous.resumed && current.resumed) ||
+          (previous.failure != current.failure && current.failure != null),
+      listener: (context, state) {
+        final messenger = ScaffoldMessenger.of(context);
+        if (state.failure != null) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(_errorText(state) ?? '')),
+          );
+        } else if (state.resumed) {
+          messenger.showSnackBar(
+            const SnackBar(content: Text(WorkoutStrings.resumedSession)),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text(WorkoutStrings.activeTitle)),
+        body: BlocBuilder<ActiveWorkoutBloc, ActiveWorkoutState>(
+          builder: (context, state) {
+            final session = state.session;
+            if (state.completed && session != null) {
+              return _CompletedPanel(
+                session: session,
+                loggedSetCount: state.loggedSetCount ?? state.loggedSets.length,
+                historyPath: historyPath,
+              );
+            }
+            if (session != null) {
+              return _InProgressPanel(state: state);
+            }
+            if (state.status == LoadStatus.loading) {
+              return const AppLoading();
+            }
+            return _StartPanel(state: state, memberId: memberId);
+          },
+        ),
       ),
     );
   }
 }
 
 class _StartPanel extends StatefulWidget {
-  const _StartPanel({required this.state});
+  const _StartPanel({required this.state, required this.memberId});
 
   final ActiveWorkoutState state;
+  final String? memberId;
 
   @override
   State<_StartPanel> createState() => _StartPanelState();
@@ -136,7 +182,7 @@ class _StartPanelState extends State<_StartPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final memberId = sessionProfileId(context);
+    final memberId = widget.memberId;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -154,7 +200,7 @@ class _StartPanelState extends State<_StartPanel> {
           else ...[
             WorkoutPlanPickerField(
               selectedPlan: _selectedPlan,
-              memberId: memberId.toString(),
+              memberId: memberId,
               onChanged: (plan) {
                 setState(() {
                   _selectedPlan = plan;
@@ -181,7 +227,7 @@ class _StartPanelState extends State<_StartPanel> {
                 } else {
                   final plan = await showWorkoutPlanPickerSheet(
                     context,
-                    memberId: memberId.toString(),
+                    memberId: memberId,
                   );
                   if (plan != null && context.mounted) {
                     setState(() {
@@ -252,6 +298,46 @@ class _InProgressPanelState extends State<_InProgressPanel> {
         rpeScore: rpe,
       ),
     );
+  }
+
+  Future<void> _editSet(BuildContext context, WorkoutSessionSet set) async {
+    final result = await _showSetFieldsSheet(
+      context,
+      title: WorkoutStrings.editSet,
+      initialReps: set.repsCompleted,
+      initialWeightKg: set.weightLiftedKg,
+      initialRpe: set.rpeScore,
+    );
+    if (result == null || !context.mounted) return;
+    context.read<ActiveWorkoutBloc>().add(
+      ActiveWorkoutSetEdited(
+        setId: set.id,
+        reps: result.reps,
+        weightKg: result.weightKg,
+        rpe: result.rpe,
+      ),
+    );
+  }
+
+  Future<void> _deleteSet(BuildContext context, WorkoutSessionSet set) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text(WorkoutStrings.deleteSet),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text(WorkoutStrings.completeConfirmCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text(WorkoutStrings.deleteSet),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    context.read<ActiveWorkoutBloc>().add(ActiveWorkoutSetDeleted(set.id));
   }
 
   @override
@@ -350,6 +436,25 @@ class _InProgressPanelState extends State<_InProgressPanel> {
                   weight: s.weightLiftedKg,
                 ),
               ),
+              trailing: PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    _editSet(context, s);
+                  } else if (value == 'delete') {
+                    _deleteSet(context, s);
+                  }
+                },
+                itemBuilder: (menuContext) => const [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Text(WorkoutStrings.editSet),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(WorkoutStrings.deleteSet),
+                  ),
+                ],
+              ),
             ),
         const SizedBox(height: 16),
         FilledButton.tonal(
@@ -440,6 +545,89 @@ class _InProgressPanelState extends State<_InProgressPanel> {
   }
 }
 
+Future<_SetFieldsResult?> _showSetFieldsSheet(
+  BuildContext context, {
+  required String title,
+  int? initialReps,
+  num? initialWeightKg,
+  num? initialRpe,
+}) {
+  final repsController = TextEditingController(
+    text: initialReps?.toString() ?? '',
+  );
+  final weightController = TextEditingController(
+    text: initialWeightKg?.toString() ?? '',
+  );
+  final rpeController = TextEditingController(
+    text: initialRpe?.toString() ?? '',
+  );
+  return showModalBottomSheet<_SetFieldsResult>(
+    context: context,
+    isScrollControlled: true,
+    builder: (sheetContext) {
+      return Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(title, style: Theme.of(sheetContext).textTheme.titleMedium),
+            const SizedBox(height: 16),
+            TextField(
+              controller: repsController,
+              decoration: const InputDecoration(
+                labelText: WorkoutStrings.repsLabel,
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: weightController,
+              decoration: const InputDecoration(
+                labelText: WorkoutStrings.weightLabel,
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: rpeController,
+              decoration: const InputDecoration(
+                labelText: WorkoutStrings.rpeLabel,
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(sheetContext).pop(
+                  _SetFieldsResult(
+                    reps: int.tryParse(repsController.text.trim()),
+                    weightKg: num.tryParse(weightController.text.trim()),
+                    rpe: num.tryParse(rpeController.text.trim()),
+                  ),
+                );
+              },
+              child: const Text(WorkoutStrings.save),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 class _ExerciseChoice extends StatelessWidget {
   const _ExerciseChoice({required this.exercise, required this.state});
 
@@ -474,10 +662,15 @@ class _ExerciseChoice extends StatelessWidget {
 }
 
 class _CompletedPanel extends StatelessWidget {
-  const _CompletedPanel({required this.session, required this.loggedSetCount});
+  const _CompletedPanel({
+    required this.session,
+    required this.loggedSetCount,
+    required this.historyPath,
+  });
 
   final WorkoutSession session;
   final int loggedSetCount;
+  final String historyPath;
 
   @override
   Widget build(BuildContext context) {
@@ -530,7 +723,7 @@ class _CompletedPanel extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           OutlinedButton(
-            onPressed: () => context.go(Routes.memberHomeWorkoutHistory),
+            onPressed: () => context.go(historyPath),
             child: const Text(WorkoutStrings.viewHistory),
           ),
         ],

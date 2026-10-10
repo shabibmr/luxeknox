@@ -689,6 +689,16 @@ class _PersonalTrainingSection extends StatelessWidget {
               context.push(path);
             },
           ),
+          if (!isAdminShell &&
+              status == PtDossierStatus.active &&
+              !readOnly)
+            ListTile(
+              title: const Text(PeopleStrings.startWorkoutSession),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(
+                Routes.trainerMembersWorkoutActiveById(person.id.toString()),
+              ),
+            ),
           ListTile(
             title: const Text(PeopleStrings.dietPlan),
             trailing: const Icon(Icons.chevron_right),

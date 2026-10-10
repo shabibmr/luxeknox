@@ -58,6 +58,7 @@ void main() {
         Routes.trainerMembersGoals,
         Routes.trainerMembersGoalsAddMeasurement,
         Routes.trainerMembersWorkoutHistory,
+        Routes.trainerMembersWorkoutActive,
         Routes.trainerSchedule,
         Routes.trainerScheduleDetail,
         Routes.trainerScheduleAvailability,
@@ -124,7 +125,7 @@ void main() {
       // set's length equals the number of entries listed.
       expect(
         allRoutes.length,
-        100,
+        101,
         reason: 'All route constants should be unique; duplicate values found',
       );
     });
@@ -152,6 +153,14 @@ void main() {
       expect(
         Routes.trainerMembersWorkoutHistoryById('3'),
         '/trainer/members/3/workout-history',
+      );
+      expect(
+        Routes.trainerMembersWorkoutActiveById('3'),
+        '/trainer/members/3/workout/active',
+      );
+      expect(
+        Routes.trainerMembersWorkoutActiveById('3', workoutPlanId: '7'),
+        '/trainer/members/3/workout/active?workoutPlanId=7',
       );
       expect(
         Routes.trainerMembersDietHistoryById('3'),

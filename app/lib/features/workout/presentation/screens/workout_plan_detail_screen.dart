@@ -178,7 +178,9 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
                       ),
                   ],
                 ),
-          bottomNavigationBar: (plan != null && isViewOnly)
+          bottomNavigationBar: plan == null
+              ? null
+              : isViewOnly
               ? SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -187,6 +189,22 @@ class _WorkoutPlanDetailBody extends StatelessWidget {
                       label: const Text(WorkoutStrings.startSession),
                       onPressed: () => context.push(
                         '${Routes.memberHomeWorkoutActive}?workoutPlanId=${plan.id}',
+                      ),
+                    ),
+                  ),
+                )
+              : plan.memberId != null
+              ? SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.play_arrow),
+                      label: const Text(WorkoutStrings.startSessionWithMember),
+                      onPressed: () => context.push(
+                        Routes.trainerMembersWorkoutActiveById(
+                          plan.memberId!,
+                          workoutPlanId: plan.id,
+                        ),
                       ),
                     ),
                   ),

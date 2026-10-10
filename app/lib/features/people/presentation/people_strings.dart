@@ -41,6 +41,7 @@ abstract final class PeopleStrings {
   static const health = 'Health';
   static const goals = 'Goals & progress';
   static const workoutPlan = 'Workout plan';
+  static const startWorkoutSession = 'Start workout session';
   static const dietPlan = 'Diet plan';
   static const medicalHistory = 'Medical history';
   static const emergencyContacts = 'Emergency contacts';
