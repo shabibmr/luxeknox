@@ -24,7 +24,7 @@ part 'me_response_profile.g.dart';
 /// * [membershipNumber] 
 /// * [firstName] 
 /// * [lastName] 
-/// * [gender] 
+/// * [gender] - Male or female. Null only for employees created before gender was required.
 /// * [dateOfBirth] 
 /// * [address] 
 /// * [assignedTrainerId] 
@@ -38,6 +38,8 @@ part 'me_response_profile.g.dart';
 /// * [maxClientsCapacity] 
 /// * [isActive] 
 /// * [assignedActiveCount] 
+/// * [email] 
+/// * [phoneNumber] 
 /// * [jobTitle] 
 /// * [department] 
 /// * [hireDate] 

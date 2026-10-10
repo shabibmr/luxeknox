@@ -20,13 +20,13 @@ class _$EmployeeCreate extends EmployeeCreate {
   @override
   final String gender;
   @override
-  final String jobTitle;
+  final String? jobTitle;
   @override
   final String? department;
   @override
   final Date? hireDate;
   @override
-  final int roleId;
+  final int? roleId;
 
   factory _$EmployeeCreate([void Function(EmployeeCreateBuilder)? updates]) =>
       (EmployeeCreateBuilder()..update(updates))._build();
@@ -38,10 +38,10 @@ class _$EmployeeCreate extends EmployeeCreate {
       required this.firstName,
       required this.lastName,
       required this.gender,
-      required this.jobTitle,
+      this.jobTitle,
       this.department,
       this.hireDate,
-      required this.roleId})
+      this.roleId})
       : super._();
   @override
   EmployeeCreate rebuild(void Function(EmployeeCreateBuilder) updates) =>
@@ -192,12 +192,10 @@ class EmployeeCreateBuilder
               lastName, r'EmployeeCreate', 'lastName'),
           gender: BuiltValueNullFieldError.checkNotNull(
               gender, r'EmployeeCreate', 'gender'),
-          jobTitle: BuiltValueNullFieldError.checkNotNull(
-              jobTitle, r'EmployeeCreate', 'jobTitle'),
+          jobTitle: jobTitle,
           department: department,
           hireDate: hireDate,
-          roleId: BuiltValueNullFieldError.checkNotNull(
-              roleId, r'EmployeeCreate', 'roleId'),
+          roleId: roleId,
         );
     replace(_$result);
     return _$result;

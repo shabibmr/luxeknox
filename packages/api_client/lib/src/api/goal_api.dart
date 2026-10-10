@@ -235,7 +235,7 @@ class GOALApi {
   }
 
   /// Create a metric
-  /// 
+  /// Trainers and staff with goals.create, goals.update, or goals.write may create a metric.
   ///
   /// Parameters:
   /// * [goalMetricWrite] 
@@ -644,7 +644,7 @@ class GOALApi {
     );
   }
 
-  /// Add a progress photo (deferred)
+  /// Add a progress photo
   /// 
   ///
   /// Parameters:
@@ -747,7 +747,7 @@ class GOALApi {
     );
   }
 
-  /// Delete a progress photo (deferred)
+  /// Delete a progress photo
   /// 
   ///
   /// Parameters:
@@ -1060,6 +1060,11 @@ class GOALApi {
   /// 
   ///
   /// Parameters:
+  /// * [limit] - Default from gym_settings pagination.default_page_size.
+  /// * [cursor] - Opaque cursor on (created_at, id) for feeds.
+  /// * [q] - Case-insensitive search (FR-API-014).
+  /// * [category] 
+  /// * [isActive] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -1106,7 +1111,7 @@ class GOALApi {
       if (cursor != null) r'cursor': encodeQueryParameter(_serializers, cursor, const FullType(String)),
       if (q != null) r'q': encodeQueryParameter(_serializers, q, const FullType(String)),
       if (category != null) r'category': encodeQueryParameter(_serializers, category, const FullType(String)),
-      if (isActive != null) r'is_active': isActive ? 'true' : 'false',
+      if (isActive != null) r'is_active': encodeQueryParameter(_serializers, isActive, const FullType(bool)),
     };
 
     final _response = await _dio.request<Object>(
@@ -1409,7 +1414,7 @@ class GOALApi {
     );
   }
 
-  /// Progress photos (deferred)
+  /// Progress photos
   /// 
   ///
   /// Parameters:
@@ -1594,7 +1599,7 @@ class GOALApi {
   }
 
   /// Update a metric
-  /// 
+  /// Trainers and staff with goals.create, goals.update, or goals.write may update a metric.
   ///
   /// Parameters:
   /// * [id] 

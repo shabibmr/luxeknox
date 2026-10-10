@@ -8,7 +8,7 @@ import 'package:built_value/serializer.dart';
 
 part 'refresh_request.g.dart';
 
-/// RefreshRequest
+/// Provide refresh_token (must start with gk_rt_).
 ///
 /// Properties:
 /// * [refreshToken] - Opaque `gk_rt_…`
@@ -16,7 +16,7 @@ part 'refresh_request.g.dart';
 abstract class RefreshRequest implements Built<RefreshRequest, RefreshRequestBuilder> {
   /// Opaque `gk_rt_…`
   @BuiltValueField(wireName: r'refresh_token')
-  String get refreshToken;
+  String? get refreshToken;
 
   RefreshRequest._();
 
@@ -41,11 +41,13 @@ class _$RefreshRequestSerializer implements PrimitiveSerializer<RefreshRequest> 
     RefreshRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    yield r'refresh_token';
-    yield serializers.serialize(
-      object.refreshToken,
-      specifiedType: const FullType(String),
-    );
+    if (object.refreshToken != null) {
+      yield r'refresh_token';
+      yield serializers.serialize(
+        object.refreshToken,
+        specifiedType: const FullType(String),
+      );
+    }
   }
 
   @override
@@ -72,8 +74,9 @@ class _$RefreshRequestSerializer implements PrimitiveSerializer<RefreshRequest> 
         case r'refresh_token':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.refreshToken = valueDes;
           break;
         default:

@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 **membershipNumber** | **String** |  | 
 **firstName** | **String** |  | 
 **lastName** | **String** |  | 
-**gender** | **String** |  | [optional] 
+**gender** | **String** | Male or female. Null only for employees created before gender was required. | [optional] 
 **dateOfBirth** | [**Date**](Date.md) |  | [optional] 
 **address** | **String** |  | [optional] 
 **assignedTrainerId** | **int** |  | [optional] 
@@ -27,11 +27,13 @@ Name | Type | Description | Notes
 **maxClientsCapacity** | **int** |  | [optional] 
 **isActive** | **bool** |  | 
 **assignedActiveCount** | **int** |  | [optional] 
-**jobTitle** | **String** |  | 
+**email** | **String** |  | [optional] 
+**phoneNumber** | **String** |  | [optional] 
+**jobTitle** | **String** |  | [optional] 
 **department** | **String** |  | [optional] 
 **hireDate** | [**Date**](Date.md) |  | [optional] 
 **status** | [**EmployeeStatus**](EmployeeStatus.md) |  | 
-**roleId** | **int** |  | [optional] 
+**roleId** | **int** |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

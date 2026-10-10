@@ -10,6 +10,8 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **accessToken** | **String** |  | 
 **refreshToken** | **String** |  | 
+**tokenType** | **String** |  | [optional] 
+**expiresIn** | **int** |  | [optional] 
 **principal** | [**Principal**](Principal.md) |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

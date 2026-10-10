@@ -40,7 +40,7 @@ abstract class TrainerCreate implements Built<TrainerCreate, TrainerCreateBuilde
   String get lastName;
 
   @BuiltValueField(wireName: r'gender')
-  String? get gender;
+  String get gender;
 
   @BuiltValueField(wireName: r'bio')
   String? get bio;
@@ -107,13 +107,11 @@ class _$TrainerCreateSerializer implements PrimitiveSerializer<TrainerCreate> {
       object.lastName,
       specifiedType: const FullType(String),
     );
-    if (object.gender != null) {
-      yield r'gender';
-      yield serializers.serialize(
-        object.gender,
-        specifiedType: const FullType(String),
-      );
-    }
+    yield r'gender';
+    yield serializers.serialize(
+      object.gender,
+      specifiedType: const FullType(String),
+    );
     if (object.bio != null) {
       yield r'bio';
       yield serializers.serialize(
@@ -205,9 +203,8 @@ class _$TrainerCreateSerializer implements PrimitiveSerializer<TrainerCreate> {
         case r'gender':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
+            specifiedType: const FullType(String),
+          ) as String;
           result.gender = valueDes;
           break;
         case r'bio':

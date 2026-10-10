@@ -18,6 +18,7 @@ Name | Type | Description | Notes
 **targetDate** | [**Date**](Date.md) |  | [optional] 
 **status** | **String** |  | 
 **metric** | [**GoalMetric**](GoalMetric.md) |  | [optional] 
+**histories** | [**BuiltList&lt;GoalHistory&gt;**](GoalHistory.md) | Present on GET /goals/{id}. Newest recorded_date first. Omitted on GET /members/{id}/goals. Not required.  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

@@ -25,7 +25,7 @@ part 'goal.g.dart';
 /// * [targetDate] 
 /// * [status] 
 /// * [metric] 
-/// * [histories] 
+/// * [histories] - Present on GET /goals/{id}. Newest recorded_date first. Omitted on GET /members/{id}/goals. Not required. 
 @BuiltValue()
 abstract class Goal implements Built<Goal, GoalBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -59,6 +59,7 @@ abstract class Goal implements Built<Goal, GoalBuilder> {
   @BuiltValueField(wireName: r'metric')
   GoalMetric? get metric;
 
+  /// Present on GET /goals/{id}. Newest recorded_date first. Omitted on GET /members/{id}/goals. Not required. 
   @BuiltValueField(wireName: r'histories')
   BuiltList<GoalHistory>? get histories;
 
@@ -256,9 +257,7 @@ class _$GoalSerializer implements PrimitiveSerializer<Goal> {
         case r'histories':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(BuiltList, [
-              FullType(GoalHistory),
-            ]),
+            specifiedType: const FullType.nullable(BuiltList, [FullType(GoalHistory)]),
           ) as BuiltList<GoalHistory>?;
           if (valueDes == null) continue;
           result.histories.replace(valueDes);

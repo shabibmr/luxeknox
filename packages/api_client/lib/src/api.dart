@@ -29,7 +29,7 @@ import 'package:api_client/src/api/sys_api.dart';
 import 'package:api_client/src/api/work_api.dart';
 
 class ApiClient {
-  static const String basePath = r'http://192.168.1.88:3000/v1';
+  static const String basePath = r'http://localhost:3000/v1';
 
   final Dio dio;
   final Serializers serializers;

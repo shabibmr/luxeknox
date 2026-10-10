@@ -97,7 +97,7 @@ class SYSApi {
     );
   }
 
-  /// All settings or one category
+  /// All catalogue settings or one category
   /// 
   ///
   /// Parameters:
@@ -290,7 +290,7 @@ class SYSApi {
     );
   }
 
-  /// Upsert known setting keys
+  /// Update known setting keys
   /// 
   ///
   /// Parameters:

@@ -10,10 +10,10 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **email** | **String** |  | [optional] 
 **phoneNumber** | **String** |  | [optional] 
-**password** | **String** |  | 
+**password** | **String** |  | [optional] 
 **firstName** | **String** |  | 
 **lastName** | **String** |  | 
-**gender** | **String** |  | [optional] 
+**gender** | **String** |  | 
 **dateOfBirth** | [**Date**](Date.md) |  | [optional] 
 **address** | **String** |  | [optional] 
 **assignedTrainerId** | **int** |  | [optional] 

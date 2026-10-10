@@ -581,6 +581,10 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<PaymentHistory>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(GoalHistory)]),
+        () => ListBuilder<GoalHistory>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(Goal)]),
         () => ListBuilder<Goal>(),
       )

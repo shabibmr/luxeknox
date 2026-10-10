@@ -17,6 +17,7 @@ Name | Type | Description | Notes
 **targetReps** | **String** |  | [optional] 
 **targetWeightKg** | **num** |  | [optional] 
 **restSeconds** | **int** |  | [optional] 
+**restBetweenExercisesSeconds** | **int** |  | [optional] 
 **notes** | **String** |  | [optional] 
 **exercise** | [**Exercise**](Exercise.md) |  | [optional] 
 

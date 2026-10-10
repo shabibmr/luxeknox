@@ -43,7 +43,7 @@ abstract class EmployeeCreate implements Built<EmployeeCreate, EmployeeCreateBui
   String get gender;
 
   @BuiltValueField(wireName: r'job_title')
-  String get jobTitle;
+  String? get jobTitle;
 
   @BuiltValueField(wireName: r'department')
   String? get department;
@@ -52,7 +52,7 @@ abstract class EmployeeCreate implements Built<EmployeeCreate, EmployeeCreateBui
   Date? get hireDate;
 
   @BuiltValueField(wireName: r'role_id')
-  int get roleId;
+  int? get roleId;
 
   EmployeeCreate._();
 
@@ -111,11 +111,13 @@ class _$EmployeeCreateSerializer implements PrimitiveSerializer<EmployeeCreate> 
       object.gender,
       specifiedType: const FullType(String),
     );
-    yield r'job_title';
-    yield serializers.serialize(
-      object.jobTitle,
-      specifiedType: const FullType(String),
-    );
+    if (object.jobTitle != null) {
+      yield r'job_title';
+      yield serializers.serialize(
+        object.jobTitle,
+        specifiedType: const FullType(String),
+      );
+    }
     if (object.department != null) {
       yield r'department';
       yield serializers.serialize(
@@ -130,11 +132,13 @@ class _$EmployeeCreateSerializer implements PrimitiveSerializer<EmployeeCreate> 
         specifiedType: const FullType(Date),
       );
     }
-    yield r'role_id';
-    yield serializers.serialize(
-      object.roleId,
-      specifiedType: const FullType(int),
-    );
+    if (object.roleId != null) {
+      yield r'role_id';
+      yield serializers.serialize(
+        object.roleId,
+        specifiedType: const FullType(int),
+      );
+    }
   }
 
   @override
@@ -205,8 +209,9 @@ class _$EmployeeCreateSerializer implements PrimitiveSerializer<EmployeeCreate> 
         case r'job_title':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.jobTitle = valueDes;
           break;
         case r'department':
@@ -228,8 +233,9 @@ class _$EmployeeCreateSerializer implements PrimitiveSerializer<EmployeeCreate> 
         case r'role_id':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(int),
-          ) as int;
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
           result.roleId = valueDes;
           break;
         default:
