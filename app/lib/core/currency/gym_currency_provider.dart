@@ -46,9 +46,9 @@ int currencyDecimalDigits(String? currencyCode) {
 }
 
 /// Display symbol for the given currency code (e.g. `$` for `USD`).
-/// Falls back to the raw code, or `$` if none is set.
+/// Falls back to the raw code, or `₹` if none is set.
 String currencySymbol(String? currencyCode) {
-  if (currencyCode == null || currencyCode.trim().isEmpty) return r'$';
+  if (currencyCode == null || currencyCode.trim().isEmpty) return '₹';
   try {
     return NumberFormat.simpleCurrency(name: currencyCode).currencySymbol;
   } catch (_) {
