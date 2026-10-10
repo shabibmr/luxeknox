@@ -9,8 +9,12 @@ import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../session/domain/entities/user_type.dart';
 import '../../../../session/presentation/session_cubit.dart';
+import '../../../people/domain/usecases/get_member_usecase.dart';
+import '../../domain/helpers/assigned_trainer.dart';
 import '../cubit/goals_list_cubit.dart';
+import '../goal_view_actions.dart';
 import '../goals_strings.dart';
 import '../widgets/goal_progress_bar.dart';
 import 'goal_form_screen.dart';
@@ -22,11 +26,15 @@ class ProgressHubScreen extends StatelessWidget {
     super.key,
     this.memberId,
     this.canCreateGoals = false,
+    this.isAssignedTrainer,
   });
 
   /// When null, uses the authenticated member's profileId.
   final String? memberId;
   final bool canCreateGoals;
+
+  /// When non-null, skips the member fetch for trainer assignment (C4.1).
+  final bool? isAssignedTrainer;
 
   String? _resolveMemberId() {
     if (memberId != null) return memberId;
@@ -41,8 +49,7 @@ class ProgressHubScreen extends StatelessWidget {
     if (!canCreateGoals) return false;
     final session = getIt<SessionCubit>().state;
     if (session is! SessionAuthenticated) return false;
-    final caps = session.capabilities;
-    return caps.can('goals.write');
+    return session.capabilities.can('goals.write');
   }
 
   @override
@@ -57,43 +64,103 @@ class ProgressHubScreen extends StatelessWidget {
 
     return BlocProvider(
       create: (_) => getIt<GoalsListCubit>()..load(id),
-      child: _ProgressHubBody(memberId: id, canCreateGoals: _canMutateGoals()),
+      child: _ProgressHubBody(
+        memberId: id,
+        canCreateGoals: _canMutateGoals(),
+        initialAssignedTrainer: isAssignedTrainer,
+      ),
     );
   }
 }
 
-class _ProgressHubBody extends StatelessWidget {
+class _ProgressHubBody extends StatefulWidget {
   const _ProgressHubBody({
     required this.memberId,
     required this.canCreateGoals,
+    required this.initialAssignedTrainer,
   });
 
   final String memberId;
   final bool canCreateGoals;
+  final bool? initialAssignedTrainer;
+
+  @override
+  State<_ProgressHubBody> createState() => _ProgressHubBodyState();
+}
+
+class _ProgressHubBodyState extends State<_ProgressHubBody> {
+  bool _isAssignedTrainer = false;
+  var _assignmentReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final known = widget.initialAssignedTrainer;
+    if (known != null) {
+      _isAssignedTrainer = known;
+      _assignmentReady = true;
+    } else {
+      _resolveAssignment();
+    }
+  }
+
+  Future<void> _resolveAssignment() async {
+    final session = getIt<SessionCubit>().state;
+    if (session is! SessionAuthenticated ||
+        session.principal.userType != UserType.trainer) {
+      if (mounted) setState(() => _assignmentReady = true);
+      return;
+    }
+    final memberId = int.tryParse(widget.memberId.trim());
+    if (memberId == null) {
+      if (mounted) setState(() => _assignmentReady = true);
+      return;
+    }
+    final result = await getIt<GetMemberUseCase>()(memberId);
+    if (!mounted) return;
+    final assigned = result.fold(
+      (_) => false,
+      (p) => resolveIsAssignedTrainer(
+        isTrainerPrincipal: true,
+        sessionProfileId: session.principal.profileId,
+        assignedTrainerId: p.assignedTrainerId,
+      ),
+    );
+    setState(() {
+      _isAssignedTrainer = assigned;
+      _assignmentReady = true;
+    });
+  }
+
+  String _goalLocation(GoalDetailShell shell, String goalId) {
+    return switch (shell) {
+      GoalDetailShell.admin =>
+        Routes.adminMemberGoalById(widget.memberId, goalId),
+      GoalDetailShell.trainer =>
+        Routes.trainerMemberGoalById(widget.memberId, goalId),
+      GoalDetailShell.member => Routes.memberProgressGoalById(goalId),
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isTrainerContext = canCreateGoals;
+    final path = GoRouterState.of(context).uri.path;
+    final shell = goalDetailShellForPath(path);
+    final isDossierShell = shell != GoalDetailShell.member;
 
-    return Listener(
-      behavior: HitTestBehavior.translucent,
-      onPointerDown: (e) => debugPrint(
-        '[GoalsProbe] pointerDown at=${e.position} '
-        'route=${GoRouterState.of(context).uri.path}',
-      ),
-      child: Scaffold(
+    return Scaffold(
       appBar: AppBar(title: const Text(GoalsStrings.hubTitle)),
-      floatingActionButton: canCreateGoals
+      floatingActionButton: widget.canCreateGoals
           ? FloatingActionButton(
               tooltip: GoalsStrings.goalFormCreateTitle,
               onPressed: () async {
                 final saved = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(
-                    builder: (_) => GoalFormScreen(memberId: memberId),
+                    builder: (_) => GoalFormScreen(memberId: widget.memberId),
                   ),
                 );
                 if (saved == true && context.mounted) {
-                  context.read<GoalsListCubit>().load(memberId);
+                  context.read<GoalsListCubit>().load(widget.memberId);
                 }
               },
               child: const Icon(Icons.add),
@@ -108,20 +175,51 @@ class _ProgressHubBody extends StatelessWidget {
               runSpacing: 8,
               children: [
                 ActionChip(
+                  label: const Text(GoalsStrings.overviewLink),
+                  onPressed: () {
+                    if (shell == GoalDetailShell.admin) {
+                      context.push(
+                        Routes.adminMemberGoalsOverviewById(widget.memberId),
+                      );
+                    } else if (shell == GoalDetailShell.trainer) {
+                      context.push(
+                        Routes.trainerMemberGoalsOverviewById(widget.memberId),
+                      );
+                    } else {
+                      context.push(Routes.memberProgressOverview);
+                    }
+                  },
+                ),
+                ActionChip(
+                  label: const Text(GoalsStrings.chartsLink),
+                  onPressed: () {
+                    if (shell == GoalDetailShell.admin) {
+                      context.push(
+                        Routes.adminMemberGoalsOverviewById(widget.memberId),
+                      );
+                    } else if (shell == GoalDetailShell.trainer) {
+                      context.push(
+                        Routes.trainerMemberGoalsOverviewById(widget.memberId),
+                      );
+                    } else {
+                      context.push(Routes.memberProgressOverview);
+                    }
+                  },
+                ),
+                ActionChip(
                   label: const Text(GoalsStrings.measurementsLink),
                   onPressed: () {
-                    if (isTrainerContext) {
-                      final isAdmin = GoRouterState.of(
-                        context,
-                      ).uri.path.startsWith('/admin');
+                    if (shell == GoalDetailShell.admin) {
                       context.push(
-                        isAdmin
-                            ? Routes.adminMemberGoalsAddMeasurementById(
-                                memberId,
-                              )
-                            : Routes.trainerMemberGoalsAddMeasurementById(
-                                memberId,
-                              ),
+                        Routes.adminMemberGoalsAddMeasurementById(
+                          widget.memberId,
+                        ),
+                      );
+                    } else if (shell == GoalDetailShell.trainer) {
+                      context.push(
+                        Routes.trainerMemberGoalsAddMeasurementById(
+                          widget.memberId,
+                        ),
                       );
                     } else {
                       context.go(Routes.memberProgressMeasurements);
@@ -131,12 +229,17 @@ class _ProgressHubBody extends StatelessWidget {
                 ActionChip(
                   label: const Text(GoalsStrings.photosLink),
                   onPressed: () {
-                    if (isTrainerContext) {
+                    if (isDossierShell) {
+                      // Wait until assignment is known so admin never inherits
+                      // a trainer bypass (C4.3).
+                      final assigned = shell == GoalDetailShell.trainer &&
+                          _assignmentReady &&
+                          _isAssignedTrainer;
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => ProgressPhotosScreen(
-                            memberId: memberId,
-                            isAssignedTrainer: true,
+                            memberId: widget.memberId,
+                            isAssignedTrainer: assigned,
                           ),
                         ),
                       );
@@ -148,70 +251,15 @@ class _ProgressHubBody extends StatelessWidget {
                 ActionChip(
                   label: const Text(GoalsStrings.notesLink),
                   onPressed: () {
-                    if (isTrainerContext) {
+                    if (isDossierShell) {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) =>
-                              ProgressNotesScreen(memberId: memberId),
+                              ProgressNotesScreen(memberId: widget.memberId),
                         ),
                       );
                     } else {
                       context.go(Routes.memberProgressNotes);
-                    }
-                  },
-                ),
-                ActionChip(
-                  label: const Text(GoalsStrings.chartsLink),
-                  onPressed: () {
-                    if (isTrainerContext) {
-                      final isAdmin = GoRouterState.of(
-                        context,
-                      ).uri.path.startsWith('/admin');
-                      context.push(
-                        isAdmin
-                            ? Routes.adminMemberGoalsAddMeasurementById(
-                                memberId,
-                              )
-                            : Routes.trainerMemberGoalsAddMeasurementById(
-                                memberId,
-                              ),
-                      );
-                    } else {
-                      context.go(Routes.memberProgressMeasurements);
-                    }
-                  },
-                ),
-                ActionChip(
-                  label: const Text(GoalsStrings.workoutPlanLink),
-                  onPressed: () {
-                    if (isTrainerContext) {
-                      final isAdminShell = GoRouterState.of(
-                        context,
-                      ).uri.path.startsWith('/admin');
-                      context.push(
-                        isAdminShell
-                            ? Routes.adminMembersWorkoutHistoryById(memberId)
-                            : Routes.trainerMembersWorkoutHistoryById(memberId),
-                      );
-                    } else {
-                      context.go(Routes.memberHomeWorkoutHistory);
-                    }
-                  },
-                ),
-                ActionChip(
-                  label: const Text(GoalsStrings.dietPlanLink),
-                  onPressed: () {
-                    if (isTrainerContext) {
-                      final isAdminShell = GoRouterState.of(
-                        context,
-                      ).uri.path.startsWith('/admin');
-                      context.push(
-                        isAdminShell
-                            ? Routes.adminMembersDietHistoryById(memberId)
-                            : Routes.trainerMembersDietHistoryById(memberId),
-                      );
-                    } else {
-                      context.go(Routes.memberHomeDietHistory);
                     }
                   },
                 ),
@@ -232,7 +280,7 @@ class _ProgressHubBody extends StatelessWidget {
                   return AppErrorView(
                     message: failureMessage(state.failure!),
                     onRetry: () =>
-                        context.read<GoalsListCubit>().load(memberId),
+                        context.read<GoalsListCubit>().load(widget.memberId),
                   );
                 }
                 final items = state.items;
@@ -240,7 +288,7 @@ class _ProgressHubBody extends StatelessWidget {
                     ? const AppEmptyView(message: GoalsStrings.noneGoals)
                     : RefreshIndicator(
                         onRefresh: () =>
-                            context.read<GoalsListCubit>().load(memberId),
+                            context.read<GoalsListCubit>().load(widget.memberId),
                         child: ListView.separated(
                           padding: const EdgeInsets.all(16),
                           itemCount: items.length,
@@ -251,28 +299,12 @@ class _ProgressHubBody extends StatelessWidget {
                             return Card(
                               child: InkWell(
                                 onTap: () async {
-                                  final location = isTrainerContext
-                                      ? (GoRouterState.of(
-                                              context,
-                                            ).uri.path.startsWith('/admin')
-                                            ? Routes.adminMemberGoalById(
-                                                memberId,
-                                                goal.id,
-                                              )
-                                            : Routes.trainerMemberGoalById(
-                                                memberId,
-                                                goal.id,
-                                              ))
-                                      : Routes.memberProgressGoalById(goal.id);
-                                  debugPrint(
-                                    '[GoalsProbe] tap goal=${goal.id} '
-                                    'status=${goal.status} -> $location',
+                                  await context.push(
+                                    _goalLocation(shell, goal.id),
                                   );
-                                  await context.push(location);
-                                  debugPrint('[GoalsProbe] returned from $location');
-                                  if (context.mounted && isTrainerContext) {
+                                  if (context.mounted && isDossierShell) {
                                     context.read<GoalsListCubit>().load(
-                                      memberId,
+                                      widget.memberId,
                                     );
                                   }
                                 },
@@ -283,7 +315,7 @@ class _ProgressHubBody extends StatelessWidget {
                                       Expanded(
                                         child: GoalProgressBar(goal: goal),
                                       ),
-                                      if (canCreateGoals)
+                                      if (widget.canCreateGoals)
                                         IconButton(
                                           tooltip: GoalsStrings.edit,
                                           icon: const Icon(Icons.edit_outlined),
@@ -295,7 +327,8 @@ class _ProgressHubBody extends StatelessWidget {
                                                   MaterialPageRoute(
                                                     builder: (_) =>
                                                         GoalFormScreen(
-                                                          memberId: memberId,
+                                                          memberId:
+                                                              widget.memberId,
                                                           goalId: goal.id,
                                                         ),
                                                   ),
@@ -304,7 +337,7 @@ class _ProgressHubBody extends StatelessWidget {
                                                 context.mounted) {
                                               context
                                                   .read<GoalsListCubit>()
-                                                  .load(memberId);
+                                                  .load(widget.memberId);
                                             }
                                           },
                                         ),
@@ -321,7 +354,6 @@ class _ProgressHubBody extends StatelessWidget {
           ),
         ],
       ),
-    ),
     );
   }
 }

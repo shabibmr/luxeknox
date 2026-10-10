@@ -20,20 +20,49 @@ GoalDetailShell goalDetailShellForPath(String path) {
   return GoalDetailShell.member;
 }
 
+/// Role gates for goal detail (ADR-0006 §7). Uses shell + `goals.write` +
+/// assigned-trainer — never [UserType].
 GoalViewActions resolveGoalViewActions({
   required bool canWriteGoals,
-  required bool isTrainerUser,
+  required bool isAssignedTrainer,
   required GoalStatus status,
   required GoalDetailShell shell,
 }) {
-  final trainerProgress =
-      isTrainerUser &&
-      canWriteGoals &&
-      shell == GoalDetailShell.trainer &&
-      status == GoalStatus.inProgress;
-  return GoalViewActions(
-    showEdit: canWriteGoals && shell != GoalDetailShell.member,
-    showRecordMeasurement: trainerProgress,
-    showCheckIn: trainerProgress,
-  );
+  if (!canWriteGoals) {
+    return const GoalViewActions(
+      showEdit: false,
+      showRecordMeasurement: false,
+      showCheckIn: false,
+    );
+  }
+
+  final inProgress = status == GoalStatus.inProgress;
+
+  switch (shell) {
+    case GoalDetailShell.member:
+      return GoalViewActions(
+        showEdit: false,
+        showRecordMeasurement: false,
+        showCheckIn: inProgress,
+      );
+    case GoalDetailShell.trainer:
+      if (!isAssignedTrainer) {
+        return const GoalViewActions(
+          showEdit: false,
+          showRecordMeasurement: false,
+          showCheckIn: false,
+        );
+      }
+      return GoalViewActions(
+        showEdit: true,
+        showRecordMeasurement: inProgress,
+        showCheckIn: inProgress,
+      );
+    case GoalDetailShell.admin:
+      return GoalViewActions(
+        showEdit: true,
+        showRecordMeasurement: inProgress,
+        showCheckIn: inProgress,
+      );
+  }
 }

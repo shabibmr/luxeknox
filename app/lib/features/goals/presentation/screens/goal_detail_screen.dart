@@ -11,8 +11,10 @@ import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../session/domain/entities/user_type.dart';
 import '../../../../session/presentation/session_cubit.dart';
+import '../../../people/domain/usecases/get_member_usecase.dart';
 import '../../../people/presentation/widgets/member_trainer_header.dart';
 import '../../domain/entities/member_goal.dart';
+import '../../domain/helpers/assigned_trainer.dart';
 import '../cubit/goal_detail_cubit.dart';
 import '../goal_view_actions.dart';
 import '../goals_strings.dart';
@@ -23,23 +25,45 @@ import '../widgets/goal_progress_bar.dart';
 import 'goal_form_screen.dart';
 
 class GoalDetailScreen extends StatelessWidget {
-  const GoalDetailScreen({super.key, required this.goalId});
+  const GoalDetailScreen({
+    super.key,
+    required this.goalId,
+    this.isAssignedTrainer = false,
+  });
 
   final String goalId;
+
+  /// When known by the caller (dossier). Otherwise trainer shell resolves it.
+  final bool isAssignedTrainer;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<GoalDetailCubit>()..load(goalId),
-      child: _GoalDetailBody(goalId: goalId),
+      child: _GoalDetailBody(
+        goalId: goalId,
+        initialAssignedTrainer: isAssignedTrainer,
+      ),
     );
   }
 }
 
-class _GoalDetailBody extends StatelessWidget {
-  const _GoalDetailBody({required this.goalId});
+class _GoalDetailBody extends StatefulWidget {
+  const _GoalDetailBody({
+    required this.goalId,
+    required this.initialAssignedTrainer,
+  });
 
   final String goalId;
+  final bool initialAssignedTrainer;
+
+  @override
+  State<_GoalDetailBody> createState() => _GoalDetailBodyState();
+}
+
+class _GoalDetailBodyState extends State<_GoalDetailBody> {
+  late bool _isAssignedTrainer = widget.initialAssignedTrainer;
+  var _resolvedAssignment = false;
 
   GoalViewActions _actions(BuildContext context, MemberGoal goal) {
     final path = GoRouterState.of(context).uri.path;
@@ -47,15 +71,48 @@ class _GoalDetailBody extends StatelessWidget {
     final canWrite =
         session is SessionAuthenticated &&
         session.capabilities.can('goals.write');
-    final isTrainer =
-        session is SessionAuthenticated &&
-        session.principal.userType == UserType.trainer;
     return resolveGoalViewActions(
       canWriteGoals: canWrite,
-      isTrainerUser: isTrainer,
+      isAssignedTrainer: _isAssignedTrainer,
       status: goal.status,
       shell: goalDetailShellForPath(path),
     );
+  }
+
+  Future<void> _resolveAssignedTrainer(MemberGoal goal) async {
+    if (_resolvedAssignment || widget.initialAssignedTrainer) {
+      _resolvedAssignment = true;
+      return;
+    }
+    final path = GoRouterState.of(context).uri.path;
+    if (goalDetailShellForPath(path) != GoalDetailShell.trainer) {
+      _resolvedAssignment = true;
+      return;
+    }
+    final session = getIt<SessionCubit>().state;
+    if (session is! SessionAuthenticated) {
+      _resolvedAssignment = true;
+      return;
+    }
+    final memberId = int.tryParse(goal.memberId.trim());
+    if (memberId == null) {
+      _resolvedAssignment = true;
+      return;
+    }
+    final person = await getIt<GetMemberUseCase>()(memberId);
+    if (!mounted) return;
+    final assigned = person.fold(
+      (_) => false,
+      (p) => resolveIsAssignedTrainer(
+        isTrainerPrincipal: session.principal.userType == UserType.trainer,
+        sessionProfileId: session.principal.profileId,
+        assignedTrainerId: p.assignedTrainerId,
+      ),
+    );
+    setState(() {
+      _isAssignedTrainer = assigned;
+      _resolvedAssignment = true;
+    });
   }
 
   Future<void> _edit(BuildContext context, MemberGoal goal) async {
@@ -65,17 +122,25 @@ class _GoalDetailBody extends StatelessWidget {
       ),
     );
     if (saved == true && context.mounted) {
-      await context.read<GoalDetailCubit>().load(goalId);
+      await context.read<GoalDetailCubit>().load(widget.goalId);
     }
   }
 
   Future<void> _record(BuildContext context, MemberGoal goal) async {
-    final saved = await context.push<bool>(
-      '${Routes.trainerMemberGoalsAddMeasurementById(goal.memberId)}'
-      '?metric=${goal.metricId}',
-    );
+    final path = GoRouterState.of(context).uri.path;
+    final shell = goalDetailShellForPath(path);
+    final location = switch (shell) {
+      GoalDetailShell.admin =>
+        '${Routes.adminMemberGoalsAddMeasurementById(goal.memberId)}'
+        '?metric=${goal.metricId}',
+      GoalDetailShell.trainer =>
+        '${Routes.trainerMemberGoalsAddMeasurementById(goal.memberId)}'
+        '?metric=${goal.metricId}',
+      GoalDetailShell.member => Routes.memberProgressMeasurements,
+    };
+    final saved = await context.push<bool>(location);
     if (saved == true && context.mounted) {
-      await context.read<GoalDetailCubit>().load(goalId);
+      await context.read<GoalDetailCubit>().load(widget.goalId);
     }
   }
 
@@ -85,7 +150,7 @@ class _GoalDetailBody extends StatelessWidget {
       isScrollControlled: true,
       builder: (sheetContext) => BlocProvider.value(
         value: context.read<GoalDetailCubit>(),
-        child: _CheckInSheet(goalId: goalId),
+        child: _CheckInSheet(goalId: widget.goalId),
       ),
     );
     if (saved == true && context.mounted) {
@@ -99,7 +164,11 @@ class _GoalDetailBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<GoalDetailCubit, GoalDetailState>(
       listener: (context, state) {
-        if (state.goal != null && state.failure != null && !state.submitting) {
+        final goal = state.goal;
+        if (goal != null && !_resolvedAssignment) {
+          _resolveAssignedTrainer(goal);
+        }
+        if (goal != null && state.failure != null && !state.submitting) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(failureMessage(state.failure!))),
           );
@@ -159,7 +228,7 @@ class _GoalDetailBody extends StatelessWidget {
           : failureMessage(failure!);
       return AppErrorView(
         message: message,
-        onRetry: () => context.read<GoalDetailCubit>().load(goalId),
+        onRetry: () => context.read<GoalDetailCubit>().load(widget.goalId),
       );
     }
     if (goal == null) return const SizedBox.shrink();

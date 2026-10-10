@@ -5,28 +5,36 @@ import 'package:luxeknox/features/goals/presentation/goal_view_actions.dart';
 void main() {
   GoalViewActions actions({
     bool canWriteGoals = true,
-    bool isTrainerUser = false,
+    bool isAssignedTrainer = false,
     GoalStatus status = GoalStatus.inProgress,
     GoalDetailShell shell = GoalDetailShell.member,
   }) {
     return resolveGoalViewActions(
       canWriteGoals: canWriteGoals,
-      isTrainerUser: isTrainerUser,
+      isAssignedTrainer: isAssignedTrainer,
       status: status,
       shell: shell,
     );
   }
 
-  test('member path is view only', () {
-    final result = actions(isTrainerUser: true);
+  test('member shell shows check-in only on in-progress goals', () {
+    final result = actions(shell: GoalDetailShell.member);
     expect(result.showEdit, isFalse);
     expect(result.showRecordMeasurement, isFalse);
+    expect(result.showCheckIn, isTrue);
+  });
+
+  test('member shell hides check-in when goal is not in progress', () {
+    final result = actions(
+      shell: GoalDetailShell.member,
+      status: GoalStatus.achieved,
+    );
     expect(result.showCheckIn, isFalse);
   });
 
-  test('trainer on the trainer path can edit, record, and check in', () {
+  test('assigned trainer on trainer shell can edit, record, and check in', () {
     final result = actions(
-      isTrainerUser: true,
+      isAssignedTrainer: true,
       shell: GoalDetailShell.trainer,
     );
     expect(result.showEdit, isTrue);
@@ -34,17 +42,27 @@ void main() {
     expect(result.showCheckIn, isTrue);
   });
 
-  test('admin on a trainer path can edit and cannot record or check in', () {
-    final result = actions(shell: GoalDetailShell.trainer);
-    expect(result.showEdit, isTrue);
+  test('unassigned trainer on trainer shell has no actions', () {
+    final result = actions(
+      isAssignedTrainer: false,
+      shell: GoalDetailShell.trainer,
+    );
+    expect(result.showEdit, isFalse);
     expect(result.showRecordMeasurement, isFalse);
     expect(result.showCheckIn, isFalse);
   });
 
-  test('admin path is edit only', () {
+  test('admin shell shows edit, record, and check-in on in-progress', () {
+    final result = actions(shell: GoalDetailShell.admin);
+    expect(result.showEdit, isTrue);
+    expect(result.showRecordMeasurement, isTrue);
+    expect(result.showCheckIn, isTrue);
+  });
+
+  test('admin achieved goal keeps edit and hides record and check-in', () {
     final result = actions(
-      isTrainerUser: false,
       shell: GoalDetailShell.admin,
+      status: GoalStatus.achieved,
     );
     expect(result.showEdit, isTrue);
     expect(result.showRecordMeasurement, isFalse);
@@ -53,7 +71,7 @@ void main() {
 
   test('achieved trainer goal keeps edit and hides record and check-in', () {
     final result = actions(
-      isTrainerUser: true,
+      isAssignedTrainer: true,
       shell: GoalDetailShell.trainer,
       status: GoalStatus.achieved,
     );
@@ -65,11 +83,26 @@ void main() {
   test('write permission is required for every action', () {
     final result = actions(
       canWriteGoals: false,
-      isTrainerUser: true,
+      isAssignedTrainer: true,
       shell: GoalDetailShell.trainer,
     );
     expect(result.showEdit, isFalse);
     expect(result.showRecordMeasurement, isFalse);
     expect(result.showCheckIn, isFalse);
+  });
+
+  test('goalDetailShellForPath maps admin, trainer, and member paths', () {
+    expect(
+      goalDetailShellForPath('/admin/members/9/goals/goal/1'),
+      GoalDetailShell.admin,
+    );
+    expect(
+      goalDetailShellForPath('/trainer/members/9/goals/goal/1'),
+      GoalDetailShell.trainer,
+    );
+    expect(
+      goalDetailShellForPath('/progress/goal/1'),
+      GoalDetailShell.member,
+    );
   });
 }

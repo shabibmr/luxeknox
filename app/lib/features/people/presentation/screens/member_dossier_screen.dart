@@ -11,6 +11,7 @@ import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../session/presentation/session_cubit.dart';
+import '../../../goals/domain/helpers/assigned_trainer.dart';
 import '../../../goals/presentation/screens/progress_hub_screen.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../../session/domain/entities/user_type.dart';
@@ -663,14 +664,27 @@ class _PersonalTrainingSection extends StatelessWidget {
         ListTile(
           title: const Text(PeopleStrings.goals),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => ProgressHubScreen(
-                memberId: person.id.toString(),
-                canCreateGoals: !readOnly,
+          onTap: () {
+            final session = context.read<SessionCubit>().state;
+            // Admin never gets a trainer photo bypass (C4.3).
+            final assigned = !isAdminShell &&
+                session is SessionAuthenticated &&
+                resolveIsAssignedTrainer(
+                  isTrainerPrincipal:
+                      session.principal.userType == UserType.trainer,
+                  sessionProfileId: session.principal.profileId,
+                  assignedTrainerId: person.assignedTrainerId,
+                );
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => ProgressHubScreen(
+                  memberId: person.id.toString(),
+                  canCreateGoals: !readOnly,
+                  isAssignedTrainer: assigned,
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
         if (showCoaching) ...[
           if (current != null)
