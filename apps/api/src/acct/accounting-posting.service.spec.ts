@@ -32,6 +32,7 @@ describe('AccountingPostingService.postJournal', () => {
     repository = {
       allocateJournalNumber: vi.fn().mockResolvedValue('JRN00000001'),
       findPeriodForDate: vi.fn().mockResolvedValue(openPeriod),
+      findBySource: vi.fn().mockResolvedValue(null),
       insertJournalEntry: vi.fn().mockImplementation(async (row) => ({
         id: 50,
         row_version: 1,
@@ -183,5 +184,51 @@ describe('AccountingPostingService.postJournal', () => {
     ).rejects.toBeInstanceOf(NotFoundError);
 
     expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+  });
+
+  it('returns the original journal on a second post for the same source and writes nothing new', async () => {
+    const existing = {
+      id: 50,
+      journal_number: 'JRN00000001',
+      entry_date: '2026-04-15',
+      accounting_period_id: 7,
+      source_type: 'sales_invoice',
+      source_id: 42,
+      memo: 'Member invoice',
+      posted_at: new Date('2026-04-15T10:00:00.000Z'),
+      posted_by_user_id: 9,
+      reverses_journal_id: null,
+      row_version: 1,
+      created_at: new Date('2026-04-15T10:00:00.000Z'),
+      updated_at: null,
+      lines: [
+        { id: 1, journal_entry_id: 50, account_id: 1100, debit: '118.00', credit: '0.00' },
+        { id: 2, journal_entry_id: 50, account_id: 2200, debit: '0.00', credit: '100.00' },
+        { id: 3, journal_entry_id: 50, account_id: 2100, debit: '0.00', credit: '9.00' },
+        { id: 4, journal_entry_id: 50, account_id: 2110, debit: '0.00', credit: '9.00' },
+      ],
+    };
+    repository.findBySource.mockResolvedValue({
+      id: 50,
+      journal_number: 'JRN00000001',
+      source_type: 'sales_invoice',
+      source_id: 42,
+    });
+    repository.findEntryWithLines.mockResolvedValue(existing);
+
+    const result = await service.postJournal({
+      entryDate: '2026-04-16',
+      sourceType: 'sales_invoice',
+      sourceId: 42,
+      memo: 'retry',
+      lines: balancedLines,
+    });
+
+    expect(repository.findBySource).toHaveBeenCalledWith('sales_invoice', 42);
+    expect(repository.findEntryWithLines).toHaveBeenCalledWith(50);
+    expect(repository.allocateJournalNumber).not.toHaveBeenCalled();
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+    expect(repository.insertJournalLines).not.toHaveBeenCalled();
+    expect(result).toEqual(existing);
   });
 });

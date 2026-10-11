@@ -60,11 +60,25 @@ export class AccountingPostingService {
    * Validate lines, resolve period, allocate number, insert header + lines.
    * Debits must equal credits in cents. A line cannot carry both sides or neither.
    * Amounts on the active side must be positive.
+   * Replaying the same `(source_type, source_id)` returns the original journal
+   * and writes nothing new (unique index + look-up).
    */
   async postJournal(input: PostJournalInput): Promise<JournalEntryWithLines> {
-    const normalized = this.normalizeAndValidateLines(input.lines);
-
     return runInTransaction(this.db, async () => {
+      const existing = await this.accountingRepository.findBySource(
+        input.sourceType as JournalSourceType,
+        input.sourceId,
+      );
+      if (existing) {
+        const withLines = await this.accountingRepository.findEntryWithLines(existing.id);
+        if (!withLines) {
+          throw new NotFoundError(`Journal entry ${existing.id} is missing lines`);
+        }
+        return withLines;
+      }
+
+      const normalized = this.normalizeAndValidateLines(input.lines);
+
       const period = await this.accountingRepository.findPeriodForDate(input.entryDate);
       if (!period) {
         throw new NotFoundError(`No accounting period covers ${input.entryDate}`);
