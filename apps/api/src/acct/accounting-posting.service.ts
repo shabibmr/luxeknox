@@ -34,6 +34,14 @@ export type PostJournalInput = {
   lines: PostJournalLineInput[];
 };
 
+export type ReverseJournalInput = {
+  journalId: number;
+  /** Date of the reversing journal. Defaults to the original entry date. */
+  entryDate?: string;
+  memo?: string | null;
+  postedByUserId?: number | null;
+};
+
 type NormalizedLine = {
   accountId: number;
   debit: string;
@@ -108,6 +116,93 @@ export class AccountingPostingService {
 
       const lines = await this.accountingRepository.insertJournalLines(
         normalized.map((line) => ({
+          journal_entry_id: entry.id,
+          account_id: line.accountId,
+          debit: line.debit,
+          credit: line.credit,
+          memo: line.memo,
+          member_id: line.memberId,
+          vendor_id: line.vendorId,
+        })),
+      );
+
+      return { ...entry, lines };
+    });
+  }
+
+  /**
+   * Post a reversing journal for a posted entry.
+   * Swaps debit and credit on each line, sets `reverses_journal_id` on the new
+   * entry, and never mutates the original.
+   * Replaying reverse for the same journal returns the existing reversal
+   * (`source_type = journal_reversal`, `source_id = original id`).
+   */
+  async reverseJournal(input: ReverseJournalInput): Promise<JournalEntryWithLines> {
+    return runInTransaction(this.db, async () => {
+      const original = await this.accountingRepository.findEntryWithLines(input.journalId);
+      if (!original) {
+        throw new NotFoundError(`Journal entry ${input.journalId} was not found`);
+      }
+
+      const existing = await this.accountingRepository.findBySource(
+        'journal_reversal',
+        input.journalId,
+      );
+      if (existing) {
+        const withLines = await this.accountingRepository.findEntryWithLines(existing.id);
+        if (!withLines) {
+          throw new NotFoundError(`Journal entry ${existing.id} is missing lines`);
+        }
+        return withLines;
+      }
+
+      const entryDate = input.entryDate ?? original.entry_date;
+      const period = await this.accountingRepository.findPeriodForDate(entryDate);
+      if (!period) {
+        throw new NotFoundError(`No accounting period covers ${entryDate}`);
+      }
+      if (period.status === 'locked') {
+        throw new BusinessRuleError(
+          `Accounting period ${period.starts_on} to ${period.ends_on} is locked`,
+        );
+      }
+
+      let memo = input.memo;
+      if (memo === undefined) {
+        memo = original.memo
+          ? `Reversal of ${original.journal_number}: ${original.memo}`
+          : `Reversal of ${original.journal_number}`;
+      }
+
+      const swapped = this.normalizeAndValidateLines(
+        original.lines.map((line) => ({
+          accountId: line.account_id,
+          debit: line.credit,
+          credit: line.debit,
+          memo: line.memo,
+          memberId: line.member_id,
+          vendorId: line.vendor_id,
+        })),
+      );
+
+      const journalNumber = await this.accountingRepository.allocateJournalNumber();
+      const now = new Date();
+
+      const entry = await this.accountingRepository.insertJournalEntry({
+        journal_number: journalNumber,
+        entry_date: entryDate,
+        accounting_period_id: period.id,
+        source_type: 'journal_reversal',
+        source_id: input.journalId,
+        memo,
+        posted_at: now,
+        posted_by_user_id: input.postedByUserId ?? null,
+        reverses_journal_id: original.id,
+        created_at: now,
+      });
+
+      const lines = await this.accountingRepository.insertJournalLines(
+        swapped.map((line) => ({
           journal_entry_id: entry.id,
           account_id: line.accountId,
           debit: line.debit,

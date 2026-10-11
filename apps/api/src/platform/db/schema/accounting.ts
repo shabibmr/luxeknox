@@ -49,6 +49,7 @@ export const JOURNAL_SOURCE_TYPES = [
   'revenue_recognition',
   'manual',
   'opening_balance',
+  'journal_reversal',
 ] as const;
 export type JournalSourceType = (typeof JOURNAL_SOURCE_TYPES)[number];
 

@@ -504,7 +504,7 @@ Double-entry books for one gym ([ADR-0010](./adr/0010-accounting-ledger.md)). Th
 
 * **Purpose**: Posted journal header. Immutable after post; corrections are reversing journals.
 * **Supporting Screens**: Journal list, detail, manual entry, day book.
-* **Key Attributes**: `id`, `journal_number`, `entry_date`, `accounting_period_id` (FK), `source_type` (sales_invoice, sales_receipt, credit_note, purchase_bill, expense_voucher, payment_voucher, debit_note, revenue_recognition, manual, opening_balance), `source_id`, `memo`, `posted_at`, `posted_by_user_id` (FK), `reverses_journal_id` (FK nullable), `row_version`, `created_at`, `updated_at`.
+* **Key Attributes**: `id`, `journal_number`, `entry_date`, `accounting_period_id` (FK), `source_type` (sales_invoice, sales_receipt, credit_note, purchase_bill, expense_voucher, payment_voucher, debit_note, revenue_recognition, manual, opening_balance, journal_reversal), `source_id`, `memo`, `posted_at`, `posted_by_user_id` (FK), `reverses_journal_id` (FK nullable), `row_version`, `created_at`, `updated_at`.
 
 ### `journal_lines`
 

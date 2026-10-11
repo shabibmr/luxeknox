@@ -254,3 +254,250 @@ describe('AccountingPostingService.postJournal', () => {
     expect(repository.insertJournalLines).not.toHaveBeenCalled();
   });
 });
+
+describe('AccountingPostingService.reverseJournal', () => {
+  let service: AccountingPostingService;
+  let repository: Record<string, ReturnType<typeof vi.fn>>;
+  const db = {} as any;
+
+  const openPeriod = {
+    id: 7,
+    fiscal_year_id: 1,
+    starts_on: '2026-04-01',
+    ends_on: '2026-04-30',
+    status: 'open' as const,
+    closed_at: null,
+    closed_by_user_id: null,
+  };
+
+  const original = {
+    id: 50,
+    journal_number: 'JRN00000001',
+    entry_date: '2026-04-15',
+    accounting_period_id: 7,
+    source_type: 'sales_invoice',
+    source_id: 42,
+    memo: 'Member invoice',
+    posted_at: new Date('2026-04-15T10:00:00.000Z'),
+    posted_by_user_id: 9,
+    reverses_journal_id: null,
+    row_version: 1,
+    created_at: new Date('2026-04-15T10:00:00.000Z'),
+    updated_at: null,
+    lines: [
+      {
+        id: 1,
+        journal_entry_id: 50,
+        account_id: 1100,
+        debit: '118.00',
+        credit: '0.00',
+        memo: 'AR',
+        member_id: 3,
+        vendor_id: null,
+      },
+      {
+        id: 2,
+        journal_entry_id: 50,
+        account_id: 2200,
+        debit: '0.00',
+        credit: '100.00',
+        memo: 'Unearned',
+        member_id: 3,
+        vendor_id: null,
+      },
+      {
+        id: 3,
+        journal_entry_id: 50,
+        account_id: 2100,
+        debit: '0.00',
+        credit: '9.00',
+        memo: null,
+        member_id: null,
+        vendor_id: null,
+      },
+      {
+        id: 4,
+        journal_entry_id: 50,
+        account_id: 2110,
+        debit: '0.00',
+        credit: '9.00',
+        memo: null,
+        member_id: null,
+        vendor_id: null,
+      },
+    ],
+  };
+
+  beforeEach(() => {
+    repository = {
+      allocateJournalNumber: vi.fn().mockResolvedValue('JRN00000002'),
+      findPeriodForDate: vi.fn().mockResolvedValue(openPeriod),
+      findBySource: vi.fn().mockResolvedValue(null),
+      findEntryWithLines: vi.fn().mockResolvedValue(original),
+      insertJournalEntry: vi.fn().mockImplementation(async (row) => ({
+        id: 51,
+        row_version: 1,
+        created_at: new Date('2026-04-16T10:00:00.000Z'),
+        updated_at: null,
+        ...row,
+      })),
+      insertJournalLines: vi.fn().mockImplementation(async (rows) =>
+        rows.map((row: Record<string, unknown>, index: number) => ({
+          id: 100 + index,
+          ...row,
+        })),
+      ),
+      update: vi.fn(),
+    };
+
+    service = new AccountingPostingService(repository as any, db);
+  });
+
+  it('posts a reversing journal that swaps debit and credit and links reverses_journal_id', async () => {
+    const result = await service.reverseJournal({
+      journalId: 50,
+      entryDate: '2026-04-16',
+      memo: 'Reverse member invoice',
+      postedByUserId: 9,
+    });
+
+    expect(repository.findEntryWithLines).toHaveBeenCalledWith(50);
+    expect(repository.findBySource).toHaveBeenCalledWith('journal_reversal', 50);
+    expect(repository.findPeriodForDate).toHaveBeenCalledWith('2026-04-16');
+    expect(repository.allocateJournalNumber).toHaveBeenCalledOnce();
+    expect(repository.insertJournalEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        journal_number: 'JRN00000002',
+        entry_date: '2026-04-16',
+        accounting_period_id: 7,
+        source_type: 'journal_reversal',
+        source_id: 50,
+        memo: 'Reverse member invoice',
+        posted_by_user_id: 9,
+        reverses_journal_id: 50,
+      }),
+    );
+    expect(repository.insertJournalLines).toHaveBeenCalledWith([
+      expect.objectContaining({
+        journal_entry_id: 51,
+        account_id: 1100,
+        debit: '0.00',
+        credit: '118.00',
+        memo: 'AR',
+        member_id: 3,
+        vendor_id: null,
+      }),
+      expect.objectContaining({
+        journal_entry_id: 51,
+        account_id: 2200,
+        debit: '100.00',
+        credit: '0.00',
+        memo: 'Unearned',
+        member_id: 3,
+        vendor_id: null,
+      }),
+      expect.objectContaining({
+        journal_entry_id: 51,
+        account_id: 2100,
+        debit: '9.00',
+        credit: '0.00',
+      }),
+      expect.objectContaining({
+        journal_entry_id: 51,
+        account_id: 2110,
+        debit: '9.00',
+        credit: '0.00',
+      }),
+    ]);
+    expect(repository.update).not.toHaveBeenCalled();
+    expect(result.id).toBe(51);
+    expect(result.reverses_journal_id).toBe(50);
+    expect(result.lines).toHaveLength(4);
+  });
+
+  it('does not edit the original journal entry or its lines', async () => {
+    await service.reverseJournal({
+      journalId: 50,
+      entryDate: '2026-04-16',
+    });
+
+    expect(repository.update).not.toHaveBeenCalled();
+    expect(repository.insertJournalEntry).toHaveBeenCalledOnce();
+    const inserted = repository.insertJournalEntry.mock.calls[0][0];
+    expect(inserted.reverses_journal_id).toBe(50);
+    expect(inserted.source_id).toBe(50);
+  });
+
+  it('returns the existing reversal on a second reverse and writes nothing new', async () => {
+    const existingReversal = {
+      id: 51,
+      journal_number: 'JRN00000002',
+      entry_date: '2026-04-16',
+      accounting_period_id: 7,
+      source_type: 'journal_reversal',
+      source_id: 50,
+      memo: 'Reverse member invoice',
+      posted_at: new Date('2026-04-16T10:00:00.000Z'),
+      posted_by_user_id: 9,
+      reverses_journal_id: 50,
+      row_version: 1,
+      created_at: new Date('2026-04-16T10:00:00.000Z'),
+      updated_at: null,
+      lines: [
+        { id: 100, journal_entry_id: 51, account_id: 1100, debit: '0.00', credit: '118.00' },
+        { id: 101, journal_entry_id: 51, account_id: 2200, debit: '100.00', credit: '0.00' },
+      ],
+    };
+    repository.findBySource.mockResolvedValue({
+      id: 51,
+      source_type: 'journal_reversal',
+      source_id: 50,
+    });
+    repository.findEntryWithLines
+      .mockResolvedValueOnce(original)
+      .mockResolvedValueOnce(existingReversal);
+
+    const result = await service.reverseJournal({
+      journalId: 50,
+      entryDate: '2026-04-17',
+      memo: 'retry',
+    });
+
+    expect(repository.allocateJournalNumber).not.toHaveBeenCalled();
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+    expect(repository.insertJournalLines).not.toHaveBeenCalled();
+    expect(repository.update).not.toHaveBeenCalled();
+    expect(result).toEqual(existingReversal);
+  });
+
+  it('rejects when the journal to reverse does not exist', async () => {
+    repository.findEntryWithLines.mockResolvedValue(null);
+
+    await expect(
+      service.reverseJournal({
+        journalId: 999,
+        entryDate: '2026-04-16',
+      }),
+    ).rejects.toBeInstanceOf(NotFoundError);
+
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+  });
+
+  it('rejects a reverse whose date falls in a locked period', async () => {
+    repository.findPeriodForDate.mockResolvedValue({
+      ...openPeriod,
+      status: 'locked',
+      closed_at: new Date('2026-05-01T00:00:00.000Z'),
+      closed_by_user_id: 1,
+    });
+
+    await expect(
+      service.reverseJournal({
+        journalId: 50,
+        entryDate: '2026-04-16',
+      }),
+    ).rejects.toBeInstanceOf(BusinessRuleError);
+
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+  });
+});
