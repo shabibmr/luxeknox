@@ -5,6 +5,7 @@ import { seedPermissions } from './permissions';
 import { seedRoles } from './roles';
 import { seedUsers } from './admin';
 import { seedSettings } from './settings';
+import { seedAccounting } from './accounting';
 import { seedNotificationTypes } from './notification-types';
 import { seedExercises } from './exercises';
 import { seedMembershipProducts } from './membership-products';
@@ -27,6 +28,12 @@ export async function runSeeds(): Promise<void> {
 
     console.log('[Seed] Seeding gym settings...');
     await seedSettings(db);
+
+    console.log('[Seed] Seeding accounting chart, tax codes, and fiscal year...');
+    const acct = await seedAccounting(db);
+    console.log(
+      `[Seed] Accounting: ${acct.accounts} accounts, ${acct.taxCodes} tax codes, FY ${acct.fiscalYearLabel}.`,
+    );
 
     console.log('[Seed] Seeding notification types & templates...');
     await seedNotificationTypes(db);

@@ -30,6 +30,21 @@ export const SEED_GYM_SETTINGS: readonly GymSettingDefinition[] = [
     description: 'Applicable GST/VAT tax percentage for invoices',
   },
   {
+    setting_key: 'accounting.posting_enabled',
+    setting_value: 'false',
+    description: 'When true, member sales post automatic journals; default off until go-live',
+  },
+  {
+    setting_key: 'accounting.fiscal_year_start_month',
+    setting_value: '4',
+    description: 'Calendar month (1-12) when the fiscal year starts; default April',
+  },
+  {
+    setting_key: 'accounting.default_tax_code',
+    setting_value: 'gst_18',
+    description: 'Default tax code slug for sales posting (must match tax_codes.code)',
+  },
+  {
     setting_key: 'payments_activate_membership_on_partial',
     setting_value: 'false',
     description: 'When true, POS product_id assign/renew runs on partial invoices; default only when paid',

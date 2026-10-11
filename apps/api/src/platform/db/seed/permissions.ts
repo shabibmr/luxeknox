@@ -101,6 +101,17 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'PAY', action: 'approve', slug: 'payments.approve', description: 'Approve refunds and invoice adjustments' },
   { module: 'PAY', action: 'pos', slug: 'payments.pos', description: 'POS point-of-sale checkout capture' },
 
+  // ACCT — double-entry accounting (admin / super_admin only at seed)
+  { module: 'ACCT', action: 'read', slug: 'accounting.read', description: 'View accounts, journals, documents and reports' },
+  { module: 'ACCT', action: 'accounts_write', slug: 'accounting.accounts_write', description: 'Create and update chart of accounts, tax codes and items' },
+  { module: 'ACCT', action: 'vendors_write', slug: 'accounting.vendors_write', description: 'Create and update vendors' },
+  { module: 'ACCT', action: 'purchases_write', slug: 'accounting.purchases_write', description: 'Create and post purchase bills and debit notes' },
+  { module: 'ACCT', action: 'expenses_write', slug: 'accounting.expenses_write', description: 'Create and post expense vouchers' },
+  { module: 'ACCT', action: 'payments_write', slug: 'accounting.payments_write', description: 'Create and post payment vouchers' },
+  { module: 'ACCT', action: 'journals_write', slug: 'accounting.journals_write', description: 'Create manual journals and opening balances' },
+  { module: 'ACCT', action: 'periods_close', slug: 'accounting.periods_close', description: 'Lock and unlock accounting periods' },
+  { module: 'ACCT', action: 'posting_toggle', slug: 'accounting.posting_toggle', description: 'Enable or disable automatic accounting posting' },
+
   // WORK
   { module: 'WORK', action: 'read', slug: 'workouts.read', description: 'View workout plans and exercise sessions' },
   { module: 'WORK', action: 'write', slug: 'workouts.write', description: 'Create or update workout plans and logs' },

@@ -28,6 +28,8 @@ export const membershipProducts = mysqlTable(
     max_freeze_days: int('max_freeze_days').notNull().default(0),
     pt_sessions_included: int('pt_sessions_included').notNull().default(0),
     access_facilities: json('access_facilities').$type<string[]>(),
+    /** FK to `accounts.id` enforced in SQL; no Drizzle `.references()` (avoids cycle with accounting). */
+    income_account_id: bigint('income_account_id', { mode: 'number', unsigned: true }),
     is_active: boolean('is_active').notNull().default(true),
     created_at: utcDatetime('created_at').notNull(),
     updated_at: utcDatetime('updated_at'),
@@ -35,6 +37,7 @@ export const membershipProducts = mysqlTable(
   (table) => [
     uniqueIndex('membership_products_code_unique').on(table.code),
     index('membership_products_is_active_idx').on(table.is_active),
+    index('membership_products_income_account_id_idx').on(table.income_account_id),
   ],
 );
 

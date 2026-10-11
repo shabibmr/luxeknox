@@ -31,6 +31,8 @@ export const ptProducts = mysqlTable(
     duration_days: int('duration_days').notNull(),
     base_price: decimal('base_price', { precision: 10, scale: 2 }).notNull(),
     tax_percentage: decimal('tax_percentage', { precision: 5, scale: 2 }).notNull().default('0.00'),
+    /** FK to `accounts.id` enforced in SQL; no Drizzle `.references()` (avoids cycle with accounting). */
+    income_account_id: bigint('income_account_id', { mode: 'number', unsigned: true }),
     is_active: boolean('is_active').notNull().default(true),
     created_at: utcDatetime('created_at').notNull(),
     updated_at: utcDatetime('updated_at'),
@@ -38,6 +40,7 @@ export const ptProducts = mysqlTable(
   (table) => [
     uniqueIndex('pt_products_code_unique').on(table.code),
     index('pt_products_is_active_idx').on(table.is_active),
+    index('pt_products_income_account_id_idx').on(table.income_account_id),
   ],
 );
 

@@ -24,5 +24,6 @@ export * from './workout';
 export * from './diet';
 export * from './idempotency';
 export * from './payments';
+export * from './accounting';
 export * from './goals';
 export * from './notifications';

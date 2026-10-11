@@ -40,12 +40,15 @@ export const paymentMethods = mysqlTable(
     method_name: varchar('method_name', { length: 100 }).notNull(),
     is_digital: boolean('is_digital').notNull().default(false),
     is_active: boolean('is_active').notNull().default(true),
+    /** FK to `accounts.id` enforced in SQL; no Drizzle `.references()` (avoids cycle with accounting). */
+    account_id: bigint('account_id', { mode: 'number', unsigned: true }),
     created_at: utcDatetime('created_at').notNull(),
     updated_at: utcDatetime('updated_at'),
   },
   (table) => [
     uniqueIndex('payment_methods_method_name_unique').on(table.method_name),
     index('payment_methods_is_active_idx').on(table.is_active),
+    index('payment_methods_account_id_idx').on(table.account_id),
   ],
 );
 

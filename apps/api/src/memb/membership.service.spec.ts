@@ -61,6 +61,7 @@ function makeProduct(overrides: Partial<MembershipProduct> = {}): MembershipProd
     max_freeze_days: 15,
     pt_sessions_included: 4,
     access_facilities: ['pool'],
+    income_account_id: null,
     is_active: true,
     created_at: new Date('2026-01-01T00:00:00.000Z'),
     updated_at: null,
