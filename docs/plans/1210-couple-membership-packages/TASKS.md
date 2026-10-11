@@ -35,10 +35,10 @@ Derived from [PLAN.md](./PLAN.md).
 - [x] CM-13 FRD, entities doc, ADR-0010, screens doc <!-- id: 13 -->
 
 **Phase 6: Flutter data and domain**
-- [ ] CM-14 Regenerate `packages/api_client` <!-- id: 14 -->
-- [ ] CM-15 `MembershipPackageType` on the product entity and model <!-- id: 15 -->
-- [ ] CM-16 Partner fields on the membership entity and model <!-- id: 16 -->
-- [ ] CM-17 Create params and `GetReplacementPreviewUseCase` <!-- id: 17 -->
+- [x] CM-14 Regenerate `packages/api_client` <!-- id: 14 -->
+- [x] CM-15 `MembershipPackageType` on the product entity and model <!-- id: 15 -->
+- [x] CM-16 Partner fields on the membership entity and model <!-- id: 16 -->
+- [x] CM-17 Create params and `GetReplacementPreviewUseCase` <!-- id: 17 -->
 
 **Phase 7: Flutter UI**
 - [ ] CM-18 Product form Single/Couple toggle and catalog chip <!-- id: 18 -->
@@ -339,7 +339,7 @@ Update these schemas and paths:
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-12 |
 | **Files** | generated `packages/api_client/**` (excluded from the 7-file rule) |
 
@@ -351,7 +351,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-14 |
 | **Files** | `app/lib/features/membership/domain/entities/membership_product.dart`, `data/models/membership_product_model.dart`, and test fixtures that construct `MembershipProduct` |
 
@@ -365,7 +365,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-14 |
 | **Files** | `domain/entities/membership.dart`, `data/models/membership_model.dart`, affected fixtures |
 
@@ -377,7 +377,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-14 |
 | **Files** | `domain/repositories/membership_repository.dart`, `data/repositories/membership_repository_impl.dart`, `data/datasources/membership_remote_datasource.dart`, `domain/usecases/create_membership_usecase.dart`, new `domain/entities/membership_replacement_preview.dart`, new `domain/usecases/get_replacement_preview_usecase.dart` |
 
