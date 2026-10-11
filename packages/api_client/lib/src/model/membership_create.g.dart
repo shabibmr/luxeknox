@@ -19,6 +19,12 @@ class _$MembershipCreate extends MembershipCreate {
   final String? lockerNumber;
   @override
   final bool? autoRenew;
+  @override
+  final int? partnerMemberId;
+  @override
+  final bool? replacePartnerMembership;
+  @override
+  final String? discountAmount;
 
   factory _$MembershipCreate(
           [void Function(MembershipCreateBuilder)? updates]) =>
@@ -30,7 +36,10 @@ class _$MembershipCreate extends MembershipCreate {
       required this.startDate,
       required this.paymentMethodId,
       this.lockerNumber,
-      this.autoRenew})
+      this.autoRenew,
+      this.partnerMemberId,
+      this.replacePartnerMembership,
+      this.discountAmount})
       : super._();
   @override
   MembershipCreate rebuild(void Function(MembershipCreateBuilder) updates) =>
@@ -49,7 +58,10 @@ class _$MembershipCreate extends MembershipCreate {
         startDate == other.startDate &&
         paymentMethodId == other.paymentMethodId &&
         lockerNumber == other.lockerNumber &&
-        autoRenew == other.autoRenew;
+        autoRenew == other.autoRenew &&
+        partnerMemberId == other.partnerMemberId &&
+        replacePartnerMembership == other.replacePartnerMembership &&
+        discountAmount == other.discountAmount;
   }
 
   @override
@@ -61,6 +73,9 @@ class _$MembershipCreate extends MembershipCreate {
     _$hash = $jc(_$hash, paymentMethodId.hashCode);
     _$hash = $jc(_$hash, lockerNumber.hashCode);
     _$hash = $jc(_$hash, autoRenew.hashCode);
+    _$hash = $jc(_$hash, partnerMemberId.hashCode);
+    _$hash = $jc(_$hash, replacePartnerMembership.hashCode);
+    _$hash = $jc(_$hash, discountAmount.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -73,7 +88,10 @@ class _$MembershipCreate extends MembershipCreate {
           ..add('startDate', startDate)
           ..add('paymentMethodId', paymentMethodId)
           ..add('lockerNumber', lockerNumber)
-          ..add('autoRenew', autoRenew))
+          ..add('autoRenew', autoRenew)
+          ..add('partnerMemberId', partnerMemberId)
+          ..add('replacePartnerMembership', replacePartnerMembership)
+          ..add('discountAmount', discountAmount))
         .toString();
   }
 }
@@ -107,6 +125,21 @@ class MembershipCreateBuilder
   bool? get autoRenew => _$this._autoRenew;
   set autoRenew(bool? autoRenew) => _$this._autoRenew = autoRenew;
 
+  int? _partnerMemberId;
+  int? get partnerMemberId => _$this._partnerMemberId;
+  set partnerMemberId(int? partnerMemberId) =>
+      _$this._partnerMemberId = partnerMemberId;
+
+  bool? _replacePartnerMembership;
+  bool? get replacePartnerMembership => _$this._replacePartnerMembership;
+  set replacePartnerMembership(bool? replacePartnerMembership) =>
+      _$this._replacePartnerMembership = replacePartnerMembership;
+
+  String? _discountAmount;
+  String? get discountAmount => _$this._discountAmount;
+  set discountAmount(String? discountAmount) =>
+      _$this._discountAmount = discountAmount;
+
   MembershipCreateBuilder() {
     MembershipCreate._defaults(this);
   }
@@ -120,6 +153,9 @@ class MembershipCreateBuilder
       _paymentMethodId = $v.paymentMethodId;
       _lockerNumber = $v.lockerNumber;
       _autoRenew = $v.autoRenew;
+      _partnerMemberId = $v.partnerMemberId;
+      _replacePartnerMembership = $v.replacePartnerMembership;
+      _discountAmount = $v.discountAmount;
       _$v = null;
     }
     return this;
@@ -151,6 +187,9 @@ class MembershipCreateBuilder
               paymentMethodId, r'MembershipCreate', 'paymentMethodId'),
           lockerNumber: lockerNumber,
           autoRenew: autoRenew,
+          partnerMemberId: partnerMemberId,
+          replacePartnerMembership: replacePartnerMembership,
+          discountAmount: discountAmount,
         );
     replace(_$result);
     return _$result;

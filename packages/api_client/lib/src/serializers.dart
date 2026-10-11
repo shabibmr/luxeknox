@@ -126,10 +126,12 @@ import 'package:api_client/src/model/membership_freeze_page.dart';
 import 'package:api_client/src/model/membership_freeze_write.dart';
 import 'package:api_client/src/model/membership_history.dart';
 import 'package:api_client/src/model/membership_history_page.dart';
+import 'package:api_client/src/model/membership_package_type.dart';
 import 'package:api_client/src/model/membership_page.dart';
 import 'package:api_client/src/model/membership_product.dart';
 import 'package:api_client/src/model/membership_product_page.dart';
 import 'package:api_client/src/model/membership_product_write.dart';
+import 'package:api_client/src/model/membership_replacement_preview.dart';
 import 'package:api_client/src/model/membership_status.dart';
 import 'package:api_client/src/model/notification.dart';
 import 'package:api_client/src/model/notification_page.dart';
@@ -344,10 +346,12 @@ part 'serializers.g.dart';
   MembershipFreezeWrite,
   MembershipHistory,
   MembershipHistoryPage,
+  MembershipPackageType,
   MembershipPage,
   MembershipProduct,
   MembershipProductPage,
   MembershipProductWrite,
+  MembershipReplacementPreview,
   MembershipStatus,
   Notification,
   NotificationPage,

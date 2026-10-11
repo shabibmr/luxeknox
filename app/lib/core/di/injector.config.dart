@@ -231,6 +231,8 @@ import '../../features/membership/domain/usecases/get_membership_usecase.dart'
     as _i71;
 import '../../features/membership/domain/usecases/get_memberships_usecase.dart'
     as _i370;
+import '../../features/membership/domain/usecases/get_replacement_preview_usecase.dart'
+    as _i422;
 import '../../features/membership/domain/usecases/reject_freeze_usecase.dart'
     as _i223;
 import '../../features/membership/domain/usecases/renew_membership_usecase.dart'
@@ -1380,6 +1382,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i370.GetMembershipsUseCase>(
       () => _i370.GetMembershipsUseCase(gh<_i325.MembershipRepository>()),
+    );
+    gh.lazySingleton<_i422.GetReplacementPreviewUseCase>(
+      () =>
+          _i422.GetReplacementPreviewUseCase(gh<_i325.MembershipRepository>()),
     );
     gh.lazySingleton<_i223.RejectFreezeUseCase>(
       () => _i223.RejectFreezeUseCase(gh<_i325.MembershipRepository>()),

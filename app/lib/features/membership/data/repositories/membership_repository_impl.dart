@@ -1,4 +1,5 @@
 import 'package:api_client/api_client.dart' as api;
+import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
@@ -10,6 +11,7 @@ import '../../domain/entities/membership_extension.dart';
 import '../../domain/entities/membership_freeze.dart';
 import '../../domain/entities/membership_history_entry.dart';
 import '../../domain/entities/membership_product.dart';
+import '../../domain/entities/membership_replacement_preview.dart';
 import '../../domain/repositories/membership_repository.dart';
 import '../datasources/membership_remote_datasource.dart';
 import '../models/membership_date.dart';
@@ -18,6 +20,7 @@ import '../models/membership_freeze_model.dart';
 import '../models/membership_history_model.dart';
 import '../models/membership_model.dart';
 import '../models/membership_product_model.dart';
+import '../models/membership_replacement_preview_model.dart';
 
 @LazySingleton(as: MembershipRepository)
 class MembershipRepositoryImpl implements MembershipRepository {
@@ -144,12 +147,20 @@ class MembershipRepositoryImpl implements MembershipRepository {
     required String paymentMethodId,
     String? lockerNumber,
     bool? autoRenew,
+    String? partnerMemberId,
+    bool? replacePartnerMembership,
+    String? discountAmount,
   }) async {
     final memberIntId = _parseId(memberId);
     final productIntId = _parseId(productId);
     final methodIntId = _parseId(paymentMethodId);
     if (memberIntId == null || productIntId == null || methodIntId == null) {
       return const Left(ValidationFailure(['Invalid member, product, or payment method id']));
+    }
+    final partnerIntId =
+        partnerMemberId == null ? null : _parseId(partnerMemberId);
+    if (partnerMemberId != null && partnerIntId == null) {
+      return const Left(ValidationFailure(['Invalid partner member id']));
     }
     try {
       final create = api.MembershipCreate((b) {
@@ -159,10 +170,31 @@ class MembershipRepositoryImpl implements MembershipRepository {
           ..startDate = dateTimeToApiDate(startDate)
           ..paymentMethodId = methodIntId
           ..lockerNumber = lockerNumber
-          ..autoRenew = autoRenew;
+          ..autoRenew = autoRenew
+          ..partnerMemberId = partnerIntId
+          ..replacePartnerMembership = replacePartnerMembership
+          ..discountAmount = discountAmount;
       });
       final created = await _remoteDataSource.createMembership(create);
       return Right(created.toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MembershipReplacementPreview?>> getReplacementPreview(
+    String memberId,
+  ) async {
+    final intId = _parseId(memberId);
+    if (intId == null) return const Left(NotFoundFailure());
+    try {
+      final preview = await _remoteDataSource.getReplacementPreview(intId);
+      return Right(preview.toDomain());
+    } on DioException catch (e) {
+      // 404 means "nothing to replace" - not an error for the caller.
+      if (e.response?.statusCode == 404) return const Right(null);
+      return Left(mapThrownToFailure(e));
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

@@ -1,5 +1,9 @@
 import 'package:equatable/equatable.dart';
 
+/// Whether a package covers one member or two (a couple package's price is
+/// the total for both members).
+enum MembershipPackageType { single, couple }
+
 /// A sellable membership package (FR-MEMB-001). [basePrice] and
 /// [taxPercentage] are decimal strings (FR-API-005) — never parsed to
 /// double for display or storage, only for arithmetic when needed.
@@ -16,6 +20,7 @@ class MembershipProduct extends Equatable {
     this.ptSessionsIncluded,
     this.accessFacilities = const [],
     required this.isActive,
+    this.packageType = MembershipPackageType.single,
   });
 
   final String id;
@@ -29,6 +34,9 @@ class MembershipProduct extends Equatable {
   final int? ptSessionsIncluded;
   final List<String> accessFacilities;
   final bool isActive;
+  final MembershipPackageType packageType;
+
+  bool get isCouple => packageType == MembershipPackageType.couple;
 
   MembershipProduct copyWith({
     String? id,
@@ -42,6 +50,7 @@ class MembershipProduct extends Equatable {
     int? ptSessionsIncluded,
     List<String>? accessFacilities,
     bool? isActive,
+    MembershipPackageType? packageType,
   }) {
     return MembershipProduct(
       id: id ?? this.id,
@@ -55,6 +64,7 @@ class MembershipProduct extends Equatable {
       ptSessionsIncluded: ptSessionsIncluded ?? this.ptSessionsIncluded,
       accessFacilities: accessFacilities ?? this.accessFacilities,
       isActive: isActive ?? this.isActive,
+      packageType: packageType ?? this.packageType,
     );
   }
 
@@ -71,5 +81,6 @@ class MembershipProduct extends Equatable {
     ptSessionsIncluded,
     accessFacilities,
     isActive,
+    packageType,
   ];
 }

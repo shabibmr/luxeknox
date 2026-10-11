@@ -28,6 +28,12 @@ class _$Membership extends Membership {
   @override
   final int rowVersion;
   @override
+  final int? partnerMembershipId;
+  @override
+  final int? partnerMemberId;
+  @override
+  final String? partnerMemberName;
+  @override
   final MembershipProduct? product;
 
   factory _$Membership([void Function(MembershipBuilder)? updates]) =>
@@ -44,6 +50,9 @@ class _$Membership extends Membership {
       this.lockerNumber,
       this.autoRenew,
       required this.rowVersion,
+      this.partnerMembershipId,
+      this.partnerMemberId,
+      this.partnerMemberName,
       this.product})
       : super._();
   @override
@@ -67,6 +76,9 @@ class _$Membership extends Membership {
         lockerNumber == other.lockerNumber &&
         autoRenew == other.autoRenew &&
         rowVersion == other.rowVersion &&
+        partnerMembershipId == other.partnerMembershipId &&
+        partnerMemberId == other.partnerMemberId &&
+        partnerMemberName == other.partnerMemberName &&
         product == other.product;
   }
 
@@ -83,6 +95,9 @@ class _$Membership extends Membership {
     _$hash = $jc(_$hash, lockerNumber.hashCode);
     _$hash = $jc(_$hash, autoRenew.hashCode);
     _$hash = $jc(_$hash, rowVersion.hashCode);
+    _$hash = $jc(_$hash, partnerMembershipId.hashCode);
+    _$hash = $jc(_$hash, partnerMemberId.hashCode);
+    _$hash = $jc(_$hash, partnerMemberName.hashCode);
     _$hash = $jc(_$hash, product.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -101,6 +116,9 @@ class _$Membership extends Membership {
           ..add('lockerNumber', lockerNumber)
           ..add('autoRenew', autoRenew)
           ..add('rowVersion', rowVersion)
+          ..add('partnerMembershipId', partnerMembershipId)
+          ..add('partnerMemberId', partnerMemberId)
+          ..add('partnerMemberName', partnerMemberName)
           ..add('product', product))
         .toString();
   }
@@ -150,6 +168,21 @@ class MembershipBuilder implements Builder<Membership, MembershipBuilder> {
   int? get rowVersion => _$this._rowVersion;
   set rowVersion(int? rowVersion) => _$this._rowVersion = rowVersion;
 
+  int? _partnerMembershipId;
+  int? get partnerMembershipId => _$this._partnerMembershipId;
+  set partnerMembershipId(int? partnerMembershipId) =>
+      _$this._partnerMembershipId = partnerMembershipId;
+
+  int? _partnerMemberId;
+  int? get partnerMemberId => _$this._partnerMemberId;
+  set partnerMemberId(int? partnerMemberId) =>
+      _$this._partnerMemberId = partnerMemberId;
+
+  String? _partnerMemberName;
+  String? get partnerMemberName => _$this._partnerMemberName;
+  set partnerMemberName(String? partnerMemberName) =>
+      _$this._partnerMemberName = partnerMemberName;
+
   MembershipProductBuilder? _product;
   MembershipProductBuilder get product =>
       _$this._product ??= MembershipProductBuilder();
@@ -172,6 +205,9 @@ class MembershipBuilder implements Builder<Membership, MembershipBuilder> {
       _lockerNumber = $v.lockerNumber;
       _autoRenew = $v.autoRenew;
       _rowVersion = $v.rowVersion;
+      _partnerMembershipId = $v.partnerMembershipId;
+      _partnerMemberId = $v.partnerMemberId;
+      _partnerMemberName = $v.partnerMemberName;
       _product = $v.product?.toBuilder();
       _$v = null;
     }
@@ -212,6 +248,9 @@ class MembershipBuilder implements Builder<Membership, MembershipBuilder> {
             autoRenew: autoRenew,
             rowVersion: BuiltValueNullFieldError.checkNotNull(
                 rowVersion, r'Membership', 'rowVersion'),
+            partnerMembershipId: partnerMembershipId,
+            partnerMemberId: partnerMemberId,
+            partnerMemberName: partnerMemberName,
             product: _product?.build(),
           );
     } catch (_) {

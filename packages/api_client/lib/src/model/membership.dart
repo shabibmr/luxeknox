@@ -24,6 +24,9 @@ part 'membership.g.dart';
 /// * [lockerNumber] 
 /// * [autoRenew] 
 /// * [rowVersion] 
+/// * [partnerMembershipId] - Set on both rows of a couple membership.
+/// * [partnerMemberId] 
+/// * [partnerMemberName] 
 /// * [product] 
 @BuiltValue()
 abstract class Membership implements Built<Membership, MembershipBuilder> {
@@ -57,6 +60,16 @@ abstract class Membership implements Built<Membership, MembershipBuilder> {
 
   @BuiltValueField(wireName: r'row_version')
   int get rowVersion;
+
+  /// Set on both rows of a couple membership.
+  @BuiltValueField(wireName: r'partner_membership_id')
+  int? get partnerMembershipId;
+
+  @BuiltValueField(wireName: r'partner_member_id')
+  int? get partnerMemberId;
+
+  @BuiltValueField(wireName: r'partner_member_name')
+  String? get partnerMemberName;
 
   @BuiltValueField(wireName: r'product')
   MembershipProduct? get product;
@@ -140,6 +153,27 @@ class _$MembershipSerializer implements PrimitiveSerializer<Membership> {
       object.rowVersion,
       specifiedType: const FullType(int),
     );
+    if (object.partnerMembershipId != null) {
+      yield r'partner_membership_id';
+      yield serializers.serialize(
+        object.partnerMembershipId,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.partnerMemberId != null) {
+      yield r'partner_member_id';
+      yield serializers.serialize(
+        object.partnerMemberId,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.partnerMemberName != null) {
+      yield r'partner_member_name';
+      yield serializers.serialize(
+        object.partnerMemberName,
+        specifiedType: const FullType(String),
+      );
+    }
     if (object.product != null) {
       yield r'product';
       yield serializers.serialize(
@@ -242,6 +276,30 @@ class _$MembershipSerializer implements PrimitiveSerializer<Membership> {
             specifiedType: const FullType(int),
           ) as int;
           result.rowVersion = valueDes;
+          break;
+        case r'partner_membership_id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.partnerMembershipId = valueDes;
+          break;
+        case r'partner_member_id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.partnerMemberId = valueDes;
+          break;
+        case r'partner_member_name':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.partnerMemberName = valueDes;
           break;
         case r'product':
           final valueDes = serializers.deserialize(

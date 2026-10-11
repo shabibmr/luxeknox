@@ -158,6 +158,7 @@ Class | Method | HTTP request | Description
 [*MEMBApi*](doc/MEMBApi.md) | [**extendMembership**](doc/MEMBApi.md#extendmembership) | **POST** /memberships/{id}/extensions | Grant a compensatory extension
 [*MEMBApi*](doc/MEMBApi.md) | [**getMembership**](doc/MEMBApi.md#getmembership) | **GET** /memberships/{id} | Membership detail
 [*MEMBApi*](doc/MEMBApi.md) | [**getMembershipProduct**](doc/MEMBApi.md#getmembershipproduct) | **GET** /membership-products/{id} | Package detail
+[*MEMBApi*](doc/MEMBApi.md) | [**getMembershipReplacementPreview**](doc/MEMBApi.md#getmembershipreplacementpreview) | **GET** /memberships/replacement-preview | Pro-rated credit preview for replacing a member&#39;s current membership
 [*MEMBApi*](doc/MEMBApi.md) | [**listMembershipFreezes**](doc/MEMBApi.md#listmembershipfreezes) | **GET** /memberships/{id}/freezes | Freeze requests
 [*MEMBApi*](doc/MEMBApi.md) | [**listMembershipHistory**](doc/MEMBApi.md#listmembershiphistory) | **GET** /memberships/{id}/history | Append-only membership history
 [*MEMBApi*](doc/MEMBApi.md) | [**listMembershipProducts**](doc/MEMBApi.md#listmembershipproducts) | **GET** /membership-products | Package catalog
@@ -379,10 +380,12 @@ Class | Method | HTTP request | Description
  - [MembershipFreezeWrite](doc/MembershipFreezeWrite.md)
  - [MembershipHistory](doc/MembershipHistory.md)
  - [MembershipHistoryPage](doc/MembershipHistoryPage.md)
+ - [MembershipPackageType](doc/MembershipPackageType.md)
  - [MembershipPage](doc/MembershipPage.md)
  - [MembershipProduct](doc/MembershipProduct.md)
  - [MembershipProductPage](doc/MembershipProductPage.md)
  - [MembershipProductWrite](doc/MembershipProductWrite.md)
+ - [MembershipReplacementPreview](doc/MembershipReplacementPreview.md)
  - [MembershipStatus](doc/MembershipStatus.md)
  - [Notification](doc/Notification.md)
  - [NotificationPage](doc/NotificationPage.md)
