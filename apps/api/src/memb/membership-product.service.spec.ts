@@ -4,7 +4,7 @@ import type { MembershipProductRepository } from './membership-product.repositor
 import { PaginationHelper } from '../platform/http/pagination';
 import type { AuditService } from '../platform/audit/audit.service';
 import type { PermissionCache } from '../rbac/permission-cache';
-import { ConflictError, NotFoundError } from '../platform/errors/app-error';
+import { BadRequestError, ConflictError, NotFoundError } from '../platform/errors/app-error';
 import type { MembershipProduct } from '../platform/db/schema/memberships';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 
@@ -41,6 +41,7 @@ function makeProduct(overrides: Partial<MembershipProduct> = {}): MembershipProd
     pt_sessions_included: 4,
     access_facilities: ['pool', 'sauna'],
     is_active: true,
+    package_type: 'single',
     created_at: new Date('2026-09-01T00:00:00.000Z'),
     updated_at: null,
     ...overrides,
@@ -82,7 +83,13 @@ describe('MembershipProductService', () => {
 
       await expect(
         service.create(
-          { name: 'Gold Plan', code: 'GOLD', duration_days: 30, base_price: '1299.00' },
+          {
+            name: 'Gold Plan',
+            code: 'GOLD',
+            duration_days: 30,
+            base_price: '1299.00',
+            package_type: 'single',
+          },
           ADMIN_USER,
         ),
       ).rejects.toThrow(ConflictError);
@@ -95,7 +102,13 @@ describe('MembershipProductService', () => {
       vi.mocked(repository.findById!).mockResolvedValue(makeProduct());
 
       await service.create(
-        { name: 'Gold Plan', code: 'GOLD', duration_days: 30, base_price: '1299.00' },
+        {
+          name: 'Gold Plan',
+          code: 'GOLD',
+          duration_days: 30,
+          base_price: '1299.00',
+          package_type: 'single',
+        },
         ADMIN_USER,
       );
 
@@ -105,8 +118,55 @@ describe('MembershipProductService', () => {
           tax_percentage: '0.00',
           max_freeze_days: 0,
           is_active: true,
+          package_type: 'single',
         }),
       );
+    });
+
+    it('creates a single package with package_type "single"', async () => {
+      vi.mocked(repository.findByCode!).mockResolvedValue(null);
+      vi.mocked(repository.insertProduct!).mockResolvedValue(1);
+      vi.mocked(repository.findById!).mockResolvedValue(makeProduct({ package_type: 'single' }));
+
+      const result = await service.create(
+        {
+          name: 'Gold Plan',
+          code: 'GOLD',
+          duration_days: 30,
+          base_price: '1299.00',
+          package_type: 'single',
+        },
+        ADMIN_USER,
+      );
+
+      expect(repository.insertProduct).toHaveBeenCalledWith(
+        expect.objectContaining({ package_type: 'single' }),
+      );
+      expect(result.package_type).toBe('single');
+    });
+
+    it('creates a couple package with package_type "couple"', async () => {
+      vi.mocked(repository.findByCode!).mockResolvedValue(null);
+      vi.mocked(repository.insertProduct!).mockResolvedValue(2);
+      vi.mocked(repository.findById!).mockResolvedValue(
+        makeProduct({ id: 2, code: 'CPL-M', package_type: 'couple' }),
+      );
+
+      const result = await service.create(
+        {
+          name: 'Couple Monthly',
+          code: 'CPL-M',
+          duration_days: 30,
+          base_price: '1999.00',
+          package_type: 'couple',
+        },
+        ADMIN_USER,
+      );
+
+      expect(repository.insertProduct).toHaveBeenCalledWith(
+        expect.objectContaining({ package_type: 'couple' }),
+      );
+      expect(result.package_type).toBe('couple');
     });
   });
 
@@ -133,6 +193,27 @@ describe('MembershipProductService', () => {
       vi.mocked(repository.findByCode!).mockResolvedValue(makeProduct({ id: 2, code: 'SILVER' }));
 
       await expect(service.update(1, { code: 'SILVER' }, ADMIN_USER)).rejects.toThrow(ConflictError);
+    });
+
+    it('rejects changing package_type', async () => {
+      vi.mocked(repository.findById!).mockResolvedValue(makeProduct({ package_type: 'single' }));
+
+      await expect(
+        service.update(1, { package_type: 'couple' }, ADMIN_USER),
+      ).rejects.toThrow(BadRequestError);
+      expect(repository.updateProduct).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('list', () => {
+    it('passes the package_type filter through to the repository', async () => {
+      vi.mocked(repository.findManyFiltered!).mockResolvedValue({ rows: [], total: 0 });
+
+      await service.list({ package_type: 'couple' }, ADMIN_USER);
+
+      expect(repository.findManyFiltered).toHaveBeenCalledWith(
+        expect.objectContaining({ packageType: 'couple' }),
+      );
     });
   });
 });

@@ -16,7 +16,7 @@ Derived from [PLAN.md](./PLAN.md).
 - [x] CM-02 Seed the couple packages and a sample couple pair <!-- id: 2 -->
 
 **Phase 2: Backend product**
-- [ ] CM-03 `package_type` on membership products <!-- id: 3 -->
+- [x] CM-03 `package_type` on membership products <!-- id: 3 -->
 
 **Phase 3: Backend membership core**
 - [ ] CM-04 Repository support for partner links and paired freezes <!-- id: 4 -->
@@ -125,7 +125,7 @@ Reset the local MySQL schema on localhost:3308 (drop and recreate the database),
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-01 |
 | **Files** | `apps/api/src/memb/membership-product.dto.ts`, `membership-product.service.ts`, `membership-product.repository.ts`, `membership-product.controller.ts` (Swagger classes), `membership-product.service.spec.ts` |
 

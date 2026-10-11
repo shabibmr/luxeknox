@@ -11,6 +11,7 @@ import type { DrizzleDb } from '../platform/db/client';
 
 export interface MembershipProductFilterParams {
   q?: string;
+  packageType?: 'single' | 'couple';
   activeOnly: boolean;
   limit: number;
   offset: number;
@@ -47,6 +48,9 @@ export class MembershipProductRepository extends BaseRepository<
       conditions.push(
         or(like(membershipProducts.name, like_), like(membershipProducts.code, like_)) as SQL,
       );
+    }
+    if (params.packageType) {
+      conditions.push(eq(membershipProducts.package_type, params.packageType));
     }
 
     if (conditions.length === 0) {
