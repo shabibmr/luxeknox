@@ -41,8 +41,8 @@ Derived from [PLAN.md](./PLAN.md).
 - [x] CM-17 Create params and `GetReplacementPreviewUseCase` <!-- id: 17 -->
 
 **Phase 7: Flutter UI**
-- [ ] CM-18 Product form Single/Couple toggle and catalog chip <!-- id: 18 -->
-- [ ] CM-19 Member picker `excludeMemberIds` <!-- id: 19 -->
+- [x] CM-18 Product form Single/Couple toggle and catalog chip <!-- id: 18 -->
+- [x] CM-19 Member picker `excludeMemberIds` <!-- id: 19 -->
 - [ ] CM-20 `CreateMembershipBloc` couple state, events and validation <!-- id: 20 -->
 - [ ] CM-21 Create screen: partner picker, replace dialog, discount summary <!-- id: 21 -->
 - [ ] CM-22 Dossier "Couple with <partner>" <!-- id: 22 -->
@@ -395,7 +395,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-15 |
 | **Files** | `presentation/screens/membership_product_form_screen.dart`, `presentation/screens/membership_packages_catalog_screen.dart`, `presentation/membership_strings.dart`, `test/.../membership_product_form_role_variants_test.dart`, `test/.../membership_packages_catalog_role_variants_test.dart` |
 
@@ -409,7 +409,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | — |
 | **Files** | `app/lib/features/people/presentation/widgets/member_picker_sheet.dart`, `app/test/features/people/presentation/member_picker_sheet_test.dart` |
 

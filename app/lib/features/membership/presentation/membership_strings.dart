@@ -52,6 +52,10 @@ class MembershipStrings {
   static const String commaSeparatedHelper = 'Comma-separated';
   static const String active = 'Active';
   static const String activeSubtitle = 'Visible in the sales catalog';
+  static const String packageTypeLabel = 'Package type';
+  static const String packageTypeSingle = 'Single';
+  static const String packageTypeCouple = 'Couple';
+  static const String coupleChip = packageTypeCouple;
 
   static const String statusActive = 'Active';
   static const String statusExpired = 'Expired';

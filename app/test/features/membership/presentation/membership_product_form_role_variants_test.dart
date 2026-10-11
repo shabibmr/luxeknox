@@ -304,4 +304,87 @@ void main() {
     expect(taxField.controller?.text, '18.00');
     expect(find.text(MembershipStrings.taxPercentageInvalid), findsNothing);
   });
+
+  testWidgets('create form shows enabled Single/Couple package type toggle', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(adminPrincipal, const Capabilities(slugs: ['memberships.create'])),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SegmentedButton<MembershipPackageType>), findsOneWidget);
+    expect(find.text(MembershipStrings.packageTypeSingle), findsOneWidget);
+    expect(find.text(MembershipStrings.packageTypeCouple), findsOneWidget);
+
+    final toggle = tester.widget<SegmentedButton<MembershipPackageType>>(
+      find.byType(SegmentedButton<MembershipPackageType>),
+    );
+    expect(toggle.onSelectionChanged, isNotNull);
+    expect(toggle.selected, equals({MembershipPackageType.single}));
+  });
+
+  testWidgets('edit form shows disabled package type toggle from product', (
+    tester,
+  ) async {
+    const coupleProduct = MembershipProduct(
+      id: '10',
+      name: 'Gold Couple',
+      code: 'GOLD-C',
+      durationDays: 30,
+      basePrice: '149.00',
+      isActive: true,
+      packageType: MembershipPackageType.couple,
+    );
+
+    await tester.pumpWidget(
+      wrap(
+        adminPrincipal,
+        const Capabilities(slugs: ['memberships.update']),
+        product: coupleProduct,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final toggle = tester.widget<SegmentedButton<MembershipPackageType>>(
+      find.byType(SegmentedButton<MembershipPackageType>),
+    );
+    expect(toggle.onSelectionChanged, isNull);
+    expect(toggle.selected, equals({MembershipPackageType.couple}));
+  });
+
+  testWidgets('create submits selected couple package type', (tester) async {
+    MembershipProduct? captured;
+    when(() => cubit.create(any())).thenAnswer((invocation) async {
+      captured = invocation.positionalArguments.first as MembershipProduct;
+    });
+
+    await tester.pumpWidget(
+      wrap(adminPrincipal, const Capabilities(slugs: ['memberships.create'])),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, MembershipStrings.nameLabel),
+      'Couple Monthly',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, MembershipStrings.durationDaysLabel),
+      '30',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, MembershipStrings.basePriceLabel),
+      '199.00',
+    );
+
+    await tester.tap(find.text(MembershipStrings.packageTypeCouple));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text(MembershipStrings.save));
+    await tester.tap(find.text(MembershipStrings.save));
+    await tester.pumpAndSettle();
+
+    expect(captured, isNotNull);
+    expect(captured!.packageType, MembershipPackageType.couple);
+  });
 }
