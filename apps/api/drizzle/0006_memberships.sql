@@ -15,11 +15,13 @@ CREATE TABLE IF NOT EXISTS `membership_products` (
   `max_freeze_days` INT NOT NULL DEFAULT 0,
   `pt_sessions_included` INT NOT NULL DEFAULT 0,
   `access_facilities` JSON NULL,
+  `package_type` VARCHAR(16) NOT NULL,
   `is_active` BOOLEAN NOT NULL DEFAULT TRUE,
   `created_at` DATETIME(3) NOT NULL,
   `updated_at` DATETIME(3) NULL,
   UNIQUE KEY `membership_products_code_unique` (`code`),
-  KEY `membership_products_is_active_idx` (`is_active`)
+  KEY `membership_products_is_active_idx` (`is_active`),
+  CONSTRAINT `membership_products_package_type_check` CHECK (`package_type` IN ('single', 'couple'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `memberships` (
@@ -32,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `memberships` (
   `status` VARCHAR(16) NOT NULL DEFAULT 'active',
   `locker_number` VARCHAR(16) NULL,
   `auto_renew` BOOLEAN NOT NULL DEFAULT FALSE,
+  `partner_membership_id` BIGINT UNSIGNED NULL,
   `row_version` INT NOT NULL DEFAULT 1,
   `created_at` DATETIME(3) NOT NULL,
   `updated_at` DATETIME(3) NULL,
@@ -39,8 +42,10 @@ CREATE TABLE IF NOT EXISTS `memberships` (
   KEY `memberships_status_idx` (`status`),
   KEY `memberships_end_date_idx` (`end_date`),
   KEY `memberships_locker_number_idx` (`locker_number`),
+  KEY `memberships_partner_membership_id_idx` (`partner_membership_id`),
   CONSTRAINT `memberships_member_id_fk` FOREIGN KEY (`member_id`) REFERENCES `members` (`id`),
-  CONSTRAINT `memberships_product_id_fk` FOREIGN KEY (`product_id`) REFERENCES `membership_products` (`id`)
+  CONSTRAINT `memberships_product_id_fk` FOREIGN KEY (`product_id`) REFERENCES `membership_products` (`id`),
+  CONSTRAINT `memberships_partner_membership_id_fk` FOREIGN KEY (`partner_membership_id`) REFERENCES `memberships` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `membership_freezes` (
@@ -53,11 +58,14 @@ CREATE TABLE IF NOT EXISTS `membership_freezes` (
   `status` VARCHAR(16) NOT NULL DEFAULT 'pending',
   `reviewed_by_user_id` BIGINT UNSIGNED NULL,
   `reviewed_at` DATETIME(3) NULL,
+  `paired_freeze_id` BIGINT UNSIGNED NULL,
   `created_at` DATETIME(3) NOT NULL,
   KEY `membership_freezes_membership_id_idx` (`membership_id`),
   KEY `membership_freezes_status_idx` (`status`),
+  KEY `membership_freezes_paired_freeze_id_idx` (`paired_freeze_id`),
   CONSTRAINT `membership_freezes_membership_id_fk` FOREIGN KEY (`membership_id`) REFERENCES `memberships` (`id`),
-  CONSTRAINT `membership_freezes_reviewed_by_user_id_fk` FOREIGN KEY (`reviewed_by_user_id`) REFERENCES `users` (`id`)
+  CONSTRAINT `membership_freezes_reviewed_by_user_id_fk` FOREIGN KEY (`reviewed_by_user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `membership_freezes_paired_freeze_id_fk` FOREIGN KEY (`paired_freeze_id`) REFERENCES `membership_freezes` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `membership_extensions` (

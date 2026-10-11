@@ -1,4 +1,5 @@
 import {
+  type AnyMySqlColumn,
   bigint,
   boolean,
   date,
@@ -28,6 +29,7 @@ export const membershipProducts = mysqlTable(
     max_freeze_days: int('max_freeze_days').notNull().default(0),
     pt_sessions_included: int('pt_sessions_included').notNull().default(0),
     access_facilities: json('access_facilities').$type<string[]>(),
+    package_type: varchar('package_type', { length: 16 }).notNull().$type<'single' | 'couple'>(),
     is_active: boolean('is_active').notNull().default(true),
     created_at: utcDatetime('created_at').notNull(),
     updated_at: utcDatetime('updated_at'),
@@ -57,6 +59,9 @@ export const memberships = mysqlTable(
     status: varchar('status', { length: 16 }).notNull().default('active'),
     locker_number: varchar('locker_number', { length: 16 }),
     auto_renew: boolean('auto_renew').notNull().default(false),
+    partner_membership_id: bigint('partner_membership_id', { mode: 'number', unsigned: true }).references(
+      (): AnyMySqlColumn => memberships.id,
+    ),
     row_version: int('row_version').notNull().default(1),
     created_at: utcDatetime('created_at').notNull(),
     updated_at: utcDatetime('updated_at'),
@@ -66,6 +71,7 @@ export const memberships = mysqlTable(
     index('memberships_status_idx').on(table.status),
     index('memberships_end_date_idx').on(table.end_date),
     index('memberships_locker_number_idx').on(table.locker_number),
+    index('memberships_partner_membership_id_idx').on(table.partner_membership_id),
   ],
 );
 
@@ -88,11 +94,15 @@ export const membershipFreezes = mysqlTable(
       () => users.id,
     ),
     reviewed_at: utcDatetime('reviewed_at'),
+    paired_freeze_id: bigint('paired_freeze_id', { mode: 'number', unsigned: true }).references(
+      (): AnyMySqlColumn => membershipFreezes.id,
+    ),
     created_at: utcDatetime('created_at').notNull(),
   },
   (table) => [
     index('membership_freezes_membership_id_idx').on(table.membership_id),
     index('membership_freezes_status_idx').on(table.status),
+    index('membership_freezes_paired_freeze_id_idx').on(table.paired_freeze_id),
   ],
 );
 
