@@ -1,6 +1,6 @@
 # Entities List
 
-Canonical physical names: [`database-entities.md`](./database-entities.md) (56 tables).
+Canonical physical names: [`database-entities.md`](./database-entities.md) (82 tables).
 
 ## 1. Master Entities
 - User
@@ -12,6 +12,7 @@ Canonical physical names: [`database-entities.md`](./database-entities.md) (56 t
 - Member
 - Trainer
 - Membership Product
+- PT Product
 - Exercise
 - Food
 - Goal Metric *(also “Measurement Type”)*
@@ -33,6 +34,7 @@ Canonical physical names: [`database-entities.md`](./database-entities.md) (56 t
 - Membership History
 - Membership Freeze
 - Membership Extension
+- PT Product
 
 ## 4. Attendance
 - Attendance *(per check-in/out)*
@@ -79,3 +81,24 @@ Canonical physical names: [`database-entities.md`](./database-entities.md) (56 t
 
 ## 11. System / Audit
 - Audit Log
+
+## 12. Accounting
+- Account
+- Fiscal Year
+- Accounting Period
+- Tax Code
+- Tax Code Component
+- Vendor
+- Item
+- Journal Entry
+- Journal Line
+- Purchase Bill
+- Purchase Bill Line
+- Expense Voucher
+- Expense Voucher Line
+- Payment Voucher
+- Payment Allocation
+- Credit Note
+- Debit Note
+- Revenue Recognition Schedule
+- Revenue Recognition Line

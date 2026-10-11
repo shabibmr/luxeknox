@@ -4,7 +4,7 @@ This document is the **table catalog** for the relational model that supports al
 
 It lists tables, purpose, screen links, and key attributes. It is **not** a physical DDL file. Types, uniqueness, and versioning rules are in [Schema notes](#schema-notes). Functional behaviour lives in [`backend-frd.md`](./backend-frd.md).
 
-**Table count:** 56.
+**Table count:** 82.
 
 ---
 
@@ -20,10 +20,10 @@ It lists tables, purpose, screen links, and key attributes. It is **not** a phys
 ## Entity Count by Domain
 
 ```mermaid
-pie title Database Entities Distribution (56 Tables)
+pie title Database Entities Distribution (82 Tables)
     "Users, Roles & Profiles (8)" : 8
     "Health & Medical (6)" : 6
-    "Membership & Products (5)" : 5
+    "Membership & Products (6)" : 6
     "Scheduling & Availability (6)" : 6
     "Attendance Tracking (2)" : 2
     "Billing & Payments (4)" : 4
@@ -32,13 +32,14 @@ pie title Database Entities Distribution (56 Tables)
     "Goals & Progress (7)" : 7
     "Notifications & Devices (4)" : 4
     "Settings & System Audit (2)" : 2
+    "Accounting (25)" : 25
 ```
 
 | Domain | Tables |
 | :--- | ---: |
 | Users, Roles & Profiles | 8 |
 | Health & Medical | 6 |
-| Membership & Products | 5 |
+| Membership & Products | 6 |
 | Scheduling & Availability | 6 |
 | Attendance | 2 |
 | Billing & Payments | 4 |
@@ -47,7 +48,8 @@ pie title Database Entities Distribution (56 Tables)
 | Goals & Progress | 7 |
 | Notifications | 4 |
 | Settings & Audit | 2 |
-| **Total** | **56** |
+| Accounting | 25 |
+| **Total** | **82** |
 
 ---
 
@@ -157,7 +159,13 @@ pie title Database Entities Distribution (56 Tables)
 
 * **Purpose**: Catalog of sellable membership packages and tiers.
 * **Supporting Screens**: Membership Packages Catalog, Membership Details.
-* **Key Attributes**: `id`, `name`, `code`, `description`, `duration_days`, `base_price`, `tax_percentage`, `max_freeze_days`, `pt_sessions_included`, `access_facilities` (JSON), `is_active`.
+* **Key Attributes**: `id`, `name`, `code`, `description`, `duration_days`, `base_price`, `tax_percentage`, `max_freeze_days`, `pt_sessions_included`, `access_facilities` (JSON), `is_active`, `income_account_id` (FK to `accounts`, nullable — overrides default earned-revenue account when set).
+
+### `pt_products`
+
+* **Purpose**: Personal Training package catalog ([ADR-0009](./adr/0009-personal-training-subscriptions.md)). Full PT tables live in `schema/personal-training.ts`; this row is listed here for the accounting alter.
+* **Supporting Screens**: PT package admin, PT sale.
+* **Key Attributes**: `id`, `name`, `code`, `duration_days`, `sessions_per_week`, `price`, `is_active`, `income_account_id` (FK to `accounts`, nullable — same pattern as `membership_products.income_account_id`).
 
 ### `memberships`
 
@@ -247,7 +255,7 @@ pie title Database Entities Distribution (56 Tables)
 
 * **Purpose**: Master payment methods (Cash, Card, UPI, Bank Transfer).
 * **Supporting Screens**: Record Payment / POS Screen.
-* **Key Attributes**: `id`, `method_name`, `is_digital`, `is_active`.
+* **Key Attributes**: `id`, `method_name`, `is_digital`, `is_active`, `account_id` (FK to `accounts`, nullable — required on active methods before `accounting.posting_enabled` can be turned on).
 
 ### `payments` (Invoices)
 
@@ -435,13 +443,164 @@ Same versioning rule as workouts: meals (and their foods) hang off `diet_plan_ve
 
 * **Purpose**: Facility operating parameters and configuration flags.
 * **Supporting Screens**: Gym & Hardware Settings.
-* **Key Attributes**: `id`, `setting_key`, `setting_value`, `category` (general, membership, attendance_gate, booking_rules, billing, workout, diet, notification, measurement).
+* **Key Attributes**: `id`, `setting_key`, `setting_value`, `category` (general, membership, attendance_gate, booking_rules, billing, workout, diet, notification, measurement, accounting).
+* **Accounting keys** (defaults): `accounting.posting_enabled` (`false`), `accounting.fiscal_year_start_month` (`4`), `accounting.default_tax_code` (seeded GST 18% code).
 
 ### `audit_logs`
 
 * **Purpose**: Immutable security audit trail for administrative operations. Append-only; no update/delete API.
 * **Supporting Screens**: Admin Security Audit.
 * **Key Attributes**: `id`, `actor_user_id` (FK), `action`, `entity_name`, `entity_id`, `before_state` (JSON), `after_state` (JSON), `ip_address`, `timestamp`.
+
+---
+
+## 12. Accounting
+
+Double-entry books for one gym ([ADR-0010](./adr/0010-accounting-ledger.md)). The general ledger is posted `journal_lines`. Member sales stay on `payments` / `payment_histories`; accounting posts journals from those rows when `accounting.posting_enabled` is true. Physical names below are the contract for `apps/api/src/platform/db/schema/accounting.ts` (Phase 1).
+
+### `accounts`
+
+* **Purpose**: Chart of accounts.
+* **Supporting Screens**: Accounting home, Chart of accounts, journals, documents, reports.
+* **Key Attributes**: `id`, `code`, `name`, `account_type` (asset, liability, equity, income, expense), `parent_id` (FK nullable), `is_active`, `is_bank`, `is_control`, `control_role` (ar, ap, unearned_membership, unearned_pt, output_cgst, output_sgst, output_igst, input_tax, discounts, null), `created_at`, `updated_at`.
+
+### `fiscal_years`
+
+* **Purpose**: Named fiscal year window (default India April–March).
+* **Supporting Screens**: Period list.
+* **Key Attributes**: `id`, `label`, `starts_on`, `ends_on`.
+
+### `accounting_periods`
+
+* **Purpose**: Month periods inside a fiscal year; only open periods accept posts.
+* **Supporting Screens**: Period list with lock.
+* **Key Attributes**: `id`, `fiscal_year_id` (FK), `starts_on`, `ends_on`, `status` (open, locked), `closed_at`, `closed_by_user_id` (FK nullable).
+
+### `tax_codes`
+
+* **Purpose**: Tax rate header used on purchase/expense lines and as the gym default for sales posts.
+* **Supporting Screens**: Tax codes, purchase bills, expenses, items.
+* **Key Attributes**: `id`, `name`, `code` (slug), `rate_percent`, `is_active`.
+
+### `tax_code_components`
+
+* **Purpose**: Split a tax code into ledger components (e.g. CGST 9 + SGST 9).
+* **Supporting Screens**: Tax codes.
+* **Key Attributes**: `id`, `tax_code_id` (FK), `name`, `rate_percent`, `output_account_id` (FK), `input_account_id` (FK).
+
+### `vendors`
+
+* **Purpose**: Purchase and expense payees (members remain the sales party).
+* **Supporting Screens**: Vendor list and form, purchase bills, expenses.
+* **Key Attributes**: `id`, `name`, `phone`, `email`, `gstin`, `is_active`, `created_at`, `updated_at`.
+
+### `items`
+
+* **Purpose**: Billable purchase/sale catalog lines for accounting documents. Inventory stays off until a later module.
+* **Supporting Screens**: Items, purchase bill lines.
+* **Key Attributes**: `id`, `name`, `item_kind` (service, goods), `inventory_tracked` (default false), `income_account_id` (FK), `expense_account_id` (FK), `tax_code_id` (FK nullable), `is_active`.
+
+### `journal_entries`
+
+* **Purpose**: Posted journal header. Immutable after post; corrections are reversing journals.
+* **Supporting Screens**: Journal list, detail, manual entry, day book.
+* **Key Attributes**: `id`, `journal_number`, `entry_date`, `accounting_period_id` (FK), `source_type` (sales_invoice, sales_receipt, credit_note, purchase_bill, expense_voucher, payment_voucher, debit_note, revenue_recognition, manual, opening_balance), `source_id`, `memo`, `posted_at`, `posted_by_user_id` (FK), `reverses_journal_id` (FK nullable), `row_version`, `created_at`, `updated_at`.
+
+### `journal_lines`
+
+* **Purpose**: General ledger lines. Debit and credit are separate positive `DECIMAL(12,2)` columns; a line carries exactly one side.
+* **Supporting Screens**: Journal detail, trial balance, profit and loss, balance sheet.
+* **Key Attributes**: `id`, `journal_entry_id` (FK), `account_id` (FK), `debit`, `credit`, `memo`, `member_id` (FK nullable), `vendor_id` (FK nullable).
+
+### `purchase_bills`
+
+* **Purpose**: Vendor bill draft/posted document.
+* **Supporting Screens**: Purchase bill list, form, detail, post.
+* **Key Attributes**: `id`, `bill_number`, `vendor_id` (FK), `bill_date`, `due_date`, `status` (draft, posted, void), `subtotal`, `tax_amount`, `total_amount`, `journal_entry_id` (FK nullable), `row_version`, `created_at`, `updated_at`.
+
+### `purchase_bill_lines`
+
+* **Purpose**: Lines on a purchase bill.
+* **Supporting Screens**: Purchase bill form and detail.
+* **Key Attributes**: `id`, `purchase_bill_id` (FK), `item_id` (FK nullable), `account_id` (FK), `description`, `quantity`, `rate`, `tax_code_id` (FK nullable), `net_amount`, `tax_amount`.
+
+### `expense_vouchers`
+
+* **Purpose**: Expense document. Credit expenses post to payable; cash expenses credit bank/cash directly.
+* **Supporting Screens**: Expense list, form, detail, post.
+* **Key Attributes**: `id`, `expense_number`, `vendor_id` (FK nullable), `payee_name`, `expense_date`, `paid_from_account_id` (FK nullable), `status` (draft, posted, void), `subtotal`, `tax_amount`, `total_amount`, `journal_entry_id` (FK nullable), `row_version`, `created_at`, `updated_at`.
+
+### `expense_voucher_lines`
+
+* **Purpose**: Lines on an expense voucher.
+* **Supporting Screens**: Expense form and detail.
+* **Key Attributes**: `id`, `expense_voucher_id` (FK), `account_id` (FK), `description`, `amount`, `tax_code_id` (FK nullable), `tax_amount`.
+
+### `payment_vouchers`
+
+* **Purpose**: Money-out voucher allocating cash/bank against open bills or expenses.
+* **Supporting Screens**: Payment voucher list, form, post.
+* **Key Attributes**: `id`, `voucher_number`, `payment_date`, `bank_account_id` (FK), `total_amount`, `memo`, `status` (draft, posted, void), `journal_entry_id` (FK nullable), `row_version`, `created_at`, `updated_at`.
+
+### `payment_allocations`
+
+* **Purpose**: Links a payment voucher to a purchase bill or expense voucher for an amount.
+* **Supporting Screens**: Payment voucher form.
+* **Key Attributes**: `id`, `payment_voucher_id` (FK), `purchase_bill_id` (FK nullable), `expense_voucher_id` (FK nullable), `amount`.
+
+### `credit_notes`
+
+* **Purpose**: Member sales credit note (refund path from `payment_histories.action = refunded`).
+* **Supporting Screens**: Credit note detail.
+* **Key Attributes**: `id`, `credit_note_number`, `payment_id` (FK), `credit_note_date`, `reason`, `subtotal`, `tax_amount`, `total_amount`, `status` (draft, posted, void), `journal_entry_id` (FK nullable), `row_version`, `created_at`, `updated_at`.
+
+### `debit_notes`
+
+* **Purpose**: Vendor debit note against a posted purchase bill.
+* **Supporting Screens**: Debit note detail.
+* **Key Attributes**: `id`, `debit_note_number`, `purchase_bill_id` (FK), `debit_note_date`, `reason`, `subtotal`, `tax_amount`, `total_amount`, `status` (draft, posted, void), `journal_entry_id` (FK nullable), `row_version`, `created_at`, `updated_at`.
+
+### `revenue_recognition_schedules`
+
+* **Purpose**: Straight-line recognition of unearned membership or PT income over a term.
+* **Supporting Screens**: Accounting home / recognition job results via journals.
+* **Key Attributes**: `id`, `payment_id` (FK), `unearned_account_id` (FK), `income_account_id` (FK), `total_amount`, `recognized_amount`, `starts_on`, `ends_on`.
+
+### `revenue_recognition_lines`
+
+* **Purpose**: One recognition posting per schedule per period.
+* **Supporting Screens**: Journal detail (via `journal_entry_id`).
+* **Key Attributes**: `id`, `schedule_id` (FK), `accounting_period_id` (FK), `amount`, `journal_entry_id` (FK nullable).
+
+### `journal_number_counters`
+
+* **Purpose**: Single-row sequence for `journal_entries.journal_number` (same shape as `invoice_number_counters`).
+* **Key Attributes**: `id`, `next_value`.
+
+### `purchase_bill_number_counters`
+
+* **Purpose**: Single-row sequence for purchase bill numbers.
+* **Key Attributes**: `id`, `next_value`.
+
+### `expense_voucher_number_counters`
+
+* **Purpose**: Single-row sequence for expense voucher numbers.
+* **Key Attributes**: `id`, `next_value`.
+
+### `payment_voucher_number_counters`
+
+* **Purpose**: Single-row sequence for payment voucher numbers.
+* **Key Attributes**: `id`, `next_value`.
+
+### `credit_note_number_counters`
+
+* **Purpose**: Single-row sequence for credit note numbers.
+* **Key Attributes**: `id`, `next_value`.
+
+### `debit_note_number_counters`
+
+* **Purpose**: Single-row sequence for debit note numbers.
+* **Key Attributes**: `id`, `next_value`.
 
 ---
 
@@ -460,7 +619,7 @@ This section is the contract implementers should follow when writing DDL. It doe
 | Files | Store external `https` URL / object key only (`file_url`, `photo_url`, `receipt_pdf_url`, media URLs). Never `BLOB`. Bytes live in external object storage. |
 | Authentication | Opaque bearer tokens (`gk_at_` 30 min, `gk_rt_` 30 days) hashed at rest with SHA-256 in `sessions`. No JWT; no `users.token_version`. Immediate revocation on logout, suspend, or password change; refresh token family reuse detection. |
 | Collation / Search | `utf8mb4` / `utf8mb4_0900_ai_ci` accent- and case-insensitive collation (FR-API-014). |
-| Concurrency | Optimistic locking via `row_version INT UNSIGNED` on mutable core entities (`schedules`, `memberships`, `payments`, plans). |
+| Concurrency | Optimistic locking via `row_version INT UNSIGNED` on mutable core entities (`schedules`, `memberships`, `payments`, plans, accounting document headers, `journal_entries`). |
 | Isolation | `READ-COMMITTED` transaction isolation with `binlog_format = ROW`. |
 | JSON | `specializations`, `secondary_muscles`, `access_facilities`, `data_payload`, audit before/after. |
 
@@ -486,6 +645,15 @@ This section is the contract implementers should follow when writing DDL. It doe
 | `permissions` | `slug` |
 | `emergency_contacts` | at most one `is_primary = true` per `user_id` (stored generated column unique) |
 | `user_devices` | `device_token` |
+| `accounts` | `code` |
+| `tax_codes` | `code` |
+| `journal_entries` | `journal_number`; unique (`source_type`, `source_id`) |
+| `purchase_bills` | `bill_number` |
+| `expense_vouchers` | `expense_number` |
+| `payment_vouchers` | `voucher_number` |
+| `credit_notes` | `credit_note_number` |
+| `debit_notes` | `debit_note_number` |
+| `accounting_periods` | (`fiscal_year_id`, `starts_on`) |
 
 At most one `users` row maps to one of `members` / `trainers` / `employees`, matching `user_type`. A member has at most one membership in `active` or `frozen`.
 
@@ -508,6 +676,15 @@ plan 1──* versions 1──* line items
 * `payments` = invoice header (`total_amount`, `amount_paid`, status).
 * One method covering the whole invoice: set `payments.payment_method_id` and write one `payment_histories` row.
 * Split tender: leave `payments.payment_method_id` null; each `payment_histories` row (`action = payment_received`) has its own `payment_method_id`. `amount_paid` is the sum of received minus refunded.
+
+### Accounting ledger
+
+* Posted `journal_lines` are the general ledger ([ADR-0010](./adr/0010-accounting-ledger.md)). Reports aggregate those lines.
+* One journal per source: unique (`source_type`, `source_id`). Replay returns the original journal.
+* Posted journals are immutable; corrections are reversing journals (`reverses_journal_id`).
+* `accounting.posting_enabled` gates automatic posts from `payments` / `payment_histories`. While false, payments behave as today.
+* AR and AP are open invoices and unpaid bills on control accounts — not separate balance tables.
+* `pt_products.income_account_id` follows the same nullable FK pattern as `membership_products.income_account_id` ([ADR-0009](./adr/0009-personal-training-subscriptions.md)).
 
 ### Attendance
 
