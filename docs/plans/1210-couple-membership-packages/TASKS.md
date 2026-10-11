@@ -31,8 +31,8 @@ Derived from [PLAN.md](./PLAN.md).
 - [x] CM-11 `/payments` path: renew both, reject a new couple purchase <!-- id: 11 -->
 
 **Phase 5: Contract and docs**
-- [ ] CM-12 OpenAPI `v1.yaml` and the parity check <!-- id: 12 -->
-- [ ] CM-13 FRD, entities doc, ADR-0010, screens doc <!-- id: 13 -->
+- [x] CM-12 OpenAPI `v1.yaml` and the parity check <!-- id: 12 -->
+- [x] CM-13 FRD, entities doc, ADR-0010, screens doc <!-- id: 13 -->
 
 **Phase 6: Flutter data and domain**
 - [ ] CM-14 Regenerate `packages/api_client` <!-- id: 14 -->
@@ -305,7 +305,7 @@ Steps:
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | Shapes from CM-03, CM-05, CM-06, CM-07 (can be written contract-first) |
 | **Files** | `docs/openapi/v1.yaml` |
 
@@ -321,7 +321,7 @@ Update these schemas and paths:
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-07 |
 | **Files** | `docs/backend-frd.md`, `docs/database-entities.md`, `docs/adr/0010-couple-memberships.md`, `docs/adr/README.md`, `docs/screens/admin-app-screens.md` |
 

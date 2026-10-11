@@ -157,19 +157,19 @@ pie title Database Entities Distribution (56 Tables)
 
 * **Purpose**: Catalog of sellable membership packages and tiers.
 * **Supporting Screens**: Membership Packages Catalog, Membership Details.
-* **Key Attributes**: `id`, `name`, `code`, `description`, `duration_days`, `base_price`, `tax_percentage`, `max_freeze_days`, `pt_sessions_included`, `access_facilities` (JSON), `is_active`.
+* **Key Attributes**: `id`, `name`, `code`, `description`, `package_type` (`single` | `couple`, immutable), `duration_days`, `base_price`, `tax_percentage`, `max_freeze_days`, `pt_sessions_included`, `access_facilities` (JSON), `is_active`.
 
 ### `memberships`
 
 * **Purpose**: Contract instance purchased by a member (not only the currently active one).
 * **Supporting Screens**: Membership Details & Status, Memberships Directory, Dashboard.
-* **Key Attributes**: `id`, `member_id` (FK), `product_id` (FK), `start_date`, `end_date`, `remaining_pt_sessions`, `status` (active, expired, frozen, cancelled), `locker_number`, `auto_renew`.
+* **Key Attributes**: `id`, `member_id` (FK), `product_id` (FK), `start_date`, `end_date`, `remaining_pt_sessions`, `status` (active, expired, frozen, cancelled), `locker_number`, `auto_renew`, `partner_membership_id` (self-FK, nullable; set on both rows of a couple membership, see ADR-0010).
 
 ### `membership_freezes`
 
 * **Purpose**: Membership hold/pause requests and approvals.
 * **Supporting Screens**: Freeze & Extension Manager, Membership Details.
-* **Key Attributes**: `id`, `membership_id` (FK), `start_date`, `end_date`, `total_freeze_days`, `reason`, `status` (pending, approved, rejected), `reviewed_by_user_id` (FK), `reviewed_at`.
+* **Key Attributes**: `id`, `membership_id` (FK), `start_date`, `end_date`, `total_freeze_days`, `reason`, `status` (pending, approved, rejected), `reviewed_by_user_id` (FK), `reviewed_at`, `paired_freeze_id` (self-FK, nullable; links the twin freeze of a couple membership).
 
 ### `membership_extensions`
 

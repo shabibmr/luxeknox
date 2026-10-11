@@ -2303,6 +2303,35 @@ paths:
           $ref: "#/components/responses/Error422"
         "429":
           $ref: "#/components/responses/Error429"
+  /memberships/replacement-preview:
+    get:
+      operationId: getMembershipReplacementPreview
+      summary: Pro-rated credit preview for replacing a member's current membership
+      tags: [MEMB]
+      x-status: mvp
+      x-parity: required
+      x-permission: memberships.create
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: member_id, in: query, required: true, schema: { type: integer, format: int64 } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MembershipReplacementPreview"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "429":
+          $ref: "#/components/responses/Error429"
   /memberships/{id}:
     get:
       operationId: getMembership
@@ -7717,7 +7746,7 @@ components:
           $ref: "#/components/schemas/PageMeta"
     MembershipProduct:
       type: object
-      required: [id, name, code, duration_days, base_price, is_active]
+      required: [id, name, code, package_type, duration_days, base_price, is_active]
       properties:
         id:
           $ref: "#/components/schemas/Id"
@@ -7725,6 +7754,8 @@ components:
           type: string
         code:
           type: string
+        package_type:
+          $ref: "#/components/schemas/MembershipPackageType"
         description:
           type: string
           nullable: true
@@ -7744,10 +7775,16 @@ components:
             type: string
         is_active:
           type: boolean
+    MembershipPackageType:
+      type: string
+      enum: [single, couple]
+      description: A couple package is sold to two members; base_price is the total for both.
     MembershipProductWrite:
       type: object
-      required: [name, code, duration_days, base_price]
+      required: [name, code, package_type, duration_days, base_price]
       properties:
+        package_type:
+          $ref: "#/components/schemas/MembershipPackageType"
         name:
           type: string
         code:
@@ -8065,8 +8102,36 @@ components:
           type: boolean
         row_version:
           type: integer
+        partner_membership_id:
+          type: integer
+          nullable: true
+          description: Set on both rows of a couple membership.
+        partner_member_id:
+          type: integer
+          nullable: true
+        partner_member_name:
+          type: string
+          nullable: true
         product:
           $ref: "#/components/schemas/MembershipProduct"
+    MembershipReplacementPreview:
+      type: object
+      required: [membership_id, product_name, status, end_date, remaining_days, is_couple, suggested_credit]
+      properties:
+        membership_id:
+          $ref: "#/components/schemas/Id"
+        product_name:
+          type: string
+        status:
+          $ref: "#/components/schemas/MembershipStatus"
+        end_date:
+          $ref: "#/components/schemas/Date"
+        remaining_days:
+          type: integer
+        is_couple:
+          type: boolean
+        suggested_credit:
+          $ref: "#/components/schemas/Money"
     MembershipCreate:
       type: object
       required: [member_id, product_id, start_date, payment_method_id]
@@ -8083,6 +8148,15 @@ components:
           type: string
         auto_renew:
           type: boolean
+        partner_member_id:
+          $ref: "#/components/schemas/Id"
+          description: Required for a couple product; rejected for a single product.
+        replace_partner_membership:
+          type: boolean
+          description: Must be true when the partner has an active or frozen single membership; it is cancelled.
+        discount_amount:
+          $ref: "#/components/schemas/Money"
+          description: Between 0 and the product base price.
     MembershipActionRequest:
       type: object
       properties:

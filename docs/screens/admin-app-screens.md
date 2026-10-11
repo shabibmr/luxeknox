@@ -94,7 +94,7 @@ The **Admin / Office App** is the central management interface for gym owners, f
 | **Membership History** | History List | `Membership Details > History` | Subscription timeline, renewals, extensions, and invoice references. |
 | **Freeze / Extension** | Action Modal / Screen | `Membership Details > Freeze/Extend` | Process membership freeze (medical/vacation) or manual validity extension. |
 | **Renew Membership** | Action Screen | `Membership Details > Renew` | Quick renewal checkout: package selection, discount, and payment collection. |
-| **Assign Membership** | Action Screen | `Memberships > Assign to Member` | Link an existing member with a purchased membership product. |
+| **Assign Membership** | Action Screen | `Memberships > Assign to Member` | Link an existing member with a purchased membership product. For a couple package it also requires a partner (second member); if the partner already has an active or frozen single membership, a warning dialog asks to replace it and offers an editable pro-rated discount. |
 
 ---
 
