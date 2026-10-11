@@ -62,6 +62,7 @@ export class AccountingPostingService {
    * Amounts on the active side must be positive.
    * Replaying the same `(source_type, source_id)` returns the original journal
    * and writes nothing new (unique index + look-up).
+   * A date in a locked period throws and rolls back the shared transaction.
    */
   async postJournal(input: PostJournalInput): Promise<JournalEntryWithLines> {
     return runInTransaction(this.db, async () => {
@@ -82,6 +83,11 @@ export class AccountingPostingService {
       const period = await this.accountingRepository.findPeriodForDate(input.entryDate);
       if (!period) {
         throw new NotFoundError(`No accounting period covers ${input.entryDate}`);
+      }
+      if (period.status === 'locked') {
+        throw new BusinessRuleError(
+          `Accounting period ${period.starts_on} to ${period.ends_on} is locked`,
+        );
       }
 
       const journalNumber = await this.accountingRepository.allocateJournalNumber();

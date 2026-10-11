@@ -231,4 +231,26 @@ describe('AccountingPostingService.postJournal', () => {
     expect(repository.insertJournalLines).not.toHaveBeenCalled();
     expect(result).toEqual(existing);
   });
+
+  it('rejects a post whose date falls in a locked period', async () => {
+    repository.findPeriodForDate.mockResolvedValue({
+      ...openPeriod,
+      status: 'locked',
+      closed_at: new Date('2026-05-01T00:00:00.000Z'),
+      closed_by_user_id: 1,
+    });
+
+    await expect(
+      service.postJournal({
+        entryDate: '2026-04-15',
+        sourceType: 'manual',
+        sourceId: 1,
+        lines: balancedLines,
+      }),
+    ).rejects.toBeInstanceOf(BusinessRuleError);
+
+    expect(repository.allocateJournalNumber).not.toHaveBeenCalled();
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+    expect(repository.insertJournalLines).not.toHaveBeenCalled();
+  });
 });
