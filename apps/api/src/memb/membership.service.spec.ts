@@ -761,4 +761,171 @@ describe('MembershipService', () => {
       ).rejects.toThrow(NotFoundError);
     });
   });
+
+  describe('linked couple lifecycle (CM-08..CM-11)', () => {
+    const coupleProduct = () => makeProduct({ id: 3, package_type: 'couple', duration_days: 30 });
+    const rowA = () =>
+      makeMembership({ id: 1, member_id: 100, product_id: 3, partner_membership_id: 2, end_date: '2099-01-31' });
+    const rowB = () =>
+      makeMembership({ id: 2, member_id: 200, product_id: 3, partner_membership_id: 1, end_date: '2099-01-31' });
+
+    beforeEach(() => {
+      repository.findById.mockImplementation(async (id: number) =>
+        id === 1 ? rowA() : id === 2 ? rowB() : null,
+      );
+      repository.findPartner.mockImplementation(async (m: Membership) =>
+        m.id === 1 ? rowB() : rowA(),
+      );
+      productRepository.findById.mockResolvedValue(coupleProduct());
+      repository.findByIdWithProduct.mockResolvedValue({ ...rowA(), product: coupleProduct() });
+    });
+
+    it('renew applies the same end date and product to both rows', async () => {
+      await service.renew(1, { row_version: 1 }, ADMIN_USER);
+
+      const updates = repository.updateMembership.mock.calls;
+      expect(updates.map((c) => c[0])).toEqual([1, 2]);
+      expect(updates[0][1].end_date).toBe(updates[1][1].end_date);
+      expect(updates[1][1]).toEqual(expect.objectContaining({ product_id: 3, status: 'active' }));
+      expect(repository.insertHistory).toHaveBeenCalledTimes(2);
+      expect(domainEventBus.emit).toHaveBeenCalledTimes(2);
+    });
+
+    it('renew rejects a package-type mismatch in both directions', async () => {
+      productRepository.findById.mockImplementation(async (id: number) =>
+        id === 3 ? coupleProduct() : makeProduct({ id: 1, package_type: 'single' }),
+      );
+      await expect(service.renew(1, { row_version: 1, product_id: 1 }, ADMIN_USER)).rejects.toThrow(
+        BusinessRuleError,
+      );
+
+      repository.findById.mockResolvedValue(makeMembership({ id: 9, product_id: 1 }));
+      await expect(service.renew(9, { row_version: 1, product_id: 3 }, ADMIN_USER)).rejects.toThrow(
+        BusinessRuleError,
+      );
+      expect(repository.updateMembership).not.toHaveBeenCalled();
+    });
+
+    it('upgrade moves both rows to the new product and end date', async () => {
+      productRepository.findById.mockResolvedValue(
+        makeProduct({ id: 4, package_type: 'couple', duration_days: 90 }),
+      );
+      await service.upgrade(1, { row_version: 1, product_id: 4 }, ADMIN_USER);
+
+      const updates = repository.updateMembership.mock.calls;
+      expect(updates.map((c) => c[0])).toEqual([1, 2]);
+      expect(updates[0][1]).toEqual(expect.objectContaining({ product_id: 4 }));
+      expect(updates[0][1].end_date).toBe(updates[1][1].end_date);
+    });
+
+    it('upgrade rejects crossing between single and couple', async () => {
+      productRepository.findById.mockImplementation(async (id: number) =>
+        id === 3 ? coupleProduct() : makeProduct({ id: 1, package_type: 'single' }),
+      );
+      await expect(service.upgrade(1, { row_version: 1, product_id: 1 }, ADMIN_USER)).rejects.toThrow(
+        BusinessRuleError,
+      );
+    });
+
+    it('cancel cancels both rows, each with its own history row', async () => {
+      await service.cancel(1, { row_version: 1 }, ADMIN_USER);
+
+      expect(repository.updateMembership.mock.calls.map((c) => c[0])).toEqual([1, 2]);
+      expect(repository.insertHistory.mock.calls.map((c) => c[0].membership_id)).toEqual([1, 2]);
+    });
+
+    it('extend extends both rows with an extension record each', async () => {
+      repository.insertExtension.mockResolvedValueOnce(11).mockResolvedValueOnce(12);
+      await service.extend(1, { days_extended: 5 }, ADMIN_USER);
+
+      expect(repository.insertExtension).toHaveBeenCalledTimes(2);
+      expect(repository.updateMembership.mock.calls.map((c) => c[1].end_date)).toEqual([
+        '2099-02-05',
+        '2099-02-05',
+      ]);
+    });
+
+    it('requestFreeze creates a cross-linked twin freeze and freezes both rows', async () => {
+      repository.insertFreeze.mockResolvedValueOnce(21).mockResolvedValueOnce(22);
+      repository.findFreezeById.mockResolvedValue({ id: 21, status: 'approved' });
+
+      await service.requestFreeze(1, { start_date: '2099-01-10', end_date: '2099-01-15' }, ADMIN_USER);
+
+      expect(repository.insertFreeze.mock.calls.map((c) => c[0].membership_id)).toEqual([1, 2]);
+      expect(repository.setPairedFreeze).toHaveBeenCalledWith(21, 22);
+      expect(repository.setPairedFreeze).toHaveBeenCalledWith(22, 21);
+      expect(repository.updateMembership.mock.calls.map((c) => c[1].status)).toEqual(['frozen', 'frozen']);
+    });
+
+    it('requestFreeze is rejected when the partner quota is breached', async () => {
+      repository.sumApprovedFreezeDays.mockImplementation(async (id: number) => (id === 2 ? 14 : 0));
+
+      await expect(
+        service.requestFreeze(1, { start_date: '2099-01-10', end_date: '2099-01-15' }, ADMIN_USER),
+      ).rejects.toThrow(BusinessRuleError);
+      expect(repository.insertFreeze).not.toHaveBeenCalled();
+    });
+
+    it('a member pending request creates pending twins without touching either membership', async () => {
+      repository.insertFreeze.mockResolvedValueOnce(21).mockResolvedValueOnce(22);
+      repository.findFreezeById.mockResolvedValue({ id: 21, status: 'pending' });
+
+      await service.requestFreeze(
+        1,
+        { start_date: '2099-01-10', end_date: '2099-01-15' },
+        { ...MEMBER_USER, profileId: 100 },
+      );
+
+      expect(repository.insertFreeze.mock.calls.map((c) => c[0].status)).toEqual(['pending', 'pending']);
+      expect(repository.updateMembership).not.toHaveBeenCalled();
+    });
+
+    it('approveFreeze approves the paired freeze and freezes both memberships', async () => {
+      const f1 = { id: 21, membership_id: 1, status: 'pending', total_freeze_days: 6, paired_freeze_id: 22 };
+      const f2 = { id: 22, membership_id: 2, status: 'pending', total_freeze_days: 6, paired_freeze_id: 21 };
+      repository.findFreezeById.mockImplementation(async (id: number) => (id === 21 ? f1 : f2));
+
+      await service.approveFreeze(21, ADMIN_USER);
+
+      expect(repository.updateFreeze.mock.calls.map((c) => c[0])).toEqual([21, 22]);
+      expect(repository.updateMembership.mock.calls.map((c) => c[0])).toEqual([1, 2]);
+      expect(repository.updateMembership.mock.calls.map((c) => c[1].end_date)).toEqual([
+        '2099-02-06',
+        '2099-02-06',
+      ]);
+    });
+
+    it('rejectFreeze rejects the paired freeze too', async () => {
+      const f1 = { id: 21, membership_id: 1, status: 'pending', total_freeze_days: 6, paired_freeze_id: 22 };
+      const f2 = { id: 22, membership_id: 2, status: 'pending', total_freeze_days: 6, paired_freeze_id: 21 };
+      repository.findFreezeById.mockImplementation(async (id: number) => (id === 21 ? f1 : f2));
+
+      await service.rejectFreeze(21, { reason: 'no' } as any, ADMIN_USER);
+
+      expect(repository.updateFreeze.mock.calls.map((c) => c[0])).toEqual([21, 22]);
+      expect(repository.updateMembership).not.toHaveBeenCalled();
+    });
+
+    it('createOrRenewForPayment renews both rows of a couple membership', async () => {
+      repository.findActiveOrFrozenForMember.mockResolvedValue(rowA());
+
+      await service.createOrRenewForPayment({
+        memberId: 100,
+        productId: 3,
+        actor: ADMIN_USER,
+        now: new Date('2026-03-01T10:00:00.000Z'),
+      });
+
+      expect(repository.updateMembership.mock.calls.map((c) => c[0])).toEqual([1, 2]);
+    });
+
+    it('createOrRenewForPayment rejects a new couple purchase', async () => {
+      repository.findActiveOrFrozenForMember.mockResolvedValue(null);
+
+      await expect(
+        service.createOrRenewForPayment({ memberId: 100, productId: 3, actor: ADMIN_USER }),
+      ).rejects.toThrow('POST /memberships');
+      expect(repository.insertMembership).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -25,10 +25,10 @@ Derived from [PLAN.md](./PLAN.md).
 - [x] CM-07 Create a couple membership (two linked rows, replacement, discount) <!-- id: 7 -->
 
 **Phase 4: Backend linked lifecycle**
-- [ ] CM-08 Linked renew and upgrade, plus the package-type match rule <!-- id: 8 -->
-- [ ] CM-09 Linked cancel and extend <!-- id: 9 -->
-- [ ] CM-10 Paired freezes: request, approve, reject <!-- id: 10 -->
-- [ ] CM-11 `/payments` path: renew both, reject a new couple purchase <!-- id: 11 -->
+- [x] CM-08 Linked renew and upgrade, plus the package-type match rule <!-- id: 8 -->
+- [x] CM-09 Linked cancel and extend <!-- id: 9 -->
+- [x] CM-10 Paired freezes: request, approve, reject <!-- id: 10 -->
+- [x] CM-11 `/payments` path: renew both, reject a new couple purchase <!-- id: 11 -->
 
 **Phase 5: Contract and docs**
 - [ ] CM-12 OpenAPI `v1.yaml` and the parity check <!-- id: 12 -->
@@ -245,7 +245,7 @@ Steps:
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-07 |
 | **Files** | `memb/membership.service.ts`, `memb/membership.service.spec.ts` |
 
@@ -260,7 +260,7 @@ Steps:
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-08 |
 | **Files** | `memb/membership.service.ts`, `memb/membership.service.spec.ts` |
 
@@ -273,7 +273,7 @@ Steps:
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-08 |
 | **Files** | `memb/membership.service.ts`, `memb/membership.service.spec.ts`, `memb/freeze.controller.ts` (only if the response shape changes) |
 
@@ -288,7 +288,7 @@ Steps:
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-08 |
 | **Files** | `memb/membership.service.ts` (`createOrRenewForPayment` :710), `memb/membership.service.spec.ts`, `pay/payment.service.spec.ts` |
 

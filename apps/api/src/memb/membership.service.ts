@@ -5,7 +5,11 @@ import { AuditService } from '../platform/audit/audit.service';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
 import { runInTransaction } from '../platform/db/transaction-context';
-import type { Membership, MembershipFreeze } from '../platform/db/schema/memberships';
+import type {
+  Membership,
+  MembershipFreeze,
+  MembershipProduct,
+} from '../platform/db/schema/memberships';
 import { verifyRowVersion } from '../platform/concurrency/row-version';
 import { DomainEventBus } from '../platform/events/domain-events';
 import {
@@ -204,6 +208,88 @@ export class MembershipService {
       beforeState: { status: before.status },
       afterState: { status: 'cancelled', reason },
     });
+  }
+
+  /** CM-08: the linked partner row of a couple membership, or null for a single membership. */
+  private async loadPartner(membership: Membership): Promise<Membership | null> {
+    if (membership.partner_membership_id == null) {
+      return null;
+    }
+    const partner = await this.repository.findPartner(membership);
+    if (!partner) {
+      throw new NotFoundError('Partner membership not found');
+    }
+    return partner;
+  }
+
+  /** CM-08: renew/upgrade must stay within the same package type (single <-> couple is rejected). */
+  private async assertSamePackageType(
+    current: Membership,
+    target: MembershipProduct,
+  ): Promise<void> {
+    if (target.id === current.product_id) {
+      return;
+    }
+    const currentProduct = await this.productRepository.findById(current.product_id);
+    if (currentProduct && currentProduct.package_type !== target.package_type) {
+      throw new BusinessRuleError(
+        `Cannot switch between ${currentProduct.package_type} and ${target.package_type} packages`,
+      );
+    }
+  }
+
+  /** CM-08: renew a row and its history/audit inside the current transaction. */
+  private async renewRow(
+    row: Membership,
+    productId: number,
+    newEndDate: string,
+    actor: AuthenticatedUser,
+    now: Date,
+    via?: string,
+    checkVersion = true,
+  ): Promise<void> {
+    await this.repository.updateMembership(
+      row.id,
+      {
+        product_id: productId,
+        end_date: newEndDate,
+        status: 'active',
+        row_version: row.row_version + 1,
+        updated_at: now,
+      },
+      checkVersion ? row.row_version : undefined,
+    );
+    await this.repository.insertHistory({
+      membership_id: row.id,
+      action: 'renewed',
+      old_end_date: row.end_date,
+      new_end_date: newEndDate,
+      performed_by_user_id: actor.id,
+      timestamp: now,
+    });
+    await this.auditService.recordAudit({
+      actorUserId: actor.id,
+      action: 'membership.renewed',
+      entityName: 'memberships',
+      entityId: row.id,
+      beforeState: { end_date: row.end_date },
+      afterState: via ? { end_date: newEndDate, via } : { end_date: newEndDate },
+    });
+  }
+
+  /** CM-10: the twin of a paired freeze, or null for a single membership. It must still be pending. */
+  private async loadPairedFreeze(freeze: MembershipFreeze): Promise<MembershipFreeze | null> {
+    if (freeze.paired_freeze_id == null) {
+      return null;
+    }
+    const paired = await this.repository.findFreezeById(freeze.paired_freeze_id);
+    if (!paired) {
+      throw new NotFoundError('Paired freeze not found');
+    }
+    if (paired.status !== 'pending') {
+      throw new BusinessRuleError('Paired freeze is no longer pending');
+    }
+    return paired;
   }
 
   /** CM-06: pro-rated credit preview for replacing a member's current membership with a couple purchase. */
@@ -435,6 +521,8 @@ export class MembershipService {
     if (!product || !product.is_active) {
       throw new NotFoundError('Membership product not found');
     }
+    await this.assertSamePackageType(before, product);
+    const partner = await this.loadPartner(before);
 
     const today = new Date().toISOString().slice(0, 10);
     const continuationStart =
@@ -445,35 +533,10 @@ export class MembershipService {
     const now = new Date();
 
     await runInTransaction(this.db, async () => {
-      await this.repository.updateMembership(
-        id,
-        {
-          product_id: targetProductId,
-          end_date: newEndDate,
-          status: 'active',
-          row_version: before.row_version + 1,
-          updated_at: now,
-        },
-        before.row_version,
-      );
-
-      await this.repository.insertHistory({
-        membership_id: id,
-        action: 'renewed',
-        old_end_date: before.end_date,
-        new_end_date: newEndDate,
-        performed_by_user_id: actor.id,
-        timestamp: now,
-      });
-
-      await this.auditService.recordAudit({
-        actorUserId: actor.id,
-        action: 'membership.renewed',
-        entityName: 'memberships',
-        entityId: id,
-        beforeState: { end_date: before.end_date },
-        afterState: { end_date: newEndDate },
-      });
+      await this.renewRow(before, targetProductId, newEndDate, actor, now);
+      if (partner) {
+        await this.renewRow(partner, targetProductId, newEndDate, actor, now);
+      }
     });
 
     await this.domainEventBus.emit({
@@ -481,6 +544,13 @@ export class MembershipService {
       occurredAt: now,
       payload: { membershipId: id },
     });
+    if (partner) {
+      await this.domainEventBus.emit({
+        eventName: 'membership.renewed',
+        occurredAt: now,
+        payload: { membershipId: partner.id },
+      });
+    }
 
     const after = await this.repository.findByIdWithProduct(id);
     if (!after) {
@@ -506,21 +576,24 @@ export class MembershipService {
       throw new NotFoundError('Membership product not found');
     }
 
+    await this.assertSamePackageType(before, newProduct);
+    const partner = await this.loadPartner(before);
+
     const newEndDate = addDays(before.start_date, newProduct.duration_days);
     const now = new Date();
 
-    await runInTransaction(this.db, async () => {
-      await this.repository.updateMembership(id, {
+    const upgradeRow = async (row: Membership) => {
+      await this.repository.updateMembership(row.id, {
         product_id: dto.product_id,
         end_date: newEndDate,
-        row_version: before.row_version + 1,
+        row_version: row.row_version + 1,
         updated_at: now,
       });
 
       await this.repository.insertHistory({
-        membership_id: id,
+        membership_id: row.id,
         action: 'upgraded',
-        old_end_date: before.end_date,
+        old_end_date: row.end_date,
         new_end_date: newEndDate,
         performed_by_user_id: actor.id,
         timestamp: now,
@@ -530,17 +603,26 @@ export class MembershipService {
         actorUserId: actor.id,
         action: 'membership.upgraded',
         entityName: 'memberships',
-        entityId: id,
-        beforeState: { product_id: before.product_id, end_date: before.end_date },
+        entityId: row.id,
+        beforeState: { product_id: row.product_id, end_date: row.end_date },
         afterState: { product_id: dto.product_id, end_date: newEndDate },
       });
+    };
+
+    await runInTransaction(this.db, async () => {
+      await upgradeRow(before);
+      if (partner) {
+        await upgradeRow(partner);
+      }
     });
 
-    await this.domainEventBus.emit({
-      eventName: 'membership.upgraded',
-      occurredAt: now,
-      payload: { membershipId: id },
-    });
+    for (const row of partner ? [before, partner] : [before]) {
+      await this.domainEventBus.emit({
+        eventName: 'membership.upgraded',
+        occurredAt: now,
+        payload: { membershipId: row.id },
+      });
+    }
 
     const after = await this.repository.findByIdWithProduct(id);
     if (!after) {
@@ -561,16 +643,22 @@ export class MembershipService {
     }
     verifyRowVersion(dto.row_version, before.row_version);
 
+    const partner = await this.loadPartner(before);
     const now = new Date();
     await runInTransaction(this.db, async () => {
       await this.cancelRow(before, dto.reason ?? null, actor, now);
+      if (partner) {
+        await this.cancelRow(partner, dto.reason ?? null, actor, now);
+      }
     });
 
-    await this.domainEventBus.emit({
-      eventName: 'membership.cancelled',
-      occurredAt: now,
-      payload: { membershipId: id },
-    });
+    for (const row of partner ? [before, partner] : [before]) {
+      await this.domainEventBus.emit({
+        eventName: 'membership.cancelled',
+        occurredAt: now,
+        payload: { membershipId: row.id },
+      });
+    }
 
     const after = await this.repository.findByIdWithProduct(id);
     if (!after) {
@@ -621,9 +709,21 @@ export class MembershipService {
       throw new BadRequestError('end_date must not be before start_date');
     }
 
+    const partner = await this.loadPartner(membership);
+
     const overlap = await this.repository.findOverlappingFreeze(id, dto.start_date, dto.end_date);
     if (overlap) {
       throw new BusinessRuleError('Freeze dates overlap an existing pending/approved freeze');
+    }
+    if (partner) {
+      const partnerOverlap = await this.repository.findOverlappingFreeze(
+        partner.id,
+        dto.start_date,
+        dto.end_date,
+      );
+      if (partnerOverlap) {
+        throw new BusinessRuleError('Freeze dates overlap an existing pending/approved freeze');
+      }
     }
 
     const isDirectApproval = actor.userType === 'admin' || actor.userType === 'employee';
@@ -631,18 +731,20 @@ export class MembershipService {
     const now = new Date();
 
     if (isDirectApproval) {
-      const product = await this.productRepository.findById(membership.product_id);
-      const approvedSoFar = await this.repository.sumApprovedFreezeDays(id);
-      if (product && approvedSoFar + totalDays > product.max_freeze_days) {
-        throw new BusinessRuleError(
-          `Freeze exceeds product.max_freeze_days (${product.max_freeze_days})`,
-        );
+      for (const row of partner ? [membership, partner] : [membership]) {
+        const product = await this.productRepository.findById(row.product_id);
+        const approvedSoFar = await this.repository.sumApprovedFreezeDays(row.id);
+        if (product && approvedSoFar + totalDays > product.max_freeze_days) {
+          throw new BusinessRuleError(
+            `Freeze exceeds product.max_freeze_days (${product.max_freeze_days})`,
+          );
+        }
       }
     }
 
-    const freezeId = await runInTransaction(this.db, async () => {
+    const createFreezeRow = async (row: Membership): Promise<number> => {
       const newFreezeId = await this.repository.insertFreeze({
-        membership_id: id,
+        membership_id: row.id,
         start_date: dto.start_date,
         end_date: dto.end_date,
         total_freeze_days: totalDays,
@@ -654,17 +756,17 @@ export class MembershipService {
       });
 
       if (isDirectApproval) {
-        const newEndDate = addDays(membership.end_date, totalDays);
-        await this.repository.updateMembership(id, {
+        const newEndDate = addDays(row.end_date, totalDays);
+        await this.repository.updateMembership(row.id, {
           status: 'frozen',
           end_date: newEndDate,
-          row_version: membership.row_version + 1,
+          row_version: row.row_version + 1,
           updated_at: now,
         });
         await this.repository.insertHistory({
-          membership_id: id,
+          membership_id: row.id,
           action: 'frozen',
-          old_end_date: membership.end_date,
+          old_end_date: row.end_date,
           new_end_date: newEndDate,
           performed_by_user_id: actor.id,
           timestamp: now,
@@ -676,17 +778,36 @@ export class MembershipService {
         action: isDirectApproval ? 'membership.freeze_created_approved' : 'membership.freeze_requested',
         entityName: 'membership_freezes',
         entityId: newFreezeId,
-        afterState: { membership_id: id, start_date: dto.start_date, end_date: dto.end_date },
+        afterState: { membership_id: row.id, start_date: dto.start_date, end_date: dto.end_date },
       });
 
       return newFreezeId;
+    };
+
+    const { freezeId, partnerFreezeId } = await runInTransaction(this.db, async () => {
+      const ownFreezeId = await createFreezeRow(membership);
+      let twinFreezeId: number | null = null;
+      if (partner) {
+        twinFreezeId = await createFreezeRow(partner);
+        await this.repository.setPairedFreeze(ownFreezeId, twinFreezeId);
+        await this.repository.setPairedFreeze(twinFreezeId, ownFreezeId);
+      }
+      return { freezeId: ownFreezeId, partnerFreezeId: twinFreezeId };
     });
 
+    const eventName = isDirectApproval ? 'membership.frozen' : 'membership.freeze_pending';
     await this.domainEventBus.emit({
-      eventName: isDirectApproval ? 'membership.frozen' : 'membership.freeze_pending',
+      eventName,
       occurredAt: now,
       payload: { membershipId: id, freezeId },
     });
+    if (partner && partnerFreezeId != null) {
+      await this.domainEventBus.emit({
+        eventName,
+        occurredAt: now,
+        payload: { membershipId: partner.id, freezeId: partnerFreezeId },
+      });
+    }
 
     const created = await this.repository.findFreezeById(freezeId);
     if (!created) {
@@ -705,59 +826,71 @@ export class MembershipService {
       throw new BusinessRuleError('Only pending freezes can be approved');
     }
 
-    const membership = await this.repository.findById(freeze.membership_id);
-    if (!membership) {
-      throw new NotFoundError('Membership not found');
-    }
-    const product = await this.productRepository.findById(membership.product_id);
-    const approvedSoFar = await this.repository.sumApprovedFreezeDays(freeze.membership_id);
-    if (product && approvedSoFar + freeze.total_freeze_days > product.max_freeze_days) {
-      throw new BusinessRuleError(
-        `Freeze exceeds product.max_freeze_days (${product.max_freeze_days})`,
-      );
+    const pairedFreeze = await this.loadPairedFreeze(freeze);
+    const targets = [freeze, ...(pairedFreeze ? [pairedFreeze] : [])];
+
+    const rows: Array<{ freeze: MembershipFreeze; membership: Membership }> = [];
+    for (const f of targets) {
+      const membership = await this.repository.findById(f.membership_id);
+      if (!membership) {
+        throw new NotFoundError('Membership not found');
+      }
+      const product = await this.productRepository.findById(membership.product_id);
+      const approvedSoFar = await this.repository.sumApprovedFreezeDays(f.membership_id);
+      if (product && approvedSoFar + f.total_freeze_days > product.max_freeze_days) {
+        throw new BusinessRuleError(
+          `Freeze exceeds product.max_freeze_days (${product.max_freeze_days})`,
+        );
+      }
+      rows.push({ freeze: f, membership });
     }
 
     const now = new Date();
-    const newEndDate = addDays(membership.end_date, freeze.total_freeze_days);
 
     await runInTransaction(this.db, async () => {
-      await this.repository.updateFreeze(freezeId, {
-        status: 'approved',
-        reviewed_by_user_id: actor.id,
-        reviewed_at: now,
-      });
+      for (const { freeze: f, membership } of rows) {
+        const newEndDate = addDays(membership.end_date, f.total_freeze_days);
 
-      await this.repository.updateMembership(freeze.membership_id, {
-        status: 'frozen',
-        end_date: newEndDate,
-        row_version: membership.row_version + 1,
-        updated_at: now,
-      });
+        await this.repository.updateFreeze(f.id, {
+          status: 'approved',
+          reviewed_by_user_id: actor.id,
+          reviewed_at: now,
+        });
 
-      await this.repository.insertHistory({
-        membership_id: freeze.membership_id,
-        action: 'frozen',
-        old_end_date: membership.end_date,
-        new_end_date: newEndDate,
-        performed_by_user_id: actor.id,
-        timestamp: now,
-      });
+        await this.repository.updateMembership(f.membership_id, {
+          status: 'frozen',
+          end_date: newEndDate,
+          row_version: membership.row_version + 1,
+          updated_at: now,
+        });
 
-      await this.auditService.recordAudit({
-        actorUserId: actor.id,
-        action: 'membership.freeze_approved',
-        entityName: 'membership_freezes',
-        entityId: freezeId,
-        beforeState: { status: 'pending' },
-        afterState: { status: 'approved' },
-      });
+        await this.repository.insertHistory({
+          membership_id: f.membership_id,
+          action: 'frozen',
+          old_end_date: membership.end_date,
+          new_end_date: newEndDate,
+          performed_by_user_id: actor.id,
+          timestamp: now,
+        });
+
+        await this.auditService.recordAudit({
+          actorUserId: actor.id,
+          action: 'membership.freeze_approved',
+          entityName: 'membership_freezes',
+          entityId: f.id,
+          beforeState: { status: 'pending' },
+          afterState: { status: 'approved' },
+        });
+      }
     });
 
-    await this.domainEventBus.emit({
-      eventName: 'membership.frozen',
-      occurredAt: now,
-      payload: { membershipId: freeze.membership_id, freezeId },
-    });
+    for (const { freeze: f } of rows) {
+      await this.domainEventBus.emit({
+        eventName: 'membership.frozen',
+        occurredAt: now,
+        payload: { membershipId: f.membership_id, freezeId: f.id },
+      });
+    }
 
     const after = await this.repository.findFreezeById(freezeId);
     if (!after) {
@@ -780,20 +913,25 @@ export class MembershipService {
       throw new BusinessRuleError('Only pending freezes can be rejected');
     }
 
+    const pairedFreeze = await this.loadPairedFreeze(freeze);
     const now = new Date();
-    await this.repository.updateFreeze(freezeId, {
-      status: 'rejected',
-      reviewed_by_user_id: actor.id,
-      reviewed_at: now,
-    });
+    await runInTransaction(this.db, async () => {
+      for (const f of [freeze, ...(pairedFreeze ? [pairedFreeze] : [])]) {
+        await this.repository.updateFreeze(f.id, {
+          status: 'rejected',
+          reviewed_by_user_id: actor.id,
+          reviewed_at: now,
+        });
 
-    await this.auditService.recordAudit({
-      actorUserId: actor.id,
-      action: 'membership.freeze_rejected',
-      entityName: 'membership_freezes',
-      entityId: freezeId,
-      beforeState: { status: 'pending' },
-      afterState: { status: 'rejected', reason: dto.reason ?? null },
+        await this.auditService.recordAudit({
+          actorUserId: actor.id,
+          action: 'membership.freeze_rejected',
+          entityName: 'membership_freezes',
+          entityId: f.id,
+          beforeState: { status: 'pending' },
+          afterState: { status: 'rejected', reason: dto.reason ?? null },
+        });
+      }
     });
 
     const after = await this.repository.findFreezeById(freezeId);
@@ -814,28 +952,29 @@ export class MembershipService {
       throw new NotFoundError('Membership not found');
     }
 
+    const partner = await this.loadPartner(membership);
     const now = new Date();
-    const newEndDate = addDays(membership.end_date, dto.days_extended);
 
-    const extensionId = await runInTransaction(this.db, async () => {
+    const extendRow = async (row: Membership): Promise<number> => {
+      const newEndDate = addDays(row.end_date, dto.days_extended);
       const newExtensionId = await this.repository.insertExtension({
-        membership_id: id,
+        membership_id: row.id,
         days_extended: dto.days_extended,
         reason: dto.reason ?? null,
         granted_by_user_id: actor.id,
         created_at: now,
       });
 
-      await this.repository.updateMembership(id, {
+      await this.repository.updateMembership(row.id, {
         end_date: newEndDate,
-        row_version: membership.row_version + 1,
+        row_version: row.row_version + 1,
         updated_at: now,
       });
 
       await this.repository.insertHistory({
-        membership_id: id,
+        membership_id: row.id,
         action: 'extended',
-        old_end_date: membership.end_date,
+        old_end_date: row.end_date,
         new_end_date: newEndDate,
         performed_by_user_id: actor.id,
         timestamp: now,
@@ -846,10 +985,16 @@ export class MembershipService {
         action: 'membership.extended',
         entityName: 'membership_extensions',
         entityId: newExtensionId,
-        afterState: { membership_id: id, days_extended: dto.days_extended },
+        afterState: { membership_id: row.id, days_extended: dto.days_extended },
       });
 
       return newExtensionId;
+    };
+
+    const { extensionId, partnerExtensionId } = await runInTransaction(this.db, async () => {
+      const own = await extendRow(membership);
+      const twin = partner ? await extendRow(partner) : null;
+      return { extensionId: own, partnerExtensionId: twin };
     });
 
     await this.domainEventBus.emit({
@@ -857,6 +1002,13 @@ export class MembershipService {
       occurredAt: now,
       payload: { membershipId: id, extensionId },
     });
+    if (partner && partnerExtensionId != null) {
+      await this.domainEventBus.emit({
+        eventName: 'membership.extended',
+        occurredAt: now,
+        payload: { membershipId: partner.id, extensionId: partnerExtensionId },
+      });
+    }
 
     return {
       id: extensionId,
@@ -906,6 +1058,9 @@ export class MembershipService {
     const today = now.toISOString().slice(0, 10);
 
     if (!existing) {
+      if (product.package_type === 'couple') {
+        throw new BusinessRuleError('Couple packages must be sold via POST /memberships');
+      }
       const startDate = params.startDate ?? today;
       const endDate = addDays(startDate, product.duration_days);
 
@@ -962,36 +1117,14 @@ export class MembershipService {
         : today);
     const newEndDate = addDays(continuationStart, product.duration_days);
 
+    await this.assertSamePackageType(existing, product);
+    const partner = await this.loadPartner(existing);
+
     await runInTransaction(this.db, async () => {
-      await this.repository.updateMembership(
-        existing.id,
-        {
-          product_id: params.productId,
-          end_date: newEndDate,
-          status: 'active',
-          row_version: existing.row_version + 1,
-          updated_at: now,
-        },
-        existing.row_version,
-      );
-
-      await this.repository.insertHistory({
-        membership_id: existing.id,
-        action: 'renewed',
-        old_end_date: existing.end_date,
-        new_end_date: newEndDate,
-        performed_by_user_id: params.actor.id,
-        timestamp: now,
-      });
-
-      await this.auditService.recordAudit({
-        actorUserId: params.actor.id,
-        action: 'membership.renewed',
-        entityName: 'memberships',
-        entityId: existing.id,
-        beforeState: { end_date: existing.end_date },
-        afterState: { end_date: newEndDate, via: 'payment' },
-      });
+      await this.renewRow(existing, params.productId, newEndDate, params.actor, now, 'payment');
+      if (partner) {
+        await this.renewRow(partner, params.productId, newEndDate, params.actor, now, 'payment');
+      }
     });
 
     await this.domainEventBus.emit({
@@ -999,6 +1132,13 @@ export class MembershipService {
       occurredAt: now,
       payload: { membershipId: existing.id },
     });
+    if (partner) {
+      await this.domainEventBus.emit({
+        eventName: 'membership.renewed',
+        occurredAt: now,
+        payload: { membershipId: partner.id },
+      });
+    }
 
     return existing.id;
   }
