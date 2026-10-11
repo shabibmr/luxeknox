@@ -19,10 +19,10 @@ Derived from [PLAN.md](./PLAN.md).
 - [x] CM-03 `package_type` on membership products <!-- id: 3 -->
 
 **Phase 3: Backend membership core**
-- [ ] CM-04 Repository support for partner links and paired freezes <!-- id: 4 -->
-- [ ] CM-05 Read model: partner fields in `present()` and the responses <!-- id: 5 -->
-- [ ] CM-06 `GET /memberships/replacement-preview` <!-- id: 6 -->
-- [ ] CM-07 Create a couple membership (two linked rows, replacement, discount) <!-- id: 7 -->
+- [x] CM-04 Repository support for partner links and paired freezes <!-- id: 4 -->
+- [x] CM-05 Read model: partner fields in `present()` and the responses <!-- id: 5 -->
+- [x] CM-06 `GET /memberships/replacement-preview` <!-- id: 6 -->
+- [x] CM-07 Create a couple membership (two linked rows, replacement, discount) <!-- id: 7 -->
 
 **Phase 4: Backend linked lifecycle**
 - [ ] CM-08 Linked renew and upgrade, plus the package-type match rule <!-- id: 8 -->
@@ -144,7 +144,7 @@ Reset the local MySQL schema on localhost:3308 (drop and recreate the database),
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-03 |
 | **Files** | `apps/api/src/memb/membership.repository.ts` |
 
@@ -165,7 +165,7 @@ Change these queries:
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-04 |
 | **Files** | `memb/membership.service.ts` (`present()`), `memb/membership.controller.ts` (Swagger response classes), `memb/membership.service.spec.ts` |
 
@@ -183,7 +183,7 @@ A member-scoped read shows only the partner's name, never other partner data.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-05 |
 | **Files** | `memb/membership.dto.ts`, `memb/membership.service.ts`, `memb/membership.controller.ts`, `memb/membership.service.spec.ts` |
 
@@ -199,7 +199,7 @@ A member-scoped read shows only the partner's name, never other partner data.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-06 |
 | **Risk** | High. This is the core rule set. |
 | **Files** | `memb/membership.dto.ts`, `memb/membership.service.ts`, `memb/membership.service.spec.ts` |

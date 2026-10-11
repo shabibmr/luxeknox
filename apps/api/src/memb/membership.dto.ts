@@ -2,6 +2,11 @@ import { z } from 'zod';
 
 const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'must be an ISO date (YYYY-MM-DD)');
 
+const moneySchema = z
+  .union([z.string(), z.number()])
+  .transform((v) => String(v).trim())
+  .refine((v) => /^-?\d+(\.\d+)?$/.test(v), { message: 'Invalid money amount' });
+
 /** Mirrors `docs/openapi/v1.yaml` `#/components/schemas/MembershipCreate`. */
 export const membershipCreateSchema = z.object({
   member_id: z.number().int().positive(),
@@ -10,9 +15,31 @@ export const membershipCreateSchema = z.object({
   payment_method_id: z.number().int().positive(),
   locker_number: z.string().trim().min(1).optional(),
   auto_renew: z.boolean().optional(),
+  partner_member_id: z.number().int().positive().optional(),
+  replace_partner_membership: z.boolean().optional(),
+  discount_amount: moneySchema.optional(),
 });
 
 export type MembershipCreateDto = z.infer<typeof membershipCreateSchema>;
+
+/** Mirrors `#/components/schemas/MembershipReplacementPreview` query. */
+export const membershipReplacementPreviewQuerySchema = z.object({
+  member_id: z.coerce.number().int().positive(),
+});
+
+export type MembershipReplacementPreviewQueryDto = z.infer<
+  typeof membershipReplacementPreviewQuerySchema
+>;
+
+export interface MembershipReplacementPreview {
+  membership_id: number;
+  product_name: string;
+  status: string;
+  end_date: string;
+  remaining_days: number;
+  is_couple: boolean;
+  suggested_credit: string;
+}
 
 /**
  * Mirrors `#/components/schemas/MembershipActionRequest`, used by renew/upgrade/cancel.

@@ -17,6 +17,7 @@ import {
 } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
+import { cmpMoney, fromCents, roundMoney, toCents } from '../platform/money/money';
 import { MemberRepository } from '../people/member.repository';
 import { MembershipProductRepository } from './membership-product.repository';
 import {
@@ -24,6 +25,7 @@ import {
   type MembershipActionRequestDto,
   type MembershipExtensionWriteDto,
   type MembershipFreezeWriteDto,
+  type MembershipReplacementPreview,
   type MembershipUpgradeRequestDto,
   type RejectRequestDto,
   membershipFilterQuerySchema,
@@ -48,6 +50,29 @@ function daysBetweenInclusive(startIso: string, endIso: string): number {
   const start = Date.UTC(sy, sm - 1, sd);
   const end = Date.UTC(ey, em - 1, ed);
   return Math.round((end - start) / 86_400_000) + 1;
+}
+
+/** Plain (non-inclusive) day difference between two ISO dates; negative if `endIso` precedes `startIso`. */
+function daysBetween(startIso: string, endIso: string): number {
+  const [sy, sm, sd] = startIso.split('-').map(Number);
+  const [ey, em, ed] = endIso.split('-').map(Number);
+  const start = Date.UTC(sy, sm - 1, sd);
+  const end = Date.UTC(ey, em - 1, ed);
+  return Math.round((end - start) / 86_400_000);
+}
+
+/** CM-06: round-half-up pro-rated credit, capped at `basePrice`. */
+function proRatedCredit(basePrice: string, remainingDays: number, durationDays: number): string {
+  if (durationDays <= 0) {
+    return roundMoney('0');
+  }
+  const baseCents = toCents(basePrice);
+  const numerator = baseCents * BigInt(remainingDays);
+  const denom = BigInt(durationDays);
+  const half = denom / 2n;
+  const creditCents = (numerator + half) / denom;
+  const credit = fromCents(creditCents);
+  return cmpMoney(credit, basePrice) > 0 ? roundMoney(basePrice) : credit;
 }
 
 @Injectable()
@@ -102,12 +127,18 @@ export class MembershipService {
     throw new ForbiddenError();
   }
 
-  /** FR-MEMB-007/BR: trainer never sees pricing or locker; hides the nested product for them entirely. */
+  /**
+   * FR-MEMB-007/BR: trainer never sees pricing or locker; hides the nested product for them entirely.
+   * CM-05: a member-scoped read shows only the partner's name, never the partner's membership/member id.
+   */
   private present(membership: MembershipWithProduct, actor: AuthenticatedUser): MembershipWithProduct {
-    if (actor.userType !== 'trainer') {
-      return membership;
+    if (actor.userType === 'trainer') {
+      return { ...membership, product: null, locker_number: null };
     }
-    return { ...membership, product: null, locker_number: null };
+    if (actor.userType === 'member') {
+      return { ...membership, partner_membership_id: null, partner_member_id: null };
+    }
+    return membership;
   }
 
   async list(
@@ -143,7 +174,66 @@ export class MembershipService {
     return this.present(membership, actor);
   }
 
-  /** FR-MEMB-005/006: assign a new contract; at most one active/frozen membership per member. */
+  /** CM-07: cancels `before` inside the current transaction; caller emits the domain event after commit. */
+  private async cancelRow(
+    before: Membership,
+    reason: string | null,
+    actor: AuthenticatedUser,
+    now: Date,
+  ): Promise<void> {
+    await this.repository.updateMembership(before.id, {
+      status: 'cancelled',
+      row_version: before.row_version + 1,
+      updated_at: now,
+    });
+
+    await this.repository.insertHistory({
+      membership_id: before.id,
+      action: 'cancelled',
+      old_end_date: before.end_date,
+      new_end_date: before.end_date,
+      performed_by_user_id: actor.id,
+      timestamp: now,
+    });
+
+    await this.auditService.recordAudit({
+      actorUserId: actor.id,
+      action: 'membership.cancelled',
+      entityName: 'memberships',
+      entityId: before.id,
+      beforeState: { status: before.status },
+      afterState: { status: 'cancelled', reason },
+    });
+  }
+
+  /** CM-06: pro-rated credit preview for replacing a member's current membership with a couple purchase. */
+  async getReplacementPreview(memberId: number): Promise<MembershipReplacementPreview> {
+    const existing = await this.repository.findActiveOrFrozenForMember(memberId);
+    if (!existing) {
+      throw new NotFoundError('Member has no active or frozen membership to replace');
+    }
+
+    const product = await this.productRepository.findById(existing.product_id);
+    if (!product) {
+      throw new NotFoundError('Membership product not found');
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const effectiveStart = today > existing.start_date ? today : existing.start_date;
+    const remainingDays = Math.max(0, daysBetween(effectiveStart, existing.end_date));
+
+    return {
+      membership_id: existing.id,
+      product_name: product.name,
+      status: existing.status,
+      end_date: existing.end_date,
+      remaining_days: remainingDays,
+      is_couple: product.package_type === 'couple',
+      suggested_credit: proRatedCredit(product.base_price, remainingDays, product.duration_days),
+    };
+  }
+
+  /** FR-MEMB-005/006/CM-07: assign a new contract; at most one active/frozen membership per member. */
   async create(dto: MembershipCreateDto, actor: AuthenticatedUser): Promise<MembershipWithProduct> {
     const member = await this.memberRepository.findById(dto.member_id);
     if (!member) {
@@ -155,11 +245,48 @@ export class MembershipService {
       throw new NotFoundError('Membership product not found');
     }
 
+    const isCouple = product.package_type === 'couple';
+    if (isCouple && dto.partner_member_id == null) {
+      throw new BadRequestError('partner_member_id is required for a couple package');
+    }
+    if (!isCouple && dto.partner_member_id != null) {
+      throw new BadRequestError('partner_member_id is only valid for a couple package');
+    }
+    if (dto.partner_member_id != null && dto.partner_member_id === dto.member_id) {
+      throw new BadRequestError('partner_member_id must differ from member_id');
+    }
+
+    let partner: { id: number } | null = null;
+    if (dto.partner_member_id != null) {
+      partner = await this.memberRepository.findById(dto.partner_member_id);
+      if (!partner) {
+        throw new NotFoundError('Partner member not found');
+      }
+    }
+
     const existing = await this.repository.findActiveOrFrozenForMember(dto.member_id);
     if (existing) {
       throw new BusinessRuleError(
         'Member already has an active or frozen membership; use renew/upgrade instead',
       );
+    }
+
+    let partnerExisting: Membership | null = null;
+    if (partner) {
+      partnerExisting = await this.repository.findActiveOrFrozenForMember(partner.id);
+      if (partnerExisting) {
+        if (!dto.replace_partner_membership) {
+          throw new BusinessRuleError(
+            'Partner has an active or frozen membership; confirm replacement',
+          );
+        }
+        const partnerProduct = await this.productRepository.findById(partnerExisting.product_id);
+        if (partnerProduct?.package_type === 'couple') {
+          throw new BusinessRuleError(
+            'Partner is already in a couple membership; replace it from that membership instead',
+          );
+        }
+      }
     }
 
     if (dto.locker_number) {
@@ -171,11 +298,22 @@ export class MembershipService {
       }
     }
 
+    if (
+      dto.discount_amount !== undefined &&
+      (cmpMoney(dto.discount_amount, '0') < 0 || cmpMoney(dto.discount_amount, product.base_price) > 0)
+    ) {
+      throw new BadRequestError('discount_amount must be between 0 and base_price');
+    }
+
     const endDate = addDays(dto.start_date, product.duration_days);
     const now = new Date();
 
-    const id = await runInTransaction(this.db, async () => {
-      const membershipId = await this.repository.insertMembership({
+    const { primaryId, partnerId } = await runInTransaction(this.db, async () => {
+      if (partnerExisting) {
+        await this.cancelRow(partnerExisting, 'replaced_by_couple', actor, now);
+      }
+
+      const primaryMembershipId = await this.repository.insertMembership({
         member_id: dto.member_id,
         product_id: dto.product_id,
         start_date: dto.start_date,
@@ -188,7 +326,7 @@ export class MembershipService {
       });
 
       await this.repository.insertHistory({
-        membership_id: membershipId,
+        membership_id: primaryMembershipId,
         action: 'created',
         old_end_date: null,
         new_end_date: endDate,
@@ -200,30 +338,80 @@ export class MembershipService {
         actorUserId: actor.id,
         action: 'membership.created',
         entityName: 'memberships',
-        entityId: membershipId,
+        entityId: primaryMembershipId,
         afterState: { member_id: dto.member_id, product_id: dto.product_id, end_date: endDate },
       });
+
+      let partnerMembershipId: number | null = null;
+      if (partner) {
+        partnerMembershipId = await this.repository.insertMembership({
+          member_id: partner.id,
+          product_id: dto.product_id,
+          start_date: dto.start_date,
+          end_date: endDate,
+          status: 'active',
+          locker_number: null,
+          auto_renew: dto.auto_renew ?? false,
+          partner_membership_id: primaryMembershipId,
+          row_version: 1,
+          created_at: now,
+        });
+
+        await this.repository.setPartner(primaryMembershipId, partnerMembershipId);
+
+        await this.repository.insertHistory({
+          membership_id: partnerMembershipId,
+          action: 'created',
+          old_end_date: null,
+          new_end_date: endDate,
+          performed_by_user_id: actor.id,
+          timestamp: now,
+        });
+
+        await this.auditService.recordAudit({
+          actorUserId: actor.id,
+          action: 'membership.created',
+          entityName: 'memberships',
+          entityId: partnerMembershipId,
+          afterState: { member_id: partner.id, product_id: dto.product_id, end_date: endDate },
+        });
+      }
 
       await this.paymentService.create(
         {
           member_id: dto.member_id,
-          membership_id: membershipId,
+          membership_id: primaryMembershipId,
           payment_method_id: dto.payment_method_id,
           subtotal: product.base_price,
+          discount_amount: dto.discount_amount,
         },
         actor,
       );
 
-      return membershipId;
+      return { primaryId: primaryMembershipId, partnerId: partnerMembershipId };
     });
 
     await this.domainEventBus.emit({
       eventName: 'membership.created',
       occurredAt: now,
-      payload: { membershipId: id, memberId: dto.member_id },
+      payload: { membershipId: primaryId, memberId: dto.member_id },
     });
+    if (partnerId != null && partner) {
+      await this.domainEventBus.emit({
+        eventName: 'membership.created',
+        occurredAt: now,
+        payload: { membershipId: partnerId, memberId: partner.id },
+      });
+    }
+    if (partnerExisting) {
+      await this.domainEventBus.emit({
+        eventName: 'membership.cancelled',
+        occurredAt: now,
+        payload: { membershipId: partnerExisting.id },
+      });
+    }
 
-    const created = await this.repository.findByIdWithProduct(id);
+    const created = await this.repository.findByIdWithProduct(primaryId);
     if (!created) {
       throw new NotFoundError('Membership not found after creation');
     }
@@ -375,29 +563,7 @@ export class MembershipService {
 
     const now = new Date();
     await runInTransaction(this.db, async () => {
-      await this.repository.updateMembership(id, {
-        status: 'cancelled',
-        row_version: before.row_version + 1,
-        updated_at: now,
-      });
-
-      await this.repository.insertHistory({
-        membership_id: id,
-        action: 'cancelled',
-        old_end_date: before.end_date,
-        new_end_date: before.end_date,
-        performed_by_user_id: actor.id,
-        timestamp: now,
-      });
-
-      await this.auditService.recordAudit({
-        actorUserId: actor.id,
-        action: 'membership.cancelled',
-        entityName: 'memberships',
-        entityId: id,
-        beforeState: { status: before.status },
-        afterState: { status: 'cancelled', reason: dto.reason ?? null },
-      });
+      await this.cancelRow(before, dto.reason ?? null, actor, now);
     });
 
     await this.domainEventBus.emit({

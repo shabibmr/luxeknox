@@ -7,7 +7,7 @@ import { PaginationHelper } from '../platform/http/pagination';
 import type { AuditService } from '../platform/audit/audit.service';
 import type { DomainEventBus } from '../platform/events/domain-events';
 import type { DrizzleDb } from '../platform/db/client';
-import { BusinessRuleError, ConflictError, NotFoundError } from '../platform/errors/app-error';
+import { BadRequestError, BusinessRuleError, ConflictError, NotFoundError } from '../platform/errors/app-error';
 import type { Membership, MembershipProduct } from '../platform/db/schema/memberships';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 
@@ -42,6 +42,7 @@ function makeMembership(overrides: Partial<Membership> = {}): Membership {
     status: 'active',
     locker_number: null,
     auto_renew: false,
+    partner_membership_id: null,
     row_version: 1,
     created_at: new Date('2026-01-01T00:00:00.000Z'),
     updated_at: null,
@@ -61,10 +62,27 @@ function makeProduct(overrides: Partial<MembershipProduct> = {}): MembershipProd
     max_freeze_days: 15,
     pt_sessions_included: 4,
     access_facilities: ['pool'],
+    package_type: 'single',
     is_active: true,
     created_at: new Date('2026-01-01T00:00:00.000Z'),
     updated_at: null,
     ...overrides,
+  };
+}
+
+function makeMembershipWithProduct(
+  overrides: Partial<Membership> = {},
+  productOverrides: Partial<MembershipProduct> | null = {},
+): ReturnType<typeof makeMembership> & {
+  product: MembershipProduct | null;
+  partner_member_id: number | null;
+  partner_member_name: string | null;
+} {
+  return {
+    ...makeMembership(overrides),
+    product: productOverrides === null ? null : makeProduct(productOverrides),
+    partner_member_id: null,
+    partner_member_name: null,
   };
 }
 
@@ -96,6 +114,9 @@ describe('MembershipService', () => {
       sumApprovedFreezeDays: vi.fn().mockResolvedValue(0),
       findOverlappingFreeze: vi.fn().mockResolvedValue(null),
       insertExtension: vi.fn(),
+      setPartner: vi.fn().mockResolvedValue(undefined),
+      findPartner: vi.fn(),
+      setPairedFreeze: vi.fn().mockResolvedValue(undefined),
     };
     productRepository = { findById: vi.fn() };
     memberRepository = { findById: vi.fn().mockImplementation(async (id: number) => ({ id, user_id: 10 })) };
@@ -179,6 +200,256 @@ describe('MembershipService', () => {
         }),
         ADMIN_USER,
       );
+    });
+
+    describe('couple packages (CM-07)', () => {
+      it('rejects a couple product without a partner', async () => {
+        memberRepository.findById.mockResolvedValue({ id: 100 });
+        productRepository.findById.mockResolvedValue(makeProduct({ package_type: 'couple' }));
+
+        await expect(
+          service.create(
+            { member_id: 100, product_id: 1, start_date: '2026-02-01', payment_method_id: 1 },
+            ADMIN_USER,
+          ),
+        ).rejects.toThrow(BadRequestError);
+        expect(repository.insertMembership).not.toHaveBeenCalled();
+      });
+
+      it('rejects a single product with a partner', async () => {
+        memberRepository.findById.mockResolvedValue({ id: 100 });
+        productRepository.findById.mockResolvedValue(makeProduct({ package_type: 'single' }));
+
+        await expect(
+          service.create(
+            {
+              member_id: 100,
+              product_id: 1,
+              start_date: '2026-02-01',
+              payment_method_id: 1,
+              partner_member_id: 200,
+            },
+            ADMIN_USER,
+          ),
+        ).rejects.toThrow(BadRequestError);
+      });
+
+      it('rejects a member picked as their own partner', async () => {
+        memberRepository.findById.mockResolvedValue({ id: 100 });
+        productRepository.findById.mockResolvedValue(makeProduct({ package_type: 'couple' }));
+
+        await expect(
+          service.create(
+            {
+              member_id: 100,
+              product_id: 1,
+              start_date: '2026-02-01',
+              payment_method_id: 1,
+              partner_member_id: 100,
+            },
+            ADMIN_USER,
+          ),
+        ).rejects.toThrow(BadRequestError);
+      });
+
+      it('rejects replacing a partner membership without the confirmation flag', async () => {
+        memberRepository.findById.mockImplementation(async (id: number) => ({ id }));
+        productRepository.findById.mockResolvedValue(makeProduct({ package_type: 'couple' }));
+        repository.findActiveOrFrozenForMember.mockImplementation(async (memberId: number) =>
+          memberId === 200 ? makeMembership({ id: 9, member_id: 200 }) : null,
+        );
+
+        await expect(
+          service.create(
+            {
+              member_id: 100,
+              product_id: 1,
+              start_date: '2026-02-01',
+              payment_method_id: 1,
+              partner_member_id: 200,
+            },
+            ADMIN_USER,
+          ),
+        ).rejects.toThrow(BusinessRuleError);
+        expect(repository.insertMembership).not.toHaveBeenCalled();
+      });
+
+      it('rejects replacing a partner who is already in a couple membership', async () => {
+        memberRepository.findById.mockImplementation(async (id: number) => ({ id }));
+        productRepository.findById.mockImplementation(async (id: number) =>
+          id === 1 ? makeProduct({ id: 1, package_type: 'couple' }) : makeProduct({ id: 2, package_type: 'couple' }),
+        );
+        repository.findActiveOrFrozenForMember.mockImplementation(async (memberId: number) =>
+          memberId === 200 ? makeMembership({ id: 9, member_id: 200, product_id: 2 }) : null,
+        );
+
+        await expect(
+          service.create(
+            {
+              member_id: 100,
+              product_id: 1,
+              start_date: '2026-02-01',
+              payment_method_id: 1,
+              partner_member_id: 200,
+              replace_partner_membership: true,
+            },
+            ADMIN_USER,
+          ),
+        ).rejects.toThrow(BusinessRuleError);
+        expect(repository.insertMembership).not.toHaveBeenCalled();
+      });
+
+      it('rejects a discount outside 0..base_price', async () => {
+        memberRepository.findById.mockResolvedValue({ id: 100 });
+        productRepository.findById.mockResolvedValue(makeProduct({ base_price: '100.00' }));
+
+        await expect(
+          service.create(
+            {
+              member_id: 100,
+              product_id: 1,
+              start_date: '2026-02-01',
+              payment_method_id: 1,
+              discount_amount: '150.00',
+            },
+            ADMIN_USER,
+          ),
+        ).rejects.toThrow(BadRequestError);
+      });
+
+      it('creates two cross-linked rows, cancels the replaced partner row, and pays with the discount', async () => {
+        memberRepository.findById.mockImplementation(async (id: number) => ({ id }));
+        productRepository.findById.mockImplementation(async (id: number) => {
+          if (id === 1) return makeProduct({ id: 1, package_type: 'couple', base_price: '2000.00', duration_days: 30 });
+          return makeProduct({ id: 2, package_type: 'single' });
+        });
+        const partnerExisting = makeMembership({ id: 9, member_id: 200, product_id: 2, row_version: 1 });
+        repository.findActiveOrFrozenForMember.mockImplementation(async (memberId: number) =>
+          memberId === 200 ? partnerExisting : null,
+        );
+        repository.insertMembership.mockResolvedValueOnce(5).mockResolvedValueOnce(6);
+        repository.findByIdWithProduct.mockResolvedValue(
+          makeMembershipWithProduct({ id: 5, partner_membership_id: 6 }, { id: 1, package_type: 'couple' }),
+        );
+
+        await service.create(
+          {
+            member_id: 100,
+            product_id: 1,
+            start_date: '2026-02-01',
+            payment_method_id: 1,
+            partner_member_id: 200,
+            replace_partner_membership: true,
+            discount_amount: '300.00',
+          },
+          ADMIN_USER,
+        );
+
+        expect(repository.updateMembership).toHaveBeenCalledWith(
+          9,
+          expect.objectContaining({ status: 'cancelled', row_version: 2 }),
+        );
+        expect(repository.insertMembership).toHaveBeenNthCalledWith(
+          1,
+          expect.objectContaining({ member_id: 100, product_id: 1 }),
+        );
+        expect(repository.insertMembership).toHaveBeenNthCalledWith(
+          2,
+          expect.objectContaining({ member_id: 200, product_id: 1, partner_membership_id: 5 }),
+        );
+        expect(repository.setPartner).toHaveBeenCalledWith(5, 6);
+        expect(paymentService.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            member_id: 100,
+            membership_id: 5,
+            subtotal: '2000.00',
+            discount_amount: '300.00',
+          }),
+          ADMIN_USER,
+        );
+        expect(auditService.recordAudit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            action: 'membership.cancelled',
+            entityId: 9,
+            afterState: expect.objectContaining({ reason: 'replaced_by_couple' }),
+          }),
+        );
+      });
+    });
+  });
+
+  describe('getReplacementPreview (CM-06)', () => {
+    it('404s when the member has no active or frozen membership', async () => {
+      repository.findActiveOrFrozenForMember.mockResolvedValue(null);
+
+      await expect(service.getReplacementPreview(100)).rejects.toThrow(NotFoundError);
+    });
+
+    it('computes remaining days and a pro-rated credit for a membership mid-term', async () => {
+      repository.findActiveOrFrozenForMember.mockResolvedValue(
+        makeMembership({ start_date: '2026-01-01', end_date: '2026-01-31' }),
+      );
+      productRepository.findById.mockResolvedValue(
+        makeProduct({ base_price: '300.00', duration_days: 30, package_type: 'single' }),
+      );
+      vi.setSystemTime(new Date('2026-01-11T00:00:00.000Z'));
+
+      const preview = await service.getReplacementPreview(100);
+
+      expect(preview.remaining_days).toBe(20);
+      expect(preview.suggested_credit).toBe('200.00');
+      expect(preview.is_couple).toBe(false);
+      vi.useRealTimers();
+    });
+
+    it('caps the credit at base_price for a membership that has not started yet', async () => {
+      repository.findActiveOrFrozenForMember.mockResolvedValue(
+        makeMembership({ start_date: '2026-02-01', end_date: '2026-03-03' }),
+      );
+      productRepository.findById.mockResolvedValue(
+        makeProduct({ base_price: '300.00', duration_days: 30, package_type: 'couple' }),
+      );
+      vi.setSystemTime(new Date('2026-01-11T00:00:00.000Z'));
+
+      const preview = await service.getReplacementPreview(100);
+
+      expect(preview.remaining_days).toBe(30);
+      expect(preview.suggested_credit).toBe('300.00');
+      expect(preview.is_couple).toBe(true);
+      vi.useRealTimers();
+    });
+
+    it('computes a pro-rated credit for a frozen membership', async () => {
+      repository.findActiveOrFrozenForMember.mockResolvedValue(
+        makeMembership({ status: 'frozen', start_date: '2026-01-01', end_date: '2026-01-31' }),
+      );
+      productRepository.findById.mockResolvedValue(
+        makeProduct({ base_price: '300.00', duration_days: 30, package_type: 'single' }),
+      );
+      vi.setSystemTime(new Date('2026-01-11T00:00:00.000Z'));
+
+      const preview = await service.getReplacementPreview(100);
+
+      expect(preview.status).toBe('frozen');
+      expect(preview.remaining_days).toBe(20);
+      expect(preview.suggested_credit).toBe('200.00');
+      vi.useRealTimers();
+    });
+
+    it('returns zero remaining days and zero credit for a membership ending today', async () => {
+      repository.findActiveOrFrozenForMember.mockResolvedValue(
+        makeMembership({ start_date: '2026-01-01', end_date: '2026-01-11' }),
+      );
+      productRepository.findById.mockResolvedValue(
+        makeProduct({ base_price: '300.00', duration_days: 10, package_type: 'single' }),
+      );
+      vi.setSystemTime(new Date('2026-01-11T00:00:00.000Z'));
+
+      const preview = await service.getReplacementPreview(100);
+
+      expect(preview.remaining_days).toBe(0);
+      expect(preview.suggested_credit).toBe('0.00');
+      vi.useRealTimers();
     });
   });
 
@@ -341,6 +612,47 @@ describe('MembershipService', () => {
       memberRepository.findById.mockResolvedValue({ id: 100, assigned_trainer_id: 99 });
 
       await expect(service.getById(1, trainer)).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('present (CM-05 partner fields)', () => {
+    it('includes partner fields for a linked row and null for a single row', async () => {
+      repository.findByIdWithProduct.mockResolvedValue(
+        makeMembershipWithProduct(
+          { id: 1, partner_membership_id: 6 },
+          { package_type: 'couple' },
+        ),
+      );
+      (repository.findByIdWithProduct as any).mockResolvedValueOnce({
+        ...makeMembershipWithProduct({ id: 1, partner_membership_id: 6 }, { package_type: 'couple' }),
+        partner_member_id: 200,
+        partner_member_name: 'Priya Shah',
+      });
+
+      const linked = await service.getById(1, ADMIN_USER);
+      expect(linked.partner_membership_id).toBe(6);
+      expect(linked.partner_member_id).toBe(200);
+      expect(linked.partner_member_name).toBe('Priya Shah');
+
+      repository.findByIdWithProduct.mockResolvedValue(makeMembershipWithProduct());
+      const single = await service.getById(1, ADMIN_USER);
+      expect(single.partner_membership_id).toBeNull();
+      expect(single.partner_member_id).toBeNull();
+      expect(single.partner_member_name).toBeNull();
+    });
+
+    it('hides partner_membership_id and partner_member_id for a member-scoped read, keeping only the name', async () => {
+      repository.findByIdWithProduct.mockResolvedValue({
+        ...makeMembershipWithProduct({ id: 1, member_id: 100, partner_membership_id: 6 }, { package_type: 'couple' }),
+        partner_member_id: 200,
+        partner_member_name: 'Priya Shah',
+      });
+
+      const result = await service.getById(1, { ...MEMBER_USER, profileId: 100 });
+
+      expect(result.partner_membership_id).toBeNull();
+      expect(result.partner_member_id).toBeNull();
+      expect(result.partner_member_name).toBe('Priya Shah');
     });
   });
 
