@@ -34,7 +34,6 @@ Canonical physical names: [`database-entities.md`](./database-entities.md) (82 t
 - Membership History
 - Membership Freeze
 - Membership Extension
-- PT Product
 
 ## 4. Attendance
 - Attendance *(per check-in/out)*
