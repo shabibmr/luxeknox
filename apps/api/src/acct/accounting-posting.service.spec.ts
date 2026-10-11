@@ -1,0 +1,187 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { BadRequestError, BusinessRuleError, NotFoundError } from '../platform/errors/app-error';
+import { AccountingPostingService } from './accounting-posting.service';
+
+vi.mock('../platform/db/transaction-context', () => ({
+  runInTransaction: async (_db: unknown, fn: () => Promise<unknown>) => fn(),
+}));
+
+describe('AccountingPostingService.postJournal', () => {
+  let service: AccountingPostingService;
+  let repository: Record<string, ReturnType<typeof vi.fn>>;
+  const db = {} as any;
+
+  const openPeriod = {
+    id: 7,
+    fiscal_year_id: 1,
+    starts_on: '2026-04-01',
+    ends_on: '2026-04-30',
+    status: 'open' as const,
+    closed_at: null,
+    closed_by_user_id: null,
+  };
+
+  const balancedLines = [
+    { accountId: 1100, debit: '118.00', credit: '0.00' },
+    { accountId: 2200, debit: '0.00', credit: '100.00' },
+    { accountId: 2100, debit: '0.00', credit: '9.00' },
+    { accountId: 2110, debit: '0.00', credit: '9.00' },
+  ];
+
+  beforeEach(() => {
+    repository = {
+      allocateJournalNumber: vi.fn().mockResolvedValue('JRN00000001'),
+      findPeriodForDate: vi.fn().mockResolvedValue(openPeriod),
+      insertJournalEntry: vi.fn().mockImplementation(async (row) => ({
+        id: 50,
+        row_version: 1,
+        created_at: new Date('2026-04-15T10:00:00.000Z'),
+        updated_at: null,
+        reverses_journal_id: null,
+        ...row,
+      })),
+      insertJournalLines: vi.fn().mockImplementation(async (rows) =>
+        rows.map((row: Record<string, unknown>, index: number) => ({
+          id: index + 1,
+          ...row,
+        })),
+      ),
+      findEntryWithLines: vi.fn(),
+    };
+
+    service = new AccountingPostingService(repository as any, db);
+  });
+
+  it('posts a balanced journal inside a transaction and returns entry with lines', async () => {
+    const result = await service.postJournal({
+      entryDate: '2026-04-15',
+      sourceType: 'manual',
+      sourceId: 9001,
+      memo: 'Opening cash',
+      postedByUserId: 9,
+      lines: balancedLines,
+    });
+
+    expect(repository.findPeriodForDate).toHaveBeenCalledWith('2026-04-15');
+    expect(repository.allocateJournalNumber).toHaveBeenCalledOnce();
+    expect(repository.insertJournalEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        journal_number: 'JRN00000001',
+        entry_date: '2026-04-15',
+        accounting_period_id: 7,
+        source_type: 'manual',
+        source_id: 9001,
+        memo: 'Opening cash',
+        posted_by_user_id: 9,
+      }),
+    );
+    expect(repository.insertJournalLines).toHaveBeenCalledWith([
+      expect.objectContaining({
+        journal_entry_id: 50,
+        account_id: 1100,
+        debit: '118.00',
+        credit: '0.00',
+      }),
+      expect.objectContaining({
+        journal_entry_id: 50,
+        account_id: 2200,
+        debit: '0.00',
+        credit: '100.00',
+      }),
+      expect.objectContaining({
+        journal_entry_id: 50,
+        account_id: 2100,
+        debit: '0.00',
+        credit: '9.00',
+      }),
+      expect.objectContaining({
+        journal_entry_id: 50,
+        account_id: 2110,
+        debit: '0.00',
+        credit: '9.00',
+      }),
+    ]);
+    expect(result.id).toBe(50);
+    expect(result.journal_number).toBe('JRN00000001');
+    expect(result.lines).toHaveLength(4);
+  });
+
+  it('rejects when debit cents do not equal credit cents', async () => {
+    await expect(
+      service.postJournal({
+        entryDate: '2026-04-15',
+        sourceType: 'manual',
+        sourceId: 1,
+        lines: [
+          { accountId: 1100, debit: '100.00', credit: '0.00' },
+          { accountId: 2200, debit: '0.00', credit: '99.99' },
+        ],
+      }),
+    ).rejects.toBeInstanceOf(BusinessRuleError);
+
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+  });
+
+  it('rejects a line that carries both debit and credit', async () => {
+    await expect(
+      service.postJournal({
+        entryDate: '2026-04-15',
+        sourceType: 'manual',
+        sourceId: 1,
+        lines: [
+          { accountId: 1100, debit: '50.00', credit: '50.00' },
+          { accountId: 2200, debit: '0.00', credit: '0.00' },
+        ],
+      }),
+    ).rejects.toBeInstanceOf(BadRequestError);
+
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+  });
+
+  it('rejects a line with neither debit nor credit', async () => {
+    await expect(
+      service.postJournal({
+        entryDate: '2026-04-15',
+        sourceType: 'manual',
+        sourceId: 1,
+        lines: [
+          { accountId: 1100, debit: '0.00', credit: '0.00' },
+          { accountId: 2200, debit: '100.00', credit: '0.00' },
+        ],
+      }),
+    ).rejects.toBeInstanceOf(BadRequestError);
+
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+  });
+
+  it('rejects a non-positive amount on the active side', async () => {
+    await expect(
+      service.postJournal({
+        entryDate: '2026-04-15',
+        sourceType: 'manual',
+        sourceId: 1,
+        lines: [
+          { accountId: 1100, debit: '-10.00', credit: '0.00' },
+          { accountId: 2200, debit: '0.00', credit: '-10.00' },
+        ],
+      }),
+    ).rejects.toBeInstanceOf(BadRequestError);
+
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+  });
+
+  it('rejects when no accounting period covers the entry date', async () => {
+    repository.findPeriodForDate.mockResolvedValue(null);
+
+    await expect(
+      service.postJournal({
+        entryDate: '2099-01-01',
+        sourceType: 'manual',
+        sourceId: 1,
+        lines: balancedLines,
+      }),
+    ).rejects.toBeInstanceOf(NotFoundError);
+
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+  });
+});
