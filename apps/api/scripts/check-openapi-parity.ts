@@ -25,7 +25,8 @@ const IMPLEMENTED_MVP_PATH_ALLOWLIST = new Set<string>([]);
 
 function normalizePath(p: string): string {
   const withPrefix = p.startsWith('/v1/') || p === '/v1' ? p : `/v1${p.startsWith('/') ? p : `/${p}`}`;
-  return withPrefix.replace(/\{[^}]+\}/g, '{}');
+  // Nest Express wildcards (`/media/*`) and OpenAPI params (`/media/{key}`) both mean one segment.
+  return withPrefix.replace(/\{[^}]+\}/g, '{}').replace(/\/\*(?=\/|$)/g, '/{}');
 }
 
 function stripV1(p: string): string {
