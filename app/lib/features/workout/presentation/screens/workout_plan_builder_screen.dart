@@ -29,7 +29,7 @@ class WorkoutPlanBuilderScreen extends StatelessWidget {
   final bool? isTemplate;
   final String? memberId;
 
-  /// Where to go after a successful save. Defaults to the plan's detail page.
+  /// Where to navigate after a successful save; defaults to the trainer plan detail.
   final String? afterSavePath;
 
   @override
