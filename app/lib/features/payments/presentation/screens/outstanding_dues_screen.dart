@@ -6,6 +6,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -70,9 +71,13 @@ class _OutstandingDuesBody extends StatelessWidget {
                   title: Text(
                     PaymentStrings.invoiceSubtitle(payment.invoiceNumber),
                   ),
-                  subtitle: Text(
-                    '${PaymentStrings.memberIdLabel(payment.memberId)} · '
-                    '${PaymentStrings.formatMoney(payment.totalAmount)}',
+                  subtitle: Wrap(
+                    spacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(PaymentStrings.memberIdLabel(payment.memberId)),
+                      AppCurrencyText(payment.totalAmount),
+                    ],
                   ),
                   trailing: PaymentStatusChip(status: payment.status),
                   onTap: () => context.go(Routes.adminPaymentById(payment.id)),

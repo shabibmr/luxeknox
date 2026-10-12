@@ -33,7 +33,7 @@ void main() {
     expect(controller.text, '49.90');
   });
 
-  testWidgets('pads decimals during form validate', (tester) async {
+  testWidgets('validation does not mutate the entered value', (tester) async {
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
@@ -54,6 +54,30 @@ void main() {
     await tester.enterText(find.byType(TextFormField), '49');
     await tester.pump();
     expect(formKey.currentState!.validate(), isTrue);
-    expect(controller.text, '49.00');
+    expect(controller.text, '49');
+  });
+
+  testWidgets('enforces minimum and maximum values', (tester) async {
+    final controller = TextEditingController(text: '101');
+    final formKey = GlobalKey<FormState>();
+
+    await pumpApp(
+      tester,
+      Scaffold(
+        body: Form(
+          key: formKey,
+          child: AppCurrencyField(
+            controller: controller,
+            label: 'Price',
+            currencyCode: 'USD',
+            minValue: 0,
+            maxValue: 100,
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    expect(formKey.currentState!.validate(), isFalse);
   });
 }
