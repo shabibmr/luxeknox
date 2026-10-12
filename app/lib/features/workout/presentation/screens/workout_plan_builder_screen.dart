@@ -122,10 +122,11 @@ class _BuilderForm extends StatefulWidget {
 }
 
 class _BuilderFormState extends State<_BuilderForm> {
+  static const _difficultyOptions = ['Beginner', 'Intermediate', 'Advanced'];
+
   late final TextEditingController _title;
   late final TextEditingController _description;
   late final TextEditingController _targetGoal;
-  late final TextEditingController _difficulty;
   late final TextEditingController _duration;
   late final TextEditingController _memberId;
   final _formKey = GlobalKey<FormState>();
@@ -137,7 +138,6 @@ class _BuilderFormState extends State<_BuilderForm> {
     _title = TextEditingController(text: s.title);
     _description = TextEditingController(text: s.description);
     _targetGoal = TextEditingController(text: s.targetGoal);
-    _difficulty = TextEditingController(text: s.difficulty);
     _duration = TextEditingController(text: s.durationWeeks?.toString() ?? '');
     _memberId = TextEditingController(text: s.memberId);
   }
@@ -151,7 +151,6 @@ class _BuilderFormState extends State<_BuilderForm> {
       _title.text = s.title;
       _description.text = s.description;
       _targetGoal.text = s.targetGoal;
-      _difficulty.text = s.difficulty;
       _duration.text = s.durationWeeks?.toString() ?? '';
       _memberId.text = s.memberId;
     }
@@ -162,7 +161,6 @@ class _BuilderFormState extends State<_BuilderForm> {
     _title.dispose();
     _description.dispose();
     _targetGoal.dispose();
-    _difficulty.dispose();
     _duration.dispose();
     _memberId.dispose();
     super.dispose();
@@ -339,13 +337,21 @@ class _BuilderFormState extends State<_BuilderForm> {
               onChanged: context.read<WorkoutPlanBuilderCubit>().setTargetGoal,
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _difficulty,
+            DropdownButtonFormField<String>(
+              initialValue: _difficultyOptions.contains(widget.state.difficulty)
+                  ? widget.state.difficulty
+                  : null,
               decoration: const InputDecoration(
                 labelText: WorkoutStrings.difficultyLabel,
                 border: OutlineInputBorder(),
               ),
-              onChanged: context.read<WorkoutPlanBuilderCubit>().setDifficulty,
+              items: [
+                for (final d in _difficultyOptions)
+                  DropdownMenuItem(value: d, child: Text(d)),
+              ],
+              onChanged: (v) => context
+                  .read<WorkoutPlanBuilderCubit>()
+                  .setDifficulty(v ?? ''),
             ),
             const SizedBox(height: 12),
             TextFormField(
