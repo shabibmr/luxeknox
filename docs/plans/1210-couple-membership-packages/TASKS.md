@@ -50,7 +50,7 @@ Derived from [PLAN.md](./PLAN.md).
 - [x] CM-24 Member card, directory badge, trainer summary <!-- id: 24 -->
 
 **Phase 8: Verification**
-- [ ] CM-25 API e2e: couple sale and lifecycle <!-- id: 25 -->
+- [x] CM-25 API e2e: couple sale and lifecycle <!-- id: 25 -->
 - [ ] CM-26 Full automated pass and manual walkthrough on Edge <!-- id: 26 -->
 
 ---
@@ -511,7 +511,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-07 to CM-11 |
 | **Files** | new `apps/api/test/memberships-couple.e2e.spec.ts`, and `apps/api/test/helpers/*` if fixtures are needed |
 
