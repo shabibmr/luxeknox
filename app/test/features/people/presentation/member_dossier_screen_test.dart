@@ -104,12 +104,15 @@ void main() {
     lastName: 'Coach',
   );
 
-  Membership gymMembership({int daysUntilExpiry = 45}) {
+  Membership gymMembership({int daysUntilExpiry = 45, String? partnerName}) {
     final end = DateTime.now().add(Duration(days: daysUntilExpiry));
     return Membership(
       id: 'm2',
       memberId: '42',
       productId: 'p2',
+      partnerMembershipId: partnerName == null ? null : 'm3',
+      partnerMemberId: partnerName == null ? null : '43',
+      partnerMemberName: partnerName,
       startDate: DateTime.now().subtract(const Duration(days: 5)),
       endDate: end,
       remainingPtSessions: 0,
@@ -284,6 +287,24 @@ void main() {
     expect(find.text(PeopleStrings.ptNotPurchased), findsOneWidget);
     expect(find.text(PeopleStrings.addPersonalTraining), findsNothing);
     expect(find.text(PeopleStrings.assignMembership), findsNothing);
+  });
+
+  testWidgets('couple membership shows "Couple with <partner>"', (
+    tester,
+  ) async {
+    stubExtras(membership: gymMembership(partnerName: 'Priya Nair'));
+
+    await pumpDossier(tester);
+
+    expect(find.text(PeopleStrings.coupleWith('Priya Nair')), findsOneWidget);
+  });
+
+  testWidgets('single membership hides the couple line', (tester) async {
+    stubExtras(membership: gymMembership());
+
+    await pumpDossier(tester);
+
+    expect(find.textContaining('Couple with'), findsNothing);
   });
 
   testWidgets('edit icon reveals inline editable profile fields', (

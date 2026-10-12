@@ -322,7 +322,7 @@ Health data is **sensitive**. Extra audit on Admin reads of medical rows is requ
 | FR-MEMB-024 | **Payments path.** Renewing a couple membership through `/payments` renews both rows. A new couple purchase through `/payments` is rejected; couple packages are sold only via `POST /memberships`. |
 | FR-MEMB-007 | Member and assigned trainer may read the current contract (plan name, dates, remaining days, remaining PT, access facilities, locker for member/admin only). Trainer does not see pricing. |
 | FR-MEMB-008 | Admin directory: filter Active / Expiring (7/15/30 days) / Expired / Frozen / Cancelled. |
-| FR-MEMB-009 | Renew: Admin (or member self-pay success) creates a continuation. If current is still active, new start is day after current end (or configurable overlap). History `renewed`. PT is **not** part of the membership any more — see PT packages (ADR-0009). |
+| FR-MEMB-009 | Renew: Admin (or member self-pay success) creates a continuation. If current is still active, new start is day after current end (or configurable overlap). History `renewed`. PT is **not** part of the membership any more — see PT packages (ADR-0009). **Couple PT** (ADR-0011): a product has `package_type` `single` or `couple` (required on create, immutable). Selling a couple PT requires `partner_member_id` (rejected for single); creates two linked `pt_subscriptions` rows with identical dates/trainer/slot, one payment on the primary, and one shared session per date (`max_capacity = 2`, two participants). Renew/reassign-trainer/change-slot from either row apply to both; renew keeps the same `package_type` and bills the primary. Both members need an active unexpired gym membership; an open overlapping PT on either member blocks the sale. |
 | FR-MEMB-010 | Upgrade: Admin switches product; writes history `upgraded` with old/new end dates and product ids in notes/payload. |
 | FR-MEMB-011 | Cancel: Admin only. Status `cancelled`. History `cancelled`. Does not auto-refund (refund is PAY). |
 | FR-MEMB-012 | Expiry job: when `end_date < today` (gym TZ) and status `active`, set `expired`, history `expired`, emit `membership_expiry`. Frozen memberships do not expire until freeze ends and remaining days elapse. |
@@ -373,7 +373,7 @@ Health data is **sensitive**. Extra audit on Admin reads of medical rows is requ
 | :--- | :--- |
 | FR-SCHED-003 | Trainer sets recurring weekly windows (`day_of_week` 0–6, start/end, `is_recurring=true`) and date-specific overrides (`override_date`, `is_available` true/false for block-outs). |
 | FR-SCHED-004 | Admin may edit any trainer’s availability. |
-| FR-SCHED-005 | Member slot picker returns **open** intervals: trainer available, no overlapping booked schedule, within booking lead-time. PT hours come from the PT schedule grid (`GET /pt/schedule-grid`, ADR-0009): active trainers, free on every PT day of the period. |
+| FR-SCHED-005 | Member slot picker returns **open** intervals: trainer available, no overlapping booked schedule, within booking lead-time. PT hours come from the PT schedule grid (`GET /pt/schedule-grid`, ADR-0009 / ADR-0011): active trainers, free on every PT day of the period. Optional `partner_member_id` marks a cell occupied when **either** member is busy; on re-plan the partner is resolved from the subscription when omitted. |
 | FR-SCHED-006 | Availability matrix (Admin): all trainers × day, booked vs free. |
 
 ### 11.3 Schedules
@@ -407,7 +407,7 @@ Health data is **sensitive**. Extra audit on Admin reads of medical rows is requ
 | FR-SCHED-013 | Book: if booked_count < max_capacity → `booked`; else if waitlist enabled → `waitlisted`; else 422 `class_full`. |
 | FR-SCHED-014 | Member cancel own booking if now < start − `cancellation_cutoff`. After cutoff: 422 unless Admin overrides. |
 | FR-SCHED-015 | On booked cancel, promote first waitlisted to `booked` and notify. |
-| FR-SCHED-016 | PT sessions are generated from a PT subscription (fixed trainer, weekdays and hour for the package period, ADR-0009); there is no per-session PT counter. |
+| FR-SCHED-016 | PT sessions are generated from a PT subscription (fixed trainer, weekdays and hour for the package period, ADR-0009); there is no per-session PT counter. A couple PT (ADR-0011) generates **one** session per date owned by the primary row (`max_capacity = 2`, both members as participants). Replan cancels and regenerates that shared set once for the pair. |
 | FR-SCHED-017 | Double-book same member overlapping time → 409. Double-book same trainer overlapping → 409. Facility overlap when capacity is 1 (or exclusive rooms) → 409. |
 | FR-SCHED-018 | Member max concurrent future bookings: `gym_settings.schedule.max_booking_slots_per_member`. |
 | FR-SCHED-019 | Booking lead time: cannot book closer than `min_lead_minutes` or further than `max_lead_days`. |

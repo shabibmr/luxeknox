@@ -1810,6 +1810,12 @@ paths:
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Q"
+        - name: package_type
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/PtPackageType"
+          description: Filter by single or couple packages.
       responses:
         "200":
           description: OK
@@ -1924,6 +1930,15 @@ paths:
           description: Comma-separated 0=Sunday … 6=Saturday, e.g. "1,3,5"
           schema:
             type: string
+        - name: partner_member_id
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: >
+            Second member when selling a couple PT. Cells busy for either member show as occupied.
+            On re-plan (`exclude_subscription_id`), the partner is resolved from the subscription when omitted.
         - name: exclude_subscription_id
           in: query
           required: false
@@ -7819,9 +7834,13 @@ components:
             $ref: "#/components/schemas/MembershipProduct"
         meta:
           $ref: "#/components/schemas/PageMeta"
+    PtPackageType:
+      type: string
+      enum: [single, couple]
+      description: A couple PT package is sold to two members; base_price is the total for both.
     PtProduct:
       type: object
-      required: [id, name, code, duration_days, base_price, is_active]
+      required: [id, name, code, package_type, duration_days, base_price, is_active]
       properties:
         id:
           $ref: "#/components/schemas/Id"
@@ -7829,6 +7848,8 @@ components:
           type: string
         code:
           type: string
+        package_type:
+          $ref: "#/components/schemas/PtPackageType"
         description:
           type: string
           nullable: true
@@ -7842,8 +7863,11 @@ components:
           type: boolean
     PtProductWrite:
       type: object
-      required: [name, code, duration_days, base_price]
+      required: [name, code, package_type, duration_days, base_price]
       properties:
+        package_type:
+          $ref: "#/components/schemas/PtPackageType"
+          description: Required on create; rejected on PATCH (immutable).
         name:
           type: string
         code:
@@ -7875,7 +7899,7 @@ components:
       type: object
       required:
         [id, member_id, pt_product_id, trainer_id, start_date, end_date, weekdays, slot_start, status, row_version,
-         product_name, sessions_per_week, trainer_name, slot_label]
+         product_name, sessions_per_week, trainer_name, slot_label, package_type, is_primary]
       properties:
         id:
           $ref: "#/components/schemas/Id"
@@ -7920,6 +7944,24 @@ components:
         slot_label:
           type: string
           description: e.g. "17:00-18:00"
+        package_type:
+          $ref: "#/components/schemas/PtPackageType"
+        is_primary:
+          type: boolean
+          description: True for a single subscription and for the primary row of a couple pair.
+        partner_subscription_id:
+          type: integer
+          format: int64
+          nullable: true
+          description: Set on both rows of a couple PT (see ADR-0011).
+        partner_member_id:
+          type: integer
+          format: int64
+          nullable: true
+        partner_member_name:
+          type: string
+          nullable: true
+          description: Partner display name; member-scoped reads expose only this partner field.
     MemberPtSummary:
       type: object
       required: [history]
@@ -7973,6 +8015,9 @@ components:
             slot_start:
               type: string
               example: "17:00"
+            partner_member_id:
+              $ref: "#/components/schemas/Id"
+              description: Required for a couple PT product; rejected for a single product.
     PtRenewRequest:
       allOf:
         - $ref: "#/components/schemas/PtPaymentFields"

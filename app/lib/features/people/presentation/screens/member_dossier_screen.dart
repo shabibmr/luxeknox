@@ -319,6 +319,11 @@ class _DossierContentState extends State<_DossierContent> {
             );
             if (mounted) await cubit.load(person.id);
           },
+          onOpenPartner: (partnerId) => context.push(
+            _isAdminShell
+                ? Routes.adminMemberById(partnerId)
+                : Routes.trainerMemberById(partnerId),
+          ),
         ),
         const Divider(),
         _PersonalTrainingSection(
@@ -504,6 +509,7 @@ class _MembershipSection extends StatelessWidget {
     required this.visitsThisMonth,
     required this.canAddMembership,
     required this.onAddMembership,
+    required this.onOpenPartner,
   });
 
   final Membership? membership;
@@ -512,6 +518,7 @@ class _MembershipSection extends StatelessWidget {
   final int? visitsThisMonth;
   final bool canAddMembership;
   final VoidCallback onAddMembership;
+  final ValueChanged<String> onOpenPartner;
 
   @override
   Widget build(BuildContext context) {
@@ -541,6 +548,22 @@ class _MembershipSection extends StatelessWidget {
           title: const Text(PeopleStrings.membershipExpiry),
           subtitle: Text(expirySubtitle),
         ),
+        if (!membershipsUnavailable &&
+            membership != null &&
+            membership!.isCouple &&
+            membership!.partnerMemberName != null)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              PeopleStrings.coupleWith(membership!.partnerMemberName!),
+            ),
+            trailing: membership!.partnerMemberId == null
+                ? null
+                : const Icon(Icons.chevron_right),
+            onTap: membership!.partnerMemberId == null
+                ? null
+                : () => onOpenPartner(membership!.partnerMemberId!),
+          ),
         if (outstandingBalance != null)
           ListTile(
             contentPadding: EdgeInsets.zero,

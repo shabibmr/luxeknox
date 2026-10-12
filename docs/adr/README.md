@@ -13,7 +13,7 @@ Each record: Status · Context · Decision · Consequences · Alternatives consi
 Statuses: `Proposed` → `Accepted` → (`Superseded by ADR-XXXX` | `Deprecated`).
 `Deferred` marks a question deliberately left open with no decision made — a placeholder, not a choice.
 
-ADR-0001–0004, 0007, 0008, 0009, and 0010 are `Accepted`. ADR-0005 is `Superseded by ADR-0008`. ADR-0006 is `Proposed`.
+ADR-0001–0004, 0007, 0008, 0009, 0010, and 0011 are `Accepted`. ADR-0005 is `Superseded by ADR-0008`. ADR-0006 is `Proposed`.
 
 ## Index
 
@@ -29,6 +29,7 @@ ADR-0001–0004, 0007, 0008, 0009, and 0010 are `Accepted`. ADR-0005 is `Superse
 | [0008](./0008-object-storage-and-media.md) | Object storage & MEDIA — **S3-compatible + local disk; signed PUT/GET** | Accepted | FRD §21, Vertical 3 |
 | [0009](./0009-personal-training-subscriptions.md) | Personal Training — **separate PT package, any active trainer, fixed weekly slot** | Accepted | PT packages, trainer scheduling |
 | [0010](./0010-couple-memberships.md) | Couple memberships — **two linked `memberships` rows, no group table** | Accepted | couple packages |
+| [0011](./0011-couple-pt-subscriptions.md) | Couple PT — **two linked `pt_subscriptions` rows, one shared session** | Accepted | couple PT packages |
 
 ## Deliberately not decided yet
 

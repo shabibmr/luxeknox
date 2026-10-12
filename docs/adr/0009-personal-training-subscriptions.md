@@ -27,8 +27,9 @@ The old model kept a session counter on the membership. It had no trainer and no
    the hour. There is one open (scheduled/active) PT per member; a renewal queues the day
    after the current end date.
 3. **Occupancy uses real schedule rows.** Each PT day becomes a `schedules` row
-   (type "Personal Training", capacity 1, `pt_subscription_id` set) plus a booked
-   participant. Calendars, attendance and the existing overlap checks work without changes.
+   (type "Personal Training", capacity 1 — or 2 for a couple PT, see ADR-0011 —
+   `pt_subscription_id` set) plus booked participant(s). Calendars, attendance and the
+   existing overlap checks work without changes.
    A trainer-hour is **free** only if it falls inside the trainer's `trainer_availabilities`
    and has no clash on *every* PT date. Sales lock the trainer row (`SELECT … FOR UPDATE`)
    and re-check before inserting.

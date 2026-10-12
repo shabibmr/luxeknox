@@ -21,6 +21,7 @@ abstract final class PeopleStrings {
   static const membership = 'Membership';
   static const membershipExpiry = 'Membership expiry';
   static const noMembership = 'No membership';
+  static String coupleWith(String partnerName) => 'Couple with $partnerName';
   static const balance = 'Balance';
   static const lastCheckIn = 'Last check-in';
   static const nextSchedule = 'Next schedule';

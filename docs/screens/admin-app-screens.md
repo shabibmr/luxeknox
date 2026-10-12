@@ -44,7 +44,9 @@ The **Admin / Office App** is the central management interface for gym owners, f
 | **Medical History** | Detail Screen | `Member Profile > Medical History` | Chronic conditions, injury reports, doctor clearance certificates. |
 | **Emergency Contact** | Detail Screen | `Member Profile > Emergency` | Next of kin contact numbers, relationships, and instructions. |
 | **Documents / Photos** | Gallery / Files | `Member Profile > Documents` | Government ID scans, agreements, membership contracts, photos. |
-| **Member Membership** | Detail Screen | `Member Profile > Membership` | Current active package, assigned trainer, validity dates, locker assignment. |
+| **Member Membership** | Detail Screen | `Member Profile > Membership` | Current active package, assigned trainer, validity dates, locker assignment. For a couple membership shows "Couple with <partner>" linking to the partner dossier. |
+| **Member Personal Training** | Detail Card | `Member Profile > Personal Training` | Current PT package, trainer, weekdays and slot. Couple PT shows "Couple with <partner>" (and "Billed to <primary>" on the partner side). Actions: Add / Renew / Reassign trainer / Change slot; re-plan notes that changes apply to both members. |
+| **Sell Personal Training** | Action Screen | `Member Profile > Add Personal Training` | Package, trainer, weekdays, hour grid and payment. A couple package requires a Partner (second member) picker; the grid marks cells busy for either member. |
 | **Membership History** | History List | `Member Profile > Subscriptions` | Full log of past memberships, renewals, upgrades, freezes, and cancellations. |
 | **Member Attendance** | Detail Screen | `Member Profile > Attendance` | Member's check-in timeline and attendance calendar. |
 | **Attendance History** | History Table | `Member Attendance > View Log` | Chronological timestamped check-in/out records. |
@@ -110,6 +112,16 @@ The **Admin / Office App** is the central management interface for gym owners, f
 | **Package Duration** | Config Sub-Screen | `Package Details > Duration` | Validity length (e.g., 30 days, 90 days, 365 days), grace period days. |
 | **Package Features** | Config Sub-Screen | `Package Details > Features` | Included access items (Cardio, Weights, Locker, Sauna, Complimentary PT sessions). |
 | **Package Status** | Quick Action | `Package Details > Toggle Status`| Publish or archive package from sales options. |
+
+---
+
+## 6a. PT Packages (`More > PT Packages`)
+
+| Screen Name | Type | Access / Navigation Path | Purpose & UI Components |
+| :--- | :--- | :--- | :--- |
+| **PT Packages** | Master List Screen | `More > PT Packages` | Catalog of Personal Training packages. Couple rows show a "Couple" chip. |
+| **Add PT Package** | Form Screen | `PT Packages > Add` | Name, code, duration, price, and required Single/Couple segmented control. |
+| **Edit PT Package** | Form Screen | `PT Package Details > Edit` | Same fields; package type is read-only after create. |
 
 ---
 

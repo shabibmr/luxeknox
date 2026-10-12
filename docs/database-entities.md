@@ -4,7 +4,7 @@ This document is the **table catalog** for the relational model that supports al
 
 It lists tables, purpose, screen links, and key attributes. It is **not** a physical DDL file. Types, uniqueness, and versioning rules are in [Schema notes](#schema-notes). Functional behaviour lives in [`backend-frd.md`](./backend-frd.md).
 
-**Table count:** 56.
+**Table count:** 59.
 
 ---
 
@@ -20,10 +20,11 @@ It lists tables, purpose, screen links, and key attributes. It is **not** a phys
 ## Entity Count by Domain
 
 ```mermaid
-pie title Database Entities Distribution (56 Tables)
+pie title Database Entities Distribution (59 Tables)
     "Users, Roles & Profiles (8)" : 8
     "Health & Medical (6)" : 6
     "Membership & Products (5)" : 5
+    "Personal Training (3)" : 3
     "Scheduling & Availability (6)" : 6
     "Attendance Tracking (2)" : 2
     "Billing & Payments (4)" : 4
@@ -39,6 +40,7 @@ pie title Database Entities Distribution (56 Tables)
 | Users, Roles & Profiles | 8 |
 | Health & Medical | 6 |
 | Membership & Products | 5 |
+| Personal Training | 3 |
 | Scheduling & Availability | 6 |
 | Attendance | 2 |
 | Billing & Payments | 4 |
@@ -47,7 +49,7 @@ pie title Database Entities Distribution (56 Tables)
 | Goals & Progress | 7 |
 | Notifications | 4 |
 | Settings & Audit | 2 |
-| **Total** | **56** |
+| **Total** | **59** |
 
 ---
 
@@ -185,6 +187,28 @@ pie title Database Entities Distribution (56 Tables)
 
 ---
 
+## 3a. Personal Training
+
+### `pt_products`
+
+* **Purpose**: Catalog of sellable Personal Training packages (separate from gym memberships).
+* **Supporting Screens**: PT Packages Catalog, Sell PT.
+* **Key Attributes**: `id`, `name`, `code`, `description`, `package_type` (`single` | `couple`, immutable), `duration_days`, `base_price`, `tax_percentage`, `is_active`.
+
+### `pt_subscriptions`
+
+* **Purpose**: PT contract: member + package + trainer + fixed weekly slot for a date range. A couple PT is two linked rows (ADR-0011).
+* **Supporting Screens**: Member Dossier PT card, Sell PT, Renew / Reassign / Change slot.
+* **Key Attributes**: `id`, `member_id` (FK), `pt_product_id` (FK), `trainer_id` (FK), `membership_id` (FK nullable), `renewed_from_id` (self-FK nullable), `partner_subscription_id` (self-FK nullable; set on both rows of a couple), `is_primary` (boolean; primary owns sessions and invoice), `start_date`, `end_date`, `weekdays` (JSON), `slot_start`, `status` (scheduled, active, completed, cancelled), `row_version`.
+
+### `pt_subscription_changes`
+
+* **Purpose**: Append-only log of mid-PT trainer reassignments and slot changes.
+* **Supporting Screens**: PT change history on the dossier.
+* **Key Attributes**: `id`, `pt_subscription_id` (FK), `change_type`, `effective_date`, `old_trainer_id`, `new_trainer_id`, `old_weekdays`, `new_weekdays`, `old_slot_start`, `new_slot_start`, `reason`, `changed_by_user_id` (FK), `created_at`.
+
+---
+
 ## 4. Scheduling & Availability
 
 ### `schedule_types`
@@ -201,9 +225,9 @@ pie title Database Entities Distribution (56 Tables)
 
 ### `schedules`
 
-* **Purpose**: Scheduled sessions, classes, or PT bookings. Recurring class series share `series_id`; each occurrence is its own row.
+* **Purpose**: Scheduled sessions, classes, or PT bookings. Recurring class series share `series_id`; each occurrence is its own row. Generated PT sessions set `pt_subscription_id` (primary row for a couple PT).
 * **Supporting Screens**: Schedule Calendar, Schedule Details Screen, Create Booking Screen.
-* **Key Attributes**: `id`, `series_id` (nullable, shared by recurring occurrences), `schedule_type_id` (FK), `facility_id` (FK), `trainer_id` (FK nullable), `title`, `start_time`, `end_time`, `max_capacity`, `status` (scheduled, ongoing, completed, cancelled), `notes`.
+* **Key Attributes**: `id`, `series_id` (nullable, shared by recurring occurrences), `schedule_type_id` (FK), `facility_id` (FK), `trainer_id` (FK nullable), `pt_subscription_id` (FK nullable), `title`, `start_time`, `end_time`, `max_capacity` (1 for single PT, 2 for couple PT), `status` (scheduled, ongoing, completed, cancelled), `notes`.
 
 ### `schedule_participants`
 

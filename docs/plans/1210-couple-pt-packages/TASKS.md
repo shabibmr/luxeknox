@@ -34,8 +34,8 @@ All backend paths are under `apps/api/src/pt/` unless stated. All Flutter paths 
 - [x] CP-10 Status job and trainer access for a linked pair <!-- id: 10 -->
 
 **Phase 5: Contract and docs**
-- [ ] CP-11 OpenAPI `v1.yaml` and the parity check <!-- id: 11 -->
-- [ ] CP-12 FRD, entities doc, ADR-0011, screens doc <!-- id: 12 -->
+- [x] CP-11 OpenAPI `v1.yaml` and the parity check <!-- id: 11 -->
+- [x] CP-12 FRD, entities doc, ADR-0011, screens doc <!-- id: 12 -->
 
 **Phase 6: Flutter data and domain**
 - [ ] CP-13 Regenerate `packages/api_client` <!-- id: 13 -->
@@ -310,7 +310,7 @@ Mostly verification: the existing per-row logic should already work.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | Shapes from CP-03, CP-05, CP-06, CP-07 (can be written contract-first) |
 | **Files** | `docs/openapi/v1.yaml` |
 
@@ -328,7 +328,7 @@ Update these schemas:
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CP-07 |
 | **Files** | `docs/backend-frd.md`, `docs/database-entities.md`, `docs/adr/0011-couple-pt-subscriptions.md`, `docs/adr/0009-personal-training-subscriptions.md`, `docs/adr/README.md`, `docs/screens/admin-app-screens.md` |
 
