@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { blankToNull } from './credentials';
 
 const moneyString = z
   .string()
@@ -6,11 +7,11 @@ const moneyString = z
   .regex(/^-?\d+\.\d{2}$/, 'hourly_rate must be a Money string (e.g. "50.00")');
 
 export const trainerCreateSchema = z.object({
-  email: z.string().trim().email().max(255),
-  phone_number: z.string().trim().min(1).max(32).optional().nullable(),
+  email: z.preprocess(blankToNull, z.string().trim().email().max(255).optional().nullable()),
+  phone_number: z.string().trim().min(1, 'phone_number is required').max(32),
   password: z.string().min(1).max(255).optional().nullable(),
   first_name: z.string().trim().min(1).max(100),
-  last_name: z.string().trim().min(1).max(100),
+  last_name: z.string().trim().max(100).nullish().transform((v) => v ?? ''),
   gender: z.string().trim().min(1, 'gender is required').max(32),
   bio: z.string().trim().max(5000).optional().nullable(),
   specializations: z.array(z.string().trim().min(1)).optional().nullable(),
@@ -25,7 +26,7 @@ export const trainerUpdateSchema = z
     email: z.string().trim().email().max(255).optional(),
     phone_number: z.string().trim().min(1).max(32).optional().nullable(),
     first_name: z.string().trim().min(1).max(100).optional(),
-    last_name: z.string().trim().min(1).max(100).optional(),
+    last_name: z.string().trim().max(100).optional(),
     gender: z.string().trim().min(1, 'gender cannot be cleared').max(32).optional(),
   bio: z.string().trim().max(5000).optional().nullable(),
     specializations: z.array(z.string().trim().min(1)).optional().nullable(),

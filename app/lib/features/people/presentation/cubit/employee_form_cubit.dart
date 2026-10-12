@@ -382,11 +382,8 @@ class EmployeeFormCubit extends Cubit<EmployeeFormState> {
     if (input.firstName.trim().isEmpty) {
       return PeopleStrings.firstNameRequired;
     }
-    if (input.lastName.trim().isEmpty) {
-      return PeopleStrings.lastNameRequired;
-    }
-    if (input.email.trim().isEmpty) {
-      return PeopleStrings.emailRequired;
+    if ((input.phoneNumber?.trim() ?? '').isEmpty) {
+      return PeopleStrings.phoneRequired;
     }
     if ((input.gender?.trim() ?? '').isEmpty) {
       return PeopleStrings.genderRequired;

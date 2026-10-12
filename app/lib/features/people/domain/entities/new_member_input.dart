@@ -28,9 +28,7 @@ class NewMemberInput extends Equatable {
 
   /// Basic-info step is complete once a name is present.
   bool get hasBasicInfo =>
-      firstName.trim().isNotEmpty &&
-      lastName.trim().isNotEmpty &&
-      (gender?.trim().isNotEmpty ?? false);
+      firstName.trim().isNotEmpty && (gender?.trim().isNotEmpty ?? false);
 
   NewMemberInput copyWith({
     String? firstName,

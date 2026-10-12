@@ -44,6 +44,7 @@ class _AddTrainerBodyState extends State<_AddTrainerBody> {
   String? _firstNameError;
   String? _lastNameError;
   String? _emailError;
+  String? _phoneError;
   String? _genderError;
 
   @override
@@ -74,33 +75,32 @@ class _AddTrainerBodyState extends State<_AddTrainerBody> {
 
   bool _validate() {
     final first = _firstName.text.trim();
-    final last = _lastName.text.trim();
     final email = _email.text.trim();
+    final phone = _phone.text.trim();
     final gender = _gender?.trim() ?? '';
     String? firstErr;
-    String? lastErr;
     String? emailErr;
+    String? phoneErr;
     String? genderErr;
 
     if (first.isEmpty) firstErr = PeopleStrings.firstNameRequired;
-    if (last.isEmpty) lastErr = PeopleStrings.lastNameRequired;
-    if (email.isEmpty) {
-      emailErr = PeopleStrings.emailRequired;
-    } else if (!_isValidEmail(email)) {
+    if (email.isNotEmpty && !_isValidEmail(email)) {
       emailErr = PeopleStrings.invalidEmail;
     }
+    if (phone.isEmpty) phoneErr = PeopleStrings.phoneRequired;
     if (gender.isEmpty) genderErr = PeopleStrings.genderRequired;
 
     setState(() {
       _firstNameError = firstErr;
-      _lastNameError = lastErr;
+      _lastNameError = null;
       _emailError = emailErr;
+      _phoneError = phoneErr;
       _genderError = genderErr;
     });
 
     return firstErr == null &&
-        lastErr == null &&
         emailErr == null &&
+        phoneErr == null &&
         genderErr == null;
   }
 
@@ -243,15 +243,21 @@ class _AddTrainerBodyState extends State<_AddTrainerBody> {
                     controller: _phone,
                     enabled: !submitting,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: PeopleStrings.phoneNumber,
+                      errorText: _phoneError,
                     ),
-                    onChanged: (_) => _syncField(
-                      _phone,
-                      (v) => context.read<TrainerFormCubit>().updateInput(
-                        (i) => i.copyWith(phoneNumber: _optional(v)),
-                      ),
-                    ),
+                    onChanged: (_) {
+                      if (_phoneError != null) {
+                        setState(() => _phoneError = null);
+                      }
+                      _syncField(
+                        _phone,
+                        (v) => context.read<TrainerFormCubit>().updateInput(
+                          (i) => i.copyWith(phoneNumber: _optional(v)),
+                        ),
+                      );
+                    },
                   ),
                   GenderRadioGroup(
                     value: _gender,

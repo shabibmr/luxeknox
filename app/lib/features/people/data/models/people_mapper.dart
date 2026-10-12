@@ -167,11 +167,11 @@ api.TrainerUpdate trainerUpdateFromProfile(TrainerProfile trainer) {
 api.TrainerCreate trainerCreateFromInput(NewTrainerInput input) {
   return api.TrainerCreate(
     (b) => b
-      ..email = input.email
+      ..email = _blankToNull(input.email)
       ..phoneNumber = input.phoneNumber
       ..password = input.password
       ..firstName = input.firstName
-      ..lastName = input.lastName
+      ..lastName = _blankToNull(input.lastName)
       ..gender = input.gender
       ..bio = input.bio
       ..specializations = ListBuilder<String>(input.specializations)
@@ -251,6 +251,11 @@ DateTime? _parseFlexibleDate(Object? value) {
   return DateTime(parsed.year, parsed.month, parsed.day);
 }
 
+String? _blankToNull(String? value) {
+  final trimmed = value?.trim();
+  return (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+}
+
 String? _dateTimeToWireDate(DateTime? dateTime) {
   if (dateTime == null) return null;
   final y = dateTime.year.toString().padLeft(4, '0');
@@ -289,11 +294,11 @@ Map<String, dynamic> employeeUpdateBodyFromInput(EmployeeUpdateInput input) {
 api.EmployeeCreate employeeCreateFromInput(NewEmployeeInput input) {
   return api.EmployeeCreate(
     (b) => b
-      ..email = input.email
+      ..email = _blankToNull(input.email)
       ..phoneNumber = input.phoneNumber
       ..password = input.password
       ..firstName = input.firstName
-      ..lastName = input.lastName
+      ..lastName = _blankToNull(input.lastName)
       ..gender = input.gender
       ..jobTitle = input.jobTitle
       ..department = input.department
@@ -331,11 +336,11 @@ api.EmployeeStatus employeeStatusFromDomain(EmployeeStatus status) {
 api.MemberCreate memberCreateFromInput(NewMemberInput input) {
   return api.MemberCreate(
     (b) => b
-      ..email = input.email
-      ..phoneNumber = input.phoneNumber
+      ..email = _blankToNull(input.email)
+      ..phoneNumber = _blankToNull(input.phoneNumber)
       ..password = input.password
       ..firstName = input.firstName
-      ..lastName = input.lastName
+      ..lastName = _blankToNull(input.lastName)
       ..gender = input.gender
       ..dateOfBirth = _dateTimeToApiDate(input.dateOfBirth)
       ..address = input.address

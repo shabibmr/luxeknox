@@ -8,11 +8,11 @@ import 'package:api_client/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**email** | **String** |  | 
-**phoneNumber** | **String** |  | [optional] 
+**email** | **String** |  | [optional] 
+**phoneNumber** | **String** |  | 
 **password** | **String** |  | [optional] 
 **firstName** | **String** |  | 
-**lastName** | **String** |  | 
+**lastName** | **String** |  | [optional] 
 **gender** | **String** |  | 
 **jobTitle** | **String** |  | [optional] 
 **department** | **String** |  | [optional] 

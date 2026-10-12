@@ -8,15 +8,15 @@ part of 'employee_create.dart';
 
 class _$EmployeeCreate extends EmployeeCreate {
   @override
-  final String email;
+  final String? email;
   @override
-  final String? phoneNumber;
+  final String phoneNumber;
   @override
   final String? password;
   @override
   final String firstName;
   @override
-  final String lastName;
+  final String? lastName;
   @override
   final String gender;
   @override
@@ -32,11 +32,11 @@ class _$EmployeeCreate extends EmployeeCreate {
       (EmployeeCreateBuilder()..update(updates))._build();
 
   _$EmployeeCreate._(
-      {required this.email,
-      this.phoneNumber,
+      {this.email,
+      required this.phoneNumber,
       this.password,
       required this.firstName,
-      required this.lastName,
+      this.lastName,
       required this.gender,
       this.jobTitle,
       this.department,
@@ -182,14 +182,13 @@ class EmployeeCreateBuilder
   _$EmployeeCreate _build() {
     final _$result = _$v ??
         _$EmployeeCreate._(
-          email: BuiltValueNullFieldError.checkNotNull(
-              email, r'EmployeeCreate', 'email'),
-          phoneNumber: phoneNumber,
+          email: email,
+          phoneNumber: BuiltValueNullFieldError.checkNotNull(
+              phoneNumber, r'EmployeeCreate', 'phoneNumber'),
           password: password,
           firstName: BuiltValueNullFieldError.checkNotNull(
               firstName, r'EmployeeCreate', 'firstName'),
-          lastName: BuiltValueNullFieldError.checkNotNull(
-              lastName, r'EmployeeCreate', 'lastName'),
+          lastName: lastName,
           gender: BuiltValueNullFieldError.checkNotNull(
               gender, r'EmployeeCreate', 'gender'),
           jobTitle: jobTitle,

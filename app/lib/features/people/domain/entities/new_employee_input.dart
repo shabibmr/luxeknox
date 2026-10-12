@@ -28,8 +28,7 @@ class NewEmployeeInput extends Equatable {
 
   bool get hasBasicInfo =>
       firstName.trim().isNotEmpty &&
-      lastName.trim().isNotEmpty &&
-      email.trim().isNotEmpty &&
+      (phoneNumber?.trim().isNotEmpty ?? false) &&
       (gender?.trim().isNotEmpty ?? false);
 
   NewEmployeeInput copyWith({

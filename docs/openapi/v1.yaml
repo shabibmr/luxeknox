@@ -7198,10 +7198,10 @@ components:
           $ref: "#/components/schemas/User"
     MemberCreate:
       type: object
-      required: [first_name, last_name, gender]
+      required: [first_name, gender]
       description: >
-        Supply email or phone_number (at least one identifier) plus password for
-        login creation (FR-AUTH-008). Profile fields create the members row in the
+        email, phone_number and last_name are optional; a member may be created
+        with no login identifier. Supply password for login creation (FR-AUTH-008). Profile fields create the members row in the
         same transaction; photo/waiver/emergency contact are follow-up routes
         (FR-PEOPLE-001 MVP carve-out).
       properties:
@@ -7338,7 +7338,7 @@ components:
           nullable: true
     TrainerCreate:
       type: object
-      required: [first_name, last_name, email, gender]
+      required: [first_name, phone_number, gender]
       properties:
         email:
           type: string
@@ -7432,7 +7432,7 @@ components:
           $ref: "#/components/schemas/Id"
     EmployeeCreate:
       type: object
-      required: [email, first_name, last_name, gender]
+      required: [phone_number, first_name, gender]
       properties:
         email:
           type: string

@@ -137,7 +137,6 @@ void main() {
 
     // Validation messages should be displayed
     expect(find.text(PeopleStrings.firstNameRequired), findsOneWidget);
-    expect(find.text(PeopleStrings.lastNameRequired), findsOneWidget);
     expect(find.text(PeopleStrings.genderRequired), findsOneWidget);
 
     // Enter first and last name
@@ -158,7 +157,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(PeopleStrings.firstNameRequired), findsNothing);
-    expect(find.text(PeopleStrings.lastNameRequired), findsNothing);
     expect(find.text(PeopleStrings.genderRequired), findsOneWidget);
 
     // Select Male
@@ -171,13 +169,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // In step 1, tap Next with empty email and phone
+    // In step 1, email and phone are optional: Next with both empty shows
+    // no validation error.
     await tester.tap(
       find.widgetWithText(FilledButton, PeopleStrings.next).first,
       warnIfMissed: false,
     );
     await tester.pumpAndSettle();
 
-    expect(find.text(PeopleStrings.emailOrPhoneRequired), findsWidgets);
+    expect(find.text(PeopleStrings.invalidEmail), findsNothing);
   });
 }

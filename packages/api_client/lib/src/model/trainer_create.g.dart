@@ -8,15 +8,15 @@ part of 'trainer_create.dart';
 
 class _$TrainerCreate extends TrainerCreate {
   @override
-  final String email;
+  final String? email;
   @override
-  final String? phoneNumber;
+  final String phoneNumber;
   @override
   final String? password;
   @override
   final String firstName;
   @override
-  final String lastName;
+  final String? lastName;
   @override
   final String gender;
   @override
@@ -32,11 +32,11 @@ class _$TrainerCreate extends TrainerCreate {
       (TrainerCreateBuilder()..update(updates))._build();
 
   _$TrainerCreate._(
-      {required this.email,
-      this.phoneNumber,
+      {this.email,
+      required this.phoneNumber,
       this.password,
       required this.firstName,
-      required this.lastName,
+      this.lastName,
       required this.gender,
       this.bio,
       this.specializations,
@@ -187,14 +187,13 @@ class TrainerCreateBuilder
     try {
       _$result = _$v ??
           _$TrainerCreate._(
-            email: BuiltValueNullFieldError.checkNotNull(
-                email, r'TrainerCreate', 'email'),
-            phoneNumber: phoneNumber,
+            email: email,
+            phoneNumber: BuiltValueNullFieldError.checkNotNull(
+                phoneNumber, r'TrainerCreate', 'phoneNumber'),
             password: password,
             firstName: BuiltValueNullFieldError.checkNotNull(
                 firstName, r'TrainerCreate', 'firstName'),
-            lastName: BuiltValueNullFieldError.checkNotNull(
-                lastName, r'TrainerCreate', 'lastName'),
+            lastName: lastName,
             gender: BuiltValueNullFieldError.checkNotNull(
                 gender, r'TrainerCreate', 'gender'),
             bio: bio,

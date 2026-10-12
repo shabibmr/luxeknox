@@ -169,7 +169,8 @@ export class PersonFactory {
 
     const email = normalizeEmail(input.credentials.email);
     const phone = normalizePhone(input.credentials.phone_number);
-    if (!email && !phone) {
+    // Members may be created without any login identifier (e.g. walk-ins).
+    if (!email && !phone && input.userType !== 'member') {
       throw new BadRequestError('At least one of email or phone_number is required');
     }
 

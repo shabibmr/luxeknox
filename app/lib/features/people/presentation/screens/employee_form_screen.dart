@@ -88,6 +88,7 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
   String? _firstNameError;
   String? _lastNameError;
   String? _emailError;
+  String? _phoneError;
   String? _genderError;
   String? _jobTitleError;
 
@@ -183,35 +184,34 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
 
   bool _validateCreate(EmployeeFormState state) {
     final first = _firstName.text.trim();
-    final last = _lastName.text.trim();
     final email = _email.text.trim();
+    final phone = _phone.text.trim();
     final gender = state.createInput.gender?.trim() ?? '';
 
     String? firstErr;
-    String? lastErr;
     String? emailErr;
+    String? phoneErr;
     String? genderErr;
 
     if (first.isEmpty) firstErr = PeopleStrings.firstNameRequired;
-    if (last.isEmpty) lastErr = PeopleStrings.lastNameRequired;
-    if (email.isEmpty) {
-      emailErr = PeopleStrings.emailRequired;
-    } else if (!_isValidEmail(email)) {
+    if (email.isNotEmpty && !_isValidEmail(email)) {
       emailErr = PeopleStrings.invalidEmail;
     }
+    if (phone.isEmpty) phoneErr = PeopleStrings.phoneRequired;
     if (gender.isEmpty) genderErr = PeopleStrings.genderRequired;
 
     setState(() {
       _firstNameError = firstErr;
-      _lastNameError = lastErr;
+      _lastNameError = null;
       _emailError = emailErr;
+      _phoneError = phoneErr;
       _genderError = genderErr;
       _jobTitleError = null;
     });
 
     return firstErr == null &&
-        lastErr == null &&
         emailErr == null &&
+        phoneErr == null &&
         genderErr == null;
   }
 
@@ -385,13 +385,18 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                     controller: _phone,
                     enabled: !submitting,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: PeopleStrings.phoneNumber,
+                      errorText: _phoneError,
                     ),
-                    onChanged: (v) =>
-                        context.read<EmployeeFormCubit>().updateCreateInput(
-                          (i) => i.copyWith(phoneNumber: _optional(v)),
-                        ),
+                    onChanged: (v) {
+                      if (_phoneError != null) {
+                        setState(() => _phoneError = null);
+                      }
+                      context.read<EmployeeFormCubit>().updateCreateInput(
+                        (i) => i.copyWith(phoneNumber: _optional(v)),
+                      );
+                    },
                   ),
                 ] else if (loaded != null) ...[
                   ListTile(
