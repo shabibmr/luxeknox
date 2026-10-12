@@ -14,8 +14,12 @@ import 'remote_api_base_url_store.dart';
 /// stores the result on [AppConfigBootstrap.resolved].
 Future<void> resolveRemoteAppConfig() async {
   final env = AppConfig.fromEnv();
+  // Staging (the /test/ deploy) pins the dart-define URL: Firestore holds the
+  // production host, and the prefs cache is shared with prod on the same origin.
   AppConfigBootstrap.resolved = env.copyWith(
-    apiBaseUrl: await _resolveApiBaseUrl(env.apiBaseUrl),
+    apiBaseUrl: env.isStaging
+        ? ApiBaseUrlResolver.normalize(env.apiBaseUrl)
+        : await _resolveApiBaseUrl(env.apiBaseUrl),
   );
 }
 

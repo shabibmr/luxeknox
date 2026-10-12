@@ -6,8 +6,8 @@
 #
 # Works on a dedicated clone ($TEST_DIR), never the production checkout.
 # The test API's env lives at $TEST_API_DIR/.env (never overwritten).
-# The app is built with ENV=staging: it reads Firestore config/app `API_BASE_URL_DEBUG`
-# (falling back to the --dart-define URL below). Branches need that code (merge main).
+# The app is built with ENV=staging, which pins the --dart-define API_BASE_URL below
+# (skipping Firestore config/app and the prefs cache, which point at production).
 set -euo pipefail
 
 TEST_DIR="${TEST_DIR:-/home/luxe/luxeknox-test}"
