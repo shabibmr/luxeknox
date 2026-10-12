@@ -32,6 +32,9 @@ const paymentFields = {
   transaction_reference: z.string().max(150).optional(),
 };
 
+export const ptPackageTypeSchema = z.enum(['single', 'couple']);
+export type PtPackageType = z.infer<typeof ptPackageTypeSchema>;
+
 export const ptProductWriteSchema = z.object({
   name: z.string().trim().min(1, 'name is required'),
   code: z.string().trim().min(1, 'code is required').max(32),
@@ -40,6 +43,7 @@ export const ptProductWriteSchema = z.object({
   base_price: moneyString,
   tax_percentage: moneyString.optional(),
   is_active: z.boolean().optional(),
+  package_type: ptPackageTypeSchema,
 });
 export type PtProductWriteDto = z.infer<typeof ptProductWriteSchema>;
 
@@ -48,6 +52,7 @@ export type PtProductUpdateDto = z.infer<typeof ptProductUpdateSchema>;
 
 export const ptProductFilterQuerySchema = z.object({
   q: z.string().trim().min(1).optional(),
+  package_type: ptPackageTypeSchema.optional(),
 });
 
 const csvWeekdays = z

@@ -6,7 +6,7 @@ import {
   requireVisibleCatalogueRow,
 } from '../platform/catalogue/browse-policy';
 import type { NewPtProduct, PtProduct } from '../platform/db/schema/personal-training';
-import { ConflictError, NotFoundError } from '../platform/errors/app-error';
+import { BadRequestError, ConflictError, NotFoundError } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { roundMoney } from '../platform/money/money';
@@ -44,6 +44,7 @@ export class PtProductService {
     );
     const { rows, total } = await this.repository.findManyFiltered({
       q: filters.q,
+      packageType: filters.package_type,
       activeOnly: !unrestricted,
       limit: pagination.limit,
       offset,
@@ -76,6 +77,7 @@ export class PtProductService {
       duration_days: dto.duration_days,
       base_price: roundMoney(dto.base_price),
       tax_percentage: dto.tax_percentage ? roundMoney(dto.tax_percentage) : '0.00',
+      package_type: dto.package_type,
       is_active: dto.is_active ?? true,
       created_at: new Date(),
     });
@@ -99,6 +101,11 @@ export class PtProductService {
   async update(id: number, dto: PtProductUpdateDto, actor: AuthenticatedUser): Promise<PtProduct> {
     const before = await this.repository.findById(id);
     if (!before) throw new NotFoundError('PT package not found');
+
+    if (dto.package_type !== undefined) {
+      throw new BadRequestError('package_type cannot be changed');
+    }
+
     if (dto.code !== undefined && dto.code !== before.code && (await this.repository.findByCode(dto.code))) {
       throw new ConflictError(`PT package code "${dto.code}" already exists`);
     }

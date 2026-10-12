@@ -10,6 +10,7 @@ const SEED_PT_PRODUCTS: Omit<NewPtProduct, 'id' | 'created_at' | 'updated_at'>[]
     duration_days: 30,
     base_price: '3999.00',
     tax_percentage: '0.00',
+    package_type: 'single',
     is_active: true,
   },
   {
@@ -19,6 +20,29 @@ const SEED_PT_PRODUCTS: Omit<NewPtProduct, 'id' | 'created_at' | 'updated_at'>[]
     duration_days: 90,
     base_price: '14999.00',
     tax_percentage: '0.00',
+    package_type: 'single',
+    is_active: true,
+  },
+  {
+    name: 'Couple PT 1 Month',
+    code: 'CPT-1M',
+    description:
+      'Personal training for two members sharing one trainer and weekly slot, 1 month.',
+    duration_days: 30,
+    base_price: '6999.00',
+    tax_percentage: '0.00',
+    package_type: 'couple',
+    is_active: true,
+  },
+  {
+    name: 'Couple PT 3 Month',
+    code: 'CPT-3M',
+    description:
+      'Personal training for two members sharing one trainer and weekly slot, 3 months.',
+    duration_days: 90,
+    base_price: '24999.00',
+    tax_percentage: '0.00',
+    package_type: 'couple',
     is_active: true,
   },
 ];

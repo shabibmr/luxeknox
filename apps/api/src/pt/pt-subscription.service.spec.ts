@@ -31,6 +31,7 @@ const product = {
   duration_days: 28,
   base_price: '3000.00',
   tax_percentage: '0.00',
+  package_type: 'single' as const,
   is_active: true,
 };
 

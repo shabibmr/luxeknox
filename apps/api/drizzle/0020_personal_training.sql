@@ -16,11 +16,13 @@ CREATE TABLE IF NOT EXISTS `pt_products` (
   `sessions_per_week` TINYINT UNSIGNED NOT NULL,
   `base_price` DECIMAL(10,2) NOT NULL,
   `tax_percentage` DECIMAL(5,2) NOT NULL DEFAULT '0.00',
+  `package_type` VARCHAR(16) NOT NULL,
   `is_active` BOOLEAN NOT NULL DEFAULT TRUE,
   `created_at` DATETIME(3) NOT NULL,
   `updated_at` DATETIME(3) NULL,
   UNIQUE KEY `pt_products_code_unique` (`code`),
-  KEY `pt_products_is_active_idx` (`is_active`)
+  KEY `pt_products_is_active_idx` (`is_active`),
+  CONSTRAINT `pt_products_package_type_check` CHECK (`package_type` IN ('single', 'couple'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `pt_subscriptions` (
@@ -30,6 +32,8 @@ CREATE TABLE IF NOT EXISTS `pt_subscriptions` (
   `trainer_id` BIGINT UNSIGNED NOT NULL,
   `membership_id` BIGINT UNSIGNED NULL,
   `renewed_from_id` BIGINT UNSIGNED NULL,
+  `partner_subscription_id` BIGINT UNSIGNED NULL,
+  `is_primary` BOOLEAN NOT NULL DEFAULT TRUE,
   `start_date` DATE NOT NULL,
   `end_date` DATE NOT NULL,
   `weekdays` JSON NOT NULL,
@@ -42,11 +46,13 @@ CREATE TABLE IF NOT EXISTS `pt_subscriptions` (
   KEY `pt_subscriptions_trainer_id_idx` (`trainer_id`),
   KEY `pt_subscriptions_status_idx` (`status`),
   KEY `pt_subscriptions_end_date_idx` (`end_date`),
+  KEY `pt_subscriptions_partner_subscription_id_idx` (`partner_subscription_id`),
   CONSTRAINT `pt_subscriptions_member_id_fk` FOREIGN KEY (`member_id`) REFERENCES `members` (`id`),
   CONSTRAINT `pt_subscriptions_pt_product_id_fk` FOREIGN KEY (`pt_product_id`) REFERENCES `pt_products` (`id`),
   CONSTRAINT `pt_subscriptions_trainer_id_fk` FOREIGN KEY (`trainer_id`) REFERENCES `trainers` (`id`),
   CONSTRAINT `pt_subscriptions_membership_id_fk` FOREIGN KEY (`membership_id`) REFERENCES `memberships` (`id`),
-  CONSTRAINT `pt_subscriptions_renewed_from_id_fk` FOREIGN KEY (`renewed_from_id`) REFERENCES `pt_subscriptions` (`id`)
+  CONSTRAINT `pt_subscriptions_renewed_from_id_fk` FOREIGN KEY (`renewed_from_id`) REFERENCES `pt_subscriptions` (`id`),
+  CONSTRAINT `pt_subscriptions_partner_subscription_id_fk` FOREIGN KEY (`partner_subscription_id`) REFERENCES `pt_subscriptions` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `pt_subscription_changes` (
