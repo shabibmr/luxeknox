@@ -53,11 +53,11 @@ Later rows stay `[>]` until a new plan pulls them in.
 
 | ID | Status | Task | Depends on | Done when |
 |---|---|---|---|---|
-| ACC-030 | `[ ]` | Accounts list, create, and patch. Deactivate instead of delete | ACC-015, ACC-016, ACC-020 | A control account used by a seed cannot be deactivated |
-| ACC-031 | `[ ]` | Tax codes and components | ACC-015, ACC-020 | Component rates sum to the code rate. Components post to seeded tax accounts |
-| ACC-032 | `[ ]` | Vendors | ACC-020 | Inactive vendors cannot be used on a new bill |
-| ACC-033 | `[ ]` | Items, with `inventory_tracked` fixed `false` | ACC-015, ACC-020 | Income and expense accounts are required. Kind is `service` or `goods` |
-| ACC-034 | `[ ]` | List fiscal years and periods. Lock and unlock | ACC-016, ACC-023, ACC-070 | Lock requires `accounting.periods_close`, a balanced trial balance, and an audit row. Response includes draft document counts |
+| ACC-030 | `[x]` | Accounts list, create, and patch. Deactivate instead of delete | ACC-015, ACC-016, ACC-020 | A control account used by a seed cannot be deactivated |
+| ACC-031 | `[x]` | Tax codes and components | ACC-015, ACC-020 | Component rates sum to the code rate. Components post to seeded tax accounts |
+| ACC-032 | `[x]` | Vendors | ACC-020 | Inactive vendors cannot be used on a new bill |
+| ACC-033 | `[x]` | Items, with `inventory_tracked` fixed `false` | ACC-015, ACC-020 | Income and expense accounts are required. Kind is `service` or `goods` |
+| ACC-034 | `[x]` | List fiscal years and periods. Lock and unlock | ACC-016, ACC-023, ACC-070 | Lock requires `accounting.periods_close`, a balanced trial balance, and an audit row. Response includes draft document counts |
 
 ## Phase 4 — Purchases, expenses, money out
 
@@ -163,8 +163,8 @@ One person owns a shared file even when the wave lists the tasks together:
 
 | Marker | Count |
 |---|---|
-| `[ ]` TODO | 35 |
+| `[ ]` TODO | 30 |
 | `[~]` DOING | 0 |
-| `[x]` DONE | 17 |
+| `[x]` DONE | 22 |
 | `[!]` BLOCKED | 0 |
 | `[>]` LATER | 6 |
