@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,9 +8,11 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
+import '../../../../core/widgets/app_currency_field.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../people/presentation/widgets/member_picker_sheet.dart';
+import '../../domain/entities/membership_replacement_preview.dart';
 import '../bloc/create_membership_bloc.dart';
 import '../membership_strings.dart';
 
@@ -38,11 +42,21 @@ class _CreateMembershipBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<CreateMembershipBloc, CreateMembershipState>(
-      listenWhen: (prev, next) => prev.created == null && next.created != null,
+      listenWhen: (prev, next) =>
+          (prev.created == null && next.created != null) ||
+          (prev.partnerReplacement == null && next.partnerReplacement != null),
       listener: (context, state) {
         final id = state.created?.id;
         if (id != null) {
           context.go('${Routes.adminMemberships}/$id');
+          return;
+        }
+        final preview = state.partnerReplacement;
+        if (preview == null) return;
+        if (preview.isCouple) {
+          unawaited(_showPartnerAlreadyCoupleDialog(context));
+        } else {
+          unawaited(_showReplacePartnerDialog(context, state, preview));
         }
       },
       builder: (context, state) {
@@ -73,6 +87,85 @@ class _CreateMembershipBody extends StatelessWidget {
   }
 }
 
+const _shortMonths = <String>[
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+/// `03 Nov`-style label without pulling in locale data (keeps widget tests light).
+String _shortDayMonth(DateTime date) {
+  final day = date.day.toString().padLeft(2, '0');
+  return '$day ${_shortMonths[date.month - 1]}';
+}
+
+Future<void> _showReplacePartnerDialog(
+  BuildContext context,
+  CreateMembershipState state,
+  MembershipReplacementPreview preview,
+) async {
+  final partnerName =
+      state.selectedPartner?.fullName ?? MembershipStrings.partnerFallbackName;
+  final endDateLabel = _shortDayMonth(preview.endDate);
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text(MembershipStrings.replacePartnerTitle),
+      content: Text(
+        MembershipStrings.replacePartnerMessage(
+          partnerName: partnerName,
+          productName: preview.productName,
+          endDateLabel: endDateLabel,
+          remainingDays: preview.remainingDays,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text(MembershipStrings.cancel),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: const Text(MembershipStrings.confirm),
+        ),
+      ],
+    ),
+  );
+  if (!context.mounted) return;
+  context.read<CreateMembershipBloc>().add(
+    CreateMembershipReplaceConfirmed(confirmed == true),
+  );
+}
+
+Future<void> _showPartnerAlreadyCoupleDialog(BuildContext context) async {
+  await showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text(MembershipStrings.partnerAlreadyCoupleTitle),
+      content: const Text(MembershipStrings.partnerAlreadyCouple),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(),
+          child: const Text(MembershipStrings.confirm),
+        ),
+      ],
+    ),
+  );
+  if (!context.mounted) return;
+  context.read<CreateMembershipBloc>().add(
+    const CreateMembershipReplaceConfirmed(false),
+  );
+}
+
 class _CreateMembershipForm extends StatelessWidget {
   const _CreateMembershipForm({
     required this.state,
@@ -81,6 +174,24 @@ class _CreateMembershipForm extends StatelessWidget {
 
   final CreateMembershipState state;
   final bool memberLocked;
+
+  Set<int> get _excludePartnerIds {
+    final raw = state.selectedMemberId;
+    if (raw == null || raw.isEmpty) return const {};
+    final id = int.tryParse(raw);
+    return id == null ? const {} : {id};
+  }
+
+  bool get _showCoupleSummary {
+    if (!state.isCoupleSelected || state.selectedPartner == null) {
+      return false;
+    }
+    if (state.checkingPartner) return false;
+    final preview = state.partnerReplacement;
+    if (preview == null) return true;
+    if (preview.isCouple) return false;
+    return state.replaceConfirmed;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -144,6 +255,31 @@ class _CreateMembershipForm extends StatelessWidget {
                   }
                 },
         ),
+        if (state.isCoupleSelected) ...[
+          const SizedBox(height: 16),
+          MemberPickerField(
+            selectedMember: state.selectedPartner,
+            selectedMemberId: state.selectedPartner?.id.toString(),
+            selectedMemberName: state.selectedPartner?.fullName,
+            labelText: MembershipStrings.partnerLabel,
+            hintText: MembershipStrings.selectPartnerHint,
+            enabled: !state.submitting && !state.checkingPartner,
+            excludeMemberIds: _excludePartnerIds,
+            onChanged: (member) {
+              if (member != null) {
+                bloc.add(CreateMembershipPartnerSelected(member));
+              }
+            },
+          ),
+          if (state.checkingPartner) ...[
+            const SizedBox(height: 8),
+            const LinearProgressIndicator(),
+          ],
+        ],
+        if (_showCoupleSummary) ...[
+          const SizedBox(height: 16),
+          _CouplePriceSummary(state: state),
+        ],
         const SizedBox(height: 16),
         if (state.paymentMethods.isEmpty)
           Text(
@@ -248,6 +384,112 @@ class _CreateMembershipForm extends StatelessWidget {
               : const Text(MembershipStrings.createSubmit),
         ),
       ],
+    );
+  }
+}
+
+class _CouplePriceSummary extends StatefulWidget {
+  const _CouplePriceSummary({required this.state});
+
+  final CreateMembershipState state;
+
+  @override
+  State<_CouplePriceSummary> createState() => _CouplePriceSummaryState();
+}
+
+class _CouplePriceSummaryState extends State<_CouplePriceSummary> {
+  late final TextEditingController _discountController;
+  var _syncingFromState = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _discountController = TextEditingController(
+      text: widget.state.discountAmount ?? '',
+    )..addListener(_onDiscountEdited);
+  }
+
+  @override
+  void didUpdateWidget(covariant _CouplePriceSummary oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = widget.state.discountAmount ?? '';
+    if (_discountController.text != next) {
+      _syncingFromState = true;
+      _discountController.text = next;
+      _syncingFromState = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    _discountController
+      ..removeListener(_onDiscountEdited)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onDiscountEdited() {
+    if (_syncingFromState || !mounted) return;
+    context.read<CreateMembershipBloc>().add(
+      CreateMembershipDiscountChanged(_discountController.text),
+    );
+  }
+
+  String get _totalLabel {
+    final price = double.tryParse(
+      widget.state.selectedProduct?.basePrice ?? '',
+    );
+    final discount = double.tryParse(widget.state.discountAmount ?? '0') ?? 0;
+    if (price == null) return '—';
+    final total = (price - discount).clamp(0, double.infinity);
+    return total.toStringAsFixed(2);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final price = widget.state.selectedProduct?.basePrice ?? '—';
+    final showDiscount = widget.state.partnerReplacement != null;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  MembershipStrings.packagePriceLabel,
+                  style: theme.textTheme.titleSmall,
+                ),
+                Text(price, style: theme.textTheme.titleSmall),
+              ],
+            ),
+            if (showDiscount) ...[
+              const SizedBox(height: 12),
+              AppCurrencyField(
+                controller: _discountController,
+                label: MembershipStrings.discountForRemainingDays,
+                enabled: !widget.state.submitting,
+                required: false,
+              ),
+            ],
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  MembershipStrings.totalDueLabel,
+                  style: theme.textTheme.titleMedium,
+                ),
+                Text(_totalLabel, style: theme.textTheme.titleMedium),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

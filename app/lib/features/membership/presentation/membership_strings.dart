@@ -57,6 +57,29 @@ class MembershipStrings {
   static const String packageTypeCouple = 'Couple';
   static const String coupleChip = packageTypeCouple;
 
+  static const String partnerLabel = 'Partner (second member)';
+  static const String selectPartnerHint = 'Select partner';
+  /// Fallback name in replace-dialog copy when partner display name is missing.
+  static const String partnerFallbackName = 'Partner';
+  static const String replacePartnerTitle = 'Replace existing membership?';
+  static const String partnerAlreadyCoupleTitle = 'Partner unavailable';
+  static const String partnerAlreadyCouple =
+      'This partner already has a couple membership. Pick someone else.';
+  static const String packagePriceLabel = 'Package price';
+  static const String discountForRemainingDays = 'Discount for remaining days';
+  static const String totalDueLabel = 'Total';
+
+  /// Body for the replace-confirmation dialog (backend owns the credit maths).
+  static String replacePartnerMessage({
+    required String partnerName,
+    required String productName,
+    required String endDateLabel,
+    required int remainingDays,
+  }) =>
+      "$partnerName's current membership '$productName' "
+      '(ends $endDateLabel, $remainingDays days left) will be cancelled '
+      'and replaced by this couple membership.';
+
   static const String statusActive = 'Active';
   static const String statusExpired = 'Expired';
   static const String statusFrozen = 'Frozen';

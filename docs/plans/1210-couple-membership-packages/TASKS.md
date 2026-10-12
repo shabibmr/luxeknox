@@ -43,8 +43,8 @@ Derived from [PLAN.md](./PLAN.md).
 **Phase 7: Flutter UI**
 - [x] CM-18 Product form Single/Couple toggle and catalog chip <!-- id: 18 -->
 - [x] CM-19 Member picker `excludeMemberIds` <!-- id: 19 -->
-- [ ] CM-20 `CreateMembershipBloc` couple state, events and validation <!-- id: 20 -->
-- [ ] CM-21 Create screen: partner picker, replace dialog, discount summary <!-- id: 21 -->
+- [x] CM-20 `CreateMembershipBloc` couple state, events and validation <!-- id: 20 -->
+- [x] CM-21 Create screen: partner picker, replace dialog, discount summary <!-- id: 21 -->
 - [ ] CM-22 Dossier "Couple with <partner>" <!-- id: 22 -->
 - [ ] CM-23 Membership detail, upgrade and renew: partner row and type filter <!-- id: 23 -->
 - [ ] CM-24 Member card, directory badge, trainer summary <!-- id: 24 -->
@@ -422,7 +422,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-17 |
 | **Files** | `presentation/bloc/create_membership_bloc.dart` (plus its generated file if any), `test/features/membership/presentation/create_membership_bloc_test.dart` |
 
@@ -447,7 +447,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-19, CM-20 |
 | **Files** | `presentation/screens/create_membership_screen.dart`, `presentation/membership_strings.dart`, `test/features/membership/presentation/create_membership_screen_test.dart` |
 
