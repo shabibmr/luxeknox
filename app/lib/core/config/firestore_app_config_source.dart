@@ -7,11 +7,20 @@ abstract class AppConfigRemoteSource {
 
 /// Reads remote app config from Firestore `config/app`.
 class FirestoreAppConfigSource implements AppConfigRemoteSource {
-  FirestoreAppConfigSource({this._firestore});
+  FirestoreAppConfigSource({
+    this._firestore,
+    this.apiBaseUrlField = defaultApiBaseUrlField,
+  });
 
   static const String collection = 'config';
   static const String document = 'app';
-  static const String apiBaseUrlField = 'API_BASE_URL';
+  static const String defaultApiBaseUrlField = 'API_BASE_URL';
+
+  /// Field read by non-production builds (debug/staging/test), so they can
+  /// point at a different API than production.
+  static const String debugApiBaseUrlField = 'API_BASE_URL_DEBUG';
+
+  final String apiBaseUrlField;
 
   /// Resolved on first fetch, so a failed Firebase init surfaces as a fetch
   /// error rather than a constructor throw.

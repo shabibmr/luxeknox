@@ -15,11 +15,11 @@ import 'remote_api_base_url_store.dart';
 Future<void> resolveRemoteAppConfig() async {
   final env = AppConfig.fromEnv();
   AppConfigBootstrap.resolved = env.copyWith(
-    apiBaseUrl: await _resolveApiBaseUrl(env.apiBaseUrl),
+    apiBaseUrl: await _resolveApiBaseUrl(env.apiBaseUrl, env.isProduction),
   );
 }
 
-Future<String> _resolveApiBaseUrl(String fallbackUrl) async {
+Future<String> _resolveApiBaseUrl(String fallbackUrl, bool isProduction) async {
   if (!DefaultFirebaseOptions.isConfigured) {
     return ApiBaseUrlResolver.normalize(fallbackUrl);
   }
@@ -39,8 +39,19 @@ Future<String> _resolveApiBaseUrl(String fallbackUrl) async {
     return ApiBaseUrlResolver.normalize(fallbackUrl);
   }
   return ApiBaseUrlResolver(
-    store: RemoteApiBaseUrlStore(prefs),
-    source: FirestoreAppConfigSource(),
+    // Non-production builds read `API_BASE_URL_DEBUG` (own cache key), so
+    // test/debug runs never pick up the production API URL.
+    store: RemoteApiBaseUrlStore(
+      prefs,
+      key: isProduction
+          ? RemoteApiBaseUrlStore.defaultKey
+          : RemoteApiBaseUrlStore.debugKey,
+    ),
+    source: FirestoreAppConfigSource(
+      apiBaseUrlField: isProduction
+          ? FirestoreAppConfigSource.defaultApiBaseUrlField
+          : FirestoreAppConfigSource.debugApiBaseUrlField,
+    ),
     fallbackUrl: fallbackUrl,
   ).resolve();
 }
