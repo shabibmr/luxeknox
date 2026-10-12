@@ -224,6 +224,12 @@ class _MembershipCardBody extends StatelessWidget {
             MembershipStrings.endDateLabel,
             formatMembershipDate(membership.endDate),
           ),
+          if (membership.isCouple)
+            _infoRow(
+              MembershipStrings.coupleWithLabel,
+              membership.partnerMemberName ??
+                  MembershipStrings.partnerFallbackName,
+            ),
           if (membership.lockerNumber != null)
             _infoRow(
               MembershipStrings.lockerNumberLabel,

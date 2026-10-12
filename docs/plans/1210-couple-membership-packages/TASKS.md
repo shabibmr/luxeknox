@@ -47,7 +47,7 @@ Derived from [PLAN.md](./PLAN.md).
 - [x] CM-21 Create screen: partner picker, replace dialog, discount summary <!-- id: 21 -->
 - [x] CM-22 Dossier "Couple with <partner>" <!-- id: 22 -->
 - [x] CM-23 Membership detail, upgrade and renew: partner row and type filter <!-- id: 23 -->
-- [ ] CM-24 Member card, directory badge, trainer summary <!-- id: 24 -->
+- [x] CM-24 Member card, directory badge, trainer summary <!-- id: 24 -->
 
 **Phase 8: Verification**
 - [ ] CM-25 API e2e: couple sale and lifecycle <!-- id: 25 -->
@@ -493,7 +493,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-16 |
 | **Files** | `presentation/screens/membership_card_screen.dart`, `presentation/screens/memberships_directory_screen.dart`, `presentation/screens/trainer_membership_summary_screen.dart`, `test/.../membership_card_screen_test.dart` |
 

@@ -128,8 +128,17 @@ class _MembershipsDirectoryBody extends StatelessWidget {
                           '${membership.startDate.toString().split(' ').first} → '
                           '${membership.endDate.toString().split(' ').first}',
                         ),
-                        trailing: MembershipStatusChip(
-                          status: membership.status,
+                        trailing: Wrap(
+                          spacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            if (membership.isCouple)
+                              const Chip(
+                                label: Text(MembershipStrings.coupleChip),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            MembershipStatusChip(status: membership.status),
+                          ],
                         ),
                         onTap: () => _openDetail(context, membership.id),
                       );

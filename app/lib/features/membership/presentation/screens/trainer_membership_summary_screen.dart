@@ -78,6 +78,12 @@ class _TrainerMembershipSummaryBody extends StatelessWidget {
                     MembershipStrings.endDateLabel,
                     membership.endDate.toString().split(' ').first,
                   ),
+                  if (membership.isCouple)
+                    _infoRow(
+                      MembershipStrings.coupleWithLabel,
+                      membership.partnerMemberName ??
+                          MembershipStrings.partnerFallbackName,
+                    ),
                 ],
               );
             },

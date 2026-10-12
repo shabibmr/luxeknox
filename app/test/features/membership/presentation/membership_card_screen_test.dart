@@ -146,6 +146,54 @@ void main() {
     expect(find.text(MembershipStrings.confirm), findsOneWidget);
   });
 
+  testWidgets('shows "Couple with" row for a couple membership only', (
+    tester,
+  ) async {
+    final couple = Membership(
+      id: 'mem-2',
+      memberId: 'm-profile-1',
+      productId: 'prod-1',
+      startDate: DateTime.utc(2026, 1, 1),
+      endDate: DateTime.utc(2026, 12, 31),
+      status: MembershipStatus.active,
+      rowVersion: 1,
+      product: product,
+      partnerMembershipId: 'mem-3',
+      partnerMemberId: 'm-profile-2',
+      partnerMemberName: 'Priya',
+    );
+    whenListen(
+      cardCubit,
+      const Stream<MembershipCardState>.empty(),
+      initialState: MembershipCardState(
+        status: LoadStatus.success,
+        membership: couple,
+      ),
+    );
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+    expect(find.text(MembershipStrings.coupleWithLabel), findsOneWidget);
+    expect(find.text('Priya'), findsOneWidget);
+  });
+
+  testWidgets('hides "Couple with" row for a single membership', (
+    tester,
+  ) async {
+    whenListen(
+      cardCubit,
+      const Stream<MembershipCardState>.empty(),
+      initialState: MembershipCardState(
+        status: LoadStatus.success,
+        membership: activeMembership,
+      ),
+    );
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+    expect(find.text(MembershipStrings.coupleWithLabel), findsNothing);
+  });
+
   testWidgets('shows empty view when no active membership on file', (
     tester,
   ) async {

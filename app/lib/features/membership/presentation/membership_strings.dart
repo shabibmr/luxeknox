@@ -70,6 +70,7 @@ class MembershipStrings {
   static const String totalDueLabel = 'Total';
   static const String partnerRowLabel = 'Partner';
   static const String billedToLabel = 'Billed to';
+  static const String coupleWithLabel = 'Couple with';
   static const String coupleActionsNote =
       'Couple membership: actions apply to both members.';
 
