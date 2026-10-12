@@ -1,5 +1,10 @@
 import 'package:equatable/equatable.dart';
 
+/// Whether a PT package covers one member or two (a couple package's price is
+/// the total for both members). Kept in the PT feature so it does not depend
+/// on the membership feature's [MembershipPackageType].
+enum PtPackageType { single, couple }
+
 /// A sellable Personal Training package. Independent of the gym membership
 /// package: it fixes the PT duration and the price. How many days a week the
 /// member trains is chosen per member when the package is sold, not fixed here.
@@ -15,6 +20,7 @@ class PtProduct extends Equatable {
     required this.basePrice,
     this.taxPercentage,
     required this.isActive,
+    this.packageType = PtPackageType.single,
   });
 
   final int id;
@@ -25,6 +31,9 @@ class PtProduct extends Equatable {
   final String basePrice;
   final String? taxPercentage;
   final bool isActive;
+  final PtPackageType packageType;
+
+  bool get isCouple => packageType == PtPackageType.couple;
 
   PtProduct copyWith({
     String? name,
@@ -34,6 +43,7 @@ class PtProduct extends Equatable {
     String? basePrice,
     String? taxPercentage,
     bool? isActive,
+    PtPackageType? packageType,
   }) {
     return PtProduct(
       id: id,
@@ -44,6 +54,7 @@ class PtProduct extends Equatable {
       basePrice: basePrice ?? this.basePrice,
       taxPercentage: taxPercentage ?? this.taxPercentage,
       isActive: isActive ?? this.isActive,
+      packageType: packageType ?? this.packageType,
     );
   }
 
@@ -57,5 +68,6 @@ class PtProduct extends Equatable {
     basePrice,
     taxPercentage,
     isActive,
+    packageType,
   ];
 }

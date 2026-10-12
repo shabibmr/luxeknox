@@ -11,6 +11,7 @@ abstract class PtRemoteDataSource {
     required int ptProductId,
     required api.Date startDate,
     required String weekdays,
+    int? partnerMemberId,
     int? excludeSubscriptionId,
   });
   Future<api.PtPurchaseResult> purchase({
@@ -65,6 +66,7 @@ class PtRemoteDataSourceImpl implements PtRemoteDataSource {
     required int ptProductId,
     required api.Date startDate,
     required String weekdays,
+    int? partnerMemberId,
     int? excludeSubscriptionId,
   }) async => _unwrap(
     await _api.getPtScheduleGrid(
@@ -72,6 +74,7 @@ class PtRemoteDataSourceImpl implements PtRemoteDataSource {
       ptProductId: ptProductId,
       startDate: startDate,
       weekdays: weekdays,
+      partnerMemberId: partnerMemberId,
       excludeSubscriptionId: excludeSubscriptionId,
     ),
   );

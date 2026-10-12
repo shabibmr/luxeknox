@@ -166,6 +166,7 @@ doc/ProgressPhotoWrite.md
 doc/PtChangeSlotRequest.md
 doc/PtGridCell.md
 doc/PtGridTrainer.md
+doc/PtPackageType.md
 doc/PtPaymentFields.md
 doc/PtProduct.md
 doc/PtProductPage.md
@@ -415,6 +416,7 @@ lib/src/model/progress_photo_write.dart
 lib/src/model/pt_change_slot_request.dart
 lib/src/model/pt_grid_cell.dart
 lib/src/model/pt_grid_trainer.dart
+lib/src/model/pt_package_type.dart
 lib/src/model/pt_payment_fields.dart
 lib/src/model/pt_product.dart
 lib/src/model/pt_product_page.dart
@@ -481,5 +483,4 @@ lib/src/model/workout_set_update.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
-test/membership_package_type_test.dart
-test/membership_replacement_preview_test.dart
+test/pt_package_type_test.dart

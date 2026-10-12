@@ -13,6 +13,7 @@ import 'package:api_client/src/model/date.dart';
 import 'package:api_client/src/model/error_body.dart';
 import 'package:api_client/src/model/member_pt_summary.dart';
 import 'package:api_client/src/model/pt_change_slot_request.dart';
+import 'package:api_client/src/model/pt_package_type.dart';
 import 'package:api_client/src/model/pt_product.dart';
 import 'package:api_client/src/model/pt_product_page.dart';
 import 'package:api_client/src/model/pt_product_write.dart';
@@ -405,6 +406,7 @@ class PTApi {
   /// * [ptProductId] 
   /// * [startDate] 
   /// * [weekdays] - Comma-separated 0=Sunday … 6=Saturday, e.g. \"1,3,5\"
+  /// * [partnerMemberId] - Second member when selling a couple PT. Cells busy for either member show as occupied. On re-plan (`exclude_subscription_id`), the partner is resolved from the subscription when omitted. 
   /// * [excludeSubscriptionId] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
@@ -420,6 +422,7 @@ class PTApi {
     required int ptProductId,
     required Date startDate,
     required String weekdays,
+    int? partnerMemberId,
     int? excludeSubscriptionId,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -452,6 +455,7 @@ class PTApi {
       r'pt_product_id': encodeQueryParameter(_serializers, ptProductId, const FullType(int)),
       r'start_date': encodeQueryParameter(_serializers, startDate, const FullType(Date)),
       r'weekdays': encodeQueryParameter(_serializers, weekdays, const FullType(String)),
+      if (partnerMemberId != null) r'partner_member_id': encodeQueryParameter(_serializers, partnerMemberId, const FullType(int)),
       if (excludeSubscriptionId != null) r'exclude_subscription_id': encodeQueryParameter(_serializers, excludeSubscriptionId, const FullType(int)),
     };
 
@@ -583,6 +587,7 @@ class PTApi {
   /// * [limit] - Default from gym_settings pagination.default_page_size.
   /// * [offset] - Admin tables that need page numbers.
   /// * [q] - Case-insensitive search (FR-API-014).
+  /// * [packageType] - Filter by single or couple packages.
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -596,6 +601,7 @@ class PTApi {
     int? limit,
     int? offset,
     String? q,
+    PtPackageType? packageType,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -626,6 +632,7 @@ class PTApi {
       if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
       if (offset != null) r'offset': encodeQueryParameter(_serializers, offset, const FullType(int)),
       if (q != null) r'q': encodeQueryParameter(_serializers, q, const FullType(String)),
+      if (packageType != null) r'package_type': encodeQueryParameter(_serializers, packageType, const FullType(PtPackageType)),
     };
 
     final _response = await _dio.request<Object>(

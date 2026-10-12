@@ -14,6 +14,8 @@ class _$PtProduct extends PtProduct {
   @override
   final String code;
   @override
+  final PtPackageType packageType;
+  @override
   final String? description;
   @override
   final int durationDays;
@@ -31,6 +33,7 @@ class _$PtProduct extends PtProduct {
       {required this.id,
       required this.name,
       required this.code,
+      required this.packageType,
       this.description,
       required this.durationDays,
       required this.basePrice,
@@ -51,6 +54,7 @@ class _$PtProduct extends PtProduct {
         id == other.id &&
         name == other.name &&
         code == other.code &&
+        packageType == other.packageType &&
         description == other.description &&
         durationDays == other.durationDays &&
         basePrice == other.basePrice &&
@@ -64,6 +68,7 @@ class _$PtProduct extends PtProduct {
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
     _$hash = $jc(_$hash, code.hashCode);
+    _$hash = $jc(_$hash, packageType.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
     _$hash = $jc(_$hash, durationDays.hashCode);
     _$hash = $jc(_$hash, basePrice.hashCode);
@@ -79,6 +84,7 @@ class _$PtProduct extends PtProduct {
           ..add('id', id)
           ..add('name', name)
           ..add('code', code)
+          ..add('packageType', packageType)
           ..add('description', description)
           ..add('durationDays', durationDays)
           ..add('basePrice', basePrice)
@@ -102,6 +108,11 @@ class PtProductBuilder implements Builder<PtProduct, PtProductBuilder> {
   String? _code;
   String? get code => _$this._code;
   set code(String? code) => _$this._code = code;
+
+  PtPackageType? _packageType;
+  PtPackageType? get packageType => _$this._packageType;
+  set packageType(PtPackageType? packageType) =>
+      _$this._packageType = packageType;
 
   String? _description;
   String? get description => _$this._description;
@@ -134,6 +145,7 @@ class PtProductBuilder implements Builder<PtProduct, PtProductBuilder> {
       _id = $v.id;
       _name = $v.name;
       _code = $v.code;
+      _packageType = $v.packageType;
       _description = $v.description;
       _durationDays = $v.durationDays;
       _basePrice = $v.basePrice;
@@ -165,6 +177,8 @@ class PtProductBuilder implements Builder<PtProduct, PtProductBuilder> {
               BuiltValueNullFieldError.checkNotNull(name, r'PtProduct', 'name'),
           code:
               BuiltValueNullFieldError.checkNotNull(code, r'PtProduct', 'code'),
+          packageType: BuiltValueNullFieldError.checkNotNull(
+              packageType, r'PtProduct', 'packageType'),
           description: description,
           durationDays: BuiltValueNullFieldError.checkNotNull(
               durationDays, r'PtProduct', 'durationDays'),

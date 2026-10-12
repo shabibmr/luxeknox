@@ -420,6 +420,7 @@ Class | Method | HTTP request | Description
  - [PtChangeSlotRequest](doc/PtChangeSlotRequest.md)
  - [PtGridCell](doc/PtGridCell.md)
  - [PtGridTrainer](doc/PtGridTrainer.md)
+ - [PtPackageType](doc/PtPackageType.md)
  - [PtPaymentFields](doc/PtPaymentFields.md)
  - [PtProduct](doc/PtProduct.md)
  - [PtProductPage](doc/PtProductPage.md)

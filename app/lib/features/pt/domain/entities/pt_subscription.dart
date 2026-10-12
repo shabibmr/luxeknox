@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'pt_product.dart';
+
 enum PtSubscriptionStatus { scheduled, active, completed, cancelled }
 
 /// How much a trainer may do on a member's hub: full while their PT with the
@@ -8,6 +10,9 @@ enum TrainerAccess { full, readOnly }
 
 /// A member's PT: one active trainer, a fixed recurring one-hour slot on
 /// [weekdays] (0=Sunday … 6=Saturday), for [startDate]–[endDate].
+///
+/// Couple PTs are two linked rows (ADR-0011): [partnerSubscriptionId] points
+/// at the other row; [isPrimary] marks the billing/session owner.
 class PtSubscription extends Equatable {
   const PtSubscription({
     required this.id,
@@ -24,6 +29,11 @@ class PtSubscription extends Equatable {
     required this.sessionsPerWeek,
     required this.trainerName,
     required this.slotLabel,
+    this.packageType = PtPackageType.single,
+    this.isPrimary = true,
+    this.partnerSubscriptionId,
+    this.partnerMemberId,
+    this.partnerMemberName,
   });
 
   final int id;
@@ -44,6 +54,13 @@ class PtSubscription extends Equatable {
 
   /// e.g. "17:00-18:00".
   final String slotLabel;
+  final PtPackageType packageType;
+  final bool isPrimary;
+  final int? partnerSubscriptionId;
+  final int? partnerMemberId;
+  final String? partnerMemberName;
+
+  bool get isCouple => partnerSubscriptionId != null;
 
   bool get isOpen =>
       status == PtSubscriptionStatus.scheduled ||
@@ -65,6 +82,11 @@ class PtSubscription extends Equatable {
     sessionsPerWeek,
     trainerName,
     slotLabel,
+    packageType,
+    isPrimary,
+    partnerSubscriptionId,
+    partnerMemberId,
+    partnerMemberName,
   ];
 }
 

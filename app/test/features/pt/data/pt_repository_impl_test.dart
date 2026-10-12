@@ -33,31 +33,37 @@ void main() {
     repository = PtRepositoryImpl(remote);
   });
 
-  Future<dynamic> purchase({String? key}) => repository.purchase(
-    memberId: 42,
-    ptProductId: 3,
-    trainerId: 7,
-    startDate: DateTime(2026, 10, 5),
-    weekdays: const [5, 1, 3],
-    slotStart: '17:00:00',
-    payment: const PtPayment(paymentMethodId: 1, discountAmount: '100.00'),
-    idempotencyKey: key,
-  );
+  Future<dynamic> purchase({String? key, int? partnerMemberId}) =>
+      repository.purchase(
+        memberId: 42,
+        ptProductId: 3,
+        trainerId: 7,
+        startDate: DateTime(2026, 10, 5),
+        weekdays: const [5, 1, 3],
+        slotStart: '17:00:00',
+        payment: const PtPayment(paymentMethodId: 1, discountAmount: '100.00'),
+        partnerMemberId: partnerMemberId,
+        idempotencyKey: key,
+      );
+
+  void stubPurchaseThrows() {
+    when(
+      () => remote.purchase(
+        request: any(named: 'request'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
+    ).thenThrow(
+      DioException(
+        requestOptions: RequestOptions(path: '/'),
+        type: DioExceptionType.connectionTimeout,
+      ),
+    );
+  }
 
   test(
     'purchase sends HH:mm, sorted weekdays and the idempotency key',
     () async {
-      when(
-        () => remote.purchase(
-          request: any(named: 'request'),
-          idempotencyKey: any(named: 'idempotencyKey'),
-        ),
-      ).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/'),
-          type: DioExceptionType.connectionTimeout,
-        ),
-      );
+      stubPurchaseThrows();
 
       final result = await purchase(key: 'key-12345678');
 
@@ -71,10 +77,64 @@ void main() {
       expect(request.slotStart, '17:00');
       expect(request.weekdays.toList(), [1, 3, 5]);
       expect(request.discountAmount, '100.00');
+      expect(request.partnerMemberId, isNull);
       expect(captured[1], 'key-12345678');
       expect(result.isLeft(), isTrue);
     },
   );
+
+  test('purchase forwards partnerMemberId on the API request', () async {
+    stubPurchaseThrows();
+
+    await purchase(partnerMemberId: 99);
+
+    final request =
+        verify(
+              () => remote.purchase(
+                request: captureAny(named: 'request'),
+                idempotencyKey: any(named: 'idempotencyKey'),
+              ),
+            ).captured.single
+            as api.PtPurchaseRequest;
+    expect(request.partnerMemberId, 99);
+  });
+
+  test('getScheduleGrid forwards partnerMemberId to the remote', () async {
+    when(
+      () => remote.scheduleGrid(
+        memberId: any(named: 'memberId'),
+        ptProductId: any(named: 'ptProductId'),
+        startDate: any(named: 'startDate'),
+        weekdays: any(named: 'weekdays'),
+        partnerMemberId: any(named: 'partnerMemberId'),
+        excludeSubscriptionId: any(named: 'excludeSubscriptionId'),
+      ),
+    ).thenThrow(
+      DioException(
+        requestOptions: RequestOptions(path: '/'),
+        type: DioExceptionType.connectionTimeout,
+      ),
+    );
+
+    await repository.getScheduleGrid(
+      memberId: 42,
+      ptProductId: 3,
+      startDate: DateTime(2026, 10, 5),
+      weekdays: const [1, 3],
+      partnerMemberId: 99,
+    );
+
+    verify(
+      () => remote.scheduleGrid(
+        memberId: 42,
+        ptProductId: 3,
+        startDate: any(named: 'startDate'),
+        weekdays: '1,3',
+        partnerMemberId: 99,
+        excludeSubscriptionId: null,
+      ),
+    ).called(1);
+  });
 
   test(
     'a thrown transport error becomes a Failure, not an exception',

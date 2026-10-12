@@ -18,6 +18,7 @@ Name | Type | Description | Notes
 **startDate** | [**Date**](Date.md) |  | 
 **weekdays** | **BuiltList&lt;int&gt;** |  | 
 **slotStart** | **String** |  | 
+**partnerMemberId** | **int** | Required for a couple PT product; rejected for a single product. | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

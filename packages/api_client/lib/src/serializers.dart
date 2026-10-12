@@ -166,6 +166,7 @@ import 'package:api_client/src/model/progress_photo_write.dart';
 import 'package:api_client/src/model/pt_change_slot_request.dart';
 import 'package:api_client/src/model/pt_grid_cell.dart';
 import 'package:api_client/src/model/pt_grid_trainer.dart';
+import 'package:api_client/src/model/pt_package_type.dart';
 import 'package:api_client/src/model/pt_payment_fields.dart';
 import 'package:api_client/src/model/pt_product.dart';
 import 'package:api_client/src/model/pt_product_page.dart';
@@ -386,6 +387,7 @@ part 'serializers.g.dart';
   PtChangeSlotRequest,
   PtGridCell,
   PtGridTrainer,
+  PtPackageType,
   PtPaymentFields,$PtPaymentFields,
   PtProduct,
   PtProductPage,

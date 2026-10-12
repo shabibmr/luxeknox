@@ -8,6 +8,8 @@ part of 'pt_purchase_request.dart';
 
 class _$PtPurchaseRequest extends PtPurchaseRequest {
   @override
+  final int? partnerMemberId;
+  @override
   final int ptProductId;
   @override
   final BuiltList<int> weekdays;
@@ -33,7 +35,8 @@ class _$PtPurchaseRequest extends PtPurchaseRequest {
       (PtPurchaseRequestBuilder()..update(updates))._build();
 
   _$PtPurchaseRequest._(
-      {required this.ptProductId,
+      {this.partnerMemberId,
+      required this.ptProductId,
       required this.weekdays,
       required this.startDate,
       required this.slotStart,
@@ -56,6 +59,7 @@ class _$PtPurchaseRequest extends PtPurchaseRequest {
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
     return other is PtPurchaseRequest &&
+        partnerMemberId == other.partnerMemberId &&
         ptProductId == other.ptProductId &&
         weekdays == other.weekdays &&
         startDate == other.startDate &&
@@ -71,6 +75,7 @@ class _$PtPurchaseRequest extends PtPurchaseRequest {
   @override
   int get hashCode {
     var _$hash = 0;
+    _$hash = $jc(_$hash, partnerMemberId.hashCode);
     _$hash = $jc(_$hash, ptProductId.hashCode);
     _$hash = $jc(_$hash, weekdays.hashCode);
     _$hash = $jc(_$hash, startDate.hashCode);
@@ -88,6 +93,7 @@ class _$PtPurchaseRequest extends PtPurchaseRequest {
   @override
   String toString() {
     return (newBuiltValueToStringHelper(r'PtPurchaseRequest')
+          ..add('partnerMemberId', partnerMemberId)
           ..add('ptProductId', ptProductId)
           ..add('weekdays', weekdays)
           ..add('startDate', startDate)
@@ -107,6 +113,11 @@ class PtPurchaseRequestBuilder
         Builder<PtPurchaseRequest, PtPurchaseRequestBuilder>,
         PtPaymentFieldsBuilder {
   _$PtPurchaseRequest? _$v;
+
+  int? _partnerMemberId;
+  int? get partnerMemberId => _$this._partnerMemberId;
+  set partnerMemberId(covariant int? partnerMemberId) =>
+      _$this._partnerMemberId = partnerMemberId;
 
   int? _ptProductId;
   int? get ptProductId => _$this._ptProductId;
@@ -162,6 +173,7 @@ class PtPurchaseRequestBuilder
   PtPurchaseRequestBuilder get _$this {
     final $v = _$v;
     if ($v != null) {
+      _partnerMemberId = $v.partnerMemberId;
       _ptProductId = $v.ptProductId;
       _weekdays = $v.weekdays.toBuilder();
       _startDate = $v.startDate;
@@ -195,6 +207,7 @@ class PtPurchaseRequestBuilder
     try {
       _$result = _$v ??
           _$PtPurchaseRequest._(
+            partnerMemberId: partnerMemberId,
             ptProductId: BuiltValueNullFieldError.checkNotNull(
                 ptProductId, r'PtPurchaseRequest', 'ptProductId'),
             weekdays: weekdays.build(),

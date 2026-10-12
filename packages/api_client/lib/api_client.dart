@@ -181,6 +181,7 @@ export 'package:api_client/src/model/progress_photo_write.dart';
 export 'package:api_client/src/model/pt_change_slot_request.dart';
 export 'package:api_client/src/model/pt_grid_cell.dart';
 export 'package:api_client/src/model/pt_grid_trainer.dart';
+export 'package:api_client/src/model/pt_package_type.dart';
 export 'package:api_client/src/model/pt_payment_fields.dart';
 export 'package:api_client/src/model/pt_product.dart';
 export 'package:api_client/src/model/pt_product_page.dart';

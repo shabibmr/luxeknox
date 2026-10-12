@@ -38,6 +38,7 @@ abstract class PtRepository {
     required int ptProductId,
     required DateTime startDate,
     required List<int> weekdays,
+    int? partnerMemberId,
     int? excludeSubscriptionId,
   });
 
@@ -49,6 +50,7 @@ abstract class PtRepository {
     required List<int> weekdays,
     required String slotStart,
     required PtPayment payment,
+    int? partnerMemberId,
 
     /// Reuse on retries of the same sale so the server replays the result.
     String? idempotencyKey,

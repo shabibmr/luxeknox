@@ -37,6 +37,7 @@ class GetPtScheduleGridParams extends Equatable {
     required this.ptProductId,
     required this.startDate,
     required this.weekdays,
+    this.partnerMemberId,
     this.excludeSubscriptionId,
   });
 
@@ -44,6 +45,7 @@ class GetPtScheduleGridParams extends Equatable {
   final int ptProductId;
   final DateTime startDate;
   final List<int> weekdays;
+  final int? partnerMemberId;
   final int? excludeSubscriptionId;
 
   @override
@@ -52,6 +54,7 @@ class GetPtScheduleGridParams extends Equatable {
     ptProductId,
     startDate,
     weekdays,
+    partnerMemberId,
     excludeSubscriptionId,
   ];
 }
@@ -69,6 +72,7 @@ class GetPtScheduleGridUseCase
         ptProductId: p.ptProductId,
         startDate: p.startDate,
         weekdays: p.weekdays,
+        partnerMemberId: p.partnerMemberId,
         excludeSubscriptionId: p.excludeSubscriptionId,
       );
 }
@@ -82,6 +86,7 @@ class PurchasePtParams extends Equatable {
     required this.weekdays,
     required this.slotStart,
     required this.payment,
+    this.partnerMemberId,
     this.idempotencyKey,
   });
 
@@ -92,6 +97,7 @@ class PurchasePtParams extends Equatable {
   final List<int> weekdays;
   final String slotStart;
   final PtPayment payment;
+  final int? partnerMemberId;
 
   /// Not part of [props]: it identifies the user's intent, not the request.
   final String? idempotencyKey;
@@ -105,6 +111,7 @@ class PurchasePtParams extends Equatable {
     weekdays,
     slotStart,
     payment,
+    partnerMemberId,
   ];
 }
 
@@ -123,6 +130,7 @@ class PurchasePtUseCase implements UseCase<PtSubscription, PurchasePtParams> {
         weekdays: p.weekdays,
         slotStart: p.slotStart,
         payment: p.payment,
+        partnerMemberId: p.partnerMemberId,
         idempotencyKey: p.idempotencyKey,
       );
 }

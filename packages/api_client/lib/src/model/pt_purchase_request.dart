@@ -25,8 +25,13 @@ part 'pt_purchase_request.g.dart';
 /// * [startDate] 
 /// * [weekdays] 
 /// * [slotStart] 
+/// * [partnerMemberId] - Required for a couple PT product; rejected for a single product.
 @BuiltValue()
 abstract class PtPurchaseRequest implements PtPaymentFields, Built<PtPurchaseRequest, PtPurchaseRequestBuilder> {
+  /// Required for a couple PT product; rejected for a single product.
+  @BuiltValueField(wireName: r'partner_member_id')
+  int? get partnerMemberId;
+
   @BuiltValueField(wireName: r'pt_product_id')
   int get ptProductId;
 
@@ -68,6 +73,13 @@ class _$PtPurchaseRequestSerializer implements PrimitiveSerializer<PtPurchaseReq
     PtPurchaseRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
+    if (object.partnerMemberId != null) {
+      yield r'partner_member_id';
+      yield serializers.serialize(
+        object.partnerMemberId,
+        specifiedType: const FullType(int),
+      );
+    }
     yield r'pt_product_id';
     yield serializers.serialize(
       object.ptProductId,
@@ -149,6 +161,14 @@ class _$PtPurchaseRequestSerializer implements PrimitiveSerializer<PtPurchaseReq
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
+        case r'partner_member_id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.partnerMemberId = valueDes;
+          break;
         case r'pt_product_id':
           final valueDes = serializers.deserialize(
             value,
