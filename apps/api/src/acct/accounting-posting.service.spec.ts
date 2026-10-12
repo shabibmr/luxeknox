@@ -247,11 +247,58 @@ describe('AccountingPostingService.postJournal', () => {
         sourceId: 1,
         lines: balancedLines,
       }),
-    ).rejects.toBeInstanceOf(BusinessRuleError);
+    ).rejects.toMatchObject({
+      name: 'BusinessRuleError',
+      message: 'Accounting period 2026-04-01 to 2026-04-30 is locked',
+    });
 
     expect(repository.allocateJournalNumber).not.toHaveBeenCalled();
     expect(repository.insertJournalEntry).not.toHaveBeenCalled();
     expect(repository.insertJournalLines).not.toHaveBeenCalled();
+  });
+
+  it('returns the original journal on replay even when the period is locked', async () => {
+    const existing = {
+      id: 50,
+      journal_number: 'JRN00000001',
+      entry_date: '2026-04-15',
+      accounting_period_id: 7,
+      source_type: 'sales_invoice',
+      source_id: 42,
+      memo: 'Member invoice',
+      posted_at: new Date('2026-04-15T10:00:00.000Z'),
+      posted_by_user_id: 9,
+      reverses_journal_id: null,
+      row_version: 1,
+      created_at: new Date('2026-04-15T10:00:00.000Z'),
+      updated_at: null,
+      lines: [
+        { id: 1, journal_entry_id: 50, account_id: 1100, debit: '118.00', credit: '0.00' },
+        { id: 2, journal_entry_id: 50, account_id: 2200, debit: '0.00', credit: '118.00' },
+      ],
+    };
+    repository.findBySource.mockResolvedValue({
+      id: 50,
+      journal_number: 'JRN00000001',
+      source_type: 'sales_invoice',
+      source_id: 42,
+    });
+    repository.findEntryWithLines.mockResolvedValue(existing);
+    repository.findPeriodForDate.mockResolvedValue({
+      ...openPeriod,
+      status: 'locked',
+    });
+
+    const result = await service.postJournal({
+      entryDate: '2026-04-15',
+      sourceType: 'sales_invoice',
+      sourceId: 42,
+      lines: balancedLines,
+    });
+
+    expect(result).toEqual(existing);
+    expect(repository.findPeriodForDate).not.toHaveBeenCalled();
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
   });
 });
 
@@ -496,7 +543,10 @@ describe('AccountingPostingService.reverseJournal', () => {
         journalId: 50,
         entryDate: '2026-04-16',
       }),
-    ).rejects.toBeInstanceOf(BusinessRuleError);
+    ).rejects.toMatchObject({
+      name: 'BusinessRuleError',
+      message: 'Accounting period 2026-04-01 to 2026-04-30 is locked',
+    });
 
     expect(repository.insertJournalEntry).not.toHaveBeenCalled();
   });

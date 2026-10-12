@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthenticatedUser } from '../auth/auth.guard';
+import { BusinessRuleError } from '../platform/errors/app-error';
+import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
 import { REQUIRE_PERMISSIONS_KEY } from '../rbac/require-permission.decorator';
 import { JournalController } from './journal.controller';
-import type { JournalDto } from './journal.dto';
+import { journalCreateSchema, type JournalDto } from './journal.dto';
 import { JournalService } from './journal.service';
 
 const ADMIN_USER: AuthenticatedUser = {
@@ -117,5 +119,104 @@ describe('JournalController', () => {
 
     expect(service.reverse).toHaveBeenCalledWith(50, dto, ADMIN_USER);
     expect(result.id).toBe(51);
+  });
+
+  it('propagates unbalanced journal rejection from create', async () => {
+    (service.create as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new BusinessRuleError('Journal debits must equal credits'),
+    );
+
+    await expect(
+      controller.create(
+        {
+          entry_date: '2026-04-15',
+          source_type: 'manual',
+          lines: [
+            { account_id: 5000, debit: '100.00' },
+            { account_id: 1000, credit: '99.00' },
+          ],
+        },
+        ADMIN_USER,
+      ),
+    ).rejects.toMatchObject({
+      message: 'Journal debits must equal credits',
+    });
+  });
+
+  it('propagates locked-period rejection from create', async () => {
+    (service.create as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new BusinessRuleError('Accounting period 2026-04-01 to 2026-04-30 is locked'),
+    );
+
+    await expect(
+      controller.create(
+        {
+          entry_date: '2026-04-15',
+          source_type: 'manual',
+          lines: [
+            { account_id: 5000, debit: '100.00' },
+            { account_id: 1000, credit: '100.00' },
+          ],
+        },
+        ADMIN_USER,
+      ),
+    ).rejects.toMatchObject({
+      message: 'Accounting period 2026-04-01 to 2026-04-30 is locked',
+    });
+  });
+
+  it('returns a reversal with reverses_journal_id from reverse', async () => {
+    const reversal: JournalDto = {
+      ...JOURNAL,
+      id: 51,
+      journal_number: 'JRN00000002',
+      source_type: 'journal_reversal',
+      source_id: 50,
+      reverses_journal_id: 50,
+      lines: [
+        {
+          id: 3,
+          journal_entry_id: 51,
+          account_id: 5000,
+          debit: '0.00',
+          credit: '100.00',
+          memo: null,
+          member_id: null,
+          vendor_id: null,
+        },
+        {
+          id: 4,
+          journal_entry_id: 51,
+          account_id: 1000,
+          debit: '100.00',
+          credit: '0.00',
+          memo: null,
+          member_id: null,
+          vendor_id: null,
+        },
+      ],
+    };
+    (service.reverse as ReturnType<typeof vi.fn>).mockResolvedValue(reversal);
+
+    const result = await controller.reverse(50, { entry_date: '2026-04-16' }, ADMIN_USER);
+
+    expect(result.reverses_journal_id).toBe(50);
+    expect(result.lines[0]).toMatchObject({ account_id: 5000, debit: '0.00', credit: '100.00' });
+    expect(result.lines[1]).toMatchObject({ account_id: 1000, debit: '100.00', credit: '0.00' });
+  });
+
+  it('rejects create bodies with fewer than two lines at the validation pipe', () => {
+    const pipe = new ZodValidationPipe(journalCreateSchema);
+
+    expect(() =>
+      pipe.transform(
+        {
+          entry_date: '2026-04-15',
+          source_type: 'manual',
+          lines: [{ account_id: 5000, debit: '100.00' }],
+        },
+        { type: 'body' } as never,
+      ),
+    ).toThrow();
   });
 });
