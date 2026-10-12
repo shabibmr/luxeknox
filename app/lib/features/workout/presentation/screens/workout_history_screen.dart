@@ -48,6 +48,16 @@ class _WorkoutHistoryBody extends StatelessWidget {
       appBar: AppBar(
         title: Text(_title),
         actions: [
+          if (role != WorkoutHistoryRole.member && memberId != null)
+            TextButton.icon(
+              icon: const Icon(Icons.add),
+              label: const Text(WorkoutStrings.addPlanForMember),
+              onPressed: () => context.push(
+                role == WorkoutHistoryRole.admin
+                    ? Routes.adminWorkoutPlansCreateForMember(memberId!)
+                    : Routes.trainerPlansWorkoutsCreateForMember(memberId!),
+              ),
+            ),
           if (role == WorkoutHistoryRole.member)
             TextButton.icon(
               icon: const Icon(Icons.today_outlined),
