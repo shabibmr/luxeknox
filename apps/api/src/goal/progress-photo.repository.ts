@@ -29,6 +29,13 @@ export class ProgressPhotoRepository extends BaseRepository<
     super(db, progressPhotos);
   }
 
+  /** Inserts a row and returns it (the base `create` yields the raw insert header). */
+  override async create(values: NewProgressPhoto): Promise<ProgressPhoto> {
+    const [header] = await this.db.insert(progressPhotos).values(values);
+    const [row] = await this.db.select().from(progressPhotos).where(eq(progressPhotos.id, header.insertId));
+    return row;
+  }
+
   async findManyByMemberId(
     memberId: number,
     options?: ProgressPhotoFilterOptions,

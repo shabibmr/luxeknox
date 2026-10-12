@@ -22,6 +22,13 @@ export class ProgressNoteRepository extends BaseRepository<
     super(db, progressNotes);
   }
 
+  /** Inserts a row and returns it (the base `create` yields the raw insert header). */
+  override async create(values: NewProgressNote): Promise<ProgressNote> {
+    const [header] = await this.db.insert(progressNotes).values(values);
+    const [row] = await this.db.select().from(progressNotes).where(eq(progressNotes.id, header.insertId));
+    return row;
+  }
+
   async findManyByMemberId(
     memberId: number,
     options?: { limit?: number; offset?: number },
