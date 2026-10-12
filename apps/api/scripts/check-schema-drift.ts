@@ -36,6 +36,8 @@ function runDrizzleKit(args: string[]): string {
     cwd: apiRoot,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
+    // pnpm is a .cmd shim on Windows; execFileSync cannot spawn it without a shell.
+    shell: process.platform === 'win32',
   });
 }
 
