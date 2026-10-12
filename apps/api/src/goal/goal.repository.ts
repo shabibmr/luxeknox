@@ -33,6 +33,13 @@ export class GoalRepository extends BaseRepository<typeof goals, Goal, NewGoal> 
     super(db, goals);
   }
 
+  /** Inserts a goal and returns the stored row (the base `create` yields the raw insert header). */
+  override async create(values: NewGoal): Promise<Goal> {
+    const [header] = await this.db.insert(goals).values(values);
+    const [row] = await this.db.select().from(goals).where(eq(goals.id, header.insertId));
+    return row;
+  }
+
   async findManyByMemberId(
     memberId: number,
     options?: { status?: string; metricId?: number; limit?: number; offset?: number },
