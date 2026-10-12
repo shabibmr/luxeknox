@@ -1643,13 +1643,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i377.RequestMembershipFreezeUseCase>(),
       ),
     );
-    gh.factory<_i632.CreateMembershipBloc>(
-      () => _i632.CreateMembershipBloc(
-        gh<_i65.CreateMembershipUseCase>(),
-        gh<_i359.GetMembershipProductsUseCase>(),
-        gh<_i789.GetPaymentMethodsUseCase>(),
-      ),
-    );
     gh.factory<_i731.WorkoutPlanListCubit>(
       () => _i731.WorkoutPlanListCubit(gh<_i110.ListWorkoutPlansUseCase>()),
     );
@@ -1840,6 +1833,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1069.MembershipPackagesCatalogCubit>(
       () => _i1069.MembershipPackagesCatalogCubit(
         gh<_i359.GetMembershipProductsUseCase>(),
+      ),
+    );
+    gh.factory<_i632.CreateMembershipBloc>(
+      () => _i632.CreateMembershipBloc(
+        gh<_i65.CreateMembershipUseCase>(),
+        gh<_i359.GetMembershipProductsUseCase>(),
+        gh<_i789.GetPaymentMethodsUseCase>(),
+        gh<_i422.GetReplacementPreviewUseCase>(),
       ),
     );
     gh.factory<_i598.WorkoutPlanBuilderCubit>(
