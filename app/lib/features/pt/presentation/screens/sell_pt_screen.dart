@@ -8,6 +8,7 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../core/widgets/package_grid_picker_field.dart';
 import '../../../people/domain/entities/person.dart';
 import '../../../people/domain/entities/profile_summary.dart';
 import '../../../people/presentation/member_dossier_pt.dart'
@@ -204,24 +205,21 @@ class _Form extends StatelessWidget {
         Text(PtStrings.stepPackage, style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         if (!state.isReplan)
-          DropdownButtonFormField<int>(
-            initialValue: product?.id,
-            decoration: const InputDecoration(
-              labelText: PtStrings.summaryPackage,
-            ),
-            items: [
+          PackageGridPickerField<int>(
+            value: product?.id,
+            labelText: PtStrings.summaryPackage,
+            options: [
               for (final p in state.products)
-                DropdownMenuItem(
+                PackageGridOption(
                   value: p.id,
-                  child: Text(
-                    '${p.name} · ${p.durationDays} days · ${p.basePrice}',
-                  ),
+                  title: p.name,
+                  subtitle: '${p.durationDays} days · ${p.basePrice}',
+                  isCouple: p.isCouple,
                 ),
             ],
-            onChanged: (id) {
-              final p = state.products.firstWhere((x) => x.id == id);
-              cubit.selectProduct(p);
-            },
+            onChanged: (id) => cubit.selectProduct(
+              state.products.firstWhere((x) => x.id == id),
+            ),
           )
         else
           ListTile(

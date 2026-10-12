@@ -11,6 +11,7 @@ import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_currency_field.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../../core/widgets/package_grid_picker_field.dart';
 import '../../../people/presentation/widgets/member_picker_sheet.dart';
 import '../../domain/entities/membership_replacement_preview.dart';
 import '../bloc/create_membership_bloc.dart';
@@ -233,27 +234,21 @@ class _CreateMembershipForm extends StatelessWidget {
           style: Theme.of(context).textTheme.titleSmall,
         ),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          initialValue: state.selectedProductId,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            hintText: MembershipStrings.selectPackageHint,
-          ),
-          items: state.products
-              .map(
-                (p) => DropdownMenuItem(
-                  value: p.id,
-                  child: Text('${p.name} · ${p.basePrice}'),
-                ),
-              )
-              .toList(),
-          onChanged: state.submitting
-              ? null
-              : (value) {
-                  if (value != null) {
-                    bloc.add(CreateMembershipProductSelected(value));
-                  }
-                },
+        PackageGridPickerField<String>(
+          value: state.selectedProductId,
+          hintText: MembershipStrings.selectPackageHint,
+          enabled: !state.submitting,
+          options: [
+            for (final p in state.products)
+              PackageGridOption(
+                value: p.id,
+                title: p.name,
+                subtitle: p.basePrice,
+                isCouple: p.isCouple,
+              ),
+          ],
+          onChanged: (value) =>
+              bloc.add(CreateMembershipProductSelected(value)),
         ),
         if (state.isCoupleSelected) ...[
           const SizedBox(height: 16),
