@@ -1,5 +1,14 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiHeader, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiHeader,
+  ApiOperation,
+  ApiParam,
+  ApiProperty,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { UseIdempotency } from '../platform/idempotency/idempotency.interceptor';
@@ -20,6 +29,28 @@ import { BadRequestError } from '../platform/errors/app-error';
 import { PtScheduleService } from './pt-schedule.service';
 import { PtSubscriptionService } from './pt-subscription.service';
 
+/** CP-06 Swagger response shape for PT subscription reads. */
+export class PtSubscriptionResponseDto {
+  @ApiProperty({ type: Number }) id!: number;
+  @ApiProperty({ type: Number }) member_id!: number;
+  @ApiProperty({ type: Number }) pt_product_id!: number;
+  @ApiProperty({ type: String }) product_name!: string;
+  @ApiProperty({ type: String, enum: ['single', 'couple'] }) package_type!: 'single' | 'couple';
+  @ApiProperty({ type: Number }) trainer_id!: number;
+  @ApiProperty({ type: String }) trainer_name!: string;
+  @ApiProperty({ type: String }) start_date!: string;
+  @ApiProperty({ type: String }) end_date!: string;
+  @ApiProperty({ type: [Number] }) weekdays!: number[];
+  @ApiProperty({ type: Number }) sessions_per_week!: number;
+  @ApiProperty({ type: String }) slot_start!: string;
+  @ApiProperty({ type: String }) slot_label!: string;
+  @ApiProperty({ type: String }) status!: string;
+  @ApiProperty({ type: Boolean }) is_primary!: boolean;
+  @ApiProperty({ type: Number, nullable: true }) partner_subscription_id!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) partner_member_id!: number | null;
+  @ApiProperty({ type: String, nullable: true }) partner_member_name!: string | null;
+}
+
 @ApiTags('PT')
 @ApiBearerAuth('bearer')
 @Controller()
@@ -35,6 +66,12 @@ export class PtSubscriptionController {
     operationId: 'getPtScheduleGrid',
     summary: 'Hours × active trainers occupancy for a PT package, start date and weekdays',
   })
+  @ApiQuery({ name: 'member_id', required: true, type: Number })
+  @ApiQuery({ name: 'pt_product_id', required: true, type: Number })
+  @ApiQuery({ name: 'start_date', required: true, type: String })
+  @ApiQuery({ name: 'weekdays', required: true, type: String, description: 'CSV of 0–6' })
+  @ApiQuery({ name: 'partner_member_id', required: false, type: Number })
+  @ApiQuery({ name: 'exclude_subscription_id', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'OK' })
   grid(@Query() rawQuery: Record<string, unknown>) {
     const parsed = ptScheduleGridQuerySchema.safeParse(rawQuery);
@@ -56,7 +93,7 @@ export class PtSubscriptionController {
     operationId: 'purchasePtSubscription',
     summary: 'Sell PT: assign trainer + fixed weekly slot, take payment, generate sessions',
   })
-  @ApiResponse({ status: 201, description: 'Created' })
+  @ApiResponse({ status: 201, description: 'Created', type: PtSubscriptionResponseDto })
   @ApiResponse({ status: 409, description: 'Slot not free for the whole period / member already has PT' })
   @ApiResponse({ status: 422, description: 'Membership expired, payment insufficient' })
   purchase(
@@ -70,7 +107,7 @@ export class PtSubscriptionController {
   @RequirePermission('pt_subscriptions.read')
   @ApiOperation({ operationId: 'getPtSubscription', summary: 'PT subscription detail' })
   @ApiParam({ name: 'id', type: Number })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 200, description: 'OK', type: PtSubscriptionResponseDto })
   getById(@Param('id', ParseIntPipe) id: number, @CurrentUser() actor: AuthenticatedUser) {
     return this.service.getById(id, actor);
   }

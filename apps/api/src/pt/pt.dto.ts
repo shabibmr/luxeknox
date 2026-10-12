@@ -65,6 +65,8 @@ export const ptScheduleGridQuerySchema = z.object({
   pt_product_id: z.coerce.number().int().positive(),
   start_date: isoDate,
   weekdays: csvWeekdays,
+  /** Second member when selling a couple PT; cells busy for either member show occupied. */
+  partner_member_id: z.coerce.number().int().positive().optional(),
   /** When re-planning an existing subscription, its own sessions are not conflicts. */
   exclude_subscription_id: z.coerce.number().int().positive().optional(),
 });
@@ -78,6 +80,8 @@ export const ptPurchaseSchema = z
     start_date: isoDate,
     weekdays,
     slot_start: hourSlot,
+    /** Required for a couple package; rejected for a single package. */
+    partner_member_id: z.number().int().positive().optional(),
     ...paymentFields,
   })
   .strict()

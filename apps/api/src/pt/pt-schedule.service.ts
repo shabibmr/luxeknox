@@ -109,24 +109,25 @@ export class PtScheduleService {
   }
 
   /**
-   * Every occurrence that the trainer (or member) cannot take. Empty ⇒ slot can be booked.
-   * Generated sessions of `excludeSubscriptionId` are ignored so a subscription can be
-   * re-planned over its own slot.
+   * Every occurrence that the trainer (or any of `memberIds`) cannot take. Empty ⇒ slot can
+   * be booked. Generated sessions of the occurrence-owner for `excludeSubscriptionId` are
+   * ignored so a subscription (or its couple partner) can be re-planned over its own slot.
    */
   async findConflicts(params: {
     trainerId: number;
-    memberId: number;
+    memberIds: number[];
     windows: OccurrenceWindow[];
     excludeSubscriptionId?: number;
   }): Promise<SlotConflict[]> {
     const { windows } = params;
     if (windows.length === 0) return [];
+    const excludeOwnerId = await this.resolveExcludeOwnerId(params.excludeSubscriptionId);
     const availability = await this.availabilityRepository.findByTrainerId(params.trainerId);
     const busy = await this.loadTrainerBusy(
       params.trainerId,
       windows[0]!.start,
       windows[windows.length - 1]!.end,
-      params.excludeSubscriptionId,
+      excludeOwnerId,
     );
     const names = await this.occupantNames(busy);
 
@@ -141,11 +142,18 @@ export class PtScheduleService {
         conflicts.push({ date: w.date, reason: 'trainer_busy', occupied_by: names(clash) });
         continue;
       }
-      const memberClash = (
-        await this.scheduleRepository.findOverlappingBookedForMember(params.memberId, w.start, w.end)
-      ).filter((s) => !params.excludeSubscriptionId || s.pt_subscription_id !== params.excludeSubscriptionId);
-      if (memberClash.length > 0) {
-        conflicts.push({ date: w.date, reason: 'member_busy', occupied_by: memberClash[0]!.title });
+      let memberBusyTitle: string | null = null;
+      for (const memberId of params.memberIds) {
+        const memberClash = (
+          await this.scheduleRepository.findOverlappingBookedForMember(memberId, w.start, w.end)
+        ).filter((s) => !excludeOwnerId || s.pt_subscription_id !== excludeOwnerId);
+        if (memberClash.length > 0) {
+          memberBusyTitle = memberClash[0]!.title;
+          break;
+        }
+      }
+      if (memberBusyTitle != null) {
+        conflicts.push({ date: w.date, reason: 'member_busy', occupied_by: memberBusyTitle });
       }
     }
     return conflicts;
@@ -156,15 +164,35 @@ export class PtScheduleService {
     const product = await this.productRepository.findById(query.pt_product_id);
     if (!product) throw new NotFoundError('PT package not found');
 
+    const memberIds = [query.member_id];
+    if (query.partner_member_id != null) {
+      if (query.partner_member_id === query.member_id) {
+        throw new BusinessRuleError('partner_member_id must differ from member_id');
+      }
+      await this.requireMember(query.partner_member_id);
+      memberIds.push(query.partner_member_id);
+    }
+
     // Re-planning an existing PT: the period ends with the subscription — the member's
     // chosen weekdays can change freely and are not tied to the package.
     let endDate = addDays(query.start_date, product.duration_days);
+    let excludeOwnerId: number | undefined;
     if (query.exclude_subscription_id) {
       const sub = await this.subscriptionRepository.findById(query.exclude_subscription_id);
-      if (!sub || sub.member_id !== query.member_id) {
+      if (!sub) {
+        throw new NotFoundError('PT subscription not found');
+      }
+      const partner = await this.subscriptionRepository.findPartner(sub);
+      const allowedMemberIds = new Set([sub.member_id, ...(partner ? [partner.member_id] : [])]);
+      if (!allowedMemberIds.has(query.member_id)) {
         throw new NotFoundError('PT subscription not found');
       }
       endDate = sub.end_date;
+      excludeOwnerId = this.subscriptionRepository.occurrenceOwnerId(sub);
+      // Re-plan of a couple: include the partner even when the query omitted partner_member_id.
+      if (partner && !memberIds.includes(partner.member_id)) {
+        memberIds.push(partner.member_id);
+      }
     }
     const dates = enumerateOccurrenceDates(query.start_date, endDate, query.weekdays);
     const tz = await this.settingsService.getTimezone();
@@ -185,13 +213,13 @@ export class PtScheduleService {
     const rangeStart = wallClockToUtcDate(query.start_date, '00:00:00', 0, tz);
     const rangeEnd = wallClockToUtcDate(endDate, '23:59:59', 999, tz);
 
-    const memberBusy = await this.loadMemberBusy(query.member_id, rangeStart, rangeEnd, query.exclude_subscription_id);
+    const memberBusy = await this.loadMembersBusy(memberIds, rangeStart, rangeEnd, excludeOwnerId);
     const memberNames = await this.occupantNames(memberBusy);
 
     const cells: PtGridCell[] = [];
     for (const t of trainers) {
       const availability = availabilityByTrainer.get(t.id) ?? [];
-      const busy = await this.loadTrainerBusy(t.id, rangeStart, rangeEnd, query.exclude_subscription_id);
+      const busy = await this.loadTrainerBusy(t.id, rangeStart, rangeEnd, excludeOwnerId);
       const names = await this.occupantNames(busy);
 
       for (const h of hours) {
@@ -236,6 +264,13 @@ export class PtScheduleService {
     };
   }
 
+  /** Resolve a subscription id to the primary row that owns shared sessions. */
+  private async resolveExcludeOwnerId(excludeSubscriptionId?: number): Promise<number | undefined> {
+    if (excludeSubscriptionId == null) return undefined;
+    const sub = await this.subscriptionRepository.findById(excludeSubscriptionId);
+    return sub ? this.subscriptionRepository.occurrenceOwnerId(sub) : excludeSubscriptionId;
+  }
+
   private async loadTrainerBusy(
     trainerId: number,
     from: Date,
@@ -248,16 +283,24 @@ export class PtScheduleService {
       : rows;
   }
 
-  private async loadMemberBusy(
-    memberId: number,
+  private async loadMembersBusy(
+    memberIds: number[],
     from: Date,
     to: Date,
     excludeSubscriptionId?: number,
   ): Promise<Schedule[]> {
-    const rows = await this.scheduleRepository.findOverlappingBookedForMember(memberId, from, to);
-    return excludeSubscriptionId
-      ? rows.filter((s) => s.pt_subscription_id !== excludeSubscriptionId)
-      : rows;
+    const all: Schedule[] = [];
+    const seen = new Set<number>();
+    for (const memberId of memberIds) {
+      const rows = await this.scheduleRepository.findOverlappingBookedForMember(memberId, from, to);
+      for (const row of rows) {
+        if (excludeSubscriptionId && row.pt_subscription_id === excludeSubscriptionId) continue;
+        if (seen.has(row.id)) continue;
+        seen.add(row.id);
+        all.push(row);
+      }
+    }
+    return all;
   }
 
   private async occupantNames(busy: Schedule[]): Promise<(s: Schedule) => string> {

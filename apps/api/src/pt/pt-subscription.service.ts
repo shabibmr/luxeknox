@@ -43,9 +43,12 @@ export const PT_SCHEDULE_TYPE_NAME = 'Personal Training';
 
 export type PtSubscriptionView = PtSubscription & {
   product_name: string;
+  package_type: 'single' | 'couple';
   sessions_per_week: number;
   trainer_name: string;
   slot_label: string;
+  partner_member_id: number | null;
+  partner_member_name: string | null;
 };
 
 export type MemberPtSummary = {
@@ -90,13 +93,13 @@ export class PtSubscriptionService {
     const sub = await this.repository.findById(id);
     if (!sub) throw new NotFoundError('PT subscription not found');
     await this.assertReadScope(actor, sub.member_id, 'PT subscription not found');
-    return this.present(sub);
+    return this.present(sub, actor);
   }
 
   async summaryForMember(memberId: number, actor: AuthenticatedUser): Promise<MemberPtSummary> {
     await this.assertReadScope(actor, memberId, 'Member not found');
     const rows = await this.repository.listForMember(memberId);
-    const views = await Promise.all(rows.map((r) => this.present(r)));
+    const views = await Promise.all(rows.map((r) => this.present(r, actor)));
     const current =
       views
         .filter((v) => (OPEN_PT_STATUSES as readonly string[]).includes(v.status))
@@ -118,23 +121,65 @@ export class PtSubscriptionService {
     await this.scheduleService.requireMember(dto.member_id);
     await this.scheduleService.requireEligibleTrainer(dto.trainer_id);
 
+    const isCouple = product.package_type === 'couple';
+    if (isCouple && dto.partner_member_id == null) {
+      throw new BadRequestError('partner_member_id is required for a couple package');
+    }
+    if (!isCouple && dto.partner_member_id != null) {
+      throw new BadRequestError('partner_member_id is only valid for a couple package');
+    }
+    if (dto.partner_member_id != null && dto.partner_member_id === dto.member_id) {
+      throw new BadRequestError('partner_member_id must differ from member_id');
+    }
+
+    let partnerMember: { id: number; first_name: string; last_name: string } | null = null;
+    if (dto.partner_member_id != null) {
+      const partner = await this.memberRepository.findById(dto.partner_member_id);
+      if (!partner) throw new NotFoundError('Partner member not found');
+      partnerMember = partner;
+    }
+
     const today = await this.today();
     if (dto.start_date < today) {
       throw new BadRequestError('start_date cannot be in the past');
     }
-    const membershipId = await this.requireActiveMembership(dto.member_id, today);
+
+    const primaryMember = await this.memberRepository.findById(dto.member_id);
+    const primaryLabel = primaryMember
+      ? `${primaryMember.first_name} ${primaryMember.last_name}`.trim()
+      : 'Member';
+    const partnerLabel = partnerMember
+      ? `${partnerMember.first_name} ${partnerMember.last_name}`.trim()
+      : null;
+
+    const membershipId = await this.requireActiveMembership(dto.member_id, today, primaryLabel);
+    let partnerMembershipId: number | null = null;
+    if (partnerMember) {
+      partnerMembershipId = await this.requireActiveMembership(
+        partnerMember.id,
+        today,
+        partnerLabel!,
+      );
+    }
+
     const endDate = addDays(dto.start_date, product.duration_days);
-    await this.assertNoOtherOpenPt(dto.member_id, dto.start_date, endDate);
+    await this.assertNoOtherOpenPt(dto.member_id, dto.start_date, endDate, primaryLabel);
+    if (partnerMember) {
+      await this.assertNoOtherOpenPt(partnerMember.id, dto.start_date, endDate, partnerLabel!);
+    }
     await this.assertPaymentActivates(product.base_price, dto);
 
     const slotStart = normalizeSlotStart(dto.slot_start);
 
     return this.createPaidSubscription({
       memberId: dto.member_id,
+      partnerMemberId: partnerMember?.id ?? null,
+      partnerMembershipId,
       product,
       trainerId: dto.trainer_id,
       membershipId,
       renewedFromId: null,
+      partnerRenewedFromId: null,
       startDate: dto.start_date,
       endDate,
       weekdays: dto.weekdays,
@@ -147,9 +192,8 @@ export class PtSubscriptionService {
   }
 
   /**
-   * Renew in place: same trainer, weekdays and hour, continuing the day after the current
-   * end date. If that slot is no longer free for the new period, fails with the clashing
-   * dates so staff can sell a fresh PT with a new trainer/slot instead.
+   * Renew: same trainer, weekdays and hour, continuing the day after the current end date.
+   * Couple (CP-08): from either row, creates two new linked rows billed on the primary.
    */
   async renew(
     id: number,
@@ -163,22 +207,49 @@ export class PtSubscriptionService {
     }
 
     const product = await this.requireActiveProduct(dto.pt_product_id ?? current.pt_product_id);
+    await this.assertSamePackageType(current, product);
     await this.scheduleService.requireEligibleTrainer(current.trainer_id);
 
     const today = await this.today();
-    const membershipId = await this.requireActiveMembership(current.member_id, today);
+    const partner = await this.loadPartner(current);
     const continuation = addDays(current.end_date, 1);
     const startDate = continuation > today ? continuation : today;
     const endDate = addDays(startDate, product.duration_days);
-    await this.assertNoOtherOpenPt(current.member_id, startDate, endDate);
     await this.assertPaymentActivates(product.base_price, dto);
 
+    const primary = partner ? (current.is_primary ? current : partner) : current;
+    const secondary = partner ? (current.is_primary ? partner : current) : null;
+
+    const primaryMember = await this.memberRepository.findById(primary.member_id);
+    const primaryLabel = primaryMember
+      ? `${primaryMember.first_name} ${primaryMember.last_name}`.trim()
+      : 'Member';
+    const membershipId = await this.requireActiveMembership(primary.member_id, today, primaryLabel);
+    await this.assertNoOtherOpenPt(primary.member_id, startDate, endDate, primaryLabel);
+
+    let partnerMembershipId: number | null = null;
+    if (secondary) {
+      const partnerMember = await this.memberRepository.findById(secondary.member_id);
+      const partnerLabel = partnerMember
+        ? `${partnerMember.first_name} ${partnerMember.last_name}`.trim()
+        : 'Partner';
+      partnerMembershipId = await this.requireActiveMembership(
+        secondary.member_id,
+        today,
+        partnerLabel,
+      );
+      await this.assertNoOtherOpenPt(secondary.member_id, startDate, endDate, partnerLabel);
+    }
+
     return this.createPaidSubscription({
-      memberId: current.member_id,
+      memberId: primary.member_id,
+      partnerMemberId: secondary?.member_id ?? null,
+      partnerMembershipId,
       product,
       trainerId: current.trainer_id,
       membershipId,
-      renewedFromId: current.id,
+      renewedFromId: primary.id,
+      partnerRenewedFromId: secondary?.id ?? null,
       startDate,
       endDate,
       weekdays: current.weekdays,
@@ -271,10 +342,13 @@ export class PtSubscriptionService {
 
   private async createPaidSubscription(p: {
     memberId: number;
+    partnerMemberId: number | null;
+    partnerMembershipId: number | null;
     product: PtProduct;
     trainerId: number;
     membershipId: number;
     renewedFromId: number | null;
+    partnerRenewedFromId: number | null;
     startDate: string;
     endDate: string;
     weekdays: number[];
@@ -294,35 +368,61 @@ export class PtSubscriptionService {
       throw new BusinessRuleError('The chosen weekdays produce no sessions in this period');
     }
 
+    const memberIds = p.partnerMemberId != null ? [p.memberId, p.partnerMemberId] : [p.memberId];
+
     const result = await runInTransaction(this.db, async () => {
-      await this.repository.lockMember(p.memberId);
+      await this.repository.lockMembers(memberIds);
       await this.repository.lockTrainer(p.trainerId);
-      // Re-checked under the member lock: a concurrent sale may have committed since.
+      // Re-checked under the member locks: a concurrent sale may have committed since.
       await this.assertNoOtherOpenPt(p.memberId, p.startDate, p.endDate);
+      if (p.partnerMemberId != null) {
+        await this.assertNoOtherOpenPt(p.partnerMemberId, p.startDate, p.endDate);
+      }
       await this.throwIfConflicts(
         await this.scheduleService.findConflicts({
           trainerId: p.trainerId,
-          memberId: p.memberId,
+          memberIds,
           windows,
         }),
       );
 
       const now = new Date();
-      const subId = await this.repository.insertSubscription({
-        member_id: p.memberId,
+      const weekdays = [...p.weekdays].sort((a, b) => a - b);
+      const status = p.startDate <= p.today ? 'active' : 'scheduled';
+      const shared = {
         pt_product_id: p.product.id,
         trainer_id: p.trainerId,
-        membership_id: p.membershipId,
-        renewed_from_id: p.renewedFromId,
         start_date: p.startDate,
         end_date: p.endDate,
-        weekdays: [...p.weekdays].sort((a, b) => a - b),
+        weekdays,
         slot_start: p.slotStart,
-        status: p.startDate <= p.today ? 'active' : 'scheduled',
+        status,
         row_version: 1,
         created_at: now,
         updated_at: null,
+      } as const;
+
+      const primaryId = await this.repository.insertSubscription({
+        ...shared,
+        member_id: p.memberId,
+        membership_id: p.membershipId,
+        renewed_from_id: p.renewedFromId,
+        is_primary: true,
+        partner_subscription_id: null,
       });
+
+      let partnerId: number | null = null;
+      if (p.partnerMemberId != null && p.partnerMembershipId != null) {
+        partnerId = await this.repository.insertSubscription({
+          ...shared,
+          member_id: p.partnerMemberId,
+          membership_id: p.partnerMembershipId,
+          renewed_from_id: p.partnerRenewedFromId,
+          is_primary: false,
+          partner_subscription_id: primaryId,
+        });
+        await this.repository.setPartner(primaryId, partnerId);
+      }
 
       const payment = await this.paymentService.create(
         {
@@ -334,31 +434,69 @@ export class PtSubscriptionService {
           transaction_reference: p.payment.transaction_reference,
         },
         p.actor,
-        { ptSubscriptionId: subId },
+        { ptSubscriptionId: primaryId },
       );
 
-      await this.generateOccurrences(subId, p.memberId, p.trainerId, windows, p.actor, now);
-      // A future PT must not take the member away from a trainer who is still running
-      // their current PT; the status job hands over on the start date instead.
-      if (p.startDate <= p.today || !(await this.repository.hasActiveForMember(p.memberId))) {
-        await this.memberRepository.updateMember(p.memberId, {
-          assigned_trainer_id: p.trainerId,
-          updated_at: now,
-        });
+      await this.generateOccurrences(primaryId, memberIds, p.trainerId, windows, p.actor, now);
+
+      for (const memberId of memberIds) {
+        // A future PT must not take the member away from a trainer who is still running
+        // their current PT; the status job hands over on the start date instead.
+        if (p.startDate <= p.today || !(await this.repository.hasActiveForMember(memberId))) {
+          await this.memberRepository.updateMember(memberId, {
+            assigned_trainer_id: p.trainerId,
+            updated_at: now,
+          });
+        }
       }
 
-      const created = (await this.repository.findById(subId))!;
+      const created = (await this.repository.findById(primaryId))!;
       await this.auditService.recordAudit({
         actorUserId: p.actor.id,
         action: p.auditAction,
         entityName: 'pt_subscriptions',
-        entityId: subId,
+        entityId: primaryId,
         afterState: { ...created, payment_id: payment.id, sessions: windows.length },
       });
+      if (partnerId != null) {
+        const partnerRow = (await this.repository.findById(partnerId))!;
+        await this.auditService.recordAudit({
+          actorUserId: p.actor.id,
+          action: p.auditAction,
+          entityName: 'pt_subscriptions',
+          entityId: partnerId,
+          afterState: { ...partnerRow, payment_id: payment.id, sessions: windows.length },
+        });
+      }
       return { created, payment };
     });
 
-    return { subscription: await this.present(result.created), payment: result.payment };
+    return { subscription: await this.present(result.created, p.actor), payment: result.payment };
+  }
+
+  /** CP-08: linked partner row, or null for a single PT. */
+  private async loadPartner(sub: PtSubscription): Promise<PtSubscription | null> {
+    if (sub.partner_subscription_id == null) {
+      return null;
+    }
+    const partner = await this.repository.findPartner(sub);
+    if (!partner) {
+      throw new NotFoundError('Partner PT subscription not found');
+    }
+    return partner;
+  }
+
+  /** CP-08: renew must stay within the same package type (single ↔ couple is rejected). */
+  private async assertSamePackageType(current: PtSubscription, target: PtProduct): Promise<void> {
+    if (target.id === current.pt_product_id) {
+      return;
+    }
+    const currentProduct = await this.productRepository.findById(current.pt_product_id);
+    if (currentProduct && currentProduct.package_type !== target.package_type) {
+      throw new BusinessRuleError(
+        `Cannot switch between ${currentProduct.package_type} and ${target.package_type} packages`,
+      );
+    }
   }
 
   private async replan(p: {
@@ -377,6 +515,12 @@ export class PtSubscriptionService {
     // A future-dated handover keeps the current trainer (and their write access) until the
     // effective date; runStatusTransitions applies it then.
     const takesEffectNow = p.effectiveDate <= (await this.today());
+    const partner = await this.loadPartner(p.sub);
+    const ownerId = this.repository.occurrenceOwnerId(p.sub);
+    const memberIds = partner
+      ? [p.sub.member_id, partner.member_id]
+      : [p.sub.member_id];
+    const rows = partner ? [p.sub, partner] : [p.sub];
     const windows = (
       await this.scheduleService.occurrenceWindows(
         p.effectiveDate,
@@ -387,72 +531,78 @@ export class PtSubscriptionService {
     ).filter((w) => w.start > now);
 
     const updated = await runInTransaction(this.db, async () => {
-      await this.repository.lockMember(p.sub.member_id);
+      await this.repository.lockMembers(memberIds);
       await this.repository.lockTrainer(p.trainerId);
       await this.throwIfConflicts(
         await this.scheduleService.findConflicts({
           trainerId: p.trainerId,
-          memberId: p.sub.member_id,
+          memberIds,
           windows,
-          excludeSubscriptionId: p.sub.id,
+          excludeSubscriptionId: ownerId,
         }),
       );
 
       // Occurrences from the effective date onward are replaced; earlier ones (history,
       // attendance) are untouched. Never touch anything that has already started.
+      // Couple sessions hang off the primary (owner) row only.
       const effectiveStart = await this.scheduleService.startOfDayUtc(p.effectiveDate);
       await this.cancelFutureOccurrences(
-        p.sub.id,
+        ownerId,
         effectiveStart > now ? effectiveStart : now,
         p.actor,
         now,
       );
-      await this.generateOccurrences(p.sub.id, p.sub.member_id, p.trainerId, windows, p.actor, now);
+      await this.generateOccurrences(ownerId, memberIds, p.trainerId, windows, p.actor, now);
 
-      await this.repository.updateSubscription(p.sub.id, {
-        ...(takesEffectNow ? { trainer_id: p.trainerId } : {}),
-        weekdays: [...p.weekdays].sort((a, b) => a - b),
-        slot_start: p.slotStart,
-        row_version: p.sub.row_version + 1,
-        updated_at: now,
-      });
-      if (takesEffectNow && p.trainerId !== p.sub.trainer_id) {
-        await this.memberRepository.updateMember(p.sub.member_id, {
-          assigned_trainer_id: p.trainerId,
+      const auditAction =
+        p.changeType === 'trainer'
+          ? 'pt_subscription.trainer_reassigned'
+          : 'pt_subscription.slot_changed';
+      const weekdays = [...p.weekdays].sort((a, b) => a - b);
+
+      for (const row of rows) {
+        await this.repository.updateSubscription(row.id, {
+          ...(takesEffectNow ? { trainer_id: p.trainerId } : {}),
+          weekdays,
+          slot_start: p.slotStart,
+          row_version: row.row_version + 1,
           updated_at: now,
         });
+        if (takesEffectNow && p.trainerId !== row.trainer_id) {
+          await this.memberRepository.updateMember(row.member_id, {
+            assigned_trainer_id: p.trainerId,
+            updated_at: now,
+          });
+        }
+        await this.repository.insertChange({
+          pt_subscription_id: row.id,
+          change_type: p.changeType,
+          effective_date: p.effectiveDate,
+          old_trainer_id: p.oldTrainerId,
+          new_trainer_id: p.trainerId,
+          old_weekdays: row.weekdays,
+          new_weekdays: p.weekdays,
+          old_slot_start: row.slot_start,
+          new_slot_start: p.slotStart,
+          reason: p.reason ?? null,
+          changed_by_user_id: p.actor.id,
+          created_at: now,
+        });
+        const after = (await this.repository.findById(row.id))!;
+        await this.auditService.recordAudit({
+          actorUserId: p.actor.id,
+          action: auditAction,
+          entityName: 'pt_subscriptions',
+          entityId: row.id,
+          beforeState: row,
+          afterState: after,
+        });
       }
-      await this.repository.insertChange({
-        pt_subscription_id: p.sub.id,
-        change_type: p.changeType,
-        effective_date: p.effectiveDate,
-        old_trainer_id: p.oldTrainerId,
-        new_trainer_id: p.trainerId,
-        old_weekdays: p.sub.weekdays,
-        new_weekdays: p.weekdays,
-        old_slot_start: p.sub.slot_start,
-        new_slot_start: p.slotStart,
-        reason: p.reason ?? null,
-        changed_by_user_id: p.actor.id,
-        created_at: now,
-      });
 
-      const after = (await this.repository.findById(p.sub.id))!;
-      await this.auditService.recordAudit({
-        actorUserId: p.actor.id,
-        action:
-          p.changeType === 'trainer'
-            ? 'pt_subscription.trainer_reassigned'
-            : 'pt_subscription.slot_changed',
-        entityName: 'pt_subscriptions',
-        entityId: p.sub.id,
-        beforeState: p.sub,
-        afterState: after,
-      });
-      return after;
+      return (await this.repository.findById(p.sub.id))!;
     });
 
-    return this.present(updated);
+    return this.present(updated, p.actor);
   }
 
   /**
@@ -487,7 +637,7 @@ export class PtSubscriptionService {
 
   private async generateOccurrences(
     subscriptionId: number,
-    memberId: number,
+    memberIds: number[],
     trainerId: number,
     windows: OccurrenceWindow[],
     actor: AuthenticatedUser,
@@ -497,8 +647,13 @@ export class PtSubscriptionService {
     if (!type) {
       throw new NotFoundError(`Schedule type "${PT_SCHEDULE_TYPE_NAME}" is missing; run migrations`);
     }
-    const member = await this.memberRepository.findById(memberId);
-    const title = `PT · ${member ? `${member.first_name} ${member.last_name}`.trim() : `Member #${memberId}`}`;
+    const names: string[] = [];
+    for (const memberId of memberIds) {
+      const member = await this.memberRepository.findById(memberId);
+      names.push(member ? `${member.first_name} ${member.last_name}`.trim() : `Member #${memberId}`);
+    }
+    const title = `PT · ${names.join(' & ')}`;
+    const capacity = memberIds.length;
 
     for (const w of windows) {
       const scheduleId = await this.scheduleRepository.insertSchedule({
@@ -510,21 +665,23 @@ export class PtSubscriptionService {
         title,
         start_time: w.start,
         end_time: w.end,
-        max_capacity: 1,
+        max_capacity: capacity,
         status: 'scheduled',
         notes: null,
         row_version: 1,
         created_at: now,
         updated_at: null,
       });
-      await this.scheduleRepository.insertParticipant({
-        schedule_id: scheduleId,
-        member_id: memberId,
-        booking_status: 'booked',
-        attended: null,
-        booked_at: now,
-        marked_at: null,
-      });
+      for (const memberId of memberIds) {
+        await this.scheduleRepository.insertParticipant({
+          schedule_id: scheduleId,
+          member_id: memberId,
+          booking_status: 'booked',
+          attended: null,
+          booked_at: now,
+          marked_at: null,
+        });
+      }
       await this.scheduleRepository.insertHistory({
         schedule_id: scheduleId,
         action: 'created',
@@ -578,19 +735,30 @@ export class PtSubscriptionService {
   }
 
   /** PT can only be added while the member's gym membership is active and not past its end date. */
-  private async requireActiveMembership(memberId: number, today: string): Promise<number> {
+  private async requireActiveMembership(
+    memberId: number,
+    today: string,
+    who = 'Member',
+  ): Promise<number> {
     const membership = await this.membershipRepository.findActiveOrFrozenForMember(memberId);
     if (!membership || membership.status !== 'active' || membership.end_date < today) {
-      throw new BusinessRuleError('Member needs an active, unexpired membership to add Personal Training');
+      throw new BusinessRuleError(
+        `${who} needs an active, unexpired membership to add Personal Training`,
+      );
     }
     return membership.id;
   }
 
-  private async assertNoOtherOpenPt(memberId: number, from: string, to: string): Promise<void> {
+  private async assertNoOtherOpenPt(
+    memberId: number,
+    from: string,
+    to: string,
+    who = 'Member',
+  ): Promise<void> {
     const open = await this.repository.findOpenOverlappingForMember(memberId, from, to);
     if (open.length > 0) {
       throw new ConflictError(
-        `Member already has Personal Training until ${open[0]!.end_date}; renew it or start after that date`,
+        `${who} already has Personal Training until ${open[0]!.end_date}; renew it or start after that date`,
       );
     }
   }
@@ -645,17 +813,47 @@ export class PtSubscriptionService {
     }
   }
 
-  private async present(sub: PtSubscription): Promise<PtSubscriptionView> {
+  /**
+   * CP-06: enrich with package_type and partner fields. A member-scoped read keeps only the
+   * partner's name — never the partner subscription/member ids.
+   */
+  private async present(sub: PtSubscription, actor?: AuthenticatedUser): Promise<PtSubscriptionView> {
     const [product, trainer] = await Promise.all([
       this.productRepository.findById(sub.pt_product_id),
       this.trainerRepository.findById(sub.trainer_id),
     ]);
-    return {
+
+    let partnerMemberId: number | null = null;
+    let partnerMemberName: string | null = null;
+    if (sub.partner_subscription_id != null) {
+      const partner = await this.repository.findPartner(sub);
+      if (partner) {
+        partnerMemberId = partner.member_id;
+        const partnerMember = await this.memberRepository.findById(partner.member_id);
+        partnerMemberName = partnerMember
+          ? `${partnerMember.first_name} ${partnerMember.last_name}`.trim()
+          : null;
+      }
+    }
+
+    const view: PtSubscriptionView = {
       ...sub,
       product_name: product?.name ?? '',
+      package_type: product?.package_type ?? 'single',
       sessions_per_week: sub.weekdays.length,
       trainer_name: trainer ? `${trainer.first_name} ${trainer.last_name}`.trim() : '',
       slot_label: slotLabel(sub.slot_start),
+      partner_member_id: partnerMemberId,
+      partner_member_name: partnerMemberName,
     };
+
+    if (actor?.userType === 'member') {
+      return {
+        ...view,
+        partner_subscription_id: null,
+        partner_member_id: null,
+      };
+    }
+    return view;
   }
 }

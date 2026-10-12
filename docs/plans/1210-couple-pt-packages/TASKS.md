@@ -23,15 +23,15 @@ All backend paths are under `apps/api/src/pt/` unless stated. All Flutter paths 
 - [x] CP-03 `package_type` on PT products <!-- id: 3 -->
 
 **Phase 3: Backend subscription core**
-- [ ] CP-04 Repository support for partner links, owner resolution and the two-member lock <!-- id: 4 -->
-- [ ] CP-05 Schedule service: conflicts and grid for more than one member <!-- id: 5 -->
-- [ ] CP-06 Read model: partner fields in `present()` and the summary <!-- id: 6 -->
-- [ ] CP-07 Purchase a couple PT (two linked rows, one shared session, one invoice) <!-- id: 7 -->
+- [x] CP-04 Repository support for partner links, owner resolution and the two-member lock <!-- id: 4 -->
+- [x] CP-05 Schedule service: conflicts and grid for more than one member <!-- id: 5 -->
+- [x] CP-06 Read model: partner fields in `present()` and the summary <!-- id: 6 -->
+- [x] CP-07 Purchase a couple PT (two linked rows, one shared session, one invoice) <!-- id: 7 -->
 
 **Phase 4: Backend linked lifecycle**
-- [ ] CP-08 Linked renew and the package-type match rule <!-- id: 8 -->
-- [ ] CP-09 Linked reassign trainer and change slot <!-- id: 9 -->
-- [ ] CP-10 Status job and trainer access for a linked pair <!-- id: 10 -->
+- [x] CP-08 Linked renew and the package-type match rule <!-- id: 8 -->
+- [x] CP-09 Linked reassign trainer and change slot <!-- id: 9 -->
+- [x] CP-10 Status job and trainer access for a linked pair <!-- id: 10 -->
 
 **Phase 5: Contract and docs**
 - [ ] CP-11 OpenAPI `v1.yaml` and the parity check <!-- id: 11 -->
@@ -150,7 +150,7 @@ Reset the local MySQL schema on localhost:3308 (drop and recreate the database),
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CP-03 |
 | **Files** | `pt-subscription.repository.ts` |
 
@@ -173,7 +173,7 @@ Change these queries:
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CP-04 |
 | **Files** | `pt-schedule.service.ts`, `pt.dto.ts` (grid query), `pt-schedule.spec.ts`, `pt-subscription.controller.ts` (only if the query handling changes) |
 
@@ -189,7 +189,7 @@ Change these queries:
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CP-04 |
 | **Files** | `pt-subscription.service.ts` (`present()`, `summaryForMember`), `pt-subscription.controller.ts` (Swagger response classes), `pt-subscription.service.spec.ts` |
 
@@ -210,7 +210,7 @@ A member-scoped read shows only the partner's name, never other partner data.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CP-05, CP-06 |
 | **Risk** | High. This is the core rule set. |
 | **Files** | `pt.dto.ts`, `pt-subscription.service.ts`, `pt-subscription.service.spec.ts`, `apps/api/src/pay/payment.service.spec.ts` (only if the invoice link needs a new case) |
@@ -256,7 +256,7 @@ Also check, and note any gap as a follow-up: no schedule booking path lets a thi
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CP-07 |
 | **Files** | `pt-subscription.service.ts`, `pt-subscription.service.spec.ts` |
 
@@ -273,7 +273,7 @@ Also check, and note any gap as a follow-up: no schedule booking path lets a thi
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CP-07 |
 | **Files** | `pt-subscription.service.ts`, `pt-subscription.service.spec.ts` |
 
@@ -290,7 +290,7 @@ Also check, and note any gap as a follow-up: no schedule booking path lets a thi
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CP-08, CP-09 |
 | **Files** | `pt-subscription.service.spec.ts`, `pt-access.service.spec.ts`, `pt-subscription.service.ts` (only if a gap is found) |
 

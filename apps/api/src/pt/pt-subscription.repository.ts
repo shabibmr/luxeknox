@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, desc, eq, gte, inArray, lt, lte, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/mysql-core';
 import { BaseRepository } from '../platform/db/base.repository';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
@@ -13,6 +14,10 @@ import {
   type PtSubscriptionChange,
 } from '../platform/db/schema/personal-training';
 import { schedules } from '../platform/db/schema/scheduling';
+
+/** Self-join for the linked couple partner's member name. */
+const partnerSubscriptions = alias(ptSubscriptions, 'partner_pt_subscriptions');
+const partnerMembers = alias(members, 'partner_pt_members');
 
 /** Statuses that hold a trainer slot / count as "the member's current PT". */
 export const OPEN_PT_STATUSES = ['scheduled', 'active'] as const;
@@ -118,6 +123,17 @@ export class PtSubscriptionRepository extends BaseRepository<
   }
 
   /**
+   * Locks several members in ascending id order (CP-04). Use for couple sales so concurrent
+   * sales of the same pair in opposite roles cannot deadlock. Must run inside `runInTransaction`.
+   */
+  async lockMembers(ids: number[]): Promise<void> {
+    const ordered = [...new Set(ids)].sort((a, b) => a - b);
+    for (const id of ordered) {
+      await this.lockMember(id);
+    }
+  }
+
+  /**
    * Serialises concurrent PT assignments against the same trainer (`SELECT … FOR UPDATE`)
    * so two staff members cannot both pass the free-slot check. Must run inside
    * `runInTransaction`.
@@ -125,6 +141,31 @@ export class PtSubscriptionRepository extends BaseRepository<
   async lockTrainer(trainerId: number): Promise<void> {
     const db = this.getDb() as any;
     await db.execute(sql`SELECT \`id\` FROM \`trainers\` WHERE \`id\` = ${trainerId} FOR UPDATE`);
+  }
+
+  /** CP-04: link a subscription row to its couple partner. */
+  async setPartner(id: number, partnerId: number): Promise<void> {
+    const db = this.getDb() as any;
+    await db
+      .update(ptSubscriptions)
+      .set({ partner_subscription_id: partnerId })
+      .where(eq(ptSubscriptions.id, id));
+  }
+
+  /** CP-04: loads the other half of a couple PT, or null for a single subscription. */
+  async findPartner(sub: PtSubscription): Promise<PtSubscription | null> {
+    if (sub.partner_subscription_id == null) {
+      return null;
+    }
+    return this.findById(sub.partner_subscription_id);
+  }
+
+  /**
+   * CP-04: the subscription id that owns shared sessions. Couple sessions always hang off the
+   * primary row; partner rows point at it through `partner_subscription_id`.
+   */
+  occurrenceOwnerId(sub: PtSubscription): number {
+    return sub.is_primary ? sub.id : (sub.partner_subscription_id ?? sub.id);
   }
 
   /** scheduled → active once start_date has arrived. */
@@ -229,7 +270,10 @@ export class PtSubscriptionRepository extends BaseRepository<
     return rows.map((r) => r.id);
   }
 
-  /** Member display names keyed by PT subscription id (for "occupied by" in the grid). */
+  /**
+   * Member display names keyed by PT subscription id (for "occupied by" in the grid).
+   * Linked couple rows render as "A & B".
+   */
   async memberNamesForSubscriptions(ids: number[]): Promise<Map<number, string>> {
     const out = new Map<number, string>();
     if (ids.length === 0) return out;
@@ -239,15 +283,32 @@ export class PtSubscriptionRepository extends BaseRepository<
         id: ptSubscriptions.id,
         first_name: members.first_name,
         last_name: members.last_name,
+        partner_first_name: partnerMembers.first_name,
+        partner_last_name: partnerMembers.last_name,
       })
       .from(ptSubscriptions)
       .innerJoin(members, eq(members.id, ptSubscriptions.member_id))
+      .leftJoin(
+        partnerSubscriptions,
+        eq(ptSubscriptions.partner_subscription_id, partnerSubscriptions.id),
+      )
+      .leftJoin(partnerMembers, eq(partnerSubscriptions.member_id, partnerMembers.id))
       .where(inArray(ptSubscriptions.id, ids))) as {
       id: number;
       first_name: string;
       last_name: string;
+      partner_first_name: string | null;
+      partner_last_name: string | null;
     }[];
-    for (const r of rows) out.set(r.id, `${r.first_name} ${r.last_name}`.trim());
+    for (const r of rows) {
+      const self = `${r.first_name} ${r.last_name}`.trim();
+      if (r.partner_first_name != null) {
+        const partner = `${r.partner_first_name} ${r.partner_last_name ?? ''}`.trim();
+        out.set(r.id, `${self} & ${partner}`);
+      } else {
+        out.set(r.id, self);
+      }
+    }
     return out;
   }
 }
