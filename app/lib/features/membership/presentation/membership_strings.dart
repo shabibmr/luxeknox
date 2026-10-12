@@ -68,6 +68,10 @@ class MembershipStrings {
   static const String packagePriceLabel = 'Package price';
   static const String discountForRemainingDays = 'Discount for remaining days';
   static const String totalDueLabel = 'Total';
+  static const String partnerRowLabel = 'Partner';
+  static const String billedToLabel = 'Billed to';
+  static const String coupleActionsNote =
+      'Couple membership: actions apply to both members.';
 
   /// Body for the replace-confirmation dialog (backend owns the credit maths).
   static String replacePartnerMessage({

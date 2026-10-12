@@ -224,4 +224,51 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('couple membership lists only couple packages', (tester) async {
+    final coupleMembership = Membership(
+      id: membership.id,
+      memberId: membership.memberId,
+      productId: 'prod-3',
+      startDate: membership.startDate,
+      endDate: membership.endDate,
+      status: membership.status,
+      rowVersion: membership.rowVersion,
+      partnerMembershipId: 'm-2',
+      partnerMemberName: 'Priya',
+    );
+    final mixed = [
+      ...products,
+      const MembershipProduct(
+        id: 'prod-3',
+        name: 'Couple Monthly',
+        code: 'CPL-M',
+        durationDays: 30,
+        basePrice: '150.00',
+        isActive: true,
+        packageType: MembershipPackageType.couple,
+      ),
+    ];
+    whenListen(
+      renewCubit,
+      const Stream<MembershipRenewState>.empty(),
+      initialState: MembershipRenewState(
+        status: LoadStatus.success,
+        membership: coupleMembership,
+        products: mixed,
+        selectedProductId: 'prod-3',
+      ),
+    );
+
+    await tester.pumpWidget(
+      wrapScreen(const MembershipRenewScreen(membershipId: 'm-1')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('renew_product_dropdown')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Couple Monthly'), findsWidgets);
+    expect(find.text('Gold Package'), findsNothing);
+    expect(find.text('Platinum Package'), findsNothing);
+  });
 }

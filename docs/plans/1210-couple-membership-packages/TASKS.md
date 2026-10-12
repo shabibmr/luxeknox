@@ -45,8 +45,8 @@ Derived from [PLAN.md](./PLAN.md).
 - [x] CM-19 Member picker `excludeMemberIds` <!-- id: 19 -->
 - [x] CM-20 `CreateMembershipBloc` couple state, events and validation <!-- id: 20 -->
 - [x] CM-21 Create screen: partner picker, replace dialog, discount summary <!-- id: 21 -->
-- [ ] CM-22 Dossier "Couple with <partner>" <!-- id: 22 -->
-- [ ] CM-23 Membership detail, upgrade and renew: partner row and type filter <!-- id: 23 -->
+- [x] CM-22 Dossier "Couple with <partner>" <!-- id: 22 -->
+- [x] CM-23 Membership detail, upgrade and renew: partner row and type filter <!-- id: 23 -->
 - [ ] CM-24 Member card, directory badge, trainer summary <!-- id: 24 -->
 
 **Phase 8: Verification**
@@ -468,7 +468,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-16 |
 | **Files** | `app/lib/features/people/presentation/screens/member_dossier_screen.dart`, `app/test/features/people/presentation/member_dossier_screen_test.dart` |
 
@@ -480,7 +480,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CM-16 |
 | **Files** | `presentation/screens/membership_detail_screen.dart`, `presentation/screens/membership_renew_screen.dart`, `presentation/membership_strings.dart`, `test/.../membership_detail_role_variants_test.dart` |
 

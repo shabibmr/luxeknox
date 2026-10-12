@@ -135,7 +135,9 @@ class _MembershipRenewViewState extends State<_MembershipRenewView> {
                     labelText: MembershipStrings.packageLabel,
                     hintText: MembershipStrings.selectProduct,
                   ),
-                  items: state.products.map((product) {
+                  items: state.products
+                      .where((p) => p.isCouple == membership.isCouple)
+                      .map((product) {
                     return DropdownMenuItem<String>(
                       value: product.id,
                       child: Text(product.name),
