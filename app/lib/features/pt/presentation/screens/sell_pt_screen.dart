@@ -8,8 +8,11 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../people/domain/entities/person.dart';
+import '../../../people/domain/entities/profile_summary.dart';
 import '../../../people/presentation/member_dossier_pt.dart'
     show formatCalendarDate;
+import '../../../people/presentation/widgets/member_picker_sheet.dart';
 import '../../domain/entities/pt_product.dart';
 import '../../domain/entities/pt_schedule_grid.dart';
 import '../../domain/entities/pt_subscription.dart';
@@ -228,6 +231,46 @@ class _Form extends StatelessWidget {
               '${formatCalendarDate(state.replanning!.startDate)} → ${formatCalendarDate(state.replanning!.endDate)}',
             ),
           ),
+        if (!state.isReplan && state.isCoupleSelected) ...[
+          const SizedBox(height: 16),
+          MemberPickerField(
+            selectedMemberId: state.partner?.id.toString(),
+            selectedMemberName: state.partner?.fullName,
+            labelText: PtStrings.partnerLabel,
+            hintText: PtStrings.partnerHint,
+            enabled:
+                !state.submitting &&
+                state.partnerCheck is! SellPtPartnerCheckLoading,
+            excludeMemberIds: {state.memberId},
+            onChanged: (summary) =>
+                cubit.selectPartner(_personFromSummary(summary)),
+          ),
+          if (state.partnerCheck is SellPtPartnerCheckLoading) ...[
+            const SizedBox(height: 8),
+            Text(PtStrings.partnerChecking, style: theme.textTheme.bodySmall),
+            const SizedBox(height: 4),
+            const LinearProgressIndicator(),
+          ],
+          if (state.partnerCheck case final SellPtPartnerCheckBlocked blocked)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                blocked.message,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
+        ],
+        if (state.isReplan && (state.replanning?.isCouple ?? false)) ...[
+          const SizedBox(height: 8),
+          Text(
+            PtStrings.replanCoupleNote,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
         const SizedBox(height: 8),
         ListTile(
           contentPadding: EdgeInsets.zero,
@@ -465,11 +508,36 @@ class _Summary extends StatelessWidget {
             row(PtStrings.summaryDays, ptWeekdaysLabel(state.weekdays)),
             row(PtStrings.summaryHour, ptHourLabel(state.slotStart!)),
             row(PtStrings.summaryTrainer, trainer?.name ?? '—'),
-            if (!state.isReplan)
+            if (!state.isReplan) ...[
               row(PtStrings.summaryAmount, state.product!.basePrice),
+              if (state.product!.isCouple)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    PtStrings.coupleTotalNote,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+            ],
           ],
         ),
       ),
     );
   }
+}
+
+Person? _personFromSummary(ProfileSummary? summary) {
+  if (summary == null) return null;
+  final parts = summary.fullName.trim().split(RegExp(r'\s+'));
+  final first = parts.isEmpty ? summary.fullName : parts.first;
+  final last = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+  return Person(
+    id: summary.id,
+    userId: 0,
+    membershipNumber: summary.membershipNumber,
+    firstName: first,
+    lastName: last,
+  );
 }

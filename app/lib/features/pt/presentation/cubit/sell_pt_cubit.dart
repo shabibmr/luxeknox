@@ -2,11 +2,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/idempotency/idempotency_key.dart';
+import '../../../../core/pagination/cursor_page.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../../../membership/domain/entities/membership.dart';
+import '../../../membership/domain/entities/membership_status.dart';
+import '../../../membership/domain/usecases/get_memberships_usecase.dart';
 import '../../../payments/domain/entities/payment_method.dart';
 import '../../../payments/domain/usecases/get_payment_methods_usecase.dart';
 import '../../../people/domain/entities/person.dart';
@@ -16,8 +21,27 @@ import '../../domain/entities/pt_schedule_grid.dart';
 import '../../domain/entities/pt_subscription.dart';
 import '../../domain/repositories/pt_repository.dart';
 import '../../domain/usecases/pt_usecases.dart';
+import '../pt_strings.dart';
 
 part 'sell_pt_cubit.freezed.dart';
+
+/// Client-side partner eligibility for a couple PT sale.
+sealed class SellPtPartnerCheck {
+  const SellPtPartnerCheck();
+}
+
+final class SellPtPartnerCheckLoading extends SellPtPartnerCheck {
+  const SellPtPartnerCheckLoading();
+}
+
+final class SellPtPartnerCheckOk extends SellPtPartnerCheck {
+  const SellPtPartnerCheckOk();
+}
+
+final class SellPtPartnerCheckBlocked extends SellPtPartnerCheck {
+  const SellPtPartnerCheckBlocked(this.message);
+  final String message;
+}
 
 @freezed
 abstract class SellPtState with _$SellPtState {
@@ -41,6 +65,10 @@ abstract class SellPtState with _$SellPtState {
     String? paymentMethodId,
     String? discount,
     String? reason,
+
+    /// Couple packages only: the second member on the sale.
+    Person? partner,
+    SellPtPartnerCheck? partnerCheck,
     @Default(false) bool submitting,
     PtSubscription? result,
     Failure? failure,
@@ -50,6 +78,8 @@ abstract class SellPtState with _$SellPtState {
 
   bool get isReplan => replanning != null;
 
+  bool get isCoupleSelected => product?.isCouple ?? false;
+
   /// How many days a week the member trains is chosen per member, not fixed
   /// by the package — any count from 1 to 7 is valid.
   bool get weekdaysChosen => product != null && weekdays.isNotEmpty;
@@ -58,6 +88,12 @@ abstract class SellPtState with _$SellPtState {
       product != null && startDate != null && weekdaysChosen;
 
   bool get slotChosen => trainerId != null && slotStart != null;
+
+  /// Re-plan already has a linked pair; only new couple sales need a partner.
+  bool get partnerReady =>
+      isReplan ||
+      !isCoupleSelected ||
+      (partner != null && partnerCheck is SellPtPartnerCheckOk);
 
   /// A re-plan is only submittable when the trainer, weekdays or hour differ
   /// from the existing subscription; otherwise there is nothing to apply.
@@ -76,6 +112,7 @@ abstract class SellPtState with _$SellPtState {
       !submitting &&
       canLoadGrid &&
       slotChosen &&
+      partnerReady &&
       (isReplan ? replanChanged : paymentMethodId != null);
 }
 
@@ -90,6 +127,8 @@ class SellPtCubit extends Cubit<SellPtState> {
     this._purchase,
     this._replan, [
     this._getMember,
+    this._getPtSummary,
+    this._getMemberships,
   ]) : super(const SellPtState(memberId: 0));
 
   final GetPtProductsUseCase _getProducts;
@@ -98,6 +137,8 @@ class SellPtCubit extends Cubit<SellPtState> {
   final PurchasePtUseCase _purchase;
   final ReplanPtUseCase _replan;
   final GetMemberUseCase? _getMember;
+  final GetMemberPtSummaryUseCase? _getPtSummary;
+  final GetMembershipsUseCase? _getMemberships;
 
   Future<void> Function()? _lastInit;
 
@@ -246,15 +287,113 @@ class SellPtCubit extends Cubit<SellPtState> {
   }
 
   void selectProduct(PtProduct product) {
+    final typeChanged = state.product?.packageType != product.packageType;
     emit(
       state.copyWith(
         product: product,
         grid: null,
         trainerId: null,
         slotStart: null,
+        partner: typeChanged ? null : state.partner,
+        partnerCheck: typeChanged ? null : state.partnerCheck,
       ),
     );
     _maybeLoadGrid();
+  }
+
+  /// Sets the couple partner and checks open-PT / membership eligibility.
+  Future<void> selectPartner(Person? partner) async {
+    if (partner == null) {
+      emit(
+        state.copyWith(
+          partner: null,
+          partnerCheck: null,
+          grid: null,
+          trainerId: null,
+          slotStart: null,
+        ),
+      );
+      _maybeLoadGrid();
+      return;
+    }
+    if (partner.id == state.memberId) {
+      emit(
+        state.copyWith(
+          partner: partner,
+          partnerCheck: const SellPtPartnerCheckBlocked(
+            PtStrings.partnerSameAsMember,
+          ),
+          grid: null,
+          trainerId: null,
+          slotStart: null,
+        ),
+      );
+      return;
+    }
+    emit(
+      state.copyWith(
+        partner: partner,
+        partnerCheck: const SellPtPartnerCheckLoading(),
+        grid: null,
+        trainerId: null,
+        slotStart: null,
+      ),
+    );
+    _maybeLoadGrid();
+
+    final summaryFuture = _getPtSummary?.call(partner.id);
+    final membershipsFuture = _getMemberships?.call(
+      GetMembershipsParams(memberId: partner.id.toString()),
+    );
+    final summaryResult = summaryFuture != null ? await summaryFuture : null;
+    final membershipsResult = membershipsFuture != null
+        ? await membershipsFuture
+        : null;
+    if (isClosed || state.partner?.id != partner.id) return;
+
+    final blocked = _partnerBlockMessage(
+      partner,
+      summaryResult,
+      membershipsResult,
+    );
+    emit(
+      state.copyWith(
+        partnerCheck: blocked == null
+            ? const SellPtPartnerCheckOk()
+            : SellPtPartnerCheckBlocked(blocked),
+      ),
+    );
+  }
+
+  String? _partnerBlockMessage(
+    Person partner,
+    Either<Failure, MemberPtSummary>? summaryResult,
+    Either<Failure, CursorPage<Membership>>? membershipsResult,
+  ) {
+    if (summaryResult != null) {
+      final open = summaryResult.fold<PtSubscription?>(
+        (_) => null,
+        (s) => s.current,
+      );
+      if (open != null) {
+        final until = DateFormat('dd MMM').format(open.endDate);
+        return PtStrings.partnerHasOpenPt(partner.fullName, until);
+      }
+    }
+    if (membershipsResult != null) {
+      return membershipsResult.fold<String?>(
+        (_) => PtStrings.partnerNoMembership(partner.fullName),
+        (page) {
+          if (page.items.any((m) => m.isActiveOrFrozen)) return null;
+          if (page.items.any((m) => m.status == MembershipStatus.expired)) {
+            return PtStrings.partnerMembershipExpired(partner.fullName);
+          }
+          return PtStrings.partnerNoMembership(partner.fullName);
+        },
+      );
+    }
+    // Use cases unavailable in tests that omit them: treat as ok.
+    return null;
   }
 
   void setStartDate(DateTime date) {
@@ -322,6 +461,7 @@ class SellPtCubit extends Cubit<SellPtState> {
     ptProductId: state.product!.id,
     startDate: state.startDate!,
     weekdays: state.weekdays,
+    partnerMemberId: state.isCoupleSelected ? state.partner?.id : null,
     excludeSubscriptionId: state.replanning?.id,
   );
 
@@ -392,6 +532,7 @@ class SellPtCubit extends Cubit<SellPtState> {
         paymentMethodId: int.parse(state.paymentMethodId!),
         discountAmount: state.discount,
       ),
+      partnerMemberId: state.isCoupleSelected ? state.partner?.id : null,
     );
     if (base != _lastPurchase || _purchaseKey == null) {
       _purchaseKey = newIdempotencyKey();
@@ -405,6 +546,7 @@ class SellPtCubit extends Cubit<SellPtState> {
       weekdays: base.weekdays,
       slotStart: base.slotStart,
       payment: base.payment,
+      partnerMemberId: base.partnerMemberId,
       idempotencyKey: _purchaseKey,
     );
   }

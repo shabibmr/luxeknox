@@ -342,6 +342,11 @@ class _DossierContentState extends State<_DossierContent> {
           },
           onChangePt: (sub) => _changePt(sub),
           onRenewPt: (sub) => _renewPt(sub),
+          onOpenPartner: (partnerId) => context.push(
+            _isAdminShell
+                ? Routes.adminMemberById(partnerId)
+                : Routes.trainerMemberById(partnerId),
+          ),
         ),
         const Divider(),
         ListTile(
@@ -595,6 +600,7 @@ class _PersonalTrainingSection extends StatelessWidget {
     required this.onAddPt,
     required this.onChangePt,
     required this.onRenewPt,
+    required this.onOpenPartner,
   });
 
   final MemberDossierState state;
@@ -605,6 +611,7 @@ class _PersonalTrainingSection extends StatelessWidget {
   final VoidCallback onAddPt;
   final ValueChanged<PtSubscription> onChangePt;
   final ValueChanged<PtSubscription> onRenewPt;
+  final ValueChanged<String> onOpenPartner;
 
   @override
   Widget build(BuildContext context) {
@@ -658,6 +665,26 @@ class _PersonalTrainingSection extends StatelessWidget {
             ),
             isThreeLine: true,
           ),
+          if (shown.isCouple && shown.partnerMemberName != null)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                PeopleStrings.coupleWith(shown.partnerMemberName!),
+              ),
+              trailing: shown.partnerMemberId == null
+                  ? null
+                  : const Icon(Icons.chevron_right),
+              onTap: shown.partnerMemberId == null
+                  ? null
+                  : () => onOpenPartner(shown.partnerMemberId!.toString()),
+            ),
+          if (shown.isCouple &&
+              !shown.isPrimary &&
+              shown.partnerMemberName != null)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(PeopleStrings.billedTo(shown.partnerMemberName!)),
+            ),
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text(PeopleStrings.assignedTrainer),

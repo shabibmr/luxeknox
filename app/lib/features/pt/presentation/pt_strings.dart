@@ -9,6 +9,10 @@ abstract final class PtStrings {
   static const durationDays = 'Duration (days)';
   static const price = 'Price';
   static const taxPercentage = 'Tax %';
+  static const packageTypeLabel = 'Package type';
+  static const packageTypeSingle = 'Single';
+  static const packageTypeCouple = 'Couple';
+  static const coupleChip = packageTypeCouple;
   static const active = 'Active';
   static const archived = 'Archived';
   static const save = 'Save';
@@ -56,6 +60,19 @@ abstract final class PtStrings {
   static const summaryAmount = 'Amount';
   static const sold = 'Personal Training assigned';
   static const replanned = 'Personal Training updated';
+
+  static const partnerLabel = 'Partner (second member)';
+  static const partnerHint = 'Select partner';
+  static const partnerChecking = 'Checking partner…';
+  static const coupleTotalNote = 'Total for both members';
+  static const replanCoupleNote = 'This change applies to both members.';
+  static String partnerHasOpenPt(String name, String until) =>
+      '$name already has PT until $until';
+  static String partnerMembershipExpired(String name) =>
+      "$name's membership has expired";
+  static String partnerNoMembership(String name) =>
+      '$name has no active membership';
+  static const partnerSameAsMember = 'Partner must be a different member';
 
   static const renew = 'Renew PT';
   static const renewTitle = 'Renew Personal Training';

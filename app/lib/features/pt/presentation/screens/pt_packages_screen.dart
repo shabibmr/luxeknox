@@ -70,7 +70,22 @@ class _PtPackagesView extends StatelessWidget {
               itemBuilder: (context, i) {
                 final p = state.items[i];
                 return ListTile(
-                  title: Text('${p.name} (${p.code})'),
+                  title: Row(
+                    children: [
+                      Expanded(child: Text('${p.name} (${p.code})')),
+                      if (p.isCouple) ...[
+                        const SizedBox(width: 8),
+                        const Chip(
+                          label: Text(PtStrings.coupleChip),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          padding: EdgeInsets.zero,
+                          labelPadding: EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                      ],
+                    ],
+                  ),
                   subtitle: Text(
                     '${p.durationDays} days · ${p.basePrice}'
                     '${p.isActive ? '' : ' · ${PtStrings.archived}'}',
@@ -124,6 +139,10 @@ class _PtPackageFormState extends State<_PtPackageForm> {
   late final _tax = TextEditingController(
     text: widget.product?.taxPercentage ?? '0.00',
   );
+  late PtPackageType _packageType =
+      widget.product?.packageType ?? PtPackageType.single;
+
+  bool get _isEditing => widget.product != null;
 
   @override
   void dispose() {
@@ -174,6 +193,7 @@ class _PtPackageFormState extends State<_PtPackageForm> {
       basePrice: _price.text.trim(),
       taxPercentage: _tax.text.trim().isEmpty ? null : _tax.text.trim(),
       isActive: widget.product?.isActive ?? true,
+      packageType: _packageType,
     );
     final ok = await context.read<PtPackagesCubit>().save(base);
     if (ok && mounted) Navigator.of(context).pop();
@@ -184,7 +204,7 @@ class _PtPackageFormState extends State<_PtPackageForm> {
     final saving = context.select<PtPackagesCubit, bool>((c) => c.state.saving);
     return AlertDialog(
       title: Text(
-        widget.product == null ? PtStrings.newPackage : PtStrings.editPackage,
+        _isEditing ? PtStrings.editPackage : PtStrings.newPackage,
       ),
       content: SizedBox(
         width: 420,
@@ -226,6 +246,32 @@ class _PtPackageFormState extends State<_PtPackageForm> {
                   label: PtStrings.taxPercentage,
                   enabled: !saving,
                   invalidMessage: PtStrings.invalidMoney,
+                ),
+                const SizedBox(height: 16),
+                InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: PtStrings.packageTypeLabel,
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  child: SegmentedButton<PtPackageType>(
+                    segments: const [
+                      ButtonSegment(
+                        value: PtPackageType.single,
+                        label: Text(PtStrings.packageTypeSingle),
+                      ),
+                      ButtonSegment(
+                        value: PtPackageType.couple,
+                        label: Text(PtStrings.packageTypeCouple),
+                      ),
+                    ],
+                    selected: {_packageType},
+                    onSelectionChanged: (_isEditing || saving)
+                        ? null
+                        : (values) {
+                            setState(() => _packageType = values.first);
+                          },
+                  ),
                 ),
               ],
             ),

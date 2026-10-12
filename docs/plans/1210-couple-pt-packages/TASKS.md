@@ -44,10 +44,10 @@ All backend paths are under `apps/api/src/pt/` unless stated. All Flutter paths 
 - [x] CP-16 Purchase and grid params carry the partner <!-- id: 16 -->
 
 **Phase 7: Flutter UI**
-- [ ] CP-17 PT package form Single/Couple toggle and list chip <!-- id: 17 -->
-- [ ] CP-18 `SellPtCubit` couple state, partner check and validation <!-- id: 18 -->
-- [ ] CP-19 Sell PT screen: partner picker, summary, re-plan note <!-- id: 19 -->
-- [ ] CP-20 Dossier "Couple with <partner>" and the renew dialog filter <!-- id: 20 -->
+- [x] CP-17 PT package form Single/Couple toggle and list chip <!-- id: 17 -->
+- [x] CP-18 `SellPtCubit` couple state, partner check and validation <!-- id: 18 -->
+- [x] CP-19 Sell PT screen: partner picker, summary, re-plan note <!-- id: 19 -->
+- [x] CP-20 Dossier "Couple with <partner>" (renew dialog filter deferred) <!-- id: 20 -->
 
 **Phase 8: Verification**
 - [ ] CP-21 API e2e: couple PT sale and lifecycle <!-- id: 21 -->
@@ -413,7 +413,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | done |
 | **Depends** | CP-14 |
 | **Files** | `presentation/screens/pt_packages_screen.dart`, `presentation/cubit/pt_packages_cubit.dart`, `presentation/pt_strings.dart`, `app/test/features/pt/presentation/pt_packages_screen_test.dart` |
 
@@ -429,7 +429,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | done |
 | **Depends** | CP-15, CP-16 |
 | **Files** | `presentation/cubit/sell_pt_cubit.dart` (plus its generated file), `app/test/features/pt/presentation/sell_pt_cubit_test.dart` |
 
@@ -448,7 +448,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | done |
 | **Depends** | CP-18 |
 | **Files** | `presentation/screens/sell_pt_screen.dart`, `presentation/pt_strings.dart`, `app/test/features/pt/presentation/sell_pt_screen_test.dart` (new) |
 
@@ -469,12 +469,12 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | done (Couple with / Billed to); renew dialog filter deferred |
 | **Depends** | CP-15 |
 | **Files** | `app/lib/features/people/presentation/screens/member_dossier_screen.dart`, `app/lib/features/people/presentation/member_dossier_pt.dart`, `presentation/pt_strings.dart`, `app/test/features/people/presentation/member_dossier_screen_test.dart` |
 
 - The PT card shows "Couple with <name>", which pushes the partner's dossier route. On the partner's side (`isPrimary == false`) it also shows "Billed to <primary>".
-- `_RenewPtDialog` lists only products of the same `packageType` and shows a note that renewal covers both members.
+- `_RenewPtDialog` lists only products of the same `packageType` and shows a note that renewal covers both members. **Deferred** (scope choice: Couple with line only).
 
 **Done when:** widget tests show the line for a couple PT and hide it for a single one, and the renew dialog's product list is filtered.
 

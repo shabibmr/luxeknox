@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luxeknox/core/di/injector.dart';
 import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/core/pagination/cursor_page.dart';
@@ -25,6 +26,7 @@ import 'package:luxeknox/features/people/domain/usecases/update_member_usecase.d
 import 'package:luxeknox/features/people/presentation/cubit/member_dossier_cubit.dart';
 import 'package:luxeknox/features/people/presentation/people_strings.dart';
 import 'package:luxeknox/features/people/presentation/screens/member_dossier_screen.dart';
+import 'package:luxeknox/features/pt/domain/entities/pt_product.dart';
 import 'package:luxeknox/features/pt/domain/entities/pt_subscription.dart';
 import 'package:luxeknox/features/pt/domain/usecases/pt_usecases.dart';
 import 'package:luxeknox/features/pt/presentation/pt_strings.dart';
@@ -131,6 +133,8 @@ void main() {
 
   PtSubscription ptSub({
     PtSubscriptionStatus status = PtSubscriptionStatus.active,
+    String? partnerName,
+    bool isPrimary = true,
   }) {
     final now = DateTime.now();
     return PtSubscription(
@@ -148,6 +152,13 @@ void main() {
       sessionsPerWeek: 3,
       trainerName: 'Alex Coach',
       slotLabel: '17:00-18:00',
+      packageType: partnerName == null
+          ? PtPackageType.single
+          : PtPackageType.couple,
+      isPrimary: isPrimary,
+      partnerSubscriptionId: partnerName == null ? null : 901,
+      partnerMemberId: partnerName == null ? null : 43,
+      partnerMemberName: partnerName,
     );
   }
 
@@ -254,15 +265,48 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
+    ProgressHubScreen goalsBuilder(GoRouterState state) {
+      final args = state.extra as ProgressHubArgs?;
+      return ProgressHubScreen(
+        memberId: state.pathParameters['id'],
+        canCreateGoals: args?.canCreateGoals ?? false,
+        isAssignedTrainer: args?.isAssignedTrainer,
+      );
+    }
+
+    final router = GoRouter(
+      initialLocation: '/trainer/members/42',
+      routes: [
+        GoRoute(
+          path: '/trainer/members/:id',
+          builder: (context, state) => MemberDossierScreen(
+            memberId: int.parse(state.pathParameters['id']!),
+          ),
+          routes: [
+            GoRoute(path: 'goals', builder: (context, state) => goalsBuilder(state)),
+          ],
+        ),
+        GoRoute(
+          path: '/admin/members/:id',
+          builder: (context, state) => MemberDossierScreen(
+            memberId: int.parse(state.pathParameters['id']!),
+          ),
+          routes: [
+            GoRoute(path: 'goals', builder: (context, state) => goalsBuilder(state)),
+          ],
+        ),
+      ],
+    );
+
     await tester.pumpWidget(
       BlocProvider<SessionCubit>.value(
         value: sessionCubit,
-        child: MaterialApp(
+        child: MaterialApp.router(
           theme: ThemeData(
             useMaterial3: true,
             splashFactory: NoSplash.splashFactory,
           ),
-          home: const MemberDossierScreen(memberId: 42),
+          routerConfig: router,
         ),
       ),
     );
@@ -351,6 +395,49 @@ void main() {
     expect(find.text(PeopleStrings.addPersonalTraining), findsNothing);
     expect(find.text(PtStrings.renew), findsNothing);
     expect(find.text(PtStrings.changeTrainerSlot), findsNothing);
+  });
+
+  testWidgets('couple PT shows "Couple with <partner>"', (tester) async {
+    stubExtras(
+      membership: gymMembership(),
+      pt: MemberPtSummary(
+        current: ptSub(partnerName: 'Priya Nair'),
+        trainerAccess: TrainerAccess.full,
+      ),
+    );
+
+    await pumpDossier(tester);
+
+    expect(find.text(PeopleStrings.coupleWith('Priya Nair')), findsOneWidget);
+    expect(find.textContaining('Billed to'), findsNothing);
+  });
+
+  testWidgets('single PT hides the couple line', (tester) async {
+    stubExtras(
+      membership: gymMembership(),
+      pt: MemberPtSummary(current: ptSub(), trainerAccess: TrainerAccess.full),
+    );
+
+    await pumpDossier(tester);
+
+    expect(find.textContaining('Couple with'), findsNothing);
+  });
+
+  testWidgets('secondary couple PT also shows "Billed to <primary>"', (
+    tester,
+  ) async {
+    stubExtras(
+      membership: gymMembership(),
+      pt: MemberPtSummary(
+        current: ptSub(partnerName: 'John Doe', isPrimary: false),
+        trainerAccess: TrainerAccess.full,
+      ),
+    );
+
+    await pumpDossier(tester);
+
+    expect(find.text(PeopleStrings.coupleWith('John Doe')), findsOneWidget);
+    expect(find.text(PeopleStrings.billedTo('John Doe')), findsOneWidget);
   });
 
   testWidgets('trainer with active PT can create goals', (tester) async {
