@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,6 +13,7 @@ import '../../../../core/widgets/app_currency_field.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/package_grid_picker_field.dart';
+import '../../../people/domain/usecases/get_member_usecase.dart';
 import '../../../people/presentation/widgets/member_picker_sheet.dart';
 import '../../domain/entities/membership_replacement_preview.dart';
 import '../bloc/create_membership_bloc.dart';
@@ -183,10 +185,10 @@ class _CreateMembershipForm extends StatelessWidget {
     return id == null ? const {} : {id};
   }
 
-  bool get _showCoupleSummary {
-    if (!state.isCoupleSelected || state.selectedPartner == null) {
-      return false;
-    }
+  bool get _showPriceSummary {
+    if (state.selectedProduct == null) return false;
+    if (!state.isCoupleSelected) return true;
+    if (state.selectedPartner == null) return false;
     if (state.checkingPartner) return false;
     final preview = state.partnerReplacement;
     if (preview == null) return true;
@@ -225,7 +227,7 @@ class _CreateMembershipForm extends StatelessWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text(MembershipStrings.memberLabel),
-            subtitle: Text('Member #${state.selectedMemberId}'),
+            subtitle: _LockedMemberName(memberId: state.selectedMemberId),
           ),
           const SizedBox(height: 8),
         ],
@@ -271,9 +273,9 @@ class _CreateMembershipForm extends StatelessWidget {
             const LinearProgressIndicator(),
           ],
         ],
-        if (_showCoupleSummary) ...[
+        if (_showPriceSummary) ...[
           const SizedBox(height: 16),
-          _CouplePriceSummary(state: state),
+          _PriceSummary(state: state),
         ],
         const SizedBox(height: 16),
         if (state.paymentMethods.isEmpty)
@@ -383,18 +385,67 @@ class _CreateMembershipForm extends StatelessWidget {
   }
 }
 
-class _CouplePriceSummary extends StatefulWidget {
-  const _CouplePriceSummary({required this.state});
+/// Shows the name of the member the sale is locked to (e.g. from the member
+/// dossier), falling back to the id while loading or if the lookup fails.
+class _LockedMemberName extends StatefulWidget {
+  const _LockedMemberName({required this.memberId});
+
+  final String? memberId;
+
+  @override
+  State<_LockedMemberName> createState() => _LockedMemberNameState();
+}
+
+class _LockedMemberNameState extends State<_LockedMemberName> {
+  String? _name;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_load());
+  }
+
+  @override
+  void didUpdateWidget(covariant _LockedMemberName oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.memberId != widget.memberId) {
+      _name = null;
+      unawaited(_load());
+    }
+  }
+
+  Future<void> _load() async {
+    final id = int.tryParse(widget.memberId ?? '');
+    if (id == null) return;
+    final result = await getIt<GetMemberUseCase>()(id);
+    if (!mounted || widget.memberId != id.toString()) return;
+    result.fold((_) {}, (person) {
+      final name = '${person.firstName} ${person.lastName}'.trim();
+      if (name.isNotEmpty) setState(() => _name = name);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      Text(_name ?? 'Member #${widget.memberId}');
+}
+
+class _PriceSummary extends StatefulWidget {
+  const _PriceSummary({required this.state});
 
   final CreateMembershipState state;
 
   @override
-  State<_CouplePriceSummary> createState() => _CouplePriceSummaryState();
+  State<_PriceSummary> createState() => _PriceSummaryState();
 }
 
-class _CouplePriceSummaryState extends State<_CouplePriceSummary> {
+class _PriceSummaryState extends State<_PriceSummary> {
   late final TextEditingController _discountController;
-  var _syncingFromState = false;
+  late final TextEditingController _percentController;
+  var _syncing = false;
+
+  double? get _price =>
+      double.tryParse(widget.state.selectedProduct?.basePrice ?? '');
 
   @override
   void initState() {
@@ -402,16 +453,25 @@ class _CouplePriceSummaryState extends State<_CouplePriceSummary> {
     _discountController = TextEditingController(
       text: widget.state.discountAmount ?? '',
     )..addListener(_onDiscountEdited);
+    _percentController = TextEditingController()..addListener(_onPercentEdited);
+    _syncPercentFromValue();
   }
 
   @override
-  void didUpdateWidget(covariant _CouplePriceSummary oldWidget) {
+  void didUpdateWidget(covariant _PriceSummary oldWidget) {
     super.didUpdateWidget(oldWidget);
     final next = widget.state.discountAmount ?? '';
-    if (_discountController.text != next) {
-      _syncingFromState = true;
+    final oldPrice = double.tryParse(
+      oldWidget.state.selectedProduct?.basePrice ?? '',
+    );
+    if (oldPrice != _price && _percentController.text.isNotEmpty) {
+      // Package changed: keep the percentage, recompute the value.
+      _onPercentEdited();
+    } else if (_discountController.text != next) {
+      _syncing = true;
       _discountController.text = next;
-      _syncingFromState = false;
+      _syncing = false;
+      _syncPercentFromValue();
     }
   }
 
@@ -420,20 +480,63 @@ class _CouplePriceSummaryState extends State<_CouplePriceSummary> {
     _discountController
       ..removeListener(_onDiscountEdited)
       ..dispose();
+    _percentController
+      ..removeListener(_onPercentEdited)
+      ..dispose();
     super.dispose();
   }
 
+  void _syncPercentFromValue() {
+    final price = _price;
+    final value = double.tryParse(_discountController.text);
+    final text = (price == null || price <= 0 || value == null || value > price)
+        ? ''
+        : _trim(value / price * 100);
+    if (_percentController.text == text) return;
+    _syncing = true;
+    _percentController.text = text;
+    _syncing = false;
+  }
+
+  static String _trim(double v) {
+    final s = v.toStringAsFixed(2);
+    return s.contains('.') ? s.replaceFirst(RegExp(r'\.?0+$'), '') : s;
+  }
+
+  void _onPercentEdited() {
+    if (_syncing || !mounted) return;
+    final price = _price;
+    final pct = double.tryParse(_percentController.text);
+    final value = (price == null || pct == null)
+        ? ''
+        : (price * pct / 100).toStringAsFixed(2);
+    _syncing = true;
+    _discountController.text = value;
+    _syncing = false;
+    context.read<CreateMembershipBloc>().add(
+      CreateMembershipDiscountChanged(value),
+    );
+  }
+
   void _onDiscountEdited() {
-    if (_syncingFromState || !mounted) return;
+    if (_syncing || !mounted) return;
+    _syncPercentFromValue();
     context.read<CreateMembershipBloc>().add(
       CreateMembershipDiscountChanged(_discountController.text),
     );
   }
 
+  String? get _valueError {
+    final price = _price;
+    final value = double.tryParse(widget.state.discountAmount ?? '');
+    if (price != null && value != null && value > price) {
+      return MembershipStrings.discountExceedsTotal;
+    }
+    return null;
+  }
+
   String get _totalLabel {
-    final price = double.tryParse(
-      widget.state.selectedProduct?.basePrice ?? '',
-    );
+    final price = _price;
     final discount = double.tryParse(widget.state.discountAmount ?? '0') ?? 0;
     if (price == null) return '—';
     final total = (price - discount).clamp(0, double.infinity);
@@ -444,7 +547,10 @@ class _CouplePriceSummaryState extends State<_CouplePriceSummary> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final price = widget.state.selectedProduct?.basePrice ?? '—';
-    final showDiscount = widget.state.partnerReplacement != null;
+    final enabled = !widget.state.submitting;
+    final label = widget.state.partnerReplacement != null
+        ? MembershipStrings.discountForRemainingDays
+        : MembershipStrings.discountByValue;
 
     return Card(
       child: Padding(
@@ -462,15 +568,46 @@ class _CouplePriceSummaryState extends State<_CouplePriceSummary> {
                 Text(price, style: theme.textTheme.titleSmall),
               ],
             ),
-            if (showDiscount) ...[
-              const SizedBox(height: 12),
-              AppCurrencyField(
-                controller: _discountController,
-                label: MembershipStrings.discountForRemainingDays,
-                enabled: !widget.state.submitting,
-                required: false,
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: _percentController,
+                    enabled: enabled,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [_PercentFormatter()],
+                    decoration: const InputDecoration(
+                      labelText: MembershipStrings.discountPercent,
+                      suffixText: '%',
+                      helperText: 'Max 100',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 3,
+                  child: AppCurrencyField(
+                    controller: _discountController,
+                    label: label,
+                    enabled: enabled,
+                    required: false,
+                    helperText: _valueError ?? 'Max ${_price ?? '—'}',
+                  ),
+                ),
+              ],
+            ),
+            if (_valueError != null)
+              Text(
+                _valueError!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
               ),
-            ],
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -486,5 +623,22 @@ class _CouplePriceSummaryState extends State<_CouplePriceSummary> {
         ),
       ),
     );
+  }
+}
+
+/// Accepts 0–100 with up to 2 decimals; anything else keeps the old value.
+class _PercentFormatter extends TextInputFormatter {
+  static final _shape = RegExp(r'^\d{0,3}(\.\d{0,2})?$');
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final t = newValue.text;
+    if (t.isEmpty) return newValue;
+    if (!_shape.hasMatch(t)) return oldValue;
+    final v = double.tryParse(t);
+    return (v == null || v > 100) ? oldValue : newValue;
   }
 }

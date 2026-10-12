@@ -440,14 +440,14 @@ class CreateMembershipBloc
         );
         return;
       }
-      if (discount != null && !_discountInRange(discount)) {
-        emit(
-          state.copyWith(
-            fieldError: 'Discount must be between 0 and the package price',
-          ),
-        );
-        return;
-      }
+    }
+    if (discount != null && !_discountInRange(discount)) {
+      emit(
+        state.copyWith(
+          fieldError: 'Discount must be between 0 and the package price',
+        ),
+      );
+      return;
     }
 
     final locker = state.lockerNumber?.trim();
@@ -460,7 +460,7 @@ class CreateMembershipBloc
       autoRenew: state.autoRenew,
       partnerMemberId: isCouple ? partner!.id.toString() : null,
       replacePartnerMembership: isCouple && preview != null ? true : null,
-      discountAmount: isCouple ? discount : null,
+      discountAmount: discount,
     );
 
     emit(

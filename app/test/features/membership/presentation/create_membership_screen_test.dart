@@ -13,15 +13,21 @@ import 'package:luxeknox/features/membership/presentation/bloc/create_membership
 import 'package:luxeknox/features/membership/presentation/membership_strings.dart';
 import 'package:luxeknox/features/membership/presentation/screens/create_membership_screen.dart';
 import 'package:luxeknox/features/payments/domain/entities/payment_method.dart';
+import 'package:luxeknox/features/people/domain/entities/person.dart';
 import 'package:luxeknox/features/people/domain/entities/profile_summary.dart';
+import 'package:luxeknox/features/people/domain/usecases/get_member_usecase.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockCreateMembershipBloc
     extends MockBloc<CreateMembershipEvent, CreateMembershipState>
     implements CreateMembershipBloc {}
 
+class MockGetMemberUseCase extends Mock implements GetMemberUseCase {}
+
 void main() {
   late MockCreateMembershipBloc bloc;
+  late MockGetMemberUseCase getMember;
 
   const gold = MembershipProduct(
     id: '10',
@@ -103,6 +109,19 @@ void main() {
   setUp(() {
     bloc = MockCreateMembershipBloc();
     getIt.registerFactory<CreateMembershipBloc>(() => bloc);
+    getMember = MockGetMemberUseCase();
+    when(() => getMember(any())).thenAnswer(
+      (_) async => const Right(
+        Person(
+          id: 100,
+          userId: 1,
+          membershipNumber: 'M-100',
+          firstName: 'Asha',
+          lastName: 'Nair',
+        ),
+      ),
+    );
+    getIt.registerFactory<GetMemberUseCase>(() => getMember);
   });
 
   tearDown(() => getIt.reset());
@@ -120,6 +139,22 @@ void main() {
     );
     return MaterialApp.router(routerConfig: router);
   }
+
+  testWidgets('locked member shows name instead of id', (tester) async {
+    whenListen(
+      bloc,
+      const Stream<CreateMembershipState>.empty(),
+      initialState: const CreateMembershipState(
+        status: LoadStatus.success,
+        products: [gold],
+        selectedMemberId: '100',
+      ),
+    );
+    await tester.pumpWidget(wrapScreen());
+    await tester.pumpAndSettle();
+    expect(find.text('Asha Nair'), findsOneWidget);
+    expect(find.text('Member #100'), findsNothing);
+  });
 
   testWidgets('shows payment method dropdown on assign membership', (
     tester,
@@ -211,11 +246,7 @@ void main() {
     final controller = StreamController<CreateMembershipState>();
     addTearDown(controller.close);
 
-    whenListen(
-      bloc,
-      controller.stream,
-      initialState: coupleState(),
-    );
+    whenListen(bloc, controller.stream, initialState: coupleState());
 
     await tester.pumpWidget(wrapScreen());
     await tester.pump();
@@ -255,11 +286,7 @@ void main() {
     final controller = StreamController<CreateMembershipState>();
     addTearDown(controller.close);
 
-    whenListen(
-      bloc,
-      controller.stream,
-      initialState: coupleState(),
-    );
+    whenListen(bloc, controller.stream, initialState: coupleState());
 
     await tester.pumpWidget(wrapScreen());
     await tester.pump();
@@ -288,20 +315,13 @@ void main() {
     final controller = StreamController<CreateMembershipState>();
     addTearDown(controller.close);
 
-    whenListen(
-      bloc,
-      controller.stream,
-      initialState: coupleState(),
-    );
+    whenListen(bloc, controller.stream, initialState: coupleState());
 
     await tester.pumpWidget(wrapScreen());
     await tester.pump();
 
     controller.add(
-      coupleState(
-        selectedPartner: partner,
-        partnerReplacement: coupleBlocked,
-      ),
+      coupleState(selectedPartner: partner, partnerReplacement: coupleBlocked),
     );
     await tester.pump();
     await tester.pump();

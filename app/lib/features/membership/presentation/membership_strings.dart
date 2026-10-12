@@ -59,6 +59,7 @@ class MembershipStrings {
 
   static const String partnerLabel = 'Partner (second member)';
   static const String selectPartnerHint = 'Select partner';
+
   /// Fallback name in replace-dialog copy when partner display name is missing.
   static const String partnerFallbackName = 'Partner';
   static const String replacePartnerTitle = 'Replace existing membership?';
@@ -67,6 +68,10 @@ class MembershipStrings {
       'This partner already has a couple membership. Pick someone else.';
   static const String packagePriceLabel = 'Package price';
   static const String discountForRemainingDays = 'Discount for remaining days';
+  static const String discountByValue = 'Discount amount';
+  static const String discountPercent = 'Discount %';
+  static const String discountExceedsTotal =
+      'Discount cannot be more than the total amount';
   static const String totalDueLabel = 'Total';
   static const String partnerRowLabel = 'Partner';
   static const String billedToLabel = 'Billed to';

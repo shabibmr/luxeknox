@@ -573,7 +573,8 @@ void main() {
           final p = capturedParams();
           expect(p.partnerMemberId, isNull);
           expect(p.replacePartnerMembership, isNull);
-          expect(p.discountAmount, isNull);
+          // Discounts apply to any package, not just couple ones.
+          expect(p.discountAmount, '700.00');
         },
       );
     });
