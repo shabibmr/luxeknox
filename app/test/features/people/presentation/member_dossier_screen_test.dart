@@ -516,7 +516,18 @@ void main() {
     },
   );
 
-  testWidgets('admin cannot add PT when the membership has expired', (
+  testWidgets('admin can add PT with no membership (PT bundles one)', (
+    tester,
+  ) async {
+    signInAs(adminPrincipal, ['pt_subscriptions.create']);
+    stubExtras(membership: null);
+
+    await pumpDossier(tester);
+
+    expect(find.text(PeopleStrings.addPersonalTraining), findsOneWidget);
+  });
+
+  testWidgets('admin can add PT when the membership has expired', (
     tester,
   ) async {
     signInAs(adminPrincipal, ['pt_subscriptions.create']);
@@ -524,7 +535,7 @@ void main() {
 
     await pumpDossier(tester);
 
-    expect(find.text(PeopleStrings.addPersonalTraining), findsNothing);
+    expect(find.text(PeopleStrings.addPersonalTraining), findsOneWidget);
   });
 
   testWidgets('admin sees renew and change trainer/slot on an active PT', (

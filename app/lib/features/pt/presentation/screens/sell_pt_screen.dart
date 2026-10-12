@@ -488,6 +488,15 @@ class _Summary extends StatelessWidget {
         ],
       ),
     );
+    Widget note(String text) => Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -510,16 +519,12 @@ class _Summary extends StatelessWidget {
             row(PtStrings.summaryTrainer, trainer?.name ?? '—'),
             if (!state.isReplan) ...[
               row(PtStrings.summaryAmount, state.product!.basePrice),
-              if (state.product!.isCouple)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    PtStrings.coupleTotalNote,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
+              if (state.product!.isCouple) note(PtStrings.coupleTotalNote),
+              note(
+                state.product!.isCouple
+                    ? PtStrings.membershipIncludedCouple
+                    : PtStrings.membershipIncluded,
+              ),
             ],
           ],
         ),

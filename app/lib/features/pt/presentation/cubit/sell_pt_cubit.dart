@@ -6,12 +6,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/idempotency/idempotency_key.dart';
-import '../../../../core/pagination/cursor_page.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/usecase/usecase.dart';
-import '../../../membership/domain/entities/membership.dart';
-import '../../../membership/domain/entities/membership_status.dart';
-import '../../../membership/domain/usecases/get_memberships_usecase.dart';
 import '../../../payments/domain/entities/payment_method.dart';
 import '../../../payments/domain/usecases/get_payment_methods_usecase.dart';
 import '../../../people/domain/entities/person.dart';
@@ -128,7 +124,6 @@ class SellPtCubit extends Cubit<SellPtState> {
     this._replan, [
     this._getMember,
     this._getPtSummary,
-    this._getMemberships,
   ]) : super(const SellPtState(memberId: 0));
 
   final GetPtProductsUseCase _getProducts;
@@ -138,7 +133,6 @@ class SellPtCubit extends Cubit<SellPtState> {
   final ReplanPtUseCase _replan;
   final GetMemberUseCase? _getMember;
   final GetMemberPtSummaryUseCase? _getPtSummary;
-  final GetMembershipsUseCase? _getMemberships;
 
   Future<void> Function()? _lastInit;
 
@@ -301,7 +295,7 @@ class SellPtCubit extends Cubit<SellPtState> {
     _maybeLoadGrid();
   }
 
-  /// Sets the couple partner and checks open-PT / membership eligibility.
+  /// Sets the couple partner and checks open-PT eligibility.
   Future<void> selectPartner(Person? partner) async {
     if (partner == null) {
       emit(
@@ -342,20 +336,10 @@ class SellPtCubit extends Cubit<SellPtState> {
     _maybeLoadGrid();
 
     final summaryFuture = _getPtSummary?.call(partner.id);
-    final membershipsFuture = _getMemberships?.call(
-      GetMembershipsParams(memberId: partner.id.toString()),
-    );
     final summaryResult = summaryFuture != null ? await summaryFuture : null;
-    final membershipsResult = membershipsFuture != null
-        ? await membershipsFuture
-        : null;
     if (isClosed || state.partner?.id != partner.id) return;
 
-    final blocked = _partnerBlockMessage(
-      partner,
-      summaryResult,
-      membershipsResult,
-    );
+    final blocked = _partnerBlockMessage(partner, summaryResult);
     emit(
       state.copyWith(
         partnerCheck: blocked == null
@@ -365,35 +349,20 @@ class SellPtCubit extends Cubit<SellPtState> {
     );
   }
 
+  /// A partner with an open PT blocks the sale. No membership check: PT
+  /// includes a gym membership, so a partner without one is bundled one.
   String? _partnerBlockMessage(
     Person partner,
     Either<Failure, MemberPtSummary>? summaryResult,
-    Either<Failure, CursorPage<Membership>>? membershipsResult,
   ) {
-    if (summaryResult != null) {
-      final open = summaryResult.fold<PtSubscription?>(
-        (_) => null,
-        (s) => s.current,
-      );
-      if (open != null) {
-        final until = DateFormat('dd MMM').format(open.endDate);
-        return PtStrings.partnerHasOpenPt(partner.fullName, until);
-      }
-    }
-    if (membershipsResult != null) {
-      return membershipsResult.fold<String?>(
-        (_) => PtStrings.partnerNoMembership(partner.fullName),
-        (page) {
-          if (page.items.any((m) => m.isActiveOrFrozen)) return null;
-          if (page.items.any((m) => m.status == MembershipStatus.expired)) {
-            return PtStrings.partnerMembershipExpired(partner.fullName);
-          }
-          return PtStrings.partnerNoMembership(partner.fullName);
-        },
-      );
-    }
-    // Use cases unavailable in tests that omit them: treat as ok.
-    return null;
+    if (summaryResult == null) return null;
+    final open = summaryResult.fold<PtSubscription?>(
+      (_) => null,
+      (s) => s.current,
+    );
+    if (open == null) return null;
+    final until = DateFormat('dd MMM').format(open.endDate);
+    return PtStrings.partnerHasOpenPt(partner.fullName, until);
   }
 
   void setStartDate(DateTime date) {

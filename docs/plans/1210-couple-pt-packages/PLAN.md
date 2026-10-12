@@ -15,7 +15,7 @@ The app is still in development, so, as for memberships:
 - **What "couple PT" means:** two members share one trainer, one weekly slot and one set of sessions. Each session is one hour with both members present.
 - **Billing:** the package price is the total for both. One invoice is raised against the primary (dossier) member.
 - **Lifecycle:** the two PT subscriptions are fully linked. Renew, reassign trainer and change slot always apply to both, so dates, trainer and slot stay identical. (PT has no freeze or cancel today, so there is nothing else to link.)
-- **Eligibility:** each member needs their own active, unexpired gym membership (ADR-0009 §5). It does not have to be a couple membership.
+- **Eligibility:** each member needs their own active, unexpired gym membership (ADR-0009 §5). It does not have to be a couple membership. *(Superseded: PT now includes a membership, see [ADR-0012](../../adr/0012-pt-includes-membership.md).)*
 - **Partner already has an open PT:** the sale is rejected. The replace-and-credit flow from the membership plan is out of scope, because PT has no cancel operation to build it on. See "Open decisions".
 
 ## Design: two linked subscription rows, one shared session

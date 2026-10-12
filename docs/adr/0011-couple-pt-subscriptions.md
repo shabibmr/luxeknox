@@ -13,7 +13,7 @@ Each member gets their own `pt_subscriptions` row. The rows point at each other 
 - **Shared session:** one `schedules` row per occurrence, `max_capacity = 2`, two `schedule_participants`, `pt_subscription_id` = primary. Title reads `PT · A & B`.
 - **Billing:** one payment against the primary member at the package total less an optional discount.
 - **Lifecycle:** renew, reassign trainer and change slot (and the shared replan they use) apply to both rows in one transaction. Renew keeps the same `package_type` and bills the primary. The client's `row_version` guards only the acted-on row; the partner is re-read server-side.
-- **Eligibility:** each member needs an active, unexpired gym membership (ADR-0009 §5). It does not have to be a couple membership. A partner who already has an open overlapping PT blocks the sale (no replace-and-credit flow yet; PT has no cancel operation to build it on).
+- **Eligibility:** no existing gym membership is needed; each member gets one bundled with the PT (ADR-0012). A partner's membership does not have to be a couple membership. A partner who already has an open overlapping PT blocks the sale (no replace-and-credit flow yet; PT has no cancel operation to build it on).
 - **Schedule grid:** `GET /pt/schedule-grid` accepts optional `partner_member_id`; a cell is occupied when either member is busy. Re-plan resolves the partner from the subscription when the query omits it.
 
 ## Consequences

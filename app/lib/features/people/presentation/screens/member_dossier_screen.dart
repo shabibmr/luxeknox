@@ -201,7 +201,6 @@ class _DossierContentState extends State<_DossierContent> {
         canSellPt(
           userType: userType,
           canCreatePt: context.can('pt_subscriptions.create'),
-          membership: membership,
           pt: state.pt,
         );
     final canChangePt =

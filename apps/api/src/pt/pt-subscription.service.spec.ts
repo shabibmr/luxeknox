@@ -60,14 +60,15 @@ const monWedFri5to8 = [1, 3, 5].map((d) => ({
 }));
 
 describe('PT subscriptions', () => {
-  let subsRepo: Record<string, ReturnType<typeof vi.fn>>;
+  // `_byId` / `_setNextId` are test helpers alongside vi.fn mocks.
+  let subsRepo: Record<string, any>;
   let productRepo: Record<string, ReturnType<typeof vi.fn>>;
   let memberRepo: Record<string, ReturnType<typeof vi.fn>>;
   let trainerRepo: Record<string, ReturnType<typeof vi.fn>>;
   let availabilityRepo: Record<string, ReturnType<typeof vi.fn>>;
   let scheduleRepo: Record<string, ReturnType<typeof vi.fn>>;
   let scheduleTypeRepo: Record<string, ReturnType<typeof vi.fn>>;
-  let membershipRepo: Record<string, ReturnType<typeof vi.fn>>;
+  let membershipService: Record<string, ReturnType<typeof vi.fn>>;
   let paymentService: Record<string, ReturnType<typeof vi.fn>>;
   let settings: Record<string, ReturnType<typeof vi.fn>>;
   let scheduleService: PtScheduleService;
@@ -169,10 +170,13 @@ describe('PT subscriptions', () => {
       cancelParticipants: vi.fn().mockResolvedValue(undefined),
     };
     scheduleTypeRepo = { findByName: vi.fn().mockResolvedValue({ id: 11, name: 'Personal Training' }) };
-    membershipRepo = {
-      findActiveOrFrozenForMember: vi
-        .fn()
-        .mockResolvedValue({ id: 77, status: 'active', end_date: '2026-12-31' }),
+    membershipService = {
+      // ADR-0012: bundling creates/extends a membership per member (primary 42 -> 77, partner 55 -> 88).
+      bundleForPt: vi.fn().mockImplementation(async ({ memberIds }: { memberIds: number[] }) => ({
+        membershipIds: new Map(memberIds.map((id) => [id, id === 55 ? 88 : 77])),
+        events: [{ eventName: 'membership.created', occurredAt: NOW, payload: {} }],
+      })),
+      emitEvents: vi.fn().mockResolvedValue(undefined),
     };
     paymentService = {
       computeTotals: vi.fn().mockResolvedValue({ subtotal: '3000.00', discount: '0.00', tax: '0.00', total: '3000.00' }),
@@ -202,7 +206,7 @@ describe('PT subscriptions', () => {
       { trainerAccess: vi.fn().mockResolvedValue('full') } as any,
       memberRepo as any,
       trainerRepo as any,
-      membershipRepo as any,
+      membershipService as any,
       scheduleRepo as any,
       scheduleTypeRepo as any,
       paymentService as any,
@@ -275,14 +279,30 @@ describe('PT subscriptions', () => {
       await expect(purchase()).resolves.toBeDefined();
     });
 
-    it('requires an active, unexpired membership', async () => {
-      membershipRepo.findActiveOrFrozenForMember.mockResolvedValue({ id: 77, status: 'active', end_date: '2026-09-30' });
-      await expect(purchase()).rejects.toThrow(/active, unexpired membership/);
+    it('bundles a membership for the PT period and links it to the subscription', async () => {
+      const { subscription } = await purchase();
+      expect(membershipService.bundleForPt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          memberIds: [42],
+          startDate: '2026-10-05',
+          endDate: '2026-11-02',
+          durationDays: product.duration_days,
+          today: '2026-10-01',
+        }),
+      );
+      expect(subsRepo.insertSubscription).toHaveBeenCalledWith(
+        expect.objectContaining({ member_id: 42, membership_id: 77 }),
+      );
+      expect(subscription).toBeDefined();
+      expect(membershipService.emitEvents).toHaveBeenCalledTimes(1);
     });
 
-    it('allows PT to run past the membership end date', async () => {
-      membershipRepo.findActiveOrFrozenForMember.mockResolvedValue({ id: 77, status: 'active', end_date: '2026-10-10' });
-      await expect(purchase()).resolves.toBeDefined();
+    it('rejects, writing nothing, when the membership cannot be bundled', async () => {
+      membershipService.bundleForPt.mockRejectedValue(new BusinessRuleError('membership is frozen'));
+      await expect(purchase()).rejects.toThrow(/frozen/);
+      expect(subsRepo.insertSubscription).not.toHaveBeenCalled();
+      expect(paymentService.create).not.toHaveBeenCalled();
+      expect(membershipService.emitEvents).not.toHaveBeenCalled();
     });
 
     it('allows only one PT at a time', async () => {
@@ -356,11 +376,6 @@ describe('PT subscriptions', () => {
 
       beforeEach(() => {
         productRepo.findById.mockResolvedValue(coupleProduct);
-        membershipRepo.findActiveOrFrozenForMember.mockImplementation(async (memberId: number) => ({
-          id: memberId === 55 ? 88 : 77,
-          status: 'active',
-          end_date: '2026-12-31',
-        }));
       });
 
       it('rejects a couple product without a partner', async () => {
@@ -384,13 +399,19 @@ describe('PT subscriptions', () => {
         await expect(purchaseCouple()).rejects.toBeInstanceOf(NotFoundError);
       });
 
-      it('rejects when either member lacks an active membership, naming who failed', async () => {
-        membershipRepo.findActiveOrFrozenForMember.mockImplementation(async (memberId: number) =>
-          memberId === 55
-            ? null
-            : { id: 77, status: 'active', end_date: '2026-12-31' },
+      it('bundles a membership for both members and links each row to its own', async () => {
+        await purchaseCouple();
+        expect(membershipService.bundleForPt).toHaveBeenCalledWith(
+          expect.objectContaining({ memberIds: [42, 55] }),
         );
-        await expect(purchaseCouple()).rejects.toThrow(/Priya Shah.*active, unexpired membership/);
+        expect(subsRepo.insertSubscription).toHaveBeenNthCalledWith(
+          1,
+          expect.objectContaining({ member_id: 42, membership_id: 77 }),
+        );
+        expect(subsRepo.insertSubscription).toHaveBeenNthCalledWith(
+          2,
+          expect.objectContaining({ member_id: 55, membership_id: 88 }),
+        );
       });
 
       it('rejects when the partner already has overlapping PT, naming who failed', async () => {
@@ -776,6 +797,21 @@ describe('PT subscriptions', () => {
           weekdays: [1, 3, 5],
           status: 'scheduled',
         }),
+      );
+    });
+
+    it('extends the bundled membership by the renewed PT period', async () => {
+      await service.renew(900, { payment_method_id: 1 } as any, admin);
+      expect(membershipService.bundleForPt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          memberIds: [42],
+          startDate: '2026-11-03',
+          endDate: '2026-12-01',
+          durationDays: product.duration_days,
+        }),
+      );
+      expect(subsRepo.insertSubscription).toHaveBeenCalledWith(
+        expect.objectContaining({ member_id: 42, membership_id: 77, renewed_from_id: 900 }),
       );
     });
 

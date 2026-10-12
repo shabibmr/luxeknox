@@ -30,6 +30,7 @@ ADR-0001–0004, 0007, 0008, 0009, 0010, and 0011 are `Accepted`. ADR-0005 is `S
 | [0009](./0009-personal-training-subscriptions.md) | Personal Training — **separate PT package, any active trainer, fixed weekly slot** | Accepted | PT packages, trainer scheduling |
 | [0010](./0010-couple-memberships.md) | Couple memberships — **two linked `memberships` rows, no group table** | Accepted | couple packages |
 | [0011](./0011-couple-pt-subscriptions.md) | Couple PT — **two linked `pt_subscriptions` rows, one shared session** | Accepted | couple PT packages |
+| [0012](./0012-pt-includes-membership.md) | PT **includes a gym membership** of the same duration (supersedes the membership gate) | Accepted | PT sale/renew, memberships |
 
 ## Deliberately not decided yet
 

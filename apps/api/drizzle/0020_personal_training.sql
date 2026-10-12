@@ -86,3 +86,13 @@ ALTER TABLE `schedules`
 
 INSERT IGNORE INTO `schedule_types` (`name`, `color_code`, `default_duration_minutes`, `requires_trainer`, `created_at`)
 VALUES ('Personal Training', '#C9A227', 60, TRUE, UTC_TIMESTAMP(3));
+
+-- PT includes a gym membership of the same duration (ADR-0012). Bundled memberships point at
+-- this catalog-hidden product; duration_days is a placeholder because the bundle's dates come
+-- from the PT package, and it is inactive so it is never offered for a normal membership sale.
+INSERT IGNORE INTO `membership_products`
+  (`name`, `code`, `description`, `duration_days`, `base_price`, `tax_percentage`, `max_freeze_days`,
+   `pt_sessions_included`, `access_facilities`, `package_type`, `is_active`, `created_at`)
+VALUES
+  ('PT Bundled', 'PT-BUNDLE', 'Gym membership included with a Personal Training package.', 1, 0.00, 0.00, 0,
+   0, NULL, 'single', FALSE, UTC_TIMESTAMP(3));

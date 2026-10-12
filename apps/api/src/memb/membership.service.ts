@@ -11,7 +11,7 @@ import type {
   MembershipProduct,
 } from '../platform/db/schema/memberships';
 import { verifyRowVersion } from '../platform/concurrency/row-version';
-import { DomainEventBus } from '../platform/events/domain-events';
+import { DomainEventBus, type DomainEvent } from '../platform/events/domain-events';
 import {
   BadRequestError,
   BusinessRuleError,
@@ -39,6 +39,9 @@ import {
   type MembershipListScope,
   type MembershipWithProduct,
 } from './membership.repository';
+
+/** Catalog-hidden product that PT-bundled memberships point at (ADR-0012). */
+export const PT_BUNDLE_PRODUCT_CODE = 'PT-BUNDLE';
 
 /** Adds one calendar day to an ISO date string. */
 function addDays(isoDate: string, days: number): string {
@@ -557,6 +560,116 @@ export class MembershipService {
       throw new NotFoundError('Membership not found after renew');
     }
     return this.present(after, actor);
+  }
+
+  /**
+   * ADR-0012: a PT package includes a gym membership of the same duration, at no extra charge.
+   * Runs inside the caller's (PT sale) transaction:
+   * - no active membership → a new `PT-BUNDLE` membership covering the PT period;
+   * - active membership → extended by the PT duration, the way a renewal continues it
+   *   (a linked couple pair is extended together, once);
+   * - frozen membership → rejected.
+   * Returns domain events for the caller to publish via {@link emitEvents} after commit.
+   */
+  async bundleForPt(p: {
+    memberIds: number[];
+    startDate: string;
+    endDate: string;
+    durationDays: number;
+    today: string;
+    actor: AuthenticatedUser;
+    now: Date;
+  }): Promise<{ membershipIds: Map<number, number>; events: DomainEvent[] }> {
+    const membershipIds = new Map<number, number>();
+    const events: DomainEvent[] = [];
+    const extended = new Set<number>();
+
+    for (const memberId of p.memberIds) {
+      const existing = await this.repository.findActiveOrFrozenForMember(memberId);
+
+      if (existing?.status === 'frozen') {
+        const member = await this.memberRepository.findById(memberId);
+        const who = member ? `${member.first_name} ${member.last_name}`.trim() : 'Member';
+        throw new BusinessRuleError(
+          `${who}'s membership is frozen; unfreeze it before adding Personal Training`,
+        );
+      }
+
+      if (existing) {
+        membershipIds.set(memberId, existing.id);
+        if (extended.has(existing.id)) {
+          continue;
+        }
+        const partner = await this.loadPartner(existing);
+        const continuation =
+          existing.end_date >= p.today ? addDays(existing.end_date, 1) : p.today;
+        const newEndDate = addDays(continuation, p.durationDays);
+        for (const row of partner ? [existing, partner] : [existing]) {
+          await this.renewRow(row, row.product_id, newEndDate, p.actor, p.now, 'pt_bundle');
+          extended.add(row.id);
+          events.push({
+            eventName: 'membership.renewed',
+            occurredAt: p.now,
+            payload: { membershipId: row.id },
+          });
+        }
+        continue;
+      }
+
+      const product = await this.productRepository.findByCode(PT_BUNDLE_PRODUCT_CODE);
+      if (!product) {
+        throw new NotFoundError(
+          `Membership product "${PT_BUNDLE_PRODUCT_CODE}" is missing; run migrations`,
+        );
+      }
+      const membershipId = await this.repository.insertMembership({
+        member_id: memberId,
+        product_id: product.id,
+        start_date: p.startDate,
+        end_date: p.endDate,
+        status: 'active',
+        locker_number: null,
+        auto_renew: false,
+        row_version: 1,
+        created_at: p.now,
+      });
+      await this.repository.insertHistory({
+        membership_id: membershipId,
+        action: 'created',
+        old_end_date: null,
+        new_end_date: p.endDate,
+        performed_by_user_id: p.actor.id,
+        timestamp: p.now,
+      });
+      await this.auditService.recordAudit({
+        actorUserId: p.actor.id,
+        action: 'membership.created',
+        entityName: 'memberships',
+        entityId: membershipId,
+        afterState: {
+          member_id: memberId,
+          product_id: product.id,
+          end_date: p.endDate,
+          via: 'pt_bundle',
+        },
+      });
+      membershipIds.set(memberId, membershipId);
+      extended.add(membershipId);
+      events.push({
+        eventName: 'membership.created',
+        occurredAt: p.now,
+        payload: { membershipId, memberId },
+      });
+    }
+
+    return { membershipIds, events };
+  }
+
+  /** Publishes events returned by {@link bundleForPt}; call after the transaction commits. */
+  async emitEvents(events: DomainEvent[]): Promise<void> {
+    for (const event of events) {
+      await this.domainEventBus.emit(event);
+    }
   }
 
   /** FR-MEMB-010: upgrade — switches product and recomputes the end date from the original start. */

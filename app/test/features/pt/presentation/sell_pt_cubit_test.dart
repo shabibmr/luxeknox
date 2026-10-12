@@ -3,12 +3,8 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:luxeknox/core/error/failures.dart';
-import 'package:luxeknox/core/pagination/cursor_page.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/core/usecase/usecase.dart';
-import 'package:luxeknox/features/membership/domain/entities/membership.dart';
-import 'package:luxeknox/features/membership/domain/entities/membership_status.dart';
-import 'package:luxeknox/features/membership/domain/usecases/get_memberships_usecase.dart';
 import 'package:luxeknox/features/payments/domain/entities/payment_method.dart';
 import 'package:luxeknox/features/payments/domain/usecases/get_payment_methods_usecase.dart';
 import 'package:luxeknox/features/people/domain/entities/person.dart';
@@ -33,7 +29,6 @@ class MockReplan extends Mock implements ReplanPtUseCase {}
 
 class MockGetPtSummary extends Mock implements GetMemberPtSummaryUseCase {}
 
-class MockGetMemberships extends Mock implements GetMembershipsUseCase {}
 
 void main() {
   late MockGetPtProducts getProducts;
@@ -42,7 +37,6 @@ void main() {
   late MockPurchase purchase;
   late MockReplan replan;
   late MockGetPtSummary getPtSummary;
-  late MockGetMemberships getMemberships;
 
   const product = PtProduct(
     id: 3,
@@ -82,25 +76,6 @@ void main() {
     firstName: 'Priya',
     lastName: 'Shah',
   );
-  final activeMembership = Membership(
-    id: 'm1',
-    memberId: '99',
-    productId: 'p1',
-    startDate: DateTime(2026, 1, 1),
-    endDate: DateTime(2026, 12, 31),
-    status: MembershipStatus.active,
-    rowVersion: 1,
-  );
-  final expiredMembership = Membership(
-    id: 'm2',
-    memberId: '99',
-    productId: 'p1',
-    startDate: DateTime(2025, 1, 1),
-    endDate: DateTime(2025, 6, 1),
-    status: MembershipStatus.expired,
-    rowVersion: 1,
-  );
-
   final grid = PtScheduleGrid(
     startDate: DateTime(2026, 10, 5),
     endDate: DateTime(2026, 11, 2),
@@ -169,7 +144,6 @@ void main() {
         payment: const PtPayment(paymentMethodId: 0),
       ),
     );
-    registerFallbackValue(const GetMembershipsParams());
   });
 
   setUp(() {
@@ -179,7 +153,6 @@ void main() {
     purchase = MockPurchase();
     replan = MockReplan();
     getPtSummary = MockGetPtSummary();
-    getMemberships = MockGetMemberships();
     when(
       () => getProducts(any()),
     ).thenAnswer((_) async => const Right([product, coupleProduct, archived]));
@@ -191,15 +164,6 @@ void main() {
     when(() => getPtSummary(any())).thenAnswer(
       (_) async => const Right(MemberPtSummary()),
     );
-    when(() => getMemberships(any())).thenAnswer(
-      (_) async => Right(
-        CursorPage<Membership>(
-          items: [activeMembership],
-          nextCursor: null,
-          hasMore: false,
-        ),
-      ),
-    );
   });
 
   SellPtCubit build() => SellPtCubit(
@@ -210,7 +174,6 @@ void main() {
     replan,
     null,
     getPtSummary,
-    getMemberships,
   );
 
   test(
@@ -606,25 +569,9 @@ void main() {
       expect(cubit.state.canSubmit, isFalse);
     });
 
-    test('expired membership on the partner blocks the sale', () async {
-      when(() => getMemberships(any())).thenAnswer(
-        (_) async => Right(
-          CursorPage<Membership>(
-            items: [expiredMembership],
-            nextCursor: null,
-            hasMore: false,
-          ),
-        ),
-      );
+    test('a partner with no membership is not blocked (PT bundles one)', () async {
       final cubit = await readyCouple(withPartner: partner);
-      final check = cubit.state.partnerCheck;
-      expect(check, isA<SellPtPartnerCheckBlocked>());
-      expect(
-        (check as SellPtPartnerCheckBlocked).message,
-        PtStrings.partnerMembershipExpired('Priya Shah'),
-      );
-      cubit.selectSlot(7, '17:00:00');
-      expect(cubit.state.canSubmit, isFalse);
+      expect(cubit.state.partnerCheck, isA<SellPtPartnerCheckOk>());
     });
 
     test('selecting a single package clears the partner', () async {

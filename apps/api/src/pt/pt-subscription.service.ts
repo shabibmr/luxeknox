@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
-import { MembershipRepository } from '../memb/membership.repository';
+import { MembershipService } from '../memb/membership.service';
 import { PaymentService } from '../pay/payment.service';
 import type { PaymentDto } from '../pay/payment.dto';
 import { MemberRepository } from '../people/member.repository';
@@ -73,7 +73,7 @@ export class PtSubscriptionService {
     private readonly accessService: PtAccessService,
     private readonly memberRepository: MemberRepository,
     private readonly trainerRepository: TrainerRepository,
-    private readonly membershipRepository: MembershipRepository,
+    private readonly membershipService: MembershipService,
     private readonly scheduleRepository: ScheduleRepository,
     private readonly scheduleTypeRepository: ScheduleTypeRepository,
     private readonly paymentService: PaymentService,
@@ -152,16 +152,6 @@ export class PtSubscriptionService {
       ? `${partnerMember.first_name} ${partnerMember.last_name}`.trim()
       : null;
 
-    const membershipId = await this.requireActiveMembership(dto.member_id, today, primaryLabel);
-    let partnerMembershipId: number | null = null;
-    if (partnerMember) {
-      partnerMembershipId = await this.requireActiveMembership(
-        partnerMember.id,
-        today,
-        partnerLabel!,
-      );
-    }
-
     const endDate = addDays(dto.start_date, product.duration_days);
     await this.assertNoOtherOpenPt(dto.member_id, dto.start_date, endDate, primaryLabel);
     if (partnerMember) {
@@ -174,10 +164,8 @@ export class PtSubscriptionService {
     return this.createPaidSubscription({
       memberId: dto.member_id,
       partnerMemberId: partnerMember?.id ?? null,
-      partnerMembershipId,
       product,
       trainerId: dto.trainer_id,
-      membershipId,
       renewedFromId: null,
       partnerRenewedFromId: null,
       startDate: dto.start_date,
@@ -224,30 +212,21 @@ export class PtSubscriptionService {
     const primaryLabel = primaryMember
       ? `${primaryMember.first_name} ${primaryMember.last_name}`.trim()
       : 'Member';
-    const membershipId = await this.requireActiveMembership(primary.member_id, today, primaryLabel);
     await this.assertNoOtherOpenPt(primary.member_id, startDate, endDate, primaryLabel);
 
-    let partnerMembershipId: number | null = null;
     if (secondary) {
       const partnerMember = await this.memberRepository.findById(secondary.member_id);
       const partnerLabel = partnerMember
         ? `${partnerMember.first_name} ${partnerMember.last_name}`.trim()
         : 'Partner';
-      partnerMembershipId = await this.requireActiveMembership(
-        secondary.member_id,
-        today,
-        partnerLabel,
-      );
       await this.assertNoOtherOpenPt(secondary.member_id, startDate, endDate, partnerLabel);
     }
 
     return this.createPaidSubscription({
       memberId: primary.member_id,
       partnerMemberId: secondary?.member_id ?? null,
-      partnerMembershipId,
       product,
       trainerId: current.trainer_id,
-      membershipId,
       renewedFromId: primary.id,
       partnerRenewedFromId: secondary?.id ?? null,
       startDate,
@@ -343,10 +322,8 @@ export class PtSubscriptionService {
   private async createPaidSubscription(p: {
     memberId: number;
     partnerMemberId: number | null;
-    partnerMembershipId: number | null;
     product: PtProduct;
     trainerId: number;
-    membershipId: number;
     renewedFromId: number | null;
     partnerRenewedFromId: number | null;
     startDate: string;
@@ -387,6 +364,21 @@ export class PtSubscriptionService {
       );
 
       const now = new Date();
+
+      // ADR-0012: PT includes a membership of the same duration (created or extended).
+      const bundle = await this.membershipService.bundleForPt({
+        memberIds,
+        startDate: p.startDate,
+        endDate: p.endDate,
+        durationDays: p.product.duration_days,
+        today: p.today,
+        actor: p.actor,
+        now,
+      });
+      const membershipId = bundle.membershipIds.get(p.memberId)!;
+      const partnerMembershipId =
+        p.partnerMemberId != null ? bundle.membershipIds.get(p.partnerMemberId)! : null;
+
       const weekdays = [...p.weekdays].sort((a, b) => a - b);
       const status = p.startDate <= p.today ? 'active' : 'scheduled';
       const shared = {
@@ -405,18 +397,18 @@ export class PtSubscriptionService {
       const primaryId = await this.repository.insertSubscription({
         ...shared,
         member_id: p.memberId,
-        membership_id: p.membershipId,
+        membership_id: membershipId,
         renewed_from_id: p.renewedFromId,
         is_primary: true,
         partner_subscription_id: null,
       });
 
       let partnerId: number | null = null;
-      if (p.partnerMemberId != null && p.partnerMembershipId != null) {
+      if (p.partnerMemberId != null && partnerMembershipId != null) {
         partnerId = await this.repository.insertSubscription({
           ...shared,
           member_id: p.partnerMemberId,
-          membership_id: p.partnerMembershipId,
+          membership_id: partnerMembershipId,
           renewed_from_id: p.partnerRenewedFromId,
           is_primary: false,
           partner_subscription_id: primaryId,
@@ -468,8 +460,10 @@ export class PtSubscriptionService {
           afterState: { ...partnerRow, payment_id: payment.id, sessions: windows.length },
         });
       }
-      return { created, payment };
+      return { created, payment, membershipEvents: bundle.events };
     });
+
+    await this.membershipService.emitEvents(result.membershipEvents);
 
     return { subscription: await this.present(result.created, p.actor), payment: result.payment };
   }
@@ -732,21 +726,6 @@ export class PtSubscriptionService {
     const product = await this.productRepository.findById(id);
     if (!product || !product.is_active) throw new NotFoundError('PT package not found or inactive');
     return product;
-  }
-
-  /** PT can only be added while the member's gym membership is active and not past its end date. */
-  private async requireActiveMembership(
-    memberId: number,
-    today: string,
-    who = 'Member',
-  ): Promise<number> {
-    const membership = await this.membershipRepository.findActiveOrFrozenForMember(memberId);
-    if (!membership || membership.status !== 'active' || membership.end_date < today) {
-      throw new BusinessRuleError(
-        `${who} needs an active, unexpired membership to add Personal Training`,
-      );
-    }
-    return membership.id;
   }
 
   private async assertNoOtherOpenPt(

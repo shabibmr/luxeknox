@@ -118,7 +118,7 @@ describe('MembershipService', () => {
       findPartner: vi.fn(),
       setPairedFreeze: vi.fn().mockResolvedValue(undefined),
     };
-    productRepository = { findById: vi.fn() };
+    productRepository = { findById: vi.fn(), findByCode: vi.fn() };
     memberRepository = { findById: vi.fn().mockImplementation(async (id: number) => ({ id, user_id: 10 })) };
     auditService = { recordAudit: vi.fn().mockResolvedValue(undefined) };
     domainEventBus = { emit: vi.fn().mockResolvedValue(undefined) };
@@ -375,6 +375,142 @@ describe('MembershipService', () => {
           }),
         );
       });
+    });
+  });
+
+  describe('bundleForPt (ADR-0012)', () => {
+    const bundle = (overrides: Record<string, unknown> = {}) =>
+      service.bundleForPt({
+        memberIds: [100],
+        startDate: '2026-10-05',
+        endDate: '2026-11-04',
+        durationDays: 30,
+        today: '2026-10-01',
+        actor: ADMIN_USER,
+        now: new Date('2026-10-01T08:00:00.000Z'),
+        ...overrides,
+      });
+
+    beforeEach(() => {
+      productRepository.findByCode.mockResolvedValue(makeProduct({ id: 9, code: 'PT-BUNDLE', is_active: false }));
+      repository.insertMembership.mockResolvedValue(501);
+    });
+
+    it('creates a PT-BUNDLE membership spanning the PT period when the member has none', async () => {
+      const { membershipIds, events } = await bundle();
+
+      expect(productRepository.findByCode).toHaveBeenCalledWith('PT-BUNDLE');
+      expect(repository.insertMembership).toHaveBeenCalledWith(
+        expect.objectContaining({
+          member_id: 100,
+          product_id: 9,
+          start_date: '2026-10-05',
+          end_date: '2026-11-04',
+          status: 'active',
+        }),
+      );
+      expect(repository.insertHistory).toHaveBeenCalledWith(
+        expect.objectContaining({ membership_id: 501, action: 'created', new_end_date: '2026-11-04' }),
+      );
+      expect(paymentService.create).not.toHaveBeenCalled();
+      expect(membershipIds.get(100)).toBe(501);
+      expect(events.map((e) => e.eventName)).toEqual(['membership.created']);
+    });
+
+    it('fails clearly when the PT-BUNDLE product is missing', async () => {
+      productRepository.findByCode.mockResolvedValue(null);
+      await expect(bundle()).rejects.toThrow(/PT-BUNDLE.*run migrations/);
+      expect(repository.insertMembership).not.toHaveBeenCalled();
+    });
+
+    it('adds the PT duration after the end of a running membership', async () => {
+      repository.findActiveOrFrozenForMember.mockResolvedValue(
+        makeMembership({ id: 7, end_date: '2026-10-20' }),
+      );
+      const { membershipIds, events } = await bundle();
+
+      expect(repository.insertMembership).not.toHaveBeenCalled();
+      expect(repository.updateMembership).toHaveBeenCalledWith(
+        7,
+        expect.objectContaining({ end_date: '2026-11-20', status: 'active' }),
+        1,
+      );
+      expect(repository.insertHistory).toHaveBeenCalledWith(
+        expect.objectContaining({ membership_id: 7, action: 'renewed', new_end_date: '2026-11-20' }),
+      );
+      expect(membershipIds.get(100)).toBe(7);
+      expect(events.map((e) => e.eventName)).toEqual(['membership.renewed']);
+    });
+
+    it('starts the added period today when the membership has already lapsed', async () => {
+      repository.findActiveOrFrozenForMember.mockResolvedValue(
+        makeMembership({ id: 7, end_date: '2026-09-20' }),
+      );
+      await bundle();
+      expect(repository.updateMembership).toHaveBeenCalledWith(
+        7,
+        expect.objectContaining({ end_date: '2026-10-31' }),
+        1,
+      );
+    });
+
+    it('rejects a frozen membership without writing anything', async () => {
+      repository.findActiveOrFrozenForMember.mockResolvedValue(makeMembership({ id: 7, status: 'frozen' }));
+      await expect(bundle()).rejects.toBeInstanceOf(BusinessRuleError);
+      expect(repository.updateMembership).not.toHaveBeenCalled();
+      expect(repository.insertMembership).not.toHaveBeenCalled();
+    });
+
+    it('extends both rows of a linked couple membership together', async () => {
+      const row = makeMembership({ id: 7, member_id: 100, end_date: '2026-10-20', partner_membership_id: 8 });
+      const partner = makeMembership({
+        id: 8,
+        member_id: 200,
+        end_date: '2026-10-20',
+        partner_membership_id: 7,
+      });
+      repository.findActiveOrFrozenForMember.mockResolvedValue(row);
+      repository.findPartner.mockResolvedValue(partner);
+
+      const { events } = await bundle();
+
+      expect(repository.updateMembership).toHaveBeenCalledTimes(2);
+      expect(repository.updateMembership).toHaveBeenCalledWith(7, expect.objectContaining({ end_date: '2026-11-20' }), 1);
+      expect(repository.updateMembership).toHaveBeenCalledWith(8, expect.objectContaining({ end_date: '2026-11-20' }), 1);
+      expect(events).toHaveLength(2);
+    });
+
+    it('extends a couple pair once when both members buy a couple PT', async () => {
+      const row = makeMembership({ id: 7, member_id: 100, end_date: '2026-10-20', partner_membership_id: 8 });
+      const partner = makeMembership({
+        id: 8,
+        member_id: 200,
+        end_date: '2026-10-20',
+        partner_membership_id: 7,
+      });
+      repository.findActiveOrFrozenForMember.mockImplementation(async (memberId: number) =>
+        memberId === 100 ? row : partner,
+      );
+      repository.findPartner.mockImplementation(async (m: Membership) => (m.id === 7 ? partner : row));
+
+      const { membershipIds } = await bundle({ memberIds: [100, 200] });
+
+      expect(repository.updateMembership).toHaveBeenCalledTimes(2);
+      expect(membershipIds.get(100)).toBe(7);
+      expect(membershipIds.get(200)).toBe(8);
+    });
+
+    it('bundles a new membership for one member and extends the other', async () => {
+      repository.findActiveOrFrozenForMember.mockImplementation(async (memberId: number) =>
+        memberId === 200 ? makeMembership({ id: 8, member_id: 200, end_date: '2026-10-20' }) : null,
+      );
+
+      const { membershipIds } = await bundle({ memberIds: [100, 200] });
+
+      expect(membershipIds.get(100)).toBe(501);
+      expect(membershipIds.get(200)).toBe(8);
+      expect(repository.insertMembership).toHaveBeenCalledTimes(1);
+      expect(repository.updateMembership).toHaveBeenCalledTimes(1);
     });
   });
 
