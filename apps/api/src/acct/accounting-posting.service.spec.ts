@@ -501,3 +501,120 @@ describe('AccountingPostingService.reverseJournal', () => {
     expect(repository.insertJournalEntry).not.toHaveBeenCalled();
   });
 });
+
+describe('AccountingPostingService.postUserJournal', () => {
+  let service: AccountingPostingService;
+  let repository: Record<string, ReturnType<typeof vi.fn>>;
+  const db = {} as any;
+
+  const openPeriod = {
+    id: 7,
+    fiscal_year_id: 1,
+    starts_on: '2026-04-01',
+    ends_on: '2026-04-30',
+    status: 'open' as const,
+    closed_at: null,
+    closed_by_user_id: null,
+  };
+
+  beforeEach(() => {
+    repository = {
+      allocateJournalNumber: vi.fn().mockResolvedValue('JRN00000001'),
+      findPeriodForDate: vi.fn().mockResolvedValue(openPeriod),
+      findBySource: vi.fn().mockResolvedValue(null),
+      insertJournalEntry: vi.fn().mockImplementation(async (row) => ({
+        id: 50,
+        row_version: 1,
+        created_at: new Date('2026-04-15T10:00:00.000Z'),
+        updated_at: null,
+        reverses_journal_id: null,
+        ...row,
+      })),
+      insertJournalLines: vi.fn().mockImplementation(async (rows) =>
+        rows.map((row: Record<string, unknown>, index: number) => ({
+          id: index + 1,
+          ...row,
+        })),
+      ),
+      findEntryWithLines: vi.fn(),
+    };
+
+    service = new AccountingPostingService(repository as any, db);
+  });
+
+  it('rejects fewer than two lines before allocating a journal number', async () => {
+    await expect(
+      service.postUserJournal({
+        entryDate: '2026-04-15',
+        sourceType: 'manual',
+        lines: [{ accountId: 1000, debit: '100.00', credit: '0.00' }],
+      }),
+    ).rejects.toBeInstanceOf(BadRequestError);
+
+    expect(repository.allocateJournalNumber).not.toHaveBeenCalled();
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+  });
+
+  it('posts a manual journal using the journal number digits as source_id', async () => {
+    const result = await service.postUserJournal({
+      entryDate: '2026-04-15',
+      sourceType: 'manual',
+      memo: 'Adjust rent',
+      postedByUserId: 9,
+      lines: [
+        { accountId: 5000, debit: '100.00', credit: '0.00' },
+        { accountId: 1000, debit: '0.00', credit: '100.00' },
+      ],
+    });
+
+    expect(repository.findPeriodForDate).toHaveBeenCalledWith('2026-04-15');
+    expect(repository.allocateJournalNumber).toHaveBeenCalledOnce();
+    expect(repository.insertJournalEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        journal_number: 'JRN00000001',
+        source_type: 'manual',
+        source_id: 1,
+        memo: 'Adjust rent',
+        posted_by_user_id: 9,
+      }),
+    );
+    expect(result.journal_number).toBe('JRN00000001');
+    expect(result.lines).toHaveLength(2);
+  });
+
+  it('rejects an unbalanced user journal before allocating a number', async () => {
+    await expect(
+      service.postUserJournal({
+        entryDate: '2026-04-15',
+        sourceType: 'manual',
+        lines: [
+          { accountId: 5000, debit: '100.00', credit: '0.00' },
+          { accountId: 1000, debit: '0.00', credit: '99.00' },
+        ],
+      }),
+    ).rejects.toBeInstanceOf(BusinessRuleError);
+
+    expect(repository.allocateJournalNumber).not.toHaveBeenCalled();
+  });
+
+  it('posts an opening_balance journal', async () => {
+    repository.allocateJournalNumber.mockResolvedValue('JRN00000042');
+
+    await service.postUserJournal({
+      entryDate: '2026-03-31',
+      sourceType: 'opening_balance',
+      lines: [
+        { accountId: 1000, debit: '5000.00', credit: '0.00' },
+        { accountId: 3000, debit: '0.00', credit: '5000.00' },
+      ],
+    });
+
+    expect(repository.insertJournalEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        source_type: 'opening_balance',
+        source_id: 42,
+        journal_number: 'JRN00000042',
+      }),
+    );
+  });
+});

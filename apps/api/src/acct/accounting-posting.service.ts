@@ -42,6 +42,14 @@ export type ReverseJournalInput = {
   postedByUserId?: number | null;
 };
 
+export type PostUserJournalInput = {
+  entryDate: string;
+  sourceType: 'manual' | 'opening_balance';
+  memo?: string | null;
+  postedByUserId?: number | null;
+  lines: PostJournalLineInput[];
+};
+
 type NormalizedLine = {
   accountId: number;
   debit: string;
@@ -107,6 +115,68 @@ export class AccountingPostingService {
         accounting_period_id: period.id,
         source_type: input.sourceType,
         source_id: input.sourceId,
+        memo: input.memo ?? null,
+        posted_at: now,
+        posted_by_user_id: input.postedByUserId ?? null,
+        reverses_journal_id: null,
+        created_at: now,
+      });
+
+      const lines = await this.accountingRepository.insertJournalLines(
+        normalized.map((line) => ({
+          journal_entry_id: entry.id,
+          account_id: line.accountId,
+          debit: line.debit,
+          credit: line.credit,
+          memo: line.memo,
+          member_id: line.memberId,
+          vendor_id: line.vendorId,
+        })),
+      );
+
+      return { ...entry, lines };
+    });
+  }
+
+  /**
+   * Post a user-entered manual or opening-balance journal.
+   * Requires at least two lines. Allocates the journal number first and uses
+   * its numeric suffix as `source_id` so `(source_type, source_id)` stays unique.
+   */
+  async postUserJournal(input: PostUserJournalInput): Promise<JournalEntryWithLines> {
+    if (!Array.isArray(input.lines) || input.lines.length < 2) {
+      throw new BadRequestError('Journal must have at least two lines');
+    }
+    if (input.sourceType !== 'manual' && input.sourceType !== 'opening_balance') {
+      throw new BadRequestError('source_type must be manual or opening_balance');
+    }
+
+    return runInTransaction(this.db, async () => {
+      const normalized = this.normalizeAndValidateLines(input.lines);
+
+      const period = await this.accountingRepository.findPeriodForDate(input.entryDate);
+      if (!period) {
+        throw new NotFoundError(`No accounting period covers ${input.entryDate}`);
+      }
+      if (period.status === 'locked') {
+        throw new BusinessRuleError(
+          `Accounting period ${period.starts_on} to ${period.ends_on} is locked`,
+        );
+      }
+
+      const journalNumber = await this.accountingRepository.allocateJournalNumber();
+      const sourceId = Number(journalNumber.replace(/\D/g, ''));
+      if (!Number.isFinite(sourceId) || sourceId < 1) {
+        throw new BadRequestError(`Invalid journal number ${journalNumber}`);
+      }
+
+      const now = new Date();
+      const entry = await this.accountingRepository.insertJournalEntry({
+        journal_number: journalNumber,
+        entry_date: input.entryDate,
+        accounting_period_id: period.id,
+        source_type: input.sourceType,
+        source_id: sourceId,
         memo: input.memo ?? null,
         posted_at: now,
         posted_by_user_id: input.postedByUserId ?? null,

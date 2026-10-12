@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, eq, lte, gte, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, lte, sql, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
@@ -114,5 +114,40 @@ export class AccountingRepository extends BaseRepository<
     if (!entry) return null;
     const lines = await this.listLines(id);
     return { ...entry, lines };
+  }
+
+  async findMany(params: {
+    from?: string;
+    to?: string;
+    sourceType?: string;
+    limit: number;
+    offset: number;
+  }): Promise<{ rows: JournalEntry[]; total: number }> {
+    const db = this.getDb() as any;
+    const conditions: SQL[] = [];
+    if (params.from) {
+      conditions.push(gte(journalEntries.entry_date, params.from));
+    }
+    if (params.to) {
+      conditions.push(lte(journalEntries.entry_date, params.to));
+    }
+    if (params.sourceType) {
+      conditions.push(eq(journalEntries.source_type, params.sourceType));
+    }
+    const where = conditions.length ? and(...conditions) : undefined;
+
+    let listQ = db.select().from(journalEntries);
+    let countQ = db.select({ value: count() }).from(journalEntries);
+    if (where) {
+      listQ = listQ.where(where);
+      countQ = countQ.where(where);
+    }
+
+    const rows = await listQ
+      .orderBy(desc(journalEntries.entry_date), desc(journalEntries.id))
+      .limit(params.limit)
+      .offset(params.offset);
+    const totalRows = await countQ;
+    return { rows, total: Number(totalRows[0]?.value ?? 0) };
   }
 }

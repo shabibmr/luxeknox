@@ -46,7 +46,7 @@ Later rows stay `[>]` until a new plan pulls them in.
 | ACC-022 | `[x]` | Enforce unique `(source_type, source_id)` | ACC-021 | A second post returns the original journal and writes nothing new |
 | ACC-023 | `[x]` | Reject a post whose date falls in a locked period | ACC-021 | The source transaction rolls back |
 | ACC-024 | `[x]` | Reverse a posted journal | ACC-021 | The reversal swaps debit and credit, links `reverses_journal_id`, and does not edit the original |
-| ACC-025 | `[ ]` | Manual journal and opening-balance journal endpoints | ACC-021, ACC-016 | `accounting.journals_write` required. Fewer than two lines is rejected |
+| ACC-025 | `[x]` | Manual journal and opening-balance journal endpoints | ACC-021, ACC-016 | `accounting.journals_write` required. Fewer than two lines is rejected |
 | ACC-026 | `[ ]` | Vitest for balance, replay, locked period, and reversal | ACC-022, ACC-023, ACC-024 | `pnpm --filter api exec vitest run src/acct` passes |
 
 ## Phase 3 — Masters
@@ -163,8 +163,8 @@ One person owns a shared file even when the wave lists the tasks together:
 
 | Marker | Count |
 |---|---|
-| `[ ]` TODO | 37 |
+| `[ ]` TODO | 36 |
 | `[~]` DOING | 0 |
-| `[x]` DONE | 15 |
+| `[x]` DONE | 16 |
 | `[!]` BLOCKED | 0 |
 | `[>]` LATER | 6 |
