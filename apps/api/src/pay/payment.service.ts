@@ -1,4 +1,5 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import { Inject, Injectable, Optional, forwardRef } from '@nestjs/common';
+import { SalesBridgeService } from '../acct/sales-bridge.service';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { MembershipProductRepository } from '../memb/membership-product.repository';
 import { MembershipRepository } from '../memb/membership.repository';
@@ -56,6 +57,8 @@ export class PaymentService {
     private readonly paginationHelper: PaginationHelper,
     @Inject(DRIZZLE_DB_TOKEN)
     private readonly db: DrizzleDb<any>,
+    @Optional()
+    private readonly salesBridgeService?: SalesBridgeService,
   ) {}
 
   private listScope(actor: AuthenticatedUser): PaymentListScope {
@@ -282,6 +285,13 @@ export class PaymentService {
         updated_at: now,
       });
 
+      if (this.salesBridgeService) {
+        await this.salesBridgeService.onInvoiceCreated(created, {
+          productId: dto.product_id,
+          startDate: dto.start_date,
+        });
+      }
+
       const histories: PaymentHistory[] = [];
       for (const tender of tenders) {
         const history = await this.repository.insertHistory({
@@ -293,6 +303,10 @@ export class PaymentService {
           timestamp: now,
         });
         histories.push(history);
+
+        if (this.salesBridgeService) {
+          await this.salesBridgeService.onPaymentReceived(history, created);
+        }
       }
 
       if (status === 'paid') {
@@ -444,6 +458,13 @@ export class PaymentService {
         updated_at: now,
       });
 
+      if (this.salesBridgeService) {
+        await this.salesBridgeService.onRefund(row, history, {
+          paymentMethodId: dto.payment_method_id ?? null,
+          notes: dto.notes ?? null,
+        });
+      }
+
       await this.auditService.recordAudit({
         actorUserId: actor.id,
         action: 'payment.refunded',
@@ -508,6 +529,14 @@ export class PaymentService {
         row_version: row.row_version + 1,
         updated_at: now,
       });
+
+      if (this.salesBridgeService) {
+        await this.salesBridgeService.onAdjustment(row, history, {
+          adjustmentAmount: amount,
+          newTotal,
+          notes: dto.notes ?? null,
+        });
+      }
 
       const histories = await this.repository.listHistories(id);
 

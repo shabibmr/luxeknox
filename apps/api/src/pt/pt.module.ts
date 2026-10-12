@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AcctModule } from '../acct/acct.module';
 import { JobModule } from '../job/job.module';
 import { MembModule } from '../memb/memb.module';
 import { PayModule } from '../pay/pay.module';
@@ -28,6 +29,7 @@ import { PtSubscriptionService } from './pt-subscription.service';
     SchedModule,
     PayModule,
     PtAccessModule,
+    AcctModule,
   ],
   controllers: [PtProductController, PtSubscriptionController],
   providers: [PtProductRepository, PtProductService, PtScheduleService, PtSubscriptionService, PtJobsService],

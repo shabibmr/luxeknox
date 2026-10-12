@@ -25,6 +25,8 @@ Inventory, bank reconciliation, payroll, and fixed assets are named in the regis
 10. **Parties.** Members remain the sales party. Vendors are new. A walk-in sale stays a member sale in `payments`.
 11. **Accounts receivable and accounts payable** are the open sales invoices and unpaid bills sitting on control accounts. They are not extra balance tables.
 12. **Admin and super_admin** receive every new permission. Other roles receive none until someone grants them.
+13. **Recognition follows the term.** Revenue is prorated by day and posted once a month. A freeze, extension, upgrade, renewal, or cancellation re-plans the remaining schedule. Unearned revenue left on a cancelled term with no refund moves to forfeited income (`4300`).
+14. **Go-live carries unearned revenue forward.** Memberships and PT terms still running at go-live get recognition schedules for their unexpired share. The opening journal's `2200` and `2210` balances must equal those schedules before posting can be enabled.
 
 ## What already exists
 
@@ -57,6 +59,7 @@ Use these. Do not replace them.
 - Budgets, cost centres, multi-currency, multi-gym.
 - Member-facing accounting screens. Members keep the payments ledger.
 - Rewriting POS. POS still writes `payments` and `payment_histories`.
+- TDS on rent and contractor fees, and GST return filing. The GST summary report gives the figures. Filing stays manual.
 
 ## Posting rules
 
@@ -82,6 +85,17 @@ A product with `income_account_id` set uses that account instead of the default 
 Debit the cash or bank account linked from `payment_methods.account_id`. Credit accounts receivable. `source_type = sales_receipt`, `source_id = payment_histories.id`.
 
 A missing `account_id` on an active method blocks the post with a clear error once posting is enabled. Seeding must set the link before the flag is turned on.
+
+Cash links to `1000`. Card and UPI methods link to `1020 Card/UPI clearing`, not to the bank. The money reaches the bank later, less the processor fee, through a fund transfer (below).
+
+### Adjustment (`payment_histories.action = adjusted`)
+
+An adjustment changes `payments.total_amount` after the invoice has posted. The books must follow.
+
+- **Decrease:** write and post a credit note for the adjustment amount. Split it between net and tax in the invoice's net-to-tax proportion. Credit receivable. Shrink the recognition schedule's `total_amount` by the net share.
+- **Increase:** post a supplementary journal. Debit receivable. Credit tax and the invoice's unearned or income account in the same proportion. Grow the schedule by the net share. `source_type = sales_adjustment`, `source_id = payment_histories.id`.
+
+A decrease larger than the unrecognized balance on the schedule is rejected. The operator must refund instead.
 
 ### Refund (`payment_histories.action = refunded`)
 
@@ -111,9 +125,41 @@ Debit accounts payable for each allocation. Credit bank or cash for the voucher 
 
 Debit accounts payable. Credit the bill line accounts and input tax. `source_type = debit_note`.
 
+### Fund transfer
+
+Moves money between two `is_bank` accounts: counter cash deposited to the bank, bank to bank, or a card/UPI settlement from `1020` to the bank. Credit the source account for the gross amount. Debit the destination for the gross minus the fee. Debit the fee account (`5500 Bank and processor charges` by default) for the fee when the fee is greater than zero. Source and destination must differ. `source_type = fund_transfer`.
+
 ### Recognition
 
-For each unearned credit, write `revenue_recognition_schedules` for the membership or PT term: start date, end date, total net, amount already recognized. The monthly job `accounting.recognize_revenue` posts, for each open schedule, that month's straight-line share: debit unearned, credit the income account (`4000`, `4100`, or the product `income_account_id`). The last month takes the remainder so the schedule ends at zero. `source_type = revenue_recognition`, `source_id = schedule line id`. The job is safe to run twice in the same month.
+For each unearned credit, write `revenue_recognition_schedules` for the membership or PT term: start date, end date, total net, amount already recognized, `recognized_through`, and `status` (`open`, `paused`, `closed`).
+
+The monthly job `accounting.recognize_revenue` posts, for each `open` schedule, the share for the days from `recognized_through + 1` to the earlier of month end and `ends_on`. The share is the remaining amount times the days in that span, divided by the days left in the term, rounded half-up. Debit unearned, credit the income account (`4000`, `4100`, or the product `income_account_id`). The last span takes the remainder so the schedule ends at zero. `source_type = revenue_recognition`, `source_id = schedule line id`. The job is safe to run twice in the same month. A member who joins on the 20th earns 11 of 30 days in their first month, not a whole month.
+
+The schedule is re-planned whenever the term changes. Recognition already posted stays posted. Only the remaining amount moves.
+
+| Event | Schedule change |
+|---|---|
+| Freeze approved | `paused` from the freeze start. No recognition for frozen days |
+| Freeze ends | `open` again. `ends_on` moves out by the frozen days, matching the membership end date |
+| Extend | `ends_on` moves to the new end date. Remaining amount spreads over the longer term |
+| Upgrade | The original schedule keeps its remaining amount on the new end date. The upgrade invoice gets its own schedule from the upgrade date to the new end date |
+| Renew | The renewal invoice gets its own schedule. The old one is untouched |
+| Cancel with refund | The credit note reduces the schedule. What is left is forfeited, as below |
+| Cancel without refund | Post the remaining unearned amount: debit unearned, credit `4300 Forfeited membership income`. Schedule becomes `closed`. `source_type = recognition_forfeit`, `source_id = schedule id` |
+
+### Go-live
+
+Before enabling posting, `GET /accounting/go-live/unearned-preview` lists each running membership and PT term with a paid or partly paid `payments` row and its unexpired net share, computed the same way as the recognition job. The totals per account (`2200`, `2210`) are what the opening journal must carry.
+
+Enabling posting, in one transaction:
+
+1. Checks that every active payment method has an `account_id`.
+2. Checks that `gym_settings.tax_rate_percent` equals the rate on `accounting.default_tax_code`.
+3. Checks that an `opening_balance` journal is posted and that its `2200` and `2210` balances equal the preview totals.
+4. Writes the go-live recognition schedules with `recognized_through` set to the day before go-live.
+5. Sets `accounting.posting_enabled = true`.
+
+A failing check returns every reason at once, not only the first.
 
 ### Manual journal and opening balances
 
@@ -121,7 +167,7 @@ For each unearned credit, write `revenue_recognition_schedules` for the membersh
 
 ### Period lock
 
-`accounting_periods.status` is `open` or `locked`. Close sets `locked`, stamps `closed_at` and `closed_by_user_id`, and requires a balanced trial balance through that period (debits equal credits). Unlock is a separate permission and writes an audit row. The current open period is the only period that accepts posts, plus any earlier period that is still `open`.
+`accounting_periods.status` is `open` or `locked`. Close sets `locked`, stamps `closed_at` and `closed_by_user_id`, and requires a balanced trial balance through that period (debits equal credits). While posting is enabled, lock also requires that `accounting.recognize_revenue` has posted for the period, so the month's earned revenue is in before the books close. The trial-balance query is one function, shared by period lock and the trial balance report. Unlock is a separate permission and writes an audit row. The current open period is the only period that accepts posts, plus any earlier period that is still `open`.
 
 ## Data model
 
@@ -146,8 +192,9 @@ All new tables live in `apps/api/src/platform/db/schema/accounting.ts`, exported
 | `payment_allocations` | `payment_voucher_id`, `purchase_bill_id` or `expense_voucher_id`, amount |
 | `credit_notes` | `payment_id`, date, reason, totals, status, `journal_entry_id` |
 | `debit_notes` | `purchase_bill_id`, date, reason, totals, status, `journal_entry_id` |
-| `revenue_recognition_schedules` | `payment_id`, unearned account, income account, `total_amount`, `recognized_amount`, `starts_on`, `ends_on` |
+| `revenue_recognition_schedules` | `payment_id`, unearned account, income account, `total_amount`, `recognized_amount`, `starts_on`, `ends_on`, `recognized_through`, `status` (`open`, `paused`, `closed`), `paused_from` nullable |
 | `revenue_recognition_lines` | Schedule, period, amount, `journal_entry_id` |
+| `fund_transfers` | Number, date, `from_account_id`, `to_account_id`, `amount`, `fee_amount` default `0.00`, `fee_account_id` nullable, memo, status (`draft`, `posted`), `journal_entry_id`, `row_version` |
 
 Alter, do not rebuild:
 
@@ -156,7 +203,9 @@ Alter, do not rebuild:
 | `account_id` nullable FK to `accounts` | `payment_methods` |
 | `income_account_id` nullable FK to `accounts` | membership products and PT products |
 
-Counters, same shape as `invoice_number_counters`: journal, purchase bill, expense, payment voucher, credit note, debit note.
+Counters, same shape as `invoice_number_counters`: journal, purchase bill, expense, payment voucher, credit note, debit note, fund transfer.
+
+The app is still in development. Schema additions edit `0025_accounting.sql` in place and the local database is reset. No follow-up migration.
 
 Seeded account codes:
 
@@ -164,6 +213,7 @@ Seeded account codes:
 |---|---|---|
 | 1000 | Cash | asset, bank |
 | 1010 | Bank | asset, bank |
+| 1020 | Card/UPI clearing | asset, bank |
 | 1100 | Accounts receivable | asset, control `ar` |
 | 1300 | Input tax | asset, control `input_tax` |
 | 2000 | Accounts payable | liability, control `ap` |
@@ -177,13 +227,16 @@ Seeded account codes:
 | 4000 | Membership revenue | income |
 | 4100 | Personal training revenue | income |
 | 4200 | Other sales | income |
+| 4300 | Forfeited membership income | income |
 | 4900 | Sales discounts | income (debit balance) |
 | 5000 | Rent | expense |
 | 5100 | Utilities | expense |
 | 5200 | Salaries | expense |
 | 5300 | Supplies | expense |
 | 5400 | Repairs and maintenance | expense |
+| 5500 | Bank and processor charges | expense |
 | 5900 | General expense | expense |
+| 5950 | Rounding off | expense |
 
 Settings keys, added to the settings catalogue:
 
@@ -206,7 +259,7 @@ Permissions, module `ACCT`:
 | `accounting.vendors_write` | Vendors |
 | `accounting.purchases_write` | Bills and debit notes |
 | `accounting.expenses_write` | Expense vouchers |
-| `accounting.payments_write` | Payment vouchers |
+| `accounting.payments_write` | Payment vouchers and fund transfers |
 | `accounting.journals_write` | Manual journals and opening balances |
 | `accounting.periods_close` | Lock and unlock a period |
 | `accounting.posting_toggle` | Flip `accounting.posting_enabled` |
@@ -218,17 +271,20 @@ Routes, all under `/accounting`:
 - `GET/POST /vendors`, `PATCH /vendors/:id`
 - `GET/POST /items`, `PATCH /items/:id`
 - `GET /fiscal-years`, `GET /periods`, `POST /periods/:id/lock`, `POST /periods/:id/unlock`
-- `GET/POST /journals`, `GET /journals/:id`, `POST /journals/:id/reverse`
+- `GET/POST /journals`, `GET /journals/:id`, `POST /journals/:id/reverse`. The list also filters by `payment_id`, which returns every journal for that payment: invoice, receipts, credit notes, adjustments, and recognition
 - `GET/POST /purchase-bills`, `GET /purchase-bills/:id`, `POST /purchase-bills/:id/post`
 - `GET/POST /expenses`, `GET /expenses/:id`, `POST /expenses/:id/post`
 - `GET/POST /payment-vouchers`, `GET /payment-vouchers/:id`, `POST /payment-vouchers/:id/post`
 - `GET/POST /credit-notes`, `POST /credit-notes/:id/post`
 - `GET/POST /debit-notes`, `POST /debit-notes/:id/post`
+- `GET/POST /fund-transfers`, `GET /fund-transfers/:id`, `POST /fund-transfers/:id/post`
+- `GET /go-live/unearned-preview` (`accounting.read`)
 - `GET /reports/trial-balance?from&to`
 - `GET /reports/profit-and-loss?from&to`
 - `GET /reports/balance-sheet?as_of`
 - `GET /reports/day-book?date`
 - `GET /reports/open-items?kind=ar|ap`
+- `GET /reports/gst-summary?from&to`
 
 `POST` of money documents accepts `Idempotency-Key`, same interceptor as payments. List endpoints use the existing pagination DTO. Optimistic concurrency uses `row_version` and returns 409.
 
@@ -239,6 +295,7 @@ Reports:
 - Balance sheet: asset, liability, and equity as of a date. Current-year earnings is income minus expense since the fiscal year start, shown under equity, so the sheet balances.
 - Day book: journals on one date.
 - Open items: invoices with `total_amount > amount_paid` for AR. Bills whose allocations are less than the total for AP.
+- GST summary: for the range, taxable value and output CGST, SGST, and IGST by tax code, then input tax credit from bills and expenses, then net payable. This gives the figures for GSTR-3B. Read from `journal_lines` on the tax control accounts, with taxable value taken from the source documents.
 
 After the controllers exist, run `pnpm --filter api openapi:dump` and regenerate `packages/api_client`. `openapi:check` must pass.
 
@@ -255,9 +312,12 @@ Screens:
 - Purchase bill list, form, detail, post.
 - Expense list, form, detail, post.
 - Payment voucher list, form, post.
+- Fund transfer list, form, post. Covers cash deposits and card/UPI settlements with a fee.
 - Credit note and debit note detail.
-- Trial balance, profit and loss, balance sheet, day book.
+- Trial balance, profit and loss, balance sheet, day book, GST summary.
 - Period list with lock.
+- Go-live setup: map each payment method to an account, show the unearned preview, show whether the opening journal matches, then enable posting. Every failing check is listed.
+- Existing payment detail screen: a read-only "Journals" link listing the journals for that payment, shown only with `accounting.read`.
 
 Add an Accounting destination to the admin shell in `admin_routes.dart` and the route constants. Hide it when the principal lacks `accounting.read`.
 
@@ -267,7 +327,7 @@ Strings live in `accounting_strings.dart`. Money display uses the existing curre
 
 **New**
 
-- `docs/adr/0010-accounting-ledger.md` — records the twelve decisions above.
+- `docs/adr/0010-accounting-ledger.md` — records the fourteen decisions above.
 - `apps/api/src/platform/db/schema/accounting.ts`
 - `apps/api/drizzle/0025_accounting.sql`
 - `apps/api/src/platform/db/seed/accounting.ts`
@@ -282,7 +342,9 @@ Strings live in `accounting_strings.dart`. Money display uses the existing curre
 - Membership product and PT product schema — `income_account_id`.
 - `apps/api/src/platform/db/seed/index.ts`, `permissions.ts`, `roles.ts`.
 - `apps/api/src/sys/settings.dto.ts` — three accounting keys.
-- `apps/api/src/pay/payment.service.ts` — call the posting port after invoice insert, collection, and refund. The port is a no-op while posting is disabled.
+- `apps/api/src/pay/payment.service.ts` — call the posting port after invoice insert, collection, refund, and adjustment. The port is a no-op while posting is disabled.
+- `apps/api/src/memb/membership.service.ts` and `apps/api/src/pt/pt-subscription.service.ts` — call a recognition port on freeze approval, freeze end, extend, upgrade, renew, and cancel. No-op while posting is disabled.
+- `app/lib/features/payments/` — journal link on the payment detail.
 - `apps/api/src/app.module.ts` — import `AcctModule`.
 - `apps/api/src/job/` — register `accounting.recognize_revenue` on the existing monthly schedule pattern.
 - `docs/openapi/v1.yaml` and `packages/api_client/` via the generators.
@@ -299,6 +361,8 @@ Backend, from the repo root:
 
 The posting spec must cover: a balanced membership invoice, a collection, a full refund, a cash expense, a bill plus payment voucher, a rejected unbalanced journal, a rejected post into a locked period, a second post of the same source returning the original journal, and a recognition run that leaves the schedule at zero after the term.
 
+The bridge and recognition specs must also cover: an adjustment up and down, a mid-month start prorated by day, a freeze that pauses and then extends the schedule, a cancellation that forfeits to `4300`, a card settlement with a fee, and enabling posting refused when the opening unearned balance differs from the preview.
+
 Flutter:
 
 - `dart analyze` on `app/lib/features/accounting`
@@ -308,7 +372,9 @@ Database is MySQL 8.4 on `localhost:3308`. Apply the migration with the repo's e
 
 ## Risks
 
-- Turning posting on before every active payment method has an `account_id` will fail the next collection. The toggle endpoint must refuse to enable posting until that is true.
-- Header-level tax on `payments` cannot split CGST and SGST from a client amount. The bridge uses `accounting.default_tax_code` and recomputes. A one-rupee rounding gap versus the stored `payments.tax_amount` is posted to `5900` only when the recomputed tax differs, and the spec must show that gap explicitly.
+- Turning posting on before every active payment method has an `account_id` will fail the next collection. The toggle endpoint must refuse to enable posting until that is true, along with the other go-live checks.
+- Header-level tax on `payments` cannot split CGST and SGST from a client amount. The bridge uses `accounting.default_tax_code` and recomputes. A rounding gap of up to one rupee versus the stored `payments.tax_amount` is posted to `5950 Rounding off` only when the recomputed tax differs, and the spec must show that gap explicitly. A larger gap means the settings disagree, and the go-live check on `tax_rate_percent` prevents it.
+- Membership and PT services call into accounting for re-planning. Keep it one-way, like the payments port: `AcctModule` exports a recognition port and does not import `MembershipModule` or `PtModule`.
+- An adjustment that cuts below the recognized amount would leave negative unearned revenue. It is rejected, and the operator refunds instead.
 - Closing a period that still has draft bills does not post them. The lock response lists draft document counts so the operator can see them.
 - `PayModule` is already in a `forwardRef` cycle with membership and notifications. The posting port must be a one-way call from `PaymentService` into `AcctModule`, with `AcctModule` importing `PayModule` only if it must read payments. Prefer `AcctModule` exporting `AccountingPostingService` and `PayModule` importing `AcctModule`.

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SettingsController } from './settings.controller';
 import type { SettingsService } from './settings.service';
 import { BadRequestError } from '../platform/errors/app-error';
+import { parseSettingCategory } from './settings.dto';
 
 describe('SettingsController', () => {
   let controller: SettingsController;
@@ -11,10 +12,15 @@ describe('SettingsController', () => {
     mockSettingsService = {
       getTimezone: vi.fn().mockResolvedValue('Asia/Kolkata'),
       getCurrency: vi.fn().mockResolvedValue('INR'),
-      listSettings: vi.fn().mockResolvedValue([
-        { id: 1, setting_key: 'timezone', setting_value: 'Asia/Kolkata', category: 'general' },
-        { id: 2, setting_key: 'currency', setting_value: 'INR', category: 'billing' },
-      ]),
+      listSettings: vi.fn().mockImplementation(async (category?: string) => {
+        if (category && !parseSettingCategory(category)) {
+          throw new BadRequestError(`Unsupported settings category "${category}".`);
+        }
+        return [
+          { id: 1, setting_key: 'timezone', setting_value: 'Asia/Kolkata', category: 'general' },
+          { id: 2, setting_key: 'currency', setting_value: 'INR', category: 'billing' },
+        ];
+      }),
       updateSettings: vi.fn().mockResolvedValue([
         { id: 1, setting_key: 'timezone', setting_value: 'Asia/Kolkata', category: 'general' },
         { id: 2, setting_key: 'currency', setting_value: 'USD', category: 'billing' },

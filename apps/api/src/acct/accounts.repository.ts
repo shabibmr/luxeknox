@@ -29,6 +29,16 @@ export class AccountsRepository extends BaseRepository<
     return rows[0] ?? null;
   }
 
+  async findByControlRole(role: string): Promise<Account | null> {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select()
+      .from(accounts)
+      .where(eq(accounts.control_role, role))
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
   async findByIds(ids: number[]): Promise<Account[]> {
     if (ids.length === 0) return [];
     const db = this.getDb() as any;

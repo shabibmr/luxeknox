@@ -1,4 +1,5 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import { Inject, Injectable, Optional, forwardRef } from '@nestjs/common';
+import { RevenueRecognitionPortService } from '../acct/revenue-recognition-port.service';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { PaymentService } from '../pay/payment.service';
 import { AuditService } from '../platform/audit/audit.service';
@@ -63,6 +64,8 @@ export class MembershipService {
     private readonly paymentService: PaymentService,
     @Inject(DRIZZLE_DB_TOKEN)
     private readonly db: DrizzleDb<any>,
+    @Optional()
+    private readonly recognitionPort?: RevenueRecognitionPortService,
   ) {}
 
   private listScope(actor: AuthenticatedUser): MembershipListScope {
@@ -398,6 +401,13 @@ export class MembershipService {
         beforeState: { status: before.status },
         afterState: { status: 'cancelled', reason: dto.reason ?? null },
       });
+
+      if (this.recognitionPort) {
+        await this.recognitionPort.onMembershipCancelled({
+          membershipId: id,
+          cancelledByUserId: actor.id,
+        });
+      }
     });
 
     await this.domainEventBus.emit({
@@ -503,6 +513,13 @@ export class MembershipService {
           performed_by_user_id: actor.id,
           timestamp: now,
         });
+
+        if (this.recognitionPort) {
+          await this.recognitionPort.onFreezeApproved({
+            membershipId: id,
+            freezeStartDate: dto.start_date,
+          });
+        }
       }
 
       await this.auditService.recordAudit({
@@ -585,6 +602,13 @@ export class MembershipService {
         beforeState: { status: 'pending' },
         afterState: { status: 'approved' },
       });
+
+      if (this.recognitionPort) {
+        await this.recognitionPort.onFreezeApproved({
+          membershipId: freeze.membership_id,
+          freezeStartDate: freeze.start_date,
+        });
+      }
     });
 
     await this.domainEventBus.emit({
@@ -682,6 +706,13 @@ export class MembershipService {
         entityId: newExtensionId,
         afterState: { membership_id: id, days_extended: dto.days_extended },
       });
+
+      if (this.recognitionPort) {
+        await this.recognitionPort.onMembershipExtended({
+          membershipId: id,
+          newEndDate,
+        });
+      }
 
       return newExtensionId;
     });
@@ -826,6 +857,13 @@ export class MembershipService {
         beforeState: { end_date: existing.end_date },
         afterState: { end_date: newEndDate, via: 'payment' },
       });
+
+      if (this.recognitionPort) {
+        await this.recognitionPort.onMembershipUpgraded({
+          membershipId: existing.id,
+          newEndDate,
+        });
+      }
     });
 
     await this.domainEventBus.emit({
@@ -835,5 +873,53 @@ export class MembershipService {
     });
 
     return existing.id;
+  }
+
+  /** Unfreezes a frozen membership, restoring status to 'active' and unpausing recognition schedules. */
+  async unfreeze(id: number, actor: AuthenticatedUser): Promise<Membership> {
+    const membership = await this.repository.findById(id);
+    if (!membership) {
+      throw new NotFoundError('Membership not found');
+    }
+    if (membership.status !== 'frozen') {
+      throw new BusinessRuleError('Membership is not frozen');
+    }
+
+    const now = new Date();
+    await runInTransaction(this.db, async () => {
+      await this.repository.updateMembership(id, {
+        status: 'active',
+        row_version: membership.row_version + 1,
+        updated_at: now,
+      });
+
+      await this.repository.insertHistory({
+        membership_id: id,
+        action: 'status_changed',
+        old_end_date: membership.end_date,
+        new_end_date: membership.end_date,
+        performed_by_user_id: actor.id,
+        timestamp: now,
+      });
+
+      await this.auditService.recordAudit({
+        actorUserId: actor.id,
+        action: 'membership.unfrozen',
+        entityName: 'memberships',
+        entityId: id,
+        beforeState: { status: 'frozen' },
+        afterState: { status: 'active' },
+      });
+
+      if (this.recognitionPort) {
+        await this.recognitionPort.onFreezeEnded({
+          membershipId: id,
+          newEndDate: membership.end_date,
+        });
+      }
+    });
+
+    const updated = await this.repository.findById(id);
+    return updated!;
   }
 }

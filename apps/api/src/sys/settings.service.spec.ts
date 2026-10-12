@@ -5,6 +5,8 @@ import { BadRequestError } from '../platform/errors/app-error';
 import type { GymSetting } from '../platform/db/schema/gym-settings';
 import { SETTING_CATALOGUE, parseSettingCategory } from './settings.dto';
 import { SEED_GYM_SETTINGS } from '../platform/db/seed/settings';
+import { paymentMethods } from '../platform/db/schema/payments';
+import { taxCodes } from '../platform/db/schema/accounting';
 
 describe('SettingsService', () => {
   let mockRepository: Partial<SettingsRepository>;
@@ -325,6 +327,239 @@ describe('SettingsService', () => {
       expect(parseSettingCategory('gym')).toBe('general');
       expect(parseSettingCategory(' WORKOUT ')).toBe('workout');
       expect(parseSettingCategory('unknown')).toBeUndefined();
+    });
+  });
+
+  describe('ACC-054 accounting.posting_enabled prerequisite validation', () => {
+    const createMockDb = (options: {
+      paymentMethods?: Array<{ id: number; method_name: string; account_id: number | null; is_active: boolean }>;
+      taxCodes?: Array<{ id: number; code: string; rate_percent: string; is_active: boolean }>;
+    }) => {
+      const pms = options.paymentMethods ?? [
+        { id: 1, method_name: 'Cash', account_id: 10, is_active: true },
+        { id: 2, method_name: 'Card', account_id: 20, is_active: true },
+      ];
+      const tcs = options.taxCodes ?? [
+        { id: 1, code: 'gst_18', rate_percent: '18.00', is_active: true },
+      ];
+
+      return {
+        select: vi.fn().mockImplementation(() => ({
+          from: vi.fn().mockImplementation((table: any) => ({
+            where: vi.fn().mockImplementation(() => {
+              if (table === paymentMethods) {
+                return Promise.resolve(pms.filter((p) => p.is_active));
+              }
+              if (table === taxCodes) {
+                return Promise.resolve(tcs);
+              }
+              return Promise.resolve([]);
+            }),
+          })),
+        })),
+      };
+    };
+
+    it('refuses to enable posting when an active payment method has no account_id', async () => {
+      const mockDb = createMockDb({
+        paymentMethods: [
+          { id: 1, method_name: 'Cash', account_id: 10, is_active: true },
+          { id: 2, method_name: 'Card/UPI', account_id: null, is_active: true },
+        ],
+      });
+      const svc = new SettingsService(mockRepository as SettingsRepository, mockDb as any);
+
+      const err = await svc.updateSettings([
+        { setting_key: 'accounting.posting_enabled', setting_value: 'true' },
+      ]).catch((e) => e);
+
+      expect(err).toBeInstanceOf(BadRequestError);
+      expect(err.message).toContain('Active payment method "Card/UPI" has no mapped accounting account');
+      expect(err.details).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            setting_key: 'accounting.posting_enabled',
+            message: 'Active payment method "Card/UPI" has no mapped accounting account.',
+          }),
+        ]),
+      );
+    });
+
+    it('returns every failing payment method at once when multiple methods lack accounts', async () => {
+      const mockDb = createMockDb({
+        paymentMethods: [
+          { id: 1, method_name: 'Cash', account_id: null, is_active: true },
+          { id: 2, method_name: 'Card/UPI', account_id: null, is_active: true },
+        ],
+      });
+      const svc = new SettingsService(mockRepository as SettingsRepository, mockDb as any);
+
+      const err = await svc.updateSettings([
+        { setting_key: 'accounting.posting_enabled', setting_value: 'true' },
+      ]).catch((e) => e);
+
+      expect(err).toBeInstanceOf(BadRequestError);
+      expect(err.message).toContain('Cash');
+      expect(err.message).toContain('Card/UPI');
+      expect(err.details).toHaveLength(2);
+    });
+
+    it('ignores inactive payment methods without account_id', async () => {
+      const mockDb = createMockDb({
+        paymentMethods: [
+          { id: 1, method_name: 'Cash', account_id: 10, is_active: true },
+          { id: 2, method_name: 'Deprecated Method', account_id: null, is_active: false },
+        ],
+      });
+      mockRepository.upsertMany = vi.fn().mockResolvedValue([]);
+      mockRepository.findAll = vi.fn().mockResolvedValue([
+        { id: 1, setting_key: 'accounting.posting_enabled', setting_value: 'true', description: null, created_at: new Date(), updated_at: new Date() },
+      ]);
+      const svc = new SettingsService(mockRepository as SettingsRepository, mockDb as any);
+
+      const res = await svc.updateSettings([
+        { setting_key: 'accounting.posting_enabled', setting_value: 'true' },
+      ]);
+
+      expect(mockRepository.upsertMany).toHaveBeenCalled();
+      expect(res.find((s) => s.setting_key === 'accounting.posting_enabled')?.setting_value).toBe('true');
+    });
+
+    it('refuses to enable posting when tax_rate_percent differs from rate on accounting.default_tax_code', async () => {
+      const mockDb = createMockDb({
+        taxCodes: [
+          { id: 1, code: 'gst_18', rate_percent: '12.00', is_active: true },
+        ],
+      });
+      const svc = new SettingsService(mockRepository as SettingsRepository, mockDb as any);
+
+      const err = await svc.updateSettings([
+        { setting_key: 'accounting.posting_enabled', setting_value: 'true' },
+      ]).catch((e) => e);
+
+      expect(err).toBeInstanceOf(BadRequestError);
+      expect(err.message).toContain('Gym tax rate (18.00%) differs from default tax code "gst_18" rate (12.00%)');
+    });
+
+    it('refuses returning BOTH unmapped payment methods and tax mismatch at once', async () => {
+      const mockDb = createMockDb({
+        paymentMethods: [
+          { id: 1, method_name: 'Cash', account_id: null, is_active: true },
+        ],
+        taxCodes: [
+          { id: 1, code: 'gst_18', rate_percent: '5.00', is_active: true },
+        ],
+      });
+      const svc = new SettingsService(mockRepository as SettingsRepository, mockDb as any);
+
+      const err = await svc.updateSettings([
+        { setting_key: 'accounting.posting_enabled', setting_value: 'true' },
+      ]).catch((e) => e);
+
+      expect(err).toBeInstanceOf(BadRequestError);
+      expect(err.message).toContain('Active payment method "Cash" has no mapped accounting account');
+      expect(err.message).toContain('Gym tax rate (18.00%) differs from default tax code "gst_18" rate (5.00%)');
+      expect(err.details).toHaveLength(2);
+    });
+
+    it('refuses when accounting.default_tax_code is missing or inactive in tax codes', async () => {
+      const mockDb = createMockDb({
+        taxCodes: [
+          { id: 1, code: 'gst_18', rate_percent: '18.00', is_active: false },
+        ],
+      });
+      const svc = new SettingsService(mockRepository as SettingsRepository, mockDb as any);
+
+      const err = await svc.updateSettings([
+        { setting_key: 'accounting.posting_enabled', setting_value: 'true' },
+      ]).catch((e) => e);
+
+      expect(err).toBeInstanceOf(BadRequestError);
+      expect(err.message).toContain('Default tax code "gst_18" is inactive');
+    });
+
+    it('allows enabling posting when tax_rate_percent and payment methods are valid', async () => {
+      const mockDb = createMockDb({
+        paymentMethods: [
+          { id: 1, method_name: 'Cash', account_id: 10, is_active: true },
+          { id: 2, method_name: 'UPI', account_id: 20, is_active: true },
+        ],
+        taxCodes: [
+          { id: 1, code: 'gst_18', rate_percent: '18.00', is_active: true },
+        ],
+      });
+      mockRepository.upsertMany = vi.fn().mockResolvedValue([]);
+      mockRepository.findAll = vi.fn().mockResolvedValue([
+        { id: 1, setting_key: 'accounting.posting_enabled', setting_value: 'true', description: null, created_at: new Date(), updated_at: new Date() },
+      ]);
+      const svc = new SettingsService(mockRepository as SettingsRepository, mockDb as any);
+
+      const res = await svc.updateSettings([
+        { setting_key: 'accounting.posting_enabled', setting_value: 'true' },
+      ]);
+
+      expect(mockRepository.upsertMany).toHaveBeenCalledWith([
+        { setting_key: 'accounting.posting_enabled', setting_value: 'true' },
+      ]);
+      expect(res.find((s) => s.setting_key === 'accounting.posting_enabled')?.setting_value).toBe('true');
+    });
+
+    it('allows enabling posting when updating tax_rate_percent in the same payload to match tax code', async () => {
+      const mockDb = createMockDb({
+        paymentMethods: [
+          { id: 1, method_name: 'Cash', account_id: 10, is_active: true },
+        ],
+        taxCodes: [
+          { id: 1, code: 'gst_5', rate_percent: '5.00', is_active: true },
+        ],
+      });
+      mockRepository.upsertMany = vi.fn().mockResolvedValue([]);
+      mockRepository.findAll = vi.fn().mockResolvedValue([
+        { id: 1, setting_key: 'accounting.posting_enabled', setting_value: 'true', description: null, created_at: new Date(), updated_at: new Date() },
+        { id: 2, setting_key: 'tax_rate_percent', setting_value: '5.00', description: null, created_at: new Date(), updated_at: new Date() },
+        { id: 3, setting_key: 'accounting.default_tax_code', setting_value: 'gst_5', description: null, created_at: new Date(), updated_at: new Date() },
+      ]);
+      const svc = new SettingsService(mockRepository as SettingsRepository, mockDb as any);
+
+      await expect(svc.updateSettings([
+        { setting_key: 'accounting.posting_enabled', setting_value: 'true' },
+        { setting_key: 'tax_rate_percent', setting_value: '5.00' },
+        { setting_key: 'accounting.default_tax_code', setting_value: 'gst_5' },
+      ])).resolves.toBeDefined();
+    });
+
+    it('allows setting accounting.posting_enabled to false even if prerequisites fail', async () => {
+      const mockDb = createMockDb({
+        paymentMethods: [
+          { id: 1, method_name: 'Cash', account_id: null, is_active: true },
+        ],
+      });
+      mockRepository.upsertMany = vi.fn().mockResolvedValue([]);
+      mockRepository.findAll = vi.fn().mockResolvedValue([
+        { id: 1, setting_key: 'accounting.posting_enabled', setting_value: 'false', description: null, created_at: new Date(), updated_at: new Date() },
+      ]);
+      const svc = new SettingsService(mockRepository as SettingsRepository, mockDb as any);
+
+      await expect(svc.updateSettings([
+        { setting_key: 'accounting.posting_enabled', setting_value: 'false' },
+      ])).resolves.toBeDefined();
+    });
+
+    it('checkPostingPrerequisites directly returns failing check array', async () => {
+      const mockDb = createMockDb({
+        paymentMethods: [
+          { id: 1, method_name: 'Cash', account_id: null, is_active: true },
+        ],
+        taxCodes: [
+          { id: 1, code: 'gst_18', rate_percent: '5.00', is_active: true },
+        ],
+      });
+      const svc = new SettingsService(mockRepository as SettingsRepository, mockDb as any);
+
+      const failures = await svc.checkPostingPrerequisites();
+      expect(failures).toHaveLength(2);
+      expect(failures[0]).toContain('Active payment method "Cash" has no mapped accounting account');
+      expect(failures[1]).toContain('Gym tax rate (18.00%) differs from default tax code "gst_18" rate (5.00%)');
     });
   });
 });

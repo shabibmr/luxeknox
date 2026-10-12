@@ -1,4 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { AcctModule } from '../acct/acct.module';
 import { MembModule } from '../memb/memb.module';
 import { PeopleModule } from '../people/people.module';
 import { PlatformModule } from '../platform/platform.module';
@@ -12,7 +13,14 @@ import { PaymentRepository } from './payment.repository';
 import { PaymentService } from './payment.service';
 
 @Module({
-  imports: [PlatformModule, RbacModule, SysModule, PeopleModule, forwardRef(() => MembModule)],
+  imports: [
+    PlatformModule,
+    RbacModule,
+    SysModule,
+    PeopleModule,
+    forwardRef(() => MembModule),
+    AcctModule,
+  ],
   controllers: [PaymentMethodController, PaymentController],
   providers: [
     PaymentMethodRepository,

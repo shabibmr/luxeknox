@@ -50,6 +50,9 @@ export const JOURNAL_SOURCE_TYPES = [
   'manual',
   'opening_balance',
   'journal_reversal',
+  'sales_adjustment',
+  'recognition_forfeit',
+  'fund_transfer',
 ] as const;
 export type JournalSourceType = (typeof JOURNAL_SOURCE_TYPES)[number];
 
@@ -86,6 +89,14 @@ export const debitNoteNumberCounters = mysqlTable('debit_note_number_counters', 
   id: bigint('id', { mode: 'number', unsigned: true }).primaryKey(),
   next_value: bigint('next_value', { mode: 'number', unsigned: true }).notNull(),
 });
+
+export const fundTransferNumberCounters = mysqlTable('fund_transfer_number_counters', {
+  id: bigint('id', { mode: 'number', unsigned: true }).primaryKey(),
+  next_value: bigint('next_value', { mode: 'number', unsigned: true }).notNull(),
+});
+
+export type FundTransferNumberCounter = typeof fundTransferNumberCounters.$inferSelect;
+export type NewFundTransferNumberCounter = typeof fundTransferNumberCounters.$inferInsert;
 
 export const accounts = mysqlTable(
   'accounts',
@@ -522,6 +533,9 @@ export const debitNotes = mysqlTable(
 export type DebitNote = typeof debitNotes.$inferSelect;
 export type NewDebitNote = typeof debitNotes.$inferInsert;
 
+export const REVENUE_RECOGNITION_STATUSES = ['open', 'paused', 'closed'] as const;
+export type RevenueRecognitionStatus = (typeof REVENUE_RECOGNITION_STATUSES)[number];
+
 export const revenueRecognitionSchedules = mysqlTable(
   'revenue_recognition_schedules',
   {
@@ -541,10 +555,14 @@ export const revenueRecognitionSchedules = mysqlTable(
       .default('0.00'),
     starts_on: date('starts_on', { mode: 'string' }).notNull(),
     ends_on: date('ends_on', { mode: 'string' }).notNull(),
+    recognized_through: date('recognized_through', { mode: 'string' }).notNull(),
+    status: varchar('status', { length: 16 }).notNull().default('open'),
+    paused_from: date('paused_from', { mode: 'string' }),
   },
   (table) => [
     index('revenue_recognition_schedules_payment_id_idx').on(table.payment_id),
     uniqueIndex('revenue_recognition_schedules_payment_id_unique').on(table.payment_id),
+    index('revenue_recognition_schedules_status_idx').on(table.status),
   ],
 );
 
@@ -577,3 +595,44 @@ export const revenueRecognitionLines = mysqlTable(
 
 export type RevenueRecognitionLine = typeof revenueRecognitionLines.$inferSelect;
 export type NewRevenueRecognitionLine = typeof revenueRecognitionLines.$inferInsert;
+
+export const FUND_TRANSFER_STATUSES = ['draft', 'posted'] as const;
+export type FundTransferStatus = (typeof FUND_TRANSFER_STATUSES)[number];
+
+export const fundTransfers = mysqlTable(
+  'fund_transfers',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    transfer_number: varchar('transfer_number', { length: 32 }).notNull(),
+    transfer_date: date('transfer_date', { mode: 'string' }).notNull(),
+    from_account_id: bigint('from_account_id', { mode: 'number', unsigned: true })
+      .notNull()
+      .references(() => accounts.id),
+    to_account_id: bigint('to_account_id', { mode: 'number', unsigned: true })
+      .notNull()
+      .references(() => accounts.id),
+    amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
+    fee_amount: decimal('fee_amount', { precision: 12, scale: 2 }).notNull().default('0.00'),
+    fee_account_id: bigint('fee_account_id', { mode: 'number', unsigned: true }).references(
+      () => accounts.id,
+    ),
+    memo: text('memo'),
+    status: varchar('status', { length: 16 }).notNull().default('draft'),
+    journal_entry_id: bigint('journal_entry_id', { mode: 'number', unsigned: true }).references(
+      () => journalEntries.id,
+    ),
+    row_version: int('row_version').notNull().default(1),
+    created_at: utcDatetime('created_at').notNull(),
+    updated_at: utcDatetime('updated_at'),
+  },
+  (table) => [
+    uniqueIndex('fund_transfers_transfer_number_unique').on(table.transfer_number),
+    index('fund_transfers_from_account_id_idx').on(table.from_account_id),
+    index('fund_transfers_to_account_id_idx').on(table.to_account_id),
+    index('fund_transfers_fee_account_id_idx').on(table.fee_account_id),
+    index('fund_transfers_status_idx').on(table.status),
+  ],
+);
+
+export type FundTransfer = typeof fundTransfers.$inferSelect;
+export type NewFundTransfer = typeof fundTransfers.$inferInsert;

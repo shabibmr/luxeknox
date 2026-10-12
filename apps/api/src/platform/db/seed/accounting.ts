@@ -19,6 +19,7 @@ const SEED_ACCOUNTS: ReadonlyArray<
 > = [
   { code: '1000', name: 'Cash', account_type: 'asset', is_active: true, is_bank: true, is_control: false, control_role: null },
   { code: '1010', name: 'Bank', account_type: 'asset', is_active: true, is_bank: true, is_control: false, control_role: null },
+  { code: '1020', name: 'Card/UPI clearing', account_type: 'asset', is_active: true, is_bank: true, is_control: false, control_role: null },
   { code: '1100', name: 'Accounts receivable', account_type: 'asset', is_active: true, is_bank: false, is_control: true, control_role: 'ar' },
   { code: '1300', name: 'Input tax', account_type: 'asset', is_active: true, is_bank: false, is_control: true, control_role: 'input_tax' },
   { code: '2000', name: 'Accounts payable', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'ap' },
@@ -32,13 +33,16 @@ const SEED_ACCOUNTS: ReadonlyArray<
   { code: '4000', name: 'Membership revenue', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '4100', name: 'Personal training revenue', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '4200', name: 'Other sales', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { code: '4300', name: 'Forfeited membership income', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '4900', name: 'Sales discounts', account_type: 'income', is_active: true, is_bank: false, is_control: true, control_role: 'discounts' },
   { code: '5000', name: 'Rent', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '5100', name: 'Utilities', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '5200', name: 'Salaries', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '5300', name: 'Supplies', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '5400', name: 'Repairs and maintenance', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { code: '5500', name: 'Bank and processor charges', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '5900', name: 'General expense', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { code: '5950', name: 'Rounding off', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
 ];
 
 const SEED_TAX_CODES: ReadonlyArray<Omit<NewTaxCode, 'id'>> = [

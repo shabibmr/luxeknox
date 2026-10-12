@@ -599,4 +599,126 @@ describe('PaymentService', () => {
       await expect(service.getReceipt(42, adminActor)).rejects.toBeInstanceOf(NotFoundError);
     });
   });
+
+  describe('SalesBridgeService integration', () => {
+    let salesBridgeService: {
+      onInvoiceCreated: ReturnType<typeof vi.fn>;
+      onPaymentReceived: ReturnType<typeof vi.fn>;
+      onRefund: ReturnType<typeof vi.fn>;
+      onAdjustment: ReturnType<typeof vi.fn>;
+    };
+    let bridgePaymentService: PaymentService;
+
+    beforeEach(() => {
+      salesBridgeService = {
+        onInvoiceCreated: vi.fn().mockResolvedValue(null),
+        onPaymentReceived: vi.fn().mockResolvedValue(null),
+        onRefund: vi.fn().mockResolvedValue(null),
+        onAdjustment: vi.fn().mockResolvedValue(null),
+      };
+
+      bridgePaymentService = new PaymentService(
+        repository as any,
+        methodRepository as any,
+        memberRepository as any,
+        membershipRepository as any,
+        productRepository as any,
+        membershipService,
+        settingsService as any,
+        auditService as any,
+        domainEventBus as any,
+        paginationHelper as any,
+        {} as any,
+        salesBridgeService as any,
+      );
+    });
+
+    it('calls onInvoiceCreated and onPaymentReceived on payment creation', async () => {
+      await bridgePaymentService.create(
+        {
+          member_id: 5,
+          subtotal: '100.00',
+          payment_method_id: 1,
+        },
+        actor,
+      );
+
+      expect(salesBridgeService.onInvoiceCreated).toHaveBeenCalledTimes(1);
+      expect(salesBridgeService.onInvoiceCreated).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 42, member_id: 5 }),
+        expect.objectContaining({ productId: undefined, startDate: undefined }),
+      );
+
+      expect(salesBridgeService.onPaymentReceived).toHaveBeenCalledTimes(1);
+      expect(salesBridgeService.onPaymentReceived).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'payment_received', amount: '118.00' }),
+        expect.objectContaining({ id: 42 }),
+      );
+    });
+
+    it('calls onRefund on refund', async () => {
+      repository.findById.mockResolvedValue({
+        id: 42,
+        member_id: 5,
+        status: 'paid',
+        total_amount: '118.00',
+        amount_paid: '118.00',
+        subtotal: '100.00',
+        tax_amount: '18.00',
+        discount_amount: '0.00',
+        row_version: 1,
+        cashier_user_id: 9,
+        payment_date: new Date(),
+        created_at: new Date(),
+        updated_at: null,
+      });
+      repository.listHistories.mockResolvedValue([
+        { id: 1, payment_id: 42, action: 'payment_received', amount: '118.00', timestamp: new Date() },
+      ]);
+
+      await bridgePaymentService.refund(
+        42,
+        { amount: '50.00', payment_method_id: 1, notes: 'partial refund' },
+        actor,
+      );
+
+      expect(salesBridgeService.onRefund).toHaveBeenCalledTimes(1);
+      expect(salesBridgeService.onRefund).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 42 }),
+        expect.objectContaining({ action: 'refunded', amount: '50.00' }),
+        expect.objectContaining({ paymentMethodId: 1, notes: 'partial refund' }),
+      );
+    });
+
+    it('calls onAdjustment on adjust', async () => {
+      repository.findById.mockResolvedValue({
+        id: 42,
+        member_id: 5,
+        status: 'pending',
+        total_amount: '118.00',
+        amount_paid: '0.00',
+        subtotal: '100.00',
+        tax_amount: '18.00',
+        discount_amount: '0.00',
+        row_version: 1,
+        cashier_user_id: 9,
+        payment_date: new Date(),
+        created_at: new Date(),
+        updated_at: null,
+      });
+
+      await bridgePaymentService.adjust(
+        42,
+        { amount: '-18.00', notes: 'decrease' },
+        actor,
+      );
+
+      expect(salesBridgeService.onAdjustment).toHaveBeenCalledTimes(1);
+      expect(salesBridgeService.onAdjustment).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 42 }),
+        expect.objectContaining({ action: 'adjusted', amount: '-18.00' }),
+        expect.objectContaining({ adjustmentAmount: '-18.00', newTotal: '100.00', notes: 'decrease' }),
+      );
+    });
+  });
 });

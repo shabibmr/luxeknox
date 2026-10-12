@@ -40,12 +40,18 @@ CREATE TABLE IF NOT EXISTS `debit_note_number_counters` (
   `next_value` BIGINT UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE IF NOT EXISTS `fund_transfer_number_counters` (
+  `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+  `next_value` BIGINT UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 INSERT INTO `journal_number_counters` (`id`, `next_value`) VALUES (1, 1);
 INSERT INTO `purchase_bill_number_counters` (`id`, `next_value`) VALUES (1, 1);
 INSERT INTO `expense_voucher_number_counters` (`id`, `next_value`) VALUES (1, 1);
 INSERT INTO `payment_voucher_number_counters` (`id`, `next_value`) VALUES (1, 1);
 INSERT INTO `credit_note_number_counters` (`id`, `next_value`) VALUES (1, 1);
 INSERT INTO `debit_note_number_counters` (`id`, `next_value`) VALUES (1, 1);
+INSERT INTO `fund_transfer_number_counters` (`id`, `next_value`) VALUES (1, 1);
 
 -- ---------------------------------------------------------------------------
 -- Masters
@@ -350,8 +356,12 @@ CREATE TABLE IF NOT EXISTS `revenue_recognition_schedules` (
   `recognized_amount` DECIMAL(12,2) NOT NULL DEFAULT '0.00',
   `starts_on` DATE NOT NULL,
   `ends_on` DATE NOT NULL,
+  `recognized_through` DATE NOT NULL,
+  `status` VARCHAR(16) NOT NULL DEFAULT 'open',
+  `paused_from` DATE NULL,
   KEY `revenue_recognition_schedules_payment_id_idx` (`payment_id`),
   UNIQUE KEY `revenue_recognition_schedules_payment_id_unique` (`payment_id`),
+  KEY `revenue_recognition_schedules_status_idx` (`status`),
   CONSTRAINT `revenue_recognition_schedules_payment_id_fk` FOREIGN KEY (`payment_id`) REFERENCES `payments` (`id`),
   CONSTRAINT `revenue_recognition_schedules_unearned_account_id_fk` FOREIGN KEY (`unearned_account_id`) REFERENCES `accounts` (`id`),
   CONSTRAINT `revenue_recognition_schedules_income_account_id_fk` FOREIGN KEY (`income_account_id`) REFERENCES `accounts` (`id`)
@@ -368,6 +378,32 @@ CREATE TABLE IF NOT EXISTS `revenue_recognition_lines` (
   CONSTRAINT `revenue_recognition_lines_schedule_id_fk` FOREIGN KEY (`schedule_id`) REFERENCES `revenue_recognition_schedules` (`id`),
   CONSTRAINT `revenue_recognition_lines_accounting_period_id_fk` FOREIGN KEY (`accounting_period_id`) REFERENCES `accounting_periods` (`id`),
   CONSTRAINT `revenue_recognition_lines_journal_entry_id_fk` FOREIGN KEY (`journal_entry_id`) REFERENCES `journal_entries` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `fund_transfers` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `transfer_number` VARCHAR(32) NOT NULL,
+  `transfer_date` DATE NOT NULL,
+  `from_account_id` BIGINT UNSIGNED NOT NULL,
+  `to_account_id` BIGINT UNSIGNED NOT NULL,
+  `amount` DECIMAL(12,2) NOT NULL,
+  `fee_amount` DECIMAL(12,2) NOT NULL DEFAULT '0.00',
+  `fee_account_id` BIGINT UNSIGNED NULL,
+  `memo` TEXT NULL,
+  `status` VARCHAR(16) NOT NULL DEFAULT 'draft',
+  `journal_entry_id` BIGINT UNSIGNED NULL,
+  `row_version` INT NOT NULL DEFAULT 1,
+  `created_at` DATETIME(3) NOT NULL,
+  `updated_at` DATETIME(3) NULL,
+  UNIQUE KEY `fund_transfers_transfer_number_unique` (`transfer_number`),
+  KEY `fund_transfers_from_account_id_idx` (`from_account_id`),
+  KEY `fund_transfers_to_account_id_idx` (`to_account_id`),
+  KEY `fund_transfers_fee_account_id_idx` (`fee_account_id`),
+  KEY `fund_transfers_status_idx` (`status`),
+  CONSTRAINT `fund_transfers_from_account_id_fk` FOREIGN KEY (`from_account_id`) REFERENCES `accounts` (`id`),
+  CONSTRAINT `fund_transfers_to_account_id_fk` FOREIGN KEY (`to_account_id`) REFERENCES `accounts` (`id`),
+  CONSTRAINT `fund_transfers_fee_account_id_fk` FOREIGN KEY (`fee_account_id`) REFERENCES `accounts` (`id`),
+  CONSTRAINT `fund_transfers_journal_entry_id_fk` FOREIGN KEY (`journal_entry_id`) REFERENCES `journal_entries` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ---------------------------------------------------------------------------

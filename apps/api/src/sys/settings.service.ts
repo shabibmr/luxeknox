@@ -1,7 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
 import { SettingsRepository } from './settings.repository';
 import { BadRequestError } from '../platform/errors/app-error';
 import { type SettingDto, SETTING_CATALOGUE, getSettingDefinition, parseSettingCategory } from './settings.dto';
+import { paymentMethods } from '../platform/db/schema/payments';
+import { taxCodes } from '../platform/db/schema/accounting';
+import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
+import type { DrizzleDb } from '../platform/db/client';
 
 /**
  * SettingsService provides typed access to system settings configured in `gym_settings`.
@@ -21,7 +26,16 @@ export class SettingsService {
   private cacheLoadedAt = 0;
   private readonly cacheTtlMs = 30_000;
 
-  constructor(private readonly settingsRepository: SettingsRepository) {}
+  constructor(
+    private readonly settingsRepository: SettingsRepository,
+    @Optional()
+    @Inject(DRIZZLE_DB_TOKEN)
+    private readonly db?: DrizzleDb<any>,
+  ) {}
+
+  private getDatabase(): DrizzleDb<any> | null {
+    return this.db ?? (this.settingsRepository as any).getDb?.() ?? null;
+  }
 
   /**
    * Gym canonical operating time zone (default: 'UTC').
@@ -240,6 +254,79 @@ export class SettingsService {
   }
 
   /**
+   * ACC-054: Checks all prerequisites before enabling `accounting.posting_enabled`.
+   * Returns a list of human-readable failing check descriptions.
+   * Empty array if all checks pass.
+   */
+  async checkPostingPrerequisites(overrides?: {
+    taxRatePercent?: string;
+    defaultTaxCode?: string;
+  }): Promise<string[]> {
+    const db = this.getDatabase();
+    if (!db) {
+      throw new Error('Database client is required to validate accounting posting prerequisites.');
+    }
+
+    const failingReasons: string[] = [];
+
+    // 1. Check active payment methods for missing account_id
+    const activeMethods = await (db as any)
+      .select({
+        id: paymentMethods.id,
+        method_name: paymentMethods.method_name,
+        account_id: paymentMethods.account_id,
+      })
+      .from(paymentMethods)
+      .where(eq(paymentMethods.is_active, true));
+
+    for (const pm of activeMethods) {
+      if (pm.account_id == null) {
+        failingReasons.push(
+          `Active payment method "${pm.method_name}" has no mapped accounting account.`,
+        );
+      }
+    }
+
+    // 2. Check gym tax_rate_percent vs rate on accounting.default_tax_code
+    const taxRateStr =
+      overrides?.taxRatePercent ?? (await this.getSetting('tax_rate_percent')) ?? '18.00';
+    const defaultTaxCode =
+      overrides?.defaultTaxCode ?? (await this.getSetting('accounting.default_tax_code')) ?? 'gst_18';
+
+    const matchingTaxCodes = await (db as any)
+      .select({
+        id: taxCodes.id,
+        code: taxCodes.code,
+        rate_percent: taxCodes.rate_percent,
+        is_active: taxCodes.is_active,
+      })
+      .from(taxCodes)
+      .where(eq(taxCodes.code, defaultTaxCode));
+
+    if (matchingTaxCodes.length === 0) {
+      failingReasons.push(
+        `Default tax code "${defaultTaxCode}" does not exist in chart of tax codes.`,
+      );
+    } else {
+      const code = matchingTaxCodes[0];
+      if (!code.is_active) {
+        failingReasons.push(`Default tax code "${defaultTaxCode}" is inactive.`);
+      }
+      const gymRate = parseFloat(taxRateStr);
+      const codeRate = parseFloat(code.rate_percent);
+      if (Number.isFinite(gymRate) && Number.isFinite(codeRate)) {
+        if (gymRate.toFixed(2) !== codeRate.toFixed(2)) {
+          failingReasons.push(
+            `Gym tax rate (${gymRate.toFixed(2)}%) differs from default tax code "${defaultTaxCode}" rate (${codeRate.toFixed(2)}%).`,
+          );
+        }
+      }
+    }
+
+    return failingReasons;
+  }
+
+  /**
    * Upserts one or multiple settings and refreshes the cache.
    */
   async updateSettings(items: Array<{ setting_key: string; setting_value: string }>): Promise<SettingDto[]> {
@@ -254,6 +341,31 @@ export class SettingsService {
     }
     if (validationErrors.length > 0) {
       throw new BadRequestError('Settings update contains invalid values.', validationErrors);
+    }
+
+    const postingItem = items.find((item) => item.setting_key === 'accounting.posting_enabled');
+    const isEnablingPosting =
+      postingItem &&
+      (postingItem.setting_value.toLowerCase() === 'true' || postingItem.setting_value === '1');
+
+    if (isEnablingPosting) {
+      const taxRateOverride = items.find((item) => item.setting_key === 'tax_rate_percent')?.setting_value;
+      const defaultTaxCodeOverride = items.find((item) => item.setting_key === 'accounting.default_tax_code')?.setting_value;
+
+      const failingChecks = await this.checkPostingPrerequisites({
+        taxRatePercent: taxRateOverride,
+        defaultTaxCode: defaultTaxCodeOverride,
+      });
+
+      if (failingChecks.length > 0) {
+        throw new BadRequestError(
+          `Cannot enable accounting posting: ${failingChecks.join('; ')}`,
+          failingChecks.map((message) => ({
+            setting_key: 'accounting.posting_enabled',
+            message,
+          })),
+        );
+      }
     }
 
     await this.settingsRepository.upsertMany(items);

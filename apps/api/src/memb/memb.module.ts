@@ -1,4 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { AcctModule } from '../acct/acct.module';
 import { PayModule } from '../pay/pay.module';
 import { PlatformModule } from '../platform/platform.module';
 import { RbacModule } from '../rbac/rbac.module';
@@ -12,7 +13,7 @@ import { MembershipRepository } from './membership.repository';
 import { MembershipService } from './membership.service';
 
 @Module({
-  imports: [PlatformModule, RbacModule, PeopleModule, forwardRef(() => PayModule)],
+  imports: [PlatformModule, RbacModule, PeopleModule, forwardRef(() => PayModule), AcctModule],
   controllers: [MembershipProductController, MembershipController, FreezeController],
   providers: [
     MembershipProductRepository,

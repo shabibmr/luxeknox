@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { RevenueRecognitionPortService } from '../acct/revenue-recognition-port.service';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { MembershipRepository } from '../memb/membership.repository';
 import { PaymentService } from '../pay/payment.service';
@@ -78,6 +79,8 @@ export class PtSubscriptionService {
     private readonly auditService: AuditService,
     @Inject(DRIZZLE_DB_TOKEN)
     private readonly db: DrizzleDb<any>,
+    @Optional()
+    private readonly recognitionPort?: RevenueRecognitionPortService,
   ) {}
 
   async today(): Promise<string> {
@@ -657,5 +660,85 @@ export class PtSubscriptionService {
       trainer_name: trainer ? `${trainer.first_name} ${trainer.last_name}`.trim() : '',
       slot_label: slotLabel(sub.slot_start),
     };
+  }
+
+  async cancel(
+    id: number,
+    actor: AuthenticatedUser,
+    reason?: string,
+  ): Promise<PtSubscriptionView> {
+    const sub = await this.requireOpenSubscription(id);
+    const now = new Date();
+
+    const updated = await runInTransaction(this.db, async () => {
+      await this.cancelFutureOccurrences(id, now, actor, now);
+
+      await this.repository.updateSubscription(id, {
+        status: 'cancelled',
+        row_version: sub.row_version + 1,
+        updated_at: now,
+      });
+
+      await this.auditService.recordAudit({
+        actorUserId: actor.id,
+        action: 'pt_subscription.cancelled',
+        entityName: 'pt_subscriptions',
+        entityId: id,
+        beforeState: { status: sub.status },
+        afterState: { status: 'cancelled', reason: reason ?? null },
+      });
+
+      if (this.recognitionPort) {
+        await this.recognitionPort.onPtCancelled({
+          ptSubscriptionId: id,
+          cancelledByUserId: actor.id,
+        });
+      }
+
+      return (await this.repository.findById(id))!;
+    });
+
+    return this.present(updated);
+  }
+
+  async extend(
+    id: number,
+    newEndDate: string,
+    actor: AuthenticatedUser,
+  ): Promise<PtSubscriptionView> {
+    const sub = await this.requireOpenSubscription(id);
+    if (newEndDate <= sub.end_date) {
+      throw new BadRequestError(`newEndDate (${newEndDate}) must be after current end_date (${sub.end_date})`);
+    }
+
+    const now = new Date();
+
+    const updated = await runInTransaction(this.db, async () => {
+      await this.repository.updateSubscription(id, {
+        end_date: newEndDate,
+        row_version: sub.row_version + 1,
+        updated_at: now,
+      });
+
+      await this.auditService.recordAudit({
+        actorUserId: actor.id,
+        action: 'pt_subscription.extended',
+        entityName: 'pt_subscriptions',
+        entityId: id,
+        beforeState: { end_date: sub.end_date },
+        afterState: { end_date: newEndDate },
+      });
+
+      if (this.recognitionPort) {
+        await this.recognitionPort.onPtExtended({
+          ptSubscriptionId: id,
+          newEndDate,
+        });
+      }
+
+      return (await this.repository.findById(id))!;
+    });
+
+    return this.present(updated);
   }
 }
