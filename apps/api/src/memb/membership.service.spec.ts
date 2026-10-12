@@ -506,6 +506,16 @@ describe('MembershipService', () => {
       ).rejects.toThrow(BusinessRuleError);
     });
 
+    it('rejects a freeze on a membership that is not active, so a cancelled row is never resurrected', async () => {
+      repository.findById.mockResolvedValue(makeMembership({ status: 'cancelled' }));
+
+      await expect(
+        service.requestFreeze(1, { start_date: '2026-01-10', end_date: '2026-01-15' }, ADMIN_USER),
+      ).rejects.toThrow('Only active memberships can be frozen');
+      expect(repository.insertFreeze).not.toHaveBeenCalled();
+      expect(repository.updateMembership).not.toHaveBeenCalled();
+    });
+
     it('creates a pending freeze for a member without touching the membership', async () => {
       repository.findById.mockResolvedValue(makeMembership({ member_id: 100 }));
       repository.insertFreeze.mockResolvedValue(1);
@@ -893,6 +903,16 @@ describe('MembershipService', () => {
         '2099-02-06',
         '2099-02-06',
       ]);
+    });
+
+    it('approveFreeze refuses a pending freeze whose membership was cancelled meanwhile', async () => {
+      const f1 = { id: 21, membership_id: 1, status: 'pending', total_freeze_days: 6, paired_freeze_id: null };
+      repository.findFreezeById.mockResolvedValue(f1);
+      repository.findById.mockResolvedValue(makeMembership({ id: 1, status: 'cancelled' }));
+
+      await expect(service.approveFreeze(21, ADMIN_USER)).rejects.toThrow('no longer active');
+      expect(repository.updateFreeze).not.toHaveBeenCalled();
+      expect(repository.updateMembership).not.toHaveBeenCalled();
     });
 
     it('rejectFreeze rejects the paired freeze too', async () => {

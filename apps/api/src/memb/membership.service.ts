@@ -711,6 +711,14 @@ export class MembershipService {
 
     const partner = await this.loadPartner(membership);
 
+    // A cancelled/expired/already-frozen row must not be (re)frozen: a direct approval would
+    // resurrect it as `frozen`.
+    for (const row of partner ? [membership, partner] : [membership]) {
+      if (row.status !== 'active') {
+        throw new BusinessRuleError('Only active memberships can be frozen');
+      }
+    }
+
     const overlap = await this.repository.findOverlappingFreeze(id, dto.start_date, dto.end_date);
     if (overlap) {
       throw new BusinessRuleError('Freeze dates overlap an existing pending/approved freeze');
@@ -834,6 +842,9 @@ export class MembershipService {
       const membership = await this.repository.findById(f.membership_id);
       if (!membership) {
         throw new NotFoundError('Membership not found');
+      }
+      if (membership.status !== 'active') {
+        throw new BusinessRuleError('Membership is no longer active; reject this freeze instead');
       }
       const product = await this.productRepository.findById(membership.product_id);
       const approvedSoFar = await this.repository.sumApprovedFreezeDays(f.membership_id);
