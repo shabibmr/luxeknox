@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../report_strings.dart';
 
@@ -8,6 +9,26 @@ class ReportDataTable extends StatelessWidget {
 
   final List<String> columns;
   final List<Map<String, dynamic>> rows;
+
+  bool _isCurrencyColumn(String column) {
+    final normalized = column.toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
+    return const [
+      'amount',
+      'amountpaid',
+      'amountdue',
+      'balance',
+      'revenue',
+      'collection',
+      'fee',
+      'price',
+      'paymentamount',
+      'totalamount',
+      'subtotal',
+      'taxamount',
+      'discountamount',
+      'outstanding',
+    ].any((keyword) => normalized.contains(keyword));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +45,14 @@ class ReportDataTable extends StatelessWidget {
         rows: [
           for (final row in rows)
             DataRow(
-              cells: [for (final c in cols) DataCell(Text('${row[c] ?? ''}'))],
+              cells: [
+                for (final c in cols)
+                  DataCell(
+                    _isCurrencyColumn(c)
+                        ? AppCurrencyText(row[c]?.toString())
+                        : Text('${row[c] ?? ''}'),
+                  ),
+              ],
             ),
         ],
       ),

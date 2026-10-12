@@ -6,6 +6,8 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
+import '../../../../core/widgets/app_currency_field.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../people/presentation/member_dossier_pt.dart'
@@ -210,8 +212,13 @@ class _Form extends StatelessWidget {
               for (final p in state.products)
                 DropdownMenuItem(
                   value: p.id,
-                  child: Text(
-                    '${p.name} · ${p.durationDays} days · ${p.basePrice}',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(child: Text('${p.name} · ${p.durationDays} days', overflow: TextOverflow.ellipsis)),
+                      const SizedBox(width: 8),
+                      AppCurrencyText(p.basePrice),
+                    ],
                   ),
                 ),
             ],
@@ -366,9 +373,9 @@ class _Form extends StatelessWidget {
               ],
               onChanged: cubit.setPaymentMethod,
             ),
-          TextFormField(
-            decoration: const InputDecoration(labelText: PtStrings.discount),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          _DiscountCurrencyField(
+            initialValue: state.discount,
+            enabled: !state.submitting,
             onChanged: cubit.setDiscount,
           ),
         ] else
@@ -433,6 +440,16 @@ class _Summary extends StatelessWidget {
         state.member?.fullName ??
         'Member #${state.memberId}';
 
+    Widget currencyRow(String k, String amount) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          SizedBox(width: 96, child: Text(k, style: Theme.of(context).textTheme.bodySmall)),
+          Expanded(child: AppCurrencyText(amount)),
+        ],
+      ),
+    );
+
     Widget row(String k, String v) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -466,10 +483,62 @@ class _Summary extends StatelessWidget {
             row(PtStrings.summaryHour, ptHourLabel(state.slotStart!)),
             row(PtStrings.summaryTrainer, trainer?.name ?? '—'),
             if (!state.isReplan)
-              row(PtStrings.summaryAmount, state.product!.basePrice),
+              currencyRow(PtStrings.summaryAmount, state.product!.basePrice),
           ],
         ),
       ),
     );
   }
+}
+
+
+class _DiscountCurrencyField extends StatefulWidget {
+  const _DiscountCurrencyField({
+    required this.initialValue,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final String? initialValue;
+  final bool enabled;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  State<_DiscountCurrencyField> createState() => _DiscountCurrencyFieldState();
+}
+
+class _DiscountCurrencyFieldState extends State<_DiscountCurrencyField> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.initialValue ?? '',
+  );
+
+  @override
+  void didUpdateWidget(covariant _DiscountCurrencyField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = widget.initialValue ?? '';
+    if (oldWidget.initialValue != widget.initialValue &&
+        _controller.text != next) {
+      _controller.value = TextEditingValue(
+        text: next,
+        selection: TextSelection.collapsed(offset: next.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AppCurrencyField(
+    controller: _controller,
+    label: PtStrings.discount,
+    enabled: widget.enabled,
+    required: false,
+    minValue: 0,
+    helperText: 'Optional discount amount',
+    onChanged: (value) => widget.onChanged(value.isEmpty ? null : value),
+  );
 }

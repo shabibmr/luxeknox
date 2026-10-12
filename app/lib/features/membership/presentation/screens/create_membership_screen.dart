@@ -6,6 +6,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../people/presentation/widgets/member_picker_sheet.dart';
@@ -132,7 +133,14 @@ class _CreateMembershipForm extends StatelessWidget {
               .map(
                 (p) => DropdownMenuItem(
                   value: p.id,
-                  child: Text('${p.name} · ${p.basePrice}'),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(child: Text(p.name, overflow: TextOverflow.ellipsis)),
+                      const SizedBox(width: 8),
+                      AppCurrencyText(p.basePrice),
+                    ],
+                  ),
                 ),
               )
               .toList(),
