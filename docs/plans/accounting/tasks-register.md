@@ -93,11 +93,11 @@ Later rows stay `[>]` until a new plan pulls them in.
 
 | ID | Status | Task | Depends on | Done when |
 |---|---|---|---|---|
-| ACC-060 | `[~]` | Register `accounting.recognize_revenue` on `JobRunnerService` | ACC-055, ACC-024, ACC-018 | The job posts debit unearned, credit income, prorated by day from `recognized_through + 1` to month end or `ends_on`. Paused schedules post nothing for frozen days |
-| ACC-061 | `[~]` | Last span takes the remainder. A second run in the same month posts nothing | ACC-060 | After the term, `recognized_amount` equals `total_amount`, the schedule is `closed`, and further runs are empty |
-| ACC-062 | `[~]` | Period lock refuses while posting is on and the recognition run for that period has not posted | ACC-034, ACC-060 | The error names the period and the missing run |
-| ACC-063 | `[~]` | Vitest for a mid-month start, a freeze that pauses then extends, an upgrade, a cancellation forfeit, and an adjustment up and down | ACC-057, ACC-058, ACC-059, ACC-061 | Specs pass. Each case ends with unearned on the ledger equal to the schedule's unrecognized amount |
-| ACC-064 | `[~]` | Go-live. `GET /accounting/go-live/unearned-preview` for running memberships and PT terms. Enabling posting also checks that the opening journal's `2200` and `2210` match the preview, then writes the go-live schedules in the same transaction | ACC-054, ACC-060, ACC-025 | A mismatch is refused with both amounts. Go-live schedules have `recognized_through` set to the day before go-live. The spec covers both |
+| ACC-060 | `[x]` | Register `accounting.recognize_revenue` on `JobRunnerService` | ACC-055, ACC-024, ACC-018 | The job posts debit unearned, credit income, prorated by day from `recognized_through + 1` to month end or `ends_on`. Paused schedules post nothing for frozen days |
+| ACC-061 | `[x]` | Last span takes the remainder. A second run in the same month posts nothing | ACC-060 | After the term, `recognized_amount` equals `total_amount`, the schedule is `closed`, and further runs are empty |
+| ACC-062 | `[x]` | Period lock refuses while posting is on and the recognition run for that period has not posted | ACC-034, ACC-060 | The error names the period and the missing run |
+| ACC-063 | `[x]` | Vitest for a mid-month start, a freeze that pauses then extends, an upgrade, a cancellation forfeit, and an adjustment up and down | ACC-057, ACC-058, ACC-059, ACC-061 | Specs pass. Each case ends with unearned on the ledger equal to the schedule's unrecognized amount |
+| ACC-064 | `[x]` | Go-live. `GET /accounting/go-live/unearned-preview` for running memberships and PT terms. Enabling posting also checks that the opening journal's `2200` and `2210` match the preview, then writes the go-live schedules in the same transaction | ACC-054, ACC-060, ACC-025 | A mismatch is refused with both amounts. Go-live schedules have `recognized_through` set to the day before go-live. The spec covers both |
 
 ## Phase 7 — Reports
 
@@ -183,7 +183,7 @@ One person owns a shared file even when the wave lists the tasks together:
 | Marker | Count |
 |---|---|
 | `[ ]` TODO | 16 |
-| `[~]` DOING | 5 |
-| `[x]` DONE | 46 |
+| `[~]` DOING | 0 |
+| `[x]` DONE | 51 |
 | `[!]` BLOCKED | 0 |
 | `[>]` LATER | 8 |
