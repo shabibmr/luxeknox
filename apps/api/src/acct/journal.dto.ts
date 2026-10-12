@@ -45,6 +45,7 @@ export const journalFilterQuerySchema = z.object({
   from: dateSchema.optional(),
   to: dateSchema.optional(),
   source_type: z.string().trim().min(1).max(32).optional(),
+  payment_id: z.coerce.number().int().positive().optional(),
 });
 
 export type JournalFilterQueryDto = z.infer<typeof journalFilterQuerySchema>;

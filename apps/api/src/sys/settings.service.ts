@@ -16,6 +16,15 @@ import type { DrizzleDb } from '../platform/db/client';
  * This guarantees a single control point if settings become tenant-scoped in the future.
  * No mutation/upsert API is exposed in Module 0.
  */
+export type PostingPrerequisiteHook = (overrides?: {
+  taxRatePercent?: string;
+  defaultTaxCode?: string;
+  goLiveDate?: string;
+}) => Promise<{
+  failingReasons: string[];
+  createGoLiveSchedules?: (txDb?: any) => Promise<void>;
+}>;
+
 @Injectable()
 export class SettingsService {
   // Each API instance caches settings for at most 30 seconds. A successful
@@ -25,6 +34,7 @@ export class SettingsService {
   private cache: Map<string, string> | null = null;
   private cacheLoadedAt = 0;
   private readonly cacheTtlMs = 30_000;
+  private postingPrerequisiteHook: PostingPrerequisiteHook | null = null;
 
   constructor(
     private readonly settingsRepository: SettingsRepository,
@@ -32,6 +42,10 @@ export class SettingsService {
     @Inject(DRIZZLE_DB_TOKEN)
     private readonly db?: DrizzleDb<any>,
   ) {}
+
+  setPostingPrerequisiteHook(hook: PostingPrerequisiteHook | null): void {
+    this.postingPrerequisiteHook = hook;
+  }
 
   private getDatabase(): DrizzleDb<any> | null {
     return this.db ?? (this.settingsRepository as any).getDb?.() ?? null;
@@ -323,6 +337,12 @@ export class SettingsService {
       }
     }
 
+    // 3. Optional hook for ACC-064 go-live validation
+    if (this.postingPrerequisiteHook) {
+      const hookResult = await this.postingPrerequisiteHook(overrides);
+      failingReasons.push(...hookResult.failingReasons);
+    }
+
     return failingReasons;
   }
 
@@ -352,6 +372,15 @@ export class SettingsService {
       const taxRateOverride = items.find((item) => item.setting_key === 'tax_rate_percent')?.setting_value;
       const defaultTaxCodeOverride = items.find((item) => item.setting_key === 'accounting.default_tax_code')?.setting_value;
 
+      let createGoLiveCallback: ((txDb?: any) => Promise<void>) | undefined;
+      if (this.postingPrerequisiteHook) {
+        const hookRes = await this.postingPrerequisiteHook({
+          taxRatePercent: taxRateOverride,
+          defaultTaxCode: defaultTaxCodeOverride,
+        });
+        createGoLiveCallback = hookRes.createGoLiveSchedules;
+      }
+
       const failingChecks = await this.checkPostingPrerequisites({
         taxRatePercent: taxRateOverride,
         defaultTaxCode: defaultTaxCodeOverride,
@@ -365,6 +394,10 @@ export class SettingsService {
             message,
           })),
         );
+      }
+
+      if (createGoLiveCallback) {
+        await createGoLiveCallback(this.getDatabase());
       }
     }
 

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, desc, eq, gte, lte, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, lte, or, sql, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
@@ -120,6 +120,7 @@ export class AccountingRepository extends BaseRepository<
     from?: string;
     to?: string;
     sourceType?: string;
+    paymentId?: number;
     limit: number;
     offset: number;
   }): Promise<{ rows: JournalEntry[]; total: number }> {
@@ -133,6 +134,34 @@ export class AccountingRepository extends BaseRepository<
     }
     if (params.sourceType) {
       conditions.push(eq(journalEntries.source_type, params.sourceType));
+    }
+    if (params.paymentId) {
+      conditions.push(
+        or(
+          and(
+            eq(journalEntries.source_type, 'sales_invoice'),
+            eq(journalEntries.source_id, params.paymentId),
+          ),
+          and(
+            inArray(journalEntries.source_type, ['sales_receipt', 'sales_adjustment']),
+            sql`${journalEntries.source_id} IN (SELECT \`id\` FROM \`payment_histories\` WHERE \`payment_id\` = ${params.paymentId})`,
+          ),
+          and(
+            eq(journalEntries.source_type, 'credit_note'),
+            sql`${journalEntries.source_id} IN (SELECT \`id\` FROM \`credit_notes\` WHERE \`payment_id\` = ${params.paymentId})`,
+          ),
+          sql`${journalEntries.id} IN (SELECT \`journal_entry_id\` FROM \`credit_notes\` WHERE \`payment_id\` = ${params.paymentId} AND \`journal_entry_id\` IS NOT NULL)`,
+          and(
+            eq(journalEntries.source_type, 'revenue_recognition'),
+            sql`${journalEntries.source_id} IN (SELECT rl.\`id\` FROM \`revenue_recognition_lines\` rl INNER JOIN \`revenue_recognition_schedules\` rs ON rl.\`schedule_id\` = rs.\`id\` WHERE rs.\`payment_id\` = ${params.paymentId})`,
+          ),
+          sql`${journalEntries.id} IN (SELECT rl.\`journal_entry_id\` FROM \`revenue_recognition_lines\` rl INNER JOIN \`revenue_recognition_schedules\` rs ON rl.\`schedule_id\` = rs.\`id\` WHERE rs.\`payment_id\` = ${params.paymentId} AND rl.\`journal_entry_id\` IS NOT NULL)`,
+          and(
+            eq(journalEntries.source_type, 'recognition_forfeit'),
+            sql`${journalEntries.source_id} IN (SELECT \`id\` FROM \`revenue_recognition_schedules\` WHERE \`payment_id\` = ${params.paymentId})`,
+          ),
+        ) as SQL,
+      );
     }
     const where = conditions.length ? and(...conditions) : undefined;
 

@@ -90,8 +90,13 @@ export class PeriodsRepository extends BaseRepository<
 
   async calculateTrialBalanceTotals(
     endsOn: string,
+    startsOn?: string,
   ): Promise<{ totalDebit: string; totalCredit: string }> {
     const db = this.getDb() as any;
+    const conditions: SQL[] = [lte(journalEntries.entry_date, endsOn)];
+    if (startsOn) {
+      conditions.push(gte(journalEntries.entry_date, startsOn));
+    }
     const rows = await db
       .select({
         totalDebit: sql<string>`COALESCE(SUM(${journalLines.debit}), '0.00')`,
@@ -99,7 +104,7 @@ export class PeriodsRepository extends BaseRepository<
       })
       .from(journalLines)
       .innerJoin(journalEntries, eq(journalLines.journal_entry_id, journalEntries.id))
-      .where(lte(journalEntries.entry_date, endsOn));
+      .where(and(...conditions));
 
     const row = rows[0];
     return {

@@ -70,6 +70,7 @@ export class JournalService {
       from: filters.from,
       to: filters.to,
       sourceType: filters.source_type,
+      paymentId: filters.payment_id,
       limit: pagination.limit,
       offset,
     });

@@ -4,8 +4,11 @@ import { BaseRepository } from '../platform/db/base.repository';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import {
+  revenueRecognitionLines,
   revenueRecognitionSchedules,
+  type NewRevenueRecognitionLine,
   type NewRevenueRecognitionSchedule,
+  type RevenueRecognitionLine,
   type RevenueRecognitionSchedule,
 } from '../platform/db/schema/accounting';
 import { payments } from '../platform/db/schema/payments';
@@ -42,6 +45,14 @@ export class RevenueRecognitionRepository extends BaseRepository<
       .where(eq(revenueRecognitionSchedules.payment_id, paymentId))
       .limit(1);
     return rows[0] ?? null;
+  }
+
+  async findOpenOrPausedSchedules(): Promise<RevenueRecognitionSchedule[]> {
+    const db = this.getDb() as any;
+    return db
+      .select()
+      .from(revenueRecognitionSchedules)
+      .where(inArray(revenueRecognitionSchedules.status, ['open', 'paused']));
   }
 
   async findByMembershipId(
@@ -117,5 +128,78 @@ export class RevenueRecognitionRepository extends BaseRepository<
     }
     return updated;
   }
+
+  async insertLine(row: NewRevenueRecognitionLine): Promise<RevenueRecognitionLine> {
+    const db = this.getDb() as any;
+    const result = await db.insert(revenueRecognitionLines).values(row);
+    const id = Number(result?.[0]?.insertId ?? result?.insertId ?? 0);
+    const rows = await db
+      .select()
+      .from(revenueRecognitionLines)
+      .where(eq(revenueRecognitionLines.id, id))
+      .limit(1);
+    const created = rows[0];
+    if (!created) {
+      throw new Error(`Failed to load revenue recognition line ${id}`);
+    }
+    return created;
+  }
+
+  async findLineByScheduleAndPeriod(
+    scheduleId: number,
+    periodId: number,
+  ): Promise<RevenueRecognitionLine | null> {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select()
+      .from(revenueRecognitionLines)
+      .where(
+        and(
+          eq(revenueRecognitionLines.schedule_id, scheduleId),
+          eq(revenueRecognitionLines.accounting_period_id, periodId),
+        ),
+      )
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
+  async countLinesForPeriod(periodId: number): Promise<number> {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select()
+      .from(revenueRecognitionLines)
+      .where(eq(revenueRecognitionLines.accounting_period_id, periodId));
+    return rows.length;
+  }
+
+  async findLinesByPeriod(periodId: number): Promise<RevenueRecognitionLine[]> {
+    const db = this.getDb() as any;
+    return db
+      .select()
+      .from(revenueRecognitionLines)
+      .where(eq(revenueRecognitionLines.accounting_period_id, periodId));
+  }
+
+  async updateLine(
+    id: number,
+    row: Partial<NewRevenueRecognitionLine>,
+  ): Promise<RevenueRecognitionLine> {
+    const db = this.getDb() as any;
+    await db
+      .update(revenueRecognitionLines)
+      .set(row)
+      .where(eq(revenueRecognitionLines.id, id));
+    const rows = await db
+      .select()
+      .from(revenueRecognitionLines)
+      .where(eq(revenueRecognitionLines.id, id))
+      .limit(1);
+    const updated = rows[0];
+    if (!updated) {
+      throw new NotFoundError(`Revenue recognition line ${id} was not found`);
+    }
+    return updated;
+  }
 }
+
 

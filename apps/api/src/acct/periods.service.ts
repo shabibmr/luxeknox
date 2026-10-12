@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { AuditService } from '../platform/audit/audit.service';
 import type { DrizzleDb } from '../platform/db/client';
@@ -7,6 +7,7 @@ import type { AccountingPeriod, FiscalYear } from '../platform/db/schema/account
 import { runInTransaction } from '../platform/db/transaction-context';
 import { BusinessRuleError, NotFoundError } from '../platform/errors/app-error';
 import { cmpMoney } from '../platform/money/money';
+import { SettingsService } from '../sys/settings.service';
 import {
   periodFilterQuerySchema,
   type AccountingPeriodDto,
@@ -15,6 +16,7 @@ import {
   type PeriodFilterQueryDto,
 } from './periods.dto';
 import { PeriodsRepository } from './periods.repository';
+import { RevenueRecognitionService } from './revenue-recognition.service';
 
 @Injectable()
 export class PeriodsService {
@@ -22,6 +24,8 @@ export class PeriodsService {
     private readonly repository: PeriodsRepository,
     private readonly auditService: AuditService,
     @Inject(DRIZZLE_DB_TOKEN) private readonly db: DrizzleDb<any>,
+    @Optional() private readonly revenueRecognitionService?: RevenueRecognitionService,
+    @Optional() private readonly settingsService?: SettingsService,
   ) {}
 
   toFiscalYearDto(year: FiscalYear): FiscalYearDto {
@@ -79,6 +83,20 @@ export class PeriodsService {
         throw new BusinessRuleError(
           'Cannot lock period: trial balance through period is unbalanced',
         );
+      }
+
+      // ACC-062: Period lock refuses while posting is on and the recognition run for that period has not posted
+      if (this.settingsService && this.revenueRecognitionService) {
+        const postingEnabled =
+          (await this.settingsService.getSetting('accounting.posting_enabled')) === 'true';
+        if (postingEnabled) {
+          const hasPosted = await this.revenueRecognitionService.hasPeriodRecognitionPosted(period);
+          if (!hasPosted) {
+            throw new BusinessRuleError(
+              `Cannot lock period ${period.starts_on} to ${period.ends_on} (id ${period.id}): revenue recognition run 'accounting.recognize_revenue' for this period has not posted`,
+            );
+          }
+        }
       }
 
       const draftCounts = await this.repository.countDraftDocuments(

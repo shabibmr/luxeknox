@@ -93,23 +93,23 @@ Later rows stay `[>]` until a new plan pulls them in.
 
 | ID | Status | Task | Depends on | Done when |
 |---|---|---|---|---|
-| ACC-060 | `[ ]` | Register `accounting.recognize_revenue` on `JobRunnerService` | ACC-055, ACC-024, ACC-018 | The job posts debit unearned, credit income, prorated by day from `recognized_through + 1` to month end or `ends_on`. Paused schedules post nothing for frozen days |
-| ACC-061 | `[ ]` | Last span takes the remainder. A second run in the same month posts nothing | ACC-060 | After the term, `recognized_amount` equals `total_amount`, the schedule is `closed`, and further runs are empty |
-| ACC-062 | `[ ]` | Period lock refuses while posting is on and the recognition run for that period has not posted | ACC-034, ACC-060 | The error names the period and the missing run |
-| ACC-063 | `[ ]` | Vitest for a mid-month start, a freeze that pauses then extends, an upgrade, a cancellation forfeit, and an adjustment up and down | ACC-057, ACC-058, ACC-059, ACC-061 | Specs pass. Each case ends with unearned on the ledger equal to the schedule's unrecognized amount |
-| ACC-064 | `[ ]` | Go-live. `GET /accounting/go-live/unearned-preview` for running memberships and PT terms. Enabling posting also checks that the opening journal's `2200` and `2210` match the preview, then writes the go-live schedules in the same transaction | ACC-054, ACC-060, ACC-025 | A mismatch is refused with both amounts. Go-live schedules have `recognized_through` set to the day before go-live. The spec covers both |
+| ACC-060 | `[~]` | Register `accounting.recognize_revenue` on `JobRunnerService` | ACC-055, ACC-024, ACC-018 | The job posts debit unearned, credit income, prorated by day from `recognized_through + 1` to month end or `ends_on`. Paused schedules post nothing for frozen days |
+| ACC-061 | `[~]` | Last span takes the remainder. A second run in the same month posts nothing | ACC-060 | After the term, `recognized_amount` equals `total_amount`, the schedule is `closed`, and further runs are empty |
+| ACC-062 | `[~]` | Period lock refuses while posting is on and the recognition run for that period has not posted | ACC-034, ACC-060 | The error names the period and the missing run |
+| ACC-063 | `[~]` | Vitest for a mid-month start, a freeze that pauses then extends, an upgrade, a cancellation forfeit, and an adjustment up and down | ACC-057, ACC-058, ACC-059, ACC-061 | Specs pass. Each case ends with unearned on the ledger equal to the schedule's unrecognized amount |
+| ACC-064 | `[~]` | Go-live. `GET /accounting/go-live/unearned-preview` for running memberships and PT terms. Enabling posting also checks that the opening journal's `2200` and `2210` match the preview, then writes the go-live schedules in the same transaction | ACC-054, ACC-060, ACC-025 | A mismatch is refused with both amounts. Go-live schedules have `recognized_through` set to the day before go-live. The spec covers both |
 
 ## Phase 7 — Reports
 
 | ID | Status | Task | Depends on | Done when |
 |---|---|---|---|---|
-| ACC-070 | `[ ]` | Trial balance for a date range | ACC-021 | Debit total equals credit total. Uses the same totals query as period lock (ACC-034). One trial-balance query in the codebase |
-| ACC-071 | `[ ]` | Profit and loss for a date range | ACC-070 | Only income and expense accounts |
-| ACC-072 | `[ ]` | Balance sheet as of a date, with current-year earnings under equity | ACC-071 | Assets equal liabilities plus equity |
-| ACC-073 | `[ ]` | Day book for one date | ACC-021 | Every journal on that date is listed with its lines |
-| ACC-074 | `[ ]` | Open AR from unpaid `payments`. Open AP from bills whose allocations are short | ACC-042, ACC-051 | A paid invoice and a fully allocated bill are absent |
-| ACC-075 | `[ ]` | GST summary for a date range: taxable value and output CGST, SGST, IGST by tax code, input tax credit, net payable | ACC-070, ACC-040, ACC-041, ACC-051 | Output tax per component equals that tax account's movement for the range. Net payable equals output minus input |
-| ACC-076 | `[ ]` | Journal list filter by `payment_id` | ACC-025 | Returns the invoice, receipt, credit note, adjustment, and recognition journals for that payment, and nothing else |
+| ACC-070 | `[x]` | Trial balance for a date range | ACC-021 | Debit total equals credit total. Uses the same totals query as period lock (ACC-034). One trial-balance query in the codebase |
+| ACC-071 | `[x]` | Profit and loss for a date range | ACC-070 | Only income and expense accounts |
+| ACC-072 | `[x]` | Balance sheet as of a date, with current-year earnings under equity | ACC-071 | Assets equal liabilities plus equity |
+| ACC-073 | `[x]` | Day book for one date | ACC-021 | Every journal on that date is listed with its lines |
+| ACC-074 | `[x]` | Open AR from unpaid `payments`. Open AP from bills whose allocations are short | ACC-042, ACC-051 | A paid invoice and a fully allocated bill are absent |
+| ACC-075 | `[x]` | GST summary for a date range: taxable value and output CGST, SGST, IGST by tax code, input tax credit, net payable | ACC-070, ACC-040, ACC-041, ACC-051 | Output tax per component equals that tax account's movement for the range. Net payable equals output minus input |
+| ACC-076 | `[x]` | Journal list filter by `payment_id` | ACC-025 | Returns the invoice, receipt, credit note, adjustment, and recognition journals for that payment, and nothing else |
 
 ## Phase 8 — Contract
 
@@ -182,8 +182,8 @@ One person owns a shared file even when the wave lists the tasks together:
 
 | Marker | Count |
 |---|---|
-| `[ ]` TODO | 28 |
-| `[~]` DOING | 0 |
-| `[x]` DONE | 39 |
+| `[ ]` TODO | 16 |
+| `[~]` DOING | 5 |
+| `[x]` DONE | 46 |
 | `[!]` BLOCKED | 0 |
 | `[>]` LATER | 8 |
