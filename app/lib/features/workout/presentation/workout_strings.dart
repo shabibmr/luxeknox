@@ -3,6 +3,7 @@ import '../domain/entities/workout_plan_status.dart';
 abstract final class WorkoutStrings {
   static const listTitle = 'Workout plans';
   static const detailTitle = 'Workout plan';
+  static const addPlanForMember = 'Add workout plan';
   static const createTitle = 'Create workout plan';
   static const editTitle = 'Edit workout plan';
   static const versionsTitle = 'Plan versions';

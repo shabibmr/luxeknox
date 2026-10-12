@@ -22,11 +22,15 @@ class WorkoutPlanBuilderScreen extends StatelessWidget {
     this.planId,
     this.isTemplate,
     this.memberId,
+    this.afterSavePath,
   });
 
   final String? planId;
   final bool? isTemplate;
   final String? memberId;
+
+  /// Where to navigate after a successful save; defaults to the trainer plan detail.
+  final String? afterSavePath;
 
   @override
   Widget build(BuildContext context) {
@@ -34,16 +38,25 @@ class WorkoutPlanBuilderScreen extends StatelessWidget {
       create: (_) =>
           getIt<WorkoutPlanBuilderCubit>()
             ..init(planId: planId, isTemplate: isTemplate, memberId: memberId),
-      child: _BuilderBody(planId: planId, isPureTemplate: isTemplate == true),
+      child: _BuilderBody(
+        planId: planId,
+        isPureTemplate: isTemplate == true,
+        afterSavePath: afterSavePath,
+      ),
     );
   }
 }
 
 class _BuilderBody extends StatelessWidget {
-  const _BuilderBody({this.planId, this.isPureTemplate = false});
+  const _BuilderBody({
+    this.planId,
+    this.isPureTemplate = false,
+    this.afterSavePath,
+  });
 
   final String? planId;
   final bool isPureTemplate;
+  final String? afterSavePath;
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +95,11 @@ class _BuilderBody extends StatelessWidget {
         }
         return UnsavedChangesScope(
           hasUnsavedChanges: state.dirty && !state.saving,
-          child: _BuilderForm(state: state, isPureTemplate: isPureTemplate),
+          child: _BuilderForm(
+            state: state,
+            isPureTemplate: isPureTemplate,
+            afterSavePath: afterSavePath,
+          ),
         );
       },
     );
@@ -90,10 +107,15 @@ class _BuilderBody extends StatelessWidget {
 }
 
 class _BuilderForm extends StatefulWidget {
-  const _BuilderForm({required this.state, this.isPureTemplate = false});
+  const _BuilderForm({
+    required this.state,
+    this.isPureTemplate = false,
+    this.afterSavePath,
+  });
 
   final WorkoutPlanBuilderState state;
   final bool isPureTemplate;
+  final String? afterSavePath;
 
   @override
   State<_BuilderForm> createState() => _BuilderFormState();
@@ -226,7 +248,9 @@ class _BuilderFormState extends State<_BuilderForm> {
           ),
         ),
       );
-      context.go(Routes.trainerPlansWorkoutById(ready.planId!));
+      context.go(
+        widget.afterSavePath ?? Routes.trainerPlansWorkoutById(ready.planId!),
+      );
     }
   }
 
