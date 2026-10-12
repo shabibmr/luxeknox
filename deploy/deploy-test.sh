@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Deploys a git branch to the TEST area:
+# Deploys the current working tree in $TEST_DIR to the TEST area (no fetch/pull/checkout):
 #   app: https://app.luxeknox.com/test/   api: https://api.luxeknox.com/test/   db: luxeknox_test
-# Usage: deploy/deploy-test.sh <branch|tag|sha> [--api-only|--app-only]
+# Usage: deploy/deploy-test.sh [--api-only|--app-only]
 # Env:   SEED=1 runs `db:seed` after migrating; RESET_DB=1 drops+recreates luxeknox_test first.
 #
 # Works on a dedicated clone ($TEST_DIR), never the production checkout.
@@ -10,28 +10,32 @@
 # (falling back to the --dart-define URL below). Branches need that code (merge main).
 set -euo pipefail
 
-REF="${1:?usage: deploy/deploy-test.sh <branch|tag|sha> [--api-only|--app-only]}"
-TARGET="${2:-all}"
-
 TEST_DIR="${TEST_DIR:-/home/luxe/luxeknox-test}"
 TEST_API_DIR="${TEST_API_DIR:-/var/www/luxeknox-api-test}"
 TEST_APP_DIR="${TEST_APP_DIR:-/var/www/html/luxeknox-app-test}"
 TEST_API_PORT="${TEST_API_PORT:-3011}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+TARGET="all"
+for arg in "$@"; do
+  case "$arg" in
+    --api-only|--app-only) TARGET="$arg" ;;
+    *)
+      echo "usage: deploy/deploy-test.sh [--api-only|--app-only]" >&2
+      exit 1
+      ;;
+  esac
+done
+
 [ -f "$TEST_API_DIR/.env" ] || { echo "error: $TEST_API_DIR/.env missing" >&2; exit 1; }
 grep -q '^DB_NAME=luxeknox_test$' "$TEST_API_DIR/.env" || { echo "error: $TEST_API_DIR/.env must use DB_NAME=luxeknox_test" >&2; exit 1; }
 
 cd "$TEST_DIR"
-echo "==> Checking out $REF"
-git fetch --prune origin
-git reset -q --hard
-if git rev-parse -q --verify "refs/remotes/origin/$REF" >/dev/null; then
-  git checkout -q -B "$REF" "origin/$REF"
-else
-  git checkout -q --detach "$REF"
-fi
+REF="$(git branch --show-current)"
+[ -n "$REF" ] || REF="$(git rev-parse --short HEAD)"
+echo "==> Deploying working tree as-is ($REF @ $(git rev-parse --short HEAD))"
 git log --oneline -1
+git status -sb
 
 if [ "$TARGET" != "--app-only" ]; then
   echo "==> Building API"
