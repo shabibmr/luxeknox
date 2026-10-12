@@ -38,10 +38,10 @@ All backend paths are under `apps/api/src/pt/` unless stated. All Flutter paths 
 - [x] CP-12 FRD, entities doc, ADR-0011, screens doc <!-- id: 12 -->
 
 **Phase 6: Flutter data and domain**
-- [ ] CP-13 Regenerate `packages/api_client` <!-- id: 13 -->
-- [ ] CP-14 `PtPackageType` on the product entity and model <!-- id: 14 -->
-- [ ] CP-15 Partner fields on the subscription entity and model <!-- id: 15 -->
-- [ ] CP-16 Purchase and grid params carry the partner <!-- id: 16 -->
+- [x] CP-13 Regenerate `packages/api_client` <!-- id: 13 -->
+- [x] CP-14 `PtPackageType` on the product entity and model <!-- id: 14 -->
+- [x] CP-15 Partner fields on the subscription entity and model <!-- id: 15 -->
+- [x] CP-16 Purchase and grid params carry the partner <!-- id: 16 -->
 
 **Phase 7: Flutter UI**
 - [ ] CP-17 PT package form Single/Couple toggle and list chip <!-- id: 17 -->
@@ -349,7 +349,7 @@ Update these schemas:
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CP-11 |
 | **Files** | generated `packages/api_client/**` (excluded from the 7-file rule) |
 
@@ -363,7 +363,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CP-13 |
 | **Files** | `domain/entities/pt_product.dart`, `data/models/pt_mappers.dart`, and test fixtures that construct `PtProduct` |
 
@@ -379,7 +379,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CP-13 |
 | **Files** | `domain/entities/pt_subscription.dart`, `data/models/pt_mappers.dart`, affected fixtures |
 
@@ -393,7 +393,7 @@ Run `bash tool/gen_api.sh`.
 
 | | |
 | :--- | :--- |
-| **Status** | pending |
+| **Status** | completed |
 | **Depends** | CP-13 |
 | **Files** | `domain/repositories/pt_repository.dart`, `data/repositories/pt_repository_impl.dart`, `data/datasources/pt_remote_datasource.dart`, `domain/usecases/pt_usecases.dart`, `test/features/pt/data/pt_repository_impl_test.dart` |
 

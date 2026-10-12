@@ -14,8 +14,9 @@ void main() {
   late MockRemote remote;
   late PtRepositoryImpl repository;
 
-  setUpAll(
-    () => registerFallbackValue(
+  setUpAll(() {
+    registerFallbackValue(api.Date(2026, 1, 1));
+    registerFallbackValue(
       api.PtPurchaseRequest(
         (b) => b
           ..memberId = 0
@@ -25,8 +26,8 @@ void main() {
           ..slotStart = '00:00'
           ..weekdays = ListBuilder<int>([1]),
       ),
-    ),
-  );
+    );
+  });
 
   setUp(() {
     remote = MockRemote();
