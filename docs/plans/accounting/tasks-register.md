@@ -71,8 +71,8 @@ Later rows stay `[>]` until a new plan pulls them in.
 | ACC-042 | `[x]` | Payment voucher and allocations | ACC-040 | Allocations cannot exceed the open bill. The allocation sum equals the voucher total. Post debits payable and credits bank |
 | ACC-043 | `[x]` | Debit note against a posted bill | ACC-040 | Post debits payable and credits the bill accounts and input tax |
 | ACC-044 | `[x]` | Vitest for bill, cash expense, over-allocation, and debit note | ACC-040, ACC-041, ACC-042, ACC-043 | Specs pass |
-| ACC-045 | `[ ]` | Fund transfer draft and post, with an optional fee line. Covers cash deposits, bank to bank, and card/UPI settlement from `1020` | ACC-018, ACC-019, ACC-021 | Post credits the source for the gross, debits the destination for gross minus fee, and debits the fee account. Both accounts are `is_bank` and differ. `accounting.payments_write` required. `source_type = fund_transfer` |
-| ACC-046 | `[ ]` | Vitest for a cash deposit, a card settlement with a fee, and a same-account transfer rejected | ACC-045 | Specs pass |
+| ACC-045 | `[x]` | Fund transfer draft and post, with an optional fee line. Covers cash deposits, bank to bank, and card/UPI settlement from `1020` | ACC-018, ACC-019, ACC-021 | Post credits the source for the gross, debits the destination for gross minus fee, and debits the fee account. Both accounts are `is_bank` and differ. `accounting.payments_write` required. `source_type = fund_transfer` |
+| ACC-046 | `[x]` | Vitest for a cash deposit, a card settlement with a fee, and a same-account transfer rejected | ACC-045 | Specs pass |
 
 ## Phase 5 — Member sales bridge
 
@@ -115,15 +115,15 @@ Later rows stay `[>]` until a new plan pulls them in.
 
 | ID | Status | Task | Depends on | Done when |
 |---|---|---|---|---|
-| ACC-080 | `[ ]` | Dump OpenAPI and regenerate `packages/api_client` | ACC-025, ACC-030, ACC-031, ACC-032, ACC-033, ACC-034, ACC-040, ACC-041, ACC-042, ACC-043, ACC-045, ACC-051, ACC-053, ACC-054, ACC-057, ACC-064, ACC-070, ACC-071, ACC-072, ACC-073, ACC-074, ACC-075, ACC-076 | `pnpm --filter api openapi:check` passes |
-| ACC-081 | `[ ]` | One e2e path: post the opening journal, enable posting, issue a membership invoice mid-month, collect it, run recognition, freeze, cancel, read trial balance | ACC-080, ACC-060, ACC-058, ACC-059, ACC-064 | The trial balance balances. Unearned moved by the prorated days. After cancellation the schedule's unearned is zero and `4300` holds the rest |
+| ACC-080 | `[x]` | Dump OpenAPI and regenerate `packages/api_client` | ACC-025, ACC-030, ACC-031, ACC-032, ACC-033, ACC-034, ACC-040, ACC-041, ACC-042, ACC-043, ACC-045, ACC-051, ACC-053, ACC-054, ACC-057, ACC-064, ACC-070, ACC-071, ACC-072, ACC-073, ACC-074, ACC-075, ACC-076 | `pnpm --filter api openapi:check` passes |
+| ACC-081 | `[x]` | One e2e path: post the opening journal, enable posting, issue a membership invoice mid-month, collect it, run recognition, freeze, cancel, read trial balance | ACC-080, ACC-060, ACC-058, ACC-059, ACC-064 | The trial balance balances. Unearned moved by the prorated days. After cancellation the schedule's unearned is zero and `4300` holds the rest |
 
 ## Phase 9 — Flutter admin
 
 | ID | Status | Task | Depends on | Done when |
 |---|---|---|---|---|
-| ACC-090 | `[ ]` | Feature skeleton `app/lib/features/accounting/` with repository, use cases, and generated client | ACC-080 | `@LazySingleton` data layer and `@injectable` cubits, same as payments |
-| ACC-091 | `[ ]` | Admin route and shell destination, hidden without `accounting.read` | ACC-090 | Member and trainer shells have no accounting route |
+| ACC-090 | `[x]` | Feature skeleton `app/lib/features/accounting/` with repository, use cases, and generated client | ACC-080 | `@LazySingleton` data layer and `@injectable` cubits, same as payments |
+| ACC-091 | `[x]` | Admin route and shell destination, hidden without `accounting.read` | ACC-090 | Member and trainer shells have no accounting route |
 | ACC-092 | `[ ]` | Accounting home: cash, bank, open AR, open AP, current period | ACC-034, ACC-074, ACC-091 | Loading, empty, and error states use the shared widgets |
 | ACC-093 | `[ ]` | Chart of accounts list and form | ACC-030, ACC-091 | Deactivated accounts stay visible and cannot be picked on a new document |
 | ACC-094 | `[ ]` | Journal list, detail, and manual entry | ACC-025, ACC-091 | An unbalanced entry cannot be submitted |
@@ -182,8 +182,8 @@ One person owns a shared file even when the wave lists the tasks together:
 
 | Marker | Count |
 |---|---|
-| `[ ]` TODO | 16 |
+| `[ ]` TODO | 10 |
 | `[~]` DOING | 0 |
-| `[x]` DONE | 51 |
+| `[x]` DONE | 57 |
 | `[!]` BLOCKED | 0 |
 | `[>]` LATER | 8 |
