@@ -35,12 +35,14 @@ class JournalsCubit extends Cubit<JournalsState> {
     String? sourceType,
     bool clearDates = false,
     bool clearPaymentId = false,
+    bool clearSourceType = false,
   }) async {
     final nextFrom = clearDates ? null : (from ?? state.fromDate);
     final nextTo = clearDates ? null : (to ?? state.toDate);
     final nextPaymentId =
         clearPaymentId ? null : (paymentId ?? state.paymentId);
-    final nextSourceType = sourceType ?? state.sourceType;
+    final nextSourceType =
+        clearSourceType ? null : (sourceType ?? state.sourceType);
 
     emit(
       state.copyWith(
@@ -89,10 +91,14 @@ class JournalsCubit extends Cubit<JournalsState> {
   }
 
   Future<void> filterBySourceType(String? sourceType) {
-    return load(sourceType: sourceType);
+    return load(sourceType: sourceType, clearSourceType: sourceType == null);
   }
 
   Future<void> clearFilters() {
-    return load(clearDates: true, clearPaymentId: true, sourceType: null);
+    return load(
+      clearDates: true,
+      clearPaymentId: true,
+      clearSourceType: true,
+    );
   }
 }

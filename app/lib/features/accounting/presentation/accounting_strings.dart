@@ -60,6 +60,7 @@ class AccountingStrings {
   // Common Actions & Buttons
   static const String retry = 'Retry';
   static const String cancel = 'Cancel';
+  static const String confirm = 'Confirm';
   static const String save = 'Save';
   static const String create = 'Create';
   static const String post = 'Post';
@@ -175,6 +176,41 @@ class AccountingStrings {
   static const String accountCreatedSuccess = 'Account created successfully.';
   static const String accountUpdatedSuccess = 'Account updated successfully.';
 
+  // Journals & Entry Form
+  static const String journalNumberLabel = 'Journal #';
+  static const String sourceTypeLabel = 'Source Type';
+  static const String sourceIdLabel = 'Source ID';
+  static const String reversesJournalLabel = 'Reverses';
+  static const String reversedByJournalLabel = 'Reversed By';
+  static const String reversalDateLabel = 'Reversal Date';
+  static const String reversalMemoLabel = 'Reversal Memo';
+  static const String reverseJournalConfirm =
+      'Are you sure you want to reverse this journal entry? This will create an offsetting journal with swapped debits and credits.';
+  static const String journalReversedSuccess =
+      'Journal entry reversed successfully.';
+  static const String journalCreatedSuccess =
+      'Journal entry created successfully.';
+  static const String unbalancedEntryError =
+      'An unbalanced entry cannot be submitted. Debits must equal credits.';
+  static const String minLinesRequired =
+      'At least two journal lines are required.';
+  static const String accountRequiredOnLines =
+      'Every line must have an account selected.';
+  static const String lineBothDebitCreditError =
+      'A line cannot have both debit and credit amounts.';
+  static const String lineZeroAmountError =
+      'Every line must have either a debit or a credit amount.';
+  static const String addLine = 'Add Line';
+  static const String removeLine = 'Remove Line';
+  static const String balancedStatus = 'Balanced';
+  static const String unbalancedStatus = 'Unbalanced';
+  static const String differenceLabel = 'Difference';
+  static const String filterByDateRange = 'Filter by Date';
+  static const String filterBySourceType = 'Source Type';
+  static const String filterByPaymentId = 'Payment ID';
+  static const String openingBadge = 'Opening';
+  static const String closingBadge = 'Closing';
+
   // Periods Management
   static const String fiscalYearLabel = 'Fiscal Year';
   static const String periodNumberLabel = 'Period #';
@@ -184,6 +220,91 @@ class AccountingStrings {
       'Are you sure you want to lock this accounting period? No further transactions can be posted to it.';
   static const String unlockPeriodConfirmation =
       'Are you sure you want to unlock this accounting period?';
+
+  // Vendors, Bills, Expenses, Vouchers, Transfers (ACC-095)
+  static const String transfersTitle = 'Fund Transfers';
+  static const String transferDetailTitle = 'Fund Transfer';
+  static const String createTransferTitle = 'New Fund Transfer';
+  static const String fromAccountLabel = 'From Account';
+  static const String toAccountLabel = 'To Account';
+  static const String feeAmountLabel = 'Fee Amount';
+  static const String feeAccountLabel = 'Fee Account';
+  static const String transferDateLabel = 'Transfer Date';
+  static const String transferCreatedSuccess =
+      'Fund transfer created successfully.';
+  static const String transferPostedSuccess =
+      'Fund transfer posted successfully.';
+  static const String postTransferConfirm =
+      'Are you sure you want to post this fund transfer to the general ledger? Once posted, it cannot be modified.';
+  static const String cannotTransferSameAccount =
+      'Source and destination accounts must be different.';
+  static const String feeLineLabel = 'Processor Fee';
+  static const String postTransfer = 'Post Transfer';
+  static const String searchTransfers = 'Search transfers...';
+  static const String grossAmountLabel = 'Gross Amount';
+  static const String netTransferAmountLabel = 'Net Deposited';
+
+  static const String phoneLabel = 'Phone';
+  static const String emailLabel = 'Email';
+  static const String gstinLabel = 'GSTIN';
+  static const String vendorSavedSuccess = 'Vendor saved successfully.';
+  static const String vendorCreatedSuccess = 'Vendor created successfully.';
+  static const String vendorUpdatedSuccess = 'Vendor updated successfully.';
+  static const String vendorNameRequired = 'Vendor name is required.';
+  static const String searchVendors = 'Search vendors...';
+
+  static const String billNumberLabel = 'Bill #';
+  static const String subtotalLabel = 'Subtotal';
+  static const String taxAmountLabel = 'Tax Amount';
+  static const String billCreatedSuccess =
+      'Purchase bill created successfully.';
+  static const String billPostedSuccess =
+      'Purchase bill posted successfully.';
+  static const String postBillConfirm =
+      'Are you sure you want to post this purchase bill? Once posted, it creates journal entries and cannot be modified.';
+  static const String postBill = 'Post Bill';
+  static const String searchBills = 'Search bills...';
+  static const String lineItemRequired =
+      'At least one bill line item is required.';
+  static const String rateLabel = 'Rate';
+  static const String quantityLabel = 'Quantity';
+  static const String taxCodeLabel = 'Tax Code';
+  static const String itemLabel = 'Item';
+
+  static const String expenseNumberLabel = 'Expense #';
+  static const String payeeLabel = 'Payee';
+  static const String paidFromAccountLabel = 'Paid From Account';
+  static const String expenseCreatedSuccess =
+      'Expense created successfully.';
+  static const String expensePostedSuccess =
+      'Expense posted successfully.';
+  static const String postExpenseConfirm =
+      'Are you sure you want to post this expense voucher? Once posted, it creates journal entries and cannot be modified.';
+  static const String postExpense = 'Post Expense';
+  static const String searchExpenses = 'Search expenses...';
+  static const String vendorOrPayeeRequired =
+      'Vendor or Payee Name is required for credit expense.';
+
+  static const String voucherNumberLabel = 'Voucher #';
+  static const String bankAccountLabel = 'Bank Account';
+  static const String allocationAmountLabel = 'Allocated Amount';
+  static const String addAllocation = 'Add Allocation';
+  static const String removeAllocation = 'Remove Allocation';
+  static const String voucherCreatedSuccess =
+      'Payment voucher created successfully.';
+  static const String voucherPostedSuccess =
+      'Payment voucher posted successfully.';
+  static const String postVoucherConfirm =
+      'Are you sure you want to post this payment voucher? Once posted, it creates journal entries and cannot be modified.';
+  static const String postVoucher = 'Post Voucher';
+  static const String allocationsSumMismatch =
+      'Total amount must equal the sum of allocated amounts.';
+  static const String searchVouchers = 'Search payment vouchers...';
+  static const String allocationTypeBill = 'Purchase Bill';
+  static const String allocationTypeExpense = 'Expense Voucher';
+  static const String selectAllocationTarget = 'Select Bill or Expense';
+  static const String allocatedLabel = 'Allocated';
+  static const String allocationsLabel = 'Allocations';
 
   // Go-Live
   static const String goLiveDateLabel = 'Go-Live Date';

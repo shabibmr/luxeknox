@@ -71,16 +71,20 @@ import '../../features/accounting/domain/usecases/unlock_accounting_period_useca
     as _i551;
 import '../../features/accounting/domain/usecases/update_account_usecase.dart'
     as _i662;
+import '../../features/accounting/presentation/cubit/account_form_cubit.dart'
+    as _i951;
 import '../../features/accounting/presentation/cubit/accounting_home_cubit.dart'
     as _i457;
 import '../../features/accounting/presentation/cubit/accounting_periods_cubit.dart'
     as _i496;
 import '../../features/accounting/presentation/cubit/accounting_reports_cubit.dart'
     as _i928;
-import '../../features/accounting/presentation/cubit/account_form_cubit.dart'
-    as _i1099;
 import '../../features/accounting/presentation/cubit/accounts_cubit.dart'
     as _i495;
+import '../../features/accounting/presentation/cubit/journal_detail_cubit.dart'
+    as _i494;
+import '../../features/accounting/presentation/cubit/journal_entry_form_cubit.dart'
+    as _i508;
 import '../../features/accounting/presentation/cubit/journals_cubit.dart'
     as _i328;
 import '../../features/alerts/data/datasources/alerts_remote_datasource.dart'
@@ -1282,13 +1286,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i495.AccountsCubit>(
       () => _i495.AccountsCubit(gh<_i676.GetAccountsUseCase>()),
     );
-    gh.factory<_i1099.AccountFormCubit>(
-      () => _i1099.AccountFormCubit(
-        gh<_i307.GetAccountUseCase>(),
-        gh<_i438.CreateAccountUseCase>(),
-        gh<_i662.UpdateAccountUseCase>(),
-      ),
-    );
     gh.lazySingleton<_i744.GetPublicSettingsUseCase>(
       () => _i744.GetPublicSettingsUseCase(gh<_i674.SettingsRepository>()),
     );
@@ -1417,6 +1414,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i518.DeactivateFoodUseCase>(),
       ),
     );
+    gh.factory<_i508.JournalEntryFormCubit>(
+      () => _i508.JournalEntryFormCubit(gh<_i517.CreateJournalUseCase>()),
+    );
     gh.factory<_i410.AttendancePassCubit>(
       () => _i410.AttendancePassCubit(
         gh<_i841.GetAttendancePassUseCase>(),
@@ -1450,6 +1450,13 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i168.FoodDetailCubit>(
       () => _i168.FoodDetailCubit(gh<_i463.GetFoodUseCase>()),
+    );
+    gh.factory<_i951.AccountFormCubit>(
+      () => _i951.AccountFormCubit(
+        gh<_i307.GetAccountUseCase>(),
+        gh<_i438.CreateAccountUseCase>(),
+        gh<_i662.UpdateAccountUseCase>(),
+      ),
     );
     gh.lazySingleton<_i997.ExportReportCsvUseCase>(
       () => _i997.ExportReportCsvUseCase(gh<_i939.ReportRepository>()),
@@ -1868,13 +1875,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i748.CompareProgressPhotosUseCase>(),
       ),
     );
-    gh.factory<_i457.AccountingHomeCubit>(
-      () => _i457.AccountingHomeCubit(
-        gh<_i344.GetOpenItemsUseCase>(),
-        gh<_i676.GetAccountsUseCase>(),
-        gh<_i256.GetAccountingPeriodsUseCase>(),
-      ),
-    );
     gh.factory<_i554.EditTrainerProfileCubit>(
       () => _i554.EditTrainerProfileCubit(
         gh<_i1033.GetTrainerUseCase>(),
@@ -1914,6 +1914,19 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i590.GetMembershipFreezesUseCase>(),
         gh<_i47.ApproveFreezeUseCase>(),
         gh<_i223.RejectFreezeUseCase>(),
+      ),
+    );
+    gh.factory<_i494.JournalDetailCubit>(
+      () => _i494.JournalDetailCubit(
+        gh<_i218.GetJournalUseCase>(),
+        gh<_i791.ReverseJournalUseCase>(),
+      ),
+    );
+    gh.factory<_i457.AccountingHomeCubit>(
+      () => _i457.AccountingHomeCubit(
+        gh<_i344.GetOpenItemsUseCase>(),
+        gh<_i676.GetAccountsUseCase>(),
+        gh<_i256.GetAccountingPeriodsUseCase>(),
       ),
     );
     gh.factory<_i20.TrainerFormCubit>(
