@@ -15,6 +15,9 @@ import { DebitNotesService } from './debit-notes.service';
 import { ExpensesController } from './expenses.controller';
 import { ExpensesRepository } from './expenses.repository';
 import { ExpensesService } from './expenses.service';
+import { FundTransfersController } from './fund-transfers.controller';
+import { FundTransfersRepository } from './fund-transfers.repository';
+import { FundTransfersService } from './fund-transfers.service';
 import { GoLiveController } from './go-live.controller';
 import { GoLiveService } from './go-live.service';
 import { ItemsController } from './items.controller';
@@ -57,6 +60,7 @@ import { VendorsService } from './vendors.service';
     PurchaseBillsController,
     ExpensesController,
     PaymentVouchersController,
+    FundTransfersController,
     DebitNotesController,
     ReportsController,
     GoLiveController,
@@ -81,6 +85,8 @@ import { VendorsService } from './vendors.service';
     ExpensesService,
     PaymentVouchersRepository,
     PaymentVouchersService,
+    FundTransfersRepository,
+    FundTransfersService,
     DebitNotesRepository,
     DebitNotesService,
     CreditNotesRepository,
@@ -112,6 +118,8 @@ import { VendorsService } from './vendors.service';
     ExpensesService,
     PaymentVouchersRepository,
     PaymentVouchersService,
+    FundTransfersRepository,
+    FundTransfersService,
     DebitNotesRepository,
     DebitNotesService,
     CreditNotesRepository,

@@ -9,7 +9,7 @@ export function roundMoney(amount: number | string): string {
     throw new Error('Amount must be a valid number or string representation of a number');
   }
 
-  const str = typeof amount === 'number' ? amount.toString() : amount.trim();
+  const str = typeof amount === 'number' ? amount.toString() : String(amount).trim();
 
   // Validate number format (optional sign, integer part, optional dot and fractional part)
   if (!/^-?\d+(\.\d+)?$/.test(str)) {
