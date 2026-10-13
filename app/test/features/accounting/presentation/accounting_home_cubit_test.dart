@@ -242,7 +242,7 @@ void main() {
             .thenAnswer((_) async => Right(tAccountsPage));
         when(() => mockGetAccountingPeriods(any()))
             .thenAnswer((_) async => Right([tJanPeriod, tFebPeriod]));
-        return AccountingHomeCubit(
+        return AccountingHomeCubit.withClock(
           mockGetOpenItems,
           mockGetAccounts,
           mockGetAccountingPeriods,
@@ -271,7 +271,7 @@ void main() {
             .thenAnswer((_) async => Right(tAccountsPage));
         when(() => mockGetAccountingPeriods(any()))
             .thenAnswer((_) async => Right([tJanPeriod, tFebPeriod]));
-        return AccountingHomeCubit(
+        return AccountingHomeCubit.withClock(
           mockGetOpenItems,
           mockGetAccounts,
           mockGetAccountingPeriods,

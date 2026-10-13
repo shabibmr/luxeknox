@@ -95,6 +95,11 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(FoodPage.serializer)
       ..add(FoodWrite.serializer)
       ..add(ForgotPasswordRequest.serializer)
+      ..add(FundTransfer.serializer)
+      ..add(FundTransferCreate.serializer)
+      ..add(FundTransferPage.serializer)
+      ..add(FundTransferStatusEnum.serializer)
+      ..add(FundTransferUpdate.serializer)
       ..add(Goal.serializer)
       ..add(GoalCheckInWrite.serializer)
       ..add(GoalHistory.serializer)
@@ -421,6 +426,9 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Food)]),
           () => ListBuilder<Food>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(FundTransfer)]),
+          () => ListBuilder<FundTransfer>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Goal)]),
           () => ListBuilder<Goal>())

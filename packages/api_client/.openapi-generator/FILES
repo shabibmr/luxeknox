@@ -88,6 +88,10 @@ doc/Food.md
 doc/FoodPage.md
 doc/FoodWrite.md
 doc/ForgotPasswordRequest.md
+doc/FundTransfer.md
+doc/FundTransferCreate.md
+doc/FundTransferPage.md
+doc/FundTransferUpdate.md
 doc/GOALApi.md
 doc/Goal.md
 doc/GoalCheckInWrite.md
@@ -414,6 +418,10 @@ lib/src/model/food.dart
 lib/src/model/food_page.dart
 lib/src/model/food_write.dart
 lib/src/model/forgot_password_request.dart
+lib/src/model/fund_transfer.dart
+lib/src/model/fund_transfer_create.dart
+lib/src/model/fund_transfer_page.dart
+lib/src/model/fund_transfer_update.dart
 lib/src/model/goal.dart
 lib/src/model/goal_check_in_write.dart
 lib/src/model/goal_history.dart
@@ -619,3 +627,7 @@ lib/src/model/workout_set_update.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
+test/fund_transfer_create_test.dart
+test/fund_transfer_page_test.dart
+test/fund_transfer_test.dart
+test/fund_transfer_update_test.dart

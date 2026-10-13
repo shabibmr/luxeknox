@@ -25,13 +25,24 @@ abstract class AccountingHomeState with _$AccountingHomeState {
   }) = _AccountingHomeState;
 }
 
+typedef Clock = DateTime Function();
+
 @injectable
 class AccountingHomeCubit extends Cubit<AccountingHomeState> {
+  @factoryMethod
   AccountingHomeCubit(
     this._getOpenItems,
     this._getAccounts,
+    this._getAccountingPeriods,
+  )   : _now = DateTime.now,
+        super(const AccountingHomeState());
+
+  @visibleForTesting
+  AccountingHomeCubit.withClock(
+    this._getOpenItems,
+    this._getAccounts,
     this._getAccountingPeriods, {
-    DateTime Function()? now,
+    Clock? now,
   })  : _now = now ?? DateTime.now,
         super(const AccountingHomeState());
 

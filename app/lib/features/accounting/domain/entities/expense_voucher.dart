@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'purchase_bill.dart';
+
 class ExpenseVoucher extends Equatable {
   const ExpenseVoucher({
     required this.id,
@@ -15,6 +17,7 @@ class ExpenseVoucher extends Equatable {
     this.journalEntryId,
     this.memo,
     this.rowVersion = 1,
+    this.lines = const [],
   });
 
   final String id;
@@ -30,6 +33,7 @@ class ExpenseVoucher extends Equatable {
   final String? journalEntryId;
   final String? memo;
   final int rowVersion;
+  final List<PurchaseBillLine> lines;
 
   @override
   List<Object?> get props => [
@@ -46,5 +50,6 @@ class ExpenseVoucher extends Equatable {
     journalEntryId,
     memo,
     rowVersion,
+    lines,
   ];
 }

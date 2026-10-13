@@ -7,6 +7,7 @@ import '../entities/accounting_period.dart';
 import '../entities/accounting_reports.dart';
 import '../entities/debit_note.dart';
 import '../entities/expense_voucher.dart';
+import '../entities/fund_transfer.dart';
 import '../entities/item.dart';
 import '../entities/journal.dart';
 import '../entities/payment_voucher.dart';
@@ -207,6 +208,43 @@ abstract class AccountingRepository {
   });
 
   Future<Either<Failure, PaymentVoucher>> postPaymentVoucher(String id);
+
+  // Fund Transfers
+  Future<Either<Failure, CursorPage<FundTransfer>>> getFundTransfers({
+    int? limit,
+    int? offset,
+    String? status,
+    String? accountId,
+    DateTime? from,
+    DateTime? to,
+    String? search,
+  });
+
+  Future<Either<Failure, FundTransfer>> getFundTransfer(String id);
+
+  Future<Either<Failure, FundTransfer>> createFundTransfer({
+    required DateTime transferDate,
+    required String fromAccountId,
+    required String toAccountId,
+    required String amount,
+    String? feeAmount,
+    String? feeAccountId,
+    String? memo,
+    String? idempotencyKey,
+  });
+
+  Future<Either<Failure, FundTransfer>> updateFundTransfer({
+    required String id,
+    DateTime? transferDate,
+    String? fromAccountId,
+    String? toAccountId,
+    String? amount,
+    String? feeAmount,
+    String? feeAccountId,
+    String? memo,
+  });
+
+  Future<Either<Failure, FundTransfer>> postFundTransfer(String id);
 
   // Debit Notes
   Future<Either<Failure, CursorPage<DebitNote>>> getDebitNotes({

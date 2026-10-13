@@ -12,6 +12,7 @@ Method | HTTP request | Description
 [**createAccount**](ACCTApi.md#createaccount) | **POST** /accounting/accounts | Create an account
 [**createDebitNote**](ACCTApi.md#createdebitnote) | **POST** /accounting/debit-notes | Create a draft debit note
 [**createExpense**](ACCTApi.md#createexpense) | **POST** /accounting/expenses | Create an expense voucher
+[**createFundTransfer**](ACCTApi.md#createfundtransfer) | **POST** /accounting/fund-transfers | Create fund transfer
 [**createItem**](ACCTApi.md#createitem) | **POST** /accounting/items | Create item
 [**createJournal**](ACCTApi.md#createjournal) | **POST** /accounting/journals | Create a manual or opening-balance journal
 [**createPaymentVoucher**](ACCTApi.md#createpaymentvoucher) | **POST** /accounting/payment-vouchers | Create a draft payment voucher
@@ -23,6 +24,7 @@ Method | HTTP request | Description
 [**getDayBook**](ACCTApi.md#getdaybook) | **GET** /accounting/reports/day-book | Day book for one date
 [**getDebitNote**](ACCTApi.md#getdebitnote) | **GET** /accounting/debit-notes/{id} | Get debit note by ID
 [**getExpense**](ACCTApi.md#getexpense) | **GET** /accounting/expenses/{id} | Get expense voucher by ID
+[**getFundTransfer**](ACCTApi.md#getfundtransfer) | **GET** /accounting/fund-transfers/{id} | Get fund transfer by ID
 [**getGstSummary**](ACCTApi.md#getgstsummary) | **GET** /accounting/reports/gst-summary | GST summary for a date range
 [**getItem**](ACCTApi.md#getitem) | **GET** /accounting/items/{id} | Get item by ID
 [**getJournal**](ACCTApi.md#getjournal) | **GET** /accounting/journals/{id} | Journal entry detail
@@ -39,6 +41,7 @@ Method | HTTP request | Description
 [**listDebitNotes**](ACCTApi.md#listdebitnotes) | **GET** /accounting/debit-notes | List debit notes
 [**listExpenses**](ACCTApi.md#listexpenses) | **GET** /accounting/expenses | List expense vouchers
 [**listFiscalYears**](ACCTApi.md#listfiscalyears) | **GET** /accounting/fiscal-years | List all fiscal years
+[**listFundTransfers**](ACCTApi.md#listfundtransfers) | **GET** /accounting/fund-transfers | List fund transfers
 [**listItems**](ACCTApi.md#listitems) | **GET** /accounting/items | List items
 [**listJournals**](ACCTApi.md#listjournals) | **GET** /accounting/journals | List journal entries
 [**listPaymentVouchers**](ACCTApi.md#listpaymentvouchers) | **GET** /accounting/payment-vouchers | List payment vouchers
@@ -48,12 +51,14 @@ Method | HTTP request | Description
 [**lockAccountingPeriod**](ACCTApi.md#lockaccountingperiod) | **POST** /accounting/periods/{id}/lock | Lock an accounting period
 [**postDebitNote**](ACCTApi.md#postdebitnote) | **POST** /accounting/debit-notes/{id}/post | Post a debit note to the general ledger
 [**postExpense**](ACCTApi.md#postexpense) | **POST** /accounting/expenses/{id}/post | Post an expense voucher to general ledger
+[**postFundTransfer**](ACCTApi.md#postfundtransfer) | **POST** /accounting/fund-transfers/{id}/post | Post fund transfer to GL
 [**postPaymentVoucher**](ACCTApi.md#postpaymentvoucher) | **POST** /accounting/payment-vouchers/{id}/post | Post a payment voucher to GL
 [**postPurchaseBill**](ACCTApi.md#postpurchasebill) | **POST** /accounting/purchase-bills/{id}/post | Post a purchase bill to the general ledger
 [**reverseJournal**](ACCTApi.md#reversejournal) | **POST** /accounting/journals/{id}/reverse | Reverse a posted journal
 [**unlockAccountingPeriod**](ACCTApi.md#unlockaccountingperiod) | **POST** /accounting/periods/{id}/unlock | Unlock an accounting period
 [**updateAccount**](ACCTApi.md#updateaccount) | **PATCH** /accounting/accounts/{id} | Update an account
 [**updateExpense**](ACCTApi.md#updateexpense) | **PATCH** /accounting/expenses/{id} | Update a draft expense voucher
+[**updateFundTransfer**](ACCTApi.md#updatefundtransfer) | **PATCH** /accounting/fund-transfers/{id} | Update fund transfer
 [**updateItem**](ACCTApi.md#updateitem) | **PATCH** /accounting/items/{id} | Update item
 [**updatePaymentVoucher**](ACCTApi.md#updatepaymentvoucher) | **PATCH** /accounting/payment-vouchers/{id} | Update a draft payment voucher
 [**updatePurchaseBill**](ACCTApi.md#updatepurchasebill) | **PATCH** /accounting/purchase-bills/{id} | Update a draft purchase bill
@@ -176,6 +181,49 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**ExpenseVoucher**](ExpenseVoucher.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **createFundTransfer**
+> FundTransfer createFundTransfer(fundTransferCreate, idempotencyKey)
+
+Create fund transfer
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getACCTApi();
+final FundTransferCreate fundTransferCreate = ; // FundTransferCreate | 
+final String idempotencyKey = idempotencyKey_example; // String | Required in practice on payments, check-in, booking, freeze (FR-API-008).
+
+try {
+    final response = api.createFundTransfer(fundTransferCreate, idempotencyKey);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling ACCTApi->createFundTransfer: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **fundTransferCreate** | [**FundTransferCreate**](FundTransferCreate.md)|  | 
+ **idempotencyKey** | **String**| Required in practice on payments, check-in, booking, freeze (FR-API-008). | [optional] 
+
+### Return type
+
+[**FundTransfer**](FundTransfer.md)
 
 ### Authorization
 
@@ -633,6 +681,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**ExpenseVoucher**](ExpenseVoucher.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getFundTransfer**
+> FundTransfer getFundTransfer(id)
+
+Get fund transfer by ID
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getACCTApi();
+final int id = 789; // int | 
+
+try {
+    final response = api.getFundTransfer(id);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling ACCTApi->getFundTransfer: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+
+### Return type
+
+[**FundTransfer**](FundTransfer.md)
 
 ### Authorization
 
@@ -1337,6 +1426,59 @@ This endpoint does not need any parameter.
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **listFundTransfers**
+> FundTransferPage listFundTransfers(limit, offset, status, from, to, accountId, search)
+
+List fund transfers
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getACCTApi();
+final int limit = 56; // int | Default from gym_settings pagination.default_page_size.
+final int offset = 56; // int | Admin tables that need page numbers.
+final String status = status_example; // String | 
+final Date from = 2013-10-20; // Date | 
+final Date to = 2013-10-20; // Date | 
+final int accountId = 789; // int | 
+final String search = search_example; // String | 
+
+try {
+    final response = api.listFundTransfers(limit, offset, status, from, to, accountId, search);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling ACCTApi->listFundTransfers: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **limit** | **int**| Default from gym_settings pagination.default_page_size. | [optional] 
+ **offset** | **int**| Admin tables that need page numbers. | [optional] 
+ **status** | **String**|  | [optional] 
+ **from** | **Date**|  | [optional] 
+ **to** | **Date**|  | [optional] 
+ **accountId** | **int**|  | [optional] 
+ **search** | **String**|  | [optional] 
+
+### Return type
+
+[**FundTransferPage**](FundTransferPage.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listItems**
 > ItemPage listItems(limit, offset, itemKind, isActive, search)
 
@@ -1758,6 +1900,47 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **postFundTransfer**
+> FundTransfer postFundTransfer(id)
+
+Post fund transfer to GL
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getACCTApi();
+final int id = 789; // int | 
+
+try {
+    final response = api.postFundTransfer(id);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling ACCTApi->postFundTransfer: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+
+### Return type
+
+[**FundTransfer**](FundTransfer.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **postPaymentVoucher**
 > PaymentVoucher postPaymentVoucher(id)
 
@@ -2000,6 +2183,49 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**ExpenseVoucher**](ExpenseVoucher.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **updateFundTransfer**
+> FundTransfer updateFundTransfer(id, fundTransferUpdate)
+
+Update fund transfer
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getACCTApi();
+final int id = 789; // int | 
+final FundTransferUpdate fundTransferUpdate = ; // FundTransferUpdate | 
+
+try {
+    final response = api.updateFundTransfer(id, fundTransferUpdate);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling ACCTApi->updateFundTransfer: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **fundTransferUpdate** | [**FundTransferUpdate**](FundTransferUpdate.md)|  | 
+
+### Return type
+
+[**FundTransfer**](FundTransfer.md)
 
 ### Authorization
 

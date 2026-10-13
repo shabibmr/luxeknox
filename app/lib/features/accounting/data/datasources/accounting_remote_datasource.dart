@@ -149,6 +149,31 @@ abstract class AccountingRemoteDataSource {
 
   Future<api.PaymentVoucher> postPaymentVoucher(int id);
 
+  // Fund Transfers
+  Future<api.FundTransferPage> listFundTransfers({
+    int? limit,
+    int? offset,
+    String? status,
+    api.Date? from,
+    api.Date? to,
+    int? accountId,
+    String? search,
+  });
+
+  Future<api.FundTransfer> getFundTransfer(int id);
+
+  Future<api.FundTransfer> createFundTransfer({
+    required api.FundTransferCreate fundTransferCreate,
+    String? idempotencyKey,
+  });
+
+  Future<api.FundTransfer> updateFundTransfer({
+    required int id,
+    required api.FundTransferUpdate fundTransferUpdate,
+  });
+
+  Future<api.FundTransfer> postFundTransfer(int id);
+
   // Debit Notes
   Future<api.DebitNotePage> listDebitNotes({
     int? limit,
@@ -592,6 +617,66 @@ class AccountingRemoteDataSourceImpl implements AccountingRemoteDataSource {
   @override
   Future<api.PaymentVoucher> postPaymentVoucher(int id) async {
     return _unwrap(await _acctApi.postPaymentVoucher(id: id));
+  }
+
+  // Fund Transfers
+  @override
+  Future<api.FundTransferPage> listFundTransfers({
+    int? limit,
+    int? offset,
+    String? status,
+    api.Date? from,
+    api.Date? to,
+    int? accountId,
+    String? search,
+  }) async {
+    return _unwrap(
+      await _acctApi.listFundTransfers(
+        limit: limit,
+        offset: offset,
+        status: status,
+        from: from,
+        to: to,
+        accountId: accountId,
+        search: search,
+      ),
+    );
+  }
+
+  @override
+  Future<api.FundTransfer> getFundTransfer(int id) async {
+    return _unwrap(await _acctApi.getFundTransfer(id: id));
+  }
+
+  @override
+  Future<api.FundTransfer> createFundTransfer({
+    required api.FundTransferCreate fundTransferCreate,
+    String? idempotencyKey,
+  }) async {
+    return _unwrap(
+      await _acctApi.createFundTransfer(
+        fundTransferCreate: fundTransferCreate,
+        idempotencyKey: idempotencyKey,
+      ),
+    );
+  }
+
+  @override
+  Future<api.FundTransfer> updateFundTransfer({
+    required int id,
+    required api.FundTransferUpdate fundTransferUpdate,
+  }) async {
+    return _unwrap(
+      await _acctApi.updateFundTransfer(
+        id: id,
+        fundTransferUpdate: fundTransferUpdate,
+      ),
+    );
+  }
+
+  @override
+  Future<api.FundTransfer> postFundTransfer(int id) async {
+    return _unwrap(await _acctApi.postFundTransfer(id: id));
   }
 
   // Debit Notes

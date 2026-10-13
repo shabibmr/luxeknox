@@ -1,13 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/accounting/domain/entities/expense_voucher.dart';
+import '../../features/accounting/domain/entities/fund_transfer.dart';
 import '../../features/accounting/domain/entities/journal.dart';
+import '../../features/accounting/domain/entities/payment_voucher.dart';
+import '../../features/accounting/domain/entities/purchase_bill.dart';
 import '../../features/accounting/presentation/screens/account_form_screen.dart';
 import '../../features/accounting/presentation/screens/accounting_home_screen.dart';
 import '../../features/accounting/presentation/screens/chart_of_accounts_screen.dart';
+import '../../features/accounting/presentation/screens/expense_detail_screen.dart';
+import '../../features/accounting/presentation/screens/expense_form_screen.dart';
+import '../../features/accounting/presentation/screens/expenses_list_screen.dart';
+import '../../features/accounting/presentation/screens/fund_transfer_detail_screen.dart';
+import '../../features/accounting/presentation/screens/fund_transfer_form_screen.dart';
+import '../../features/accounting/presentation/screens/fund_transfers_list_screen.dart';
 import '../../features/accounting/presentation/screens/journal_detail_screen.dart';
 import '../../features/accounting/presentation/screens/journal_entry_form_screen.dart';
 import '../../features/accounting/presentation/screens/journals_list_screen.dart';
+import '../../features/accounting/presentation/screens/payment_voucher_detail_screen.dart';
+import '../../features/accounting/presentation/screens/payment_voucher_form_screen.dart';
+import '../../features/accounting/presentation/screens/payment_vouchers_list_screen.dart';
+import '../../features/accounting/presentation/screens/purchase_bill_detail_screen.dart';
+import '../../features/accounting/presentation/screens/purchase_bill_form_screen.dart';
+import '../../features/accounting/presentation/screens/purchase_bills_list_screen.dart';
+import '../../features/accounting/presentation/screens/vendor_form_screen.dart';
+import '../../features/accounting/presentation/screens/vendors_list_screen.dart';
 import '../../features/alerts/presentation/screens/system_alerts_screen.dart';
 import '../../features/attendance/presentation/screens/admin_attendance_screen.dart';
 import '../../features/auth/presentation/widgets/sign_out_tile.dart';
@@ -414,6 +432,99 @@ StatefulShellRoute createAdminBranchRoute() {
                       journalId: state.pathParameters['id']!,
                       initialJournal: state.extra is Journal
                           ? state.extra as Journal
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'vendors',
+                builder: (context, state) => const VendorsListScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (context, state) => const VendorFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id/edit',
+                    builder: (context, state) => VendorFormScreen(
+                      vendorId: state.pathParameters['id'],
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'bills',
+                builder: (context, state) => const PurchaseBillsListScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (context, state) => const PurchaseBillFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) => PurchaseBillDetailScreen(
+                      billId: state.pathParameters['id']!,
+                      initialBill: state.extra is PurchaseBill
+                          ? state.extra as PurchaseBill
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'expenses',
+                builder: (context, state) => const ExpensesListScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (context, state) => const ExpenseFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) => ExpenseDetailScreen(
+                      expenseId: state.pathParameters['id']!,
+                      initialExpense: state.extra is ExpenseVoucher
+                          ? state.extra as ExpenseVoucher
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'payment-vouchers',
+                builder: (context, state) => const PaymentVouchersListScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (context, state) =>
+                        const PaymentVoucherFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) => PaymentVoucherDetailScreen(
+                      voucherId: state.pathParameters['id']!,
+                      initialVoucher: state.extra is PaymentVoucher
+                          ? state.extra as PaymentVoucher
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'transfers',
+                builder: (context, state) => const FundTransfersListScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (context, state) => const FundTransferFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) => FundTransferDetailScreen(
+                      transferId: state.pathParameters['id']!,
+                      initialTransfer: state.extra is FundTransfer
+                          ? state.extra as FundTransfer
                           : null,
                     ),
                   ),

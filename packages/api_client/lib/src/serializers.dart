@@ -95,6 +95,10 @@ import 'package:api_client/src/model/food.dart';
 import 'package:api_client/src/model/food_page.dart';
 import 'package:api_client/src/model/food_write.dart';
 import 'package:api_client/src/model/forgot_password_request.dart';
+import 'package:api_client/src/model/fund_transfer.dart';
+import 'package:api_client/src/model/fund_transfer_create.dart';
+import 'package:api_client/src/model/fund_transfer_page.dart';
+import 'package:api_client/src/model/fund_transfer_update.dart';
 import 'package:api_client/src/model/goal.dart';
 import 'package:api_client/src/model/goal_check_in_write.dart';
 import 'package:api_client/src/model/goal_history.dart';
@@ -383,6 +387,10 @@ part 'serializers.g.dart';
   FoodPage,
   FoodWrite,
   ForgotPasswordRequest,
+  FundTransfer,
+  FundTransferCreate,
+  FundTransferPage,
+  FundTransferUpdate,
   Goal,
   GoalCheckInWrite,
   GoalHistory,
@@ -611,6 +619,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(OpenApItem)]),
         () => ListBuilder<OpenApItem>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(FundTransfer)]),
+        () => ListBuilder<FundTransfer>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(MembershipProduct)]),

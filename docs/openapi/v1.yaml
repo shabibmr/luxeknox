@@ -8226,6 +8226,207 @@ paths:
         "429":
           $ref: "#/components/responses/Error429"
 
+  /accounting/fund-transfers:
+    get:
+      operationId: listFundTransfers
+      summary: List fund transfers
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, posted]
+        - name: from
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: to
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: account_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FundTransferPage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    post:
+      operationId: createFundTransfer
+      summary: Create fund transfer
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.payments_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FundTransferCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FundTransfer"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/fund-transfers/{id}:
+    get:
+      operationId: getFundTransfer
+      summary: Get fund transfer by ID
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FundTransfer"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    patch:
+      operationId: updateFundTransfer
+      summary: Update fund transfer
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.payments_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FundTransferUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FundTransfer"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/fund-transfers/{id}/post:
+    post:
+      operationId: postFundTransfer
+      summary: Post fund transfer to GL
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.payments_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FundTransfer"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
   /accounting/debit-notes:
     get:
       operationId: listDebitNotes
@@ -12893,6 +13094,97 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PaymentVoucher"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    FundTransfer:
+      type: object
+      required: [id, transfer_number, transfer_date, from_account_id, to_account_id, amount, fee_amount, status, row_version, created_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        transfer_number:
+          type: string
+        transfer_date:
+          $ref: "#/components/schemas/Date"
+        from_account_id:
+          $ref: "#/components/schemas/Id"
+        to_account_id:
+          $ref: "#/components/schemas/Id"
+        amount:
+          $ref: "#/components/schemas/Money"
+        fee_amount:
+          $ref: "#/components/schemas/Money"
+        fee_account_id:
+          $ref: "#/components/schemas/Id"
+          nullable: true
+        memo:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [draft, posted]
+        journal_entry_id:
+          type: integer
+          format: int64
+          nullable: true
+        row_version:
+          type: integer
+        created_at:
+          $ref: "#/components/schemas/DateTime"
+        updated_at:
+          $ref: "#/components/schemas/DateTime"
+          nullable: true
+
+    FundTransferCreate:
+      type: object
+      required: [transfer_date, from_account_id, to_account_id, amount]
+      properties:
+        transfer_date:
+          $ref: "#/components/schemas/Date"
+        from_account_id:
+          $ref: "#/components/schemas/Id"
+        to_account_id:
+          $ref: "#/components/schemas/Id"
+        amount:
+          $ref: "#/components/schemas/Money"
+        fee_amount:
+          $ref: "#/components/schemas/Money"
+        fee_account_id:
+          $ref: "#/components/schemas/Id"
+          nullable: true
+        memo:
+          type: string
+          nullable: true
+
+    FundTransferUpdate:
+      type: object
+      properties:
+        transfer_date:
+          $ref: "#/components/schemas/Date"
+        from_account_id:
+          $ref: "#/components/schemas/Id"
+        to_account_id:
+          $ref: "#/components/schemas/Id"
+        amount:
+          $ref: "#/components/schemas/Money"
+        fee_amount:
+          $ref: "#/components/schemas/Money"
+        fee_account_id:
+          $ref: "#/components/schemas/Id"
+          nullable: true
+        memo:
+          type: string
+          nullable: true
+
+    FundTransferPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/FundTransfer"
         meta:
           $ref: "#/components/schemas/PageMeta"
 

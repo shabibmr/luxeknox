@@ -1,5 +1,30 @@
 import 'package:equatable/equatable.dart';
 
+class PaymentVoucherAllocation extends Equatable {
+  const PaymentVoucherAllocation({
+    required this.id,
+    required this.paymentVoucherId,
+    this.purchaseBillId,
+    this.expenseVoucherId,
+    required this.amount,
+  });
+
+  final String id;
+  final String paymentVoucherId;
+  final String? purchaseBillId;
+  final String? expenseVoucherId;
+  final String amount;
+
+  @override
+  List<Object?> get props => [
+    id,
+    paymentVoucherId,
+    purchaseBillId,
+    expenseVoucherId,
+    amount,
+  ];
+}
+
 class PaymentVoucher extends Equatable {
   const PaymentVoucher({
     required this.id,
@@ -13,6 +38,7 @@ class PaymentVoucher extends Equatable {
     this.journalEntryId,
     this.memo,
     this.rowVersion = 1,
+    this.allocations = const [],
   });
 
   final String id;
@@ -26,6 +52,7 @@ class PaymentVoucher extends Equatable {
   final String? journalEntryId;
   final String? memo;
   final int rowVersion;
+  final List<PaymentVoucherAllocation> allocations;
 
   @override
   List<Object?> get props => [
@@ -40,5 +67,6 @@ class PaymentVoucher extends Equatable {
     journalEntryId,
     memo,
     rowVersion,
+    allocations,
   ];
 }

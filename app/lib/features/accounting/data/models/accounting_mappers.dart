@@ -6,6 +6,7 @@ import '../../domain/entities/accounting_period.dart';
 import '../../domain/entities/accounting_reports.dart';
 import '../../domain/entities/debit_note.dart';
 import '../../domain/entities/expense_voucher.dart';
+import '../../domain/entities/fund_transfer.dart';
 import '../../domain/entities/item.dart';
 import '../../domain/entities/journal.dart';
 import '../../domain/entities/payment_voucher.dart';
@@ -342,6 +343,21 @@ extension ExpenseVoucherModelMapper on api.ExpenseVoucher {
       journalEntryId: journalEntryId?.toString(),
       memo: payeeName,
       rowVersion: rowVersion,
+      lines: lines
+          .map(
+            (l) => PurchaseBillLine(
+              id: l.id.toString(),
+              billId: id.toString(),
+              accountId: l.accountId.toString(),
+              description: l.description,
+              quantity: '1',
+              unitPrice: l.amount,
+              amount: l.amount,
+              taxCodeId: l.taxCodeId?.toString(),
+              taxAmount: l.taxAmount,
+            ),
+          )
+          .toList(),
     );
   }
 }
@@ -424,6 +440,17 @@ extension PaymentVoucherModelMapper on api.PaymentVoucher {
       journalEntryId: journalEntryId?.toString(),
       memo: memo,
       rowVersion: rowVersion,
+      allocations: allocations
+          .map(
+            (a) => PaymentVoucherAllocation(
+              id: a.id.toString(),
+              paymentVoucherId: id.toString(),
+              purchaseBillId: a.purchaseBillId?.toString(),
+              expenseVoucherId: a.expenseVoucherId?.toString(),
+              amount: a.amount,
+            ),
+          )
+          .toList(),
     );
   }
 }
@@ -883,3 +910,73 @@ extension UnearnedPreviewResponseModelMapper on api.UnearnedPreviewResponse {
     );
   }
 }
+
+// Fund Transfers
+extension FundTransferModelMapper on api.FundTransfer {
+  FundTransfer toDomain() {
+    return FundTransfer(
+      id: id.toString(),
+      transferNumber: transferNumber,
+      transferDate: transferDate.toDateTime(),
+      fromAccountId: fromAccountId.toString(),
+      toAccountId: toAccountId.toString(),
+      amount: amount,
+      feeAmount: feeAmount,
+      feeAccountId: feeAccountId?.toString(),
+      memo: memo,
+      status: status.name,
+      journalEntryId: journalEntryId?.toString(),
+      rowVersion: rowVersion,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+}
+
+api.FundTransferCreate toFundTransferCreate({
+  required DateTime transferDate,
+  required String fromAccountId,
+  required String toAccountId,
+  required String amount,
+  String? feeAmount,
+  String? feeAccountId,
+  String? memo,
+}) {
+  return api.FundTransferCreate(
+    (b) => b
+      ..transferDate =
+          api.Date(transferDate.year, transferDate.month, transferDate.day)
+      ..fromAccountId = int.parse(fromAccountId)
+      ..toAccountId = int.parse(toAccountId)
+      ..amount = amount
+      ..feeAmount = feeAmount
+      ..feeAccountId = feeAccountId == null ? null : int.tryParse(feeAccountId)
+      ..memo = memo,
+  );
+}
+
+api.FundTransferUpdate toFundTransferUpdate({
+  DateTime? transferDate,
+  String? fromAccountId,
+  String? toAccountId,
+  String? amount,
+  String? feeAmount,
+  String? feeAccountId,
+  String? memo,
+}) {
+  return api.FundTransferUpdate(
+    (b) => b
+      ..transferDate = transferDate == null
+          ? null
+          : api.Date(
+              transferDate.year, transferDate.month, transferDate.day)
+      ..fromAccountId =
+          fromAccountId == null ? null : int.tryParse(fromAccountId)
+      ..toAccountId = toAccountId == null ? null : int.tryParse(toAccountId)
+      ..amount = amount
+      ..feeAmount = feeAmount
+      ..feeAccountId = feeAccountId == null ? null : int.tryParse(feeAccountId)
+      ..memo = memo,
+  );
+}
+

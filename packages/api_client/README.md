@@ -76,6 +76,7 @@ Class | Method | HTTP request | Description
 [*ACCTApi*](doc/ACCTApi.md) | [**createAccount**](doc/ACCTApi.md#createaccount) | **POST** /accounting/accounts | Create an account
 [*ACCTApi*](doc/ACCTApi.md) | [**createDebitNote**](doc/ACCTApi.md#createdebitnote) | **POST** /accounting/debit-notes | Create a draft debit note
 [*ACCTApi*](doc/ACCTApi.md) | [**createExpense**](doc/ACCTApi.md#createexpense) | **POST** /accounting/expenses | Create an expense voucher
+[*ACCTApi*](doc/ACCTApi.md) | [**createFundTransfer**](doc/ACCTApi.md#createfundtransfer) | **POST** /accounting/fund-transfers | Create fund transfer
 [*ACCTApi*](doc/ACCTApi.md) | [**createItem**](doc/ACCTApi.md#createitem) | **POST** /accounting/items | Create item
 [*ACCTApi*](doc/ACCTApi.md) | [**createJournal**](doc/ACCTApi.md#createjournal) | **POST** /accounting/journals | Create a manual or opening-balance journal
 [*ACCTApi*](doc/ACCTApi.md) | [**createPaymentVoucher**](doc/ACCTApi.md#createpaymentvoucher) | **POST** /accounting/payment-vouchers | Create a draft payment voucher
@@ -87,6 +88,7 @@ Class | Method | HTTP request | Description
 [*ACCTApi*](doc/ACCTApi.md) | [**getDayBook**](doc/ACCTApi.md#getdaybook) | **GET** /accounting/reports/day-book | Day book for one date
 [*ACCTApi*](doc/ACCTApi.md) | [**getDebitNote**](doc/ACCTApi.md#getdebitnote) | **GET** /accounting/debit-notes/{id} | Get debit note by ID
 [*ACCTApi*](doc/ACCTApi.md) | [**getExpense**](doc/ACCTApi.md#getexpense) | **GET** /accounting/expenses/{id} | Get expense voucher by ID
+[*ACCTApi*](doc/ACCTApi.md) | [**getFundTransfer**](doc/ACCTApi.md#getfundtransfer) | **GET** /accounting/fund-transfers/{id} | Get fund transfer by ID
 [*ACCTApi*](doc/ACCTApi.md) | [**getGstSummary**](doc/ACCTApi.md#getgstsummary) | **GET** /accounting/reports/gst-summary | GST summary for a date range
 [*ACCTApi*](doc/ACCTApi.md) | [**getItem**](doc/ACCTApi.md#getitem) | **GET** /accounting/items/{id} | Get item by ID
 [*ACCTApi*](doc/ACCTApi.md) | [**getJournal**](doc/ACCTApi.md#getjournal) | **GET** /accounting/journals/{id} | Journal entry detail
@@ -103,6 +105,7 @@ Class | Method | HTTP request | Description
 [*ACCTApi*](doc/ACCTApi.md) | [**listDebitNotes**](doc/ACCTApi.md#listdebitnotes) | **GET** /accounting/debit-notes | List debit notes
 [*ACCTApi*](doc/ACCTApi.md) | [**listExpenses**](doc/ACCTApi.md#listexpenses) | **GET** /accounting/expenses | List expense vouchers
 [*ACCTApi*](doc/ACCTApi.md) | [**listFiscalYears**](doc/ACCTApi.md#listfiscalyears) | **GET** /accounting/fiscal-years | List all fiscal years
+[*ACCTApi*](doc/ACCTApi.md) | [**listFundTransfers**](doc/ACCTApi.md#listfundtransfers) | **GET** /accounting/fund-transfers | List fund transfers
 [*ACCTApi*](doc/ACCTApi.md) | [**listItems**](doc/ACCTApi.md#listitems) | **GET** /accounting/items | List items
 [*ACCTApi*](doc/ACCTApi.md) | [**listJournals**](doc/ACCTApi.md#listjournals) | **GET** /accounting/journals | List journal entries
 [*ACCTApi*](doc/ACCTApi.md) | [**listPaymentVouchers**](doc/ACCTApi.md#listpaymentvouchers) | **GET** /accounting/payment-vouchers | List payment vouchers
@@ -112,12 +115,14 @@ Class | Method | HTTP request | Description
 [*ACCTApi*](doc/ACCTApi.md) | [**lockAccountingPeriod**](doc/ACCTApi.md#lockaccountingperiod) | **POST** /accounting/periods/{id}/lock | Lock an accounting period
 [*ACCTApi*](doc/ACCTApi.md) | [**postDebitNote**](doc/ACCTApi.md#postdebitnote) | **POST** /accounting/debit-notes/{id}/post | Post a debit note to the general ledger
 [*ACCTApi*](doc/ACCTApi.md) | [**postExpense**](doc/ACCTApi.md#postexpense) | **POST** /accounting/expenses/{id}/post | Post an expense voucher to general ledger
+[*ACCTApi*](doc/ACCTApi.md) | [**postFundTransfer**](doc/ACCTApi.md#postfundtransfer) | **POST** /accounting/fund-transfers/{id}/post | Post fund transfer to GL
 [*ACCTApi*](doc/ACCTApi.md) | [**postPaymentVoucher**](doc/ACCTApi.md#postpaymentvoucher) | **POST** /accounting/payment-vouchers/{id}/post | Post a payment voucher to GL
 [*ACCTApi*](doc/ACCTApi.md) | [**postPurchaseBill**](doc/ACCTApi.md#postpurchasebill) | **POST** /accounting/purchase-bills/{id}/post | Post a purchase bill to the general ledger
 [*ACCTApi*](doc/ACCTApi.md) | [**reverseJournal**](doc/ACCTApi.md#reversejournal) | **POST** /accounting/journals/{id}/reverse | Reverse a posted journal
 [*ACCTApi*](doc/ACCTApi.md) | [**unlockAccountingPeriod**](doc/ACCTApi.md#unlockaccountingperiod) | **POST** /accounting/periods/{id}/unlock | Unlock an accounting period
 [*ACCTApi*](doc/ACCTApi.md) | [**updateAccount**](doc/ACCTApi.md#updateaccount) | **PATCH** /accounting/accounts/{id} | Update an account
 [*ACCTApi*](doc/ACCTApi.md) | [**updateExpense**](doc/ACCTApi.md#updateexpense) | **PATCH** /accounting/expenses/{id} | Update a draft expense voucher
+[*ACCTApi*](doc/ACCTApi.md) | [**updateFundTransfer**](doc/ACCTApi.md#updatefundtransfer) | **PATCH** /accounting/fund-transfers/{id} | Update fund transfer
 [*ACCTApi*](doc/ACCTApi.md) | [**updateItem**](doc/ACCTApi.md#updateitem) | **PATCH** /accounting/items/{id} | Update item
 [*ACCTApi*](doc/ACCTApi.md) | [**updatePaymentVoucher**](doc/ACCTApi.md#updatepaymentvoucher) | **PATCH** /accounting/payment-vouchers/{id} | Update a draft payment voucher
 [*ACCTApi*](doc/ACCTApi.md) | [**updatePurchaseBill**](doc/ACCTApi.md#updatepurchasebill) | **PATCH** /accounting/purchase-bills/{id} | Update a draft purchase bill
@@ -399,6 +404,10 @@ Class | Method | HTTP request | Description
  - [FoodPage](doc/FoodPage.md)
  - [FoodWrite](doc/FoodWrite.md)
  - [ForgotPasswordRequest](doc/ForgotPasswordRequest.md)
+ - [FundTransfer](doc/FundTransfer.md)
+ - [FundTransferCreate](doc/FundTransferCreate.md)
+ - [FundTransferPage](doc/FundTransferPage.md)
+ - [FundTransferUpdate](doc/FundTransferUpdate.md)
  - [Goal](doc/Goal.md)
  - [GoalCheckInWrite](doc/GoalCheckInWrite.md)
  - [GoalHistory](doc/GoalHistory.md)

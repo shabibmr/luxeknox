@@ -209,11 +209,31 @@ class Routes {
   static const String adminAccountingJournalsDetail =
       '/admin/accounting/journals/:id';
   static const String adminAccountingVendors = '/admin/accounting/vendors';
+  static const String adminAccountingVendorsCreate =
+      '/admin/accounting/vendors/create';
+  static const String adminAccountingVendorsEdit =
+      '/admin/accounting/vendors/:id/edit';
   static const String adminAccountingBills = '/admin/accounting/bills';
+  static const String adminAccountingBillsCreate =
+      '/admin/accounting/bills/create';
+  static const String adminAccountingBillsDetail =
+      '/admin/accounting/bills/:id';
   static const String adminAccountingExpenses = '/admin/accounting/expenses';
+  static const String adminAccountingExpensesCreate =
+      '/admin/accounting/expenses/create';
+  static const String adminAccountingExpensesDetail =
+      '/admin/accounting/expenses/:id';
   static const String adminAccountingPaymentVouchers =
       '/admin/accounting/payment-vouchers';
+  static const String adminAccountingPaymentVouchersCreate =
+      '/admin/accounting/payment-vouchers/create';
+  static const String adminAccountingPaymentVouchersDetail =
+      '/admin/accounting/payment-vouchers/:id';
   static const String adminAccountingTransfers = '/admin/accounting/transfers';
+  static const String adminAccountingTransfersCreate =
+      '/admin/accounting/transfers/create';
+  static const String adminAccountingTransfersDetail =
+      '/admin/accounting/transfers/:id';
   static const String adminAccountingReports = '/admin/accounting/reports';
   static const String adminAccountingPeriods = '/admin/accounting/periods';
   static const String adminAccountingGoLive = '/admin/accounting/go-live';
@@ -222,6 +242,16 @@ class Routes {
       '/admin/accounting/journals/$id';
   static String adminAccountingAccountEditById(String id) =>
       '/admin/accounting/accounts/$id/edit';
+  static String adminAccountingVendorEditById(String id) =>
+      '/admin/accounting/vendors/$id/edit';
+  static String adminAccountingBillById(String id) =>
+      '/admin/accounting/bills/$id';
+  static String adminAccountingExpenseById(String id) =>
+      '/admin/accounting/expenses/$id';
+  static String adminAccountingPaymentVoucherById(String id) =>
+      '/admin/accounting/payment-vouchers/$id';
+  static String adminAccountingTransferById(String id) =>
+      '/admin/accounting/transfers/$id';
 
   // More (Menu / Side Navigation)
   /// Lightweight More-branch root; hub chrome overlays this location.

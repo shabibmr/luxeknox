@@ -10,6 +10,7 @@ import '../../domain/entities/accounting_period.dart';
 import '../../domain/entities/accounting_reports.dart';
 import '../../domain/entities/debit_note.dart';
 import '../../domain/entities/expense_voucher.dart';
+import '../../domain/entities/fund_transfer.dart';
 import '../../domain/entities/item.dart';
 import '../../domain/entities/journal.dart';
 import '../../domain/entities/payment_voucher.dart';
@@ -686,6 +687,125 @@ class AccountingRepositoryImpl implements AccountingRepository {
     if (intId == null) return const Left(NotFoundFailure());
     try {
       final posted = await _remoteDataSource.postPaymentVoucher(intId);
+      return Right(posted.toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  // Fund Transfers
+  @override
+  Future<Either<Failure, CursorPage<FundTransfer>>> getFundTransfers({
+    int? limit,
+    int? offset,
+    String? status,
+    String? accountId,
+    DateTime? from,
+    DateTime? to,
+    String? search,
+  }) async {
+    try {
+      final page = await _remoteDataSource.listFundTransfers(
+        limit: limit,
+        offset: offset,
+        status: status,
+        accountId: accountId == null ? null : int.tryParse(accountId),
+        from: from?.toDate(),
+        to: to?.toDate(),
+        search: search,
+      );
+      return Right(
+        CursorPage<FundTransfer>(
+          items: page.data.map((ft) => ft.toDomain()).toList(),
+          nextCursor: page.meta.nextCursor,
+          hasMore: page.meta.hasMore,
+        ),
+      );
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, FundTransfer>> getFundTransfer(String id) async {
+    final intId = _parseId(id);
+    if (intId == null) return const Left(NotFoundFailure());
+    try {
+      final model = await _remoteDataSource.getFundTransfer(intId);
+      return Right(model.toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, FundTransfer>> createFundTransfer({
+    required DateTime transferDate,
+    required String fromAccountId,
+    required String toAccountId,
+    required String amount,
+    String? feeAmount,
+    String? feeAccountId,
+    String? memo,
+    String? idempotencyKey,
+  }) async {
+    try {
+      final created = await _remoteDataSource.createFundTransfer(
+        fundTransferCreate: toFundTransferCreate(
+          transferDate: transferDate,
+          fromAccountId: fromAccountId,
+          toAccountId: toAccountId,
+          amount: amount,
+          feeAmount: feeAmount,
+          feeAccountId: feeAccountId,
+          memo: memo,
+        ),
+        idempotencyKey: idempotencyKey,
+      );
+      return Right(created.toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, FundTransfer>> updateFundTransfer({
+    required String id,
+    DateTime? transferDate,
+    String? fromAccountId,
+    String? toAccountId,
+    String? amount,
+    String? feeAmount,
+    String? feeAccountId,
+    String? memo,
+  }) async {
+    final intId = _parseId(id);
+    if (intId == null) return const Left(NotFoundFailure());
+    try {
+      final updated = await _remoteDataSource.updateFundTransfer(
+        id: intId,
+        fundTransferUpdate: toFundTransferUpdate(
+          transferDate: transferDate,
+          fromAccountId: fromAccountId,
+          toAccountId: toAccountId,
+          amount: amount,
+          feeAmount: feeAmount,
+          feeAccountId: feeAccountId,
+          memo: memo,
+        ),
+      );
+      return Right(updated.toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, FundTransfer>> postFundTransfer(String id) async {
+    final intId = _parseId(id);
+    if (intId == null) return const Left(NotFoundFailure());
+    try {
+      final posted = await _remoteDataSource.postFundTransfer(intId);
       return Right(posted.toDomain());
     } catch (e) {
       return Left(mapThrownToFailure(e));
