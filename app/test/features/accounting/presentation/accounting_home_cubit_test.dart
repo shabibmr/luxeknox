@@ -191,4 +191,283 @@ void main() {
       ),
     ],
   );
+
+  group('Accounting period resolution', () {
+    final tJanPeriod = AccountingPeriod(
+      id: '1',
+      fiscalYearId: '1',
+      periodNumber: 1,
+      name: 'Jan 2026',
+      startDate: DateTime.utc(2026, 1, 1),
+      endDate: DateTime.utc(2026, 1, 31),
+      isLocked: false,
+    );
+
+    final tFebPeriod = AccountingPeriod(
+      id: '2',
+      fiscalYearId: '1',
+      periodNumber: 2,
+      name: 'Feb 2026',
+      startDate: DateTime.utc(2026, 2, 1),
+      endDate: DateTime.utc(2026, 2, 28),
+      isLocked: false,
+    );
+
+    final tLockedPeriod1 = AccountingPeriod(
+      id: '10',
+      fiscalYearId: '1',
+      periodNumber: 1,
+      name: 'Jan 2025',
+      startDate: DateTime.utc(2025, 1, 1),
+      endDate: DateTime.utc(2025, 1, 31),
+      isLocked: true,
+    );
+
+    final tLockedPeriod2 = AccountingPeriod(
+      id: '11',
+      fiscalYearId: '1',
+      periodNumber: 2,
+      name: 'Feb 2025',
+      startDate: DateTime.utc(2025, 2, 1),
+      endDate: DateTime.utc(2025, 2, 28),
+      isLocked: true,
+    );
+
+    blocTest<AccountingHomeCubit, AccountingHomeState>(
+      'picks unlocked period where current date falls between startDate and endDate',
+      build: () {
+        when(() => mockGetOpenItems(any()))
+            .thenAnswer((_) async => const Right(tArReport));
+        when(() => mockGetAccounts(any()))
+            .thenAnswer((_) async => Right(tAccountsPage));
+        when(() => mockGetAccountingPeriods(any()))
+            .thenAnswer((_) async => Right([tJanPeriod, tFebPeriod]));
+        return AccountingHomeCubit(
+          mockGetOpenItems,
+          mockGetAccounts,
+          mockGetAccountingPeriods,
+          now: () => DateTime.utc(2026, 2, 15),
+        );
+      },
+      act: (cubit) => cubit.load(),
+      expect: () => [
+        const AccountingHomeState(status: LoadStatus.loading),
+        AccountingHomeState(
+          status: LoadStatus.success,
+          openAr: tArReport,
+          openAp: tArReport,
+          bankAndCashAccounts: const [tBankAccount],
+          currentPeriod: tFebPeriod,
+        ),
+      ],
+    );
+
+    blocTest<AccountingHomeCubit, AccountingHomeState>(
+      'picks first unlocked period when current date is outside range of all unlocked periods',
+      build: () {
+        when(() => mockGetOpenItems(any()))
+            .thenAnswer((_) async => const Right(tArReport));
+        when(() => mockGetAccounts(any()))
+            .thenAnswer((_) async => Right(tAccountsPage));
+        when(() => mockGetAccountingPeriods(any()))
+            .thenAnswer((_) async => Right([tJanPeriod, tFebPeriod]));
+        return AccountingHomeCubit(
+          mockGetOpenItems,
+          mockGetAccounts,
+          mockGetAccountingPeriods,
+          now: () => DateTime.utc(2026, 5, 1),
+        );
+      },
+      act: (cubit) => cubit.load(),
+      expect: () => [
+        const AccountingHomeState(status: LoadStatus.loading),
+        AccountingHomeState(
+          status: LoadStatus.success,
+          openAr: tArReport,
+          openAp: tArReport,
+          bankAndCashAccounts: const [tBankAccount],
+          currentPeriod: tJanPeriod,
+        ),
+      ],
+    );
+
+    blocTest<AccountingHomeCubit, AccountingHomeState>(
+      'falls back to periods.first when all periods are locked',
+      build: () {
+        when(() => mockGetOpenItems(any()))
+            .thenAnswer((_) async => const Right(tArReport));
+        when(() => mockGetAccounts(any()))
+            .thenAnswer((_) async => Right(tAccountsPage));
+        when(() => mockGetAccountingPeriods(any()))
+            .thenAnswer((_) async => Right([tLockedPeriod1, tLockedPeriod2]));
+        return cubit;
+      },
+      act: (cubit) => cubit.load(),
+      expect: () => [
+        const AccountingHomeState(status: LoadStatus.loading),
+        AccountingHomeState(
+          status: LoadStatus.success,
+          openAr: tArReport,
+          openAp: tArReport,
+          bankAndCashAccounts: const [tBankAccount],
+          currentPeriod: tLockedPeriod1,
+        ),
+      ],
+    );
+  });
+
+  group('Cash and Bank account sorting', () {
+    const acc2000 = Account(
+      id: '20',
+      code: '2000',
+      name: 'ICICI Current A/C',
+      type: 'asset',
+      isBank: true,
+      isActive: true,
+    );
+    const acc1000 = Account(
+      id: '10',
+      code: '1000',
+      name: 'HDFC Main A/C',
+      type: 'asset',
+      isBank: true,
+      isActive: true,
+    );
+    const acc1050 = Account(
+      id: '15',
+      code: '1050',
+      name: 'Cash in Hand',
+      type: 'asset',
+      isBank: true,
+      isActive: true,
+    );
+    const nonBankAcc = Account(
+      id: '50',
+      code: '5000',
+      name: 'Office Rent',
+      type: 'expense',
+      isBank: false,
+      isActive: true,
+    );
+
+    blocTest<AccountingHomeCubit, AccountingHomeState>(
+      'filters isBank == true and sorts accounts ascending by code',
+      build: () {
+        when(() => mockGetOpenItems(any()))
+            .thenAnswer((_) async => const Right(tArReport));
+        when(() => mockGetAccounts(any())).thenAnswer(
+          (_) async => const Right(
+            CursorPage<Account>(
+              items: [acc2000, nonBankAcc, acc1050, acc1000],
+              nextCursor: null,
+              hasMore: false,
+            ),
+          ),
+        );
+        when(() => mockGetAccountingPeriods(any()))
+            .thenAnswer((_) async => Right([tOpenPeriod]));
+        return cubit;
+      },
+      act: (cubit) => cubit.load(),
+      expect: () => [
+        const AccountingHomeState(status: LoadStatus.loading),
+        AccountingHomeState(
+          status: LoadStatus.success,
+          openAr: tArReport,
+          openAp: tArReport,
+          bankAndCashAccounts: const [acc1000, acc1050, acc2000],
+          currentPeriod: tOpenPeriod,
+        ),
+      ],
+    );
+  });
+
+  group('Partial failure handling', () {
+    blocTest<AccountingHomeCubit, AccountingHomeState>(
+      'emits success when only AR succeeds and other calls fail',
+      build: () {
+        when(
+          () => mockGetOpenItems(const GetOpenItemsParams(kind: 'ar')),
+        ).thenAnswer((_) async => const Right(tArReport));
+        when(
+          () => mockGetOpenItems(const GetOpenItemsParams(kind: 'ap')),
+        ).thenAnswer((_) async => const Left(NetworkFailure()));
+        when(
+          () => mockGetAccounts(any()),
+        ).thenAnswer((_) async => const Left(NetworkFailure()));
+        when(
+          () => mockGetAccountingPeriods(any()),
+        ).thenAnswer((_) async => const Left(NetworkFailure()));
+        return cubit;
+      },
+      act: (cubit) => cubit.load(),
+      expect: () => [
+        const AccountingHomeState(status: LoadStatus.loading),
+        const AccountingHomeState(
+          status: LoadStatus.success,
+          openAr: tArReport,
+          openAp: null,
+          bankAndCashAccounts: [],
+          currentPeriod: null,
+        ),
+      ],
+    );
+
+    blocTest<AccountingHomeCubit, AccountingHomeState>(
+      'emits success when only AP succeeds and other calls fail',
+      build: () {
+        when(
+          () => mockGetOpenItems(const GetOpenItemsParams(kind: 'ar')),
+        ).thenAnswer((_) async => const Left(NetworkFailure()));
+        when(
+          () => mockGetOpenItems(const GetOpenItemsParams(kind: 'ap')),
+        ).thenAnswer((_) async => const Right(tApReport));
+        when(
+          () => mockGetAccounts(any()),
+        ).thenAnswer((_) async => const Left(NetworkFailure()));
+        when(
+          () => mockGetAccountingPeriods(any()),
+        ).thenAnswer((_) async => const Left(NetworkFailure()));
+        return cubit;
+      },
+      act: (cubit) => cubit.load(),
+      expect: () => [
+        const AccountingHomeState(status: LoadStatus.loading),
+        const AccountingHomeState(
+          status: LoadStatus.success,
+          openAr: null,
+          openAp: tApReport,
+          bankAndCashAccounts: [],
+          currentPeriod: null,
+        ),
+      ],
+    );
+
+    blocTest<AccountingHomeCubit, AccountingHomeState>(
+      'emits success when only accounts succeeds and other calls fail',
+      build: () {
+        when(
+          () => mockGetOpenItems(any()),
+        ).thenAnswer((_) async => const Left(NetworkFailure()));
+        when(
+          () => mockGetAccounts(any()),
+        ).thenAnswer((_) async => Right(tAccountsPage));
+        when(
+          () => mockGetAccountingPeriods(any()),
+        ).thenAnswer((_) async => const Left(NetworkFailure()));
+        return cubit;
+      },
+      act: (cubit) => cubit.load(),
+      expect: () => [
+        const AccountingHomeState(status: LoadStatus.loading),
+        const AccountingHomeState(
+          status: LoadStatus.success,
+          openAr: null,
+          openAp: null,
+          bankAndCashAccounts: [tBankAccount],
+          currentPeriod: null,
+        ),
+      ],
+    );
+  });
 }

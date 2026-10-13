@@ -142,6 +142,39 @@ class AccountingStrings {
   static const String activeBadge = 'Active';
   static const String inactiveBadge = 'Inactive';
 
+  // Accounts Form & Picker
+  static const String searchAccounts = 'Search accounts...';
+  static const String allTypes = 'All Types';
+  static const String allStatuses = 'All Statuses';
+  static const String activeOnly = 'Active Only';
+  static const String inactiveOnly = 'Inactive Only';
+  static const String parentAccountLabel = 'Parent Account';
+  static const String none = 'None';
+  static const String selectAccount = 'Select Account';
+  static const String cannotPickDeactivated =
+      'Deactivated accounts cannot be picked on a new document.';
+  static const String deactivateAccount = 'Deactivate Account';
+  static const String deactivateAccountConfirm =
+      'Are you sure you want to deactivate this account? Deactivated accounts stay visible on reports and lists, but cannot be picked on new documents.';
+  static const String cannotDeactivateControl =
+      'Control accounts cannot be deactivated.';
+  static const String accountTypeAsset = 'Asset';
+  static const String accountTypeLiability = 'Liability';
+  static const String accountTypeEquity = 'Equity';
+  static const String accountTypeIncome = 'Income';
+  static const String accountTypeExpense = 'Expense';
+  static const String codeRequired = 'Account code is required.';
+  static const String nameRequired = 'Account name is required.';
+  static const String typeRequired = 'Account type is required.';
+  static const String accountSavedSuccess = 'Account saved successfully.';
+  static const String accountDeactivatedSuccess =
+      'Account deactivated successfully.';
+  static const String noPermission =
+      'You do not have permission to perform this action.';
+  static const String selectType = 'Select Account Type';
+  static const String accountCreatedSuccess = 'Account created successfully.';
+  static const String accountUpdatedSuccess = 'Account updated successfully.';
+
   // Periods Management
   static const String fiscalYearLabel = 'Fiscal Year';
   static const String periodNumberLabel = 'Period #';

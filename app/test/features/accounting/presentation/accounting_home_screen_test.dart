@@ -47,7 +47,7 @@ void main() {
 
   const tBankAccount = Account(
     id: '1',
-    code: '1000',
+    code: '1010',
     name: 'Bank of Baroda',
     type: 'asset',
     isBank: true,
@@ -161,6 +161,175 @@ void main() {
     final refreshBtn = find.byIcon(Icons.refresh);
     expect(refreshBtn, findsOneWidget);
     await tester.tap(refreshBtn);
+    verify(() => mockCubit.load()).called(greaterThanOrEqualTo(1));
+  });
+
+  testWidgets('renders periodLockedBadge when current period is locked', (tester) async {
+    final tLockedPeriod = AccountingPeriod(
+      id: '2',
+      fiscalYearId: '1',
+      periodNumber: 2,
+      name: 'Feb 2026',
+      startDate: tDate,
+      endDate: tDate,
+      isLocked: true,
+    );
+
+    when(() => mockCubit.state).thenReturn(
+      AccountingHomeState(
+        status: LoadStatus.success,
+        currentPeriod: tLockedPeriod,
+      ),
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: AccountingHomeScreen(),
+      ),
+    );
+
+    expect(find.text(AccountingStrings.currentPeriod), findsOneWidget);
+    expect(find.text('Feb 2026'), findsOneWidget);
+    expect(find.text(AccountingStrings.periodLockedBadge), findsOneWidget);
+    expect(find.text(AccountingStrings.periodOpenBadge), findsNothing);
+  });
+
+  testWidgets('renders draft documents warning banner when period has draft documents', (tester) async {
+    final tPeriodWithDrafts = AccountingPeriod(
+      id: '1',
+      fiscalYearId: '1',
+      periodNumber: 1,
+      name: 'Jan 2026',
+      startDate: tDate,
+      endDate: tDate,
+      isLocked: false,
+      draftCounts: const DraftDocumentCounts(
+        billsCount: 3,
+        expensesCount: 0,
+        paymentVouchersCount: 1,
+        debitNotesCount: 0,
+      ),
+    );
+
+    when(() => mockCubit.state).thenReturn(
+      AccountingHomeState(
+        status: LoadStatus.success,
+        currentPeriod: tPeriodWithDrafts,
+      ),
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: AccountingHomeScreen(),
+      ),
+    );
+
+    expect(find.text(AccountingStrings.draftDocumentsWarning), findsOneWidget);
+    expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+  });
+
+  testWidgets('does not render draft warning banner when draftCounts has no pending drafts', (tester) async {
+    final tPeriodNoDrafts = AccountingPeriod(
+      id: '1',
+      fiscalYearId: '1',
+      periodNumber: 1,
+      name: 'Jan 2026',
+      startDate: tDate,
+      endDate: tDate,
+      isLocked: false,
+      draftCounts: const DraftDocumentCounts(
+        billsCount: 0,
+        expensesCount: 0,
+        paymentVouchersCount: 0,
+        debitNotesCount: 0,
+      ),
+    );
+
+    when(() => mockCubit.state).thenReturn(
+      AccountingHomeState(
+        status: LoadStatus.success,
+        currentPeriod: tPeriodNoDrafts,
+      ),
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: AccountingHomeScreen(),
+      ),
+    );
+
+    expect(find.text(AccountingStrings.draftDocumentsWarning), findsNothing);
+  });
+
+  testWidgets('renders cash and bank accounts with distinct icons based on code and name', (tester) async {
+    const tCashByCode = Account(
+      id: 'c1',
+      code: '1000',
+      name: 'Main Safe',
+      type: 'asset',
+      isBank: true,
+      isActive: true,
+    );
+
+    const tCashByName = Account(
+      id: 'c2',
+      code: '1005',
+      name: 'Petty Cash',
+      type: 'asset',
+      isBank: true,
+      isActive: true,
+    );
+
+    const tBank = Account(
+      id: 'b1',
+      code: '1020',
+      name: 'HDFC Current Account',
+      type: 'asset',
+      isBank: true,
+      isActive: true,
+    );
+
+    when(() => mockCubit.state).thenReturn(
+      const AccountingHomeState(
+        status: LoadStatus.success,
+        bankAndCashAccounts: [tCashByCode, tCashByName, tBank],
+      ),
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: AccountingHomeScreen(),
+      ),
+    );
+
+    expect(find.text(AccountingStrings.cashAndBank), findsOneWidget);
+    expect(find.text('Main Safe'), findsOneWidget);
+    expect(find.text('Petty Cash'), findsOneWidget);
+    expect(find.text('HDFC Current Account'), findsOneWidget);
+
+    // 2 cash accounts should have payments_outlined icon
+    expect(find.byIcon(Icons.payments_outlined), findsNWidgets(2));
+    // 1 bank account should have account_balance icon
+    expect(find.byIcon(Icons.account_balance), findsOneWidget);
+  });
+
+  testWidgets('pull to refresh invokes cubit load', (tester) async {
+    when(() => mockCubit.state).thenReturn(
+      AccountingHomeState(
+        status: LoadStatus.success,
+        currentPeriod: tPeriod,
+      ),
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: AccountingHomeScreen(),
+      ),
+    );
+
+    await tester.fling(find.byType(ListView), const Offset(0, 300), 1000);
+    await tester.pumpAndSettle();
+
     verify(() => mockCubit.load()).called(greaterThanOrEqualTo(1));
   });
 }

@@ -30,12 +30,15 @@ class AccountingHomeCubit extends Cubit<AccountingHomeState> {
   AccountingHomeCubit(
     this._getOpenItems,
     this._getAccounts,
-    this._getAccountingPeriods,
-  ) : super(const AccountingHomeState());
+    this._getAccountingPeriods, {
+    DateTime Function()? now,
+  })  : _now = now ?? DateTime.now,
+        super(const AccountingHomeState());
 
   final GetOpenItemsUseCase _getOpenItems;
   final GetAccountsUseCase _getAccounts;
   final GetAccountingPeriodsUseCase _getAccountingPeriods;
+  final DateTime Function() _now;
 
   Future<void> load() async {
     emit(state.copyWith(status: LoadStatus.loading, failure: null));
@@ -71,17 +74,28 @@ class AccountingHomeCubit extends Cubit<AccountingHomeState> {
     apResult.fold((f) => firstFailure ??= f, (data) => apReport = data);
     accountsResult.fold(
       (f) => firstFailure ??= f,
-      (page) => bankAccounts =
-          page.items.where((Account a) => a.isBank).toList(),
+      (page) {
+        bankAccounts = (page.items as Iterable)
+            .whereType<Account>()
+            .where((a) => a.isBank)
+            .toList()
+          ..sort((Account a, Account b) => a.code.compareTo(b.code));
+      },
     );
     periodsResult.fold(
       (f) => firstFailure ??= f,
       (List<AccountingPeriod> periods) {
         if (periods.isNotEmpty) {
-          period = periods.firstWhere(
-            (p) => !p.isLocked,
-            orElse: () => periods.first,
-          );
+          final now = _now();
+          final unlocked = periods.where((p) => !p.isLocked).toList();
+          if (unlocked.isNotEmpty) {
+            period = unlocked.firstWhere(
+              (p) => _isBetween(now, p.startDate, p.endDate),
+              orElse: () => unlocked.first,
+            );
+          } else {
+            period = periods.first;
+          }
         }
       },
     );
@@ -94,11 +108,26 @@ class AccountingHomeCubit extends Cubit<AccountingHomeState> {
           status: LoadStatus.success,
           openAr: arReport ?? state.openAr,
           openAp: apReport ?? state.openAp,
-          bankAndCashAccounts: bankAccounts,
+          bankAndCashAccounts: accountsResult.isRight()
+              ? bankAccounts
+              : state.bankAndCashAccounts,
           currentPeriod: period ?? state.currentPeriod,
           failure: null,
         ),
       );
     }
+  }
+
+  bool _isBetween(DateTime now, DateTime start, DateTime end) {
+    if (!now.isBefore(start) && !now.isAfter(end)) {
+      return true;
+    }
+    final effectiveEnd =
+        (end.hour == 0 && end.minute == 0 && end.second == 0 && end.millisecond == 0)
+            ? (end.isUtc
+                ? DateTime.utc(end.year, end.month, end.day, 23, 59, 59, 999)
+                : DateTime(end.year, end.month, end.day, 23, 59, 59, 999))
+            : end;
+    return !now.isBefore(start) && !now.isAfter(effectiveEnd);
   }
 }

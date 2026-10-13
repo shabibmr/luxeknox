@@ -77,6 +77,8 @@ import '../../features/accounting/presentation/cubit/accounting_periods_cubit.da
     as _i496;
 import '../../features/accounting/presentation/cubit/accounting_reports_cubit.dart'
     as _i928;
+import '../../features/accounting/presentation/cubit/account_form_cubit.dart'
+    as _i1099;
 import '../../features/accounting/presentation/cubit/accounts_cubit.dart'
     as _i495;
 import '../../features/accounting/presentation/cubit/journals_cubit.dart'
@@ -1279,6 +1281,13 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i495.AccountsCubit>(
       () => _i495.AccountsCubit(gh<_i676.GetAccountsUseCase>()),
+    );
+    gh.factory<_i1099.AccountFormCubit>(
+      () => _i1099.AccountFormCubit(
+        gh<_i307.GetAccountUseCase>(),
+        gh<_i438.CreateAccountUseCase>(),
+        gh<_i662.UpdateAccountUseCase>(),
+      ),
     );
     gh.lazySingleton<_i744.GetPublicSettingsUseCase>(
       () => _i744.GetPublicSettingsUseCase(gh<_i674.SettingsRepository>()),

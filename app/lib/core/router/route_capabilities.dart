@@ -16,6 +16,7 @@ abstract final class RouteCapabilities {
     ('/admin/payments/record', 'payments.create'),
     ('/admin/payments/methods', 'payments.read'),
     ('/admin/payments/outstanding', 'payments.read'),
+    ('/admin/accounting/accounts/create', 'accounting.accounts_write'),
     ('/admin/accounting', 'accounting.read'),
     ('/admin/reports', 'reports.read'),
     ('/admin/goal-metrics', 'goals.create'),
@@ -65,6 +66,10 @@ abstract final class RouteCapabilities {
     }
     if (path.startsWith('/admin/diet-plans/') && path.endsWith('/edit')) {
       return 'diets.write';
+    }
+    if (path.startsWith('/admin/accounting/accounts/') &&
+        path.endsWith('/edit')) {
+      return 'accounting.accounts_write';
     }
     for (final (prefix, slug) in requirements) {
       if (path == prefix || path.startsWith('$prefix/')) {

@@ -124,8 +124,8 @@ Later rows stay `[>]` until a new plan pulls them in.
 |---|---|---|---|---|
 | ACC-090 | `[x]` | Feature skeleton `app/lib/features/accounting/` with repository, use cases, and generated client | ACC-080 | `@LazySingleton` data layer and `@injectable` cubits, same as payments |
 | ACC-091 | `[x]` | Admin route and shell destination, hidden without `accounting.read` | ACC-090 | Member and trainer shells have no accounting route |
-| ACC-092 | `[ ]` | Accounting home: cash, bank, open AR, open AP, current period | ACC-034, ACC-074, ACC-091 | Loading, empty, and error states use the shared widgets |
-| ACC-093 | `[ ]` | Chart of accounts list and form | ACC-030, ACC-091 | Deactivated accounts stay visible and cannot be picked on a new document |
+| ACC-092 | `[x]` | Accounting home: cash, bank, open AR, open AP, current period | ACC-034, ACC-074, ACC-091 | Loading, empty, and error states use the shared widgets |
+| ACC-093 | `[x]` | Chart of accounts list and form | ACC-030, ACC-091 | Deactivated accounts stay visible and cannot be picked on a new document |
 | ACC-094 | `[ ]` | Journal list, detail, and manual entry | ACC-025, ACC-091 | An unbalanced entry cannot be submitted |
 | ACC-095 | `[ ]` | Vendors, purchase bills, expenses, payment vouchers, fund transfers | ACC-032, ACC-040, ACC-041, ACC-042, ACC-045, ACC-091 | Posting a draft refreshes the detail and shows the journal number. A transfer shows the fee line |
 | ACC-096 | `[ ]` | Trial balance, profit and loss, balance sheet, day book, GST summary | ACC-070, ACC-071, ACC-072, ACC-073, ACC-075, ACC-091 | Totals on screen match the API totals |

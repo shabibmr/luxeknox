@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/accounting/presentation/screens/account_form_screen.dart';
 import '../../features/accounting/presentation/screens/accounting_home_screen.dart';
+import '../../features/accounting/presentation/screens/chart_of_accounts_screen.dart';
 import '../../features/alerts/presentation/screens/system_alerts_screen.dart';
 import '../../features/attendance/presentation/screens/admin_attendance_screen.dart';
 import '../../features/auth/presentation/widgets/sign_out_tile.dart';
@@ -373,6 +375,24 @@ StatefulShellRoute createAdminBranchRoute() {
           GoRoute(
             path: Routes.adminAccounting,
             builder: (context, state) => const AccountingHomeScreen(),
+            routes: [
+              GoRoute(
+                path: 'accounts',
+                builder: (context, state) => const ChartOfAccountsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (context, state) => const AccountFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id/edit',
+                    builder: (context, state) => AccountFormScreen(
+                      accountId: state.pathParameters['id'],
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),

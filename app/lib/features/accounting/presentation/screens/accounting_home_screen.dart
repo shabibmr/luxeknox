@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/app_status_chip.dart';
+import '../../domain/entities/account.dart';
+import '../../domain/entities/accounting_period.dart';
+import '../../domain/entities/accounting_reports.dart';
 import '../accounting_strings.dart';
 import '../cubit/accounting_home_cubit.dart';
 
@@ -45,7 +51,8 @@ class _AccountingHomeBody extends StatelessWidget {
             next.failure != previous.failure &&
             (next.openAr != null ||
                 next.openAp != null ||
-                next.bankAndCashAccounts.isNotEmpty),
+                next.bankAndCashAccounts.isNotEmpty ||
+                next.currentPeriod != null),
         listener: (context, state) {
           final failure = state.failure;
           if (failure == null) return;
@@ -79,6 +86,7 @@ class _AccountingHomeBody extends StatelessWidget {
           return RefreshIndicator(
             onRefresh: () => context.read<AccountingHomeCubit>().load(),
             child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               children: [
                 _CurrentPeriodSection(period: state.currentPeriod),
@@ -104,12 +112,18 @@ class _AccountingHomeBody extends StatelessWidget {
 class _CurrentPeriodSection extends StatelessWidget {
   const _CurrentPeriodSection({this.period});
 
-  final dynamic period;
+  final AccountingPeriod? period;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final currentPeriod = period;
+    final draftCounts = currentPeriod?.draftCounts;
+    final hasDraftDocuments = draftCounts != null &&
+        (draftCounts.billsCount > 0 ||
+            draftCounts.expensesCount > 0 ||
+            draftCounts.paymentVouchersCount > 0 ||
+            draftCounts.debitNotesCount > 0);
 
     return Card(
       elevation: 0,
@@ -166,11 +180,7 @@ class _CurrentPeriodSection extends StatelessWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              if (currentPeriod.draftCounts != null &&
-                  (currentPeriod.draftCounts!.billsCount > 0 ||
-                      currentPeriod.draftCounts!.expensesCount > 0 ||
-                      currentPeriod.draftCounts!.paymentVouchersCount > 0 ||
-                      currentPeriod.draftCounts!.debitNotesCount > 0)) ...[
+              if (hasDraftDocuments) ...[
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(8),
@@ -209,21 +219,24 @@ class _CurrentPeriodSection extends StatelessWidget {
 class _OpenItemsSummarySection extends StatelessWidget {
   const _OpenItemsSummarySection({this.openAr, this.openAp});
 
-  final dynamic openAr;
-  final dynamic openAp;
+  final OpenItemsReport? openAr;
+  final OpenItemsReport? openAp;
 
   @override
   Widget build(BuildContext context) {
+    final ar = openAr;
+    final ap = openAp;
+
     return Row(
       children: [
         Expanded(
           child: _MetricCard(
             title: AccountingStrings.openReceivables,
-            amount: openAr != null
-                ? AccountingStrings.formatMoney(openAr.totalOpenAmount)
+            amount: ar != null
+                ? AccountingStrings.formatMoney(ar.totalOpenAmount)
                 : '\$0.00',
-            subtitle: openAr != null
-                ? AccountingStrings.openItemsCount(openAr.items.length)
+            subtitle: ar != null
+                ? AccountingStrings.openItemsCount(ar.items.length)
                 : '0 items',
             color: Colors.teal,
             icon: Icons.call_received,
@@ -233,11 +246,11 @@ class _OpenItemsSummarySection extends StatelessWidget {
         Expanded(
           child: _MetricCard(
             title: AccountingStrings.openPayables,
-            amount: openAp != null
-                ? AccountingStrings.formatMoney(openAp.totalOpenAmount)
+            amount: ap != null
+                ? AccountingStrings.formatMoney(ap.totalOpenAmount)
                 : '\$0.00',
-            subtitle: openAp != null
-                ? AccountingStrings.openItemsCount(openAp.items.length)
+            subtitle: ap != null
+                ? AccountingStrings.openItemsCount(ap.items.length)
                 : '0 items',
             color: Colors.deepOrange,
             icon: Icons.call_made,
@@ -318,7 +331,11 @@ class _MetricCard extends StatelessWidget {
 class _BankAndCashSection extends StatelessWidget {
   const _BankAndCashSection({required this.accounts});
 
-  final List<dynamic> accounts;
+  final List<Account> accounts;
+
+  bool _isCash(Account account) {
+    return account.name.toLowerCase().contains('cash') || account.code == '1000';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -365,12 +382,13 @@ class _BankAndCashSection extends StatelessWidget {
               separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final account = accounts[index];
+                final isCash = _isCash(account);
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundColor:
                         theme.colorScheme.primaryContainer,
                     child: Icon(
-                      Icons.account_balance,
+                      isCash ? Icons.payments_outlined : Icons.account_balance,
                       color: theme.colorScheme.onPrimaryContainer,
                       size: 20,
                     ),
@@ -416,7 +434,7 @@ class _QuickActionsSection extends StatelessWidget {
             ActionChip(
               avatar: const Icon(Icons.account_tree_outlined, size: 18),
               label: const Text(AccountingStrings.viewAllAccounts),
-              onPressed: () {},
+              onPressed: () => context.go(Routes.adminAccountingAccounts),
             ),
             ActionChip(
               avatar: const Icon(Icons.receipt_long_outlined, size: 18),
