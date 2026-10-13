@@ -8,6 +8,8 @@ import 'package:luxeknox/core/widgets/adaptive_shell.dart';
 import 'package:luxeknox/core/widgets/destination_hub_screen.dart';
 import 'package:luxeknox/core/widgets/more_hub_screen.dart';
 import 'package:luxeknox/core/widgets/not_found_screen.dart';
+import 'package:luxeknox/features/accounting/presentation/cubit/accounting_home_cubit.dart';
+import 'package:luxeknox/features/accounting/presentation/screens/accounting_home_screen.dart';
 import 'package:luxeknox/features/auth/presentation/cubit/login_cubit.dart';
 import 'package:luxeknox/features/dashboard/domain/usecases/get_dashboard_usecase.dart';
 import 'package:luxeknox/features/dashboard/presentation/cubit/dashboard_cubit.dart';
@@ -67,6 +69,9 @@ class MockDietPlanBuilderCubit extends MockCubit<DietPlanBuilderState>
 
 class MockDietPlanVersionsCubit extends MockCubit<DietPlanVersionsState>
     implements DietPlanVersionsCubit {}
+
+class MockAccountingHomeCubit extends MockCubit<AccountingHomeState>
+    implements AccountingHomeCubit {}
 
 void main() {
   const memberPrincipal = Principal(
@@ -240,6 +245,62 @@ void main() {
         expect(redirect, isNull);
       },
     );
+
+    test(
+      'admin without accounting.read accessing /admin/accounting redirects to /admin/dashboard',
+      () {
+        final redirect = appRedirectLogic(
+          sessionState: const SessionAuthenticated(
+            principal: adminPrincipal,
+            capabilities: emptyCaps,
+          ),
+          uri: Uri.parse(Routes.adminAccounting),
+        );
+        expect(redirect, Routes.adminDashboard);
+      },
+    );
+
+    test(
+      'admin with accounting.read accessing /admin/accounting stays on path',
+      () {
+        final redirect = appRedirectLogic(
+          sessionState: const SessionAuthenticated(
+            principal: adminPrincipal,
+            capabilities: Capabilities(slugs: ['accounting.read']),
+          ),
+          uri: Uri.parse(Routes.adminAccounting),
+        );
+        expect(redirect, isNull);
+      },
+    );
+
+    test(
+      'member accessing /admin/accounting redirects to /home',
+      () {
+        final redirect = appRedirectLogic(
+          sessionState: const SessionAuthenticated(
+            principal: memberPrincipal,
+            capabilities: Capabilities(slugs: ['accounting.read']),
+          ),
+          uri: Uri.parse(Routes.adminAccounting),
+        );
+        expect(redirect, Routes.memberHome);
+      },
+    );
+
+    test(
+      'trainer accessing /admin/accounting redirects to /trainer/home',
+      () {
+        final redirect = appRedirectLogic(
+          sessionState: const SessionAuthenticated(
+            principal: trainerPrincipal,
+            capabilities: Capabilities(slugs: ['accounting.read']),
+          ),
+          uri: Uri.parse(Routes.adminAccounting),
+        );
+        expect(redirect, Routes.trainerHome);
+      },
+    );
   });
 
   group('GoRouter redirect + loop guard (L5)', () {
@@ -369,6 +430,17 @@ void main() {
           initialState: const DietPlanVersionsState(),
         );
         when(() => cubit.load(any())).thenAnswer((_) async {});
+        return cubit;
+      });
+
+      getIt.registerFactory<AccountingHomeCubit>(() {
+        final cubit = MockAccountingHomeCubit();
+        whenListen(
+          cubit,
+          const Stream<AccountingHomeState>.empty(),
+          initialState: const AccountingHomeState(status: LoadStatus.success),
+        );
+        when(() => cubit.load()).thenAnswer((_) async {});
         return cubit;
       });
     }
@@ -626,30 +698,187 @@ void main() {
         }
       });
 
-      testWidgets('admin shell has five NavigationBar destinations', (
-        tester,
-      ) async {
-        await pumpAtWidth(
-          tester,
-          const SessionAuthenticated(
-            principal: adminPrincipal,
-            capabilities: emptyCaps,
-          ),
-          Routes.adminDashboard,
-        );
+      testWidgets(
+        'admin shell has five NavigationBar destinations without accounting.read',
+        (tester) async {
+          await pumpAtWidth(
+            tester,
+            const SessionAuthenticated(
+              principal: adminPrincipal,
+              capabilities: emptyCaps,
+            ),
+            Routes.adminDashboard,
+          );
 
-        expect(find.byType(AdaptiveShell), findsOneWidget);
-        expect(find.byType(NavigationBar), findsOneWidget);
-        for (final label in [
-          ShellStrings.dashboard,
-          ShellStrings.members,
-          ShellStrings.memberships,
-          ShellStrings.payments,
-          ShellStrings.more,
-        ]) {
-          expect(find.text(label), findsWidgets);
-        }
-      });
+          expect(find.byType(AdaptiveShell), findsOneWidget);
+          expect(find.byType(NavigationBar), findsOneWidget);
+          for (final label in [
+            ShellStrings.dashboard,
+            ShellStrings.members,
+            ShellStrings.memberships,
+            ShellStrings.payments,
+            ShellStrings.more,
+          ]) {
+            expect(find.text(label), findsWidgets);
+          }
+          expect(find.text(ShellStrings.accounting), findsNothing);
+        },
+      );
+
+      testWidgets(
+        'admin shell has six NavigationBar destinations with accounting.read',
+        (tester) async {
+          await pumpAtWidth(
+            tester,
+            const SessionAuthenticated(
+              principal: adminPrincipal,
+              capabilities: Capabilities(slugs: ['accounting.read']),
+            ),
+            Routes.adminDashboard,
+          );
+
+          expect(find.byType(AdaptiveShell), findsOneWidget);
+          expect(find.byType(NavigationBar), findsOneWidget);
+          for (final label in [
+            ShellStrings.dashboard,
+            ShellStrings.members,
+            ShellStrings.memberships,
+            ShellStrings.payments,
+            ShellStrings.accounting,
+            ShellStrings.more,
+          ]) {
+            expect(find.text(label), findsWidgets);
+          }
+        },
+      );
+
+      testWidgets(
+        'member shell has five NavigationBar destinations even with accounting.read',
+        (tester) async {
+          await pumpAtWidth(
+            tester,
+            const SessionAuthenticated(
+              principal: memberPrincipal,
+              capabilities: Capabilities(slugs: ['accounting.read']),
+            ),
+            Routes.memberHome,
+          );
+
+          expect(find.byType(AdaptiveShell), findsOneWidget);
+          expect(find.byType(NavigationBar), findsOneWidget);
+          for (final label in [
+            ShellStrings.home,
+            ShellStrings.membership,
+            ShellStrings.schedule,
+            ShellStrings.progress,
+            ShellStrings.profile,
+          ]) {
+            expect(find.text(label), findsWidgets);
+          }
+          expect(find.text(ShellStrings.accounting), findsNothing);
+        },
+      );
+
+      testWidgets(
+        'trainer shell has five NavigationBar destinations even with accounting.read',
+        (tester) async {
+          await pumpAtWidth(
+            tester,
+            const SessionAuthenticated(
+              principal: trainerPrincipal,
+              capabilities: Capabilities(slugs: ['accounting.read']),
+            ),
+            Routes.trainerHome,
+          );
+
+          expect(find.byType(AdaptiveShell), findsOneWidget);
+          expect(find.byType(NavigationBar), findsOneWidget);
+          for (final label in [
+            ShellStrings.home,
+            ShellStrings.members,
+            ShellStrings.schedule,
+            ShellStrings.plans,
+            ShellStrings.profile,
+          ]) {
+            expect(find.text(label), findsWidgets);
+          }
+          expect(find.text(ShellStrings.accounting), findsNothing);
+        },
+      );
+
+      testWidgets(
+        'admin shell has six NavigationRail destinations with accounting.read at tablet width',
+        (tester) async {
+          await pumpAtWidth(
+            tester,
+            const SessionAuthenticated(
+              principal: adminPrincipal,
+              capabilities: Capabilities(slugs: ['accounting.read']),
+            ),
+            Routes.adminDashboard,
+            width: AdaptiveShellBreakpoints.compact + 10,
+          );
+
+          expect(find.byType(AdaptiveShell), findsOneWidget);
+          expect(find.byType(NavigationRail), findsOneWidget);
+          for (final label in [
+            ShellStrings.dashboard,
+            ShellStrings.members,
+            ShellStrings.memberships,
+            ShellStrings.payments,
+            ShellStrings.accounting,
+            ShellStrings.more,
+          ]) {
+            expect(
+              find.descendant(
+                of: find.byType(NavigationRail),
+                matching: find.text(label),
+              ),
+              findsOneWidget,
+            );
+          }
+        },
+      );
+
+      testWidgets(
+        'admin shell has five NavigationRail destinations without accounting.read at tablet width',
+        (tester) async {
+          await pumpAtWidth(
+            tester,
+            const SessionAuthenticated(
+              principal: adminPrincipal,
+              capabilities: emptyCaps,
+            ),
+            Routes.adminDashboard,
+            width: AdaptiveShellBreakpoints.compact + 10,
+          );
+
+          expect(find.byType(AdaptiveShell), findsOneWidget);
+          expect(find.byType(NavigationRail), findsOneWidget);
+          for (final label in [
+            ShellStrings.dashboard,
+            ShellStrings.members,
+            ShellStrings.memberships,
+            ShellStrings.payments,
+            ShellStrings.more,
+          ]) {
+            expect(
+              find.descendant(
+                of: find.byType(NavigationRail),
+                matching: find.text(label),
+              ),
+              findsOneWidget,
+            );
+          }
+          expect(
+            find.descendant(
+              of: find.byType(NavigationRail),
+              matching: find.text(ShellStrings.accounting),
+            ),
+            findsNothing,
+          );
+        },
+      );
 
       testWidgets('admin More root overlays MoreHubScreen', (tester) async {
         await pumpAtWidth(
@@ -821,6 +1050,79 @@ void main() {
           Routes.adminDashboard,
         );
       });
+
+      testWidgets('admin without accounting.read leaves accounting route', (
+        tester,
+      ) async {
+        final router = await pumpRouter(
+          tester,
+          const SessionAuthenticated(
+            principal: adminPrincipal,
+            capabilities: emptyCaps,
+          ),
+        );
+        router.go(Routes.adminAccounting);
+        await tester.pumpAndSettle();
+        expect(
+          router.routeInformationProvider.value.uri.path,
+          Routes.adminDashboard,
+        );
+      });
+
+      testWidgets('admin with accounting.read stays on accounting route', (
+        tester,
+      ) async {
+        final router = await pumpRouter(
+          tester,
+          const SessionAuthenticated(
+            principal: adminPrincipal,
+            capabilities: Capabilities(slugs: ['accounting.read']),
+          ),
+        );
+        router.go(Routes.adminAccounting);
+        await tester.pumpAndSettle();
+        expect(
+          router.routeInformationProvider.value.uri.path,
+          Routes.adminAccounting,
+        );
+        expect(find.byType(AccountingHomeScreen), findsOneWidget);
+      });
+
+      testWidgets('member accessing /admin/accounting redirects to member home', (
+        tester,
+      ) async {
+        final router = await pumpRouter(
+          tester,
+          const SessionAuthenticated(
+            principal: memberPrincipal,
+            capabilities: Capabilities(slugs: ['accounting.read']),
+          ),
+        );
+        router.go(Routes.adminAccounting);
+        await tester.pumpAndSettle();
+        expect(
+          router.routeInformationProvider.value.uri.path,
+          Routes.memberHome,
+        );
+      });
+
+      testWidgets('trainer accessing /admin/accounting redirects to trainer home', (
+        tester,
+      ) async {
+        final router = await pumpRouter(
+          tester,
+          const SessionAuthenticated(
+            principal: trainerPrincipal,
+            capabilities: Capabilities(slugs: ['accounting.read']),
+          ),
+        );
+        router.go(Routes.adminAccounting);
+        await tester.pumpAndSettle();
+        expect(
+          router.routeInformationProvider.value.uri.path,
+          Routes.trainerHome,
+        );
+      });
     });
 
     group('tab navigation', () {
@@ -868,6 +1170,45 @@ void main() {
           Routes.memberProgress,
         );
       });
+
+      testWidgets(
+        'admin shell tapping Accounting tab switches to accounting branch',
+        (tester) async {
+          final sessionCubit = MockSessionCubit();
+          when(() => sessionCubit.restore()).thenAnswer((_) async {});
+          whenListen(
+            sessionCubit,
+            const Stream<SessionState>.empty(),
+            initialState: const SessionAuthenticated(
+              principal: adminPrincipal,
+              capabilities: Capabilities(slugs: ['accounting.read']),
+            ),
+          );
+          registerScreenCubits(sessionCubit);
+          final router = createRouter(sessionCubit);
+          await tester.pumpWidget(
+            MaterialApp.router(
+              routerConfig: router,
+              builder: (context, child) => BlocProvider<SessionCubit>.value(
+                value: sessionCubit,
+                child: Center(
+                  child: SizedBox(width: 390, height: 800, child: child),
+                ),
+              ),
+            ),
+          );
+          router.go(Routes.adminDashboard);
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.text(ShellStrings.accounting));
+          await tester.pumpAndSettle();
+          expect(
+            router.routeInformationProvider.value.uri.path,
+            Routes.adminAccounting,
+          );
+          expect(find.byType(AccountingHomeScreen), findsOneWidget);
+        },
+      );
     });
 
     group('unknown routes', () {
@@ -883,6 +1224,32 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(NotFoundScreen), findsOneWidget);
         expect(find.text(ShellStrings.notFoundTitle), findsOneWidget);
+      });
+
+      testWidgets('member /member/accounting is not found', (tester) async {
+        final router = await pumpRouter(
+          tester,
+          const SessionAuthenticated(
+            principal: memberPrincipal,
+            capabilities: Capabilities(slugs: ['accounting.read']),
+          ),
+        );
+        router.go('/member/accounting');
+        await tester.pumpAndSettle();
+        expect(find.byType(NotFoundScreen), findsOneWidget);
+      });
+
+      testWidgets('trainer /trainer/accounting is not found', (tester) async {
+        final router = await pumpRouter(
+          tester,
+          const SessionAuthenticated(
+            principal: trainerPrincipal,
+            capabilities: Capabilities(slugs: ['accounting.read']),
+          ),
+        );
+        router.go('/trainer/accounting');
+        await tester.pumpAndSettle();
+        expect(find.byType(NotFoundScreen), findsOneWidget);
       });
     });
 

@@ -114,4 +114,53 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('B'), findsOneWidget);
   });
+
+  testWidgets('honors explicit selectedIndex override', (tester) async {
+    final width = AdaptiveShellBreakpoints.compact - 1;
+    await setSurfaceSize(tester, width);
+    router = GoRouter(
+      initialLocation: '/a',
+      routes: [
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) {
+            return AdaptiveShell(
+              navigationShell: navigationShell,
+              selectedIndex: 2,
+              destinations: const [
+                AdaptiveNavigationDestination(
+                  icon: Icon(Icons.home),
+                  label: 'One',
+                ),
+                AdaptiveNavigationDestination(
+                  icon: Icon(Icons.star),
+                  label: 'Two',
+                ),
+                AdaptiveNavigationDestination(
+                  icon: Icon(Icons.person),
+                  label: 'Three',
+                ),
+              ],
+            );
+          },
+          branches: [
+            StatefulShellBranch(
+              routes: [GoRoute(path: '/a', builder: (_, _) => const Text('A'))],
+            ),
+            StatefulShellBranch(
+              routes: [GoRoute(path: '/b', builder: (_, _) => const Text('B'))],
+            ),
+            StatefulShellBranch(
+              routes: [GoRoute(path: '/c', builder: (_, _) => const Text('C'))],
+            ),
+          ],
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+    expect(navBar.selectedIndex, 2);
+  });
 }

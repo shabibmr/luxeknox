@@ -16,6 +16,7 @@ abstract final class RouteCapabilities {
     ('/admin/payments/record', 'payments.create'),
     ('/admin/payments/methods', 'payments.read'),
     ('/admin/payments/outstanding', 'payments.read'),
+    ('/admin/accounting', 'accounting.read'),
     ('/admin/reports', 'reports.read'),
     ('/admin/goal-metrics', 'goals.create'),
     ('/admin/member-goals', 'goals.read'),

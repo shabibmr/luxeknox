@@ -196,6 +196,33 @@ class Routes {
   static const String adminPaymentsDetail = '/admin/payments/:id';
   static const String adminPaymentsOutstanding = '/admin/payments/outstanding';
 
+  // Accounting Stack
+  static const String adminAccounting = '/admin/accounting';
+  static const String adminAccountingAccounts = '/admin/accounting/accounts';
+  static const String adminAccountingAccountsCreate =
+      '/admin/accounting/accounts/create';
+  static const String adminAccountingAccountsEdit =
+      '/admin/accounting/accounts/:id/edit';
+  static const String adminAccountingJournals = '/admin/accounting/journals';
+  static const String adminAccountingJournalsCreate =
+      '/admin/accounting/journals/create';
+  static const String adminAccountingJournalsDetail =
+      '/admin/accounting/journals/:id';
+  static const String adminAccountingVendors = '/admin/accounting/vendors';
+  static const String adminAccountingBills = '/admin/accounting/bills';
+  static const String adminAccountingExpenses = '/admin/accounting/expenses';
+  static const String adminAccountingPaymentVouchers =
+      '/admin/accounting/payment-vouchers';
+  static const String adminAccountingTransfers = '/admin/accounting/transfers';
+  static const String adminAccountingReports = '/admin/accounting/reports';
+  static const String adminAccountingPeriods = '/admin/accounting/periods';
+  static const String adminAccountingGoLive = '/admin/accounting/go-live';
+
+  static String adminAccountingJournalById(String id) =>
+      '/admin/accounting/journals/$id';
+  static String adminAccountingAccountEditById(String id) =>
+      '/admin/accounting/accounts/$id/edit';
+
   // More (Menu / Side Navigation)
   /// Lightweight More-branch root; hub chrome overlays this location.
   static const String adminMore = '/admin/more';

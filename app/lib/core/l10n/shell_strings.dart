@@ -10,6 +10,7 @@ abstract final class ShellStrings {
   static const dashboard = 'Dashboard';
   static const memberships = 'Memberships';
   static const payments = 'Payments';
+  static const accounting = 'Accounting';
   static const more = 'More';
 
   static const comingSoon = 'Coming Soon';
@@ -25,6 +26,7 @@ abstract final class ShellStrings {
   static const adminMembers = 'Admin Members';
   static const adminMemberships = 'Admin Memberships';
   static const adminPayments = 'Admin Payments';
+  static const adminAccounting = 'Admin Accounting';
 
   static const trainerSessionsToday = "Today's Sessions";
   static const trainerNotifications = 'Notifications';

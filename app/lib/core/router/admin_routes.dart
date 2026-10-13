@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/accounting/presentation/screens/accounting_home_screen.dart';
 import '../../features/alerts/presentation/screens/system_alerts_screen.dart';
 import '../../features/attendance/presentation/screens/admin_attendance_screen.dart';
 import '../../features/auth/presentation/widgets/sign_out_tile.dart';
@@ -80,7 +81,7 @@ import '../widgets/more_hub_screen.dart';
 import '../widgets/placeholder_screen.dart';
 import 'routes.dart';
 
-const int _adminMoreBranchIndex = 4;
+const int _adminMoreBranchIndex = 5;
 
 StatefulShellRoute createAdminBranchRoute() {
   return StatefulShellRoute.indexedStack(
@@ -367,6 +368,14 @@ StatefulShellRoute createAdminBranchRoute() {
           ),
         ],
       ),
+      StatefulShellBranch(
+        routes: [
+          GoRoute(
+            path: Routes.adminAccounting,
+            builder: (context, state) => const AccountingHomeScreen(),
+          ),
+        ],
+      ),
       // More branch: sibling routes for every nav-§4 More path.
       // Default location is /admin/more (empty); hub overlays as tab chrome.
       StatefulShellBranch(
@@ -382,9 +391,6 @@ StatefulShellRoute createAdminBranchRoute() {
               return WorkoutPlanBuilderScreen(
                 isTemplate: false,
                 memberId: memberId,
-                afterSavePath: memberId == null
-                    ? Routes.adminMembers
-                    : Routes.adminMembersWorkoutHistoryById(memberId),
               );
             },
           ),
@@ -662,12 +668,34 @@ class _AdminAdaptiveShellState extends State<_AdminAdaptiveShell> {
   bool _showMoreHub = false;
 
   void _onDestinationSelected(int index) {
+    final session = getIt<SessionCubit>().state;
+    final canReadAccounting =
+        session is SessionAuthenticated &&
+        session.capabilities.can('accounting.read');
+
     // Always reset the destination branch to its root route: switching
     // verticals (or re-tapping the active one) should never resume a
     // stale, deep navigation state from a previous visit.
+    if (!canReadAccounting) {
+      if (index == 4) {
+        setState(() => _showMoreHub = true);
+        widget.navigationShell.goBranch(
+          _adminMoreBranchIndex,
+          initialLocation: true,
+        );
+        return;
+      }
+      setState(() => _showMoreHub = false);
+      widget.navigationShell.goBranch(index, initialLocation: true);
+      return;
+    }
+
     if (index == _adminMoreBranchIndex) {
       setState(() => _showMoreHub = true);
-      widget.navigationShell.goBranch(index, initialLocation: true);
+      widget.navigationShell.goBranch(
+        _adminMoreBranchIndex,
+        initialLocation: true,
+      );
       return;
     }
     setState(() => _showMoreHub = false);
@@ -676,6 +704,11 @@ class _AdminAdaptiveShellState extends State<_AdminAdaptiveShell> {
 
   @override
   Widget build(BuildContext context) {
+    final session = getIt<SessionCubit>().state;
+    final canReadAccounting =
+        session is SessionAuthenticated &&
+        session.capabilities.can('accounting.read');
+
     // Deep-link into a More sibling: show that page, not the hub.
     // /admin/more (branch root) always shows the hub.
     final onMoreBranch =
@@ -684,10 +717,17 @@ class _AdminAdaptiveShellState extends State<_AdminAdaptiveShell> {
         GoRouterState.of(context).matchedLocation == Routes.adminMore;
     final showHub = onMoreBranch && (_showMoreHub || onMoreRoot);
 
+    final selectedIndex =
+        (!canReadAccounting &&
+                widget.navigationShell.currentIndex == _adminMoreBranchIndex)
+            ? 4
+            : widget.navigationShell.currentIndex;
+
     // Keep [navigationShell] mounted under the hub so other tab stacks
     // are not disposed while More chrome is visible.
     return AdaptiveShell(
       navigationShell: widget.navigationShell,
+      selectedIndex: selectedIndex,
       onDestinationSelected: _onDestinationSelected,
       body: Stack(
         children: [
@@ -703,28 +743,34 @@ class _AdminAdaptiveShellState extends State<_AdminAdaptiveShell> {
             ),
         ],
       ),
-      destinations: const [
-        AdaptiveNavigationDestination(
+      destinations: [
+        const AdaptiveNavigationDestination(
           icon: Icon(Icons.dashboard_outlined),
           selectedIcon: Icon(Icons.dashboard),
           label: ShellStrings.dashboard,
         ),
-        AdaptiveNavigationDestination(
+        const AdaptiveNavigationDestination(
           icon: Icon(Icons.people_outline),
           selectedIcon: Icon(Icons.people),
           label: ShellStrings.members,
         ),
-        AdaptiveNavigationDestination(
+        const AdaptiveNavigationDestination(
           icon: Icon(Icons.card_membership_outlined),
           selectedIcon: Icon(Icons.card_membership),
           label: ShellStrings.memberships,
         ),
-        AdaptiveNavigationDestination(
+        const AdaptiveNavigationDestination(
           icon: Icon(Icons.payment_outlined),
           selectedIcon: Icon(Icons.payment),
           label: ShellStrings.payments,
         ),
-        AdaptiveNavigationDestination(
+        if (canReadAccounting)
+          const AdaptiveNavigationDestination(
+            icon: Icon(Icons.account_balance_outlined),
+            selectedIcon: Icon(Icons.account_balance),
+            label: ShellStrings.accounting,
+          ),
+        const AdaptiveNavigationDestination(
           icon: Icon(Icons.more_horiz_outlined),
           selectedIcon: Icon(Icons.more_horiz),
           label: ShellStrings.more,

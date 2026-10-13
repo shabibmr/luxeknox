@@ -32,12 +32,14 @@ class AdaptiveShell extends StatelessWidget {
     super.key,
     required this.navigationShell,
     required this.destinations,
+    this.selectedIndex,
     this.onDestinationSelected,
     this.body,
   });
 
   final StatefulNavigationShell navigationShell;
   final List<AdaptiveNavigationDestination> destinations;
+  final int? selectedIndex;
 
   /// Optional override for tab selection (e.g. Admin More hub).
   final ValueChanged<int>? onDestinationSelected;
@@ -59,6 +61,7 @@ class AdaptiveShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = body ?? navigationShell;
+    final activeIndex = selectedIndex ?? navigationShell.currentIndex;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -68,7 +71,7 @@ class AdaptiveShell extends StatelessWidget {
           return Scaffold(
             body: content,
             bottomNavigationBar: NavigationBar(
-              selectedIndex: navigationShell.currentIndex,
+              selectedIndex: activeIndex,
               onDestinationSelected: _onDestinationSelected,
               destinations: destinations
                   .map(
@@ -89,7 +92,7 @@ class AdaptiveShell extends StatelessWidget {
           body: Row(
             children: [
               NavigationRail(
-                selectedIndex: navigationShell.currentIndex,
+                selectedIndex: activeIndex,
                 onDestinationSelected: _onDestinationSelected,
                 extended: isExtended,
                 destinations: destinations
