@@ -12,7 +12,7 @@ import { roles } from '../platform/db/schema/roles';
 import { NotFoundError } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
-import { PersonFactory } from './person.factory';
+import { PersonFactory, userTypeForRoleSlug } from './person.factory';
 import {
   employeeFilterQuerySchema,
   type AssignRoleDto,
@@ -156,7 +156,7 @@ export class EmployeeService {
     }
 
     const roleRows = await (this.db as any)
-      .select({ id: roles.id })
+      .select({ id: roles.id, slug: roles.slug })
       .from(roles)
       .where(eq(roles.id, dto.role_id))
       .limit(1);
@@ -165,10 +165,15 @@ export class EmployeeService {
     }
 
     const now = new Date();
+    const userType = userTypeForRoleSlug(roleRows[0].slug);
     await (this.db as any)
       .update(users)
-      .set({ role_id: dto.role_id, updated_at: now })
+      .set({ role_id: dto.role_id, user_type: userType, updated_at: now })
       .where(eq(users.id, before.user_id));
+
+    // Sessions carry user_type/role; force re-login so the client picks up the new shell.
+    await this.sessionRepository.revokeAllForUser(before.user_id, now);
+    this.sessionCache.dropByUser(before.user_id);
 
     const after = await this.repository.findByIdWithRole(id);
     if (!after) {

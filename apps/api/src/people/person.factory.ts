@@ -119,6 +119,11 @@ export function insertIdFromResult(result: unknown): number {
  * FR-AUTH-008/009: create a login user + matching profile in one transaction.
  * Login `sessions.profile_id` stamping is deferred to V3-09 — use {@link resolveProfileId}.
  */
+/** Staff roles `admin` / `super_admin` get the admin app shell, which the client keys off `users.user_type`. */
+export function userTypeForRoleSlug(slug: string): 'admin' | 'employee' {
+  return slug === 'admin' || slug === 'super_admin' ? 'admin' : 'employee';
+}
+
 @Injectable()
 export class PersonFactory {
   constructor(
@@ -180,12 +185,12 @@ export class PersonFactory {
     const now = new Date();
 
     return runInTransaction(this.db, async (tx) => {
-      const roleId = await this.resolveRoleId(tx, input);
+      const { id: roleId, slug: roleSlug } = await this.resolveRole(tx, input);
       const userId = await this.insertUser(tx, {
         email,
         phone_number: phone,
         password_hash: passwordHash,
-        user_type: input.userType,
+        user_type: input.userType === 'employee' ? userTypeForRoleSlug(roleSlug) : input.userType,
         role_id: roleId,
         status: 'active',
         created_at: now,
@@ -265,17 +270,20 @@ export class PersonFactory {
     }
   }
 
-  private async resolveRoleId(tx: AnyTransaction, input: CreatePersonInput): Promise<number> {
+  private async resolveRole(
+    tx: AnyTransaction,
+    input: CreatePersonInput,
+  ): Promise<{ id: number; slug: string }> {
     if (input.userType === 'employee' && input.roleId != null) {
       const rows = await (tx as any)
-        .select({ id: roles.id })
+        .select({ id: roles.id, slug: roles.slug })
         .from(roles)
         .where(eq(roles.id, input.roleId))
         .limit(1);
       if (!rows[0]) {
         throw new NotFoundError('Role not found');
       }
-      return input.roleId;
+      return { id: rows[0].id as number, slug: rows[0].slug as string };
     }
 
     const slug =
@@ -292,7 +300,7 @@ export class PersonFactory {
     if (!rows[0]) {
       throw new NotFoundError(`Role "${slug}" not found`);
     }
-    return rows[0].id as number;
+    return { id: rows[0].id as number, slug };
   }
 
   /**
