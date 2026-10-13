@@ -39,6 +39,7 @@ tags:
   - name: RPT
   - name: SYS
   - name: MEDIA
+  - name: ACCT
 security:
   - bearerAuth: []
 paths:
@@ -6704,6 +6705,1969 @@ paths:
         "429":
           $ref: "#/components/responses/Error429"
 
+  /accounting/journals:
+    get:
+      operationId: listJournals
+      summary: List journal entries
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: from
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: to
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: source_type
+          in: query
+          schema:
+            type: string
+        - name: payment_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalPage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    post:
+      operationId: createJournal
+      summary: Create a manual or opening-balance journal
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.journals_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JournalCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Journal"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/journals/{id}:
+    get:
+      operationId: getJournal
+      summary: Journal entry detail
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Journal"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/journals/{id}/reverse:
+    post:
+      operationId: reverseJournal
+      summary: Reverse a posted journal
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.journals_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JournalReverse"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Journal"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/accounts:
+    get:
+      operationId: listAccounts
+      summary: List accounts
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: account_type
+          in: query
+          schema:
+            $ref: "#/components/schemas/AccountType"
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountPage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    post:
+      operationId: createAccount
+      summary: Create an account
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.accounts_write
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/accounts/{id}:
+    get:
+      operationId: getAccount
+      summary: Account detail
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    patch:
+      operationId: updateAccount
+      summary: Update an account
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.accounts_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/tax-codes:
+    get:
+      operationId: listTaxCodes
+      summary: List tax codes
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxCodePage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    post:
+      operationId: createTaxCode
+      summary: Create a tax code
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.accounts_write
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaxCodeCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxCode"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/tax-codes/{id}:
+    get:
+      operationId: getTaxCode
+      summary: Tax code detail
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxCode"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    patch:
+      operationId: updateTaxCode
+      summary: Update a tax code
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.accounts_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaxCodeUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxCode"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/vendors:
+    get:
+      operationId: listVendors
+      summary: List vendors
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorPage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    post:
+      operationId: createVendor
+      summary: Create vendor
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.vendors_write
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorWrite"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vendor"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/vendors/{id}:
+    get:
+      operationId: getVendor
+      summary: Get vendor by ID
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vendor"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    patch:
+      operationId: updateVendor
+      summary: Update vendor
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.vendors_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vendor"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/items:
+    get:
+      operationId: listItems
+      summary: List items
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: item_kind
+          in: query
+          schema:
+            $ref: "#/components/schemas/ItemKind"
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemPage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    post:
+      operationId: createItem
+      summary: Create item
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.accounts_write
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/items/{id}:
+    get:
+      operationId: getItem
+      summary: Get item by ID
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    patch:
+      operationId: updateItem
+      summary: Update item
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.accounts_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/fiscal-years:
+    get:
+      operationId: listFiscalYears
+      summary: List all fiscal years
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FiscalYear"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/periods:
+    get:
+      operationId: listAccountingPeriods
+      summary: List accounting periods
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: fiscal_year_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, locked]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountingPeriod"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/periods/{id}/lock:
+    post:
+      operationId: lockAccountingPeriod
+      summary: Lock an accounting period
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.periods_close
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountingPeriod"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/periods/{id}/unlock:
+    post:
+      operationId: unlockAccountingPeriod
+      summary: Unlock an accounting period
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.periods_close
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountingPeriod"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/purchase-bills:
+    get:
+      operationId: listPurchaseBills
+      summary: List purchase bills
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/PurchaseBillStatus"
+        - name: vendor_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: from
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: to
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseBillPage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    post:
+      operationId: createPurchaseBill
+      summary: Create a draft purchase bill
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.purchases_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseBillCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseBill"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/purchase-bills/{id}:
+    get:
+      operationId: getPurchaseBill
+      summary: Get purchase bill by ID
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseBill"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    patch:
+      operationId: updatePurchaseBill
+      summary: Update a draft purchase bill
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.purchases_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseBillUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseBill"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/purchase-bills/{id}/post:
+    post:
+      operationId: postPurchaseBill
+      summary: Post a purchase bill to the general ledger
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.purchases_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseBill"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/expenses:
+    get:
+      operationId: listExpenses
+      summary: List expense vouchers
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/ExpenseStatus"
+        - name: vendor_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: from
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: to
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseVoucherPage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    post:
+      operationId: createExpense
+      summary: Create an expense voucher
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.expenses_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseVoucher"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/expenses/{id}:
+    get:
+      operationId: getExpense
+      summary: Get expense voucher by ID
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseVoucher"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    patch:
+      operationId: updateExpense
+      summary: Update a draft expense voucher
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.expenses_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseVoucher"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/expenses/{id}/post:
+    post:
+      operationId: postExpense
+      summary: Post an expense voucher to general ledger
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.expenses_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseVoucher"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/payment-vouchers:
+    get:
+      operationId: listPaymentVouchers
+      summary: List payment vouchers
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, posted]
+        - name: from
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: to
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: bank_account_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentVoucherPage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    post:
+      operationId: createPaymentVoucher
+      summary: Create a draft payment voucher
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.payments_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentVoucherCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentVoucher"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/payment-vouchers/{id}:
+    get:
+      operationId: getPaymentVoucher
+      summary: Get payment voucher by ID
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentVoucher"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    patch:
+      operationId: updatePaymentVoucher
+      summary: Update a draft payment voucher
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.payments_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentVoucherUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentVoucher"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/payment-vouchers/{id}/post:
+    post:
+      operationId: postPaymentVoucher
+      summary: Post a payment voucher to GL
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.payments_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentVoucher"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/debit-notes:
+    get:
+      operationId: listDebitNotes
+      summary: List debit notes
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/DebitNoteStatus"
+        - name: purchase_bill_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: from
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: to
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DebitNotePage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    post:
+      operationId: createDebitNote
+      summary: Create a draft debit note
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.purchases_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DebitNoteCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DebitNote"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/debit-notes/{id}:
+    get:
+      operationId: getDebitNote
+      summary: Get debit note by ID
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DebitNote"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/debit-notes/{id}/post:
+    post:
+      operationId: postDebitNote
+      summary: Post a debit note to the general ledger
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.purchases_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DebitNote"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/reports/trial-balance:
+    get:
+      operationId: getTrialBalance
+      summary: Trial balance for a date range
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: to
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/Date"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrialBalanceReport"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/reports/profit-and-loss:
+    get:
+      operationId: getProfitAndLoss
+      summary: Profit and loss for a date range
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: to
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/Date"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfitAndLossReport"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/reports/balance-sheet:
+    get:
+      operationId: getBalanceSheet
+      summary: Balance sheet as of a date
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: as_of
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/Date"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BalanceSheetReport"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/reports/day-book:
+    get:
+      operationId: getDayBook
+      summary: Day book for one date
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/Date"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DayBookReport"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/reports/open-items:
+    get:
+      operationId: getOpenItems
+      summary: Open AR or AP items
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: kind
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [ar, ap]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenItemsReport"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/reports/gst-summary:
+    get:
+      operationId: getGstSummary
+      summary: GST summary for a date range
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/Date"
+        - name: to
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/Date"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GstSummaryReport"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/go-live/unearned-preview:
+    get:
+      operationId: getUnearnedPreview
+      summary: Preview unearned membership and PT revenue for go-live
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: go_live_date
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnearnedPreviewResponse"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -10030,3 +11994,1320 @@ components:
           format: uri
         expires_at:
           $ref: "#/components/schemas/DateTime"
+
+    AccountType:
+      type: string
+      enum: [asset, liability, equity, income, expense]
+
+    Account:
+      type: object
+      required: [id, code, name, account_type, is_active, is_bank, is_control, created_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        code:
+          type: string
+        name:
+          type: string
+        account_type:
+          $ref: "#/components/schemas/AccountType"
+        parent_id:
+          type: integer
+          format: int64
+          nullable: true
+        is_active:
+          type: boolean
+        is_bank:
+          type: boolean
+        is_control:
+          type: boolean
+        control_role:
+          type: string
+          nullable: true
+        created_at:
+          $ref: "#/components/schemas/DateTime"
+        updated_at:
+          $ref: "#/components/schemas/DateTime"
+          nullable: true
+
+    AccountCreate:
+      type: object
+      required: [code, name, account_type]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        account_type:
+          $ref: "#/components/schemas/AccountType"
+        parent_id:
+          type: integer
+          format: int64
+          nullable: true
+        is_active:
+          type: boolean
+          default: true
+        is_bank:
+          type: boolean
+          default: false
+        is_control:
+          type: boolean
+          default: false
+        control_role:
+          type: string
+          nullable: true
+
+    AccountUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        parent_id:
+          type: integer
+          format: int64
+          nullable: true
+        is_active:
+          type: boolean
+        is_bank:
+          type: boolean
+
+    AccountPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Account"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    JournalLine:
+      type: object
+      required: [id, journal_entry_id, account_id, debit, credit]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        journal_entry_id:
+          $ref: "#/components/schemas/Id"
+        account_id:
+          $ref: "#/components/schemas/Id"
+        debit:
+          $ref: "#/components/schemas/Money"
+        credit:
+          $ref: "#/components/schemas/Money"
+        memo:
+          type: string
+          nullable: true
+        member_id:
+          type: integer
+          format: int64
+          nullable: true
+        vendor_id:
+          type: integer
+          format: int64
+          nullable: true
+
+    JournalLineWrite:
+      type: object
+      required: [account_id]
+      properties:
+        account_id:
+          $ref: "#/components/schemas/Id"
+        debit:
+          $ref: "#/components/schemas/Money"
+        credit:
+          $ref: "#/components/schemas/Money"
+        memo:
+          type: string
+          nullable: true
+        member_id:
+          type: integer
+          format: int64
+          nullable: true
+        vendor_id:
+          type: integer
+          format: int64
+          nullable: true
+
+    Journal:
+      type: object
+      required: [id, journal_number, entry_date, accounting_period_id, source_type, source_id, posted_at, row_version, lines]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        journal_number:
+          type: string
+        entry_date:
+          $ref: "#/components/schemas/Date"
+        accounting_period_id:
+          $ref: "#/components/schemas/Id"
+        source_type:
+          type: string
+        source_id:
+          type: integer
+          format: int64
+        memo:
+          type: string
+          nullable: true
+        posted_at:
+          $ref: "#/components/schemas/DateTime"
+        posted_by_user_id:
+          type: integer
+          format: int64
+          nullable: true
+        reverses_journal_id:
+          type: integer
+          format: int64
+          nullable: true
+        row_version:
+          type: integer
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/JournalLine"
+
+    JournalCreate:
+      type: object
+      required: [entry_date, source_type, lines]
+      properties:
+        entry_date:
+          $ref: "#/components/schemas/Date"
+        source_type:
+          type: string
+          enum: [manual, opening_balance]
+        memo:
+          type: string
+          nullable: true
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/JournalLineWrite"
+
+    JournalReverse:
+      type: object
+      properties:
+        entry_date:
+          $ref: "#/components/schemas/Date"
+        memo:
+          type: string
+          nullable: true
+
+    JournalPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Journal"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    TaxCodeComponent:
+      type: object
+      required: [id, tax_code_id, name, rate_percent, output_account_id, input_account_id]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        tax_code_id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+        rate_percent:
+          $ref: "#/components/schemas/Money"
+        output_account_id:
+          $ref: "#/components/schemas/Id"
+        input_account_id:
+          $ref: "#/components/schemas/Id"
+
+    TaxCodeComponentWrite:
+      type: object
+      required: [name, rate_percent, output_account_id, input_account_id]
+      properties:
+        name:
+          type: string
+        rate_percent:
+          $ref: "#/components/schemas/Money"
+        output_account_id:
+          $ref: "#/components/schemas/Id"
+        input_account_id:
+          $ref: "#/components/schemas/Id"
+
+    TaxCode:
+      type: object
+      required: [id, name, code, rate_percent, is_active, components]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+        code:
+          type: string
+        rate_percent:
+          $ref: "#/components/schemas/Money"
+        is_active:
+          type: boolean
+        components:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaxCodeComponent"
+
+    TaxCodeCreate:
+      type: object
+      required: [name, code, rate_percent]
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        rate_percent:
+          $ref: "#/components/schemas/Money"
+        is_active:
+          type: boolean
+          default: true
+        components:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaxCodeComponentWrite"
+
+    TaxCodeUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        rate_percent:
+          $ref: "#/components/schemas/Money"
+        is_active:
+          type: boolean
+        components:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaxCodeComponentWrite"
+
+    TaxCodePage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaxCode"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    Vendor:
+      type: object
+      required: [id, name, is_active, created_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        gstin:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        created_at:
+          $ref: "#/components/schemas/DateTime"
+        updated_at:
+          $ref: "#/components/schemas/DateTime"
+          nullable: true
+
+    VendorWrite:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        gstin:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+          default: true
+
+    VendorUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        gstin:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+
+    VendorPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Vendor"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    ItemKind:
+      type: string
+      enum: [service, goods]
+
+    Item:
+      type: object
+      required: [id, name, item_kind, inventory_tracked, income_account_id, expense_account_id, is_active]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+        item_kind:
+          $ref: "#/components/schemas/ItemKind"
+        inventory_tracked:
+          type: boolean
+        income_account_id:
+          $ref: "#/components/schemas/Id"
+        expense_account_id:
+          $ref: "#/components/schemas/Id"
+        tax_code_id:
+          type: integer
+          format: int64
+          nullable: true
+        is_active:
+          type: boolean
+
+    ItemCreate:
+      type: object
+      required: [name, item_kind, income_account_id, expense_account_id]
+      properties:
+        name:
+          type: string
+        item_kind:
+          $ref: "#/components/schemas/ItemKind"
+        income_account_id:
+          $ref: "#/components/schemas/Id"
+        expense_account_id:
+          $ref: "#/components/schemas/Id"
+        tax_code_id:
+          type: integer
+          format: int64
+          nullable: true
+        is_active:
+          type: boolean
+          default: true
+        inventory_tracked:
+          type: boolean
+          default: false
+
+    ItemUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        income_account_id:
+          $ref: "#/components/schemas/Id"
+        expense_account_id:
+          $ref: "#/components/schemas/Id"
+        tax_code_id:
+          type: integer
+          format: int64
+          nullable: true
+        is_active:
+          type: boolean
+        inventory_tracked:
+          type: boolean
+
+    ItemPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Item"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    FiscalYear:
+      type: object
+      required: [id, label, starts_on, ends_on]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        label:
+          type: string
+        starts_on:
+          $ref: "#/components/schemas/Date"
+        ends_on:
+          $ref: "#/components/schemas/Date"
+
+    DraftDocumentCounts:
+      type: object
+      required: [purchase_bills, expense_vouchers, payment_vouchers, credit_notes, debit_notes, total]
+      properties:
+        purchase_bills:
+          type: integer
+        expense_vouchers:
+          type: integer
+        payment_vouchers:
+          type: integer
+        credit_notes:
+          type: integer
+        debit_notes:
+          type: integer
+        total:
+          type: integer
+
+    AccountingPeriod:
+      type: object
+      required: [id, fiscal_year_id, starts_on, ends_on, status]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        fiscal_year_id:
+          $ref: "#/components/schemas/Id"
+        starts_on:
+          $ref: "#/components/schemas/Date"
+        ends_on:
+          $ref: "#/components/schemas/Date"
+        status:
+          type: string
+          enum: [open, locked]
+        closed_at:
+          $ref: "#/components/schemas/DateTime"
+          nullable: true
+        closed_by_user_id:
+          type: integer
+          format: int64
+          nullable: true
+        draft_document_counts:
+          $ref: "#/components/schemas/DraftDocumentCounts"
+
+    PurchaseBillStatus:
+      type: string
+      enum: [draft, posted, void]
+
+    PurchaseBillLine:
+      type: object
+      required: [id, purchase_bill_id, account_id, quantity, rate, net_amount, tax_amount]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        purchase_bill_id:
+          $ref: "#/components/schemas/Id"
+        item_id:
+          type: integer
+          format: int64
+          nullable: true
+        account_id:
+          $ref: "#/components/schemas/Id"
+        description:
+          type: string
+          nullable: true
+        quantity:
+          $ref: "#/components/schemas/Money"
+        rate:
+          $ref: "#/components/schemas/Money"
+        tax_code_id:
+          type: integer
+          format: int64
+          nullable: true
+        net_amount:
+          $ref: "#/components/schemas/Money"
+        tax_amount:
+          $ref: "#/components/schemas/Money"
+
+    PurchaseBillLineWrite:
+      type: object
+      required: [account_id, rate]
+      properties:
+        item_id:
+          type: integer
+          format: int64
+          nullable: true
+        account_id:
+          $ref: "#/components/schemas/Id"
+        description:
+          type: string
+          nullable: true
+        quantity:
+          $ref: "#/components/schemas/Money"
+        rate:
+          $ref: "#/components/schemas/Money"
+        tax_code_id:
+          type: integer
+          format: int64
+          nullable: true
+
+    PurchaseBill:
+      type: object
+      required: [id, bill_number, vendor_id, bill_date, status, subtotal, tax_amount, total_amount, row_version, created_at, lines]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        bill_number:
+          type: string
+        vendor_id:
+          $ref: "#/components/schemas/Id"
+        bill_date:
+          $ref: "#/components/schemas/Date"
+        due_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        status:
+          $ref: "#/components/schemas/PurchaseBillStatus"
+        subtotal:
+          $ref: "#/components/schemas/Money"
+        tax_amount:
+          $ref: "#/components/schemas/Money"
+        total_amount:
+          $ref: "#/components/schemas/Money"
+        journal_entry_id:
+          type: integer
+          format: int64
+          nullable: true
+        row_version:
+          type: integer
+        created_at:
+          $ref: "#/components/schemas/DateTime"
+        updated_at:
+          $ref: "#/components/schemas/DateTime"
+          nullable: true
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseBillLine"
+
+    PurchaseBillCreate:
+      type: object
+      required: [vendor_id, bill_date, lines]
+      properties:
+        vendor_id:
+          $ref: "#/components/schemas/Id"
+        bill_date:
+          $ref: "#/components/schemas/Date"
+        due_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseBillLineWrite"
+
+    PurchaseBillUpdate:
+      type: object
+      properties:
+        vendor_id:
+          $ref: "#/components/schemas/Id"
+        bill_date:
+          $ref: "#/components/schemas/Date"
+        due_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseBillLineWrite"
+
+    PurchaseBillPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseBill"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    ExpenseStatus:
+      type: string
+      enum: [draft, posted]
+
+    ExpenseVoucherLine:
+      type: object
+      required: [id, expense_voucher_id, account_id, amount, tax_amount]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        expense_voucher_id:
+          $ref: "#/components/schemas/Id"
+        account_id:
+          $ref: "#/components/schemas/Id"
+        description:
+          type: string
+          nullable: true
+        amount:
+          $ref: "#/components/schemas/Money"
+        tax_code_id:
+          type: integer
+          format: int64
+          nullable: true
+        tax_amount:
+          $ref: "#/components/schemas/Money"
+
+    ExpenseLineCreate:
+      type: object
+      required: [account_id, amount]
+      properties:
+        account_id:
+          $ref: "#/components/schemas/Id"
+        description:
+          type: string
+          nullable: true
+        amount:
+          $ref: "#/components/schemas/Money"
+        tax_code_id:
+          type: integer
+          format: int64
+          nullable: true
+
+    ExpenseVoucher:
+      type: object
+      required: [id, expense_number, expense_date, status, subtotal, tax_amount, total_amount, row_version, created_at, lines]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        expense_number:
+          type: string
+        vendor_id:
+          type: integer
+          format: int64
+          nullable: true
+        payee_name:
+          type: string
+          nullable: true
+        expense_date:
+          $ref: "#/components/schemas/Date"
+        paid_from_account_id:
+          type: integer
+          format: int64
+          nullable: true
+        status:
+          $ref: "#/components/schemas/ExpenseStatus"
+        subtotal:
+          $ref: "#/components/schemas/Money"
+        tax_amount:
+          $ref: "#/components/schemas/Money"
+        total_amount:
+          $ref: "#/components/schemas/Money"
+        journal_entry_id:
+          type: integer
+          format: int64
+          nullable: true
+        row_version:
+          type: integer
+        created_at:
+          $ref: "#/components/schemas/DateTime"
+        updated_at:
+          $ref: "#/components/schemas/DateTime"
+          nullable: true
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExpenseVoucherLine"
+
+    ExpenseCreate:
+      type: object
+      required: [expense_date, lines]
+      properties:
+        expense_date:
+          $ref: "#/components/schemas/Date"
+        paid_from_account_id:
+          type: integer
+          format: int64
+          nullable: true
+        vendor_id:
+          type: integer
+          format: int64
+          nullable: true
+        payee_name:
+          type: string
+          nullable: true
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExpenseLineCreate"
+
+    ExpenseUpdate:
+      type: object
+      properties:
+        expense_date:
+          $ref: "#/components/schemas/Date"
+        paid_from_account_id:
+          type: integer
+          format: int64
+          nullable: true
+        vendor_id:
+          type: integer
+          format: int64
+          nullable: true
+        payee_name:
+          type: string
+          nullable: true
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExpenseLineCreate"
+
+    ExpenseVoucherPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExpenseVoucher"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    PaymentAllocation:
+      type: object
+      required: [id, payment_voucher_id, amount]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        payment_voucher_id:
+          $ref: "#/components/schemas/Id"
+        purchase_bill_id:
+          type: integer
+          format: int64
+          nullable: true
+        expense_voucher_id:
+          type: integer
+          format: int64
+          nullable: true
+        amount:
+          $ref: "#/components/schemas/Money"
+
+    PaymentAllocationWrite:
+      type: object
+      required: [amount]
+      properties:
+        purchase_bill_id:
+          type: integer
+          format: int64
+          nullable: true
+        expense_voucher_id:
+          type: integer
+          format: int64
+          nullable: true
+        amount:
+          $ref: "#/components/schemas/Money"
+
+    PaymentVoucher:
+      type: object
+      required: [id, voucher_number, payment_date, bank_account_id, total_amount, status, row_version, created_at, allocations]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        voucher_number:
+          type: string
+        payment_date:
+          $ref: "#/components/schemas/Date"
+        bank_account_id:
+          $ref: "#/components/schemas/Id"
+        total_amount:
+          $ref: "#/components/schemas/Money"
+        memo:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [draft, posted]
+        journal_entry_id:
+          type: integer
+          format: int64
+          nullable: true
+        row_version:
+          type: integer
+        created_at:
+          $ref: "#/components/schemas/DateTime"
+        updated_at:
+          $ref: "#/components/schemas/DateTime"
+          nullable: true
+        allocations:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentAllocation"
+
+    PaymentVoucherCreate:
+      type: object
+      required: [payment_date, bank_account_id, total_amount, allocations]
+      properties:
+        payment_date:
+          $ref: "#/components/schemas/Date"
+        bank_account_id:
+          $ref: "#/components/schemas/Id"
+        total_amount:
+          $ref: "#/components/schemas/Money"
+        memo:
+          type: string
+          nullable: true
+        allocations:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentAllocationWrite"
+
+    PaymentVoucherUpdate:
+      type: object
+      properties:
+        payment_date:
+          $ref: "#/components/schemas/Date"
+        bank_account_id:
+          $ref: "#/components/schemas/Id"
+        total_amount:
+          $ref: "#/components/schemas/Money"
+        memo:
+          type: string
+          nullable: true
+        allocations:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentAllocationWrite"
+
+    PaymentVoucherPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentVoucher"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    DebitNoteStatus:
+      type: string
+      enum: [draft, posted, void]
+
+    DebitNote:
+      type: object
+      required: [id, debit_note_number, purchase_bill_id, debit_note_date, subtotal, tax_amount, total_amount, status, row_version, created_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        debit_note_number:
+          type: string
+        purchase_bill_id:
+          $ref: "#/components/schemas/Id"
+        debit_note_date:
+          $ref: "#/components/schemas/Date"
+        reason:
+          type: string
+          nullable: true
+        subtotal:
+          $ref: "#/components/schemas/Money"
+        tax_amount:
+          $ref: "#/components/schemas/Money"
+        total_amount:
+          $ref: "#/components/schemas/Money"
+        status:
+          $ref: "#/components/schemas/DebitNoteStatus"
+        journal_entry_id:
+          type: integer
+          format: int64
+          nullable: true
+        row_version:
+          type: integer
+        created_at:
+          $ref: "#/components/schemas/DateTime"
+        updated_at:
+          $ref: "#/components/schemas/DateTime"
+          nullable: true
+
+    DebitNoteCreate:
+      type: object
+      required: [purchase_bill_id, debit_note_date, subtotal]
+      properties:
+        purchase_bill_id:
+          $ref: "#/components/schemas/Id"
+        debit_note_date:
+          $ref: "#/components/schemas/Date"
+        reason:
+          type: string
+          nullable: true
+        subtotal:
+          $ref: "#/components/schemas/Money"
+        tax_amount:
+          $ref: "#/components/schemas/Money"
+
+    DebitNotePage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/DebitNote"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    TrialBalanceAccount:
+      type: object
+      required: [account_id, account_code, account_name, account_type, debit, credit]
+      properties:
+        account_id:
+          $ref: "#/components/schemas/Id"
+        account_code:
+          type: string
+        account_name:
+          type: string
+        account_type:
+          type: string
+        debit:
+          $ref: "#/components/schemas/Money"
+        credit:
+          $ref: "#/components/schemas/Money"
+
+    TrialBalanceReport:
+      type: object
+      required: [to, accounts, total_debit, total_credit]
+      properties:
+        from:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        to:
+          $ref: "#/components/schemas/Date"
+        accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrialBalanceAccount"
+        total_debit:
+          $ref: "#/components/schemas/Money"
+        total_credit:
+          $ref: "#/components/schemas/Money"
+
+    ProfitAndLossAccount:
+      type: object
+      required: [account_id, account_code, account_name, amount]
+      properties:
+        account_id:
+          $ref: "#/components/schemas/Id"
+        account_code:
+          type: string
+        account_name:
+          type: string
+        amount:
+          $ref: "#/components/schemas/Money"
+
+    ProfitAndLossReport:
+      type: object
+      required: [from, to, income_accounts, total_income, expense_accounts, total_expense, net_profit]
+      properties:
+        from:
+          $ref: "#/components/schemas/Date"
+        to:
+          $ref: "#/components/schemas/Date"
+        income_accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfitAndLossAccount"
+        total_income:
+          $ref: "#/components/schemas/Money"
+        expense_accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfitAndLossAccount"
+        total_expense:
+          $ref: "#/components/schemas/Money"
+        net_profit:
+          $ref: "#/components/schemas/Money"
+
+    BalanceSheetAccount:
+      type: object
+      required: [account_id, account_code, account_name, amount]
+      properties:
+        account_id:
+          $ref: "#/components/schemas/Id"
+        account_code:
+          type: string
+        account_name:
+          type: string
+        amount:
+          $ref: "#/components/schemas/Money"
+
+    BalanceSheetReport:
+      type: object
+      required: [as_of, fiscal_year_start, asset_accounts, total_assets, liability_accounts, total_liabilities, equity_accounts, current_year_earnings, total_equity, total_liabilities_and_equity]
+      properties:
+        as_of:
+          $ref: "#/components/schemas/Date"
+        fiscal_year_start:
+          $ref: "#/components/schemas/Date"
+        asset_accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/BalanceSheetAccount"
+        total_assets:
+          $ref: "#/components/schemas/Money"
+        liability_accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/BalanceSheetAccount"
+        total_liabilities:
+          $ref: "#/components/schemas/Money"
+        equity_accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/BalanceSheetAccount"
+        current_year_earnings:
+          $ref: "#/components/schemas/Money"
+        total_equity:
+          $ref: "#/components/schemas/Money"
+        total_liabilities_and_equity:
+          $ref: "#/components/schemas/Money"
+
+    DayBookLine:
+      type: object
+      required: [id, account_id, account_code, account_name, debit, credit]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        account_id:
+          $ref: "#/components/schemas/Id"
+        account_code:
+          type: string
+        account_name:
+          type: string
+        debit:
+          $ref: "#/components/schemas/Money"
+        credit:
+          $ref: "#/components/schemas/Money"
+        memo:
+          type: string
+          nullable: true
+        member_id:
+          type: integer
+          format: int64
+          nullable: true
+        vendor_id:
+          type: integer
+          format: int64
+          nullable: true
+
+    DayBookJournal:
+      type: object
+      required: [id, journal_number, entry_date, source_type, source_id, lines]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        journal_number:
+          type: string
+        entry_date:
+          $ref: "#/components/schemas/Date"
+        source_type:
+          type: string
+        source_id:
+          type: integer
+          format: int64
+        memo:
+          type: string
+          nullable: true
+        reverses_journal_id:
+          type: integer
+          format: int64
+          nullable: true
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/DayBookLine"
+
+    DayBookReport:
+      type: object
+      required: [date, journals, total_debit, total_credit]
+      properties:
+        date:
+          $ref: "#/components/schemas/Date"
+        journals:
+          type: array
+          items:
+            $ref: "#/components/schemas/DayBookJournal"
+        total_debit:
+          $ref: "#/components/schemas/Money"
+        total_credit:
+          $ref: "#/components/schemas/Money"
+
+    OpenArItem:
+      type: object
+      required: [payment_id, invoice_number, invoice_date, member_id, total_amount, amount_paid, open_amount, status]
+      properties:
+        payment_id:
+          $ref: "#/components/schemas/Id"
+        invoice_number:
+          type: string
+        invoice_date:
+          $ref: "#/components/schemas/Date"
+        member_id:
+          $ref: "#/components/schemas/Id"
+        total_amount:
+          $ref: "#/components/schemas/Money"
+        amount_paid:
+          $ref: "#/components/schemas/Money"
+        open_amount:
+          $ref: "#/components/schemas/Money"
+        status:
+          type: string
+
+    OpenApItem:
+      type: object
+      required: [purchase_bill_id, bill_number, bill_date, vendor_id, total_amount, allocated_amount, debit_note_amount, open_amount, status]
+      properties:
+        purchase_bill_id:
+          $ref: "#/components/schemas/Id"
+        bill_number:
+          type: string
+        bill_date:
+          $ref: "#/components/schemas/Date"
+        due_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        vendor_id:
+          $ref: "#/components/schemas/Id"
+        total_amount:
+          $ref: "#/components/schemas/Money"
+        allocated_amount:
+          $ref: "#/components/schemas/Money"
+        debit_note_amount:
+          $ref: "#/components/schemas/Money"
+        open_amount:
+          $ref: "#/components/schemas/Money"
+        status:
+          type: string
+
+    OpenItemsReport:
+      type: object
+      required: [kind, total_open_amount]
+      properties:
+        kind:
+          type: string
+          enum: [ar, ap]
+        ar_items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpenArItem"
+        ap_items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpenApItem"
+        total_open_amount:
+          $ref: "#/components/schemas/Money"
+
+    GstTaxCodeSummary:
+      type: object
+      required: [tax_code_id, tax_code_name, rate_percent, taxable_value, cgst_amount, sgst_amount, igst_amount, total_tax]
+      properties:
+        tax_code_id:
+          $ref: "#/components/schemas/Id"
+        tax_code_name:
+          type: string
+        rate_percent:
+          $ref: "#/components/schemas/Money"
+        taxable_value:
+          $ref: "#/components/schemas/Money"
+        cgst_amount:
+          $ref: "#/components/schemas/Money"
+        sgst_amount:
+          $ref: "#/components/schemas/Money"
+        igst_amount:
+          $ref: "#/components/schemas/Money"
+        total_tax:
+          $ref: "#/components/schemas/Money"
+
+    GstSummaryReport:
+      type: object
+      required: [from, to, tax_codes, total_taxable_value, output_cgst, output_sgst, output_igst, total_output_tax, input_tax_credit, net_payable]
+      properties:
+        from:
+          $ref: "#/components/schemas/Date"
+        to:
+          $ref: "#/components/schemas/Date"
+        tax_codes:
+          type: array
+          items:
+            $ref: "#/components/schemas/GstTaxCodeSummary"
+        total_taxable_value:
+          $ref: "#/components/schemas/Money"
+        output_cgst:
+          $ref: "#/components/schemas/Money"
+        output_sgst:
+          $ref: "#/components/schemas/Money"
+        output_igst:
+          $ref: "#/components/schemas/Money"
+        total_output_tax:
+          $ref: "#/components/schemas/Money"
+        input_tax_credit:
+          $ref: "#/components/schemas/Money"
+        net_payable:
+          $ref: "#/components/schemas/Money"
+
+    UnearnedPreviewItem:
+      type: object
+      required: [kind, source_id, payment_id, member_id, starts_on, ends_on, unearned_account_id, income_account_id, account_code, total_net, unexpired_amount]
+      properties:
+        kind:
+          type: string
+          enum: [membership, pt]
+        source_id:
+          $ref: "#/components/schemas/Id"
+        payment_id:
+          $ref: "#/components/schemas/Id"
+        member_id:
+          $ref: "#/components/schemas/Id"
+        starts_on:
+          $ref: "#/components/schemas/Date"
+        ends_on:
+          $ref: "#/components/schemas/Date"
+        unearned_account_id:
+          $ref: "#/components/schemas/Id"
+        income_account_id:
+          $ref: "#/components/schemas/Id"
+        account_code:
+          type: string
+        total_net:
+          $ref: "#/components/schemas/Money"
+        unexpired_amount:
+          $ref: "#/components/schemas/Money"
+
+    UnearnedPreviewTotals:
+      type: object
+      required: [unearned_membership_total, unearned_pt_total, combined_total]
+      properties:
+        unearned_membership_total:
+          $ref: "#/components/schemas/Money"
+        unearned_pt_total:
+          $ref: "#/components/schemas/Money"
+        combined_total:
+          $ref: "#/components/schemas/Money"
+
+    UnearnedPreviewResponse:
+      type: object
+      required: [go_live_date, totals, items]
+      properties:
+        go_live_date:
+          $ref: "#/components/schemas/Date"
+        totals:
+          $ref: "#/components/schemas/UnearnedPreviewTotals"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/UnearnedPreviewItem"

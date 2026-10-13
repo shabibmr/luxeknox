@@ -25,7 +25,7 @@ const IMPLEMENTED_MVP_PATH_ALLOWLIST = new Set<string>([]);
 
 function normalizePath(p: string): string {
   const withPrefix = p.startsWith('/v1/') || p === '/v1' ? p : `/v1${p.startsWith('/') ? p : `/${p}`}`;
-  return withPrefix.replace(/\{[^}]+\}/g, '{}');
+  return withPrefix.replace(/\{[^}]+\}/g, '{}').replace(/\/\*$/, '/{}');
 }
 
 function stripV1(p: string): string {

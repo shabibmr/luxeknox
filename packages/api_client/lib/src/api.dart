@@ -9,6 +9,7 @@ import 'package:api_client/src/auth/api_key_auth.dart';
 import 'package:api_client/src/auth/basic_auth.dart';
 import 'package:api_client/src/auth/bearer_auth.dart';
 import 'package:api_client/src/auth/oauth.dart';
+import 'package:api_client/src/api/acct_api.dart';
 import 'package:api_client/src/api/api_api.dart';
 import 'package:api_client/src/api/attn_api.dart';
 import 'package:api_client/src/api/auth_api.dart';
@@ -120,6 +121,12 @@ class ApiClient {
     if (this.dio.interceptors.any((i) => i is ApiKeyAuthInterceptor)) {
       (this.dio.interceptors.firstWhere((element) => element is ApiKeyAuthInterceptor) as ApiKeyAuthInterceptor).apiKeys.remove(name);
     }
+  }
+
+  /// Get ACCTApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  ACCTApi getACCTApi() {
+    return ACCTApi(dio, serializers);
   }
 
   /// Get APIApi instance, base route and serializer can be overridden by a given but be careful,

@@ -55,13 +55,14 @@ Please follow the [installation procedure](#installation--usage) and then run th
 import 'package:api_client/api_client.dart';
 
 
-final api = ApiClient().getAPIApi();
+final api = ApiClient().getACCTApi();
+final AccountCreate accountCreate = ; // AccountCreate | 
 
 try {
-    final response = await api.getHealth();
+    final response = await api.createAccount(accountCreate);
     print(response);
 } on DioException catch (e) {
-    print("Exception when calling APIApi->getHealth: $e\n");
+    print("Exception when calling ACCTApi->createAccount: $e\n");
 }
 
 ```
@@ -72,6 +73,56 @@ All URIs are relative to *http://localhost:3000/v1*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+[*ACCTApi*](doc/ACCTApi.md) | [**createAccount**](doc/ACCTApi.md#createaccount) | **POST** /accounting/accounts | Create an account
+[*ACCTApi*](doc/ACCTApi.md) | [**createDebitNote**](doc/ACCTApi.md#createdebitnote) | **POST** /accounting/debit-notes | Create a draft debit note
+[*ACCTApi*](doc/ACCTApi.md) | [**createExpense**](doc/ACCTApi.md#createexpense) | **POST** /accounting/expenses | Create an expense voucher
+[*ACCTApi*](doc/ACCTApi.md) | [**createItem**](doc/ACCTApi.md#createitem) | **POST** /accounting/items | Create item
+[*ACCTApi*](doc/ACCTApi.md) | [**createJournal**](doc/ACCTApi.md#createjournal) | **POST** /accounting/journals | Create a manual or opening-balance journal
+[*ACCTApi*](doc/ACCTApi.md) | [**createPaymentVoucher**](doc/ACCTApi.md#createpaymentvoucher) | **POST** /accounting/payment-vouchers | Create a draft payment voucher
+[*ACCTApi*](doc/ACCTApi.md) | [**createPurchaseBill**](doc/ACCTApi.md#createpurchasebill) | **POST** /accounting/purchase-bills | Create a draft purchase bill
+[*ACCTApi*](doc/ACCTApi.md) | [**createTaxCode**](doc/ACCTApi.md#createtaxcode) | **POST** /accounting/tax-codes | Create a tax code
+[*ACCTApi*](doc/ACCTApi.md) | [**createVendor**](doc/ACCTApi.md#createvendor) | **POST** /accounting/vendors | Create vendor
+[*ACCTApi*](doc/ACCTApi.md) | [**getAccount**](doc/ACCTApi.md#getaccount) | **GET** /accounting/accounts/{id} | Account detail
+[*ACCTApi*](doc/ACCTApi.md) | [**getBalanceSheet**](doc/ACCTApi.md#getbalancesheet) | **GET** /accounting/reports/balance-sheet | Balance sheet as of a date
+[*ACCTApi*](doc/ACCTApi.md) | [**getDayBook**](doc/ACCTApi.md#getdaybook) | **GET** /accounting/reports/day-book | Day book for one date
+[*ACCTApi*](doc/ACCTApi.md) | [**getDebitNote**](doc/ACCTApi.md#getdebitnote) | **GET** /accounting/debit-notes/{id} | Get debit note by ID
+[*ACCTApi*](doc/ACCTApi.md) | [**getExpense**](doc/ACCTApi.md#getexpense) | **GET** /accounting/expenses/{id} | Get expense voucher by ID
+[*ACCTApi*](doc/ACCTApi.md) | [**getGstSummary**](doc/ACCTApi.md#getgstsummary) | **GET** /accounting/reports/gst-summary | GST summary for a date range
+[*ACCTApi*](doc/ACCTApi.md) | [**getItem**](doc/ACCTApi.md#getitem) | **GET** /accounting/items/{id} | Get item by ID
+[*ACCTApi*](doc/ACCTApi.md) | [**getJournal**](doc/ACCTApi.md#getjournal) | **GET** /accounting/journals/{id} | Journal entry detail
+[*ACCTApi*](doc/ACCTApi.md) | [**getOpenItems**](doc/ACCTApi.md#getopenitems) | **GET** /accounting/reports/open-items | Open AR or AP items
+[*ACCTApi*](doc/ACCTApi.md) | [**getPaymentVoucher**](doc/ACCTApi.md#getpaymentvoucher) | **GET** /accounting/payment-vouchers/{id} | Get payment voucher by ID
+[*ACCTApi*](doc/ACCTApi.md) | [**getProfitAndLoss**](doc/ACCTApi.md#getprofitandloss) | **GET** /accounting/reports/profit-and-loss | Profit and loss for a date range
+[*ACCTApi*](doc/ACCTApi.md) | [**getPurchaseBill**](doc/ACCTApi.md#getpurchasebill) | **GET** /accounting/purchase-bills/{id} | Get purchase bill by ID
+[*ACCTApi*](doc/ACCTApi.md) | [**getTaxCode**](doc/ACCTApi.md#gettaxcode) | **GET** /accounting/tax-codes/{id} | Tax code detail
+[*ACCTApi*](doc/ACCTApi.md) | [**getTrialBalance**](doc/ACCTApi.md#gettrialbalance) | **GET** /accounting/reports/trial-balance | Trial balance for a date range
+[*ACCTApi*](doc/ACCTApi.md) | [**getUnearnedPreview**](doc/ACCTApi.md#getunearnedpreview) | **GET** /accounting/go-live/unearned-preview | Preview unearned membership and PT revenue for go-live
+[*ACCTApi*](doc/ACCTApi.md) | [**getVendor**](doc/ACCTApi.md#getvendor) | **GET** /accounting/vendors/{id} | Get vendor by ID
+[*ACCTApi*](doc/ACCTApi.md) | [**listAccountingPeriods**](doc/ACCTApi.md#listaccountingperiods) | **GET** /accounting/periods | List accounting periods
+[*ACCTApi*](doc/ACCTApi.md) | [**listAccounts**](doc/ACCTApi.md#listaccounts) | **GET** /accounting/accounts | List accounts
+[*ACCTApi*](doc/ACCTApi.md) | [**listDebitNotes**](doc/ACCTApi.md#listdebitnotes) | **GET** /accounting/debit-notes | List debit notes
+[*ACCTApi*](doc/ACCTApi.md) | [**listExpenses**](doc/ACCTApi.md#listexpenses) | **GET** /accounting/expenses | List expense vouchers
+[*ACCTApi*](doc/ACCTApi.md) | [**listFiscalYears**](doc/ACCTApi.md#listfiscalyears) | **GET** /accounting/fiscal-years | List all fiscal years
+[*ACCTApi*](doc/ACCTApi.md) | [**listItems**](doc/ACCTApi.md#listitems) | **GET** /accounting/items | List items
+[*ACCTApi*](doc/ACCTApi.md) | [**listJournals**](doc/ACCTApi.md#listjournals) | **GET** /accounting/journals | List journal entries
+[*ACCTApi*](doc/ACCTApi.md) | [**listPaymentVouchers**](doc/ACCTApi.md#listpaymentvouchers) | **GET** /accounting/payment-vouchers | List payment vouchers
+[*ACCTApi*](doc/ACCTApi.md) | [**listPurchaseBills**](doc/ACCTApi.md#listpurchasebills) | **GET** /accounting/purchase-bills | List purchase bills
+[*ACCTApi*](doc/ACCTApi.md) | [**listTaxCodes**](doc/ACCTApi.md#listtaxcodes) | **GET** /accounting/tax-codes | List tax codes
+[*ACCTApi*](doc/ACCTApi.md) | [**listVendors**](doc/ACCTApi.md#listvendors) | **GET** /accounting/vendors | List vendors
+[*ACCTApi*](doc/ACCTApi.md) | [**lockAccountingPeriod**](doc/ACCTApi.md#lockaccountingperiod) | **POST** /accounting/periods/{id}/lock | Lock an accounting period
+[*ACCTApi*](doc/ACCTApi.md) | [**postDebitNote**](doc/ACCTApi.md#postdebitnote) | **POST** /accounting/debit-notes/{id}/post | Post a debit note to the general ledger
+[*ACCTApi*](doc/ACCTApi.md) | [**postExpense**](doc/ACCTApi.md#postexpense) | **POST** /accounting/expenses/{id}/post | Post an expense voucher to general ledger
+[*ACCTApi*](doc/ACCTApi.md) | [**postPaymentVoucher**](doc/ACCTApi.md#postpaymentvoucher) | **POST** /accounting/payment-vouchers/{id}/post | Post a payment voucher to GL
+[*ACCTApi*](doc/ACCTApi.md) | [**postPurchaseBill**](doc/ACCTApi.md#postpurchasebill) | **POST** /accounting/purchase-bills/{id}/post | Post a purchase bill to the general ledger
+[*ACCTApi*](doc/ACCTApi.md) | [**reverseJournal**](doc/ACCTApi.md#reversejournal) | **POST** /accounting/journals/{id}/reverse | Reverse a posted journal
+[*ACCTApi*](doc/ACCTApi.md) | [**unlockAccountingPeriod**](doc/ACCTApi.md#unlockaccountingperiod) | **POST** /accounting/periods/{id}/unlock | Unlock an accounting period
+[*ACCTApi*](doc/ACCTApi.md) | [**updateAccount**](doc/ACCTApi.md#updateaccount) | **PATCH** /accounting/accounts/{id} | Update an account
+[*ACCTApi*](doc/ACCTApi.md) | [**updateExpense**](doc/ACCTApi.md#updateexpense) | **PATCH** /accounting/expenses/{id} | Update a draft expense voucher
+[*ACCTApi*](doc/ACCTApi.md) | [**updateItem**](doc/ACCTApi.md#updateitem) | **PATCH** /accounting/items/{id} | Update item
+[*ACCTApi*](doc/ACCTApi.md) | [**updatePaymentVoucher**](doc/ACCTApi.md#updatepaymentvoucher) | **PATCH** /accounting/payment-vouchers/{id} | Update a draft payment voucher
+[*ACCTApi*](doc/ACCTApi.md) | [**updatePurchaseBill**](doc/ACCTApi.md#updatepurchasebill) | **PATCH** /accounting/purchase-bills/{id} | Update a draft purchase bill
+[*ACCTApi*](doc/ACCTApi.md) | [**updateTaxCode**](doc/ACCTApi.md#updatetaxcode) | **PATCH** /accounting/tax-codes/{id} | Update a tax code
+[*ACCTApi*](doc/ACCTApi.md) | [**updateVendor**](doc/ACCTApi.md#updatevendor) | **PATCH** /accounting/vendors/{id} | Update vendor
 [*APIApi*](doc/APIApi.md) | [**getHealth**](doc/APIApi.md#gethealth) | **GET** /health | Process liveness
 [*APIApi*](doc/APIApi.md) | [**getReady**](doc/APIApi.md#getready) | **GET** /ready | Database readiness
 [*ATTNApi*](doc/ATTNApi.md) | [**checkIn**](doc/ATTNApi.md#checkin) | **POST** /attendances/check-in | Gate check-in (user session or device key)
@@ -267,6 +318,12 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [Account](doc/Account.md)
+ - [AccountCreate](doc/AccountCreate.md)
+ - [AccountPage](doc/AccountPage.md)
+ - [AccountType](doc/AccountType.md)
+ - [AccountUpdate](doc/AccountUpdate.md)
+ - [AccountingPeriod](doc/AccountingPeriod.md)
  - [AssignPlanRequest](doc/AssignPlanRequest.md)
  - [AssignRoleRequest](doc/AssignRoleRequest.md)
  - [AssignTrainerRequest](doc/AssignTrainerRequest.md)
@@ -279,6 +336,8 @@ Class | Method | HTTP request | Description
  - [AttendanceSummary](doc/AttendanceSummary.md)
  - [AuditLog](doc/AuditLog.md)
  - [AuditLogPage](doc/AuditLogPage.md)
+ - [BalanceSheetAccount](doc/BalanceSheetAccount.md)
+ - [BalanceSheetReport](doc/BalanceSheetReport.md)
  - [BookRequest](doc/BookRequest.md)
  - [BroadcastRequest](doc/BroadcastRequest.md)
  - [CancelBookingRequest](doc/CancelBookingRequest.md)
@@ -286,6 +345,13 @@ Class | Method | HTTP request | Description
  - [ChangePasswordRequest](doc/ChangePasswordRequest.md)
  - [CheckInRequest](doc/CheckInRequest.md)
  - [Dashboard](doc/Dashboard.md)
+ - [DayBookJournal](doc/DayBookJournal.md)
+ - [DayBookLine](doc/DayBookLine.md)
+ - [DayBookReport](doc/DayBookReport.md)
+ - [DebitNote](doc/DebitNote.md)
+ - [DebitNoteCreate](doc/DebitNoteCreate.md)
+ - [DebitNotePage](doc/DebitNotePage.md)
+ - [DebitNoteStatus](doc/DebitNoteStatus.md)
  - [Device](doc/Device.md)
  - [DevicePage](doc/DevicePage.md)
  - [DeviceWrite](doc/DeviceWrite.md)
@@ -302,6 +368,7 @@ Class | Method | HTTP request | Description
  - [DietPlanVersion](doc/DietPlanVersion.md)
  - [DietPlanVersionPage](doc/DietPlanVersionPage.md)
  - [DietPlanWrite](doc/DietPlanWrite.md)
+ - [DraftDocumentCounts](doc/DraftDocumentCounts.md)
  - [EmergencyContact](doc/EmergencyContact.md)
  - [EmergencyContactPage](doc/EmergencyContactPage.md)
  - [EmergencyContactWrite](doc/EmergencyContactWrite.md)
@@ -317,9 +384,17 @@ Class | Method | HTTP request | Description
  - [Exercise](doc/Exercise.md)
  - [ExercisePage](doc/ExercisePage.md)
  - [ExerciseWrite](doc/ExerciseWrite.md)
+ - [ExpenseCreate](doc/ExpenseCreate.md)
+ - [ExpenseLineCreate](doc/ExpenseLineCreate.md)
+ - [ExpenseStatus](doc/ExpenseStatus.md)
+ - [ExpenseUpdate](doc/ExpenseUpdate.md)
+ - [ExpenseVoucher](doc/ExpenseVoucher.md)
+ - [ExpenseVoucherLine](doc/ExpenseVoucherLine.md)
+ - [ExpenseVoucherPage](doc/ExpenseVoucherPage.md)
  - [Facility](doc/Facility.md)
  - [FacilityPage](doc/FacilityPage.md)
  - [FacilityWrite](doc/FacilityWrite.md)
+ - [FiscalYear](doc/FiscalYear.md)
  - [Food](doc/Food.md)
  - [FoodPage](doc/FoodPage.md)
  - [FoodWrite](doc/FoodWrite.md)
@@ -332,10 +407,23 @@ Class | Method | HTTP request | Description
  - [GoalMetricWrite](doc/GoalMetricWrite.md)
  - [GoalPage](doc/GoalPage.md)
  - [GoalWrite](doc/GoalWrite.md)
+ - [GstSummaryReport](doc/GstSummaryReport.md)
+ - [GstTaxCodeSummary](doc/GstTaxCodeSummary.md)
  - [Health](doc/Health.md)
  - [HealthCondition](doc/HealthCondition.md)
  - [HealthConditionPage](doc/HealthConditionPage.md)
  - [HealthConditionWrite](doc/HealthConditionWrite.md)
+ - [Item](doc/Item.md)
+ - [ItemCreate](doc/ItemCreate.md)
+ - [ItemKind](doc/ItemKind.md)
+ - [ItemPage](doc/ItemPage.md)
+ - [ItemUpdate](doc/ItemUpdate.md)
+ - [Journal](doc/Journal.md)
+ - [JournalCreate](doc/JournalCreate.md)
+ - [JournalLine](doc/JournalLine.md)
+ - [JournalLineWrite](doc/JournalLineWrite.md)
+ - [JournalPage](doc/JournalPage.md)
+ - [JournalReverse](doc/JournalReverse.md)
  - [LoginRequest](doc/LoginRequest.md)
  - [LogoutRequest](doc/LogoutRequest.md)
  - [LongitudinalDataPoint](doc/LongitudinalDataPoint.md)
@@ -388,9 +476,14 @@ Class | Method | HTTP request | Description
  - [NotificationPage](doc/NotificationPage.md)
  - [Occupancy](doc/Occupancy.md)
  - [OccupancyByGateInner](doc/OccupancyByGateInner.md)
+ - [OpenApItem](doc/OpenApItem.md)
+ - [OpenArItem](doc/OpenArItem.md)
+ - [OpenItemsReport](doc/OpenItemsReport.md)
  - [PageMeta](doc/PageMeta.md)
  - [Payment](doc/Payment.md)
  - [PaymentAdjustRequest](doc/PaymentAdjustRequest.md)
+ - [PaymentAllocation](doc/PaymentAllocation.md)
+ - [PaymentAllocationWrite](doc/PaymentAllocationWrite.md)
  - [PaymentCreate](doc/PaymentCreate.md)
  - [PaymentHistory](doc/PaymentHistory.md)
  - [PaymentMethod](doc/PaymentMethod.md)
@@ -399,11 +492,17 @@ Class | Method | HTTP request | Description
  - [PaymentPage](doc/PaymentPage.md)
  - [PaymentReceipt](doc/PaymentReceipt.md)
  - [PaymentStatus](doc/PaymentStatus.md)
+ - [PaymentVoucher](doc/PaymentVoucher.md)
+ - [PaymentVoucherCreate](doc/PaymentVoucherCreate.md)
+ - [PaymentVoucherPage](doc/PaymentVoucherPage.md)
+ - [PaymentVoucherUpdate](doc/PaymentVoucherUpdate.md)
  - [Permission](doc/Permission.md)
  - [PermissionAction](doc/PermissionAction.md)
  - [PermissionPage](doc/PermissionPage.md)
  - [PersonalRecord](doc/PersonalRecord.md)
  - [Principal](doc/Principal.md)
+ - [ProfitAndLossAccount](doc/ProfitAndLossAccount.md)
+ - [ProfitAndLossReport](doc/ProfitAndLossReport.md)
  - [ProgressAggregate](doc/ProgressAggregate.md)
  - [ProgressNote](doc/ProgressNote.md)
  - [ProgressNotePage](doc/ProgressNotePage.md)
@@ -429,6 +528,13 @@ Class | Method | HTTP request | Description
  - [PtSubscription](doc/PtSubscription.md)
  - [PtSubscriptionStatus](doc/PtSubscriptionStatus.md)
  - [PublicSettings](doc/PublicSettings.md)
+ - [PurchaseBill](doc/PurchaseBill.md)
+ - [PurchaseBillCreate](doc/PurchaseBillCreate.md)
+ - [PurchaseBillLine](doc/PurchaseBillLine.md)
+ - [PurchaseBillLineWrite](doc/PurchaseBillLineWrite.md)
+ - [PurchaseBillPage](doc/PurchaseBillPage.md)
+ - [PurchaseBillStatus](doc/PurchaseBillStatus.md)
+ - [PurchaseBillUpdate](doc/PurchaseBillUpdate.md)
  - [Ready](doc/Ready.md)
  - [ReadyJobs](doc/ReadyJobs.md)
  - [RefreshRequest](doc/RefreshRequest.md)
@@ -456,6 +562,12 @@ Class | Method | HTTP request | Description
  - [SettingsList](doc/SettingsList.md)
  - [SettingsWrite](doc/SettingsWrite.md)
  - [SettingsWriteItemsInner](doc/SettingsWriteItemsInner.md)
+ - [TaxCode](doc/TaxCode.md)
+ - [TaxCodeComponent](doc/TaxCodeComponent.md)
+ - [TaxCodeComponentWrite](doc/TaxCodeComponentWrite.md)
+ - [TaxCodeCreate](doc/TaxCodeCreate.md)
+ - [TaxCodePage](doc/TaxCodePage.md)
+ - [TaxCodeUpdate](doc/TaxCodeUpdate.md)
  - [TenderLine](doc/TenderLine.md)
  - [Trainer](doc/Trainer.md)
  - [TrainerAvailability](doc/TrainerAvailability.md)
@@ -464,9 +576,18 @@ Class | Method | HTTP request | Description
  - [TrainerCreate](doc/TrainerCreate.md)
  - [TrainerPage](doc/TrainerPage.md)
  - [TrainerUpdate](doc/TrainerUpdate.md)
+ - [TrialBalanceAccount](doc/TrialBalanceAccount.md)
+ - [TrialBalanceReport](doc/TrialBalanceReport.md)
+ - [UnearnedPreviewItem](doc/UnearnedPreviewItem.md)
+ - [UnearnedPreviewResponse](doc/UnearnedPreviewResponse.md)
+ - [UnearnedPreviewTotals](doc/UnearnedPreviewTotals.md)
  - [User](doc/User.md)
  - [UserStatus](doc/UserStatus.md)
  - [UserType](doc/UserType.md)
+ - [Vendor](doc/Vendor.md)
+ - [VendorPage](doc/VendorPage.md)
+ - [VendorUpdate](doc/VendorUpdate.md)
+ - [VendorWrite](doc/VendorWrite.md)
  - [WorkoutPlan](doc/WorkoutPlan.md)
  - [WorkoutPlanExercise](doc/WorkoutPlanExercise.md)
  - [WorkoutPlanExercisesWrite](doc/WorkoutPlanExercisesWrite.md)

@@ -9,6 +9,13 @@ part of 'serializers.dart';
 Serializers _$serializers = (Serializers().toBuilder()
       ..add($Member.serializer)
       ..add($PtPaymentFields.serializer)
+      ..add(Account.serializer)
+      ..add(AccountCreate.serializer)
+      ..add(AccountPage.serializer)
+      ..add(AccountType.serializer)
+      ..add(AccountUpdate.serializer)
+      ..add(AccountingPeriod.serializer)
+      ..add(AccountingPeriodStatusEnum.serializer)
       ..add(AssignPlanRequest.serializer)
       ..add(AssignRoleRequest.serializer)
       ..add(AssignTrainerRequest.serializer)
@@ -21,6 +28,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(AttendanceSummary.serializer)
       ..add(AuditLog.serializer)
       ..add(AuditLogPage.serializer)
+      ..add(BalanceSheetAccount.serializer)
+      ..add(BalanceSheetReport.serializer)
       ..add(BookRequest.serializer)
       ..add(BroadcastRequest.serializer)
       ..add(BroadcastRequestAudienceEnum.serializer)
@@ -29,6 +38,13 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ChangePasswordRequest.serializer)
       ..add(CheckInRequest.serializer)
       ..add(Dashboard.serializer)
+      ..add(DayBookJournal.serializer)
+      ..add(DayBookLine.serializer)
+      ..add(DayBookReport.serializer)
+      ..add(DebitNote.serializer)
+      ..add(DebitNoteCreate.serializer)
+      ..add(DebitNotePage.serializer)
+      ..add(DebitNoteStatus.serializer)
       ..add(Device.serializer)
       ..add(DeviceDevicePlatformEnum.serializer)
       ..add(DevicePage.serializer)
@@ -48,6 +64,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(DietPlanVersion.serializer)
       ..add(DietPlanVersionPage.serializer)
       ..add(DietPlanWrite.serializer)
+      ..add(DraftDocumentCounts.serializer)
       ..add(EmergencyContact.serializer)
       ..add(EmergencyContactPage.serializer)
       ..add(EmergencyContactWrite.serializer)
@@ -63,9 +80,17 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(Exercise.serializer)
       ..add(ExercisePage.serializer)
       ..add(ExerciseWrite.serializer)
+      ..add(ExpenseCreate.serializer)
+      ..add(ExpenseLineCreate.serializer)
+      ..add(ExpenseStatus.serializer)
+      ..add(ExpenseUpdate.serializer)
+      ..add(ExpenseVoucher.serializer)
+      ..add(ExpenseVoucherLine.serializer)
+      ..add(ExpenseVoucherPage.serializer)
       ..add(Facility.serializer)
       ..add(FacilityPage.serializer)
       ..add(FacilityWrite.serializer)
+      ..add(FiscalYear.serializer)
       ..add(Food.serializer)
       ..add(FoodPage.serializer)
       ..add(FoodWrite.serializer)
@@ -82,11 +107,25 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(GoalStatusEnum.serializer)
       ..add(GoalWrite.serializer)
       ..add(GoalWriteStatusEnum.serializer)
+      ..add(GstSummaryReport.serializer)
+      ..add(GstTaxCodeSummary.serializer)
       ..add(Health.serializer)
       ..add(HealthCondition.serializer)
       ..add(HealthConditionPage.serializer)
       ..add(HealthConditionWrite.serializer)
       ..add(HealthStatusEnum.serializer)
+      ..add(Item.serializer)
+      ..add(ItemCreate.serializer)
+      ..add(ItemKind.serializer)
+      ..add(ItemPage.serializer)
+      ..add(ItemUpdate.serializer)
+      ..add(Journal.serializer)
+      ..add(JournalCreate.serializer)
+      ..add(JournalCreateSourceTypeEnum.serializer)
+      ..add(JournalLine.serializer)
+      ..add(JournalLineWrite.serializer)
+      ..add(JournalPage.serializer)
+      ..add(JournalReverse.serializer)
       ..add(LoginRequest.serializer)
       ..add(LogoutRequest.serializer)
       ..add(LongitudinalDataPoint.serializer)
@@ -144,9 +183,15 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(NotificationPage.serializer)
       ..add(Occupancy.serializer)
       ..add(OccupancyByGateInner.serializer)
+      ..add(OpenApItem.serializer)
+      ..add(OpenArItem.serializer)
+      ..add(OpenItemsReport.serializer)
+      ..add(OpenItemsReportKindEnum.serializer)
       ..add(PageMeta.serializer)
       ..add(Payment.serializer)
       ..add(PaymentAdjustRequest.serializer)
+      ..add(PaymentAllocation.serializer)
+      ..add(PaymentAllocationWrite.serializer)
       ..add(PaymentCreate.serializer)
       ..add(PaymentHistory.serializer)
       ..add(PaymentHistoryActionEnum.serializer)
@@ -156,11 +201,18 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PaymentPage.serializer)
       ..add(PaymentReceipt.serializer)
       ..add(PaymentStatus.serializer)
+      ..add(PaymentVoucher.serializer)
+      ..add(PaymentVoucherCreate.serializer)
+      ..add(PaymentVoucherPage.serializer)
+      ..add(PaymentVoucherStatusEnum.serializer)
+      ..add(PaymentVoucherUpdate.serializer)
       ..add(Permission.serializer)
       ..add(PermissionAction.serializer)
       ..add(PermissionPage.serializer)
       ..add(PersonalRecord.serializer)
       ..add(Principal.serializer)
+      ..add(ProfitAndLossAccount.serializer)
+      ..add(ProfitAndLossReport.serializer)
       ..add(ProgressAggregate.serializer)
       ..add(ProgressNote.serializer)
       ..add(ProgressNoteNoteTypeEnum.serializer)
@@ -190,6 +242,13 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PtSubscription.serializer)
       ..add(PtSubscriptionStatus.serializer)
       ..add(PublicSettings.serializer)
+      ..add(PurchaseBill.serializer)
+      ..add(PurchaseBillCreate.serializer)
+      ..add(PurchaseBillLine.serializer)
+      ..add(PurchaseBillLineWrite.serializer)
+      ..add(PurchaseBillPage.serializer)
+      ..add(PurchaseBillStatus.serializer)
+      ..add(PurchaseBillUpdate.serializer)
       ..add(Ready.serializer)
       ..add(ReadyDatabaseEnum.serializer)
       ..add(ReadyJobs.serializer)
@@ -220,6 +279,12 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(SettingsList.serializer)
       ..add(SettingsWrite.serializer)
       ..add(SettingsWriteItemsInner.serializer)
+      ..add(TaxCode.serializer)
+      ..add(TaxCodeComponent.serializer)
+      ..add(TaxCodeComponentWrite.serializer)
+      ..add(TaxCodeCreate.serializer)
+      ..add(TaxCodePage.serializer)
+      ..add(TaxCodeUpdate.serializer)
       ..add(TenderLine.serializer)
       ..add(Trainer.serializer)
       ..add(TrainerAvailability.serializer)
@@ -228,9 +293,19 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(TrainerCreate.serializer)
       ..add(TrainerPage.serializer)
       ..add(TrainerUpdate.serializer)
+      ..add(TrialBalanceAccount.serializer)
+      ..add(TrialBalanceReport.serializer)
+      ..add(UnearnedPreviewItem.serializer)
+      ..add(UnearnedPreviewItemKindEnum.serializer)
+      ..add(UnearnedPreviewResponse.serializer)
+      ..add(UnearnedPreviewTotals.serializer)
       ..add(User.serializer)
       ..add(UserStatus.serializer)
       ..add(UserType.serializer)
+      ..add(Vendor.serializer)
+      ..add(VendorPage.serializer)
+      ..add(VendorUpdate.serializer)
+      ..add(VendorWrite.serializer)
       ..add(WorkoutPlan.serializer)
       ..add(WorkoutPlanExercise.serializer)
       ..add(WorkoutPlanExercisesWrite.serializer)
@@ -247,6 +322,9 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(WorkoutSetUpdate.serializer)
       ..add(WorkoutSetWrite.serializer)
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(Account)]),
+          () => ListBuilder<Account>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Attendance)]),
           () => ListBuilder<Attendance>())
       ..addBuilderFactory(
@@ -255,6 +333,18 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(AuditLog)]),
           () => ListBuilder<AuditLog>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(BalanceSheetAccount)]),
+          () => ListBuilder<BalanceSheetAccount>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(BalanceSheetAccount)]),
+          () => ListBuilder<BalanceSheetAccount>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(BalanceSheetAccount)]),
+          () => ListBuilder<BalanceSheetAccount>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [
             const FullType(BuiltMap, const [
@@ -266,6 +356,15 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Date)]),
           () => ListBuilder<Date>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(DayBookJournal)]),
+          () => ListBuilder<DayBookJournal>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(DayBookLine)]),
+          () => ListBuilder<DayBookLine>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(DebitNote)]),
+          () => ListBuilder<DebitNote>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Device)]),
           () => ListBuilder<Device>())
@@ -305,6 +404,18 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(Exercise)]),
           () => ListBuilder<Exercise>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(ExpenseLineCreate)]),
+          () => ListBuilder<ExpenseLineCreate>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(ExpenseLineCreate)]),
+          () => ListBuilder<ExpenseLineCreate>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(ExpenseVoucher)]),
+          () => ListBuilder<ExpenseVoucher>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(ExpenseVoucherLine)]),
+          () => ListBuilder<ExpenseVoucherLine>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Facility)]),
           () => ListBuilder<Facility>())
       ..addBuilderFactory(
@@ -320,8 +431,23 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(GoalMetric)]),
           () => ListBuilder<GoalMetric>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(GstTaxCodeSummary)]),
+          () => ListBuilder<GstTaxCodeSummary>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(HealthCondition)]),
           () => ListBuilder<HealthCondition>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(Item)]),
+          () => ListBuilder<Item>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(Journal)]),
+          () => ListBuilder<Journal>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(JournalLine)]),
+          () => ListBuilder<JournalLine>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(JournalLineWrite)]),
+          () => ListBuilder<JournalLineWrite>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(LongitudinalDataPoint)]),
@@ -376,8 +502,25 @@ Serializers _$serializers = (Serializers().toBuilder()
               BuiltList, const [const FullType(OccupancyByGateInner)]),
           () => ListBuilder<OccupancyByGateInner>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(OpenArItem)]),
+          () => ListBuilder<OpenArItem>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(OpenApItem)]),
+          () => ListBuilder<OpenApItem>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Payment)]),
           () => ListBuilder<Payment>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(PaymentAllocation)]),
+          () => ListBuilder<PaymentAllocation>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(PaymentAllocationWrite)]),
+          () => ListBuilder<PaymentAllocationWrite>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(PaymentAllocationWrite)]),
+          () => ListBuilder<PaymentAllocationWrite>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(PaymentHistory)]),
           () => ListBuilder<PaymentHistory>())
@@ -385,11 +528,22 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(PaymentMethod)]),
           () => ListBuilder<PaymentMethod>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(PaymentVoucher)]),
+          () => ListBuilder<PaymentVoucher>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Permission)]),
           () => ListBuilder<Permission>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Permission)]),
           () => ListBuilder<Permission>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ProfitAndLossAccount)]),
+          () => ListBuilder<ProfitAndLossAccount>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ProfitAndLossAccount)]),
+          () => ListBuilder<ProfitAndLossAccount>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(ProgressNote)]),
           () => ListBuilder<ProgressNote>())
@@ -408,6 +562,20 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(PtSubscription)]),
           () => ListBuilder<PtSubscription>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(PurchaseBill)]),
+          () => ListBuilder<PurchaseBill>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(PurchaseBillLine)]),
+          () => ListBuilder<PurchaseBillLine>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(PurchaseBillLineWrite)]),
+          () => ListBuilder<PurchaseBillLineWrite>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(PurchaseBillLineWrite)]),
+          () => ListBuilder<PurchaseBillLineWrite>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Role)]),
           () => ListBuilder<Role>())
@@ -456,6 +624,20 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(String)]),
           () => ListBuilder<String>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(TaxCode)]),
+          () => ListBuilder<TaxCode>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(TaxCodeComponent)]),
+          () => ListBuilder<TaxCodeComponent>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(TaxCodeComponentWrite)]),
+          () => ListBuilder<TaxCodeComponentWrite>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(TaxCodeComponentWrite)]),
+          () => ListBuilder<TaxCodeComponentWrite>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(TenderLine)]),
           () => ListBuilder<TenderLine>())
       ..addBuilderFactory(
@@ -475,6 +657,17 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(
               BuiltList, const [const FullType(TrainerAvailability)]),
           () => ListBuilder<TrainerAvailability>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(TrialBalanceAccount)]),
+          () => ListBuilder<TrialBalanceAccount>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(UnearnedPreviewItem)]),
+          () => ListBuilder<UnearnedPreviewItem>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(Vendor)]),
+          () => ListBuilder<Vendor>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(WorkoutPlan)]),
           () => ListBuilder<WorkoutPlan>())

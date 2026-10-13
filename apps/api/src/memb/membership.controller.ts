@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiProperty, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.guard';
@@ -86,6 +86,7 @@ export class MembershipController {
   }
 
   @Post('memberships/:id/renew')
+  @HttpCode(200)
   @RequirePermission('memberships.approve')
   @ApiOperation({ operationId: 'renewMembership', summary: 'Renew a membership' })
   @ApiParam({ name: 'id', type: Number })
@@ -100,6 +101,7 @@ export class MembershipController {
   }
 
   @Post('memberships/:id/upgrade')
+  @HttpCode(200)
   @RequirePermission('memberships.approve')
   @ApiOperation({ operationId: 'upgradeMembership', summary: 'Upgrade a membership' })
   @ApiParam({ name: 'id', type: Number })
@@ -114,6 +116,7 @@ export class MembershipController {
   }
 
   @Post('memberships/:id/cancel')
+  @HttpCode(200)
   @RequirePermission('memberships.approve')
   @ApiOperation({ operationId: 'cancelMembership', summary: 'Cancel a membership' })
   @ApiParam({ name: 'id', type: Number })

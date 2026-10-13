@@ -69,6 +69,12 @@ async function deleteWithDependents(
   );
 
   for (const edge of edges.filter((e) => e.refTable === table)) {
+    if (edge.table === table) {
+      await db.execute(
+        sql`UPDATE ${ident(table)} SET ${ident(edge.column)} = NULL WHERE ${ident(column)} IN (${inList})`,
+      );
+      continue;
+    }
     const refRows = rowsOf<Record<string, unknown>>(
       await db.execute(
         sql`SELECT DISTINCT ${ident(edge.refColumn)} AS v FROM ${ident(table)} WHERE ${ident(column)} IN (${inList})`,
