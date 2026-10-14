@@ -127,7 +127,21 @@ class _CatalogBody extends StatelessWidget {
               ? '${product.code} · ${product.durationDays}d'
               : '${product.code} · ${product.durationDays}d · ${product.basePrice}';
           return ListTile(
-            title: Text(product.name),
+            title: Row(
+              children: [
+                Expanded(child: Text(product.name)),
+                if (product.isCouple) ...[
+                  const SizedBox(width: 8),
+                  const Chip(
+                    label: Text(MembershipStrings.coupleChip),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: EdgeInsets.zero,
+                    labelPadding: EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                ],
+              ],
+            ),
             subtitle: Text(subtitle),
             trailing: product.isActive
                 ? null

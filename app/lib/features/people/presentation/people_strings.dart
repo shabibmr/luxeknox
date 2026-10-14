@@ -21,6 +21,8 @@ abstract final class PeopleStrings {
   static const membership = 'Membership';
   static const membershipExpiry = 'Membership expiry';
   static const noMembership = 'No membership';
+  static String coupleWith(String partnerName) => 'Couple with $partnerName';
+  static String billedTo(String primaryName) => 'Billed to $primaryName';
   static const balance = 'Balance';
   static const lastCheckIn = 'Last check-in';
   static const nextSchedule = 'Next schedule';
@@ -117,7 +119,6 @@ abstract final class PeopleStrings {
   static const createMember = 'Create member';
   static const memberCreated = 'Member created.';
   static const reviewHint = 'Review the details below, then create the member.';
-  static const emailOrPhoneRequired = 'Email or phone number is required.';
   static const invalidEmail = 'Enter a valid email address.';
   static const alreadySubmittingMember = 'Already submitting — please wait.';
 
@@ -132,8 +133,7 @@ abstract final class PeopleStrings {
   static const maxClients = 'Max clients';
   static const specializationAddHint = 'Add specialization';
   static const firstNameRequired = 'First name is required.';
-  static const lastNameRequired = 'Last name is required.';
-  static const emailRequired = 'Email is required.';
+  static const phoneRequired = 'Phone number is required.';
   static const passwordRequired = 'Temporary password is required.';
   static const alreadySubmitting = 'Already submitting — please wait.';
   static const deactivateTrainerTitle = 'Deactivate trainer';

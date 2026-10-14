@@ -8,6 +8,7 @@ import 'package:api_client/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**packageType** | [**PtPackageType**](PtPackageType.md) | Required on create; rejected on PATCH (immutable). | 
 **name** | **String** |  | 
 **code** | **String** |  | 
 **description** | **String** |  | [optional] 

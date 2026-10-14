@@ -8,6 +8,8 @@ part of 'membership_product_write.dart';
 
 class _$MembershipProductWrite extends MembershipProductWrite {
   @override
+  final MembershipPackageType packageType;
+  @override
   final String name;
   @override
   final String code;
@@ -33,7 +35,8 @@ class _$MembershipProductWrite extends MembershipProductWrite {
       (MembershipProductWriteBuilder()..update(updates))._build();
 
   _$MembershipProductWrite._(
-      {required this.name,
+      {required this.packageType,
+      required this.name,
       required this.code,
       this.description,
       required this.durationDays,
@@ -57,6 +60,7 @@ class _$MembershipProductWrite extends MembershipProductWrite {
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
     return other is MembershipProductWrite &&
+        packageType == other.packageType &&
         name == other.name &&
         code == other.code &&
         description == other.description &&
@@ -72,6 +76,7 @@ class _$MembershipProductWrite extends MembershipProductWrite {
   @override
   int get hashCode {
     var _$hash = 0;
+    _$hash = $jc(_$hash, packageType.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
     _$hash = $jc(_$hash, code.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
@@ -89,6 +94,7 @@ class _$MembershipProductWrite extends MembershipProductWrite {
   @override
   String toString() {
     return (newBuiltValueToStringHelper(r'MembershipProductWrite')
+          ..add('packageType', packageType)
           ..add('name', name)
           ..add('code', code)
           ..add('description', description)
@@ -106,6 +112,11 @@ class _$MembershipProductWrite extends MembershipProductWrite {
 class MembershipProductWriteBuilder
     implements Builder<MembershipProductWrite, MembershipProductWriteBuilder> {
   _$MembershipProductWrite? _$v;
+
+  MembershipPackageType? _packageType;
+  MembershipPackageType? get packageType => _$this._packageType;
+  set packageType(MembershipPackageType? packageType) =>
+      _$this._packageType = packageType;
 
   String? _name;
   String? get name => _$this._name;
@@ -159,6 +170,7 @@ class MembershipProductWriteBuilder
   MembershipProductWriteBuilder get _$this {
     final $v = _$v;
     if ($v != null) {
+      _packageType = $v.packageType;
       _name = $v.name;
       _code = $v.code;
       _description = $v.description;
@@ -192,6 +204,8 @@ class MembershipProductWriteBuilder
     try {
       _$result = _$v ??
           _$MembershipProductWrite._(
+            packageType: BuiltValueNullFieldError.checkNotNull(
+                packageType, r'MembershipProductWrite', 'packageType'),
             name: BuiltValueNullFieldError.checkNotNull(
                 name, r'MembershipProductWrite', 'name'),
             code: BuiltValueNullFieldError.checkNotNull(

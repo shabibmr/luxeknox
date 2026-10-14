@@ -27,16 +27,18 @@ The old model kept a session counter on the membership. It had no trainer and no
    the hour. There is one open (scheduled/active) PT per member; a renewal queues the day
    after the current end date.
 3. **Occupancy uses real schedule rows.** Each PT day becomes a `schedules` row
-   (type "Personal Training", capacity 1, `pt_subscription_id` set) plus a booked
-   participant. Calendars, attendance and the existing overlap checks work without changes.
+   (type "Personal Training", capacity 1 — or 2 for a couple PT, see ADR-0011 —
+   `pt_subscription_id` set) plus booked participant(s). Calendars, attendance and the
+   existing overlap checks work without changes.
    A trainer-hour is **free** only if it falls inside the trainer's `trainer_availabilities`
    and has no clash on *every* PT date. Sales lock the trainer row (`SELECT … FOR UPDATE`)
    and re-check before inserting.
 4. **No gender rule.** Member and trainer gender do not restrict PT. Trainers are listed
    regardless of gender, and a missing gender does not block a sale. *(Amended: the
    original same-gender rule was removed. Trainer and member gender are no longer checked.)*
-5. **Membership gate.** A sale needs an `active` membership whose end date has not passed.
-   PT may run beyond the membership end date.
+5. **Membership gate.** *(Superseded by [ADR-0012](./0012-pt-includes-membership.md): PT now
+   includes a membership of the same duration, so no existing membership is required.)*
+   A sale needed an `active` membership whose end date had not passed.
 6. **Payment gate.** A sale or renewal only goes through when payment activates it (paid,
    or partial when `payments_activate_membership_on_partial` is on). Otherwise nothing is
    written.

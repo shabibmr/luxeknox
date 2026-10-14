@@ -20,6 +20,9 @@ class Membership extends Equatable {
     this.autoRenew,
     required this.rowVersion,
     this.product,
+    this.partnerMembershipId,
+    this.partnerMemberId,
+    this.partnerMemberName,
   });
 
   final String id;
@@ -33,6 +36,11 @@ class Membership extends Equatable {
   final bool? autoRenew;
   final int rowVersion;
   final MembershipProduct? product;
+  final String? partnerMembershipId;
+  final String? partnerMemberId;
+  final String? partnerMemberName;
+
+  bool get isCouple => partnerMembershipId != null;
 
   bool get isActiveOrFrozen =>
       status == MembershipStatus.active || status == MembershipStatus.frozen;
@@ -52,6 +60,9 @@ class Membership extends Equatable {
     autoRenew,
     rowVersion,
     product,
+    partnerMembershipId,
+    partnerMemberId,
+    partnerMemberName,
   ];
 }
 

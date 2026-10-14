@@ -7,6 +7,7 @@ import '../entities/membership_extension.dart';
 import '../entities/membership_freeze.dart';
 import '../entities/membership_history_entry.dart';
 import '../entities/membership_product.dart';
+import '../entities/membership_replacement_preview.dart';
 
 abstract class MembershipRepository {
   // FR-MEMB-001/002 — package catalog.
@@ -44,7 +45,16 @@ abstract class MembershipRepository {
     required String paymentMethodId,
     String? lockerNumber,
     bool? autoRenew,
+    String? partnerMemberId,
+    bool? replacePartnerMembership,
+    String? discountAmount,
   });
+
+  /// FR-MEMB-005 - what selling a couple package with [memberId] as partner
+  /// would replace. Right(null) when they have no active/frozen membership.
+  Future<Either<Failure, MembershipReplacementPreview?>> getReplacementPreview(
+    String memberId,
+  );
 
   Future<Either<Failure, CursorPage<MembershipHistoryEntry>>> getHistory(
     String membershipId, {

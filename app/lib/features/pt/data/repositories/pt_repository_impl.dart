@@ -56,6 +56,7 @@ class PtRepositoryImpl implements PtRepository {
     required int ptProductId,
     required DateTime startDate,
     required List<int> weekdays,
+    int? partnerMemberId,
     int? excludeSubscriptionId,
   }) => _guard(() async {
     final grid = await _remote.scheduleGrid(
@@ -63,6 +64,7 @@ class PtRepositoryImpl implements PtRepository {
       ptProductId: ptProductId,
       startDate: dateTimeToApiDate(startDate),
       weekdays: ([...weekdays]..sort()).join(','),
+      partnerMemberId: partnerMemberId,
       excludeSubscriptionId: excludeSubscriptionId,
     );
     return grid.toDomain();
@@ -77,6 +79,7 @@ class PtRepositoryImpl implements PtRepository {
     required List<int> weekdays,
     required String slotStart,
     required PtPayment payment,
+    int? partnerMemberId,
     String? idempotencyKey,
   }) => _guard(() async {
     final result = await _remote.purchase(
@@ -91,7 +94,8 @@ class PtRepositoryImpl implements PtRepository {
           ..slotStart = _hour(slotStart)
           ..paymentMethodId = payment.paymentMethodId
           ..discountAmount = payment.discountAmount
-          ..transactionReference = payment.transactionReference,
+          ..transactionReference = payment.transactionReference
+          ..partnerMemberId = partnerMemberId,
       ),
     );
     return result.subscription.toDomain();

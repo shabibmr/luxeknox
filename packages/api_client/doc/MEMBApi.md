@@ -16,6 +16,7 @@ Method | HTTP request | Description
 [**extendMembership**](MEMBApi.md#extendmembership) | **POST** /memberships/{id}/extensions | Grant a compensatory extension
 [**getMembership**](MEMBApi.md#getmembership) | **GET** /memberships/{id} | Membership detail
 [**getMembershipProduct**](MEMBApi.md#getmembershipproduct) | **GET** /membership-products/{id} | Package detail
+[**getMembershipReplacementPreview**](MEMBApi.md#getmembershipreplacementpreview) | **GET** /memberships/replacement-preview | Pro-rated credit preview for replacing a member&#39;s current membership
 [**listMembershipFreezes**](MEMBApi.md#listmembershipfreezes) | **GET** /memberships/{id}/freezes | Freeze requests
 [**listMembershipHistory**](MEMBApi.md#listmembershiphistory) | **GET** /memberships/{id}/history | Append-only membership history
 [**listMembershipProducts**](MEMBApi.md#listmembershipproducts) | **GET** /membership-products | Package catalog
@@ -306,6 +307,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**MembershipProduct**](MembershipProduct.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getMembershipReplacementPreview**
+> MembershipReplacementPreview getMembershipReplacementPreview(memberId)
+
+Pro-rated credit preview for replacing a member's current membership
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getMEMBApi();
+final int memberId = 789; // int | 
+
+try {
+    final response = api.getMembershipReplacementPreview(memberId);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling MEMBApi->getMembershipReplacementPreview: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **memberId** | **int**|  | 
+
+### Return type
+
+[**MembershipReplacementPreview**](MembershipReplacementPreview.md)
 
 ### Authorization
 

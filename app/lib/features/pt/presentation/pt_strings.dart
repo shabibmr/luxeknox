@@ -9,6 +9,10 @@ abstract final class PtStrings {
   static const durationDays = 'Duration (days)';
   static const price = 'Price';
   static const taxPercentage = 'Tax %';
+  static const packageTypeLabel = 'Package type';
+  static const packageTypeSingle = 'Single';
+  static const packageTypeCouple = 'Couple';
+  static const coupleChip = packageTypeCouple;
   static const active = 'Active';
   static const archived = 'Archived';
   static const save = 'Save';
@@ -57,10 +61,23 @@ abstract final class PtStrings {
   static const sold = 'Personal Training assigned';
   static const replanned = 'Personal Training updated';
 
+  static const partnerLabel = 'Partner (second member)';
+  static const partnerHint = 'Select partner';
+  static const partnerChecking = 'Checking partner…';
+  static const coupleTotalNote = 'Total for both members';
+  static const membershipIncluded =
+      'Includes a gym membership for the same period. An existing membership is extended.';
+  static const membershipIncludedCouple =
+      'Includes a gym membership for each member for the same period. Existing memberships are extended.';
+  static const replanCoupleNote = 'This change applies to both members.';
+  static String partnerHasOpenPt(String name, String until) =>
+      '$name already has PT until $until';
+  static const partnerSameAsMember = 'Partner must be a different member';
+
   static const renew = 'Renew PT';
   static const renewTitle = 'Renew Personal Training';
   static String renewBody(String trainer, String days, String hour) =>
-      'Continue with $trainer on $days at $hour for another period, starting the day after the current end date.';
+      'Continue with $trainer on $days at $hour for another period, starting the day after the current end date. The gym membership is extended by the same period.';
   static const renewed = 'Personal Training renewed';
   static const changeTrainerSlot = 'Change trainer / slot';
   static const readOnlyBanner =

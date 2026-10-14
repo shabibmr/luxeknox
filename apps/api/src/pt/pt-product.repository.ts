@@ -11,6 +11,7 @@ import {
 
 export interface PtProductFilterParams {
   q?: string;
+  packageType?: 'single' | 'couple';
   activeOnly: boolean;
   limit: number;
   offset: number;
@@ -28,6 +29,9 @@ export class PtProductRepository extends BaseRepository<typeof ptProducts, PtPro
     if (params.q) {
       const like_ = `%${params.q}%`;
       conditions.push(or(like(ptProducts.name, like_), like(ptProducts.code, like_)) as SQL);
+    }
+    if (params.packageType) {
+      conditions.push(eq(ptProducts.package_type, params.packageType));
     }
     const where = conditions.length === 0 ? undefined : and(...conditions);
     const db = this.getDb() as any;

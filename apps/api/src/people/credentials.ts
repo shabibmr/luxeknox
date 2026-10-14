@@ -11,3 +11,8 @@ export function normalizePhone(phone: string | null | undefined): string | null 
   const trimmed = phone.trim();
   return trimmed.length > 0 ? trimmed : null;
 }
+
+/** Zod preprocessor: treat blank/whitespace-only strings as an absent value. */
+export function blankToNull(value: unknown): unknown {
+  return typeof value === 'string' && value.trim() === '' ? null : value;
+}

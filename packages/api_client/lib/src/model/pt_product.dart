@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:api_client/src/model/pt_package_type.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -14,6 +15,7 @@ part 'pt_product.g.dart';
 /// * [id] 
 /// * [name] 
 /// * [code] 
+/// * [packageType] 
 /// * [description] 
 /// * [durationDays] 
 /// * [basePrice] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
@@ -29,6 +31,10 @@ abstract class PtProduct implements Built<PtProduct, PtProductBuilder> {
 
   @BuiltValueField(wireName: r'code')
   String get code;
+
+  @BuiltValueField(wireName: r'package_type')
+  PtPackageType get packageType;
+  // enum packageTypeEnum {  single,  couple,  };
 
   @BuiltValueField(wireName: r'description')
   String? get description;
@@ -83,6 +89,11 @@ class _$PtProductSerializer implements PrimitiveSerializer<PtProduct> {
     yield serializers.serialize(
       object.code,
       specifiedType: const FullType(String),
+    );
+    yield r'package_type';
+    yield serializers.serialize(
+      object.packageType,
+      specifiedType: const FullType(PtPackageType),
     );
     if (object.description != null) {
       yield r'description';
@@ -156,6 +167,13 @@ class _$PtProductSerializer implements PrimitiveSerializer<PtProduct> {
             specifiedType: const FullType(String),
           ) as String;
           result.code = valueDes;
+          break;
+        case r'package_type':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(PtPackageType),
+          ) as PtPackageType;
+          result.packageType = valueDes;
           break;
         case r'description':
           final valueDes = serializers.deserialize(

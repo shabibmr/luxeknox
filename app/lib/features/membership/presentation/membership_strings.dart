@@ -52,6 +52,43 @@ class MembershipStrings {
   static const String commaSeparatedHelper = 'Comma-separated';
   static const String active = 'Active';
   static const String activeSubtitle = 'Visible in the sales catalog';
+  static const String packageTypeLabel = 'Package type';
+  static const String packageTypeSingle = 'Single';
+  static const String packageTypeCouple = 'Couple';
+  static const String coupleChip = packageTypeCouple;
+
+  static const String partnerLabel = 'Partner (second member)';
+  static const String selectPartnerHint = 'Select partner';
+
+  /// Fallback name in replace-dialog copy when partner display name is missing.
+  static const String partnerFallbackName = 'Partner';
+  static const String replacePartnerTitle = 'Replace existing membership?';
+  static const String partnerAlreadyCoupleTitle = 'Partner unavailable';
+  static const String partnerAlreadyCouple =
+      'This partner already has a couple membership. Pick someone else.';
+  static const String packagePriceLabel = 'Package price';
+  static const String discountForRemainingDays = 'Discount for remaining days';
+  static const String discountByValue = 'Discount amount';
+  static const String discountPercent = 'Discount %';
+  static const String discountExceedsTotal =
+      'Discount cannot be more than the total amount';
+  static const String totalDueLabel = 'Total';
+  static const String partnerRowLabel = 'Partner';
+  static const String billedToLabel = 'Billed to';
+  static const String coupleWithLabel = 'Couple with';
+  static const String coupleActionsNote =
+      'Couple membership: actions apply to both members.';
+
+  /// Body for the replace-confirmation dialog (backend owns the credit maths).
+  static String replacePartnerMessage({
+    required String partnerName,
+    required String productName,
+    required String endDateLabel,
+    required int remainingDays,
+  }) =>
+      "$partnerName's current membership '$productName' "
+      '(ends $endDateLabel, $remainingDays days left) will be cancelled '
+      'and replaced by this couple membership.';
 
   static const String statusActive = 'Active';
   static const String statusExpired = 'Expired';

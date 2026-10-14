@@ -7,7 +7,7 @@ import {
 } from '../platform/catalogue/browse-policy';
 import type { MembershipProduct, NewMembershipProduct } from '../platform/db/schema/memberships';
 import { roundMoney } from '../platform/money/money';
-import { ConflictError, NotFoundError } from '../platform/errors/app-error';
+import { BadRequestError, ConflictError, NotFoundError } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { PermissionCache } from '../rbac/permission-cache';
@@ -45,6 +45,7 @@ export class MembershipProductService {
 
     const { rows, total } = await this.repository.findManyFiltered({
       q: filters.q,
+      packageType: filters.package_type,
       activeOnly: !unrestricted,
       limit: pagination.limit,
       offset,
@@ -87,6 +88,7 @@ export class MembershipProductService {
       max_freeze_days: dto.max_freeze_days ?? 0,
       access_facilities: dto.access_facilities ?? null,
       is_active: dto.is_active ?? true,
+      package_type: dto.package_type,
       created_at: new Date(),
     });
 
@@ -119,6 +121,10 @@ export class MembershipProductService {
     const before = await this.repository.findById(id);
     if (!before) {
       throw new NotFoundError('Membership product not found');
+    }
+
+    if (dto.package_type !== undefined) {
+      throw new BadRequestError('package_type cannot be changed');
     }
 
     if (dto.code !== undefined && dto.code !== before.code) {

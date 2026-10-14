@@ -18,6 +18,9 @@ Name | Type | Description | Notes
 **lockerNumber** | **String** |  | [optional] 
 **autoRenew** | **bool** |  | [optional] 
 **rowVersion** | **int** |  | 
+**partnerMembershipId** | **int** | Set on both rows of a couple membership. | [optional] 
+**partnerMemberId** | **int** |  | [optional] 
+**partnerMemberName** | **String** |  | [optional] 
 **product** | [**MembershipProduct**](MembershipProduct.md) |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

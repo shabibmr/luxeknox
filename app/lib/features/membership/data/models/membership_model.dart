@@ -32,6 +32,9 @@ extension MembershipModelMapper on api.Membership {
       rowVersion: rowVersion,
       // Absent for trainer-scoped reads (FR-MEMB-007) — no pricing leak.
       product: product?.toDomain(),
+      partnerMembershipId: partnerMembershipId?.toString(),
+      partnerMemberId: partnerMemberId?.toString(),
+      partnerMemberName: partnerMemberName,
     );
   }
 }

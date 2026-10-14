@@ -8,6 +8,8 @@ part of 'pt_product_write.dart';
 
 class _$PtProductWrite extends PtProductWrite {
   @override
+  final PtPackageType packageType;
+  @override
   final String name;
   @override
   final String code;
@@ -26,7 +28,8 @@ class _$PtProductWrite extends PtProductWrite {
       (PtProductWriteBuilder()..update(updates))._build();
 
   _$PtProductWrite._(
-      {required this.name,
+      {required this.packageType,
+      required this.name,
       required this.code,
       this.description,
       required this.durationDays,
@@ -45,6 +48,7 @@ class _$PtProductWrite extends PtProductWrite {
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
     return other is PtProductWrite &&
+        packageType == other.packageType &&
         name == other.name &&
         code == other.code &&
         description == other.description &&
@@ -57,6 +61,7 @@ class _$PtProductWrite extends PtProductWrite {
   @override
   int get hashCode {
     var _$hash = 0;
+    _$hash = $jc(_$hash, packageType.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
     _$hash = $jc(_$hash, code.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
@@ -71,6 +76,7 @@ class _$PtProductWrite extends PtProductWrite {
   @override
   String toString() {
     return (newBuiltValueToStringHelper(r'PtProductWrite')
+          ..add('packageType', packageType)
           ..add('name', name)
           ..add('code', code)
           ..add('description', description)
@@ -85,6 +91,11 @@ class _$PtProductWrite extends PtProductWrite {
 class PtProductWriteBuilder
     implements Builder<PtProductWrite, PtProductWriteBuilder> {
   _$PtProductWrite? _$v;
+
+  PtPackageType? _packageType;
+  PtPackageType? get packageType => _$this._packageType;
+  set packageType(PtPackageType? packageType) =>
+      _$this._packageType = packageType;
 
   String? _name;
   String? get name => _$this._name;
@@ -122,6 +133,7 @@ class PtProductWriteBuilder
   PtProductWriteBuilder get _$this {
     final $v = _$v;
     if ($v != null) {
+      _packageType = $v.packageType;
       _name = $v.name;
       _code = $v.code;
       _description = $v.description;
@@ -150,6 +162,8 @@ class PtProductWriteBuilder
   _$PtProductWrite _build() {
     final _$result = _$v ??
         _$PtProductWrite._(
+          packageType: BuiltValueNullFieldError.checkNotNull(
+              packageType, r'PtProductWrite', 'packageType'),
           name: BuiltValueNullFieldError.checkNotNull(
               name, r'PtProductWrite', 'name'),
           code: BuiltValueNullFieldError.checkNotNull(

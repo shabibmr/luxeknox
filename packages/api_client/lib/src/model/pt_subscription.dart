@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:built_collection/built_collection.dart';
+import 'package:api_client/src/model/pt_package_type.dart';
 import 'package:api_client/src/model/pt_subscription_status.dart';
 import 'package:api_client/src/model/date.dart';
 import 'package:built_value/built_value.dart';
@@ -30,6 +31,11 @@ part 'pt_subscription.g.dart';
 /// * [sessionsPerWeek] 
 /// * [trainerName] 
 /// * [slotLabel] - e.g. \"17:00-18:00\"
+/// * [packageType] 
+/// * [isPrimary] - True for a single subscription and for the primary row of a couple pair.
+/// * [partnerSubscriptionId] - Set on both rows of a couple PT (see ADR-0011).
+/// * [partnerMemberId] 
+/// * [partnerMemberName] - Partner display name; member-scoped reads expose only this partner field.
 @BuiltValue()
 abstract class PtSubscription implements Built<PtSubscription, PtSubscriptionBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -83,6 +89,25 @@ abstract class PtSubscription implements Built<PtSubscription, PtSubscriptionBui
   /// e.g. \"17:00-18:00\"
   @BuiltValueField(wireName: r'slot_label')
   String get slotLabel;
+
+  @BuiltValueField(wireName: r'package_type')
+  PtPackageType get packageType;
+  // enum packageTypeEnum {  single,  couple,  };
+
+  /// True for a single subscription and for the primary row of a couple pair.
+  @BuiltValueField(wireName: r'is_primary')
+  bool get isPrimary;
+
+  /// Set on both rows of a couple PT (see ADR-0011).
+  @BuiltValueField(wireName: r'partner_subscription_id')
+  int? get partnerSubscriptionId;
+
+  @BuiltValueField(wireName: r'partner_member_id')
+  int? get partnerMemberId;
+
+  /// Partner display name; member-scoped reads expose only this partner field.
+  @BuiltValueField(wireName: r'partner_member_name')
+  String? get partnerMemberName;
 
   PtSubscription._();
 
@@ -191,6 +216,37 @@ class _$PtSubscriptionSerializer implements PrimitiveSerializer<PtSubscription> 
       object.slotLabel,
       specifiedType: const FullType(String),
     );
+    yield r'package_type';
+    yield serializers.serialize(
+      object.packageType,
+      specifiedType: const FullType(PtPackageType),
+    );
+    yield r'is_primary';
+    yield serializers.serialize(
+      object.isPrimary,
+      specifiedType: const FullType(bool),
+    );
+    if (object.partnerSubscriptionId != null) {
+      yield r'partner_subscription_id';
+      yield serializers.serialize(
+        object.partnerSubscriptionId,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.partnerMemberId != null) {
+      yield r'partner_member_id';
+      yield serializers.serialize(
+        object.partnerMemberId,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.partnerMemberName != null) {
+      yield r'partner_member_name';
+      yield serializers.serialize(
+        object.partnerMemberName,
+        specifiedType: const FullType(String),
+      );
+    }
   }
 
   @override
@@ -327,6 +383,44 @@ class _$PtSubscriptionSerializer implements PrimitiveSerializer<PtSubscription> 
             specifiedType: const FullType(String),
           ) as String;
           result.slotLabel = valueDes;
+          break;
+        case r'package_type':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(PtPackageType),
+          ) as PtPackageType;
+          result.packageType = valueDes;
+          break;
+        case r'is_primary':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.isPrimary = valueDes;
+          break;
+        case r'partner_subscription_id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.partnerSubscriptionId = valueDes;
+          break;
+        case r'partner_member_id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.partnerMemberId = valueDes;
+          break;
+        case r'partner_member_name':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.partnerMemberName = valueDes;
           break;
         default:
           unhandled.add(key);

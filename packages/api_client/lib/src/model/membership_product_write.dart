@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:built_collection/built_collection.dart';
+import 'package:api_client/src/model/membership_package_type.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -12,6 +13,7 @@ part 'membership_product_write.g.dart';
 /// MembershipProductWrite
 ///
 /// Properties:
+/// * [packageType] 
 /// * [name] 
 /// * [code] 
 /// * [description] 
@@ -24,6 +26,10 @@ part 'membership_product_write.g.dart';
 /// * [isActive] 
 @BuiltValue()
 abstract class MembershipProductWrite implements Built<MembershipProductWrite, MembershipProductWriteBuilder> {
+  @BuiltValueField(wireName: r'package_type')
+  MembershipPackageType get packageType;
+  // enum packageTypeEnum {  single,  couple,  };
+
   @BuiltValueField(wireName: r'name')
   String get name;
 
@@ -80,6 +86,11 @@ class _$MembershipProductWriteSerializer implements PrimitiveSerializer<Membersh
     MembershipProductWrite object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
+    yield r'package_type';
+    yield serializers.serialize(
+      object.packageType,
+      specifiedType: const FullType(MembershipPackageType),
+    );
     yield r'name';
     yield serializers.serialize(
       object.name,
@@ -165,6 +176,13 @@ class _$MembershipProductWriteSerializer implements PrimitiveSerializer<Membersh
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
+        case r'package_type':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(MembershipPackageType),
+          ) as MembershipPackageType;
+          result.packageType = valueDes;
+          break;
         case r'name':
           final valueDes = serializers.deserialize(
             value,

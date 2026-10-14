@@ -43,4 +43,19 @@ describe('PtAccessService', () => {
     await service.assertTrainerCanWrite({ ...trainer, userType: 'admin' }, 42);
     expect(repo.hasActiveForMemberAndTrainer).not.toHaveBeenCalled();
   });
+
+  it('CP-10: both members of a linked pair get full while active and read_only after', async () => {
+    const repo = {
+      hasActiveForMemberAndTrainer: vi
+        .fn()
+        .mockImplementation(async (memberId: number) => memberId === 42 || memberId === 55),
+    };
+    const service = new PtAccessService(repo as any);
+    expect(await service.trainerAccess(7, 42)).toBe('full');
+    expect(await service.trainerAccess(7, 55)).toBe('full');
+
+    repo.hasActiveForMemberAndTrainer.mockResolvedValue(false);
+    expect(await service.trainerAccess(7, 42)).toBe('read_only');
+    expect(await service.trainerAccess(7, 55)).toBe('read_only');
+  });
 });

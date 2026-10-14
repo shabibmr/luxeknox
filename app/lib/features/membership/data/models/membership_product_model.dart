@@ -16,6 +16,9 @@ extension MembershipProductModelMapper on api.MembershipProduct {
       ptSessionsIncluded: ptSessionsIncluded,
       accessFacilities: accessFacilities?.toList() ?? const [],
       isActive: isActive,
+      packageType: packageType == api.MembershipPackageType.couple
+          ? MembershipPackageType.couple
+          : MembershipPackageType.single,
     );
   }
 }
@@ -33,7 +36,10 @@ extension MembershipProductEntityMapper on MembershipProduct {
         ..maxFreezeDays = maxFreezeDays
         ..ptSessionsIncluded = ptSessionsIncluded
         ..accessFacilities.addAll(accessFacilities)
-        ..isActive = isActive;
+        ..isActive = isActive
+        ..packageType = packageType == MembershipPackageType.couple
+            ? api.MembershipPackageType.couple
+            : api.MembershipPackageType.single;
     });
   }
 }

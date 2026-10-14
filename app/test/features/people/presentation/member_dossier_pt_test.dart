@@ -1,27 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:luxeknox/features/membership/domain/entities/membership.dart';
-import 'package:luxeknox/features/membership/domain/entities/membership_status.dart';
 import 'package:luxeknox/features/people/presentation/member_dossier_pt.dart';
 import 'package:luxeknox/features/pt/domain/entities/pt_subscription.dart';
 import 'package:luxeknox/session/domain/entities/user_type.dart';
 
 void main() {
   final now = DateTime(2026, 10, 1);
-
-  Membership membership({
-    MembershipStatus status = MembershipStatus.active,
-    required DateTime endDate,
-  }) {
-    return Membership(
-      id: 'm1',
-      memberId: '42',
-      productId: 'p1',
-      startDate: DateTime(2026, 9, 1),
-      endDate: endDate,
-      status: status,
-      rowVersion: 1,
-    );
-  }
 
   PtSubscription sub(PtSubscriptionStatus status) => PtSubscription(
     id: 1,
@@ -168,52 +151,27 @@ void main() {
     bool sell({
       UserType userType = UserType.admin,
       bool canCreatePt = true,
-      Membership? m,
       MemberPtSummary? pt = const MemberPtSummary(),
-    }) => canSellPt(
-      userType: userType,
-      canCreatePt: canCreatePt,
-      membership: m,
-      pt: pt,
-      now: now,
-    );
+    }) => canSellPt(userType: userType, canCreatePt: canCreatePt, pt: pt);
 
-    test('admin with permission, active unexpired membership, no PT', () {
-      expect(sell(m: membership(endDate: DateTime(2026, 12, 31))), isTrue);
+    test('admin with permission and no PT can sell (membership is bundled)', () {
+      expect(sell(), isTrue);
     });
 
-    test('membership ending today still counts as not expired', () {
-      expect(sell(m: membership(endDate: now)), isTrue);
-    });
-
-    test('blocked when membership has expired or is missing', () {
-      expect(sell(m: membership(endDate: DateTime(2026, 9, 30))), isFalse);
-      expect(
-        sell(
-          m: membership(
-            status: MembershipStatus.frozen,
-            endDate: DateTime(2026, 12, 31),
-          ),
-        ),
-        isFalse,
-      );
-      expect(sell(m: null), isFalse);
+    test('allowed with no PT summary loaded yet', () {
+      expect(sell(pt: null), isTrue);
     });
 
     test('blocked while another PT is scheduled or active (one at a time)', () {
       expect(
-        sell(
-          m: membership(endDate: DateTime(2026, 12, 31)),
-          pt: MemberPtSummary(current: sub(PtSubscriptionStatus.active)),
-        ),
+        sell(pt: MemberPtSummary(current: sub(PtSubscriptionStatus.active))),
         isFalse,
       );
     });
 
     test('blocked for trainers and without the capability', () {
-      final m = membership(endDate: DateTime(2026, 12, 31));
-      expect(sell(userType: UserType.trainer, m: m), isFalse);
-      expect(sell(canCreatePt: false, m: m), isFalse);
+      expect(sell(userType: UserType.trainer), isFalse);
+      expect(sell(canCreatePt: false), isFalse);
     });
   });
 

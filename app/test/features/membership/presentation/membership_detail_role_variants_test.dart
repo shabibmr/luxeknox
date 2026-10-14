@@ -84,8 +84,12 @@ void main() {
     slugs: ['memberships.read', 'memberships.approve'],
   );
 
+  late Membership current;
+  late MockMembershipDetailCubit detailCubit;
+
   setUp(() {
-    final detailCubit = MockMembershipDetailCubit();
+    current = membership;
+    detailCubit = MockMembershipDetailCubit();
     final freezeCubit = MockMembershipFreezeCubit();
     final historyCubit = MockMembershipHistoryCubit();
 
@@ -98,7 +102,7 @@ void main() {
       const Stream<MembershipDetailState>.empty(),
       initialState: MembershipDetailState(
         status: LoadStatus.success,
-        membership: membership,
+        membership: current,
       ),
     );
     whenListen(
@@ -127,6 +131,14 @@ void main() {
   tearDown(() => getIt.reset());
 
   Widget wrap(Principal principal, Capabilities capabilities) {
+    whenListen(
+      detailCubit,
+      const Stream<MembershipDetailState>.empty(),
+      initialState: MembershipDetailState(
+        status: LoadStatus.success,
+        membership: current,
+      ),
+    );
     final sessionCubit = MockSessionCubit();
     whenListen(
       sessionCubit,
@@ -189,5 +201,52 @@ void main() {
     await tester.pumpAndSettle();
 
     expectApproveActions(tester, visible: false);
+  });
+
+  group('couple membership', () {
+    Membership coupleOf({required String id, required String partnerId}) =>
+        Membership(
+          id: id,
+          memberId: '1',
+          productId: '10',
+          startDate: DateTime.utc(2026, 1, 1),
+          endDate: DateTime.utc(2026, 12, 1),
+          status: MembershipStatus.active,
+          rowVersion: 1,
+          partnerMembershipId: partnerId,
+          partnerMemberId: '2',
+          partnerMemberName: 'Priya',
+          product: membership.product,
+        );
+
+    testWidgets('primary row shows partner and note, no billed-to', (
+      tester,
+    ) async {
+      current = coupleOf(id: '5', partnerId: '6');
+      await tester.pumpWidget(wrap(adminPrincipal, canApprove));
+      await tester.pumpAndSettle();
+
+      expect(find.text(MembershipStrings.partnerRowLabel), findsOneWidget);
+      expect(find.text('Priya'), findsOneWidget);
+      expect(find.text(MembershipStrings.billedToLabel), findsNothing);
+      expect(find.text(MembershipStrings.coupleActionsNote), findsOneWidget);
+    });
+
+    testWidgets('partner row also shows billed-to the primary', (tester) async {
+      current = coupleOf(id: '6', partnerId: '5');
+      await tester.pumpWidget(wrap(adminPrincipal, canApprove));
+      await tester.pumpAndSettle();
+
+      expect(find.text(MembershipStrings.partnerRowLabel), findsOneWidget);
+      expect(find.text(MembershipStrings.billedToLabel), findsOneWidget);
+    });
+
+    testWidgets('single membership shows no partner row', (tester) async {
+      await tester.pumpWidget(wrap(adminPrincipal, canApprove));
+      await tester.pumpAndSettle();
+
+      expect(find.text(MembershipStrings.partnerRowLabel), findsNothing);
+      expect(find.text(MembershipStrings.coupleActionsNote), findsNothing);
+    });
   });
 }

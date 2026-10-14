@@ -57,6 +57,7 @@ void main() {
       api.TrainerCreate(
         (b) => b
           ..email = 'fallback@example.com'
+          ..phoneNumber = '+15550100'
           ..firstName = 'F'
           ..lastName = 'L'
           ..gender = 'male',
@@ -66,6 +67,7 @@ void main() {
       api.EmployeeCreate(
         (b) => b
           ..email = 'fallback@example.com'
+          ..phoneNumber = '+15550100'
           ..firstName = 'F'
           ..lastName = 'L'
           ..gender = 'male'
@@ -90,6 +92,7 @@ void main() {
       firstName: 'Jane',
       lastName: 'Doe',
       email: 'jane@example.com',
+      phoneNumber: '+15550100',
       gender: 'female',
     );
 
@@ -137,6 +140,7 @@ void main() {
       firstName: 'Ed',
       lastName: 'Ford',
       email: 'ed@example.com',
+      phoneNumber: '+15550100',
       gender: 'male',
       jobTitle: 'Front Desk',
       roleId: 3,

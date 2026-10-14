@@ -24,6 +24,7 @@ export class MembershipProductResponseDto {
   @ApiProperty({ type: Number }) pt_sessions_included!: number;
   @ApiProperty({ type: [String], nullable: true }) access_facilities!: string[] | null;
   @ApiProperty({ type: Boolean }) is_active!: boolean;
+  @ApiProperty({ type: String, enum: ['single', 'couple'] }) package_type!: 'single' | 'couple';
 }
 
 export class MembershipProductPageMetaDto {
@@ -52,6 +53,7 @@ export class MembershipProductController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
   @ApiQuery({ name: 'q', required: false, type: String })
+  @ApiQuery({ name: 'package_type', required: false, enum: ['single', 'couple'] })
   @ApiResponse({ status: 200, description: 'OK', type: MembershipProductPageResponseDto })
   async list(
     @Query() query: Record<string, unknown>,

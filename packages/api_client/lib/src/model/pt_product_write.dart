@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:api_client/src/model/pt_package_type.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -11,6 +12,7 @@ part 'pt_product_write.g.dart';
 /// PtProductWrite
 ///
 /// Properties:
+/// * [packageType] - Required on create; rejected on PATCH (immutable).
 /// * [name] 
 /// * [code] 
 /// * [description] 
@@ -20,6 +22,11 @@ part 'pt_product_write.g.dart';
 /// * [isActive] 
 @BuiltValue()
 abstract class PtProductWrite implements Built<PtProductWrite, PtProductWriteBuilder> {
+  /// Required on create; rejected on PATCH (immutable).
+  @BuiltValueField(wireName: r'package_type')
+  PtPackageType get packageType;
+  // enum packageTypeEnum {  single,  couple,  };
+
   @BuiltValueField(wireName: r'name')
   String get name;
 
@@ -65,6 +72,11 @@ class _$PtProductWriteSerializer implements PrimitiveSerializer<PtProductWrite> 
     PtProductWrite object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
+    yield r'package_type';
+    yield serializers.serialize(
+      object.packageType,
+      specifiedType: const FullType(PtPackageType),
+    );
     yield r'name';
     yield serializers.serialize(
       object.name,
@@ -129,6 +141,13 @@ class _$PtProductWriteSerializer implements PrimitiveSerializer<PtProductWrite> 
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
+        case r'package_type':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(PtPackageType),
+          ) as PtPackageType;
+          result.packageType = valueDes;
+          break;
         case r'name':
           final valueDes = serializers.deserialize(
             value,

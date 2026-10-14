@@ -15,6 +15,9 @@ class CreateMembershipParams extends Equatable {
     required this.paymentMethodId,
     this.lockerNumber,
     this.autoRenew,
+    this.partnerMemberId,
+    this.replacePartnerMembership,
+    this.discountAmount,
   });
 
   final String memberId;
@@ -23,6 +26,9 @@ class CreateMembershipParams extends Equatable {
   final String paymentMethodId;
   final String? lockerNumber;
   final bool? autoRenew;
+  final String? partnerMemberId;
+  final bool? replacePartnerMembership;
+  final String? discountAmount;
 
   @override
   List<Object?> get props => [
@@ -32,6 +38,9 @@ class CreateMembershipParams extends Equatable {
     paymentMethodId,
     lockerNumber,
     autoRenew,
+    partnerMemberId,
+    replacePartnerMembership,
+    discountAmount,
   ];
 }
 
@@ -51,6 +60,9 @@ class CreateMembershipUseCase
       paymentMethodId: params.paymentMethodId,
       lockerNumber: params.lockerNumber,
       autoRenew: params.autoRenew,
+      partnerMemberId: params.partnerMemberId,
+      replacePartnerMembership: params.replacePartnerMembership,
+      discountAmount: params.discountAmount,
     );
   }
 }

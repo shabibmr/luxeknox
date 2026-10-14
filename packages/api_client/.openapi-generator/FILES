@@ -171,10 +171,12 @@ doc/MembershipFreezePage.md
 doc/MembershipFreezeWrite.md
 doc/MembershipHistory.md
 doc/MembershipHistoryPage.md
+doc/MembershipPackageType.md
 doc/MembershipPage.md
 doc/MembershipProduct.md
 doc/MembershipProductPage.md
 doc/MembershipProductWrite.md
+doc/MembershipReplacementPreview.md
 doc/MembershipStatus.md
 doc/NOTIFApi.md
 doc/Notification.md
@@ -224,6 +226,7 @@ doc/ProgressPhotoWrite.md
 doc/PtChangeSlotRequest.md
 doc/PtGridCell.md
 doc/PtGridTrainer.md
+doc/PtPackageType.md
 doc/PtPaymentFields.md
 doc/PtProduct.md
 doc/PtProductPage.md
@@ -504,10 +507,12 @@ lib/src/model/membership_freeze_page.dart
 lib/src/model/membership_freeze_write.dart
 lib/src/model/membership_history.dart
 lib/src/model/membership_history_page.dart
+lib/src/model/membership_package_type.dart
 lib/src/model/membership_page.dart
 lib/src/model/membership_product.dart
 lib/src/model/membership_product_page.dart
 lib/src/model/membership_product_write.dart
+lib/src/model/membership_replacement_preview.dart
 lib/src/model/membership_status.dart
 lib/src/model/notification.dart
 lib/src/model/notification_page.dart
@@ -553,6 +558,7 @@ lib/src/model/progress_photo_write.dart
 lib/src/model/pt_change_slot_request.dart
 lib/src/model/pt_grid_cell.dart
 lib/src/model/pt_grid_trainer.dart
+lib/src/model/pt_package_type.dart
 lib/src/model/pt_payment_fields.dart
 lib/src/model/pt_product.dart
 lib/src/model/pt_product_page.dart
@@ -641,3 +647,4 @@ lib/src/model/workout_set_update.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
+test/pt_package_type_test.dart

@@ -29,25 +29,16 @@ bool canSellMembership({
   required bool canCreateMembership,
 }) => userType == UserType.admin && canCreateMembership;
 
-/// PT can be added only while the gym membership is active and unexpired, and
-/// only one PT runs at a time (renew instead). Selling is admin/staff only.
+/// PT includes a gym membership of the same duration, so no membership is
+/// needed to add it. Only one PT runs at a time (renew instead). Selling is
+/// admin/staff only.
 bool canSellPt({
   required UserType userType,
   required bool canCreatePt,
-  required Membership? membership,
   required MemberPtSummary? pt,
-  DateTime? now,
 }) {
   if (userType != UserType.admin || !canCreatePt) return false;
-  if (pt?.current != null) return false;
-  if (membership == null || membership.status.name != 'active') return false;
-  final today = now ?? DateTime.now();
-  final end = DateTime(
-    membership.endDate.year,
-    membership.endDate.month,
-    membership.endDate.day,
-  );
-  return !end.isBefore(DateTime(today.year, today.month, today.day));
+  return pt?.current == null;
 }
 
 /// Mid-PT trainer/slot change and renewal are admin actions.

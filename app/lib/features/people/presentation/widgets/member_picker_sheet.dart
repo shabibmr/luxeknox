@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/pagination/cursor_page.dart';
 import '../../../../core/widgets/app_picker_form_field.dart';
 import '../../../../core/widgets/app_picker_sheet.dart';
 import '../../domain/entities/member_filter.dart';
@@ -13,6 +14,7 @@ Future<ProfileSummary?> showMemberPickerSheet(
   BuildContext context, {
   ListMembersUseCase? listMembers,
   int? assignedTrainerId,
+  Set<int> excludeMemberIds = const {},
 }) {
   return showModalBottomSheet<ProfileSummary>(
     context: context,
@@ -21,6 +23,7 @@ Future<ProfileSummary?> showMemberPickerSheet(
     builder: (_) => MemberPickerSheet(
       listMembers: listMembers,
       assignedTrainerId: assignedTrainerId,
+      excludeMemberIds: excludeMemberIds,
     ),
   );
 }
@@ -38,6 +41,7 @@ class MemberPickerField extends StatelessWidget {
     this.enabled = true,
     this.listMembers,
     this.assignedTrainerId,
+    this.excludeMemberIds = const {},
   });
 
   final ProfileSummary? selectedMember;
@@ -49,6 +53,10 @@ class MemberPickerField extends StatelessWidget {
   final bool enabled;
   final ListMembersUseCase? listMembers;
   final int? assignedTrainerId;
+
+  /// Members that must not be offered, e.g. the primary member when picking
+  /// their couple partner.
+  final Set<int> excludeMemberIds;
 
   String? get _displayLabel {
     if (selectedMember != null) {
@@ -80,6 +88,7 @@ class MemberPickerField extends StatelessWidget {
         context,
         listMembers: listMembers,
         assignedTrainerId: assignedTrainerId,
+        excludeMemberIds: excludeMemberIds,
       ),
       onChanged: onChanged,
     );
@@ -91,10 +100,12 @@ class MemberPickerSheet extends StatelessWidget {
     super.key,
     this.listMembers,
     this.assignedTrainerId,
+    this.excludeMemberIds = const {},
   });
 
   final ListMembersUseCase? listMembers;
   final int? assignedTrainerId;
+  final Set<int> excludeMemberIds;
 
   @override
   Widget build(BuildContext context) {
@@ -106,15 +117,27 @@ class MemberPickerSheet extends StatelessWidget {
       retryLabel: PeopleStrings.retry,
       heightFactor: 0.85,
       autofocus: true,
-      fetcher: ({cursor, query}) => useCase(
-        ListMembersParams(
-          filter: MemberFilter(
-            query: query,
-            assignedTrainerId: assignedTrainerId,
+      fetcher: ({cursor, query}) async {
+        final result = await useCase(
+          ListMembersParams(
+            filter: MemberFilter(
+              query: query,
+              assignedTrainerId: assignedTrainerId,
+            ),
+            cursor: cursor,
           ),
-          cursor: cursor,
-        ),
-      ),
+        );
+        if (excludeMemberIds.isEmpty) return result;
+        return result.map(
+          (page) => CursorPage<ProfileSummary>(
+            items: page.items
+                .where((m) => !excludeMemberIds.contains(m.id))
+                .toList(),
+            nextCursor: page.nextCursor,
+            hasMore: page.hasMore,
+          ),
+        );
+      },
       itemBuilder: (context, member) => ListTile(
         key: Key('member_option_${member.id}'),
         leading: CircleAvatar(

@@ -33,6 +33,7 @@ export const ptProducts = mysqlTable(
     tax_percentage: decimal('tax_percentage', { precision: 5, scale: 2 }).notNull().default('0.00'),
     /** FK to `accounts.id` enforced in SQL; no Drizzle `.references()` (avoids cycle with accounting). */
     income_account_id: bigint('income_account_id', { mode: 'number', unsigned: true }),
+    package_type: varchar('package_type', { length: 16 }).notNull().$type<'single' | 'couple'>(),
     is_active: boolean('is_active').notNull().default(true),
     created_at: utcDatetime('created_at').notNull(),
     updated_at: utcDatetime('updated_at'),
@@ -66,6 +67,11 @@ export const ptSubscriptions = mysqlTable(
     renewed_from_id: bigint('renewed_from_id', { mode: 'number', unsigned: true }).references(
       (): AnyMySqlColumn => ptSubscriptions.id,
     ),
+    partner_subscription_id: bigint('partner_subscription_id', {
+      mode: 'number',
+      unsigned: true,
+    }).references((): AnyMySqlColumn => ptSubscriptions.id),
+    is_primary: boolean('is_primary').notNull().default(true),
     start_date: date('start_date', { mode: 'string' }).notNull(),
     end_date: date('end_date', { mode: 'string' }).notNull(),
     /** Days of week (0=Sunday … 6=Saturday, `getUTCDay` convention). */
@@ -82,6 +88,7 @@ export const ptSubscriptions = mysqlTable(
     index('pt_subscriptions_trainer_id_idx').on(table.trainer_id),
     index('pt_subscriptions_status_idx').on(table.status),
     index('pt_subscriptions_end_date_idx').on(table.end_date),
+    index('pt_subscriptions_partner_subscription_id_idx').on(table.partner_subscription_id),
   ],
 );
 

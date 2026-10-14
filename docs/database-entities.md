@@ -4,7 +4,7 @@ This document is the **table catalog** for the relational model that supports al
 
 It lists tables, purpose, screen links, and key attributes. It is **not** a physical DDL file. Types, uniqueness, and versioning rules are in [Schema notes](#schema-notes). Functional behaviour lives in [`backend-frd.md`](./backend-frd.md).
 
-**Table count:** 82.
+**Table count:** 86.
 
 ---
 
@@ -20,10 +20,11 @@ It lists tables, purpose, screen links, and key attributes. It is **not** a phys
 ## Entity Count by Domain
 
 ```mermaid
-pie title Database Entities Distribution (82 Tables)
+pie title Database Entities Distribution (86 Tables)
     "Users, Roles & Profiles (8)" : 8
     "Health & Medical (6)" : 6
-    "Membership & Products (6)" : 6
+    "Membership & Products (5)" : 5
+    "Personal Training (3)" : 3
     "Scheduling & Availability (6)" : 6
     "Attendance Tracking (2)" : 2
     "Billing & Payments (4)" : 4
@@ -39,7 +40,8 @@ pie title Database Entities Distribution (82 Tables)
 | :--- | ---: |
 | Users, Roles & Profiles | 8 |
 | Health & Medical | 6 |
-| Membership & Products | 6 |
+| Membership & Products | 5 |
+| Personal Training | 3 |
 | Scheduling & Availability | 6 |
 | Attendance | 2 |
 | Billing & Payments | 4 |
@@ -49,7 +51,7 @@ pie title Database Entities Distribution (82 Tables)
 | Notifications | 4 |
 | Settings & Audit | 2 |
 | Accounting | 27 |
-| **Total** | **84** |
+| **Total** | **86** |
 
 ---
 
@@ -159,25 +161,19 @@ pie title Database Entities Distribution (82 Tables)
 
 * **Purpose**: Catalog of sellable membership packages and tiers.
 * **Supporting Screens**: Membership Packages Catalog, Membership Details.
-* **Key Attributes**: `id`, `name`, `code`, `description`, `duration_days`, `base_price`, `tax_percentage`, `max_freeze_days`, `pt_sessions_included`, `access_facilities` (JSON), `is_active`, `income_account_id` (FK to `accounts`, nullable — overrides default earned-revenue account when set).
-
-### `pt_products`
-
-* **Purpose**: Personal Training package catalog ([ADR-0009](./adr/0009-personal-training-subscriptions.md)). Full PT tables live in `schema/personal-training.ts`; this row is listed here for the accounting alter.
-* **Supporting Screens**: PT package admin, PT sale.
-* **Key Attributes**: `id`, `name`, `code`, `duration_days`, `sessions_per_week`, `price`, `is_active`, `income_account_id` (FK to `accounts`, nullable — same pattern as `membership_products.income_account_id`).
+* **Key Attributes**: `id`, `name`, `code`, `description`, `package_type` (`single` | `couple`, immutable), `duration_days`, `base_price`, `tax_percentage`, `max_freeze_days`, `pt_sessions_included`, `access_facilities` (JSON), `is_active`, `income_account_id` (FK to `accounts`, nullable — overrides default earned-revenue account when set).
 
 ### `memberships`
 
 * **Purpose**: Contract instance purchased by a member (not only the currently active one).
 * **Supporting Screens**: Membership Details & Status, Memberships Directory, Dashboard.
-* **Key Attributes**: `id`, `member_id` (FK), `product_id` (FK), `start_date`, `end_date`, `remaining_pt_sessions`, `status` (active, expired, frozen, cancelled), `locker_number`, `auto_renew`.
+* **Key Attributes**: `id`, `member_id` (FK), `product_id` (FK), `start_date`, `end_date`, `remaining_pt_sessions`, `status` (active, expired, frozen, cancelled), `locker_number`, `auto_renew`, `partner_membership_id` (self-FK, nullable; set on both rows of a couple membership, see ADR-0010).
 
 ### `membership_freezes`
 
 * **Purpose**: Membership hold/pause requests and approvals.
 * **Supporting Screens**: Freeze & Extension Manager, Membership Details.
-* **Key Attributes**: `id`, `membership_id` (FK), `start_date`, `end_date`, `total_freeze_days`, `reason`, `status` (pending, approved, rejected), `reviewed_by_user_id` (FK), `reviewed_at`.
+* **Key Attributes**: `id`, `membership_id` (FK), `start_date`, `end_date`, `total_freeze_days`, `reason`, `status` (pending, approved, rejected), `reviewed_by_user_id` (FK), `reviewed_at`, `paired_freeze_id` (self-FK, nullable; links the twin freeze of a couple membership).
 
 ### `membership_extensions`
 
@@ -190,6 +186,28 @@ pie title Database Entities Distribution (82 Tables)
 * **Purpose**: Append-only log of plan changes, upgrades, renewals, freezes, and cancellations.
 * **Supporting Screens**: Membership History Screen.
 * **Key Attributes**: `id`, `membership_id` (FK), `action` (created, renewed, upgraded, frozen, expired, cancelled, extended), `old_end_date`, `new_end_date`, `performed_by_user_id` (FK), `timestamp`.
+
+---
+
+## 3a. Personal Training
+
+### `pt_products`
+
+* **Purpose**: Catalog of sellable Personal Training packages (separate from gym memberships).
+* **Supporting Screens**: PT Packages Catalog, Sell PT.
+* **Key Attributes**: `id`, `name`, `code`, `description`, `package_type` (`single` | `couple`, immutable), `duration_days`, `base_price`, `tax_percentage`, `is_active`, `income_account_id` (FK to `accounts`, nullable — same pattern as `membership_products.income_account_id`).
+
+### `pt_subscriptions`
+
+* **Purpose**: PT contract: member + package + trainer + fixed weekly slot for a date range. A couple PT is two linked rows (ADR-0011).
+* **Supporting Screens**: Member Dossier PT card, Sell PT, Renew / Reassign / Change slot.
+* **Key Attributes**: `id`, `member_id` (FK), `pt_product_id` (FK), `trainer_id` (FK), `membership_id` (FK nullable), `renewed_from_id` (self-FK nullable), `partner_subscription_id` (self-FK nullable; set on both rows of a couple), `is_primary` (boolean; primary owns sessions and invoice), `start_date`, `end_date`, `weekdays` (JSON), `slot_start`, `status` (scheduled, active, completed, cancelled), `row_version`.
+
+### `pt_subscription_changes`
+
+* **Purpose**: Append-only log of mid-PT trainer reassignments and slot changes.
+* **Supporting Screens**: PT change history on the dossier.
+* **Key Attributes**: `id`, `pt_subscription_id` (FK), `change_type`, `effective_date`, `old_trainer_id`, `new_trainer_id`, `old_weekdays`, `new_weekdays`, `old_slot_start`, `new_slot_start`, `reason`, `changed_by_user_id` (FK), `created_at`.
 
 ---
 
@@ -209,9 +227,9 @@ pie title Database Entities Distribution (82 Tables)
 
 ### `schedules`
 
-* **Purpose**: Scheduled sessions, classes, or PT bookings. Recurring class series share `series_id`; each occurrence is its own row.
+* **Purpose**: Scheduled sessions, classes, or PT bookings. Recurring class series share `series_id`; each occurrence is its own row. Generated PT sessions set `pt_subscription_id` (primary row for a couple PT).
 * **Supporting Screens**: Schedule Calendar, Schedule Details Screen, Create Booking Screen.
-* **Key Attributes**: `id`, `series_id` (nullable, shared by recurring occurrences), `schedule_type_id` (FK), `facility_id` (FK), `trainer_id` (FK nullable), `title`, `start_time`, `end_time`, `max_capacity`, `status` (scheduled, ongoing, completed, cancelled), `notes`.
+* **Key Attributes**: `id`, `series_id` (nullable, shared by recurring occurrences), `schedule_type_id` (FK), `facility_id` (FK), `trainer_id` (FK nullable), `pt_subscription_id` (FK nullable), `title`, `start_time`, `end_time`, `max_capacity` (1 for single PT, 2 for couple PT), `status` (scheduled, ongoing, completed, cancelled), `notes`.
 
 ### `schedule_participants`
 
@@ -456,7 +474,7 @@ Same versioning rule as workouts: meals (and their foods) hang off `diet_plan_ve
 
 ## 12. Accounting
 
-Double-entry books for one gym ([ADR-0010](./adr/0010-accounting-ledger.md)). The general ledger is posted `journal_lines`. Member sales stay on `payments` / `payment_histories`; accounting posts journals from those rows when `accounting.posting_enabled` is true. Physical names below are the contract for `apps/api/src/platform/db/schema/accounting.ts` (Phase 1).
+Double-entry books for one gym ([ADR-0013](./adr/0013-accounting-ledger.md)). The general ledger is posted `journal_lines`. Member sales stay on `payments` / `payment_histories`; accounting posts journals from those rows when `accounting.posting_enabled` is true. Physical names below are the contract for `apps/api/src/platform/db/schema/accounting.ts` (Phase 1).
 
 ### `accounts`
 
@@ -693,7 +711,7 @@ plan 1──* versions 1──* line items
 
 ### Accounting ledger
 
-* Posted `journal_lines` are the general ledger ([ADR-0010](./adr/0010-accounting-ledger.md)). Reports aggregate those lines.
+* Posted `journal_lines` are the general ledger ([ADR-0013](./adr/0013-accounting-ledger.md)). Reports aggregate those lines.
 * One journal per source: unique (`source_type`, `source_id`). Replay returns the original journal.
 * Posted journals are immutable; corrections are reversing journals (`reverses_journal_id`).
 * `accounting.posting_enabled` gates automatic posts from `payments` / `payment_histories`. While false, payments behave as today.

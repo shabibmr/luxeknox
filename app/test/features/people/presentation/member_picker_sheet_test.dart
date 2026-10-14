@@ -111,4 +111,26 @@ void main() {
       expect(find.text('Bob Builder (M-1002)'), findsOneWidget);
     },
   );
+
+  testWidgets('excludeMemberIds hides excluded members from the sheet', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MemberPickerField(
+            listMembers: listMembers,
+            excludeMemberIds: const {10},
+            onChanged: (_) {},
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byType(MemberPickerField));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Alice Walker'), findsNothing);
+    expect(find.text('Bob Builder'), findsOneWidget);
+  });
 }

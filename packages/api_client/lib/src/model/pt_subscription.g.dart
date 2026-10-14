@@ -39,6 +39,16 @@ class _$PtSubscription extends PtSubscription {
   final String trainerName;
   @override
   final String slotLabel;
+  @override
+  final PtPackageType packageType;
+  @override
+  final bool isPrimary;
+  @override
+  final int? partnerSubscriptionId;
+  @override
+  final int? partnerMemberId;
+  @override
+  final String? partnerMemberName;
 
   factory _$PtSubscription([void Function(PtSubscriptionBuilder)? updates]) =>
       (PtSubscriptionBuilder()..update(updates))._build();
@@ -59,7 +69,12 @@ class _$PtSubscription extends PtSubscription {
       required this.productName,
       required this.sessionsPerWeek,
       required this.trainerName,
-      required this.slotLabel})
+      required this.slotLabel,
+      required this.packageType,
+      required this.isPrimary,
+      this.partnerSubscriptionId,
+      this.partnerMemberId,
+      this.partnerMemberName})
       : super._();
   @override
   PtSubscription rebuild(void Function(PtSubscriptionBuilder) updates) =>
@@ -87,7 +102,12 @@ class _$PtSubscription extends PtSubscription {
         productName == other.productName &&
         sessionsPerWeek == other.sessionsPerWeek &&
         trainerName == other.trainerName &&
-        slotLabel == other.slotLabel;
+        slotLabel == other.slotLabel &&
+        packageType == other.packageType &&
+        isPrimary == other.isPrimary &&
+        partnerSubscriptionId == other.partnerSubscriptionId &&
+        partnerMemberId == other.partnerMemberId &&
+        partnerMemberName == other.partnerMemberName;
   }
 
   @override
@@ -109,6 +129,11 @@ class _$PtSubscription extends PtSubscription {
     _$hash = $jc(_$hash, sessionsPerWeek.hashCode);
     _$hash = $jc(_$hash, trainerName.hashCode);
     _$hash = $jc(_$hash, slotLabel.hashCode);
+    _$hash = $jc(_$hash, packageType.hashCode);
+    _$hash = $jc(_$hash, isPrimary.hashCode);
+    _$hash = $jc(_$hash, partnerSubscriptionId.hashCode);
+    _$hash = $jc(_$hash, partnerMemberId.hashCode);
+    _$hash = $jc(_$hash, partnerMemberName.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -131,7 +156,12 @@ class _$PtSubscription extends PtSubscription {
           ..add('productName', productName)
           ..add('sessionsPerWeek', sessionsPerWeek)
           ..add('trainerName', trainerName)
-          ..add('slotLabel', slotLabel))
+          ..add('slotLabel', slotLabel)
+          ..add('packageType', packageType)
+          ..add('isPrimary', isPrimary)
+          ..add('partnerSubscriptionId', partnerSubscriptionId)
+          ..add('partnerMemberId', partnerMemberId)
+          ..add('partnerMemberName', partnerMemberName))
         .toString();
   }
 }
@@ -206,6 +236,30 @@ class PtSubscriptionBuilder
   String? get slotLabel => _$this._slotLabel;
   set slotLabel(String? slotLabel) => _$this._slotLabel = slotLabel;
 
+  PtPackageType? _packageType;
+  PtPackageType? get packageType => _$this._packageType;
+  set packageType(PtPackageType? packageType) =>
+      _$this._packageType = packageType;
+
+  bool? _isPrimary;
+  bool? get isPrimary => _$this._isPrimary;
+  set isPrimary(bool? isPrimary) => _$this._isPrimary = isPrimary;
+
+  int? _partnerSubscriptionId;
+  int? get partnerSubscriptionId => _$this._partnerSubscriptionId;
+  set partnerSubscriptionId(int? partnerSubscriptionId) =>
+      _$this._partnerSubscriptionId = partnerSubscriptionId;
+
+  int? _partnerMemberId;
+  int? get partnerMemberId => _$this._partnerMemberId;
+  set partnerMemberId(int? partnerMemberId) =>
+      _$this._partnerMemberId = partnerMemberId;
+
+  String? _partnerMemberName;
+  String? get partnerMemberName => _$this._partnerMemberName;
+  set partnerMemberName(String? partnerMemberName) =>
+      _$this._partnerMemberName = partnerMemberName;
+
   PtSubscriptionBuilder() {
     PtSubscription._defaults(this);
   }
@@ -229,6 +283,11 @@ class PtSubscriptionBuilder
       _sessionsPerWeek = $v.sessionsPerWeek;
       _trainerName = $v.trainerName;
       _slotLabel = $v.slotLabel;
+      _packageType = $v.packageType;
+      _isPrimary = $v.isPrimary;
+      _partnerSubscriptionId = $v.partnerSubscriptionId;
+      _partnerMemberId = $v.partnerMemberId;
+      _partnerMemberName = $v.partnerMemberName;
       _$v = null;
     }
     return this;
@@ -281,6 +340,13 @@ class PtSubscriptionBuilder
                 trainerName, r'PtSubscription', 'trainerName'),
             slotLabel: BuiltValueNullFieldError.checkNotNull(
                 slotLabel, r'PtSubscription', 'slotLabel'),
+            packageType: BuiltValueNullFieldError.checkNotNull(
+                packageType, r'PtSubscription', 'packageType'),
+            isPrimary: BuiltValueNullFieldError.checkNotNull(
+                isPrimary, r'PtSubscription', 'isPrimary'),
+            partnerSubscriptionId: partnerSubscriptionId,
+            partnerMemberId: partnerMemberId,
+            partnerMemberName: partnerMemberName,
           );
     } catch (_) {
       late String _$failedField;

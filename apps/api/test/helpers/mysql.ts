@@ -20,6 +20,12 @@ export const ADMIN_CREDENTIALS = {
   password: process.env.BOOTSTRAP_ADMIN_PASSWORD || '123456',
 };
 
+/** Throwaway super-admin so specs do not depend on the dev admin's (rotatable) password. */
+export const E2E_ADMIN_CREDENTIALS = {
+  email: 'e2e_admin@luxeknox.test',
+  password: 'AdminSecurePassword123!',
+};
+
 export const MEMBER_CREDENTIALS = {
   email: 'e2e_member@luxeknox.test',
   password: 'MemberSecurePassword123!',
@@ -70,6 +76,8 @@ async function deleteWithDependents(
 
   for (const edge of edges.filter((e) => e.refTable === table)) {
     if (edge.table === table) {
+      // Self-referencing FK (e.g. memberships.partner_membership_id): recursing would never
+      // terminate, so detach the doomed rows from their partners and let DELETE proceed.
       await db.execute(
         sql`UPDATE ${ident(table)} SET ${ident(edge.column)} = NULL WHERE ${ident(column)} IN (${inList})`,
       );
@@ -251,4 +259,36 @@ export async function seedTestUsers(
     .limit(1);
 
   return { member: memberRows[0], inactive: inactiveRows[0], trainer: trainerRows[0] };
+}
+
+/** Upserts {@link E2E_ADMIN_CREDENTIALS} as an active super_admin; removed by `resetTestData`. */
+export async function seedTestAdmin(db: DrizzleDb<any>): Promise<void> {
+  const roleRows = await (db as any)
+    .select()
+    .from(roles)
+    .where(eq(roles.slug, 'super_admin'))
+    .limit(1);
+  if (!roleRows[0]) {
+    throw new Error('seedTestAdmin: role "super_admin" does not exist; seed roles first.');
+  }
+  const passwordHash = await hashPassword(E2E_ADMIN_CREDENTIALS.password);
+  const now = new Date();
+  await (db as any)
+    .insert(users)
+    .values({
+      email: E2E_ADMIN_CREDENTIALS.email,
+      password_hash: passwordHash,
+      user_type: 'admin',
+      role_id: roleRows[0].id,
+      status: 'active',
+      created_at: now,
+    })
+    .onDuplicateKeyUpdate({
+      set: {
+        password_hash: passwordHash,
+        status: 'active',
+        role_id: roleRows[0].id,
+        updated_at: now,
+      },
+    });
 }

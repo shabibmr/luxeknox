@@ -1,43 +1,32 @@
 import { z } from 'zod';
+import { blankToNull } from './credentials';
 
-const optionalEmail = z
-  .string()
-  .trim()
-  .email('email must be a valid email')
-  .max(255)
-  .optional()
-  .nullable();
+const optionalEmail = z.preprocess(
+  blankToNull,
+  z.string().trim().email('email must be a valid email').max(255).optional().nullable(),
+);
 
-const optionalPhone = z.string().trim().min(1).max(32).optional().nullable();
+const optionalPhone = z.preprocess(
+  blankToNull,
+  z.string().trim().min(1).max(32).optional().nullable(),
+);
 
 /**
- * Mirrors OpenAPI `MemberCreate` (V3-05a): password required; at least one of
- * email / phone_number.
+ * Mirrors OpenAPI `MemberCreate` (V3-05a). Email and phone_number are both
+ * optional — a member may be created with no login identifier.
  */
-export const memberCreateSchema = z
-  .object({
-    email: optionalEmail,
-    phone_number: optionalPhone,
-    password: z.string().min(1).max(255).optional().nullable(),
-    first_name: z.string().trim().min(1, 'first_name is required').max(100),
-    last_name: z.string().trim().min(1, 'last_name is required').max(100),
-    gender: z.string().trim().min(1, 'gender is required').max(32),
-    date_of_birth: z.string().trim().min(1).optional().nullable(),
-    address: z.string().trim().max(2000).optional().nullable(),
-    assigned_trainer_id: z.number().int().positive().optional().nullable(),
-    notes: z.string().trim().max(5000).optional().nullable(),
-  })
-  .superRefine((data, ctx) => {
-    const hasEmail = data.email != null && String(data.email).trim().length > 0;
-    const hasPhone = data.phone_number != null && String(data.phone_number).trim().length > 0;
-    if (!hasEmail && !hasPhone) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'At least one of email or phone_number is required',
-        path: ['email'],
-      });
-    }
-  });
+export const memberCreateSchema = z.object({
+  email: optionalEmail,
+  phone_number: optionalPhone,
+  password: z.string().min(1).max(255).optional().nullable(),
+  first_name: z.string().trim().min(1, 'first_name is required').max(100),
+  last_name: z.string().trim().max(100).nullish().transform((v) => v ?? ''),
+  gender: z.string().trim().min(1, 'gender is required').max(32),
+  date_of_birth: z.string().trim().min(1).optional().nullable(),
+  address: z.string().trim().max(2000).optional().nullable(),
+  assigned_trainer_id: z.number().int().positive().optional().nullable(),
+  notes: z.string().trim().max(5000).optional().nullable(),
+});
 
 export type MemberCreateDto = z.infer<typeof memberCreateSchema>;
 
@@ -49,7 +38,7 @@ export const memberUpdateSchema = z
     email: optionalEmail,
     phone_number: optionalPhone,
     first_name: z.string().trim().min(1).max(100).optional(),
-    last_name: z.string().trim().min(1).max(100).optional(),
+    last_name: z.string().trim().max(100).optional(),
     gender: z.string().trim().min(1, 'gender cannot be cleared').max(32).optional(),
     date_of_birth: z.string().trim().min(1).optional().nullable(),
     address: z.string().trim().max(2000).optional().nullable(),

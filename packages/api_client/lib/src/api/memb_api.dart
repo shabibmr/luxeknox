@@ -23,6 +23,7 @@ import 'package:api_client/src/model/membership_page.dart';
 import 'package:api_client/src/model/membership_product.dart';
 import 'package:api_client/src/model/membership_product_page.dart';
 import 'package:api_client/src/model/membership_product_write.dart';
+import 'package:api_client/src/model/membership_replacement_preview.dart';
 import 'package:api_client/src/model/reject_request.dart';
 
 class MEMBApi {
@@ -673,6 +674,92 @@ class MEMBApi {
     }
 
     return Response<MembershipProduct>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Pro-rated credit preview for replacing a member&#39;s current membership
+  /// 
+  ///
+  /// Parameters:
+  /// * [memberId] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [MembershipReplacementPreview] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<MembershipReplacementPreview>> getMembershipReplacementPreview({ 
+    required int memberId,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/memberships/replacement-preview';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      r'member_id': encodeQueryParameter(_serializers, memberId, const FullType(int)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    MembershipReplacementPreview? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(MembershipReplacementPreview),
+      ) as MembershipReplacementPreview;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<MembershipReplacementPreview>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

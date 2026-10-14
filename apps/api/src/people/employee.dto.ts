@@ -1,12 +1,13 @@
 import { z } from 'zod';
+import { blankToNull } from './credentials';
 import { EMPLOYEE_STATUSES } from '../platform/db/schema/employees';
 
 export const employeeCreateSchema = z.object({
-  email: z.string().trim().email().max(255),
-  phone_number: z.string().trim().min(1).max(32).optional().nullable(),
+  email: z.preprocess(blankToNull, z.string().trim().email().max(255).optional().nullable()),
+  phone_number: z.string().trim().min(1, 'phone_number is required').max(32),
   password: z.string().min(1).max(255).optional().nullable(),
   first_name: z.string().trim().min(1).max(100),
-  last_name: z.string().trim().min(1).max(100),
+  last_name: z.string().trim().max(100).nullish().transform((v) => v ?? ''),
   gender: z.string().trim().min(1, 'gender is required').max(32),
   job_title: z.string().trim().max(150).optional().nullable(),
   department: z.string().trim().max(150).optional().nullable(),
@@ -23,7 +24,7 @@ export const employeeUpdateSchema = z
     department: z.string().trim().max(150).optional().nullable(),
     hire_date: z.string().trim().min(1).optional().nullable(),
     first_name: z.string().trim().min(1).max(100).optional(),
-    last_name: z.string().trim().min(1).max(100).optional(),
+    last_name: z.string().trim().max(100).optional(),
     gender: z.string().trim().min(1, 'gender cannot be cleared').max(32).optional(),
   })
   .strict();

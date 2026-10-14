@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, count, desc, eq, gte, lte, ne, sql, type SQL } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/mysql-core';
 import { BaseRepository } from '../platform/db/base.repository';
 import {
   membershipExtensions,
@@ -36,7 +37,14 @@ export interface MembershipFilterParams {
 
 export interface MembershipWithProduct extends Membership {
   product: MembershipProduct | null;
+  partner_member_id: number | null;
+  partner_member_name: string | null;
 }
+
+/** Self-joins for the partner's membership row and member record. */
+const partnerMemberships = alias(memberships, 'partner_memberships');
+const partnerMembers = alias(members, 'partner_members');
+const partnerMemberNameSql = sql<string | null>`concat(${partnerMembers.first_name}, ' ', ${partnerMembers.last_name})`;
 
 @Injectable()
 export class MembershipRepository extends BaseRepository<
@@ -85,9 +93,16 @@ export class MembershipRepository extends BaseRepository<
     const needsMemberJoin = params.scope.type === 'trainer';
 
     let rowsQuery = db
-      .select({ membership: memberships, product: membershipProducts })
+      .select({
+        membership: memberships,
+        product: membershipProducts,
+        partner_member_id: partnerMemberships.member_id,
+        partner_member_name: partnerMemberNameSql,
+      })
       .from(memberships)
-      .leftJoin(membershipProducts, eq(memberships.product_id, membershipProducts.id));
+      .leftJoin(membershipProducts, eq(memberships.product_id, membershipProducts.id))
+      .leftJoin(partnerMemberships, eq(memberships.partner_membership_id, partnerMemberships.id))
+      .leftJoin(partnerMembers, eq(partnerMemberships.member_id, partnerMembers.id));
     let countQuery = db.select({ value: sql<number>`count(*)` }).from(memberships);
 
     if (needsMemberJoin) {
@@ -105,7 +120,12 @@ export class MembershipRepository extends BaseRepository<
     ]);
 
     return {
-      rows: rows.map((row: any) => ({ ...row.membership, product: row.product ?? null })),
+      rows: rows.map((row: any) => ({
+        ...row.membership,
+        product: row.product ?? null,
+        partner_member_id: row.partner_member_id ?? null,
+        partner_member_name: row.partner_member_name ?? null,
+      })),
       total: Number(countRows[0]?.value ?? 0),
     };
   }
@@ -113,14 +133,26 @@ export class MembershipRepository extends BaseRepository<
   async findByIdWithProduct(id: number): Promise<MembershipWithProduct | null> {
     const db = this.getDb() as any;
     const rows = await db
-      .select({ membership: memberships, product: membershipProducts })
+      .select({
+        membership: memberships,
+        product: membershipProducts,
+        partner_member_id: partnerMemberships.member_id,
+        partner_member_name: partnerMemberNameSql,
+      })
       .from(memberships)
       .leftJoin(membershipProducts, eq(memberships.product_id, membershipProducts.id))
+      .leftJoin(partnerMemberships, eq(memberships.partner_membership_id, partnerMemberships.id))
+      .leftJoin(partnerMembers, eq(partnerMemberships.member_id, partnerMembers.id))
       .where(eq(memberships.id, id))
       .limit(1);
     const row = rows[0];
     if (!row) return null;
-    return { ...row.membership, product: row.product ?? null };
+    return {
+      ...row.membership,
+      product: row.product ?? null,
+      partner_member_id: row.partner_member_id ?? null,
+      partner_member_name: row.partner_member_name ?? null,
+    };
   }
 
   /** FR-MEMB-006: at most one active/frozen membership per member. */
@@ -290,5 +322,31 @@ export class MembershipRepository extends BaseRepository<
     const db = this.getDb() as any;
     const result = await db.insert(membershipExtensions).values(values);
     return Number(result?.[0]?.insertId ?? 0);
+  }
+
+  /** CM-04: link a membership row to its couple partner. */
+  async setPartner(id: number, partnerId: number): Promise<void> {
+    const db = this.getDb() as any;
+    await db
+      .update(memberships)
+      .set({ partner_membership_id: partnerId })
+      .where(eq(memberships.id, id));
+  }
+
+  /** CM-04: loads the other half of a couple membership, or null for a single membership. */
+  async findPartner(membership: Membership): Promise<Membership | null> {
+    if (membership.partner_membership_id == null) {
+      return null;
+    }
+    return this.findById(membership.partner_membership_id);
+  }
+
+  /** CM-04: cross-links twin freeze rows created for a couple membership. */
+  async setPairedFreeze(freezeId: number, pairedId: number): Promise<void> {
+    const db = this.getDb() as any;
+    await db
+      .update(membershipFreezes)
+      .set({ paired_freeze_id: pairedId })
+      .where(eq(membershipFreezes.id, freezeId));
   }
 }

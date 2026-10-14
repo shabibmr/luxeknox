@@ -58,44 +58,36 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
 
   bool _validateStep0(AddMemberWizardState state) {
     final first = _firstNameController.text.trim();
-    final last = _lastNameController.text.trim();
     final gender = state.input.gender?.trim() ?? '';
     String? firstErr;
-    String? lastErr;
     String? genderErr;
 
     if (first.isEmpty) firstErr = PeopleStrings.firstNameRequired;
-    if (last.isEmpty) lastErr = PeopleStrings.lastNameRequired;
     if (gender.isEmpty) genderErr = PeopleStrings.genderRequired;
 
     setState(() {
       _firstNameError = firstErr;
-      _lastNameError = lastErr;
+      _lastNameError = null;
       _genderError = genderErr;
     });
 
-    return firstErr == null && lastErr == null && genderErr == null;
+    return firstErr == null && genderErr == null;
   }
 
   bool _validateStep1() {
     final email = _emailController.text.trim();
-    final phone = _phoneController.text.trim();
     String? emailErr;
-    String? phoneErr;
 
-    if (email.isEmpty && phone.isEmpty) {
-      emailErr = PeopleStrings.emailOrPhoneRequired;
-      phoneErr = PeopleStrings.emailOrPhoneRequired;
-    } else if (email.isNotEmpty && !_isValidEmail(email)) {
+    if (email.isNotEmpty && !_isValidEmail(email)) {
       emailErr = PeopleStrings.invalidEmail;
     }
 
     setState(() {
       _emailError = emailErr;
-      _phoneError = phoneErr;
+      _phoneError = null;
     });
 
-    return emailErr == null && phoneErr == null;
+    return emailErr == null;
   }
 
   void _onStepContinue(AddMemberWizardCubit cubit, AddMemberWizardState state) {

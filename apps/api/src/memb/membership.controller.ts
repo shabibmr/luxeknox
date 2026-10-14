@@ -9,6 +9,7 @@ import {
   membershipCreateSchema,
   membershipExtensionWriteSchema,
   membershipFreezeWriteSchema,
+  membershipReplacementPreviewQuerySchema,
   membershipUpgradeRequestSchema,
   type MembershipActionRequestDto,
   type MembershipCreateDto,
@@ -29,6 +30,19 @@ export class MembershipResponseDto {
   @ApiProperty({ type: String, nullable: true }) locker_number!: string | null;
   @ApiProperty({ type: Boolean }) auto_renew!: boolean;
   @ApiProperty({ type: Number }) row_version!: number;
+  @ApiProperty({ type: Number, nullable: true }) partner_membership_id!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) partner_member_id!: number | null;
+  @ApiProperty({ type: String, nullable: true }) partner_member_name!: string | null;
+}
+
+export class MembershipReplacementPreviewResponseDto {
+  @ApiProperty({ type: Number }) membership_id!: number;
+  @ApiProperty({ type: String }) product_name!: string;
+  @ApiProperty({ type: String }) status!: string;
+  @ApiProperty({ type: String }) end_date!: string;
+  @ApiProperty({ type: Number }) remaining_days!: number;
+  @ApiProperty({ type: Boolean }) is_couple!: boolean;
+  @ApiProperty({ type: String }) suggested_credit!: string;
 }
 
 @ApiTags('MEMB')
@@ -58,6 +72,21 @@ export class MembershipController {
     @CurrentUser() currentUser: AuthenticatedUser,
   ) {
     return this.service.create(dto, currentUser);
+  }
+
+  @Get('memberships/replacement-preview')
+  @RequirePermission('memberships.create')
+  @ApiOperation({
+    operationId: 'getMembershipReplacementPreview',
+    summary: 'Pro-rated credit preview for replacing a member\'s current membership',
+  })
+  @ApiQuery({ name: 'member_id', required: true, type: Number })
+  @ApiResponse({ status: 200, description: 'OK', type: MembershipReplacementPreviewResponseDto })
+  @ApiResponse({ status: 404, description: 'No active or frozen membership to replace' })
+  async getReplacementPreview(
+    @Query(new ZodValidationPipe(membershipReplacementPreviewQuerySchema)) query: { member_id: number },
+  ) {
+    return this.service.getReplacementPreview(query.member_id);
   }
 
   @Get('memberships/:id')

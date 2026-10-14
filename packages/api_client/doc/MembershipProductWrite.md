@@ -8,6 +8,7 @@ import 'package:api_client/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**packageType** | [**MembershipPackageType**](MembershipPackageType.md) |  | 
 **name** | **String** |  | 
 **code** | **String** |  | 
 **description** | **String** |  | [optional] 

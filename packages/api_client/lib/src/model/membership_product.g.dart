@@ -14,6 +14,8 @@ class _$MembershipProduct extends MembershipProduct {
   @override
   final String code;
   @override
+  final MembershipPackageType packageType;
+  @override
   final String? description;
   @override
   final int durationDays;
@@ -38,6 +40,7 @@ class _$MembershipProduct extends MembershipProduct {
       {required this.id,
       required this.name,
       required this.code,
+      required this.packageType,
       this.description,
       required this.durationDays,
       required this.basePrice,
@@ -62,6 +65,7 @@ class _$MembershipProduct extends MembershipProduct {
         id == other.id &&
         name == other.name &&
         code == other.code &&
+        packageType == other.packageType &&
         description == other.description &&
         durationDays == other.durationDays &&
         basePrice == other.basePrice &&
@@ -78,6 +82,7 @@ class _$MembershipProduct extends MembershipProduct {
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
     _$hash = $jc(_$hash, code.hashCode);
+    _$hash = $jc(_$hash, packageType.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
     _$hash = $jc(_$hash, durationDays.hashCode);
     _$hash = $jc(_$hash, basePrice.hashCode);
@@ -96,6 +101,7 @@ class _$MembershipProduct extends MembershipProduct {
           ..add('id', id)
           ..add('name', name)
           ..add('code', code)
+          ..add('packageType', packageType)
           ..add('description', description)
           ..add('durationDays', durationDays)
           ..add('basePrice', basePrice)
@@ -123,6 +129,11 @@ class MembershipProductBuilder
   String? _code;
   String? get code => _$this._code;
   set code(String? code) => _$this._code = code;
+
+  MembershipPackageType? _packageType;
+  MembershipPackageType? get packageType => _$this._packageType;
+  set packageType(MembershipPackageType? packageType) =>
+      _$this._packageType = packageType;
 
   String? _description;
   String? get description => _$this._description;
@@ -171,6 +182,7 @@ class MembershipProductBuilder
       _id = $v.id;
       _name = $v.name;
       _code = $v.code;
+      _packageType = $v.packageType;
       _description = $v.description;
       _durationDays = $v.durationDays;
       _basePrice = $v.basePrice;
@@ -208,6 +220,8 @@ class MembershipProductBuilder
                 name, r'MembershipProduct', 'name'),
             code: BuiltValueNullFieldError.checkNotNull(
                 code, r'MembershipProduct', 'code'),
+            packageType: BuiltValueNullFieldError.checkNotNull(
+                packageType, r'MembershipProduct', 'packageType'),
             description: description,
             durationDays: BuiltValueNullFieldError.checkNotNull(
                 durationDays, r'MembershipProduct', 'durationDays'),

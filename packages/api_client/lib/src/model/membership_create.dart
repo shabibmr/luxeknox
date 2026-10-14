@@ -18,6 +18,9 @@ part 'membership_create.g.dart';
 /// * [paymentMethodId] 
 /// * [lockerNumber] 
 /// * [autoRenew] 
+/// * [partnerMemberId] - Required for a couple product; rejected for a single product.
+/// * [replacePartnerMembership] - Must be true when the partner has an active or frozen single membership; it is cancelled.
+/// * [discountAmount] - Between 0 and the product base price.
 @BuiltValue()
 abstract class MembershipCreate implements Built<MembershipCreate, MembershipCreateBuilder> {
   @BuiltValueField(wireName: r'member_id')
@@ -37,6 +40,18 @@ abstract class MembershipCreate implements Built<MembershipCreate, MembershipCre
 
   @BuiltValueField(wireName: r'auto_renew')
   bool? get autoRenew;
+
+  /// Required for a couple product; rejected for a single product.
+  @BuiltValueField(wireName: r'partner_member_id')
+  int? get partnerMemberId;
+
+  /// Must be true when the partner has an active or frozen single membership; it is cancelled.
+  @BuiltValueField(wireName: r'replace_partner_membership')
+  bool? get replacePartnerMembership;
+
+  /// Between 0 and the product base price.
+  @BuiltValueField(wireName: r'discount_amount')
+  String? get discountAmount;
 
   MembershipCreate._();
 
@@ -93,6 +108,27 @@ class _$MembershipCreateSerializer implements PrimitiveSerializer<MembershipCrea
       yield serializers.serialize(
         object.autoRenew,
         specifiedType: const FullType(bool),
+      );
+    }
+    if (object.partnerMemberId != null) {
+      yield r'partner_member_id';
+      yield serializers.serialize(
+        object.partnerMemberId,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.replacePartnerMembership != null) {
+      yield r'replace_partner_membership';
+      yield serializers.serialize(
+        object.replacePartnerMembership,
+        specifiedType: const FullType(bool),
+      );
+    }
+    if (object.discountAmount != null) {
+      yield r'discount_amount';
+      yield serializers.serialize(
+        object.discountAmount,
+        specifiedType: const FullType(String),
       );
     }
   }
@@ -161,6 +197,30 @@ class _$MembershipCreateSerializer implements PrimitiveSerializer<MembershipCrea
           ) as bool?;
           if (valueDes == null) continue;
           result.autoRenew = valueDes;
+          break;
+        case r'partner_member_id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.partnerMemberId = valueDes;
+          break;
+        case r'replace_partner_membership':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(bool),
+          ) as bool?;
+          if (valueDes == null) continue;
+          result.replacePartnerMembership = valueDes;
+          break;
+        case r'discount_amount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.discountAmount = valueDes;
           break;
         default:
           unhandled.add(key);

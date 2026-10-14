@@ -9,7 +9,7 @@ import 'package:built_value/serializer.dart';
 
 part 'member_create.g.dart';
 
-/// Supply email or phone_number (at least one identifier) plus password for login creation (FR-AUTH-008). Profile fields create the members row in the same transaction; photo/waiver/emergency contact are follow-up routes (FR-PEOPLE-001 MVP carve-out). 
+/// email, phone_number and last_name are optional; a member may be created with no login identifier. Supply password for login creation (FR-AUTH-008). Profile fields create the members row in the same transaction; photo/waiver/emergency contact are follow-up routes (FR-PEOPLE-001 MVP carve-out). 
 ///
 /// Properties:
 /// * [email] 
@@ -37,7 +37,7 @@ abstract class MemberCreate implements Built<MemberCreate, MemberCreateBuilder> 
   String get firstName;
 
   @BuiltValueField(wireName: r'last_name')
-  String get lastName;
+  String? get lastName;
 
   @BuiltValueField(wireName: r'gender')
   String get gender;
@@ -103,11 +103,13 @@ class _$MemberCreateSerializer implements PrimitiveSerializer<MemberCreate> {
       object.firstName,
       specifiedType: const FullType(String),
     );
-    yield r'last_name';
-    yield serializers.serialize(
-      object.lastName,
-      specifiedType: const FullType(String),
-    );
+    if (object.lastName != null) {
+      yield r'last_name';
+      yield serializers.serialize(
+        object.lastName,
+        specifiedType: const FullType(String),
+      );
+    }
     yield r'gender';
     yield serializers.serialize(
       object.gender,
@@ -198,8 +200,9 @@ class _$MemberCreateSerializer implements PrimitiveSerializer<MemberCreate> {
         case r'last_name':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.lastName = valueDes;
           break;
         case r'gender':

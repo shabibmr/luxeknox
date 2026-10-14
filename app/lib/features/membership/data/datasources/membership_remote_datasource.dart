@@ -29,6 +29,8 @@ abstract class MembershipRemoteDataSource {
 
   Future<api.Membership> createMembership(api.MembershipCreate create);
 
+  Future<api.MembershipReplacementPreview> getReplacementPreview(int memberId);
+
   Future<api.MembershipHistoryPage> getHistory(
     int membershipId, {
     String? cursor,
@@ -142,6 +144,15 @@ class MembershipRemoteDataSourceImpl implements MembershipRemoteDataSource {
   @override
   Future<api.Membership> createMembership(api.MembershipCreate create) async {
     return _unwrap(await _membApi.createMembership(membershipCreate: create));
+  }
+
+  @override
+  Future<api.MembershipReplacementPreview> getReplacementPreview(
+    int memberId,
+  ) async {
+    return _unwrap(
+      await _membApi.getMembershipReplacementPreview(memberId: memberId),
+    );
   }
 
   @override

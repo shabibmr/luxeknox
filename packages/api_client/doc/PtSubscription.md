@@ -24,6 +24,11 @@ Name | Type | Description | Notes
 **sessionsPerWeek** | **int** |  | 
 **trainerName** | **String** |  | 
 **slotLabel** | **String** | e.g. \"17:00-18:00\" | 
+**packageType** | [**PtPackageType**](PtPackageType.md) |  | 
+**isPrimary** | **bool** | True for a single subscription and for the primary row of a couple pair. | 
+**partnerSubscriptionId** | **int** | Set on both rows of a couple PT (see ADR-0011). | [optional] 
+**partnerMemberId** | **int** |  | [optional] 
+**partnerMemberName** | **String** | Partner display name; member-scoped reads expose only this partner field. | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

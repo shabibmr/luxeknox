@@ -7,12 +7,14 @@ import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/core/usecase/usecase.dart';
 import 'package:luxeknox/features/payments/domain/entities/payment_method.dart';
 import 'package:luxeknox/features/payments/domain/usecases/get_payment_methods_usecase.dart';
+import 'package:luxeknox/features/people/domain/entities/person.dart';
 import 'package:luxeknox/features/pt/domain/entities/pt_product.dart';
 import 'package:luxeknox/features/pt/domain/entities/pt_schedule_grid.dart';
 import 'package:luxeknox/features/pt/domain/entities/pt_subscription.dart';
 import 'package:luxeknox/features/pt/domain/repositories/pt_repository.dart';
 import 'package:luxeknox/features/pt/domain/usecases/pt_usecases.dart';
 import 'package:luxeknox/features/pt/presentation/cubit/sell_pt_cubit.dart';
+import 'package:luxeknox/features/pt/presentation/pt_strings.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGetPtProducts extends Mock implements GetPtProductsUseCase {}
@@ -25,12 +27,16 @@ class MockPurchase extends Mock implements PurchasePtUseCase {}
 
 class MockReplan extends Mock implements ReplanPtUseCase {}
 
+class MockGetPtSummary extends Mock implements GetMemberPtSummaryUseCase {}
+
+
 void main() {
   late MockGetPtProducts getProducts;
   late MockGetPaymentMethods getPaymentMethods;
   late MockGetGrid getGrid;
   late MockPurchase purchase;
   late MockReplan replan;
+  late MockGetPtSummary getPtSummary;
 
   const product = PtProduct(
     id: 3,
@@ -39,6 +45,15 @@ void main() {
     durationDays: 28,
     basePrice: '3000.00',
     isActive: true,
+  );
+  const coupleProduct = PtProduct(
+    id: 5,
+    name: 'Couple PT 1M',
+    code: 'CPT1',
+    durationDays: 28,
+    basePrice: '6999.00',
+    isActive: true,
+    packageType: PtPackageType.couple,
   );
   const archived = PtProduct(
     id: 4,
@@ -54,7 +69,13 @@ void main() {
     isDigital: false,
     isActive: true,
   );
-
+  const partner = Person(
+    id: 99,
+    userId: 199,
+    membershipNumber: 'M-99',
+    firstName: 'Priya',
+    lastName: 'Shah',
+  );
   final grid = PtScheduleGrid(
     startDate: DateTime(2026, 10, 5),
     endDate: DateTime(2026, 11, 2),
@@ -131,18 +152,29 @@ void main() {
     getGrid = MockGetGrid();
     purchase = MockPurchase();
     replan = MockReplan();
+    getPtSummary = MockGetPtSummary();
     when(
       () => getProducts(any()),
-    ).thenAnswer((_) async => const Right([product, archived]));
+    ).thenAnswer((_) async => const Right([product, coupleProduct, archived]));
     when(
       () => getPaymentMethods(any()),
     ).thenAnswer((_) async => const Right([cash]));
     when(() => getGrid(any())).thenAnswer((_) async => Right(grid));
     when(() => purchase(any())).thenAnswer((_) async => Right(sold));
+    when(() => getPtSummary(any())).thenAnswer(
+      (_) async => const Right(MemberPtSummary()),
+    );
   });
 
-  SellPtCubit build() =>
-      SellPtCubit(getProducts, getPaymentMethods, getGrid, purchase, replan);
+  SellPtCubit build() => SellPtCubit(
+    getProducts,
+    getPaymentMethods,
+    getGrid,
+    purchase,
+    replan,
+    null,
+    getPtSummary,
+  );
 
   test(
     'init offers only active packages and preselects the only payment method',
@@ -150,7 +182,7 @@ void main() {
       final cubit = build();
       await cubit.init(42);
       expect(cubit.state.status, LoadStatus.success);
-      expect(cubit.state.products, [product]);
+      expect(cubit.state.products, [product, coupleProduct]);
       expect(cubit.state.paymentMethodId, '1');
     },
   );
@@ -454,5 +486,130 @@ void main() {
     expect(p.slotStart, '18:00:00');
     expect(p.reason, 'moved shifts');
     expect(cubit.state.result, sold);
+  });
+
+  group('couple package', () {
+    Future<SellPtCubit> readyCouple({Person? withPartner}) async {
+      final cubit = build();
+      await cubit.init(42);
+      cubit
+        ..selectProduct(coupleProduct)
+        ..setStartDate(DateTime(2026, 10, 5))
+        ..toggleWeekday(1)
+        ..toggleWeekday(3)
+        ..toggleWeekday(5);
+      await Future<void>.delayed(Duration.zero);
+      if (withPartner != null) {
+        await cubit.selectPartner(withPartner);
+        await Future<void>.delayed(Duration.zero);
+      }
+      return cubit;
+    }
+
+    test('couple product without a partner cannot be submitted', () async {
+      final cubit = await readyCouple();
+      cubit.selectSlot(7, '17:00:00');
+      expect(cubit.state.isCoupleSelected, isTrue);
+      expect(cubit.state.canSubmit, isFalse);
+    });
+
+    test('eligible partner enables submit and is sent on purchase', () async {
+      final cubit = await readyCouple(withPartner: partner);
+      expect(cubit.state.partnerCheck, isA<SellPtPartnerCheckOk>());
+      cubit.selectSlot(7, '17:00:00');
+      expect(cubit.state.canSubmit, isTrue);
+
+      await cubit.submit();
+      final p =
+          verify(() => purchase(captureAny())).captured.single
+              as PurchasePtParams;
+      expect(p.partnerMemberId, 99);
+    });
+
+    test('grid params include partnerMemberId when a partner is set', () async {
+      final cubit = await readyCouple(withPartner: partner);
+      final params =
+          verify(() => getGrid(captureAny())).captured.last
+              as GetPtScheduleGridParams;
+      expect(params.partnerMemberId, 99);
+      expect(cubit.state.partner?.id, 99);
+    });
+
+    test('open PT on the partner blocks the sale', () async {
+      when(() => getPtSummary(any())).thenAnswer(
+        (_) async => Right(
+          MemberPtSummary(
+            current: PtSubscription(
+              id: 1,
+              memberId: 99,
+              ptProductId: 3,
+              trainerId: 7,
+              startDate: DateTime(2026, 9, 1),
+              endDate: DateTime(2026, 11, 3),
+              weekdays: const [1],
+              slotStart: '17:00:00',
+              status: PtSubscriptionStatus.active,
+              rowVersion: 1,
+              productName: 'PT Monthly 3x',
+              sessionsPerWeek: 1,
+              trainerName: 'Rina S',
+              slotLabel: '17:00-18:00',
+            ),
+          ),
+        ),
+      );
+      final cubit = await readyCouple(withPartner: partner);
+      final check = cubit.state.partnerCheck;
+      expect(check, isA<SellPtPartnerCheckBlocked>());
+      expect(
+        (check as SellPtPartnerCheckBlocked).message,
+        PtStrings.partnerHasOpenPt('Priya Shah', '03 Nov'),
+      );
+      cubit.selectSlot(7, '17:00:00');
+      expect(cubit.state.canSubmit, isFalse);
+    });
+
+    test('a partner with no membership is not blocked (PT bundles one)', () async {
+      final cubit = await readyCouple(withPartner: partner);
+      expect(cubit.state.partnerCheck, isA<SellPtPartnerCheckOk>());
+    });
+
+    test('selecting a single package clears the partner', () async {
+      final cubit = await readyCouple(withPartner: partner);
+      expect(cubit.state.partner, isNotNull);
+
+      cubit.selectProduct(product);
+      expect(cubit.state.partner, isNull);
+      expect(cubit.state.partnerCheck, isNull);
+      expect(cubit.state.isCoupleSelected, isFalse);
+    });
+
+    test('changing the partner mints a new purchase idempotency key', () async {
+      when(
+        () => purchase(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      final cubit = await readyCouple(withPartner: partner);
+      cubit.selectSlot(7, '17:00:00');
+      await cubit.submit();
+
+      const other = Person(
+        id: 100,
+        userId: 200,
+        membershipNumber: 'M-100',
+        firstName: 'Omar',
+        lastName: 'Ali',
+      );
+      await cubit.selectPartner(other);
+      await Future<void>.delayed(Duration.zero);
+      cubit.selectSlot(7, '17:00:00');
+      await cubit.submit();
+
+      final keys = verify(() => purchase(captureAny())).captured
+          .cast<PurchasePtParams>()
+          .map((p) => p.idempotencyKey)
+          .toList();
+      expect(keys, hasLength(2));
+      expect(keys.first, isNot(keys.last));
+    });
   });
 }

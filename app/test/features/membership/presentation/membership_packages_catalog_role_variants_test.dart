@@ -2,6 +2,7 @@ import 'package:luxeknox/core/di/injector.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/features/membership/domain/entities/membership_product.dart';
 import 'package:luxeknox/features/membership/presentation/cubit/membership_packages_catalog_cubit.dart';
+import 'package:luxeknox/features/membership/presentation/membership_strings.dart';
 import 'package:luxeknox/features/membership/presentation/screens/membership_packages_catalog_screen.dart';
 import 'package:luxeknox/session/domain/entities/capabilities.dart';
 import 'package:luxeknox/session/domain/entities/principal.dart';
@@ -192,5 +193,41 @@ void main() {
     await tester.pumpWidget(wrap(memberPrincipal, readOnly));
     await tester.pumpAndSettle();
     expect(find.text('GOLD · 30d · 99.00'), findsOneWidget);
+  });
+
+  testWidgets('couple package rows show a Couple chip', (tester) async {
+    final coupleCubit = MockMembershipPackagesCatalogCubit();
+    when(
+      () => coupleCubit.load(activeOnly: any(named: 'activeOnly')),
+    ).thenAnswer((_) async {});
+    whenListen(
+      coupleCubit,
+      const Stream<MembershipPackagesCatalogState>.empty(),
+      initialState: const MembershipPackagesCatalogState(
+        status: LoadStatus.success,
+        items: [
+          MembershipProduct(
+            id: '11',
+            name: 'Couple Monthly',
+            code: 'CPL-M',
+            durationDays: 30,
+            basePrice: '199.00',
+            isActive: true,
+            packageType: MembershipPackageType.couple,
+          ),
+          product,
+        ],
+      ),
+    );
+    await getIt.reset();
+    getIt.registerFactory<MembershipPackagesCatalogCubit>(() => coupleCubit);
+
+    await tester.pumpWidget(wrap(memberPrincipal, readOnly));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Chip), findsOneWidget);
+    expect(find.text(MembershipStrings.coupleChip), findsOneWidget);
+    expect(find.text('Couple Monthly'), findsOneWidget);
+    expect(find.text('Gold'), findsOneWidget);
   });
 }

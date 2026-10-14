@@ -189,7 +189,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getPtScheduleGrid**
-> PtScheduleGrid getPtScheduleGrid(memberId, ptProductId, startDate, weekdays, excludeSubscriptionId)
+> PtScheduleGrid getPtScheduleGrid(memberId, ptProductId, startDate, weekdays, partnerMemberId, excludeSubscriptionId)
 
 Hours × active trainers occupancy for a PT package, start date and weekdays
 
@@ -204,10 +204,11 @@ final int memberId = 789; // int |
 final int ptProductId = 789; // int | 
 final Date startDate = 2013-10-20; // Date | 
 final String weekdays = weekdays_example; // String | Comma-separated 0=Sunday … 6=Saturday, e.g. \"1,3,5\"
+final int partnerMemberId = 789; // int | Second member when selling a couple PT. Cells busy for either member show as occupied. On re-plan (`exclude_subscription_id`), the partner is resolved from the subscription when omitted. 
 final int excludeSubscriptionId = 789; // int | 
 
 try {
-    final response = api.getPtScheduleGrid(memberId, ptProductId, startDate, weekdays, excludeSubscriptionId);
+    final response = api.getPtScheduleGrid(memberId, ptProductId, startDate, weekdays, partnerMemberId, excludeSubscriptionId);
     print(response);
 } on DioException catch (e) {
     print('Exception when calling PTApi->getPtScheduleGrid: $e\n');
@@ -222,6 +223,7 @@ Name | Type | Description  | Notes
  **ptProductId** | **int**|  | 
  **startDate** | **Date**|  | 
  **weekdays** | **String**| Comma-separated 0=Sunday … 6=Saturday, e.g. \"1,3,5\" | 
+ **partnerMemberId** | **int**| Second member when selling a couple PT. Cells busy for either member show as occupied. On re-plan (`exclude_subscription_id`), the partner is resolved from the subscription when omitted.  | [optional] 
  **excludeSubscriptionId** | **int**|  | [optional] 
 
 ### Return type
@@ -281,7 +283,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **listPtProducts**
-> PtProductPage listPtProducts(limit, offset, q)
+> PtProductPage listPtProducts(limit, offset, q, packageType)
 
 Personal Training package catalog
 
@@ -293,9 +295,10 @@ final api = ApiClient().getPTApi();
 final int limit = 56; // int | Default from gym_settings pagination.default_page_size.
 final int offset = 56; // int | Admin tables that need page numbers.
 final String q = q_example; // String | Case-insensitive search (FR-API-014).
+final PtPackageType packageType = ; // PtPackageType | Filter by single or couple packages.
 
 try {
-    final response = api.listPtProducts(limit, offset, q);
+    final response = api.listPtProducts(limit, offset, q, packageType);
     print(response);
 } on DioException catch (e) {
     print('Exception when calling PTApi->listPtProducts: $e\n');
@@ -309,6 +312,7 @@ Name | Type | Description  | Notes
  **limit** | **int**| Default from gym_settings pagination.default_page_size. | [optional] 
  **offset** | **int**| Admin tables that need page numbers. | [optional] 
  **q** | **String**| Case-insensitive search (FR-API-014). | [optional] 
+ **packageType** | [**PtPackageType**](.md)| Filter by single or couple packages. | [optional] 
 
 ### Return type
 

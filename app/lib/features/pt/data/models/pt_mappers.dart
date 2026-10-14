@@ -6,6 +6,16 @@ import '../../domain/entities/pt_product.dart';
 import '../../domain/entities/pt_schedule_grid.dart';
 import '../../domain/entities/pt_subscription.dart';
 
+PtPackageType _packageTypeFromApi(api.PtPackageType type) =>
+    type == api.PtPackageType.couple
+    ? PtPackageType.couple
+    : PtPackageType.single;
+
+api.PtPackageType _packageTypeToApi(PtPackageType type) =>
+    type == PtPackageType.couple
+    ? api.PtPackageType.couple
+    : api.PtPackageType.single;
+
 extension PtProductApiX on api.PtProduct {
   PtProduct toDomain() => PtProduct(
     id: id,
@@ -16,6 +26,7 @@ extension PtProductApiX on api.PtProduct {
     basePrice: basePrice,
     taxPercentage: taxPercentage,
     isActive: isActive,
+    packageType: _packageTypeFromApi(packageType),
   );
 }
 
@@ -28,7 +39,8 @@ extension PtProductDomainX on PtProduct {
       ..durationDays = durationDays
       ..basePrice = basePrice
       ..taxPercentage = taxPercentage
-      ..isActive = isActive,
+      ..isActive = isActive
+      ..packageType = _packageTypeToApi(packageType),
   );
 }
 
@@ -48,6 +60,11 @@ extension PtSubscriptionApiX on api.PtSubscription {
     sessionsPerWeek: sessionsPerWeek,
     trainerName: trainerName,
     slotLabel: slotLabel,
+    packageType: _packageTypeFromApi(packageType),
+    isPrimary: isPrimary,
+    partnerSubscriptionId: partnerSubscriptionId,
+    partnerMemberId: partnerMemberId,
+    partnerMemberName: partnerMemberName,
   );
 }
 

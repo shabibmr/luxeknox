@@ -174,10 +174,12 @@ import 'package:api_client/src/model/membership_freeze_page.dart';
 import 'package:api_client/src/model/membership_freeze_write.dart';
 import 'package:api_client/src/model/membership_history.dart';
 import 'package:api_client/src/model/membership_history_page.dart';
+import 'package:api_client/src/model/membership_package_type.dart';
 import 'package:api_client/src/model/membership_page.dart';
 import 'package:api_client/src/model/membership_product.dart';
 import 'package:api_client/src/model/membership_product_page.dart';
 import 'package:api_client/src/model/membership_product_write.dart';
+import 'package:api_client/src/model/membership_replacement_preview.dart';
 import 'package:api_client/src/model/membership_status.dart';
 import 'package:api_client/src/model/notification.dart';
 import 'package:api_client/src/model/notification_page.dart';
@@ -223,6 +225,7 @@ import 'package:api_client/src/model/progress_photo_write.dart';
 import 'package:api_client/src/model/pt_change_slot_request.dart';
 import 'package:api_client/src/model/pt_grid_cell.dart';
 import 'package:api_client/src/model/pt_grid_trainer.dart';
+import 'package:api_client/src/model/pt_package_type.dart';
 import 'package:api_client/src/model/pt_payment_fields.dart';
 import 'package:api_client/src/model/pt_product.dart';
 import 'package:api_client/src/model/pt_product_page.dart';
@@ -473,10 +476,12 @@ part 'serializers.g.dart';
   MembershipFreezeWrite,
   MembershipHistory,
   MembershipHistoryPage,
+  MembershipPackageType,
   MembershipPage,
   MembershipProduct,
   MembershipProductPage,
   MembershipProductWrite,
+  MembershipReplacementPreview,
   MembershipStatus,
   Notification,
   NotificationPage,
@@ -522,6 +527,7 @@ part 'serializers.g.dart';
   PtChangeSlotRequest,
   PtGridCell,
   PtGridTrainer,
+  PtPackageType,
   PtPaymentFields,$PtPaymentFields,
   PtProduct,
   PtProductPage,

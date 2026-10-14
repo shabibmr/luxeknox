@@ -8,6 +8,10 @@ const moneyString = z
  * Mirrors `docs/openapi/v1.yaml` `#/components/schemas/MembershipProductWrite` field-for-field.
  * Money is always a two-decimal string on the wire (FR-API-005) — never a float.
  */
+export const membershipPackageTypeSchema = z.enum(['single', 'couple']);
+
+export type MembershipPackageType = z.infer<typeof membershipPackageTypeSchema>;
+
 export const membershipProductWriteSchema = z.object({
   name: z.string().trim().min(1, 'name is required'),
   code: z.string().trim().min(1, 'code is required'),
@@ -20,6 +24,7 @@ export const membershipProductWriteSchema = z.object({
   pt_sessions_included: z.number().int().min(0).optional(),
   access_facilities: z.array(z.string()).optional(),
   is_active: z.boolean().optional(),
+  package_type: membershipPackageTypeSchema,
 });
 
 export type MembershipProductWriteDto = z.infer<typeof membershipProductWriteSchema>;
@@ -31,6 +36,7 @@ export type MembershipProductUpdateDto = z.infer<typeof membershipProductUpdateS
 
 export const membershipProductFilterQuerySchema = z.object({
   q: z.string().trim().min(1).optional(),
+  package_type: membershipPackageTypeSchema.optional(),
 });
 
 export type MembershipProductFilterQueryDto = z.infer<typeof membershipProductFilterQuerySchema>;

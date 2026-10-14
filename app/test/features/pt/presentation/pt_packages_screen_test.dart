@@ -121,6 +121,125 @@ void main() {
       expect(saved.code.length, lessThanOrEqualTo(32));
       expect(saved.durationDays, 30);
       expect(saved.basePrice, '4999.00');
+      expect(saved.packageType, PtPackageType.single);
     },
   );
+
+  testWidgets(
+    'create form shows enabled Single/Couple package type toggle',
+    (tester) async {
+      when(
+        () => mockGetProducts(const NoParams()),
+      ).thenAnswer((_) async => const Right(<PtProduct>[]));
+
+      await tester.pumpWidget(const MaterialApp(home: PtPackagesScreen()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SegmentedButton<PtPackageType>), findsOneWidget);
+      expect(find.text(PtStrings.packageTypeSingle), findsOneWidget);
+      expect(find.text(PtStrings.packageTypeCouple), findsOneWidget);
+
+      final toggle = tester.widget<SegmentedButton<PtPackageType>>(
+        find.byType(SegmentedButton<PtPackageType>),
+      );
+      expect(toggle.onSelectionChanged, isNotNull);
+      expect(toggle.selected, equals({PtPackageType.single}));
+    },
+  );
+
+  testWidgets(
+    'edit form shows disabled package type toggle from product',
+    (tester) async {
+      const coupleProduct = PtProduct(
+        id: 2,
+        name: 'Couple PT',
+        code: 'PT-CPL',
+        durationDays: 30,
+        basePrice: '8000.00',
+        isActive: true,
+        packageType: PtPackageType.couple,
+      );
+      when(
+        () => mockGetProducts(const NoParams()),
+      ).thenAnswer((_) async => const Right([coupleProduct]));
+
+      await tester.pumpWidget(const MaterialApp(home: PtPackagesScreen()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Couple PT (PT-CPL)'));
+      await tester.pumpAndSettle();
+
+      final toggle = tester.widget<SegmentedButton<PtPackageType>>(
+        find.byType(SegmentedButton<PtPackageType>),
+      );
+      expect(toggle.onSelectionChanged, isNull);
+      expect(toggle.selected, equals({PtPackageType.couple}));
+    },
+  );
+
+  testWidgets('create submits selected couple package type', (tester) async {
+    when(
+      () => mockGetProducts(const NoParams()),
+    ).thenAnswer((_) async => const Right(<PtProduct>[]));
+    when(() => mockSaveProduct(any())).thenAnswer((invocation) async {
+      final p = invocation.positionalArguments[0] as PtProduct;
+      return Right(p.copyWith());
+    });
+
+    await tester.pumpWidget(const MaterialApp(home: PtPackagesScreen()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, PtStrings.name),
+      'Couple PT 1M',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, PtStrings.durationDays),
+      '30',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, PtStrings.price),
+      '7999.00',
+    );
+
+    await tester.ensureVisible(find.text(PtStrings.packageTypeCouple));
+    await tester.tap(find.text(PtStrings.packageTypeCouple));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.widgetWithText(FilledButton, PtStrings.save));
+    await tester.tap(find.widgetWithText(FilledButton, PtStrings.save));
+    await tester.pumpAndSettle();
+
+    final captured = verify(() => mockSaveProduct(captureAny())).captured;
+    expect(captured.length, 1);
+    final saved = captured.first as PtProduct;
+    expect(saved.packageType, PtPackageType.couple);
+  });
+
+  testWidgets('list shows Couple chip for couple packages', (tester) async {
+    const coupleProduct = PtProduct(
+      id: 2,
+      name: 'Couple PT',
+      code: 'PT-CPL',
+      durationDays: 30,
+      basePrice: '8000.00',
+      isActive: true,
+      packageType: PtPackageType.couple,
+    );
+    when(
+      () => mockGetProducts(const NoParams()),
+    ).thenAnswer((_) async => const Right([tProduct, coupleProduct]));
+
+    await tester.pumpWidget(const MaterialApp(home: PtPackagesScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.text(PtStrings.coupleChip), findsOneWidget);
+    expect(find.widgetWithText(Chip, PtStrings.coupleChip), findsOneWidget);
+  });
 }

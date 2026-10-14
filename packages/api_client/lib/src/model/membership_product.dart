@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:built_collection/built_collection.dart';
+import 'package:api_client/src/model/membership_package_type.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -15,6 +16,7 @@ part 'membership_product.g.dart';
 /// * [id] 
 /// * [name] 
 /// * [code] 
+/// * [packageType] 
 /// * [description] 
 /// * [durationDays] 
 /// * [basePrice] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
@@ -33,6 +35,10 @@ abstract class MembershipProduct implements Built<MembershipProduct, MembershipP
 
   @BuiltValueField(wireName: r'code')
   String get code;
+
+  @BuiltValueField(wireName: r'package_type')
+  MembershipPackageType get packageType;
+  // enum packageTypeEnum {  single,  couple,  };
 
   @BuiltValueField(wireName: r'description')
   String? get description;
@@ -96,6 +102,11 @@ class _$MembershipProductSerializer implements PrimitiveSerializer<MembershipPro
     yield serializers.serialize(
       object.code,
       specifiedType: const FullType(String),
+    );
+    yield r'package_type';
+    yield serializers.serialize(
+      object.packageType,
+      specifiedType: const FullType(MembershipPackageType),
     );
     if (object.description != null) {
       yield r'description';
@@ -190,6 +201,13 @@ class _$MembershipProductSerializer implements PrimitiveSerializer<MembershipPro
             specifiedType: const FullType(String),
           ) as String;
           result.code = valueDes;
+          break;
+        case r'package_type':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(MembershipPackageType),
+          ) as MembershipPackageType;
+          result.packageType = valueDes;
           break;
         case r'description':
           final valueDes = serializers.deserialize(

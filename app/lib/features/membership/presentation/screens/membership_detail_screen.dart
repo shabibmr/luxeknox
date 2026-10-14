@@ -21,6 +21,7 @@ import '../membership_strings.dart';
 import '../widgets/membership_freeze_list.dart';
 import '../widgets/membership_history_list.dart';
 import '../widgets/membership_status_chip.dart';
+import '../../domain/entities/membership.dart';
 import '../../domain/entities/membership_product.dart';
 import '../../domain/usecases/get_membership_products_usecase.dart';
 
@@ -191,13 +192,18 @@ class _MembershipDetailView extends StatelessWidget {
     _showActionError(context, failure, 'extend');
   }
 
-  Future<void> _handleUpgrade(BuildContext context) async {
+  Future<void> _handleUpgrade(BuildContext context, bool isCouple) async {
     List<MembershipProduct> products = [];
     if (getIt.isRegistered<GetMembershipProductsUseCase>()) {
       final res = await getIt<GetMembershipProductsUseCase>()(
         const GetMembershipProductsParams(),
       );
-      res.fold((_) {}, (page) => products = page.items);
+      res.fold(
+        (_) {},
+        (page) => products = page.items
+            .where((p) => p.isCouple == isCouple)
+            .toList(),
+      );
     }
 
     String? selectedProductId = products.isNotEmpty ? products.first.id : null;
@@ -366,6 +372,28 @@ class _MembershipDetailView extends StatelessWidget {
               MembershipStrings.basePriceLabel,
               membership.product!.basePrice,
             ),
+          if (membership.isCouple) ...[
+            _infoRow(
+              MembershipStrings.partnerRowLabel,
+              membership.partnerMemberName ?? MembershipStrings.partnerFallbackName,
+            ),
+            // The primary row is created first, so the partner side is the
+            // row with the higher id. Billing sits on the primary.
+            if (_isPartnerSide(membership))
+              _infoRow(
+                MembershipStrings.billedToLabel,
+                membership.partnerMemberName ??
+                    MembershipStrings.partnerFallbackName,
+              ),
+            if (canApprove || canUpdate)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  MembershipStrings.coupleActionsNote,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+          ],
           if (canApprove || canUpdate) ...[
             const SizedBox(height: 16),
             Wrap(
@@ -390,7 +418,7 @@ class _MembershipDetailView extends StatelessWidget {
                   OutlinedButton(
                     onPressed: actionsLocked
                         ? null
-                        : () => _handleUpgrade(context),
+                        : () => _handleUpgrade(context, membership.isCouple),
                     child: const Text(MembershipStrings.upgrade),
                   ),
                 if (canApprove)
@@ -433,6 +461,12 @@ class _MembershipDetailView extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  bool _isPartnerSide(Membership membership) {
+    final own = int.tryParse(membership.id);
+    final other = int.tryParse(membership.partnerMembershipId ?? '');
+    return own != null && other != null && own > other;
   }
 
   Widget _infoRow(String label, String value) {

@@ -25,10 +25,10 @@ part 'employee_create.g.dart';
 @BuiltValue()
 abstract class EmployeeCreate implements Built<EmployeeCreate, EmployeeCreateBuilder> {
   @BuiltValueField(wireName: r'email')
-  String get email;
+  String? get email;
 
   @BuiltValueField(wireName: r'phone_number')
-  String? get phoneNumber;
+  String get phoneNumber;
 
   @BuiltValueField(wireName: r'password')
   String? get password;
@@ -37,7 +37,7 @@ abstract class EmployeeCreate implements Built<EmployeeCreate, EmployeeCreateBui
   String get firstName;
 
   @BuiltValueField(wireName: r'last_name')
-  String get lastName;
+  String? get lastName;
 
   @BuiltValueField(wireName: r'gender')
   String get gender;
@@ -77,18 +77,18 @@ class _$EmployeeCreateSerializer implements PrimitiveSerializer<EmployeeCreate> 
     EmployeeCreate object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    yield r'email';
-    yield serializers.serialize(
-      object.email,
-      specifiedType: const FullType(String),
-    );
-    if (object.phoneNumber != null) {
-      yield r'phone_number';
+    if (object.email != null) {
+      yield r'email';
       yield serializers.serialize(
-        object.phoneNumber,
+        object.email,
         specifiedType: const FullType(String),
       );
     }
+    yield r'phone_number';
+    yield serializers.serialize(
+      object.phoneNumber,
+      specifiedType: const FullType(String),
+    );
     if (object.password != null) {
       yield r'password';
       yield serializers.serialize(
@@ -101,11 +101,13 @@ class _$EmployeeCreateSerializer implements PrimitiveSerializer<EmployeeCreate> 
       object.firstName,
       specifiedType: const FullType(String),
     );
-    yield r'last_name';
-    yield serializers.serialize(
-      object.lastName,
-      specifiedType: const FullType(String),
-    );
+    if (object.lastName != null) {
+      yield r'last_name';
+      yield serializers.serialize(
+        object.lastName,
+        specifiedType: const FullType(String),
+      );
+    }
     yield r'gender';
     yield serializers.serialize(
       object.gender,
@@ -165,16 +167,16 @@ class _$EmployeeCreateSerializer implements PrimitiveSerializer<EmployeeCreate> 
         case r'email':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.email = valueDes;
           break;
         case r'phone_number':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
+            specifiedType: const FullType(String),
+          ) as String;
           result.phoneNumber = valueDes;
           break;
         case r'password':
@@ -195,8 +197,9 @@ class _$EmployeeCreateSerializer implements PrimitiveSerializer<EmployeeCreate> 
         case r'last_name':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.lastName = valueDes;
           break;
         case r'gender':

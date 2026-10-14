@@ -64,6 +64,9 @@ class _MembershipProductFormBodyState
   );
   late bool _isActive = widget.product?.isActive ?? true;
   late final bool _initialIsActive = _isActive;
+  late MembershipPackageType _packageType =
+      widget.product?.packageType ?? MembershipPackageType.single;
+  late final MembershipPackageType _initialPackageType = _packageType;
 
   bool _isDirty = false;
 
@@ -147,6 +150,7 @@ class _MembershipProductFormBodyState
       ptSessionsIncluded: widget.product?.ptSessionsIncluded,
       accessFacilities: widget.product?.accessFacilities ?? const [],
       isActive: _isActive,
+      packageType: _packageType,
     );
   }
 
@@ -192,7 +196,10 @@ class _MembershipProductFormBodyState
         }
 
         final submitting = state.status == LoadStatus.loading;
-        final dirty = _isDirty || _isActive != _initialIsActive;
+        final dirty =
+            _isDirty ||
+            _isActive != _initialIsActive ||
+            _packageType != _initialPackageType;
         final errorMessage = state.failure == null
             ? null
             : failureMessage(state.failure!);
@@ -270,6 +277,32 @@ class _MembershipProductFormBodyState
                       label: MembershipStrings.taxPercentageLabel,
                       enabled: !submitting,
                       invalidMessage: MembershipStrings.taxPercentageInvalid,
+                    ),
+                    const SizedBox(height: 16),
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: MembershipStrings.packageTypeLabel,
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      child: SegmentedButton<MembershipPackageType>(
+                        segments: const [
+                          ButtonSegment(
+                            value: MembershipPackageType.single,
+                            label: Text(MembershipStrings.packageTypeSingle),
+                          ),
+                          ButtonSegment(
+                            value: MembershipPackageType.couple,
+                            label: Text(MembershipStrings.packageTypeCouple),
+                          ),
+                        ],
+                        selected: {_packageType},
+                        onSelectionChanged: (widget.isEditing || submitting)
+                            ? null
+                            : (values) {
+                                setState(() => _packageType = values.first);
+                              },
+                      ),
                     ),
                     const SizedBox(height: 8),
                     SwitchListTile(

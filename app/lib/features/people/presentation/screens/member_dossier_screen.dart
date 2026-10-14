@@ -201,7 +201,6 @@ class _DossierContentState extends State<_DossierContent> {
         canSellPt(
           userType: userType,
           canCreatePt: context.can('pt_subscriptions.create'),
-          membership: membership,
           pt: state.pt,
         );
     final canChangePt =
@@ -319,6 +318,11 @@ class _DossierContentState extends State<_DossierContent> {
             );
             if (mounted) await cubit.load(person.id);
           },
+          onOpenPartner: (partnerId) => context.push(
+            _isAdminShell
+                ? Routes.adminMemberById(partnerId)
+                : Routes.trainerMemberById(partnerId),
+          ),
         ),
         const Divider(),
         _PersonalTrainingSection(
@@ -337,6 +341,11 @@ class _DossierContentState extends State<_DossierContent> {
           },
           onChangePt: (sub) => _changePt(sub),
           onRenewPt: (sub) => _renewPt(sub),
+          onOpenPartner: (partnerId) => context.push(
+            _isAdminShell
+                ? Routes.adminMemberById(partnerId)
+                : Routes.trainerMemberById(partnerId),
+          ),
         ),
         const Divider(),
         ListTile(
@@ -504,6 +513,7 @@ class _MembershipSection extends StatelessWidget {
     required this.visitsThisMonth,
     required this.canAddMembership,
     required this.onAddMembership,
+    required this.onOpenPartner,
   });
 
   final Membership? membership;
@@ -512,6 +522,7 @@ class _MembershipSection extends StatelessWidget {
   final int? visitsThisMonth;
   final bool canAddMembership;
   final VoidCallback onAddMembership;
+  final ValueChanged<String> onOpenPartner;
 
   @override
   Widget build(BuildContext context) {
@@ -541,6 +552,22 @@ class _MembershipSection extends StatelessWidget {
           title: const Text(PeopleStrings.membershipExpiry),
           subtitle: Text(expirySubtitle),
         ),
+        if (!membershipsUnavailable &&
+            membership != null &&
+            membership!.isCouple &&
+            membership!.partnerMemberName != null)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              PeopleStrings.coupleWith(membership!.partnerMemberName!),
+            ),
+            trailing: membership!.partnerMemberId == null
+                ? null
+                : const Icon(Icons.chevron_right),
+            onTap: membership!.partnerMemberId == null
+                ? null
+                : () => onOpenPartner(membership!.partnerMemberId!),
+          ),
         if (outstandingBalance != null)
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -572,6 +599,7 @@ class _PersonalTrainingSection extends StatelessWidget {
     required this.onAddPt,
     required this.onChangePt,
     required this.onRenewPt,
+    required this.onOpenPartner,
   });
 
   final MemberDossierState state;
@@ -582,6 +610,7 @@ class _PersonalTrainingSection extends StatelessWidget {
   final VoidCallback onAddPt;
   final ValueChanged<PtSubscription> onChangePt;
   final ValueChanged<PtSubscription> onRenewPt;
+  final ValueChanged<String> onOpenPartner;
 
   @override
   Widget build(BuildContext context) {
@@ -635,6 +664,26 @@ class _PersonalTrainingSection extends StatelessWidget {
             ),
             isThreeLine: true,
           ),
+          if (shown.isCouple && shown.partnerMemberName != null)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                PeopleStrings.coupleWith(shown.partnerMemberName!),
+              ),
+              trailing: shown.partnerMemberId == null
+                  ? null
+                  : const Icon(Icons.chevron_right),
+              onTap: shown.partnerMemberId == null
+                  ? null
+                  : () => onOpenPartner(shown.partnerMemberId!.toString()),
+            ),
+          if (shown.isCouple &&
+              !shown.isPrimary &&
+              shown.partnerMemberName != null)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(PeopleStrings.billedTo(shown.partnerMemberName!)),
+            ),
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text(PeopleStrings.assignedTrainer),

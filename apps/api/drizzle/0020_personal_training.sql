@@ -16,11 +16,13 @@ CREATE TABLE IF NOT EXISTS `pt_products` (
   `sessions_per_week` TINYINT UNSIGNED NOT NULL,
   `base_price` DECIMAL(10,2) NOT NULL,
   `tax_percentage` DECIMAL(5,2) NOT NULL DEFAULT '0.00',
+  `package_type` VARCHAR(16) NOT NULL,
   `is_active` BOOLEAN NOT NULL DEFAULT TRUE,
   `created_at` DATETIME(3) NOT NULL,
   `updated_at` DATETIME(3) NULL,
   UNIQUE KEY `pt_products_code_unique` (`code`),
-  KEY `pt_products_is_active_idx` (`is_active`)
+  KEY `pt_products_is_active_idx` (`is_active`),
+  CONSTRAINT `pt_products_package_type_check` CHECK (`package_type` IN ('single', 'couple'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `pt_subscriptions` (
@@ -30,6 +32,8 @@ CREATE TABLE IF NOT EXISTS `pt_subscriptions` (
   `trainer_id` BIGINT UNSIGNED NOT NULL,
   `membership_id` BIGINT UNSIGNED NULL,
   `renewed_from_id` BIGINT UNSIGNED NULL,
+  `partner_subscription_id` BIGINT UNSIGNED NULL,
+  `is_primary` BOOLEAN NOT NULL DEFAULT TRUE,
   `start_date` DATE NOT NULL,
   `end_date` DATE NOT NULL,
   `weekdays` JSON NOT NULL,
@@ -42,11 +46,13 @@ CREATE TABLE IF NOT EXISTS `pt_subscriptions` (
   KEY `pt_subscriptions_trainer_id_idx` (`trainer_id`),
   KEY `pt_subscriptions_status_idx` (`status`),
   KEY `pt_subscriptions_end_date_idx` (`end_date`),
+  KEY `pt_subscriptions_partner_subscription_id_idx` (`partner_subscription_id`),
   CONSTRAINT `pt_subscriptions_member_id_fk` FOREIGN KEY (`member_id`) REFERENCES `members` (`id`),
   CONSTRAINT `pt_subscriptions_pt_product_id_fk` FOREIGN KEY (`pt_product_id`) REFERENCES `pt_products` (`id`),
   CONSTRAINT `pt_subscriptions_trainer_id_fk` FOREIGN KEY (`trainer_id`) REFERENCES `trainers` (`id`),
   CONSTRAINT `pt_subscriptions_membership_id_fk` FOREIGN KEY (`membership_id`) REFERENCES `memberships` (`id`),
-  CONSTRAINT `pt_subscriptions_renewed_from_id_fk` FOREIGN KEY (`renewed_from_id`) REFERENCES `pt_subscriptions` (`id`)
+  CONSTRAINT `pt_subscriptions_renewed_from_id_fk` FOREIGN KEY (`renewed_from_id`) REFERENCES `pt_subscriptions` (`id`),
+  CONSTRAINT `pt_subscriptions_partner_subscription_id_fk` FOREIGN KEY (`partner_subscription_id`) REFERENCES `pt_subscriptions` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `pt_subscription_changes` (
@@ -80,3 +86,13 @@ ALTER TABLE `schedules`
 
 INSERT IGNORE INTO `schedule_types` (`name`, `color_code`, `default_duration_minutes`, `requires_trainer`, `created_at`)
 VALUES ('Personal Training', '#C9A227', 60, TRUE, UTC_TIMESTAMP(3));
+
+-- PT includes a gym membership of the same duration (ADR-0012). Bundled memberships point at
+-- this catalog-hidden product; duration_days is a placeholder because the bundle's dates come
+-- from the PT package, and it is inactive so it is never offered for a normal membership sale.
+INSERT IGNORE INTO `membership_products`
+  (`name`, `code`, `description`, `duration_days`, `base_price`, `tax_percentage`, `max_freeze_days`,
+   `pt_sessions_included`, `access_facilities`, `package_type`, `is_active`, `created_at`)
+VALUES
+  ('PT Bundled', 'PT-BUNDLE', 'Gym membership included with a Personal Training package.', 1, 0.00, 0.00, 0,
+   0, NULL, 'single', FALSE, UTC_TIMESTAMP(3));

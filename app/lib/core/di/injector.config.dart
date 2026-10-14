@@ -371,6 +371,8 @@ import '../../features/membership/domain/usecases/get_membership_usecase.dart'
     as _i74;
 import '../../features/membership/domain/usecases/get_memberships_usecase.dart'
     as _i370;
+import '../../features/membership/domain/usecases/get_replacement_preview_usecase.dart'
+    as _i422;
 import '../../features/membership/domain/usecases/reject_freeze_usecase.dart'
     as _i223;
 import '../../features/membership/domain/usecases/renew_membership_usecase.dart'
@@ -1739,6 +1741,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i370.GetMembershipsUseCase>(
       () => _i370.GetMembershipsUseCase(gh<_i325.MembershipRepository>()),
     );
+    gh.lazySingleton<_i422.GetReplacementPreviewUseCase>(
+      () =>
+          _i422.GetReplacementPreviewUseCase(gh<_i325.MembershipRepository>()),
+    );
     gh.lazySingleton<_i223.RejectFreezeUseCase>(
       () => _i223.RejectFreezeUseCase(gh<_i325.MembershipRepository>()),
     );
@@ -2009,13 +2015,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i377.RequestMembershipFreezeUseCase>(),
       ),
     );
-    gh.factory<_i632.CreateMembershipBloc>(
-      () => _i632.CreateMembershipBloc(
-        gh<_i65.CreateMembershipUseCase>(),
-        gh<_i359.GetMembershipProductsUseCase>(),
-        gh<_i789.GetPaymentMethodsUseCase>(),
-      ),
-    );
     gh.factory<_i731.WorkoutPlanListCubit>(
       () => _i731.WorkoutPlanListCubit(gh<_i110.ListWorkoutPlansUseCase>()),
     );
@@ -2217,16 +2216,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i467.ExercisePickerCubit>(
       () => _i467.ExercisePickerCubit(gh<_i872.GetExercisesUseCase>()),
     );
-    gh.factory<_i122.SellPtCubit>(
-      () => _i122.SellPtCubit(
-        gh<_i929.GetPtProductsUseCase>(),
-        gh<_i789.GetPaymentMethodsUseCase>(),
-        gh<_i929.GetPtScheduleGridUseCase>(),
-        gh<_i929.PurchasePtUseCase>(),
-        gh<_i929.ReplanPtUseCase>(),
-        gh<_i562.GetMemberUseCase>(),
-      ),
-    );
     gh.factory<_i115.FacilitiesCubit>(
       () => _i115.FacilitiesCubit(
         gh<_i871.ListFacilitiesUseCase>(),
@@ -2236,6 +2225,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1069.MembershipPackagesCatalogCubit>(
       () => _i1069.MembershipPackagesCatalogCubit(
         gh<_i359.GetMembershipProductsUseCase>(),
+      ),
+    );
+    gh.factory<_i632.CreateMembershipBloc>(
+      () => _i632.CreateMembershipBloc(
+        gh<_i65.CreateMembershipUseCase>(),
+        gh<_i359.GetMembershipProductsUseCase>(),
+        gh<_i789.GetPaymentMethodsUseCase>(),
+        gh<_i422.GetReplacementPreviewUseCase>(),
       ),
     );
     gh.factory<_i598.WorkoutPlanBuilderCubit>(
@@ -2258,6 +2255,17 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i756.ExerciseDetailCubit>(
       () => _i756.ExerciseDetailCubit(gh<_i1034.GetExerciseUseCase>()),
+    );
+    gh.factory<_i122.SellPtCubit>(
+      () => _i122.SellPtCubit(
+        gh<_i929.GetPtProductsUseCase>(),
+        gh<_i789.GetPaymentMethodsUseCase>(),
+        gh<_i929.GetPtScheduleGridUseCase>(),
+        gh<_i929.PurchasePtUseCase>(),
+        gh<_i929.ReplanPtUseCase>(),
+        gh<_i562.GetMemberUseCase>(),
+        gh<_i929.GetMemberPtSummaryUseCase>(),
+      ),
     );
     gh.factory<_i203.MembershipFreezeFormCubit>(
       () => _i203.MembershipFreezeFormCubit(

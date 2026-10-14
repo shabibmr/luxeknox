@@ -11,6 +11,7 @@ Name | Type | Description | Notes
 **id** | **int** |  | 
 **name** | **String** |  | 
 **code** | **String** |  | 
+**packageType** | [**PtPackageType**](PtPackageType.md) |  | 
 **description** | **String** |  | [optional] 
 **durationDays** | **int** |  | 
 **basePrice** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | 

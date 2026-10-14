@@ -252,14 +252,24 @@ describe('PersonFactory', () => {
     expect(result.user.role_id).toBe(4);
   });
 
-  it('rejects credentials with neither email nor phone', async () => {
+  it('rejects non-member credentials with neither email nor phone', async () => {
     await expect(
       factory.createPerson({
-        userType: 'member',
+        userType: 'trainer',
         credentials: { password: 'Secret123!' },
         profile: { first_name: 'Ada', last_name: 'Lovelace' },
       }),
     ).rejects.toThrow(BadRequestError);
+  });
+
+  it('allows a member with neither email nor phone', async () => {
+    await expect(
+      factory.createPerson({
+        userType: 'member',
+        credentials: {},
+        profile: { first_name: 'Ada', last_name: '' },
+      }),
+    ).resolves.toMatchObject({ userType: 'member' });
   });
 
   it('creates member + user atomically and never returns password_hash', async () => {

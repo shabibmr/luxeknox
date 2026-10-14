@@ -327,7 +327,7 @@ Strings live in `accounting_strings.dart`. Money display uses the existing curre
 
 **New**
 
-- `docs/adr/0010-accounting-ledger.md` — records the fourteen decisions above.
+- `docs/adr/0013-accounting-ledger.md` — records the fourteen decisions above.
 - `apps/api/src/platform/db/schema/accounting.ts`
 - `apps/api/drizzle/0025_accounting.sql`
 - `apps/api/src/platform/db/seed/accounting.ts`
