@@ -240,6 +240,8 @@ class Routes {
 
   static String adminAccountingJournalById(String id) =>
       '/admin/accounting/journals/$id';
+  static String adminAccountingJournalsForPayment(String paymentId) =>
+      '/admin/accounting/journals?paymentId=${Uri.encodeQueryComponent(paymentId)}';
   static String adminAccountingAccountEditById(String id) =>
       '/admin/accounting/accounts/$id/edit';
   static String adminAccountingVendorEditById(String id) =>

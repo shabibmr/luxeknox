@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -121,6 +124,18 @@ class _PaymentDetailContent extends StatelessWidget {
             contentPadding: EdgeInsets.zero,
             title: const Text(PaymentStrings.paymentDateLabel),
             subtitle: Text(payment.paymentDate!.toUtc().toIso8601String()),
+          ),
+        if (context.can('accounting.read'))
+          ListTile(
+            key: const Key('payment_journals_link'),
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.receipt_long_outlined),
+            title: const Text(PaymentStrings.journalsLink),
+            subtitle: const Text(PaymentStrings.journalsLinkSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.go(
+              Routes.adminAccountingJournalsForPayment(payment.id),
+            ),
           ),
         const SizedBox(height: 8),
         Text(PaymentStrings.historyTitle, style: theme.textTheme.titleMedium),

@@ -43,6 +43,9 @@ class PaymentStrings {
   static const String paymentDateLabel = 'Payment date';
   static const String historyTitle = 'History';
   static const String noHistory = 'No history entries.';
+  static const String journalsLink = 'Journals';
+  static const String journalsLinkSubtitle =
+      'Accounting entries posted for this invoice';
 
   static const String actionPaymentReceived = 'Payment received';
   static const String actionRefunded = 'Refunded';

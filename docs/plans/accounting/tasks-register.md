@@ -132,7 +132,7 @@ Later rows stay `[>]` until a new plan pulls them in.
 | ACC-097 | `[ ]` | Period list with lock | ACC-034, ACC-062, ACC-091 | A locked period shows locked. The lock action is hidden without `accounting.periods_close`. A refused lock shows the reason |
 | ACC-098 | `[ ]` | Widget tests for home, journal entry validation, a posted bill detail, and the go-live checklist | ACC-092, ACC-094, ACC-095, ACC-099 | The tests pass. `dart analyze` is clean for the feature |
 | ACC-099 | `[x]` | Go-live setup: map payment methods to accounts, show the unearned preview and opening-journal match, enable posting | ACC-054, ACC-064, ACC-091 | Every failing check is listed. The enable action is hidden without `accounting.posting_toggle` |
-| ACC-100 | `[ ]` | Journals link on the existing payment detail screen in `app/lib/features/payments/` | ACC-076, ACC-090 | Hidden without `accounting.read`. Lists the payment's journals and opens the journal detail |
+| ACC-100 | `[x]` | Journals link on the existing payment detail screen in `app/lib/features/payments/` | ACC-076, ACC-090 | Hidden without `accounting.read`. Lists the payment's journals and opens the journal detail |
 
 ## Phase 10 — Later
 
@@ -182,8 +182,8 @@ One person owns a shared file even when the wave lists the tasks together:
 
 | Marker | Count |
 |---|---|
-| `[ ]` TODO | 5 |
+| `[ ]` TODO | 4 |
 | `[~]` DOING | 0 |
-| `[x]` DONE | 62 |
+| `[x]` DONE | 63 |
 | `[!]` BLOCKED | 0 |
 | `[>]` LATER | 8 |
