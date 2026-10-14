@@ -8869,6 +8869,121 @@ paths:
         "429":
           $ref: "#/components/responses/Error429"
 
+  /accounting/go-live/checklist:
+    get:
+      operationId: getGoLiveChecklist
+      summary: Get accounting go-live checklist and prerequisite checks
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: go_live_date
+          in: query
+          schema:
+            $ref: "#/components/schemas/Date"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoLiveChecklistResponse"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/go-live/payment-methods/{id}:
+    patch:
+      operationId: mapPaymentMethodAccount
+      summary: Map payment method to accounting account
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.accounts_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoLiveMapPaymentMethod"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoLivePaymentMethod"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/go-live/enable-posting:
+    post:
+      operationId: enablePosting
+      summary: Enable accounting journal posting
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.posting_toggle
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoLiveEnablePosting"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoLiveEnablePostingResponse"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -13603,3 +13718,111 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/UnearnedPreviewItem"
+
+    GoLivePaymentMethod:
+      type: object
+      required: [id, method_name, is_active, is_digital]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        method_name:
+          type: string
+        is_active:
+          type: boolean
+        is_digital:
+          type: boolean
+        account_id:
+          $ref: "#/components/schemas/Id"
+          nullable: true
+        account_code:
+          type: string
+          nullable: true
+        account_name:
+          type: string
+          nullable: true
+
+    GoLiveUnearnedMatch:
+      type: object
+      required: [preview, actual, matched]
+      properties:
+        preview:
+          $ref: "#/components/schemas/Money"
+        actual:
+          $ref: "#/components/schemas/Money"
+        matched:
+          type: boolean
+
+    GoLiveTaxMatch:
+      type: object
+      required: [gym_tax_rate, default_tax_code, default_tax_rate, matched]
+      properties:
+        gym_tax_rate:
+          type: string
+        default_tax_code:
+          type: string
+        default_tax_rate:
+          type: string
+        matched:
+          type: boolean
+
+    GoLiveChecklistResponse:
+      type: object
+      required:
+        - go_live_date
+        - posting_enabled
+        - can_enable
+        - failing_reasons
+        - opening_journal_found
+        - opening_journal_matches
+        - unearned_membership
+        - unearned_pt
+        - tax_match
+        - payment_methods
+      properties:
+        go_live_date:
+          $ref: "#/components/schemas/Date"
+        posting_enabled:
+          type: boolean
+        can_enable:
+          type: boolean
+        failing_reasons:
+          type: array
+          items:
+            type: string
+        opening_journal_found:
+          type: boolean
+        opening_journal_matches:
+          type: boolean
+        unearned_membership:
+          $ref: "#/components/schemas/GoLiveUnearnedMatch"
+        unearned_pt:
+          $ref: "#/components/schemas/GoLiveUnearnedMatch"
+        tax_match:
+          $ref: "#/components/schemas/GoLiveTaxMatch"
+        payment_methods:
+          type: array
+          items:
+            $ref: "#/components/schemas/GoLivePaymentMethod"
+
+    GoLiveMapPaymentMethod:
+      type: object
+      properties:
+        account_id:
+          $ref: "#/components/schemas/Id"
+          nullable: true
+
+    GoLiveEnablePosting:
+      type: object
+      properties:
+        go_live_date:
+          $ref: "#/components/schemas/Date"
+
+    GoLiveEnablePostingResponse:
+      type: object
+      required: [success, posting_enabled]
+      properties:
+        success:
+          type: boolean
+        posting_enabled:
+          type: boolean
+

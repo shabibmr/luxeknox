@@ -15,6 +15,7 @@ import '../../features/accounting/presentation/screens/expenses_list_screen.dart
 import '../../features/accounting/presentation/screens/fund_transfer_detail_screen.dart';
 import '../../features/accounting/presentation/screens/fund_transfer_form_screen.dart';
 import '../../features/accounting/presentation/screens/fund_transfers_list_screen.dart';
+import '../../features/accounting/presentation/screens/go_live_screen.dart';
 import '../../features/accounting/presentation/screens/journal_detail_screen.dart';
 import '../../features/accounting/presentation/screens/journal_entry_form_screen.dart';
 import '../../features/accounting/presentation/screens/journals_list_screen.dart';
@@ -529,6 +530,10 @@ StatefulShellRoute createAdminBranchRoute() {
                     ),
                   ),
                 ],
+              ),
+              GoRoute(
+                path: 'go-live',
+                builder: (context, state) => const GoLiveScreen(),
               ),
             ],
           ),

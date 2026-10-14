@@ -19,12 +19,14 @@ Method | HTTP request | Description
 [**createPurchaseBill**](ACCTApi.md#createpurchasebill) | **POST** /accounting/purchase-bills | Create a draft purchase bill
 [**createTaxCode**](ACCTApi.md#createtaxcode) | **POST** /accounting/tax-codes | Create a tax code
 [**createVendor**](ACCTApi.md#createvendor) | **POST** /accounting/vendors | Create vendor
+[**enablePosting**](ACCTApi.md#enableposting) | **POST** /accounting/go-live/enable-posting | Enable accounting journal posting
 [**getAccount**](ACCTApi.md#getaccount) | **GET** /accounting/accounts/{id} | Account detail
 [**getBalanceSheet**](ACCTApi.md#getbalancesheet) | **GET** /accounting/reports/balance-sheet | Balance sheet as of a date
 [**getDayBook**](ACCTApi.md#getdaybook) | **GET** /accounting/reports/day-book | Day book for one date
 [**getDebitNote**](ACCTApi.md#getdebitnote) | **GET** /accounting/debit-notes/{id} | Get debit note by ID
 [**getExpense**](ACCTApi.md#getexpense) | **GET** /accounting/expenses/{id} | Get expense voucher by ID
 [**getFundTransfer**](ACCTApi.md#getfundtransfer) | **GET** /accounting/fund-transfers/{id} | Get fund transfer by ID
+[**getGoLiveChecklist**](ACCTApi.md#getgolivechecklist) | **GET** /accounting/go-live/checklist | Get accounting go-live checklist and prerequisite checks
 [**getGstSummary**](ACCTApi.md#getgstsummary) | **GET** /accounting/reports/gst-summary | GST summary for a date range
 [**getItem**](ACCTApi.md#getitem) | **GET** /accounting/items/{id} | Get item by ID
 [**getJournal**](ACCTApi.md#getjournal) | **GET** /accounting/journals/{id} | Journal entry detail
@@ -49,6 +51,7 @@ Method | HTTP request | Description
 [**listTaxCodes**](ACCTApi.md#listtaxcodes) | **GET** /accounting/tax-codes | List tax codes
 [**listVendors**](ACCTApi.md#listvendors) | **GET** /accounting/vendors | List vendors
 [**lockAccountingPeriod**](ACCTApi.md#lockaccountingperiod) | **POST** /accounting/periods/{id}/lock | Lock an accounting period
+[**mapPaymentMethodAccount**](ACCTApi.md#mappaymentmethodaccount) | **PATCH** /accounting/go-live/payment-methods/{id} | Map payment method to accounting account
 [**postDebitNote**](ACCTApi.md#postdebitnote) | **POST** /accounting/debit-notes/{id}/post | Post a debit note to the general ledger
 [**postExpense**](ACCTApi.md#postexpense) | **POST** /accounting/expenses/{id}/post | Post an expense voucher to general ledger
 [**postFundTransfer**](ACCTApi.md#postfundtransfer) | **POST** /accounting/fund-transfers/{id}/post | Post fund transfer to GL
@@ -488,6 +491,47 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **enablePosting**
+> GoLiveEnablePostingResponse enablePosting(goLiveEnablePosting)
+
+Enable accounting journal posting
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getACCTApi();
+final GoLiveEnablePosting goLiveEnablePosting = ; // GoLiveEnablePosting | 
+
+try {
+    final response = api.enablePosting(goLiveEnablePosting);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling ACCTApi->enablePosting: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **goLiveEnablePosting** | [**GoLiveEnablePosting**](GoLiveEnablePosting.md)|  | [optional] 
+
+### Return type
+
+[**GoLiveEnablePostingResponse**](GoLiveEnablePostingResponse.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getAccount**
 > Account getAccount(id)
 
@@ -722,6 +766,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**FundTransfer**](FundTransfer.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getGoLiveChecklist**
+> GoLiveChecklistResponse getGoLiveChecklist(goLiveDate)
+
+Get accounting go-live checklist and prerequisite checks
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getACCTApi();
+final Date goLiveDate = 2013-10-20; // Date | 
+
+try {
+    final response = api.getGoLiveChecklist(goLiveDate);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling ACCTApi->getGoLiveChecklist: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **goLiveDate** | **Date**|  | [optional] 
+
+### Return type
+
+[**GoLiveChecklistResponse**](GoLiveChecklistResponse.md)
 
 ### Authorization
 
@@ -1814,6 +1899,49 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **mapPaymentMethodAccount**
+> GoLivePaymentMethod mapPaymentMethodAccount(id, goLiveMapPaymentMethod)
+
+Map payment method to accounting account
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getACCTApi();
+final int id = 789; // int | 
+final GoLiveMapPaymentMethod goLiveMapPaymentMethod = ; // GoLiveMapPaymentMethod | 
+
+try {
+    final response = api.mapPaymentMethodAccount(id, goLiveMapPaymentMethod);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling ACCTApi->mapPaymentMethodAccount: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **goLiveMapPaymentMethod** | [**GoLiveMapPaymentMethod**](GoLiveMapPaymentMethod.md)|  | 
+
+### Return type
+
+[**GoLivePaymentMethod**](GoLivePaymentMethod.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

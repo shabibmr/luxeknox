@@ -11,6 +11,7 @@ import '../../domain/entities/accounting_reports.dart';
 import '../../domain/entities/debit_note.dart';
 import '../../domain/entities/expense_voucher.dart';
 import '../../domain/entities/fund_transfer.dart';
+import '../../domain/entities/go_live.dart';
 import '../../domain/entities/item.dart';
 import '../../domain/entities/journal.dart';
 import '../../domain/entities/payment_voucher.dart';
@@ -1182,6 +1183,51 @@ class AccountingRepositoryImpl implements AccountingRepository {
         goLiveDate: goLiveDate?.toDate(),
       );
       return Right(report.toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  // Go-Live
+  @override
+  Future<Either<Failure, GoLiveChecklist>> getGoLiveChecklist({
+    DateTime? goLiveDate,
+  }) async {
+    try {
+      final json = await _remoteDataSource.getGoLiveChecklist(
+        goLiveDate: goLiveDate?.toDate(),
+      );
+      return Right(goLiveChecklistFromJson(json));
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, GoLivePaymentMethodMapping>> mapPaymentMethodAccount({
+    required int paymentMethodId,
+    required int? accountId,
+  }) async {
+    try {
+      final json = await _remoteDataSource.mapPaymentMethodAccount(
+        paymentMethodId: paymentMethodId,
+        accountId: accountId,
+      );
+      return Right(goLivePaymentMethodMappingFromJson(json));
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> enablePosting({
+    DateTime? goLiveDate,
+  }) async {
+    try {
+      final result = await _remoteDataSource.enablePosting(
+        goLiveDate: goLiveDate?.toDate(),
+      );
+      return Right(result);
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

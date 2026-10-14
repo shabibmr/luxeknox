@@ -100,6 +100,13 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(FundTransferPage.serializer)
       ..add(FundTransferStatusEnum.serializer)
       ..add(FundTransferUpdate.serializer)
+      ..add(GoLiveChecklistResponse.serializer)
+      ..add(GoLiveEnablePosting.serializer)
+      ..add(GoLiveEnablePostingResponse.serializer)
+      ..add(GoLiveMapPaymentMethod.serializer)
+      ..add(GoLivePaymentMethod.serializer)
+      ..add(GoLiveTaxMatch.serializer)
+      ..add(GoLiveUnearnedMatch.serializer)
       ..add(Goal.serializer)
       ..add(GoalCheckInWrite.serializer)
       ..add(GoalHistory.serializer)
@@ -631,6 +638,13 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
           () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(GoLivePaymentMethod)]),
+          () => ListBuilder<GoLivePaymentMethod>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(TaxCode)]),
           () => ListBuilder<TaxCode>())

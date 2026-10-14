@@ -99,6 +99,13 @@ import 'package:api_client/src/model/fund_transfer.dart';
 import 'package:api_client/src/model/fund_transfer_create.dart';
 import 'package:api_client/src/model/fund_transfer_page.dart';
 import 'package:api_client/src/model/fund_transfer_update.dart';
+import 'package:api_client/src/model/go_live_checklist_response.dart';
+import 'package:api_client/src/model/go_live_enable_posting.dart';
+import 'package:api_client/src/model/go_live_enable_posting_response.dart';
+import 'package:api_client/src/model/go_live_map_payment_method.dart';
+import 'package:api_client/src/model/go_live_payment_method.dart';
+import 'package:api_client/src/model/go_live_tax_match.dart';
+import 'package:api_client/src/model/go_live_unearned_match.dart';
 import 'package:api_client/src/model/goal.dart';
 import 'package:api_client/src/model/goal_check_in_write.dart';
 import 'package:api_client/src/model/goal_history.dart';
@@ -391,6 +398,13 @@ part 'serializers.g.dart';
   FundTransferCreate,
   FundTransferPage,
   FundTransferUpdate,
+  GoLiveChecklistResponse,
+  GoLiveEnablePosting,
+  GoLiveEnablePostingResponse,
+  GoLiveMapPaymentMethod,
+  GoLivePaymentMethod,
+  GoLiveTaxMatch,
+  GoLiveUnearnedMatch,
   Goal,
   GoalCheckInWrite,
   GoalHistory,
@@ -679,6 +693,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(Payment)]),
         () => ListBuilder<Payment>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(GoLivePaymentMethod)]),
+        () => ListBuilder<GoLivePaymentMethod>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(BalanceSheetAccount)]),

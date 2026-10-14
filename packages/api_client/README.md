@@ -83,12 +83,14 @@ Class | Method | HTTP request | Description
 [*ACCTApi*](doc/ACCTApi.md) | [**createPurchaseBill**](doc/ACCTApi.md#createpurchasebill) | **POST** /accounting/purchase-bills | Create a draft purchase bill
 [*ACCTApi*](doc/ACCTApi.md) | [**createTaxCode**](doc/ACCTApi.md#createtaxcode) | **POST** /accounting/tax-codes | Create a tax code
 [*ACCTApi*](doc/ACCTApi.md) | [**createVendor**](doc/ACCTApi.md#createvendor) | **POST** /accounting/vendors | Create vendor
+[*ACCTApi*](doc/ACCTApi.md) | [**enablePosting**](doc/ACCTApi.md#enableposting) | **POST** /accounting/go-live/enable-posting | Enable accounting journal posting
 [*ACCTApi*](doc/ACCTApi.md) | [**getAccount**](doc/ACCTApi.md#getaccount) | **GET** /accounting/accounts/{id} | Account detail
 [*ACCTApi*](doc/ACCTApi.md) | [**getBalanceSheet**](doc/ACCTApi.md#getbalancesheet) | **GET** /accounting/reports/balance-sheet | Balance sheet as of a date
 [*ACCTApi*](doc/ACCTApi.md) | [**getDayBook**](doc/ACCTApi.md#getdaybook) | **GET** /accounting/reports/day-book | Day book for one date
 [*ACCTApi*](doc/ACCTApi.md) | [**getDebitNote**](doc/ACCTApi.md#getdebitnote) | **GET** /accounting/debit-notes/{id} | Get debit note by ID
 [*ACCTApi*](doc/ACCTApi.md) | [**getExpense**](doc/ACCTApi.md#getexpense) | **GET** /accounting/expenses/{id} | Get expense voucher by ID
 [*ACCTApi*](doc/ACCTApi.md) | [**getFundTransfer**](doc/ACCTApi.md#getfundtransfer) | **GET** /accounting/fund-transfers/{id} | Get fund transfer by ID
+[*ACCTApi*](doc/ACCTApi.md) | [**getGoLiveChecklist**](doc/ACCTApi.md#getgolivechecklist) | **GET** /accounting/go-live/checklist | Get accounting go-live checklist and prerequisite checks
 [*ACCTApi*](doc/ACCTApi.md) | [**getGstSummary**](doc/ACCTApi.md#getgstsummary) | **GET** /accounting/reports/gst-summary | GST summary for a date range
 [*ACCTApi*](doc/ACCTApi.md) | [**getItem**](doc/ACCTApi.md#getitem) | **GET** /accounting/items/{id} | Get item by ID
 [*ACCTApi*](doc/ACCTApi.md) | [**getJournal**](doc/ACCTApi.md#getjournal) | **GET** /accounting/journals/{id} | Journal entry detail
@@ -113,6 +115,7 @@ Class | Method | HTTP request | Description
 [*ACCTApi*](doc/ACCTApi.md) | [**listTaxCodes**](doc/ACCTApi.md#listtaxcodes) | **GET** /accounting/tax-codes | List tax codes
 [*ACCTApi*](doc/ACCTApi.md) | [**listVendors**](doc/ACCTApi.md#listvendors) | **GET** /accounting/vendors | List vendors
 [*ACCTApi*](doc/ACCTApi.md) | [**lockAccountingPeriod**](doc/ACCTApi.md#lockaccountingperiod) | **POST** /accounting/periods/{id}/lock | Lock an accounting period
+[*ACCTApi*](doc/ACCTApi.md) | [**mapPaymentMethodAccount**](doc/ACCTApi.md#mappaymentmethodaccount) | **PATCH** /accounting/go-live/payment-methods/{id} | Map payment method to accounting account
 [*ACCTApi*](doc/ACCTApi.md) | [**postDebitNote**](doc/ACCTApi.md#postdebitnote) | **POST** /accounting/debit-notes/{id}/post | Post a debit note to the general ledger
 [*ACCTApi*](doc/ACCTApi.md) | [**postExpense**](doc/ACCTApi.md#postexpense) | **POST** /accounting/expenses/{id}/post | Post an expense voucher to general ledger
 [*ACCTApi*](doc/ACCTApi.md) | [**postFundTransfer**](doc/ACCTApi.md#postfundtransfer) | **POST** /accounting/fund-transfers/{id}/post | Post fund transfer to GL
@@ -408,6 +411,13 @@ Class | Method | HTTP request | Description
  - [FundTransferCreate](doc/FundTransferCreate.md)
  - [FundTransferPage](doc/FundTransferPage.md)
  - [FundTransferUpdate](doc/FundTransferUpdate.md)
+ - [GoLiveChecklistResponse](doc/GoLiveChecklistResponse.md)
+ - [GoLiveEnablePosting](doc/GoLiveEnablePosting.md)
+ - [GoLiveEnablePostingResponse](doc/GoLiveEnablePostingResponse.md)
+ - [GoLiveMapPaymentMethod](doc/GoLiveMapPaymentMethod.md)
+ - [GoLivePaymentMethod](doc/GoLivePaymentMethod.md)
+ - [GoLiveTaxMatch](doc/GoLiveTaxMatch.md)
+ - [GoLiveUnearnedMatch](doc/GoLiveUnearnedMatch.md)
  - [Goal](doc/Goal.md)
  - [GoalCheckInWrite](doc/GoalCheckInWrite.md)
  - [GoalHistory](doc/GoalHistory.md)

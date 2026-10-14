@@ -275,6 +275,7 @@ export class SettingsService {
   async checkPostingPrerequisites(overrides?: {
     taxRatePercent?: string;
     defaultTaxCode?: string;
+    goLiveDate?: string;
   }): Promise<string[]> {
     const db = this.getDatabase();
     if (!db) {

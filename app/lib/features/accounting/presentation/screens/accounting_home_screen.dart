@@ -451,6 +451,11 @@ class _QuickActionsSection extends StatelessWidget {
               label: const Text(AccountingStrings.managePeriods),
               onPressed: () {},
             ),
+            ActionChip(
+              avatar: const Icon(Icons.rocket_launch_outlined, size: 18),
+              label: const Text(AccountingStrings.goLiveSetup),
+              onPressed: () => context.go(Routes.adminAccountingGoLive),
+            ),
           ],
         ),
       ],

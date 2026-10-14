@@ -4,7 +4,7 @@ import { memberships, membershipProducts } from '../platform/db/schema/membershi
 import { payments, paymentMethods } from '../platform/db/schema/payments';
 import { ptSubscriptions, ptProducts } from '../platform/db/schema/personal-training';
 import { journalEntries, journalLines, taxCodes } from '../platform/db/schema/accounting';
-import { BadRequestError } from '../platform/errors/app-error';
+import { BadRequestError, NotFoundError } from '../platform/errors/app-error';
 import { SettingsService } from '../sys/settings.service';
 import { GoLiveService } from './go-live.service';
 
@@ -63,7 +63,7 @@ const ACCOUNTS: Record<string, Account> = {
   },
 };
 
-describe('GoLiveService (ACC-064)', () => {
+describe('GoLiveService (ACC-064 & ACC-099)', () => {
   let goLiveService: GoLiveService;
   let accountsRepository: any;
   let revenueRecognitionRepository: any;
@@ -72,6 +72,7 @@ describe('GoLiveService (ACC-064)', () => {
   beforeEach(() => {
     accountsRepository = {
       findByCode: vi.fn().mockImplementation(async (code: string) => ACCOUNTS[code] ?? null),
+      findById: vi.fn().mockImplementation(async (id: number) => Object.values(ACCOUNTS).find((a) => a.id === id) ?? null),
     };
 
     revenueRecognitionRepository = {
@@ -81,6 +82,7 @@ describe('GoLiveService (ACC-064)', () => {
 
     mockDb = {
       select: vi.fn(),
+      update: vi.fn(),
     };
 
     goLiveService = new GoLiveService(
@@ -229,6 +231,10 @@ describe('GoLiveService (ACC-064)', () => {
       expect(result.failingReasons).toHaveLength(2);
       expect(result.failingReasons[0]).toContain('2200 unearned membership balance (800.00) does not match unearned preview (1000.00)');
       expect(result.failingReasons[1]).toContain('2210 unearned PT balance (1500.00) does not match unearned preview (2000.00)');
+      expect(result.openingJournalFound).toBe(true);
+      expect(result.openingJournalMatches).toBe(false);
+      expect(result.actual2200).toBe('800.00');
+      expect(result.actual2210).toBe('1500.00');
     });
 
     it('passes when opening journal balances match the preview totals', async () => {
@@ -259,6 +265,10 @@ describe('GoLiveService (ACC-064)', () => {
 
       const result = await goLiveService.validateOpeningJournalMatch('2026-03-01');
       expect(result.failingReasons).toHaveLength(0);
+      expect(result.openingJournalFound).toBe(true);
+      expect(result.openingJournalMatches).toBe(true);
+      expect(result.actual2200).toBe('1000.00');
+      expect(result.actual2210).toBe('2000.00');
     });
 
     it('refuses when opening balance journal is missing', async () => {
@@ -280,6 +290,327 @@ describe('GoLiveService (ACC-064)', () => {
 
       const result = await goLiveService.validateOpeningJournalMatch('2026-03-01');
       expect(result.failingReasons).toContain('No posted opening balance journal found.');
+      expect(result.openingJournalFound).toBe(false);
+      expect(result.openingJournalMatches).toBe(false);
+    });
+  });
+
+  describe('getGoLiveChecklist (ACC-099)', () => {
+    it('returns checklist when prerequisites pass and opening journal matches', async () => {
+      const mockSettingsService: any = {
+        getSetting: vi.fn().mockImplementation(async (key: string) => {
+          if (key === 'accounting.posting_enabled') return 'false';
+          if (key === 'tax_rate_percent') return '18.00';
+          if (key === 'accounting.default_tax_code') return 'gst_18';
+          return null;
+        }),
+        checkPostingPrerequisites: vi.fn().mockResolvedValue([]),
+        setPostingPrerequisiteHook: vi.fn(),
+      };
+
+      const svc = new GoLiveService(
+        accountsRepository,
+        revenueRecognitionRepository,
+        mockDb as any,
+        mockSettingsService,
+      );
+
+      vi.spyOn(svc, 'getUnearnedPreview').mockResolvedValue({
+        go_live_date: '2026-03-01',
+        totals: {
+          unearned_membership_total: '1000.00',
+          unearned_pt_total: '2000.00',
+          combined_total: '3000.00',
+        },
+        items: [],
+      });
+
+      // 1. paymentMethods leftJoin accounts
+      // 2. taxCodes
+      // 3. openingJournals
+      // 4. journalLines
+      mockDb.select
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            leftJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockReturnValue({
+                orderBy: vi.fn().mockResolvedValue([
+                  {
+                    id: 1,
+                    method_name: 'Credit Card',
+                    is_active: true,
+                    is_digital: true,
+                    account_id: 1010,
+                    account_code: '1010',
+                    account_name: 'Bank Account',
+                  },
+                ]),
+              }),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([
+              { id: 1, code: 'gst_18', rate_percent: '18.00', is_active: true },
+            ]),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([{ id: 1 }]),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([
+              { accountId: 2200, debit: '0.00', credit: '1000.00' },
+              { accountId: 2210, debit: '0.00', credit: '2000.00' },
+            ]),
+          }),
+        });
+
+      const checklist = await svc.getGoLiveChecklist('2026-03-01');
+
+      expect(checklist.go_live_date).toBe('2026-03-01');
+      expect(checklist.posting_enabled).toBe(false);
+      expect(checklist.can_enable).toBe(true);
+      expect(checklist.failing_reasons).toEqual([]);
+      expect(checklist.opening_journal_found).toBe(true);
+      expect(checklist.opening_journal_matches).toBe(true);
+      expect(checklist.unearned_membership).toEqual({
+        preview: '1000.00',
+        actual: '1000.00',
+        matched: true,
+      });
+      expect(checklist.unearned_pt).toEqual({
+        preview: '2000.00',
+        actual: '2000.00',
+        matched: true,
+      });
+      expect(checklist.tax_match).toEqual({
+        gym_tax_rate: '18.00',
+        default_tax_code: 'gst_18',
+        default_tax_rate: '18.00',
+        matched: true,
+      });
+      expect(checklist.payment_methods).toHaveLength(1);
+      expect(checklist.payment_methods[0].account_code).toBe('1010');
+      expect(mockSettingsService.checkPostingPrerequisites).toHaveBeenCalledWith({
+        goLiveDate: '2026-03-01',
+      });
+    });
+
+    it('returns failing checks and can_enable = false when prerequisites fail', async () => {
+      const mockSettingsService: any = {
+        getSetting: vi.fn().mockResolvedValue(null),
+        checkPostingPrerequisites: vi.fn().mockResolvedValue([
+          'Active payment method "Cash" has no mapped accounting account.',
+          'No posted opening balance journal found.',
+        ]),
+        setPostingPrerequisiteHook: vi.fn(),
+      };
+
+      const svc = new GoLiveService(
+        accountsRepository,
+        revenueRecognitionRepository,
+        mockDb as any,
+        mockSettingsService,
+      );
+
+      vi.spyOn(svc, 'getUnearnedPreview').mockResolvedValue({
+        go_live_date: '2026-03-01',
+        totals: {
+          unearned_membership_total: '1000.00',
+          unearned_pt_total: '2000.00',
+          combined_total: '3000.00',
+        },
+        items: [],
+      });
+
+      // 1. paymentMethods (unmapped)
+      // 2. taxCodes (missing)
+      // 3. openingJournals (empty)
+      mockDb.select
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            leftJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockReturnValue({
+                orderBy: vi.fn().mockResolvedValue([
+                  {
+                    id: 1,
+                    method_name: 'Cash',
+                    is_active: true,
+                    is_digital: false,
+                    account_id: null,
+                    account_code: null,
+                    account_name: null,
+                  },
+                ]),
+              }),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([]),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([]),
+          }),
+        });
+
+      const checklist = await svc.getGoLiveChecklist('2026-03-01');
+
+      expect(checklist.can_enable).toBe(false);
+      expect(checklist.failing_reasons).toHaveLength(2);
+      expect(checklist.opening_journal_found).toBe(false);
+      expect(checklist.opening_journal_matches).toBe(false);
+      expect(checklist.unearned_membership.matched).toBe(false);
+      expect(checklist.tax_match.matched).toBe(false);
+    });
+  });
+
+  describe('mapPaymentMethodAccount (ACC-099)', () => {
+    it('throws NotFoundError when payment method does not exist', async () => {
+      mockDb.select.mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      });
+
+      await expect(
+        goLiveService.mapPaymentMethodAccount(999, 1010),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('throws NotFoundError when account does not exist', async () => {
+      mockDb.select.mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ id: 1 }]),
+        }),
+      });
+      accountsRepository.findById = vi.fn().mockResolvedValue(null);
+
+      await expect(
+        goLiveService.mapPaymentMethodAccount(1, 9999),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('successfully updates mapping and returns payment method with account details', async () => {
+      mockDb.select
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([{ id: 1 }]),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            leftJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([
+                {
+                  id: 1,
+                  method_name: 'Cash',
+                  is_active: true,
+                  is_digital: false,
+                  account_id: 1000,
+                  account_code: '1000',
+                  account_name: 'Cash on hand',
+                },
+              ]),
+            }),
+          }),
+        });
+
+      mockDb.update = vi.fn().mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(undefined),
+        }),
+      });
+
+      accountsRepository.findById = vi.fn().mockResolvedValue({
+        id: 1000,
+        code: '1000',
+        name: 'Cash on hand',
+      });
+
+      const result = await goLiveService.mapPaymentMethodAccount(1, 1000);
+
+      expect(result.id).toBe(1);
+      expect(result.account_id).toBe(1000);
+      expect(result.account_code).toBe('1000');
+      expect(result.account_name).toBe('Cash on hand');
+      expect(mockDb.update).toHaveBeenCalled();
+    });
+
+    it('successfully unmaps account when accountId is null', async () => {
+      mockDb.select
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([{ id: 1 }]),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            leftJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([
+                {
+                  id: 1,
+                  method_name: 'Cash',
+                  is_active: true,
+                  is_digital: false,
+                  account_id: null,
+                  account_code: null,
+                  account_name: null,
+                },
+              ]),
+            }),
+          }),
+        });
+
+      mockDb.update = vi.fn().mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(undefined),
+        }),
+      });
+
+      const result = await goLiveService.mapPaymentMethodAccount(1, null);
+
+      expect(result.account_id).toBeNull();
+      expect(result.account_code).toBeNull();
+      expect(result.account_name).toBeNull();
+      expect(accountsRepository.findById).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('enablePosting (ACC-099)', () => {
+    it('calls settingsService.updateSettings and returns success', async () => {
+      const mockSettingsService: any = {
+        updateSettings: vi.fn().mockResolvedValue([]),
+        setPostingPrerequisiteHook: vi.fn(),
+      };
+
+      const svc = new GoLiveService(
+        accountsRepository,
+        revenueRecognitionRepository,
+        mockDb as any,
+        mockSettingsService,
+      );
+
+      const result = await svc.enablePosting('2026-03-01');
+
+      expect(mockSettingsService.updateSettings).toHaveBeenCalledWith([
+        { setting_key: 'accounting.posting_enabled', setting_value: 'true' },
+      ]);
+      expect(result).toEqual({ success: true, posting_enabled: true });
+    });
+
+    it('throws error when settingsService is missing', async () => {
+      await expect(goLiveService.enablePosting()).rejects.toThrow(
+        'SettingsService is required to enable posting.',
+      );
     });
   });
 

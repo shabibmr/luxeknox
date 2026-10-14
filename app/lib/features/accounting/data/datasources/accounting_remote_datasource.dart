@@ -257,13 +257,29 @@ abstract class AccountingRemoteDataSource {
   Future<api.UnearnedPreviewResponse> getUnearnedPreview({
     api.Date? goLiveDate,
   });
+
+  // Go-Live
+  Future<Map<String, dynamic>> getGoLiveChecklist({
+    api.Date? goLiveDate,
+  });
+
+  Future<Map<String, dynamic>> mapPaymentMethodAccount({
+    required int paymentMethodId,
+    required int? accountId,
+  });
+
+  Future<bool> enablePosting({
+    api.Date? goLiveDate,
+  });
 }
 
 @LazySingleton(as: AccountingRemoteDataSource)
 class AccountingRemoteDataSourceImpl implements AccountingRemoteDataSource {
-  AccountingRemoteDataSourceImpl(this._acctApi);
+  AccountingRemoteDataSourceImpl(this._acctApi, [Dio? dio])
+      : _dio = dio ?? Dio();
 
   final api.ACCTApi _acctApi;
+  final Dio _dio;
 
   T _unwrap<T>(Response<T> response) {
     final data = response.data;
@@ -849,5 +865,63 @@ class AccountingRemoteDataSourceImpl implements AccountingRemoteDataSource {
     api.Date? goLiveDate,
   }) async {
     return _unwrap(await _acctApi.getUnearnedPreview(goLiveDate: goLiveDate));
+  }
+
+  // Go-Live
+  @override
+  Future<Map<String, dynamic>> getGoLiveChecklist({
+    api.Date? goLiveDate,
+  }) async {
+    final response = await _dio.get<dynamic>(
+      '/accounting/go-live/checklist',
+      queryParameters: <String, dynamic>{
+        if (goLiveDate != null) 'go_live_date': goLiveDate.toString(),
+      },
+    );
+    final data = _unwrap(response);
+    return Map<String, dynamic>.from(data as Map);
+  }
+
+  @override
+  Future<Map<String, dynamic>> mapPaymentMethodAccount({
+    required int paymentMethodId,
+    required int? accountId,
+  }) async {
+    final response = await _dio.patch<dynamic>(
+      '/accounting/go-live/payment-methods/$paymentMethodId',
+      data: <String, dynamic>{
+        'account_id': accountId,
+      },
+    );
+    final data = _unwrap(response);
+    return Map<String, dynamic>.from(data as Map);
+  }
+
+  @override
+  Future<bool> enablePosting({
+    api.Date? goLiveDate,
+  }) async {
+    final response = await _dio.post<dynamic>(
+      '/accounting/go-live/enable-posting',
+      queryParameters: <String, dynamic>{
+        if (goLiveDate != null) 'go_live_date': goLiveDate.toString(),
+      },
+      data: <String, dynamic>{
+        if (goLiveDate != null) 'go_live_date': goLiveDate.toString(),
+      },
+    );
+    final data = _unwrap(response);
+    if (data is Map) {
+      final map = Map<String, dynamic>.from(data);
+      return (map['is_posting_enabled'] as bool?) ??
+          (map['posting_enabled'] as bool?) ??
+          (map['can_enable'] as bool?) ??
+          (map['success'] as bool?) ??
+          true;
+    }
+    if (data is bool) {
+      return data;
+    }
+    return true;
   }
 }

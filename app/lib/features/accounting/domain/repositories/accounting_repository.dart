@@ -8,6 +8,7 @@ import '../entities/accounting_reports.dart';
 import '../entities/debit_note.dart';
 import '../entities/expense_voucher.dart';
 import '../entities/fund_transfer.dart';
+import '../entities/go_live.dart';
 import '../entities/item.dart';
 import '../entities/journal.dart';
 import '../entities/payment_voucher.dart';
@@ -355,6 +356,20 @@ abstract class AccountingRepository {
   });
 
   Future<Either<Failure, UnearnedPreviewReport>> getUnearnedPreview({
+    DateTime? goLiveDate,
+  });
+
+  // Go-Live
+  Future<Either<Failure, GoLiveChecklist>> getGoLiveChecklist({
+    DateTime? goLiveDate,
+  });
+
+  Future<Either<Failure, GoLivePaymentMethodMapping>> mapPaymentMethodAccount({
+    required int paymentMethodId,
+    required int? accountId,
+  });
+
+  Future<Either<Failure, bool>> enablePosting({
     DateTime? goLiveDate,
   });
 }

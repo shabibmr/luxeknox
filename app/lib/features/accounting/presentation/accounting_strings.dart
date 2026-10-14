@@ -306,11 +306,56 @@ class AccountingStrings {
   static const String allocatedLabel = 'Allocated';
   static const String allocationsLabel = 'Allocations';
 
-  // Go-Live
+  // Go-Live (ACC-099)
+  static const String goLiveSetup = 'Go-Live Setup';
   static const String goLiveDateLabel = 'Go-Live Date';
+  static const String changeDateLabel = 'Change Date';
   static const String runCutover = 'Execute Cutover';
   static const String cutoverWarning =
       'Executing Go-Live locks all historical periods and initializes opening balances.';
+  static const String goLiveChecklistTitle = 'Go-Live Checklist';
+
+  // Payment Method Mappings
+  static const String paymentMethodMappingsTitle = 'Payment Method Mappings';
+  static const String paymentMethodMappingsSubtitle =
+      'Active payment methods mapped to ledger accounts';
+  static const String mappedAccountLabel = 'Mapped Account';
+  static const String unmappedAccount = 'Unmapped';
+  static const String mapAccount = 'Map Account';
+  static const String changeAccount = 'Change Account';
+  static const String paymentMethodMappedSuccess =
+      'Payment method mapped successfully.';
+
+  // Unearned Revenue & Opening Balance Match
+  static const String unearnedComparisonTitle =
+      'Opening Balance & Unearned Revenue Comparison';
+  static const String expectedPreviewLabel = 'Expected (Calculated Preview)';
+  static const String actualOpeningLabel = 'Actual (Opening Journal)';
+  static const String openingJournalMissing = 'Opening Journal Missing';
+  static const String matchedBadge = 'Matched';
+  static const String mismatchBadge = 'Mismatch';
+  static const String unearnedMembershipAccountLabel =
+      'Unearned Membership (2200)';
+  static const String unearnedPtAccountLabel = 'Unearned PT (2210)';
+
+  // Readiness & Failing Checks
+  static const String readinessTitle = 'Go-Live Readiness';
+  static const String allPrerequisitesMet =
+      'All prerequisites met. Ready for Go-Live.';
+  static const String prerequisitesNotMet =
+      'Prerequisites not met. Resolve the issues below before enabling posting.';
+  static const String failingChecksTitle = 'Failing Checks';
+
+  // Enable Posting
+  static const String enableAutomaticPosting = 'Enable Automatic Posting';
+  static const String postingAlreadyEnabled = 'Posting is currently ENABLED';
+  static const String confirmGoLiveTitle = 'Confirm Go-Live';
+  static const String enablePostingConfirm =
+      'Executing Go-Live locks all historical periods and initializes opening balances. This action enables automatic journal creation from member sales and cannot be undone easily. Are you sure you want to proceed?';
+  static const String postingEnabledSuccess =
+      'Automatic journal posting enabled successfully.';
+  static const String missingPostingTogglePermission =
+      'Requires accounting.posting_toggle capability to enable automatic posting.';
 
   // Formatters
   static String formatMoney(String amount) => '\$$amount';

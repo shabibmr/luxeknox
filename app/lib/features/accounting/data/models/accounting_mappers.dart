@@ -13,6 +13,7 @@ import '../../domain/entities/payment_voucher.dart';
 import '../../domain/entities/purchase_bill.dart';
 import '../../domain/entities/tax_code.dart';
 import '../../domain/entities/vendor.dart';
+export 'go_live_mapper.dart';
 
 // Accounts
 extension AccountModelMapper on api.Account {

@@ -6,10 +6,11 @@ import {
   accounts,
   journalEntries,
   journalLines,
+  taxCodes,
   type Account,
 } from '../platform/db/schema/accounting';
 import { memberships, membershipProducts } from '../platform/db/schema/memberships';
-import { payments } from '../platform/db/schema/payments';
+import { paymentMethods, payments } from '../platform/db/schema/payments';
 import { ptSubscriptions, ptProducts } from '../platform/db/schema/personal-training';
 import { NotFoundError } from '../platform/errors/app-error';
 import {
@@ -22,7 +23,12 @@ import {
 } from '../platform/money/money';
 import { SettingsService } from '../sys/settings.service';
 import { AccountsRepository } from './accounts.repository';
-import type { UnearnedPreviewItemDto, UnearnedPreviewResponseDto } from './go-live.dto';
+import type {
+  GoLiveChecklistResponseDto,
+  GoLivePaymentMethodDto,
+  UnearnedPreviewItemDto,
+  UnearnedPreviewResponseDto,
+} from './go-live.dto';
 import { RevenueRecognitionRepository } from './revenue-recognition.repository';
 import { countDaysInclusive } from './revenue-recognition.service';
 
@@ -38,6 +44,8 @@ function subtractOneDay(dateStr: string): string {
 
 @Injectable()
 export class GoLiveService implements OnModuleInit {
+  private targetGoLiveDate: string | null = null;
+
   constructor(
     private readonly accountsRepository: AccountsRepository,
     private readonly revenueRecognitionRepository: RevenueRecognitionRepository,
@@ -50,7 +58,8 @@ export class GoLiveService implements OnModuleInit {
   onModuleInit(): void {
     if (this.settingsService) {
       this.settingsService.setPostingPrerequisiteHook(async (overrides) => {
-        const targetDate = overrides?.goLiveDate ?? new Date().toISOString().slice(0, 10);
+        const targetDate =
+          overrides?.goLiveDate ?? this.targetGoLiveDate ?? new Date().toISOString().slice(0, 10);
         const { failingReasons, preview } = await this.validateOpeningJournalMatch(targetDate);
         return {
           failingReasons,
@@ -311,12 +320,19 @@ export class GoLiveService implements OnModuleInit {
   }
 
   /**
-   * ACC-064: Checks opening balance journal net credits on accounts 2200 and 2210 against preview.
+   * ACC-064 / ACC-099: Checks opening balance journal net credits on accounts 2200 and 2210 against preview.
    * Returns failing check messages if missing or mismatched, naming both actual and expected amounts.
    */
   async validateOpeningJournalMatch(
     goLiveDate: string,
-  ): Promise<{ failingReasons: string[]; preview: UnearnedPreviewResponseDto }> {
+  ): Promise<{
+    failingReasons: string[];
+    preview: UnearnedPreviewResponseDto;
+    openingJournalFound: boolean;
+    openingJournalMatches: boolean;
+    actual2200: string;
+    actual2210: string;
+  }> {
     const preview = await this.getUnearnedPreview(goLiveDate);
     const db = this.db as any;
 
@@ -331,6 +347,10 @@ export class GoLiveService implements OnModuleInit {
       return {
         failingReasons: ['No posted opening balance journal found.'],
         preview,
+        openingJournalFound: false,
+        openingJournalMatches: false,
+        actual2200: '0.00',
+        actual2210: '0.00',
       };
     }
 
@@ -362,18 +382,230 @@ export class GoLiveService implements OnModuleInit {
     }
 
     const failingReasons: string[] = [];
-    if (cmpMoney(actual2200, preview.totals.unearned_membership_total) !== 0) {
+    const match2200 = cmpMoney(actual2200, preview.totals.unearned_membership_total) === 0;
+    if (!match2200) {
       failingReasons.push(
         `Opening balance journal 2200 unearned membership balance (${actual2200}) does not match unearned preview (${preview.totals.unearned_membership_total}).`,
       );
     }
 
-    if (cmpMoney(actual2210, preview.totals.unearned_pt_total) !== 0) {
+    const match2210 = cmpMoney(actual2210, preview.totals.unearned_pt_total) === 0;
+    if (!match2210) {
       failingReasons.push(
         `Opening balance journal 2210 unearned PT balance (${actual2210}) does not match unearned preview (${preview.totals.unearned_pt_total}).`,
       );
     }
 
-    return { failingReasons, preview };
+    return {
+      failingReasons,
+      preview,
+      openingJournalFound: true,
+      openingJournalMatches: match2200 && match2210,
+      actual2200,
+      actual2210,
+    };
+  }
+
+  /**
+   * ACC-099: Retrieves the go-live checklist, prerequisite checks, unearned revenue preview,
+   * opening balance match status, tax code comparison, and payment method mapping status.
+   */
+  async getGoLiveChecklist(targetDate?: string): Promise<GoLiveChecklistResponseDto> {
+    const effectiveDate = targetDate ?? new Date().toISOString().slice(0, 10);
+    const db = this.db as any;
+
+    let postingEnabled = false;
+    let gymTaxRate = '18.00';
+    let defaultTaxCode = 'gst_18';
+
+    if (this.settingsService) {
+      const postingVal = await this.settingsService.getSetting('accounting.posting_enabled');
+      postingEnabled = postingVal === 'true' || postingVal === '1';
+
+      const taxRateVal = await this.settingsService.getSetting('tax_rate_percent');
+      if (taxRateVal) {
+        const parsed = parseFloat(taxRateVal);
+        if (Number.isFinite(parsed) && parsed >= 0) {
+          gymTaxRate = parsed.toFixed(2);
+        }
+      }
+
+      const codeVal = await this.settingsService.getSetting('accounting.default_tax_code');
+      if (codeVal) {
+        defaultTaxCode = codeVal;
+      }
+    }
+
+    const pmRows = await db
+      .select({
+        id: paymentMethods.id,
+        method_name: paymentMethods.method_name,
+        is_active: paymentMethods.is_active,
+        is_digital: paymentMethods.is_digital,
+        account_id: paymentMethods.account_id,
+        account_code: accounts.code,
+        account_name: accounts.name,
+      })
+      .from(paymentMethods)
+      .leftJoin(accounts, eq(paymentMethods.account_id, accounts.id))
+      .where(eq(paymentMethods.is_active, true))
+      .orderBy(paymentMethods.id);
+
+    const paymentMethodList: GoLivePaymentMethodDto[] = pmRows.map((pm: any) => ({
+      id: pm.id,
+      method_name: pm.method_name,
+      is_active: Boolean(pm.is_active),
+      is_digital: Boolean(pm.is_digital),
+      account_id: pm.account_id ?? null,
+      account_code: pm.account_code ?? null,
+      account_name: pm.account_name ?? null,
+    }));
+
+    const matchingTaxCodes = await db
+      .select({
+        id: taxCodes.id,
+        code: taxCodes.code,
+        rate_percent: taxCodes.rate_percent,
+        is_active: taxCodes.is_active,
+      })
+      .from(taxCodes)
+      .where(eq(taxCodes.code, defaultTaxCode));
+
+    let defaultTaxRate = '0.00';
+    let taxMatched = false;
+    if (matchingTaxCodes.length > 0) {
+      const code = matchingTaxCodes[0];
+      const parsedCodeRate = parseFloat(code.rate_percent);
+      defaultTaxRate = Number.isFinite(parsedCodeRate) ? parsedCodeRate.toFixed(2) : '0.00';
+      taxMatched = Boolean(code.is_active) && gymTaxRate === defaultTaxRate;
+    }
+
+    const openingMatch = await this.validateOpeningJournalMatch(effectiveDate);
+
+    let failingReasons: string[] = [];
+    if (this.settingsService) {
+      failingReasons = await this.settingsService.checkPostingPrerequisites({
+        goLiveDate: effectiveDate,
+      });
+    } else {
+      failingReasons = openingMatch.failingReasons;
+    }
+
+    const canEnable = failingReasons.length === 0;
+
+    return {
+      go_live_date: effectiveDate,
+      posting_enabled: postingEnabled,
+      can_enable: canEnable,
+      failing_reasons: failingReasons,
+      opening_journal_found: openingMatch.openingJournalFound,
+      opening_journal_matches: openingMatch.openingJournalMatches,
+      unearned_membership: {
+        preview: openingMatch.preview.totals.unearned_membership_total,
+        actual: openingMatch.actual2200,
+        matched:
+          openingMatch.openingJournalFound &&
+          cmpMoney(
+            openingMatch.actual2200,
+            openingMatch.preview.totals.unearned_membership_total,
+          ) === 0,
+      },
+      unearned_pt: {
+        preview: openingMatch.preview.totals.unearned_pt_total,
+        actual: openingMatch.actual2210,
+        matched:
+          openingMatch.openingJournalFound &&
+          cmpMoney(
+            openingMatch.actual2210,
+            openingMatch.preview.totals.unearned_pt_total,
+          ) === 0,
+      },
+      tax_match: {
+        gym_tax_rate: gymTaxRate,
+        default_tax_code: defaultTaxCode,
+        default_tax_rate: defaultTaxRate,
+        matched: taxMatched,
+      },
+      payment_methods: paymentMethodList,
+    };
+  }
+
+  /**
+   * ACC-099: Maps a payment method to an account in the chart of accounts.
+   */
+  async mapPaymentMethodAccount(
+    paymentMethodId: number,
+    accountId: number | null,
+  ): Promise<GoLivePaymentMethodDto> {
+    const db = this.db as any;
+
+    const existing = await db
+      .select({ id: paymentMethods.id })
+      .from(paymentMethods)
+      .where(eq(paymentMethods.id, paymentMethodId));
+
+    if (existing.length === 0) {
+      throw new NotFoundError(`Payment method ${paymentMethodId} was not found`);
+    }
+
+    if (accountId != null) {
+      const account = await this.accountsRepository.findById(accountId);
+      if (!account) {
+        throw new NotFoundError(`Account ${accountId} was not found`);
+      }
+    }
+
+    await db
+      .update(paymentMethods)
+      .set({
+        account_id: accountId,
+        updated_at: new Date(),
+      })
+      .where(eq(paymentMethods.id, paymentMethodId));
+
+    const updated = await db
+      .select({
+        id: paymentMethods.id,
+        method_name: paymentMethods.method_name,
+        is_active: paymentMethods.is_active,
+        is_digital: paymentMethods.is_digital,
+        account_id: paymentMethods.account_id,
+        account_code: accounts.code,
+        account_name: accounts.name,
+      })
+      .from(paymentMethods)
+      .leftJoin(accounts, eq(paymentMethods.account_id, accounts.id))
+      .where(eq(paymentMethods.id, paymentMethodId));
+
+    const pm = updated[0];
+    return {
+      id: pm.id,
+      method_name: pm.method_name,
+      is_active: Boolean(pm.is_active),
+      is_digital: Boolean(pm.is_digital),
+      account_id: pm.account_id ?? null,
+      account_code: pm.account_code ?? null,
+      account_name: pm.account_name ?? null,
+    };
+  }
+
+  /**
+   * ACC-099: Enables automatic journal posting via SettingsService.
+   */
+  async enablePosting(
+    targetDate?: string,
+  ): Promise<{ success: true; posting_enabled: true }> {
+    if (!this.settingsService) {
+      throw new Error('SettingsService is required to enable posting.');
+    }
+    this.targetGoLiveDate = targetDate ?? null;
+    try {
+      await this.settingsService.updateSettings([
+        { setting_key: 'accounting.posting_enabled', setting_value: 'true' },
+      ]);
+      return { success: true, posting_enabled: true };
+    } finally {
+      this.targetGoLiveDate = null;
+    }
   }
 }

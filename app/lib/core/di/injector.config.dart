@@ -37,6 +37,8 @@ import '../../features/accounting/domain/usecases/create_purchase_bill_usecase.d
     as _i988;
 import '../../features/accounting/domain/usecases/create_vendor_usecase.dart'
     as _i508;
+import '../../features/accounting/domain/usecases/enable_posting_usecase.dart'
+    as _i424;
 import '../../features/accounting/domain/usecases/get_account_usecase.dart'
     as _i307;
 import '../../features/accounting/domain/usecases/get_accounting_periods_usecase.dart'
@@ -59,6 +61,8 @@ import '../../features/accounting/domain/usecases/get_fund_transfer_usecase.dart
     as _i530;
 import '../../features/accounting/domain/usecases/get_fund_transfers_usecase.dart'
     as _i778;
+import '../../features/accounting/domain/usecases/get_go_live_checklist_usecase.dart'
+    as _i73;
 import '../../features/accounting/domain/usecases/get_gst_summary_usecase.dart'
     as _i153;
 import '../../features/accounting/domain/usecases/get_journal_usecase.dart'
@@ -89,6 +93,8 @@ import '../../features/accounting/domain/usecases/get_vendors_usecase.dart'
     as _i612;
 import '../../features/accounting/domain/usecases/lock_accounting_period_usecase.dart'
     as _i514;
+import '../../features/accounting/domain/usecases/map_payment_method_account_usecase.dart'
+    as _i1001;
 import '../../features/accounting/domain/usecases/post_expense_usecase.dart'
     as _i503;
 import '../../features/accounting/domain/usecases/post_fund_transfer_usecase.dart'
@@ -127,6 +133,8 @@ import '../../features/accounting/presentation/cubit/fund_transfer_form_cubit.da
     as _i760;
 import '../../features/accounting/presentation/cubit/fund_transfers_cubit.dart'
     as _i386;
+import '../../features/accounting/presentation/cubit/go_live_cubit.dart'
+    as _i533;
 import '../../features/accounting/presentation/cubit/journal_detail_cubit.dart'
     as _i494;
 import '../../features/accounting/presentation/cubit/journal_entry_form_cubit.dart'
@@ -142,7 +150,7 @@ import '../../features/accounting/presentation/cubit/payment_vouchers_cubit.dart
 import '../../features/accounting/presentation/cubit/purchase_bill_detail_cubit.dart'
     as _i128;
 import '../../features/accounting/presentation/cubit/purchase_bill_form_cubit.dart'
-    as _i74;
+    as _i75;
 import '../../features/accounting/presentation/cubit/purchase_bills_cubit.dart'
     as _i870;
 import '../../features/accounting/presentation/cubit/vendor_form_cubit.dart'
@@ -360,7 +368,7 @@ import '../../features/membership/domain/usecases/get_membership_product_usecase
 import '../../features/membership/domain/usecases/get_membership_products_usecase.dart'
     as _i359;
 import '../../features/membership/domain/usecases/get_membership_usecase.dart'
-    as _i73;
+    as _i74;
 import '../../features/membership/domain/usecases/get_memberships_usecase.dart'
     as _i370;
 import '../../features/membership/domain/usecases/reject_freeze_usecase.dart'
@@ -781,6 +789,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i633.RBACApi>(
       () => registerModule.rbacApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i85.AccountingRemoteDataSource>(
+      () => _i85.AccountingRemoteDataSourceImpl(
+        gh<_i633.ACCTApi>(),
+        gh<_i361.Dio>(),
+      ),
+    );
     gh.lazySingleton<_i817.DashboardRemoteDataSource>(
       () => _i817.DashboardRemoteDataSourceImpl(gh<_i633.DASHApi>()),
     );
@@ -902,9 +916,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i555.GoalsListCubit>(
       () => _i555.GoalsListCubit(gh<_i62.ListMemberGoalsUseCase>()),
-    );
-    gh.lazySingleton<_i85.AccountingRemoteDataSource>(
-      () => _i85.AccountingRemoteDataSourceImpl(gh<_i633.ACCTApi>()),
     );
     gh.lazySingleton<_i804.GetDashboardUseCase>(
       () => _i804.GetDashboardUseCase(gh<_i665.DashboardRepository>()),
@@ -1196,6 +1207,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i864.DeleteDeviceUseCase>(
       () => _i864.DeleteDeviceUseCase(gh<_i563.NotificationsRepository>()),
     );
+    gh.factory<_i533.GoLiveCubit>(
+      () => _i533.GoLiveCubit(gh<_i330.AccountingRepository>()),
+    );
     gh.lazySingleton<_i7.AlertsRepository>(
       () => _i56.AlertsRepositoryImpl(gh<_i1019.AlertsRemoteDataSource>()),
     );
@@ -1266,6 +1280,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i508.CreateVendorUseCase>(
       () => _i508.CreateVendorUseCase(gh<_i330.AccountingRepository>()),
     );
+    gh.lazySingleton<_i424.EnablePostingUseCase>(
+      () => _i424.EnablePostingUseCase(gh<_i330.AccountingRepository>()),
+    );
     gh.lazySingleton<_i307.GetAccountUseCase>(
       () => _i307.GetAccountUseCase(gh<_i330.AccountingRepository>()),
     );
@@ -1298,6 +1315,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i778.GetFundTransfersUseCase>(
       () => _i778.GetFundTransfersUseCase(gh<_i330.AccountingRepository>()),
+    );
+    gh.lazySingleton<_i73.GetGoLiveChecklistUseCase>(
+      () => _i73.GetGoLiveChecklistUseCase(gh<_i330.AccountingRepository>()),
     );
     gh.lazySingleton<_i153.GetGstSummaryUseCase>(
       () => _i153.GetGstSummaryUseCase(gh<_i330.AccountingRepository>()),
@@ -1343,6 +1363,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i514.LockAccountingPeriodUseCase>(
       () => _i514.LockAccountingPeriodUseCase(gh<_i330.AccountingRepository>()),
+    );
+    gh.lazySingleton<_i1001.MapPaymentMethodAccountUseCase>(
+      () => _i1001.MapPaymentMethodAccountUseCase(
+        gh<_i330.AccountingRepository>(),
+      ),
     );
     gh.lazySingleton<_i503.PostExpenseUseCase>(
       () => _i503.PostExpenseUseCase(gh<_i330.AccountingRepository>()),
@@ -1708,8 +1733,8 @@ extension GetItInjectableX on _i174.GetIt {
       () =>
           _i359.GetMembershipProductsUseCase(gh<_i325.MembershipRepository>()),
     );
-    gh.lazySingleton<_i73.GetMembershipUseCase>(
-      () => _i73.GetMembershipUseCase(gh<_i325.MembershipRepository>()),
+    gh.lazySingleton<_i74.GetMembershipUseCase>(
+      () => _i74.GetMembershipUseCase(gh<_i325.MembershipRepository>()),
     );
     gh.lazySingleton<_i370.GetMembershipsUseCase>(
       () => _i370.GetMembershipsUseCase(gh<_i325.MembershipRepository>()),
@@ -1747,8 +1772,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i645.GetPaymentsUseCase>(
       () => _i645.GetPaymentsUseCase(gh<_i663.PaymentsRepository>()),
     );
-    gh.factory<_i74.PurchaseBillFormCubit>(
-      () => _i74.PurchaseBillFormCubit(
+    gh.factory<_i75.PurchaseBillFormCubit>(
+      () => _i75.PurchaseBillFormCubit(
         gh<_i988.CreatePurchaseBillUseCase>(),
         gh<_i612.GetVendorsUseCase>(),
         gh<_i676.GetAccountsUseCase>(),
@@ -1757,7 +1782,7 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i269.MembershipRenewCubit>(
       () => _i269.MembershipRenewCubit(
-        gh<_i73.GetMembershipUseCase>(),
+        gh<_i74.GetMembershipUseCase>(),
         gh<_i359.GetMembershipProductsUseCase>(),
         gh<_i806.RenewMembershipUseCase>(),
       ),
@@ -2146,7 +2171,7 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i854.MembershipDetailCubit>(
       () => _i854.MembershipDetailCubit(
-        gh<_i73.GetMembershipUseCase>(),
+        gh<_i74.GetMembershipUseCase>(),
         gh<_i806.RenewMembershipUseCase>(),
         gh<_i238.CancelMembershipUseCase>(),
         gh<_i227.ExtendMembershipUseCase>(),
@@ -2236,7 +2261,7 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i203.MembershipFreezeFormCubit>(
       () => _i203.MembershipFreezeFormCubit(
-        gh<_i73.GetMembershipUseCase>(),
+        gh<_i74.GetMembershipUseCase>(),
         gh<_i377.RequestMembershipFreezeUseCase>(),
       ),
     );

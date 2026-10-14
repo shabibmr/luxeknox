@@ -93,6 +93,13 @@ doc/FundTransferCreate.md
 doc/FundTransferPage.md
 doc/FundTransferUpdate.md
 doc/GOALApi.md
+doc/GoLiveChecklistResponse.md
+doc/GoLiveEnablePosting.md
+doc/GoLiveEnablePostingResponse.md
+doc/GoLiveMapPaymentMethod.md
+doc/GoLivePaymentMethod.md
+doc/GoLiveTaxMatch.md
+doc/GoLiveUnearnedMatch.md
 doc/Goal.md
 doc/GoalCheckInWrite.md
 doc/GoalHistory.md
@@ -422,6 +429,13 @@ lib/src/model/fund_transfer.dart
 lib/src/model/fund_transfer_create.dart
 lib/src/model/fund_transfer_page.dart
 lib/src/model/fund_transfer_update.dart
+lib/src/model/go_live_checklist_response.dart
+lib/src/model/go_live_enable_posting.dart
+lib/src/model/go_live_enable_posting_response.dart
+lib/src/model/go_live_map_payment_method.dart
+lib/src/model/go_live_payment_method.dart
+lib/src/model/go_live_tax_match.dart
+lib/src/model/go_live_unearned_match.dart
 lib/src/model/goal.dart
 lib/src/model/goal_check_in_write.dart
 lib/src/model/goal_history.dart
@@ -627,7 +641,3 @@ lib/src/model/workout_set_update.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
-test/fund_transfer_create_test.dart
-test/fund_transfer_page_test.dart
-test/fund_transfer_test.dart
-test/fund_transfer_update_test.dart
