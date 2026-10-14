@@ -32,7 +32,7 @@ pie title Database Entities Distribution (82 Tables)
     "Goals & Progress (7)" : 7
     "Notifications & Devices (4)" : 4
     "Settings & System Audit (2)" : 2
-    "Accounting (25)" : 25
+    "Accounting (27)" : 27
 ```
 
 | Domain | Tables |
@@ -48,8 +48,8 @@ pie title Database Entities Distribution (82 Tables)
 | Goals & Progress | 7 |
 | Notifications | 4 |
 | Settings & Audit | 2 |
-| Accounting | 25 |
-| **Total** | **82** |
+| Accounting | 27 |
+| **Total** | **84** |
 
 ---
 
@@ -504,7 +504,7 @@ Double-entry books for one gym ([ADR-0010](./adr/0010-accounting-ledger.md)). Th
 
 * **Purpose**: Posted journal header. Immutable after post; corrections are reversing journals.
 * **Supporting Screens**: Journal list, detail, manual entry, day book.
-* **Key Attributes**: `id`, `journal_number`, `entry_date`, `accounting_period_id` (FK), `source_type` (sales_invoice, sales_receipt, credit_note, purchase_bill, expense_voucher, payment_voucher, debit_note, revenue_recognition, manual, opening_balance, journal_reversal), `source_id`, `memo`, `posted_at`, `posted_by_user_id` (FK), `reverses_journal_id` (FK nullable), `row_version`, `created_at`, `updated_at`.
+* **Key Attributes**: `id`, `journal_number`, `entry_date`, `accounting_period_id` (FK), `source_type` (sales_invoice, sales_receipt, credit_note, purchase_bill, expense_voucher, payment_voucher, debit_note, revenue_recognition, manual, opening_balance, journal_reversal, sales_adjustment, recognition_forfeit, fund_transfer), `source_id`, `memo`, `posted_at`, `posted_by_user_id` (FK), `reverses_journal_id` (FK nullable), `row_version`, `created_at`, `updated_at`.
 
 ### `journal_lines`
 
@@ -562,15 +562,21 @@ Double-entry books for one gym ([ADR-0010](./adr/0010-accounting-ledger.md)). Th
 
 ### `revenue_recognition_schedules`
 
-* **Purpose**: Straight-line recognition of unearned membership or PT income over a term.
-* **Supporting Screens**: Accounting home / recognition job results via journals.
-* **Key Attributes**: `id`, `payment_id` (FK), `unearned_account_id` (FK), `income_account_id` (FK), `total_amount`, `recognized_amount`, `starts_on`, `ends_on`.
+* **Purpose**: Day-prorated recognition of unearned membership or PT income over a term, posted monthly. Re-planned on freeze, extend, upgrade, renew, and cancel; posted recognition is never edited.
+* **Supporting Screens**: Accounting home / recognition job results via journals, go-live setup.
+* **Key Attributes**: `id`, `payment_id` (FK, unique), `unearned_account_id` (FK), `income_account_id` (FK), `total_amount`, `recognized_amount`, `starts_on`, `ends_on`, `recognized_through` (last day posted; the day before the term starts, or the day before go-live for carried-forward terms), `status` (open, paused, closed), `paused_from` (nullable; freeze start while paused).
 
 ### `revenue_recognition_lines`
 
 * **Purpose**: One recognition posting per schedule per period.
 * **Supporting Screens**: Journal detail (via `journal_entry_id`).
 * **Key Attributes**: `id`, `schedule_id` (FK), `accounting_period_id` (FK), `amount`, `journal_entry_id` (FK nullable).
+
+### `fund_transfers`
+
+* **Purpose**: Money moved between two bank or cash accounts: cash deposits, bank to bank, and card/UPI settlement out of `1020`. An optional fee line debits the fee account; the destination receives the amount minus the fee.
+* **Supporting Screens**: Fund transfer list, form, detail, post.
+* **Key Attributes**: `id`, `transfer_number`, `transfer_date`, `from_account_id` (FK), `to_account_id` (FK), `amount`, `fee_amount` (default 0.00), `fee_account_id` (FK nullable), `memo`, `status` (draft, posted), `journal_entry_id` (FK nullable), `row_version`, `created_at`, `updated_at`.
 
 ### `journal_number_counters`
 
@@ -600,6 +606,11 @@ Double-entry books for one gym ([ADR-0010](./adr/0010-accounting-ledger.md)). Th
 ### `debit_note_number_counters`
 
 * **Purpose**: Single-row sequence for debit note numbers.
+* **Key Attributes**: `id`, `next_value`.
+
+### `fund_transfer_number_counters`
+
+* **Purpose**: Single-row sequence for fund transfer numbers.
 * **Key Attributes**: `id`, `next_value`.
 
 ---
@@ -653,6 +664,9 @@ This section is the contract implementers should follow when writing DDL. It doe
 | `payment_vouchers` | `voucher_number` |
 | `credit_notes` | `credit_note_number` |
 | `debit_notes` | `debit_note_number` |
+| `fund_transfers` | `transfer_number` |
+| `revenue_recognition_schedules` | `payment_id` |
+| `revenue_recognition_lines` | (`schedule_id`, `accounting_period_id`) |
 | `accounting_periods` | (`fiscal_year_id`, `starts_on`) |
 
 At most one `users` row maps to one of `members` / `trainers` / `employees`, matching `user_type`. A member has at most one membership in `active` or `frozen`.
@@ -684,6 +698,7 @@ plan 1──* versions 1──* line items
 * Posted journals are immutable; corrections are reversing journals (`reverses_journal_id`).
 * `accounting.posting_enabled` gates automatic posts from `payments` / `payment_histories`. While false, payments behave as today.
 * AR and AP are open invoices and unpaid bills on control accounts — not separate balance tables.
+* Unearned revenue on `2200` / `2210` equals the unrecognized amount on open and paused `revenue_recognition_schedules`. Terms running at go-live get schedules for their unexpired share (ADR-0010 decisions 13 and 14).
 * `pt_products.income_account_id` follows the same nullable FK pattern as `membership_products.income_account_id` ([ADR-0009](./adr/0009-personal-training-subscriptions.md)).
 
 ### Attendance

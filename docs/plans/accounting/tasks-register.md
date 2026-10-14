@@ -23,7 +23,7 @@ Later rows stay `[>]` until a new plan pulls them in.
 |---|---|---|---|---|
 | ACC-001 | `[x]` | Write `docs/adr/0010-accounting-ledger.md` with the twelve decisions in the plan | — | ADR is accepted in `docs/adr/README.md` |
 | ACC-002 | `[x]` | Add an Accounting section to `docs/Entities-List.md` and `docs/database-entities.md` | ACC-001 | Names match `schema/accounting.ts` |
-| ACC-003 | `[ ]` | Amend ADR-0010 with decision 13 (recognition follows the term) and decision 14 (go-live carries unearned revenue forward). Add `fund_transfers` and the new schedule columns to the entity docs | ACC-001, ACC-002 | ADR lists fourteen decisions. Entity docs match `schema/accounting.ts` after ACC-018 |
+| ACC-003 | `[x]` | Amend ADR-0010 with decision 13 (recognition follows the term) and decision 14 (go-live carries unearned revenue forward). Add `fund_transfers` and the new schedule columns to the entity docs | ACC-001, ACC-002 | ADR lists fourteen decisions. Entity docs match `schema/accounting.ts` after ACC-018 |
 
 ## Phase 1 — Schema, seed, settings
 
@@ -182,8 +182,8 @@ One person owns a shared file even when the wave lists the tasks together:
 
 | Marker | Count |
 |---|---|
-| `[ ]` TODO | 4 |
+| `[ ]` TODO | 3 |
 | `[~]` DOING | 0 |
-| `[x]` DONE | 63 |
+| `[x]` DONE | 64 |
 | `[!]` BLOCKED | 0 |
 | `[>]` LATER | 8 |

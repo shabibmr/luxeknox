@@ -4,6 +4,7 @@
 | :--- | :--- |
 | **Status** | **Accepted** |
 | **Date** | 2026-10-12 |
+| **Amended** | 2026-10-14 — decisions 13 and 14 |
 | **Resolves** | Double-entry books beside member sales; chart, periods, purchases, expenses, recognition |
 | **Related** | [ADR-0004](./0004-tenancy-model.md), [implementation plan](../plans/accounting/implementation-plan.md), FR-PAY-005, FR-PAY-012 |
 | **Supersedes** | — |
@@ -28,12 +29,15 @@ Staff need double-entry books for one gym without replacing POS or rewriting the
 10. **Parties.** Members remain the sales party. Vendors are new. A walk-in sale stays a member sale in `payments`.
 11. **Accounts receivable and accounts payable** are the open sales invoices and unpaid bills sitting on control accounts. They are not extra balance tables.
 12. **Admin and super_admin** receive every new permission. Other roles receive none until someone grants them.
+13. **Recognition follows the term.** Revenue is prorated by day and posted once a month. A freeze, extension, upgrade, renewal, or cancellation re-plans the remaining schedule. Unearned revenue left on a cancelled term with no refund moves to forfeited income (`4300`).
+14. **Go-live carries unearned revenue forward.** Memberships and PT terms still running at go-live get recognition schedules for their unexpired share. The opening journal's `2200` and `2210` balances must equal those schedules before posting can be enabled.
 
 ## Consequences
 
 - New tables live in `apps/api/src/platform/db/schema/accounting.ts`. Member sales keep posting through `PaymentService` into `AccountingPostingService` when posting is enabled.
 - Turning posting on before every active payment method has an `account_id` fails the next collection; the settings toggle must refuse until those links exist.
-- Header-level tax on `payments` cannot split CGST and SGST from a client amount. The sales bridge uses `accounting.default_tax_code` and recomputes. A rounding gap versus stored `payments.tax_amount` posts to account `5900` when the amounts differ.
+- Header-level tax on `payments` cannot split CGST and SGST from a client amount. The sales bridge uses `accounting.default_tax_code` and recomputes. A rounding gap versus stored `payments.tax_amount` posts to account `5950` when the amounts differ.
+- Posted recognition is never edited. A re-plan moves only the unrecognized remainder, and a schedule records how far it has posted in `recognized_through`. A freeze pauses the schedule from `paused_from` and posts nothing for frozen days.
 - Closing a period that still has draft bills does not post them. The lock response lists draft document counts.
 - Inventory, bank statement reconciliation, payroll, fixed assets, budgets, and historical payment backfill are out of this ADR; they are named as later tasks in the accounting register.
 

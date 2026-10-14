@@ -97,6 +97,7 @@ Canonical physical names: [`database-entities.md`](./database-entities.md) (82 t
 - Expense Voucher Line
 - Payment Voucher
 - Payment Allocation
+- Fund Transfer
 - Credit Note
 - Debit Note
 - Revenue Recognition Schedule
