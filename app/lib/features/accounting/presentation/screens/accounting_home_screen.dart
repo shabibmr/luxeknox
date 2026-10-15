@@ -442,6 +442,22 @@ class _QuickActionsSection extends StatelessWidget {
               onPressed: () => context.go(Routes.adminAccountingJournals),
             ),
             ActionChip(
+              avatar: const Icon(Icons.shopping_cart_outlined, size: 18),
+              label: const Text(AccountingStrings.expensesTitle),
+              onPressed: () => context.go(Routes.adminAccountingExpenses),
+            ),
+            ActionChip(
+              avatar: const Icon(Icons.payments_outlined, size: 18),
+              label: const Text(AccountingStrings.paymentVouchersTitle),
+              onPressed: () =>
+                  context.go(Routes.adminAccountingPaymentVouchers),
+            ),
+            ActionChip(
+              avatar: const Icon(Icons.store_outlined, size: 18),
+              label: const Text(AccountingStrings.vendorsTitle),
+              onPressed: () => context.go(Routes.adminAccountingVendors),
+            ),
+            ActionChip(
               avatar: const Icon(Icons.bar_chart_outlined, size: 18),
               label: const Text(AccountingStrings.viewReports),
               onPressed: () => context.go(Routes.adminAccountingReports),
