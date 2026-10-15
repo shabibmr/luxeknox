@@ -1,16 +1,19 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { DrizzleDb } from '../client';
 import {
   accountingPeriods,
   accounts,
   fiscalYears,
+  items,
   taxCodeComponents,
   taxCodes,
+  uoms,
   type NewAccount,
   type NewAccountingPeriod,
   type NewFiscalYear,
   type NewTaxCode,
   type NewTaxCodeComponent,
+  type NewUom,
 } from '../schema/accounting';
 
 /** Seeded chart of accounts — codes are stable lookup keys. */
@@ -22,6 +25,7 @@ const SEED_ACCOUNTS: ReadonlyArray<
   { code: '1020', name: 'Card/UPI clearing', account_type: 'asset', is_active: true, is_bank: true, is_control: false, control_role: null },
   { code: '1100', name: 'Accounts receivable', account_type: 'asset', is_active: true, is_bank: false, is_control: true, control_role: 'ar' },
   { code: '1300', name: 'Input tax', account_type: 'asset', is_active: true, is_bank: false, is_control: true, control_role: 'input_tax' },
+  { code: '1400', name: 'Inventory', account_type: 'asset', is_active: true, is_bank: false, is_control: true, control_role: 'inventory' },
   { code: '2000', name: 'Accounts payable', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'ap' },
   { code: '2100', name: 'Output CGST', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'output_cgst' },
   { code: '2110', name: 'Output SGST', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'output_sgst' },
@@ -33,16 +37,30 @@ const SEED_ACCOUNTS: ReadonlyArray<
   { code: '4000', name: 'Membership revenue', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '4100', name: 'Personal training revenue', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '4200', name: 'Other sales', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { code: '4250', name: 'Merchandise sales', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '4300', name: 'Forfeited membership income', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '4900', name: 'Sales discounts', account_type: 'income', is_active: true, is_bank: false, is_control: true, control_role: 'discounts' },
   { code: '5000', name: 'Rent', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { code: '5050', name: 'Cost of goods sold', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '5100', name: 'Utilities', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '5200', name: 'Salaries', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '5300', name: 'Supplies', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '5400', name: 'Repairs and maintenance', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '5500', name: 'Bank and processor charges', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '5900', name: 'General expense', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { code: '5960', name: 'Inventory adjustments', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
   { code: '5950', name: 'Rounding off', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+];
+
+const SEED_UOMS: ReadonlyArray<Omit<NewUom, 'id' | 'created_at' | 'updated_at' | 'is_active'>> = [
+  { code: 'PCS', name: 'Pieces', decimal_places: 0 },
+  { code: 'BOX', name: 'Box', decimal_places: 0 },
+  { code: 'PKT', name: 'Packet', decimal_places: 0 },
+  { code: 'BTL', name: 'Bottle', decimal_places: 0 },
+  { code: 'KG', name: 'Kilogram', decimal_places: 3 },
+  { code: 'G', name: 'Gram', decimal_places: 0 },
+  { code: 'LTR', name: 'Litre', decimal_places: 3 },
+  { code: 'ML', name: 'Millilitre', decimal_places: 0 },
 ];
 
 const SEED_TAX_CODES: ReadonlyArray<Omit<NewTaxCode, 'id'>> = [
@@ -105,6 +123,28 @@ async function ensureAccounts(db: DrizzleDb): Promise<Map<string, number>> {
   }
 
   return byCode;
+}
+
+async function ensureUoms(db: DrizzleDb): Promise<number> {
+  const now = new Date();
+  const existing = await db.select({ id: uoms.id, code: uoms.code }).from(uoms);
+  const byCode = new Map(existing.map((row) => [row.code, row.id]));
+  const missing = SEED_UOMS.filter((uom) => !byCode.has(uom.code));
+  if (missing.length > 0) {
+    await db.insert(uoms).values(
+      missing.map((uom) => ({ ...uom, is_active: true, created_at: now })),
+    );
+    const refreshed = await db.select({ id: uoms.id, code: uoms.code }).from(uoms);
+    for (const row of refreshed) byCode.set(row.code, row.id);
+  }
+
+  const pcsId = byCode.get('PCS');
+  if (!pcsId) {
+    throw new Error('[Seed] Missing UOM PCS');
+  }
+
+  await db.update(items).set({ uom_id: pcsId, updated_at: now }).where(isNull(items.uom_id));
+  return byCode.size;
 }
 
 async function ensureTaxCodes(
@@ -229,9 +269,11 @@ async function ensureFiscalYear(db: DrizzleDb): Promise<void> {
 export async function seedAccounting(db: DrizzleDb): Promise<{
   accounts: number;
   taxCodes: number;
+  uoms: number;
   fiscalYearLabel: string;
 }> {
   const accountIds = await ensureAccounts(db);
+  const uomCount = await ensureUoms(db);
   await ensureTaxCodes(db, accountIds);
   await ensureFiscalYear(db);
 
@@ -243,6 +285,7 @@ export async function seedAccounting(db: DrizzleDb): Promise<{
   return {
     accounts: accountIds.size,
     taxCodes: taxCount,
+    uoms: uomCount,
     fiscalYearLabel: label,
   };
 }

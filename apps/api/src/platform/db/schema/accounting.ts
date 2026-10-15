@@ -7,6 +7,7 @@ import {
   int,
   mysqlTable,
   text,
+  tinyint,
   uniqueIndex,
   varchar,
   type AnyMySqlColumn,
@@ -29,6 +30,7 @@ export const ACCOUNT_CONTROL_ROLES = [
   'output_igst',
   'input_tax',
   'discounts',
+  'inventory',
 ] as const;
 export type AccountControlRole = (typeof ACCOUNT_CONTROL_ROLES)[number];
 
@@ -53,6 +55,9 @@ export const JOURNAL_SOURCE_TYPES = [
   'sales_adjustment',
   'recognition_forfeit',
   'fund_transfer',
+  'counter_sale',
+  'counter_sale_return',
+  'stock_adjustment',
 ] as const;
 export type JournalSourceType = (typeof JOURNAL_SOURCE_TYPES)[number];
 
@@ -222,27 +227,88 @@ export const vendors = mysqlTable(
 export type Vendor = typeof vendors.$inferSelect;
 export type NewVendor = typeof vendors.$inferInsert;
 
+export const uoms = mysqlTable(
+  'uoms',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    code: varchar('code', { length: 16 }).notNull(),
+    name: varchar('name', { length: 64 }).notNull(),
+    decimal_places: tinyint('decimal_places').notNull().default(0),
+    is_active: boolean('is_active').notNull().default(true),
+    created_at: utcDatetime('created_at').notNull(),
+    updated_at: utcDatetime('updated_at'),
+  },
+  (table) => [uniqueIndex('uoms_code_unique').on(table.code)],
+);
+
+export type Uom = typeof uoms.$inferSelect;
+export type NewUom = typeof uoms.$inferInsert;
+
+export const itemCategories = mysqlTable(
+  'item_categories',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    name: varchar('name', { length: 100 }).notNull(),
+    parent_id: bigint('parent_id', { mode: 'number', unsigned: true }).references(
+      (): AnyMySqlColumn => itemCategories.id,
+    ),
+    is_active: boolean('is_active').notNull().default(true),
+    created_at: utcDatetime('created_at').notNull(),
+    updated_at: utcDatetime('updated_at'),
+  },
+  (table) => [
+    uniqueIndex('item_categories_name_unique').on(table.name),
+    index('item_categories_parent_id_idx').on(table.parent_id),
+  ],
+);
+
+export type ItemCategory = typeof itemCategories.$inferSelect;
+export type NewItemCategory = typeof itemCategories.$inferInsert;
+
 export const items = mysqlTable(
   'items',
   {
     id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
     name: varchar('name', { length: 150 }).notNull(),
+    sku: varchar('sku', { length: 64 }),
+    hsn_sac: varchar('hsn_sac', { length: 16 }),
     item_kind: varchar('item_kind', { length: 16 }).notNull(),
+    category_id: bigint('category_id', { mode: 'number', unsigned: true }).references(
+      () => itemCategories.id,
+    ),
+    uom_id: bigint('uom_id', { mode: 'number', unsigned: true })
+      .notNull()
+      .references(() => uoms.id),
     inventory_tracked: boolean('inventory_tracked').notNull().default(false),
+    sale_rate: decimal('sale_rate', { precision: 12, scale: 2 }),
+    purchase_rate: decimal('purchase_rate', { precision: 12, scale: 2 }),
+    reorder_level: decimal('reorder_level', { precision: 14, scale: 3 }),
     income_account_id: bigint('income_account_id', { mode: 'number', unsigned: true })
       .notNull()
       .references(() => accounts.id),
     expense_account_id: bigint('expense_account_id', { mode: 'number', unsigned: true })
       .notNull()
       .references(() => accounts.id),
+    inventory_account_id: bigint('inventory_account_id', {
+      mode: 'number',
+      unsigned: true,
+    }).references(() => accounts.id),
+    cogs_account_id: bigint('cogs_account_id', { mode: 'number', unsigned: true }).references(
+      () => accounts.id,
+    ),
     tax_code_id: bigint('tax_code_id', { mode: 'number', unsigned: true }).references(
       () => taxCodes.id,
     ),
     is_active: boolean('is_active').notNull().default(true),
+    row_version: int('row_version').notNull().default(1),
+    created_at: utcDatetime('created_at').notNull(),
+    updated_at: utcDatetime('updated_at'),
   },
   (table) => [
+    uniqueIndex('items_sku_unique').on(table.sku),
     index('items_is_active_idx').on(table.is_active),
     index('items_item_kind_idx').on(table.item_kind),
+    index('items_category_id_idx').on(table.category_id),
   ],
 );
 
@@ -354,7 +420,7 @@ export const purchaseBillLines = mysqlTable(
       .notNull()
       .references(() => accounts.id),
     description: varchar('description', { length: 255 }),
-    quantity: decimal('quantity', { precision: 12, scale: 2 }).notNull().default('1.00'),
+    quantity: decimal('quantity', { precision: 14, scale: 3 }).notNull().default('1.000'),
     rate: decimal('rate', { precision: 12, scale: 2 }).notNull(),
     tax_code_id: bigint('tax_code_id', { mode: 'number', unsigned: true }).references(
       () => taxCodes.id,
@@ -532,6 +598,29 @@ export const debitNotes = mysqlTable(
 
 export type DebitNote = typeof debitNotes.$inferSelect;
 export type NewDebitNote = typeof debitNotes.$inferInsert;
+
+export const debitNoteLines = mysqlTable(
+  'debit_note_lines',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    debit_note_id: bigint('debit_note_id', { mode: 'number', unsigned: true })
+      .notNull()
+      .references(() => debitNotes.id),
+    purchase_bill_line_id: bigint('purchase_bill_line_id', { mode: 'number', unsigned: true })
+      .notNull()
+      .references(() => purchaseBillLines.id),
+    quantity: decimal('quantity', { precision: 14, scale: 3 }).notNull(),
+    net_amount: decimal('net_amount', { precision: 12, scale: 2 }).notNull(),
+    tax_amount: decimal('tax_amount', { precision: 12, scale: 2 }).notNull().default('0.00'),
+  },
+  (table) => [
+    index('debit_note_lines_debit_note_id_idx').on(table.debit_note_id),
+    index('debit_note_lines_purchase_bill_line_id_idx').on(table.purchase_bill_line_id),
+  ],
+);
+
+export type DebitNoteLine = typeof debitNoteLines.$inferSelect;
+export type NewDebitNoteLine = typeof debitNoteLines.$inferInsert;
 
 export const REVENUE_RECOGNITION_STATUSES = ['open', 'paused', 'closed'] as const;
 export type RevenueRecognitionStatus = (typeof REVENUE_RECOGNITION_STATUSES)[number];

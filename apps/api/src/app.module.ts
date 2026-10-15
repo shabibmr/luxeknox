@@ -19,6 +19,7 @@ import { GoalModule } from './goal/goal.module';
 import { NotifModule } from './notif/notif.module';
 import { PtModule } from './pt/pt.module';
 import { AcctModule } from './acct/acct.module';
+import { InvModule } from './inv/inv.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { AcctModule } from './acct/acct.module';
     NotifModule,
     PtModule,
     AcctModule,
+    InvModule,
     DashboardModule,
     ReportsModule,
   ],

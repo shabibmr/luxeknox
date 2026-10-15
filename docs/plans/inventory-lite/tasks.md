@@ -1,6 +1,6 @@
 # Inventory Lite — task register
 
-**Plan:** [plan.md](./plan.md). **Updated:** 2026-10-15.
+**Plan:** [plan.md](./plan.md). **Updated:** 2026-10-16.
 **Markers:** `[ ]` todo, `[~]` doing, `[x]` done, `[!]` blocked, `[>]` later. Change the marker here only.
 Start a task when every ID in *Needs* is `[x]`.
 
@@ -8,18 +8,18 @@ Start a task when every ID in *Needs* is `[x]`.
 
 | ID | Status | Task | Needs | Done when |
 |---|---|---|---|---|
-| IL-01 | `[ ]` | Edit `schema/accounting.ts` + `0025_accounting.sql` in place: `items` new columns (`sku`, `hsn_sac`, `category_id`, `uom_id`, `sale_rate`, `purchase_rate`, `reorder_level`, `inventory_account_id`, `cogs_account_id`, `row_version`, timestamps), `uoms`, `item_categories`, `purchase_bill_lines.quantity` to `decimal(14,3)`, `debit_note_lines`, `inventory` control role | — | Migrate from empty works on `localhost:3308` |
-| IL-02 | `[ ]` | New `schema/inventory.ts` (export in `schema/index.ts`) and `0027_inventory.sql`: `item_stock`, `stock_movements`, `counter_sales`, `counter_sale_lines`, `counter_sale_tenders`, `sales_returns` (+lines, tenders), `stock_adjustments` (+lines), three number counters. Add the new `JOURNAL_SOURCE_TYPES` | IL-01 | Drift check clean; table list matches the full plan |
-| IL-03 | `[ ]` | Seed: UOMs, accounts `1400/4250/5050/5960`, `INV` permissions to `super_admin` and `admin`. Backfill existing items with `PCS` | IL-01 | Seed twice, no duplicates; existing items have a `uom_id` |
+| IL-01 | `[x]` | Edit `schema/accounting.ts` + `0025_accounting.sql` in place: `items` new columns (`sku`, `hsn_sac`, `category_id`, `uom_id`, `sale_rate`, `purchase_rate`, `reorder_level`, `inventory_account_id`, `cogs_account_id`, `row_version`, timestamps), `uoms`, `item_categories`, `purchase_bill_lines.quantity` to `decimal(14,3)`, `debit_note_lines`, `inventory` control role | — | Migrate from empty works on `localhost:3308` |
+| IL-02 | `[x]` | New `schema/inventory.ts` (export in `schema/index.ts`) and `0027_inventory.sql`: `item_stock`, `stock_movements`, `counter_sales`, `counter_sale_lines`, `counter_sale_tenders`, `sales_returns` (+lines, tenders), `stock_adjustments` (+lines), three number counters. Add the new `JOURNAL_SOURCE_TYPES` | IL-01 | Drift check clean; table list matches the full plan |
+| IL-03 | `[x]` | Seed: UOMs, accounts `1400/4250/5050/5960`, `INV` permissions to `super_admin` and `admin`. Backfill existing items with `PCS` | IL-01 | Seed twice, no duplicates; existing items have a `uom_id` |
 
 ## B. Backend
 
 | ID | Status | Task | Needs | Done when |
 |---|---|---|---|---|
-| IL-10 | `[ ]` | `mulQtyRate` in `platform/money/money.ts` (integer maths, half-up) with spec | — | Spec covers 3-decimal qty and `.005` rounding |
-| IL-11 | `[ ]` | Extract the tax component split into `acct/tax-lines.ts` (tax code + side) | — | `member-sales-bridge.spec.ts` unchanged and green |
-| IL-12 | `[ ]` | Extend `/accounting/items` DTO, repository and service with the new item columns; validate `uom_id` and tracked rules | IL-01 | Create/update with new fields works; existing specs pass |
-| IL-13 | `[ ]` | `inv` module skeleton imported in `app.module.ts`; item read endpoints (list with search by name or SKU, get) | IL-03, IL-12 | List returns `uom_code`, `category_name`; SKU search works |
+| IL-10 | `[x]` | `mulQtyRate` in `platform/money/money.ts` (integer maths, half-up) with spec | — | Spec covers 3-decimal qty and `.005` rounding |
+| IL-11 | `[x]` | Extract the tax component split into `acct/tax-lines.ts` (tax code + side) | — | `member-sales-bridge.spec.ts` unchanged and green |
+| IL-12 | `[x]` | Extend `/accounting/items` DTO, repository and service with the new item columns; validate `uom_id` and tracked rules | IL-01 | Create/update with new fields works; existing specs pass |
+| IL-13 | `[x]` | `inv` module skeleton imported in `app.module.ts`; item read endpoints (list with search by name or SKU, get) | IL-03, IL-12 | List returns `uom_code`, `category_name`; SKU search works |
 | IL-14 | `[ ]` | Counter sale create: `SaleWrite` zod DTO, defaults, server totals, tender check, number `SAL-…`, journal in the same transaction, idempotency | IL-02, IL-10, IL-11, IL-13 | Journal balances; tender mismatch gives 422; same key returns same sale |
 | IL-15 | `[ ]` | Counter sale `get` and `list` | IL-14 | Lists omit lines/tenders; `get` has lines, tenders, journal number |
 | IL-16 | `[ ]` | Unit and e2e tests for IL-12 to IL-15 | IL-15 | `vitest run src/inv src/acct src/platform/money` green |

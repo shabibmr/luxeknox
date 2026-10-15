@@ -5,12 +5,16 @@ import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import {
   accounts,
+  itemCategories,
   items,
   taxCodes,
+  uoms,
   type Account,
   type Item,
+  type ItemCategory,
   type NewItem,
   type TaxCode,
+  type Uom,
 } from '../platform/db/schema/accounting';
 import { NotFoundError } from '../platform/errors/app-error';
 import type { ItemKind } from './items.dto';
@@ -100,6 +104,30 @@ export class ItemsRepository extends BaseRepository<
       .from(taxCodes)
       .where(eq(taxCodes.id, id))
       .limit(1);
+    return rows[0] ?? null;
+  }
+
+  async findAccountByCode(code: string): Promise<Account | null> {
+    const db = this.getDb() as any;
+    const rows = await db.select().from(accounts).where(eq(accounts.code, code)).limit(1);
+    return rows[0] ?? null;
+  }
+
+  async findUomById(id: number): Promise<Uom | null> {
+    const db = this.getDb() as any;
+    const rows = await db.select().from(uoms).where(eq(uoms.id, id)).limit(1);
+    return rows[0] ?? null;
+  }
+
+  async findCategoryById(id: number): Promise<ItemCategory | null> {
+    const db = this.getDb() as any;
+    const rows = await db.select().from(itemCategories).where(eq(itemCategories.id, id)).limit(1);
+    return rows[0] ?? null;
+  }
+
+  async findBySku(sku: string): Promise<Item | null> {
+    const db = this.getDb() as any;
+    const rows = await db.select().from(items).where(eq(items.sku, sku)).limit(1);
     return rows[0] ?? null;
   }
 }

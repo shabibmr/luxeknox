@@ -23,12 +23,24 @@ const ADMIN_USER: AuthenticatedUser = {
 const ITEM_DTO: ItemDto = {
   id: 10,
   name: 'Personal Training Session',
+  sku: null,
+  hsn_sac: null,
   item_kind: 'service',
+  category_id: null,
+  uom_id: 1,
   inventory_tracked: false,
+  sale_rate: null,
+  purchase_rate: null,
+  reorder_level: null,
   income_account_id: 4000,
   expense_account_id: 5000,
+  inventory_account_id: null,
+  cogs_account_id: null,
   tax_code_id: 1,
   is_active: true,
+  row_version: 1,
+  created_at: '2026-10-16T00:00:00.000Z',
+  updated_at: null,
 };
 
 describe('ItemsController', () => {
@@ -87,6 +99,7 @@ describe('ItemsController', () => {
       const dto = {
         name: 'Personal Training Session',
         item_kind: 'service' as const,
+        uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
         tax_code_id: 1,
@@ -122,12 +135,18 @@ describe('ItemsController', () => {
       const payload = {
         name: 'Gym Towel',
         item_kind: 'goods',
+        uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
+        sale_rate: '10.5',
+        reorder_level: 1,
       };
       const result = createPipe.transform(payload);
       expect(result.name).toBe('Gym Towel');
       expect(result.item_kind).toBe('goods');
+      expect(result.uom_id).toBe(1);
+      expect(result.sale_rate).toBe('10.50');
+      expect(result.reorder_level).toBe('1.000');
       expect(result.inventory_tracked).toBe(false);
       expect(result.is_active).toBe(true);
     });
@@ -150,15 +169,17 @@ describe('ItemsController', () => {
       expect(() => createPipe.transform(payload)).toThrow();
     });
 
-    it('rejects create payload with inventory_tracked: true', () => {
+    it('accepts a tracked goods payload', () => {
       const payload = {
         name: 'Gym Towel',
         item_kind: 'goods',
+        uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
         inventory_tracked: true,
       };
-      expect(() => createPipe.transform(payload)).toThrow();
+      const result = createPipe.transform(payload);
+      expect(result.inventory_tracked).toBe(true);
     });
 
     it('validates valid partial update payload', () => {
@@ -171,11 +192,10 @@ describe('ItemsController', () => {
       expect(result.income_account_id).toBe(4100);
     });
 
-    it('rejects update payload with inventory_tracked: true', () => {
-      const payload = {
-        inventory_tracked: true,
-      };
-      expect(() => updatePipe.transform(payload)).toThrow();
+    it('accepts an update that turns tracking on', () => {
+      const result = updatePipe.transform({ inventory_tracked: true, reorder_level: '0.5' });
+      expect(result.inventory_tracked).toBe(true);
+      expect(result.reorder_level).toBe('0.500');
     });
   });
 });

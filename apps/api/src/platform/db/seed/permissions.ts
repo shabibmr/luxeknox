@@ -111,6 +111,10 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'ACCT', action: 'journals_write', slug: 'accounting.journals_write', description: 'Create manual journals and opening balances' },
   { module: 'ACCT', action: 'periods_close', slug: 'accounting.periods_close', description: 'Lock and unlock accounting periods' },
   { module: 'ACCT', action: 'posting_toggle', slug: 'accounting.posting_toggle', description: 'Enable or disable automatic accounting posting' },
+  { module: 'INV', action: 'read', slug: 'inventory.read', description: 'View inventory items, documents and reports' },
+  { module: 'INV', action: 'masters_write', slug: 'inventory.masters_write', description: 'Create and update units, categories and items' },
+  { module: 'INV', action: 'sales_write', slug: 'inventory.sales_write', description: 'Create counter sales and sales returns' },
+  { module: 'INV', action: 'adjust', slug: 'inventory.adjust', description: 'Create and post stock adjustments' },
 
   // WORK
   { module: 'WORK', action: 'read', slug: 'workouts.read', description: 'View workout plans and exercise sessions' },

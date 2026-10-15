@@ -132,19 +132,61 @@ CREATE TABLE IF NOT EXISTS `vendors` (
   KEY `vendors_is_active_idx` (`is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE IF NOT EXISTS `uoms` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `code` VARCHAR(16) NOT NULL,
+  `name` VARCHAR(64) NOT NULL,
+  `decimal_places` TINYINT NOT NULL DEFAULT 0,
+  `is_active` BOOLEAN NOT NULL DEFAULT TRUE,
+  `created_at` DATETIME(3) NOT NULL,
+  `updated_at` DATETIME(3) NULL,
+  UNIQUE KEY `uoms_code_unique` (`code`),
+  CONSTRAINT `uoms_decimal_places_chk` CHECK (`decimal_places` BETWEEN 0 AND 3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `item_categories` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(100) NOT NULL,
+  `parent_id` BIGINT UNSIGNED NULL,
+  `is_active` BOOLEAN NOT NULL DEFAULT TRUE,
+  `created_at` DATETIME(3) NOT NULL,
+  `updated_at` DATETIME(3) NULL,
+  UNIQUE KEY `item_categories_name_unique` (`name`),
+  KEY `item_categories_parent_id_idx` (`parent_id`),
+  CONSTRAINT `item_categories_parent_id_fk` FOREIGN KEY (`parent_id`) REFERENCES `item_categories` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 CREATE TABLE IF NOT EXISTS `items` (
   `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `name` VARCHAR(150) NOT NULL,
+  `sku` VARCHAR(64) NULL,
+  `hsn_sac` VARCHAR(16) NULL,
   `item_kind` VARCHAR(16) NOT NULL,
+  `category_id` BIGINT UNSIGNED NULL,
+  `uom_id` BIGINT UNSIGNED NOT NULL,
   `inventory_tracked` BOOLEAN NOT NULL DEFAULT FALSE,
+  `sale_rate` DECIMAL(12,2) NULL,
+  `purchase_rate` DECIMAL(12,2) NULL,
+  `reorder_level` DECIMAL(14,3) NULL,
   `income_account_id` BIGINT UNSIGNED NOT NULL,
   `expense_account_id` BIGINT UNSIGNED NOT NULL,
+  `inventory_account_id` BIGINT UNSIGNED NULL,
+  `cogs_account_id` BIGINT UNSIGNED NULL,
   `tax_code_id` BIGINT UNSIGNED NULL,
   `is_active` BOOLEAN NOT NULL DEFAULT TRUE,
+  `row_version` INT NOT NULL DEFAULT 1,
+  `created_at` DATETIME(3) NOT NULL,
+  `updated_at` DATETIME(3) NULL,
+  UNIQUE KEY `items_sku_unique` (`sku`),
   KEY `items_is_active_idx` (`is_active`),
   KEY `items_item_kind_idx` (`item_kind`),
+  KEY `items_category_id_idx` (`category_id`),
+  CONSTRAINT `items_category_id_fk` FOREIGN KEY (`category_id`) REFERENCES `item_categories` (`id`),
+  CONSTRAINT `items_uom_id_fk` FOREIGN KEY (`uom_id`) REFERENCES `uoms` (`id`),
   CONSTRAINT `items_income_account_id_fk` FOREIGN KEY (`income_account_id`) REFERENCES `accounts` (`id`),
   CONSTRAINT `items_expense_account_id_fk` FOREIGN KEY (`expense_account_id`) REFERENCES `accounts` (`id`),
+  CONSTRAINT `items_inventory_account_id_fk` FOREIGN KEY (`inventory_account_id`) REFERENCES `accounts` (`id`),
+  CONSTRAINT `items_cogs_account_id_fk` FOREIGN KEY (`cogs_account_id`) REFERENCES `accounts` (`id`),
   CONSTRAINT `items_tax_code_id_fk` FOREIGN KEY (`tax_code_id`) REFERENCES `tax_codes` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -223,7 +265,7 @@ CREATE TABLE IF NOT EXISTS `purchase_bill_lines` (
   `item_id` BIGINT UNSIGNED NULL,
   `account_id` BIGINT UNSIGNED NOT NULL,
   `description` VARCHAR(255) NULL,
-  `quantity` DECIMAL(12,2) NOT NULL DEFAULT '1.00',
+  `quantity` DECIMAL(14,3) NOT NULL DEFAULT '1.000',
   `rate` DECIMAL(12,2) NOT NULL,
   `tax_code_id` BIGINT UNSIGNED NULL,
   `net_amount` DECIMAL(12,2) NOT NULL,
@@ -345,6 +387,19 @@ CREATE TABLE IF NOT EXISTS `debit_notes` (
   KEY `debit_notes_status_idx` (`status`),
   CONSTRAINT `debit_notes_purchase_bill_id_fk` FOREIGN KEY (`purchase_bill_id`) REFERENCES `purchase_bills` (`id`),
   CONSTRAINT `debit_notes_journal_entry_id_fk` FOREIGN KEY (`journal_entry_id`) REFERENCES `journal_entries` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `debit_note_lines` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `debit_note_id` BIGINT UNSIGNED NOT NULL,
+  `purchase_bill_line_id` BIGINT UNSIGNED NOT NULL,
+  `quantity` DECIMAL(14,3) NOT NULL,
+  `net_amount` DECIMAL(12,2) NOT NULL,
+  `tax_amount` DECIMAL(12,2) NOT NULL DEFAULT '0.00',
+  KEY `debit_note_lines_debit_note_id_idx` (`debit_note_id`),
+  KEY `debit_note_lines_purchase_bill_line_id_idx` (`purchase_bill_line_id`),
+  CONSTRAINT `debit_note_lines_debit_note_id_fk` FOREIGN KEY (`debit_note_id`) REFERENCES `debit_notes` (`id`),
+  CONSTRAINT `debit_note_lines_purchase_bill_line_id_fk` FOREIGN KEY (`purchase_bill_line_id`) REFERENCES `purchase_bill_lines` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `revenue_recognition_schedules` (

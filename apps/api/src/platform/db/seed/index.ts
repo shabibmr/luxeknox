@@ -32,7 +32,7 @@ export async function runSeeds(): Promise<void> {
     console.log('[Seed] Seeding accounting chart, tax codes, and fiscal year...');
     const acct = await seedAccounting(db);
     console.log(
-      `[Seed] Accounting: ${acct.accounts} accounts, ${acct.taxCodes} tax codes, FY ${acct.fiscalYearLabel}.`,
+      `[Seed] Accounting: ${acct.accounts} accounts, ${acct.uoms} UOMs, ${acct.taxCodes} tax codes, FY ${acct.fiscalYearLabel}.`,
     );
 
     console.log('[Seed] Seeding notification types & templates...');

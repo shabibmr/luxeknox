@@ -93,3 +93,31 @@ export function mulMoneyPercent(amount: number | string, percent: number | strin
   const quot = raw >= 0n ? (raw + half) / denom : (raw - half) / denom;
   return fromCents(quot);
 }
+
+/** Parse a decimal string with at most `scale` fraction digits into scaled integer units. */
+function toScaled(value: number | string, scale: number, label: string): bigint {
+  const str = typeof value === 'number' ? value.toString() : String(value).trim();
+  const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(str);
+  if (!match) {
+    throw new Error(`Invalid ${label}: "${value}"`);
+  }
+  const [, sign, intPart, fracPart = ''] = match;
+  if (fracPart.length > scale) {
+    throw new Error(`Invalid ${label}: "${value}" has more than ${scale} decimal places`);
+  }
+  const units = BigInt(intPart) * 10n ** BigInt(scale) + BigInt(fracPart.padEnd(scale, '0') || '0');
+  return sign === '-' ? -units : units;
+}
+
+/**
+ * Multiply a quantity (up to 3 decimals) by a rate (up to 2 decimals) and round
+ * half-up (away from zero on ties) to cents. Integer maths only.
+ * E.g. mulQtyRate('1.500', '0.01') -> "0.02", mulQtyRate('0.333', '10.00') -> "3.33".
+ */
+export function mulQtyRate(quantity: number | string, rate: number | string): string {
+  const raw = toScaled(quantity, 3, 'quantity') * toScaled(rate, 2, 'rate');
+  const denom = 1000n;
+  const half = denom / 2n;
+  const quot = raw >= 0n ? (raw + half) / denom : (raw - half) / denom;
+  return fromCents(quot);
+}

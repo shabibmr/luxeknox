@@ -2,10 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
-import {
-  type CreditNote,
-  type TaxCodeComponent,
-} from '../platform/db/schema/accounting';
+import { type CreditNote } from '../platform/db/schema/accounting';
 import { memberships, membershipProducts } from '../platform/db/schema/memberships';
 import { payments, paymentMethods, type Payment, type PaymentHistory } from '../platform/db/schema/payments';
 import { ptSubscriptions, ptProducts } from '../platform/db/schema/personal-training';
@@ -27,6 +24,7 @@ import { AccountsRepository } from './accounts.repository';
 import { CreditNotesRepository } from './credit-notes.repository';
 import { RevenueRecognitionRepository } from './revenue-recognition.repository';
 import { TaxCodesRepository } from './tax-codes.repository';
+import { buildTaxComponentLines } from './tax-lines';
 
 function toDateString(d: Date | string): string {
   if (typeof d === 'string') {
@@ -732,64 +730,18 @@ export class SalesBridgeService {
     side: 'debit' | 'credit',
     memoPrefix: string,
   ): Promise<PostJournalLineInput[]> {
-    const lines: PostJournalLineInput[] = [];
     if (cmpMoney(taxAmount, '0') <= 0) {
-      return lines;
+      return [];
     }
-
     const defaultTaxCodeKey =
       (await this.settingsService.getSetting('accounting.default_tax_code')) ?? 'gst_18';
     const taxCode = await this.taxCodesRepository.findByCode(defaultTaxCodeKey);
-    const components = taxCode ? await this.taxCodesRepository.listComponents(taxCode.id) : [];
-
-    if (components.length === 0) {
-      return lines;
-    }
-
-    const taxAmountCents = toCents(taxAmount);
-    const sumRates = components.reduce((sum, c) => addMoney(sum, c.rate_percent), '0.00');
-    const sumRatesCents = toCents(sumRates);
-
-    let compTaxSumCents = 0n;
-    for (const comp of components) {
-      const cTaxCents =
-        sumRatesCents > 0n
-          ? (taxAmountCents * toCents(comp.rate_percent) + sumRatesCents / 2n) / sumRatesCents
-          : 0n;
-      compTaxSumCents += cTaxCents;
-      const compTax = fromCents(cTaxCents);
-      if (cmpMoney(compTax, '0') > 0) {
-        lines.push({
-          accountId: comp.output_account_id,
-          ...(side === 'debit' ? { debit: compTax } : { credit: compTax }),
-          memberId: payment.member_id,
-          memo: `${memoPrefix} (${comp.name})`,
-        });
-      }
-    }
-
-    const taxGapCents = taxAmountCents - compTaxSumCents;
-    if (taxGapCents !== 0n) {
-      const roundingAccount = await this.accountsRepository.findByCode('5950');
-      if (roundingAccount) {
-        if (taxGapCents > 0n) {
-          const gap = fromCents(taxGapCents);
-          lines.push({
-            accountId: roundingAccount.id,
-            ...(side === 'debit' ? { debit: gap } : { credit: gap }),
-            memo: `${memoPrefix} (Rounding off)`,
-          });
-        } else {
-          const gap = fromCents(-taxGapCents);
-          lines.push({
-            accountId: roundingAccount.id,
-            ...(side === 'debit' ? { credit: gap } : { debit: gap }),
-            memo: `${memoPrefix} (Rounding off)`,
-          });
-        }
-      }
-    }
-
-    return lines;
+    return buildTaxComponentLines(
+      {
+        taxCodesRepository: this.taxCodesRepository,
+        accountsRepository: this.accountsRepository,
+      },
+      { taxCode, taxAmount, side, memoPrefix, memberId: payment.member_id },
+    );
   }
 }

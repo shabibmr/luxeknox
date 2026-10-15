@@ -51,15 +51,65 @@ const TAX_CODE = {
   is_active: true,
 };
 
+const UOM = {
+  id: 1,
+  code: 'PCS',
+  name: 'Pieces',
+  decimal_places: 0,
+  is_active: true,
+  created_at: new Date(),
+  updated_at: null,
+};
+
+const INVENTORY_ACCOUNT = {
+  id: 1400,
+  code: '1400',
+  name: 'Inventory',
+  account_type: 'asset',
+  parent_id: null,
+  is_active: true,
+  is_bank: false,
+  is_control: true,
+  control_role: 'inventory',
+  created_at: new Date(),
+  updated_at: null,
+};
+
+const COGS_ACCOUNT = {
+  id: 5050,
+  code: '5050',
+  name: 'Cost of goods sold',
+  account_type: 'expense',
+  parent_id: null,
+  is_active: true,
+  is_bank: false,
+  is_control: false,
+  control_role: null,
+  created_at: new Date(),
+  updated_at: null,
+};
+
 const ITEM_ROW = {
   id: 10,
   name: 'Personal Training Session',
+  sku: null,
+  hsn_sac: null,
   item_kind: 'service' as const,
+  category_id: null,
+  uom_id: 1,
   inventory_tracked: false,
+  sale_rate: null,
+  purchase_rate: null,
+  reorder_level: null,
   income_account_id: 4000,
   expense_account_id: 5000,
+  inventory_account_id: null,
+  cogs_account_id: null,
   tax_code_id: 1,
   is_active: true,
+  row_version: 1,
+  created_at: new Date('2026-10-16T00:00:00.000Z'),
+  updated_at: null,
 };
 
 describe('ItemsService', () => {
@@ -76,8 +126,18 @@ describe('ItemsService', () => {
       findAccountById: vi.fn().mockImplementation(async (id: number) => {
         if (id === 4000) return INCOME_ACCOUNT;
         if (id === 5000) return EXPENSE_ACCOUNT;
+        if (id === 1400) return INVENTORY_ACCOUNT;
+        if (id === 5050) return COGS_ACCOUNT;
         return null;
       }),
+      findAccountByCode: vi.fn().mockImplementation(async (code: string) => {
+        if (code === '1400') return INVENTORY_ACCOUNT;
+        if (code === '5050') return COGS_ACCOUNT;
+        return null;
+      }),
+      findUomById: vi.fn().mockImplementation(async (id: number) => (id === 1 ? UOM : null)),
+      findCategoryById: vi.fn().mockResolvedValue(null),
+      findBySku: vi.fn().mockResolvedValue(null),
       findTaxCodeById: vi.fn().mockImplementation(async (id: number) => {
         if (id === 1) return TAX_CODE;
         return null;
@@ -146,6 +206,7 @@ describe('ItemsService', () => {
       const dto = {
         name: 'Gym Towel',
         item_kind: 'goods' as const,
+        uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
         tax_code_id: 1,
@@ -156,28 +217,66 @@ describe('ItemsService', () => {
 
       expect(repository.insertItem).toHaveBeenCalledWith({
         name: 'Gym Towel',
+        sku: null,
+        hsn_sac: null,
         item_kind: 'goods',
+        category_id: null,
+        uom_id: 1,
         inventory_tracked: false,
+        sale_rate: null,
+        purchase_rate: null,
+        reorder_level: null,
         income_account_id: 4000,
         expense_account_id: 5000,
+        inventory_account_id: null,
+        cogs_account_id: null,
         tax_code_id: 1,
         is_active: true,
+        created_at: expect.any(Date),
       });
       expect(result.id).toBe(10);
     });
 
-    it('rejects inventory_tracked: true with BusinessRuleError', async () => {
+    it('creates a tracked goods item with default inventory and COGS accounts', async () => {
       const dto = {
         name: 'Protein Shake',
         item_kind: 'goods' as const,
+        uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
-        inventory_tracked: true as any,
+        inventory_tracked: true,
+        sku: 'SHAKE',
+        sale_rate: '120.00',
+        reorder_level: '2.500',
+      };
+
+      await service.create(dto, ADMIN_USER);
+
+      expect(repository.insertItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sku: 'SHAKE',
+          inventory_tracked: true,
+          inventory_account_id: 1400,
+          cogs_account_id: 5050,
+          sale_rate: '120.00',
+          reorder_level: '2.500',
+        }),
+      );
+    });
+
+    it('rejects tracking a service item', async () => {
+      const dto = {
+        name: 'Session',
+        item_kind: 'service' as const,
+        uom_id: 1,
+        income_account_id: 4000,
+        expense_account_id: 5000,
+        inventory_tracked: true,
       };
 
       await expect(service.create(dto, ADMIN_USER)).rejects.toThrow(BusinessRuleError);
       await expect(service.create(dto, ADMIN_USER)).rejects.toThrow(
-        'Inventory tracking is not supported',
+        'A tracked item must have item_kind goods',
       );
     });
 
@@ -190,6 +289,7 @@ describe('ItemsService', () => {
       const dto = {
         name: 'Item',
         item_kind: 'service' as const,
+        uom_id: 1,
         income_account_id: 9999,
         expense_account_id: 5000,
       };
@@ -208,6 +308,7 @@ describe('ItemsService', () => {
       const dto = {
         name: 'Item',
         item_kind: 'service' as const,
+        uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
       };
@@ -226,6 +327,7 @@ describe('ItemsService', () => {
       const dto = {
         name: 'Item',
         item_kind: 'service' as const,
+        uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
       };
@@ -245,6 +347,7 @@ describe('ItemsService', () => {
       const dto = {
         name: 'Item',
         item_kind: 'service' as const,
+        uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 9999,
       };
@@ -263,6 +366,7 @@ describe('ItemsService', () => {
       const dto = {
         name: 'Item',
         item_kind: 'service' as const,
+        uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
       };
@@ -281,6 +385,7 @@ describe('ItemsService', () => {
       const dto = {
         name: 'Item',
         item_kind: 'service' as const,
+        uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
       };
@@ -297,6 +402,7 @@ describe('ItemsService', () => {
       const dto = {
         name: 'Item',
         item_kind: 'service' as const,
+        uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
         tax_code_id: 999,
@@ -312,6 +418,7 @@ describe('ItemsService', () => {
       const dto = {
         name: 'Item',
         item_kind: 'service' as const,
+        uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
         tax_code_id: 1,
@@ -340,16 +447,16 @@ describe('ItemsService', () => {
       expect(repository.updateItem).toHaveBeenCalledWith(10, {
         name: 'Updated Session',
         is_active: false,
-        inventory_tracked: false,
+        row_version: 2,
       });
       expect(result.name).toBe('Updated Session');
       expect(result.is_active).toBe(false);
     });
 
-    it('rejects inventory_tracked: true on update', async () => {
+    it('rejects tracking a service item on update', async () => {
       await expect(
-        service.update(10, { inventory_tracked: true as any }, ADMIN_USER),
-      ).rejects.toThrow(BusinessRuleError);
+        service.update(10, { inventory_tracked: true }, ADMIN_USER),
+      ).rejects.toThrow('A tracked item must have item_kind goods');
     });
 
     it('throws NotFoundError if item does not exist', async () => {
@@ -393,7 +500,7 @@ describe('ItemsService', () => {
       const result = await service.update(10, { tax_code_id: null }, ADMIN_USER);
 
       expect(repository.updateItem).toHaveBeenCalledWith(10, {
-        inventory_tracked: false,
+        row_version: 2,
         tax_code_id: null,
       });
       expect(result.tax_code_id).toBeNull();

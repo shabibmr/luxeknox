@@ -25,5 +25,6 @@ export * from './diet';
 export * from './idempotency';
 export * from './payments';
 export * from './accounting';
+export * from './inventory';
 export * from './goals';
 export * from './notifications';
