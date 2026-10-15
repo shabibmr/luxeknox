@@ -7,6 +7,8 @@ import { CounterSalesService } from './counter-sales.service';
 import { InventoryItemsController } from './items.controller';
 import { InventoryItemsRepository } from './items.repository';
 import { InventoryItemsService } from './items.service';
+import { StockRepository } from './stock.repository';
+import { StockService } from './stock.service';
 
 @Module({
   imports: [PlatformModule, AcctModule],
@@ -16,12 +18,16 @@ import { InventoryItemsService } from './items.service';
     InventoryItemsService,
     CounterSalesRepository,
     CounterSalesService,
+    StockRepository,
+    StockService,
   ],
   exports: [
     InventoryItemsRepository,
     InventoryItemsService,
     CounterSalesRepository,
     CounterSalesService,
+    StockRepository,
+    StockService,
   ],
 })
 export class InvModule {}

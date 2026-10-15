@@ -5,6 +5,11 @@ import {
   fromCents,
   mulMoneyPercent,
   mulQtyRate,
+  mulQtyUnitCost,
+  divValueByQty,
+  cmpQty,
+  addQty,
+  subQty,
   roundMoney,
   subMoney,
   toCents,
@@ -75,5 +80,44 @@ describe('mulQtyRate', () => {
     expect(() => mulQtyRate('1.0001', '1.00')).toThrow();
     expect(() => mulQtyRate('1', '1.001')).toThrow();
     expect(() => mulQtyRate('abc', '1')).toThrow();
+  });
+});
+
+describe('divValueByQty', () => {
+  it('computes the weighted-average unit cost to 4 decimals', () => {
+    expect(divValueByQty('1650.00', '15.000')).toBe('110.0000');
+    expect(divValueByQty('1000.00', '10.000')).toBe('100.0000');
+  });
+
+  it('rounds half-up at the 5th decimal', () => {
+    // 10 / 3 = 3.3333… → 3.3333
+    expect(divValueByQty('10.00', '3.000')).toBe('3.3333');
+    // 1.00 / 6 = 0.16666… → 0.1667
+    expect(divValueByQty('1.00', '6.000')).toBe('0.1667');
+  });
+
+  it('rejects zero quantity', () => {
+    expect(() => divValueByQty('10.00', '0')).toThrow();
+  });
+});
+
+describe('mulQtyUnitCost', () => {
+  it('multiplies quantity by a 4-decimal unit cost', () => {
+    expect(mulQtyUnitCost('2.000', '110.0000')).toBe('220.00');
+    expect(mulQtyUnitCost('1.500', '10.0000')).toBe('15.00');
+  });
+
+  it('rounds half-up to cents', () => {
+    expect(mulQtyUnitCost('1.000', '1.0050')).toBe('1.01');
+    expect(mulQtyUnitCost('1.000', '1.0049')).toBe('1.00');
+  });
+});
+
+describe('qty helpers', () => {
+  it('adds, subtracts and compares at 3 decimals', () => {
+    expect(addQty('10.000', '5.000')).toBe('15.000');
+    expect(subQty('15.000', '2.000')).toBe('13.000');
+    expect(cmpQty('14.000', '15.000')).toBe(-1);
+    expect(cmpQty('15.000', '15')).toBe(0);
   });
 });

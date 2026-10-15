@@ -121,3 +121,70 @@ export function mulQtyRate(quantity: number | string, rate: number | string): st
   const quot = raw >= 0n ? (raw + half) / denom : (raw - half) / denom;
   return fromCents(quot);
 }
+
+/** Format a 4-decimal unit-cost scaled integer as a string. */
+function fromUnitCost4(units: bigint): string {
+  const negative = units < 0n;
+  const abs = negative ? -units : units;
+  const whole = abs / 10000n;
+  const frac = (abs % 10000n).toString().padStart(4, '0');
+  return `${negative ? '-' : ''}${whole.toString()}.${frac}`;
+}
+
+/** Format quantity milli-units as a 3-decimal string. */
+function fromQtyMilli(units: bigint): string {
+  const negative = units < 0n;
+  const abs = negative ? -units : units;
+  const whole = abs / 1000n;
+  const frac = (abs % 1000n).toString().padStart(3, '0');
+  return `${negative ? '-' : ''}${whole.toString()}.${frac}`;
+}
+
+/**
+ * Moving-average unit cost: money value ÷ quantity, half-up to 4 decimals.
+ * E.g. divValueByQty('1650.00', '15.000') -> "110.0000".
+ */
+export function divValueByQty(value: number | string, quantity: number | string): string {
+  const qtyMilli = toScaled(quantity, 3, 'quantity');
+  if (qtyMilli === 0n) {
+    throw new Error('Cannot divide by zero quantity');
+  }
+  const valueCents = toCents(value);
+  // valueCents/100 ÷ qtyMilli/1000 → 4dp units: (valueCents * 100000) / qtyMilli
+  const numer = valueCents * 100000n;
+  const absQty = qtyMilli < 0n ? -qtyMilli : qtyMilli;
+  const absNumer = numer < 0n ? -numer : numer;
+  const absQuot = (absNumer + absQty / 2n) / absQty;
+  const signed = numer < 0n !== qtyMilli < 0n ? -absQuot : absQuot;
+  return fromUnitCost4(signed);
+}
+
+/**
+ * Multiply quantity (≤3dp) by unit cost (≤4dp), half-up to money cents.
+ * E.g. mulQtyUnitCost('2.000', '110.0000') -> "220.00".
+ */
+export function mulQtyUnitCost(quantity: number | string, unitCost: number | string): string {
+  const qtyMilli = toScaled(quantity, 3, 'quantity');
+  const cost4 = toScaled(unitCost, 4, 'unit cost');
+  const raw = qtyMilli * cost4;
+  const denom = 100000n; // 10^3 * 10^4 / 10^2 → cents
+  const half = denom / 2n;
+  const quot = raw >= 0n ? (raw + half) / denom : (raw - half) / denom;
+  return fromCents(quot);
+}
+
+/** Compare quantities at 3 decimal places: -1 / 0 / 1. */
+export function cmpQty(a: number | string, b: number | string): -1 | 0 | 1 {
+  const diff = toScaled(a, 3, 'quantity') - toScaled(b, 3, 'quantity');
+  if (diff < 0n) return -1;
+  if (diff > 0n) return 1;
+  return 0;
+}
+
+export function addQty(a: number | string, b: number | string): string {
+  return fromQtyMilli(toScaled(a, 3, 'quantity') + toScaled(b, 3, 'quantity'));
+}
+
+export function subQty(a: number | string, b: number | string): string {
+  return fromQtyMilli(toScaled(a, 3, 'quantity') - toScaled(b, 3, 'quantity'));
+}
