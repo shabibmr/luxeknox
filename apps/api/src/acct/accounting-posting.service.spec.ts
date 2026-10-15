@@ -32,6 +32,7 @@ describe('AccountingPostingService.postJournal', () => {
     repository = {
       allocateJournalNumber: vi.fn().mockResolvedValue('JRN00000001'),
       findPeriodForDate: vi.fn().mockResolvedValue(openPeriod),
+      findPeriodById: vi.fn().mockResolvedValue(openPeriod),
       findBySource: vi.fn().mockResolvedValue(null),
       insertJournalEntry: vi.fn().mockImplementation(async (row) => ({
         id: 50,
@@ -298,6 +299,78 @@ describe('AccountingPostingService.postJournal', () => {
 
     expect(result).toEqual(existing);
     expect(repository.findPeriodForDate).not.toHaveBeenCalled();
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+  });
+
+  it('posts into the named accounting period without a date lookup', async () => {
+    await service.postJournal({
+      entryDate: '2026-04-15',
+      accountingPeriodId: 7,
+      sourceType: 'revenue_recognition',
+      sourceId: 50,
+      lines: balancedLines,
+    });
+
+    expect(repository.findPeriodById).toHaveBeenCalledWith(7);
+    expect(repository.findPeriodForDate).not.toHaveBeenCalled();
+    expect(repository.insertJournalEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ accounting_period_id: 7 }),
+    );
+  });
+
+  it('rejects a named accounting period that does not exist', async () => {
+    repository.findPeriodById.mockResolvedValue(null);
+
+    await expect(
+      service.postJournal({
+        entryDate: '2026-04-15',
+        accountingPeriodId: 99,
+        sourceType: 'revenue_recognition',
+        sourceId: 50,
+        lines: balancedLines,
+      }),
+    ).rejects.toBeInstanceOf(NotFoundError);
+
+    expect(repository.findPeriodForDate).not.toHaveBeenCalled();
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+  });
+
+  it('rejects a named accounting period that does not contain the entry date', async () => {
+    await expect(
+      service.postJournal({
+        entryDate: '2026-05-01',
+        accountingPeriodId: 7,
+        sourceType: 'revenue_recognition',
+        sourceId: 50,
+        lines: balancedLines,
+      }),
+    ).rejects.toMatchObject({
+      name: 'BusinessRuleError',
+      message: 'Entry date 2026-05-01 is outside accounting period 2026-04-01 to 2026-04-30',
+    });
+
+    expect(repository.insertJournalEntry).not.toHaveBeenCalled();
+  });
+
+  it('rejects a named accounting period that is locked', async () => {
+    repository.findPeriodById.mockResolvedValue({
+      ...openPeriod,
+      status: 'locked',
+    });
+
+    await expect(
+      service.postJournal({
+        entryDate: '2026-04-15',
+        accountingPeriodId: 7,
+        sourceType: 'revenue_recognition',
+        sourceId: 50,
+        lines: balancedLines,
+      }),
+    ).rejects.toMatchObject({
+      name: 'BusinessRuleError',
+      message: 'Accounting period 2026-04-01 to 2026-04-30 is locked',
+    });
+
     expect(repository.insertJournalEntry).not.toHaveBeenCalled();
   });
 });
@@ -571,6 +644,7 @@ describe('AccountingPostingService.postUserJournal', () => {
     repository = {
       allocateJournalNumber: vi.fn().mockResolvedValue('JRN00000001'),
       findPeriodForDate: vi.fn().mockResolvedValue(openPeriod),
+      findPeriodById: vi.fn().mockResolvedValue(openPeriod),
       findBySource: vi.fn().mockResolvedValue(null),
       insertJournalEntry: vi.fn().mockImplementation(async (row) => ({
         id: 50,

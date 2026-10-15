@@ -27,6 +27,11 @@ export type PostJournalLineInput = {
 
 export type PostJournalInput = {
   entryDate: string;
+  /**
+   * Post into this period. The entry date must fall inside it.
+   * When omitted, the period is the one that contains `entryDate`.
+   */
+  accountingPeriodId?: number;
   sourceType: JournalSourceType | string;
   sourceId: number;
   memo?: string | null;
@@ -96,10 +101,7 @@ export class AccountingPostingService {
 
       const normalized = this.normalizeAndValidateLines(input.lines);
 
-      const period = await this.accountingRepository.findPeriodForDate(input.entryDate);
-      if (!period) {
-        throw new NotFoundError(`No accounting period covers ${input.entryDate}`);
-      }
+      const period = await this.resolvePeriod(input.entryDate, input.accountingPeriodId);
       if (period.status === 'locked') {
         throw new BusinessRuleError(
           `Accounting period ${period.starts_on} to ${period.ends_on} is locked`,
@@ -285,6 +287,31 @@ export class AccountingPostingService {
 
       return { ...entry, lines };
     });
+  }
+
+  /**
+   * Named period when `accountingPeriodId` is set; otherwise the period that contains `entryDate`.
+   * A named period must contain the entry date.
+   */
+  private async resolvePeriod(entryDate: string, accountingPeriodId?: number) {
+    if (accountingPeriodId == null) {
+      const period = await this.accountingRepository.findPeriodForDate(entryDate);
+      if (!period) {
+        throw new NotFoundError(`No accounting period covers ${entryDate}`);
+      }
+      return period;
+    }
+
+    const period = await this.accountingRepository.findPeriodById(accountingPeriodId);
+    if (!period) {
+      throw new NotFoundError(`Accounting period ${accountingPeriodId} was not found`);
+    }
+    if (entryDate < period.starts_on || entryDate > period.ends_on) {
+      throw new BusinessRuleError(
+        `Entry date ${entryDate} is outside accounting period ${period.starts_on} to ${period.ends_on}`,
+      );
+    }
+    return period;
   }
 
   private normalizeAndValidateLines(lines: PostJournalLineInput[]): NormalizedLine[] {

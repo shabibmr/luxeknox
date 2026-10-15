@@ -83,6 +83,16 @@ export class AccountingRepository extends BaseRepository<
     return rows[0] ?? null;
   }
 
+  async findPeriodById(id: number): Promise<AccountingPeriod | null> {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select()
+      .from(accountingPeriods)
+      .where(eq(accountingPeriods.id, id))
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
   async insertJournalEntry(row: NewJournalEntry): Promise<JournalEntry> {
     const db = this.getDb() as any;
     const result = await db.insert(journalEntries).values(row);

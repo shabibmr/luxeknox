@@ -135,7 +135,7 @@ export interface OpenApItemDto {
   purchase_bill_id: number;
   bill_number: string;
   bill_date: string;
-  due_date: string;
+  due_date: string | null;
   vendor_id: number;
   total_amount: string;
   allocated_amount: string;
