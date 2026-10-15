@@ -8,6 +8,7 @@ import '../../features/accounting/domain/entities/payment_voucher.dart';
 import '../../features/accounting/domain/entities/purchase_bill.dart';
 import '../../features/accounting/presentation/screens/account_form_screen.dart';
 import '../../features/accounting/presentation/screens/accounting_home_screen.dart';
+import '../../features/accounting/presentation/screens/accounting_reports_screen.dart';
 import '../../features/accounting/presentation/screens/chart_of_accounts_screen.dart';
 import '../../features/accounting/presentation/screens/expense_detail_screen.dart';
 import '../../features/accounting/presentation/screens/expense_form_screen.dart';
@@ -530,6 +531,10 @@ StatefulShellRoute createAdminBranchRoute() {
                     ),
                   ),
                 ],
+              ),
+              GoRoute(
+                path: 'reports',
+                builder: (context, state) => const AccountingReportsScreen(),
               ),
               GoRoute(
                 path: 'go-live',

@@ -106,20 +106,24 @@ class ProfitAndLossReport extends Equatable {
 class BalanceSheetReport extends Equatable {
   const BalanceSheetReport({
     required this.asOfDate,
+    required this.fiscalYearStart,
     required this.totalAssets,
     required this.totalLiabilities,
     required this.totalEquity,
     required this.currentYearEarnings,
+    required this.totalLiabilitiesAndEquity,
     this.assetAccounts = const [],
     this.liabilityAccounts = const [],
     this.equityAccounts = const [],
   });
 
   final DateTime asOfDate;
+  final DateTime fiscalYearStart;
   final String totalAssets;
   final String totalLiabilities;
   final String totalEquity;
   final String currentYearEarnings;
+  final String totalLiabilitiesAndEquity;
   final List<ReportAccountItem> assetAccounts;
   final List<ReportAccountItem> liabilityAccounts;
   final List<ReportAccountItem> equityAccounts;
@@ -127,10 +131,12 @@ class BalanceSheetReport extends Equatable {
   @override
   List<Object?> get props => [
     asOfDate,
+    fiscalYearStart,
     totalAssets,
     totalLiabilities,
     totalEquity,
     currentYearEarnings,
+    totalLiabilitiesAndEquity,
     assetAccounts,
     liabilityAccounts,
     equityAccounts,
@@ -196,14 +202,18 @@ class DayBookJournalItem extends Equatable {
 class DayBookReport extends Equatable {
   const DayBookReport({
     required this.date,
+    required this.totalDebit,
+    required this.totalCredit,
     this.journals = const [],
   });
 
   final DateTime date;
+  final String totalDebit;
+  final String totalCredit;
   final List<DayBookJournalItem> journals;
 
   @override
-  List<Object?> get props => [date, journals];
+  List<Object?> get props => [date, totalDebit, totalCredit, journals];
 }
 
 class OpenItemEntry extends Equatable {
@@ -295,6 +305,9 @@ class GstSummaryReport extends Equatable {
     required this.fromDate,
     required this.toDate,
     required this.totalTaxableValue,
+    required this.outputCgst,
+    required this.outputSgst,
+    required this.outputIgst,
     required this.totalOutputTax,
     required this.totalInputTax,
     required this.netTaxPayable,
@@ -304,6 +317,9 @@ class GstSummaryReport extends Equatable {
   final DateTime fromDate;
   final DateTime toDate;
   final String totalTaxableValue;
+  final String outputCgst;
+  final String outputSgst;
+  final String outputIgst;
   final String totalOutputTax;
   final String totalInputTax;
   final String netTaxPayable;
@@ -314,6 +330,9 @@ class GstSummaryReport extends Equatable {
     fromDate,
     toDate,
     totalTaxableValue,
+    outputCgst,
+    outputSgst,
+    outputIgst,
     totalOutputTax,
     totalInputTax,
     netTaxPayable,

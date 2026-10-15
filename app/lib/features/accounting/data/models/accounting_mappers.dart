@@ -762,10 +762,12 @@ extension BalanceSheetReportModelMapper on api.BalanceSheetReport {
   BalanceSheetReport toDomain() {
     return BalanceSheetReport(
       asOfDate: asOf.toDateTime(),
+      fiscalYearStart: fiscalYearStart.toDateTime(),
       totalAssets: totalAssets,
       totalLiabilities: totalLiabilities,
       totalEquity: totalEquity,
       currentYearEarnings: currentYearEarnings,
+      totalLiabilitiesAndEquity: totalLiabilitiesAndEquity,
       assetAccounts: assetAccounts.map((a) => a.toDomain()).toList(),
       liabilityAccounts: liabilityAccounts.map((a) => a.toDomain()).toList(),
       equityAccounts: equityAccounts.map((a) => a.toDomain()).toList(),
@@ -803,6 +805,8 @@ extension DayBookReportModelMapper on api.DayBookReport {
   DayBookReport toDomain() {
     return DayBookReport(
       date: date.toDateTime(),
+      totalDebit: totalDebit,
+      totalCredit: totalCredit,
       journals: journals.map((j) => j.toDomain()).toList(),
     );
   }
@@ -874,6 +878,9 @@ extension GstSummaryReportModelMapper on api.GstSummaryReport {
       fromDate: from.toDateTime(),
       toDate: to.toDateTime(),
       totalTaxableValue: totalTaxableValue,
+      outputCgst: outputCgst,
+      outputSgst: outputSgst,
+      outputIgst: outputIgst,
       totalOutputTax: totalOutputTax,
       totalInputTax: inputTaxCredit,
       netTaxPayable: netPayable,

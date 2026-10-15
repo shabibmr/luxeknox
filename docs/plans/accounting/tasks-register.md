@@ -128,7 +128,7 @@ Later rows stay `[>]` until a new plan pulls them in.
 | ACC-093 | `[x]` | Chart of accounts list and form | ACC-030, ACC-091 | Deactivated accounts stay visible and cannot be picked on a new document |
 | ACC-094 | `[x]` | Journal list, detail, and manual entry | ACC-025, ACC-091 | An unbalanced entry cannot be submitted |
 | ACC-095 | `[x]` | Vendors, purchase bills, expenses, payment vouchers, fund transfers | ACC-032, ACC-040, ACC-041, ACC-042, ACC-045, ACC-091 | Posting a draft refreshes the detail and shows the journal number. A transfer shows the fee line |
-| ACC-096 | `[ ]` | Trial balance, profit and loss, balance sheet, day book, GST summary | ACC-070, ACC-071, ACC-072, ACC-073, ACC-075, ACC-091 | Totals on screen match the API totals |
+| ACC-096 | `[x]` | Trial balance, profit and loss, balance sheet, day book, GST summary | ACC-070, ACC-071, ACC-072, ACC-073, ACC-075, ACC-091 | Totals on screen match the API totals |
 | ACC-097 | `[ ]` | Period list with lock | ACC-034, ACC-062, ACC-091 | A locked period shows locked. The lock action is hidden without `accounting.periods_close`. A refused lock shows the reason |
 | ACC-098 | `[ ]` | Widget tests for home, journal entry validation, a posted bill detail, and the go-live checklist | ACC-092, ACC-094, ACC-095, ACC-099 | The tests pass. `dart analyze` is clean for the feature |
 | ACC-099 | `[x]` | Go-live setup: map payment methods to accounts, show the unearned preview and opening-journal match, enable posting | ACC-054, ACC-064, ACC-091 | Every failing check is listed. The enable action is hidden without `accounting.posting_toggle` |
@@ -182,8 +182,8 @@ One person owns a shared file even when the wave lists the tasks together:
 
 | Marker | Count |
 |---|---|
-| `[ ]` TODO | 3 |
+| `[ ]` TODO | 2 |
 | `[~]` DOING | 0 |
-| `[x]` DONE | 64 |
+| `[x]` DONE | 65 |
 | `[!]` BLOCKED | 0 |
 | `[>]` LATER | 8 |

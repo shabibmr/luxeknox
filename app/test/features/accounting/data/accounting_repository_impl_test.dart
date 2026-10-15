@@ -372,7 +372,110 @@ void main() {
       expect(result.isRight(), isTrue);
       result.fold(
         (failure) => fail('expected right'),
-        (report) => expect(report.totalDebit, '1000.00'),
+        (report) {
+          expect(report.totalDebit, '1000.00');
+          expect(report.totalCredit, '1000.00');
+        },
+      );
+    });
+
+    test('getDayBook maps debit and credit totals from API', () async {
+      final tReport = api.DayBookReport((b) {
+        b
+          ..date = tDate
+          ..totalDebit = '250.00'
+          ..totalCredit = '250.00'
+          ..journals.replace([]);
+      });
+
+      when(
+        () => mockDataSource.getDayBook(date: any(named: 'date')),
+      ).thenAnswer((_) async => tReport);
+
+      final result = await repository.getDayBook(date: DateTime.utc(2026, 1, 1));
+
+      expect(result.isRight(), isTrue);
+      result.fold(
+        (failure) => fail('expected right'),
+        (report) {
+          expect(report.totalDebit, '250.00');
+          expect(report.totalCredit, '250.00');
+        },
+      );
+    });
+
+    test('getBalanceSheet maps liabilities-and-equity total from API', () async {
+      final tReport = api.BalanceSheetReport((b) {
+        b
+          ..asOf = tDate
+          ..fiscalYearStart = tDate
+          ..totalAssets = '500.00'
+          ..totalLiabilities = '200.00'
+          ..totalEquity = '300.00'
+          ..currentYearEarnings = '50.00'
+          ..totalLiabilitiesAndEquity = '500.00'
+          ..assetAccounts.replace([])
+          ..liabilityAccounts.replace([])
+          ..equityAccounts.replace([]);
+      });
+
+      when(
+        () => mockDataSource.getBalanceSheet(asOf: any(named: 'asOf')),
+      ).thenAnswer((_) async => tReport);
+
+      final result =
+          await repository.getBalanceSheet(asOf: DateTime.utc(2026, 1, 1));
+
+      expect(result.isRight(), isTrue);
+      result.fold(
+        (failure) => fail('expected right'),
+        (report) {
+          expect(report.totalAssets, '500.00');
+          expect(report.totalLiabilitiesAndEquity, '500.00');
+          expect(report.currentYearEarnings, '50.00');
+        },
+      );
+    });
+
+    test('getGstSummary maps output components and net payable from API',
+        () async {
+      final tReport = api.GstSummaryReport((b) {
+        b
+          ..from = tDate
+          ..to = tDate
+          ..totalTaxableValue = '100.00'
+          ..outputCgst = '9.00'
+          ..outputSgst = '9.00'
+          ..outputIgst = '0.00'
+          ..totalOutputTax = '18.00'
+          ..inputTaxCredit = '5.00'
+          ..netPayable = '13.00'
+          ..taxCodes.replace([]);
+      });
+
+      when(
+        () => mockDataSource.getGstSummary(
+          from: any(named: 'from'),
+          to: any(named: 'to'),
+        ),
+      ).thenAnswer((_) async => tReport);
+
+      final result = await repository.getGstSummary(
+        from: DateTime.utc(2026, 1, 1),
+        to: DateTime.utc(2026, 1, 1),
+      );
+
+      expect(result.isRight(), isTrue);
+      result.fold(
+        (failure) => fail('expected right'),
+        (report) {
+          expect(report.outputCgst, '9.00');
+          expect(report.outputSgst, '9.00');
+          expect(report.outputIgst, '0.00');
+          expect(report.totalOutputTax, '18.00');
+          expect(report.totalInputTax, '5.00');
+          expect(report.netTaxPayable, '13.00');
+        },
       );
     });
   });

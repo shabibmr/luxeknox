@@ -444,7 +444,7 @@ class _QuickActionsSection extends StatelessWidget {
             ActionChip(
               avatar: const Icon(Icons.bar_chart_outlined, size: 18),
               label: const Text(AccountingStrings.viewReports),
-              onPressed: () {},
+              onPressed: () => context.go(Routes.adminAccountingReports),
             ),
             ActionChip(
               avatar: const Icon(Icons.calendar_month_outlined, size: 18),
