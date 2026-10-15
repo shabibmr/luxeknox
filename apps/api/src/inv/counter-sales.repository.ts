@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { asc, eq, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, exists, gte, like, lte, sql, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
@@ -51,6 +51,43 @@ export interface CounterSaleTenderRow {
   payment_method_name: string;
   amount: string;
   reference: string | null;
+}
+
+export interface CounterSaleListFilter {
+  from?: string;
+  to?: string;
+  memberId?: number;
+  itemId?: number;
+  search?: string;
+}
+
+export type CounterSaleListRow = Omit<CounterSaleDetail, 'lines' | 'tenders'>;
+
+export function counterSaleListWhere(filters: CounterSaleListFilter): SQL | undefined {
+  const conditions: SQL[] = [];
+
+  if (filters.from) {
+    conditions.push(gte(counterSales.sale_date, filters.from));
+  }
+  if (filters.to) {
+    conditions.push(lte(counterSales.sale_date, filters.to));
+  }
+  if (filters.memberId != null) {
+    conditions.push(eq(counterSales.member_id, filters.memberId));
+  }
+  const search = filters.search?.trim();
+  if (search) {
+    conditions.push(like(counterSales.sale_number, `%${search}%`));
+  }
+  if (filters.itemId != null) {
+    conditions.push(
+      exists(
+        sql`(select 1 from ${counterSaleLines} where ${counterSaleLines.counter_sale_id} = ${counterSales.id} and ${counterSaleLines.item_id} = ${filters.itemId})`,
+      ),
+    );
+  }
+
+  return conditions.length > 0 ? and(...conditions) : undefined;
 }
 
 export interface CounterSaleDetail {
@@ -241,5 +278,48 @@ export class CounterSalesRepository extends BaseRepository<
       .orderBy(asc(counterSaleTenders.id))) as CounterSaleTenderRow[];
 
     return { ...header, lines, tenders };
+  }
+
+  async findMany(
+    params: CounterSaleListFilter & { limit: number; offset: number },
+  ): Promise<{ rows: CounterSaleListRow[]; total: number }> {
+    const db = this.getDb() as any;
+    const where = counterSaleListWhere(params);
+
+    let listQ = db
+      .select({
+        id: counterSales.id,
+        sale_number: counterSales.sale_number,
+        sale_date: counterSales.sale_date,
+        member_id: counterSales.member_id,
+        member_first_name: members.first_name,
+        member_last_name: members.last_name,
+        customer_name: counterSales.customer_name,
+        status: counterSales.status,
+        subtotal: counterSales.subtotal,
+        discount_amount: counterSales.discount_amount,
+        tax_amount: counterSales.tax_amount,
+        total_amount: counterSales.total_amount,
+        cogs_amount: counterSales.cogs_amount,
+        journal_entry_id: counterSales.journal_entry_id,
+        journal_number: journalEntries.journal_number,
+        row_version: counterSales.row_version,
+        created_at: counterSales.created_at,
+      })
+      .from(counterSales)
+      .leftJoin(members, eq(counterSales.member_id, members.id))
+      .leftJoin(journalEntries, eq(counterSales.journal_entry_id, journalEntries.id));
+    let countQ = db.select({ value: count() }).from(counterSales);
+    if (where) {
+      listQ = listQ.where(where);
+      countQ = countQ.where(where);
+    }
+
+    const rows = await listQ
+      .orderBy(desc(counterSales.sale_date), desc(counterSales.id))
+      .limit(params.limit)
+      .offset(params.offset);
+    const totalRows = await countQ;
+    return { rows: rows as CounterSaleListRow[], total: Number(totalRows[0]?.value ?? 0) };
   }
 }

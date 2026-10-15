@@ -39,11 +39,22 @@ const SALE: CounterSaleDto = {
 };
 
 describe('CounterSalesController', () => {
-  let service: { create: ReturnType<typeof vi.fn> };
+  let service: {
+    create: ReturnType<typeof vi.fn>;
+    list: ReturnType<typeof vi.fn>;
+    getById: ReturnType<typeof vi.fn>;
+  };
   let controller: CounterSalesController;
 
   beforeEach(() => {
-    service = { create: vi.fn().mockResolvedValue(SALE) };
+    service = {
+      create: vi.fn().mockResolvedValue(SALE),
+      list: vi.fn().mockResolvedValue({
+        data: [SALE],
+        meta: { limit: 20, offset: 0, cursor: null, next_cursor: null, has_more: false, total: 1 },
+      }),
+      getById: vi.fn().mockResolvedValue(SALE),
+    };
     controller = new CounterSalesController(service as unknown as CounterSalesService);
   });
 
@@ -62,5 +73,23 @@ describe('CounterSalesController', () => {
     };
     await expect(controller.create(dto, ACTOR)).resolves.toBe(SALE);
     expect(service.create).toHaveBeenCalledWith(dto, ACTOR);
+  });
+
+  it('requires inventory.read on list and get', () => {
+    expect(Reflect.getMetadata(REQUIRE_PERMISSIONS_KEY, CounterSalesController.prototype.list)).toEqual([
+      'inventory.read',
+    ]);
+    expect(Reflect.getMetadata(REQUIRE_PERMISSIONS_KEY, CounterSalesController.prototype.getById)).toEqual([
+      'inventory.read',
+    ]);
+  });
+
+  it('delegates list and get to the service', async () => {
+    const query = { search: 'SAL-', from: '2026-10-01' };
+    await controller.list(query, ACTOR);
+    await controller.getById(50, ACTOR);
+
+    expect(service.list).toHaveBeenCalledWith(query, ACTOR);
+    expect(service.getById).toHaveBeenCalledWith(50, ACTOR);
   });
 });

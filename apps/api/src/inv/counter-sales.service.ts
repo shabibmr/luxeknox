@@ -5,15 +5,28 @@ import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import { runInTransaction } from '../platform/db/transaction-context';
 import { BusinessRuleError, NotFoundError } from '../platform/errors/app-error';
+import {
+  createPaginatedResponse,
+  PaginationHelper,
+  type PaginatedResponse,
+} from '../platform/http/pagination';
 import { addMoney, cmpMoney, mulMoneyPercent, mulQtyRate, subMoney } from '../platform/money/money';
 import { AccountingPostingService, type PostJournalLineInput } from '../acct/accounting-posting.service';
 import { AccountsRepository } from '../acct/accounts.repository';
 import { TaxCodesRepository } from '../acct/tax-codes.repository';
 import { buildTaxComponentLines } from '../acct/tax-lines';
-import type { CounterSaleDto, SaleLineDto, SaleWrite, TenderDto } from './counter-sales.dto';
+import {
+  counterSaleFilterQuerySchema,
+  type CounterSaleDto,
+  type CounterSaleListItemDto,
+  type SaleLineDto,
+  type SaleWrite,
+  type TenderDto,
+} from './counter-sales.dto';
 import {
   CounterSalesRepository,
   type CounterSaleDetail,
+  type CounterSaleListRow,
   type SalePaymentMethodRow,
 } from './counter-sales.repository';
 import { InventoryItemsRepository, type InventoryItemRow } from './items.repository';
@@ -57,6 +70,7 @@ export class CounterSalesService {
     private readonly accountsRepository: AccountsRepository,
     private readonly postingService: AccountingPostingService,
     @Inject(DRIZZLE_DB_TOKEN) private readonly db: DrizzleDb<any>,
+    private readonly paginationHelper: PaginationHelper,
   ) {}
 
   toDto(detail: CounterSaleDetail): CounterSaleDto {
@@ -111,6 +125,60 @@ export class CounterSalesService {
       row_version: detail.row_version,
       created_at: detail.created_at,
     };
+  }
+
+  toListItem(row: CounterSaleListRow): CounterSaleListItemDto {
+    const sale = this.toDto({ ...row, lines: [], tenders: [] });
+    return {
+      id: sale.id,
+      sale_number: sale.sale_number,
+      sale_date: sale.sale_date,
+      member_id: sale.member_id,
+      member_name: sale.member_name,
+      customer_name: sale.customer_name,
+      status: sale.status,
+      subtotal: sale.subtotal,
+      discount_amount: sale.discount_amount,
+      tax_amount: sale.tax_amount,
+      total_amount: sale.total_amount,
+      cogs_amount: sale.cogs_amount,
+      journal_entry_id: sale.journal_entry_id,
+      journal_number: sale.journal_number,
+      row_version: sale.row_version,
+      created_at: sale.created_at,
+    };
+  }
+
+  async list(
+    rawQuery: Record<string, unknown>,
+    _actor?: AuthenticatedUser,
+  ): Promise<PaginatedResponse<CounterSaleListItemDto>> {
+    const filters = counterSaleFilterQuerySchema.parse(rawQuery);
+    const pagination = await this.paginationHelper.normalizeParams(rawQuery);
+    const offset = pagination.offset ?? 0;
+    const { rows, total } = await this.salesRepository.findMany({
+      from: filters.from,
+      to: filters.to,
+      memberId: filters.member_id,
+      itemId: filters.item_id,
+      search: filters.search,
+      limit: pagination.limit,
+      offset,
+    });
+    return createPaginatedResponse({
+      items: rows.map((row) => this.toListItem(row)),
+      limit: pagination.limit,
+      offset,
+      total,
+    });
+  }
+
+  async getById(id: number, _actor?: AuthenticatedUser): Promise<CounterSaleDto> {
+    const detail = await this.salesRepository.findDetail(id);
+    if (!detail) {
+      throw new NotFoundError(`Counter sale ${id} was not found`);
+    }
+    return this.toDto(detail);
   }
 
   async create(dto: SaleWrite, actor?: AuthenticatedUser): Promise<CounterSaleDto> {

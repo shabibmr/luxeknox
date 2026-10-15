@@ -4,6 +4,7 @@ import type { TaxCode } from '../platform/db/schema/accounting';
 import { BusinessRuleError, NotFoundError } from '../platform/errors/app-error';
 import { toCents } from '../platform/money/money';
 import type { AccountingPostingService, PostJournalLineInput } from '../acct/accounting-posting.service';
+import type { PaginationHelper } from '../platform/http/pagination';
 import type { AccountsRepository } from '../acct/accounts.repository';
 import type { TaxCodesRepository } from '../acct/tax-codes.repository';
 import { saleWriteSchema, type SaleWrite } from './counter-sales.dto';
@@ -140,6 +141,7 @@ describe('CounterSalesService', () => {
     insertSale: ReturnType<typeof vi.fn>;
     attachJournal: ReturnType<typeof vi.fn>;
     findDetail: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
   };
   let itemsRepository: { findReadById: ReturnType<typeof vi.fn> };
   let taxCodesRepository: {
@@ -148,6 +150,7 @@ describe('CounterSalesService', () => {
   };
   let accountsRepository: { findByCode: ReturnType<typeof vi.fn> };
   let postingService: { postJournal: ReturnType<typeof vi.fn> };
+  let paginationHelper: { normalizeParams: ReturnType<typeof vi.fn> };
   let service: CounterSalesService;
 
   const splitSale: SaleWrite = {
@@ -175,6 +178,7 @@ describe('CounterSalesService', () => {
       insertSale: vi.fn().mockResolvedValue(50),
       attachJournal: vi.fn().mockResolvedValue(undefined),
       findDetail: vi.fn().mockImplementation(async (id: number) => detailFor(id)),
+      findMany: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
     };
     itemsRepository = { findReadById: vi.fn().mockResolvedValue(ITEM) };
     taxCodesRepository = {
@@ -191,6 +195,9 @@ describe('CounterSalesService', () => {
         return { id: 77, journal_number: 'JRN00000077', lines: [] };
       }),
     };
+    paginationHelper = {
+      normalizeParams: vi.fn().mockResolvedValue({ limit: 20, offset: 0 }),
+    };
     service = new CounterSalesService(
       salesRepository as unknown as CounterSalesRepository,
       itemsRepository as unknown as InventoryItemsRepository,
@@ -198,6 +205,7 @@ describe('CounterSalesService', () => {
       accountsRepository as unknown as AccountsRepository,
       postingService as unknown as AccountingPostingService,
       {} as never,
+      paginationHelper as unknown as PaginationHelper,
     );
   });
 
@@ -324,6 +332,75 @@ describe('CounterSalesService', () => {
   it('returns 404 for an unknown item', async () => {
     itemsRepository.findReadById.mockResolvedValue(null);
     await expect(service.create(splitSale, ACTOR)).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it('lists sale headers without lines, tenders, or returns', async () => {
+    const header = detailFor(50);
+    salesRepository.findMany.mockResolvedValue({
+      rows: [
+        {
+          id: header.id,
+          sale_number: header.sale_number,
+          sale_date: header.sale_date,
+          member_id: header.member_id,
+          member_first_name: header.member_first_name,
+          member_last_name: header.member_last_name,
+          customer_name: header.customer_name,
+          status: header.status,
+          subtotal: header.subtotal,
+          discount_amount: header.discount_amount,
+          tax_amount: header.tax_amount,
+          total_amount: header.total_amount,
+          cogs_amount: header.cogs_amount,
+          journal_entry_id: header.journal_entry_id,
+          journal_number: header.journal_number,
+          row_version: header.row_version,
+          created_at: header.created_at,
+        },
+      ],
+      total: 1,
+    });
+
+    const page = await service.list(
+      { from: '2026-10-01', to: '2026-10-16', member_id: '8', item_id: '10', search: 'SAL-' },
+      ACTOR,
+    );
+
+    expect(salesRepository.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: '2026-10-01',
+        to: '2026-10-16',
+        memberId: 8,
+        itemId: 10,
+        search: 'SAL-',
+        limit: 20,
+        offset: 0,
+      }),
+    );
+    expect(page.data[0]).toMatchObject({
+      id: 50,
+      sale_number: 'SAL-00000001',
+      journal_number: 'JRN00000077',
+    });
+    expect(page.data[0]).not.toHaveProperty('lines');
+    expect(page.data[0]).not.toHaveProperty('tenders');
+    expect(page.data[0]).not.toHaveProperty('returns');
+    expect(page.meta.total).toBe(1);
+  });
+
+  it('returns lines, tenders, and the journal number for one sale', async () => {
+    const sale = await service.getById(50, ACTOR);
+
+    expect(salesRepository.findDetail).toHaveBeenCalledWith(50);
+    expect(sale.journal_number).toBe('JRN00000077');
+    expect(sale.lines).toHaveLength(1);
+    expect(sale.tenders).toHaveLength(2);
+    expect(sale.returns).toEqual([]);
+  });
+
+  it('returns 404 for an unknown sale', async () => {
+    salesRepository.findDetail.mockResolvedValue(null);
+    await expect(service.getById(99, ACTOR)).rejects.toBeInstanceOf(NotFoundError);
   });
 });
 

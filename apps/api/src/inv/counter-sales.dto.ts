@@ -71,6 +71,26 @@ export const saleWriteSchema = z
 
 export type SaleWrite = z.infer<typeof saleWriteSchema>;
 
+export const counterSaleFilterQuerySchema = z.object({
+  from: dateSchema.optional(),
+  to: dateSchema.optional(),
+  member_id: z.preprocess(
+    (val) => (val === '' || val == null ? undefined : val),
+    z.coerce.number().int().positive().optional(),
+  ),
+  item_id: z.preprocess(
+    (val) => (val === '' || val == null ? undefined : val),
+    z.coerce.number().int().positive().optional(),
+  ),
+  search: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => (value && value.length > 0 ? value : undefined)),
+});
+
+export type CounterSaleFilterQuery = z.infer<typeof counterSaleFilterQuerySchema>;
+
 export interface SaleLineDto {
   id: number;
   item_id: number;
@@ -102,6 +122,9 @@ export interface CounterSaleReturnSummaryDto {
   return_date: string;
   total_amount: string;
 }
+
+/** List rows omit `lines`, `tenders`, and `returns`. */
+export type CounterSaleListItemDto = Omit<CounterSaleDto, 'lines' | 'tenders' | 'returns'>;
 
 export interface CounterSaleDto {
   id: number;
