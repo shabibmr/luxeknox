@@ -22,7 +22,7 @@ Start a task when every ID in *Needs* is `[x]`.
 | IL-13 | `[x]` | `inv` module skeleton imported in `app.module.ts`; item read endpoints (list with search by name or SKU, get) | IL-03, IL-12 | List returns `uom_code`, `category_name`; SKU search works |
 | IL-14 | `[x]` | Counter sale create: `SaleWrite` zod DTO, defaults, server totals, tender check, number `SAL-…`, journal in the same transaction, idempotency | IL-02, IL-10, IL-11, IL-13 | Journal balances; tender mismatch gives 422; same key returns same sale |
 | IL-15 | `[x]` | Counter sale `get` and `list` | IL-14 | Lists omit lines/tenders; `get` has lines, tenders, journal number |
-| IL-16 | `[ ]` | Unit and e2e tests for IL-12 to IL-15 | IL-15 | `vitest run src/inv src/acct src/platform/money` green |
+| IL-16 | `[x]` | Unit and e2e tests for IL-12 to IL-15 | IL-15 | `vitest run src/inv src/acct src/platform/money` green |
 | IL-17 | `[ ]` | `openapi:dump`, regenerate `packages/api_client`, `openapi:check` (after the purchase bill changes too) | IL-15, IL-35 | Check passes; `INVApi` generated; purchase bill line fields present |
 
 ## B2. Stock ledger core and purchase entry (backend)
