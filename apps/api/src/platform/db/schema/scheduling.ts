@@ -113,6 +113,7 @@ export const scheduleParticipants = mysqlTable(
     attended: boolean('attended'),
     booked_at: utcDatetime('booked_at').notNull(),
     marked_at: utcDatetime('marked_at'),
+    client_verified_at: utcDatetime('client_verified_at'),
   },
   (table) => [
     uniqueIndex('schedule_participants_schedule_member_unique').on(

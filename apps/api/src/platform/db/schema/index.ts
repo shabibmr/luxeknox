@@ -26,3 +26,5 @@ export * from './idempotency';
 export * from './payments';
 export * from './goals';
 export * from './notifications';
+export * from './par-q';
+export * from './lifestyle-intake';

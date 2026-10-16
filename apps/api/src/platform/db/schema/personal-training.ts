@@ -108,6 +108,7 @@ export const ptSubscriptionChanges = mysqlTable(
     old_slot_start: varchar('old_slot_start', { length: 8 }),
     new_slot_start: varchar('new_slot_start', { length: 8 }),
     reason: text('reason'),
+    handover_continuity_notes: text('handover_continuity_notes'),
     changed_by_user_id: bigint('changed_by_user_id', { mode: 'number', unsigned: true })
       .notNull()
       .references(() => users.id),
@@ -118,3 +119,85 @@ export const ptSubscriptionChanges = mysqlTable(
 
 export type PtSubscriptionChange = typeof ptSubscriptionChanges.$inferSelect;
 export type NewPtSubscriptionChange = typeof ptSubscriptionChanges.$inferInsert;
+
+export const PT_PROGRESS_REVIEW_STATUSES = [
+  'draft',
+  'pending_client_sign',
+  'pending_manager_approval',
+  'approved',
+  'archived',
+] as const;
+export type PtProgressReviewStatus = (typeof PT_PROGRESS_REVIEW_STATUSES)[number];
+
+export interface BodyMetricSnapshot {
+  metric: string;
+  start_val: number | null;
+  current_val: number | null;
+  change_val: number | null;
+  target_val: number | null;
+}
+
+export interface PerformanceMarkerSnapshot {
+  marker: string;
+  start_val: string | null;
+  current_val: string | null;
+  change_val: string | null;
+  target_val: string | null;
+}
+
+export interface ReviewChecklist {
+  goals_reviewed?: boolean;
+  measurements_reviewed?: boolean;
+  performance_reviewed?: boolean;
+  attendance_reviewed?: boolean;
+  program_updated?: boolean;
+  next_goals_agreed?: boolean;
+}
+
+export const ptProgressReviews = mysqlTable(
+  'pt_progress_reviews',
+  {
+    id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
+    member_id: bigint('member_id', { mode: 'number', unsigned: true })
+      .notNull()
+      .references(() => members.id),
+    trainer_id: bigint('trainer_id', { mode: 'number', unsigned: true })
+      .notNull()
+      .references(() => trainers.id),
+    review_period_start: date('review_period_start', { mode: 'string' }).notNull(),
+    review_period_end: date('review_period_end', { mode: 'string' }).notNull(),
+    body_metrics_snapshot: json('body_metrics_snapshot').$type<BodyMetricSnapshot[]>(),
+    performance_markers_snapshot:
+      json('performance_markers_snapshot').$type<PerformanceMarkerSnapshot[]>(),
+    progress_highlights: json('progress_highlights').$type<string[]>(),
+    highlights_other_text: text('highlights_other_text'),
+    trainer_summary: text('trainer_summary'),
+    client_feedback: text('client_feedback'),
+    next_phase_goal: text('next_phase_goal'),
+    next_phase_training_focus: text('next_phase_training_focus'),
+    next_review_date: date('next_review_date', { mode: 'string' }),
+    review_checklist: json('review_checklist').$type<ReviewChecklist>(),
+    final_review_notes: text('final_review_notes'),
+    client_signed_at: utcDatetime('client_signed_at'),
+    trainer_signed_at: utcDatetime('trainer_signed_at'),
+    manager_user_id: bigint('manager_user_id', { mode: 'number', unsigned: true }).references(
+      () => users.id,
+    ),
+    manager_signed_at: utcDatetime('manager_signed_at'),
+    status: varchar('status', { length: 32 })
+      .notNull()
+      .default('draft')
+      .$type<PtProgressReviewStatus>(),
+    created_at: utcDatetime('created_at').notNull(),
+    updated_at: utcDatetime('updated_at'),
+  },
+  (table) => [
+    index('pt_progress_reviews_member_id_idx').on(table.member_id),
+    index('pt_progress_reviews_trainer_id_idx').on(table.trainer_id),
+    index('pt_progress_reviews_status_idx').on(table.status),
+  ],
+);
+
+export type PtProgressReview = typeof ptProgressReviews.$inferSelect;
+export type NewPtProgressReview = typeof ptProgressReviews.$inferInsert;
+
