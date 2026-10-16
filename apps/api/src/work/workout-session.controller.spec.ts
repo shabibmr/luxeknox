@@ -82,6 +82,23 @@ describe('WorkoutSessionController', () => {
     expect(result.id).toBe(50);
   });
 
+  it('delegates complete with multi-metric ratings, pain, and next session plan (PTF-14)', async () => {
+    const dto = {
+      effort_rating: 8,
+      satisfaction_rating: 9,
+      pain_discomfort_score: 2,
+      pain_notes: 'Mild shoulder pinch',
+      next_session_plan: 'Warm up shoulders with band pull-aparts',
+      trainer_notes: 'Great depth on squats',
+      client_signed: true,
+      trainer_signed: true,
+    };
+    const result = await controller.complete(50, dto, ADMIN_USER);
+
+    expect(service.complete).toHaveBeenCalledWith(50, dto, ADMIN_USER);
+    expect(result.id).toBe(50);
+  });
+
   it('requires workouts.read on GET /workout-sessions/personal-records', async () => {
     expect(
       Reflect.getMetadata(REQUIRE_PERMISSIONS_KEY, WorkoutSessionController.prototype.getPersonalRecords),

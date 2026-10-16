@@ -24,7 +24,7 @@ import type {
   WorkoutSessionFilterQueryDto,
   WorkoutSetUpdateDto,
   WorkoutSetWriteDto,
-} from './workout-plan.dto';
+} from './workout-session.dto';
 import type { WorkoutSessionExercise } from '../platform/db/schema/workout';
 
 @Injectable()
@@ -158,13 +158,18 @@ export class WorkoutSessionService {
       throw new BusinessRuleError('Cannot log sets for a completed workout session');
     }
 
+    const actualRir = dto.actual_rir ?? dto.target_rir;
+    const actualDurationSeconds = dto.actual_duration_seconds ?? dto.target_duration_seconds;
+
     return this.sessionRepo.insertSessionExercise({
       workout_session_id: sessionId,
       exercise_id: dto.exercise_id,
       set_number: dto.set_number,
       reps_completed: dto.reps_completed ?? 0,
       weight_lifted_kg: String(dto.weight_lifted_kg ?? 0),
-      rpe_score: dto.rpe_score ? String(dto.rpe_score) : null,
+      rpe_score: dto.rpe_score !== undefined && dto.rpe_score !== null ? String(dto.rpe_score) : null,
+      actual_rir: actualRir !== undefined && actualRir !== null ? String(actualRir) : null,
+      actual_duration_seconds: actualDurationSeconds ?? null,
       is_completed: dto.is_completed ?? true,
       notes: dto.notes ?? null,
       created_at: new Date(),
@@ -203,6 +208,52 @@ export class WorkoutSessionService {
       Math.round((completedAt.getTime() - new Date(session.started_at).getTime()) / 60000),
     );
 
+    let clientSignedAt: Date | null = session.client_signed_at ?? null;
+    let trainerSignedAt: Date | null = session.trainer_signed_at ?? null;
+
+    if (dto.client_signed_at !== undefined) {
+      clientSignedAt = dto.client_signed_at ? new Date(dto.client_signed_at) : null;
+    } else if (dto.client_signed === true || (actor.userType === 'member' && dto.client_signed !== false)) {
+      clientSignedAt = completedAt;
+    } else if (dto.client_signed === false) {
+      clientSignedAt = null;
+    }
+
+    if (dto.trainer_signed_at !== undefined) {
+      trainerSignedAt = dto.trainer_signed_at ? new Date(dto.trainer_signed_at) : null;
+    } else if (dto.trainer_signed === true || (actor.userType === 'trainer' && dto.trainer_signed !== false)) {
+      trainerSignedAt = completedAt;
+    } else if (dto.trainer_signed === false) {
+      trainerSignedAt = null;
+    }
+
+    const extra: {
+      effort_rating?: number | null;
+      satisfaction_rating?: number | null;
+      pain_discomfort_score?: number | null;
+      pain_notes?: string | null;
+      trainer_notes?: string | null;
+      next_session_plan?: string | null;
+      session_focus?: string | null;
+      warmup_protocol?: string | null;
+      cooldown_protocol?: string | null;
+      client_signed_at?: Date | null;
+      trainer_signed_at?: Date | null;
+    } = {
+      client_signed_at: clientSignedAt,
+      trainer_signed_at: trainerSignedAt,
+    };
+
+    if (dto.effort_rating !== undefined) extra.effort_rating = dto.effort_rating;
+    if (dto.satisfaction_rating !== undefined) extra.satisfaction_rating = dto.satisfaction_rating;
+    if (dto.pain_discomfort_score !== undefined) extra.pain_discomfort_score = dto.pain_discomfort_score;
+    if (dto.pain_notes !== undefined) extra.pain_notes = dto.pain_notes;
+    if (dto.trainer_notes !== undefined) extra.trainer_notes = dto.trainer_notes;
+    if (dto.next_session_plan !== undefined) extra.next_session_plan = dto.next_session_plan;
+    if (dto.session_focus !== undefined) extra.session_focus = dto.session_focus;
+    if (dto.warmup_protocol !== undefined) extra.warmup_protocol = dto.warmup_protocol;
+    if (dto.cooldown_protocol !== undefined) extra.cooldown_protocol = dto.cooldown_protocol;
+
     await this.sessionRepo.completeSession(
       sessionId,
       completedAt,
@@ -210,6 +261,7 @@ export class WorkoutSessionService {
       durationMinutes,
       dto.client_feedback_rating,
       dto.notes,
+      extra,
     );
 
     this.eventBus.emitSync({
@@ -221,6 +273,9 @@ export class WorkoutSessionService {
         total_volume_kg: totalVolume,
         duration_minutes: durationMinutes,
         actor_id: actor.id,
+        effort_rating: dto.effort_rating ?? null,
+        satisfaction_rating: dto.satisfaction_rating ?? null,
+        pain_discomfort_score: dto.pain_discomfort_score ?? null,
       },
     });
 
@@ -276,7 +331,13 @@ export class WorkoutSessionService {
     const patch: Partial<
       Pick<
         WorkoutSessionExercise,
-        'reps_completed' | 'weight_lifted_kg' | 'rpe_score' | 'is_completed' | 'notes'
+        | 'reps_completed'
+        | 'weight_lifted_kg'
+        | 'rpe_score'
+        | 'actual_rir'
+        | 'actual_duration_seconds'
+        | 'is_completed'
+        | 'notes'
       >
     > = {};
     if (dto.reps_completed !== undefined) {
@@ -286,7 +347,18 @@ export class WorkoutSessionService {
       patch.weight_lifted_kg = String(dto.weight_lifted_kg);
     }
     if (dto.rpe_score !== undefined) {
-      patch.rpe_score = String(dto.rpe_score);
+      patch.rpe_score = dto.rpe_score !== null ? String(dto.rpe_score) : null;
+    }
+    const rir = dto.actual_rir !== undefined ? dto.actual_rir : dto.target_rir;
+    if (rir !== undefined) {
+      patch.actual_rir = rir !== null ? String(rir) : null;
+    }
+    const duration =
+      dto.actual_duration_seconds !== undefined
+        ? dto.actual_duration_seconds
+        : dto.target_duration_seconds;
+    if (duration !== undefined) {
+      patch.actual_duration_seconds = duration;
     }
     if (dto.is_completed !== undefined) {
       patch.is_completed = dto.is_completed;

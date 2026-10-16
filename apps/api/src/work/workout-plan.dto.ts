@@ -106,44 +106,5 @@ export const workoutPlanExercisesWriteSchema = z.object({
 
 export type WorkoutPlanExercisesWriteDto = z.infer<typeof workoutPlanExercisesWriteSchema>;
 
-export const workoutSessionCreateSchema = z.object({
-  member_id: z.number().int().positive().optional(),
-  workout_plan_id: z.number().int().positive().optional(),
-  workout_plan_version_id: z.number().int().positive().optional(),
-});
+export * from './workout-session.dto';
 
-export type WorkoutSessionCreateDto = z.infer<typeof workoutSessionCreateSchema>;
-
-export const workoutSetWriteSchema = z.object({
-  exercise_id: z.number().int().positive('exercise_id is required'),
-  set_number: z.number().int().min(1, 'set_number must be at least 1'),
-  reps_completed: z.number().int().min(0).optional().default(0),
-  weight_lifted_kg: z.number().min(0).optional().default(0),
-  rpe_score: z.number().min(1).max(10).optional(),
-  is_completed: z.boolean().optional().default(true),
-  notes: z.string().trim().max(1000).nullable().optional(),
-});
-
-export type WorkoutSetWriteDto = z.infer<typeof workoutSetWriteSchema>;
-
-export const workoutSetUpdateSchema = workoutSetWriteSchema
-  .omit({ exercise_id: true, set_number: true })
-  .partial()
-  .refine((data) => Object.keys(data).length > 0, {
-    message: 'At least one field is required',
-  });
-
-export type WorkoutSetUpdateDto = z.infer<typeof workoutSetUpdateSchema>;
-
-export const workoutSessionCompleteSchema = z.object({
-  client_feedback_rating: z.number().int().min(1).max(5).optional(),
-  notes: z.string().optional(),
-});
-
-export type WorkoutSessionCompleteDto = z.infer<typeof workoutSessionCompleteSchema>;
-
-export const workoutSessionFilterQuerySchema = z.object({
-  member_id: z.coerce.number().int().positive().optional(),
-});
-
-export type WorkoutSessionFilterQueryDto = z.infer<typeof workoutSessionFilterQuerySchema>;
