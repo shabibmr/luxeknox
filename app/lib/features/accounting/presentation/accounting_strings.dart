@@ -34,6 +34,33 @@ class AccountingStrings {
   static const String itemDetailTitle = 'Item Details';
   static const String createItemTitle = 'New Item';
   static const String editItemTitle = 'Edit Item';
+  static const String itemSectionBasics = 'Basics';
+  static const String itemSectionPricing = 'Pricing & tax';
+  static const String itemSectionAccounting = 'Accounting';
+  static const String itemSectionInventory = 'Inventory';
+  static const String itemNameLabel = 'Name';
+  static const String itemSkuLabel = 'SKU';
+  static const String itemHsnSacLabel = 'HSN/SAC';
+  static const String itemKindLabel = 'Kind';
+  static const String itemCategoryLabel = 'Category';
+  static const String itemUomLabel = 'Unit of measure';
+  static const String itemSaleRateLabel = 'Sale rate';
+  static const String itemPurchaseRateLabel = 'Purchase rate';
+  static const String itemTaxCodeLabel = 'Tax code';
+  static const String itemIncomeAccountLabel = 'Income account';
+  static const String itemExpenseAccountLabel = 'Expense account';
+  static const String itemInventoryAccountLabel = 'Inventory account';
+  static const String itemCogsAccountLabel = 'COGS account';
+  static const String itemTrackedLabel = 'Tracks inventory';
+  static const String itemReorderLevelLabel = 'Reorder level';
+  static const String itemHasMovementsLabel = 'Has stock movements';
+  static const String itemActive = 'Active';
+  static const String itemInactive = 'Inactive';
+  static const String itemYes = 'Yes';
+  static const String itemNo = 'No';
+  static const String itemEditAction = 'Edit';
+  static const String itemRefreshFailed = 'Could not refresh this item.';
+  static const String itemEmDash = '—';
   static const String reportsTitle = 'Accounting Reports';
   static const String periodsTitle = 'Fiscal Periods';
   static const String goLiveTitle = 'Accounting Go-Live';
@@ -165,12 +192,18 @@ class AccountingStrings {
 
   // Accounts Form & Picker
   static const String searchAccounts = 'Search accounts...';
-  static const String searchItems = 'Search by name or code...';
+  static const String searchItems = 'Search by name or SKU...';
   static const String selectItem = 'Select an item';
   static const String allTypes = 'All Types';
+  static const String allKinds = 'All kinds';
   static const String allStatuses = 'All Statuses';
   static const String activeOnly = 'Active Only';
   static const String inactiveOnly = 'Inactive Only';
+  static const String itemKindGoods = 'Goods';
+  static const String itemKindService = 'Service';
+  static const String trackedBadge = 'Tracked';
+  static const String trackedOnly = 'Tracked';
+  static const String untrackedOnly = 'Untracked';
   static const String parentAccountLabel = 'Parent Account';
   static const String none = 'None';
   static const String selectAccount = 'Select Account';
@@ -392,4 +425,7 @@ class AccountingStrings {
       '${period.name} (${period.startDate.toIso8601String().substring(0, 10)} to ${period.endDate.toIso8601String().substring(0, 10)})';
 
   static String openItemsCount(int count) => '$count open item${count == 1 ? '' : 's'}';
+
+  static const String searchUoms = 'Search units';
+  static const String itemCategoryNone = 'No category';
 }

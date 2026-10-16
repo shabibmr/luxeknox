@@ -31,21 +31,21 @@
 
 | ID | Status | Task | Needs | Done when |
 |---|---|---|---|---|
-| IU-30 | `[ ]` | `ItemsCubit`: load, refresh, load-more (limit/offset), debounced search (name or SKU), filters for kind / active / tracked | IU-13 | Cubit tests: search re-queries from offset 0; filter change resets the page; load-more appends; an error keeps the old list |
-| IU-31 | `[ ]` | `ItemsListScreen`: search field, filter chips, row = name, SKU, kind, UOM, sale rate, tracked and inactive badges; shared `App*` loading / empty / error widgets; pull to refresh; create FAB (needs `accounting.accounts_write`) | IU-30, IU-22 | Widget test: rows render, inactive badge shows, empty and error states, FAB hidden without write access, row tap opens detail |
+| IU-30 | `[x]` | `ItemsCubit`: load, refresh, load-more (limit/offset), debounced search (name or SKU), filters for kind / active / tracked | IU-13 | Cubit tests: search re-queries from offset 0; filter change resets the page; load-more appends; an error keeps the old list |
+| IU-31 | `[x]` | `ItemsListScreen`: search field, filter chips, row = name, SKU, kind, UOM, sale rate, tracked and inactive badges; shared `App*` loading / empty / error widgets; pull to refresh; create FAB (needs `accounting.accounts_write`) | IU-30, IU-22 | Widget test: rows render, inactive badge shows, empty and error states, FAB hidden without write access, row tap opens detail |
 
 ## E. Detail
 
 | ID | Status | Task | Needs | Done when |
 |---|---|---|---|---|
-| IU-40 | `[ ]` | `ItemDetailCubit`: emit `initialItem` at once, then refresh from the API; a load failure keeps the cached item with an error banner | IU-13 | Cubit test: initial item emitted before the fetch resolves |
-| IU-41 | `[ ]` | `ItemDetailScreen`: sections *Basics* (name, SKU, HSN/SAC, kind, category, UOM, status), *Pricing & tax* (rates, tax code name), *Accounting* (income, expense, inventory, COGS account names), *Inventory* (tracked, reorder level, has movements). Edit action gated on write access. Resolve account and tax-code names with the existing account and tax-code use cases | IU-40, IU-22 | Widget test: tracked and untracked items; missing optional fields show an em dash; Edit hidden without access |
+| IU-40 | `[x]` | `ItemDetailCubit`: emit `initialItem` at once, then refresh from the API; a load failure keeps the cached item with an error banner | IU-13 | Cubit test: initial item emitted before the fetch resolves |
+| IU-41 | `[x]` | `ItemDetailScreen`: sections *Basics* (name, SKU, HSN/SAC, kind, category, UOM, status), *Pricing & tax* (rates, tax code name), *Accounting* (income, expense, inventory, COGS account names), *Inventory* (tracked, reorder level, has movements). Edit action gated on write access. Resolve account and tax-code names with the existing account and tax-code use cases | IU-40, IU-22 | Widget test: tracked and untracked items; missing optional fields show an em dash; Edit hidden without access |
 
 ## F. Create / edit form
 
 | ID | Status | Task | Needs | Done when |
 |---|---|---|---|---|
-| IU-50 | `[ ]` | `UomPickerSheet` and a category dropdown using `getUoms` / `getItemCategories`; inactive rows visible but not selectable | IU-13 | Widget test: select returns the UOM; inactive row disabled |
+| IU-50 | `[x]` | `UomPickerSheet` and a category dropdown using `getUoms` / `getItemCategories`; inactive rows visible but not selectable | IU-13 | Widget test: select returns the UOM; inactive row disabled |
 | IU-51 | `[ ]` | `ItemFormCubit`: create and edit modes; fields from `ItemCreate`; client checks per plan decision 7; the tracking toggle defaults inventory (`1400`) and COGS (`5050`) accounts; `hasMovements` locks tracking and UOM; `itemKind` locked in edit; API errors map to a form-level message | IU-13, IU-50 | Cubit tests: name required; negative rate rejected; tracking on without accounts refused; locked fields cannot change; create and edit payloads are right |
 | IU-52 | `[ ]` | `ItemFormScreen`: kind segmented control, name, SKU, HSN/SAC, category, UOM, rates, tax code picker, income / expense `AccountPickerSheet`, active switch, tracking section with inventory and COGS pickers and reorder level; submit disabled while saving; on success go to item detail and show a saved snackbar | IU-51, IU-22 | Widget test: tracking section appears and disappears; submit disabled when invalid; server error text shown |
 
