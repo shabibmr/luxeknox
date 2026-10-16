@@ -36,8 +36,8 @@ Source Document: [Luxe knox pt client  file.pdf](./Luxe%20knox%20pt%20client%20%
 - [ ] PTF-15 Automated safety trigger: log medical alert if `pain_discomfort_score >= 4` <!-- id: 15 -->
 
 **Phase 5: Backend PT Progress Reviews & Presentation Card**
-- [ ] PTF-16 `PtProgressReviewService`: create draft, auto-calculate deltas (start vs current vs target) <!-- id: 16 -->
-- [ ] PTF-17 Review tri-party sign-off state machine (Trainer $\rightarrow$ Client $\rightarrow$ Manager) <!-- id: 17 -->
+- [x] PTF-16 `PtProgressReviewService`: create draft, auto-calculate deltas (start vs current vs target) <!-- id: 16 -->
+- [x] PTF-17 Review tri-party sign-off state machine (Trainer $\rightarrow$ Client $\rightarrow$ Manager) <!-- id: 17 -->
 - [ ] PTF-18 Presentation Card PDF export endpoint (matching Page 8 layout) <!-- id: 18 -->
 
 **Phase 6: Contract and Docs**
