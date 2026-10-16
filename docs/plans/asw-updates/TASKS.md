@@ -28,7 +28,7 @@ Source Document: [Luxe knox pt client  file.pdf](./Luxe%20knox%20pt%20client%20%
 **Phase 3: Backend Lifestyle Intake & Macrocycle Program Design**
 - [x] PTF-10 `LifestyleIntakeService`: upsert habits, stress (1–10), and 4 lifestyle priorities <!-- id: 10 -->
 - [x] PTF-11 `LifestyleIntakeController` endpoints & DTOs <!-- id: 11 -->
-- [ ] PTF-12 Update `WorkoutPlanService` for 12w objective, 4w milestone, frequency, duration, split, progression methods <!-- id: 12 -->
+- [x] PTF-12 Update `WorkoutPlanService` for 12w objective, 4w milestone, frequency, duration, split, progression methods <!-- id: 12 -->
 
 **Phase 4: Backend Workout Micro-Execution & Pain Hook**
 - [ ] PTF-13 Workout set logging: RIR, timed duration seconds, exercise notes <!-- id: 13 -->
