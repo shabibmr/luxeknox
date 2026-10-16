@@ -104,7 +104,7 @@ Blueprint columns, in write order: `primary_objective_12w`, `milestone_4w`, `ses
 
 `LifestyleIntakeDto` fields: `id`, `member_id`, `activity_level`, `training_history`, `current_pain_discomfort`, `sleep_hours_typical`, `stress_level`, `work_activity_demands`, `typical_daily_steps`, `nutrition_approach`, `hydration_habits`, `recovery_habits`, `other_notes`, `lifestyle_priorities`, `conducted_by_trainer_id`, `created_at`, `updated_at`. Datetimes are ISO strings. `sleep_hours_typical` is `string | null`.
 
-- [ ] **Step 1: Write the failing service tests**
+- [x] **Step 1: Write the failing service tests**
 
 Construct `LifestyleIntakeService` with fake repository, member repository, and audit, the same way `medical-history.service.spec.ts` builds its service. Cover:
 
@@ -164,13 +164,13 @@ it('schema_rejects_bad_activity_and_sleep', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests and confirm they fail**
+- [x] **Step 2: Run the tests and confirm they fail**
 
 Run: `pnpm --filter api exec vitest run src/people/lifestyle-intake.service.spec.ts`
 
 Expected: FAIL because `LifestyleIntakeService` is not defined.
 
-- [ ] **Step 3: Implement the repository, schema, and service**
+- [x] **Step 3: Implement the repository, schema, and service**
 
 `findByMemberId` selects by `member_id`, limit 1.
 
@@ -180,13 +180,13 @@ Expected: FAIL because `LifestyleIntakeService` is not defined.
 
 Sort priorities to `sleep`, `nutrition`, `activity`, `recovery` before write.
 
-- [ ] **Step 4: Run the tests and confirm they pass**
+- [x] **Step 4: Run the tests and confirm they pass**
 
 Run: `pnpm --filter api exec vitest run src/people/lifestyle-intake.service.spec.ts`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/people/lifestyle-intake.dto.ts apps/api/src/people/lifestyle-intake.repository.ts apps/api/src/people/lifestyle-intake.service.ts apps/api/src/people/lifestyle-intake.service.spec.ts

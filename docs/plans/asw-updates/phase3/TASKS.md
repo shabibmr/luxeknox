@@ -15,7 +15,7 @@ Steps, signatures, and test names are in [PLAN.md](./PLAN.md). This register is 
 ## Checklist
 
 **Phase 3: Backend Lifestyle Intake & Macrocycle Program Design**
-- [ ] P3-01 `LifestyleIntakeService`: replace-style upsert and fetch <!-- id: 1 -->
+- [x] P3-01 `LifestyleIntakeService`: replace-style upsert and fetch <!-- id: 1 -->
 - [ ] P3-02 `LifestyleIntakeController` endpoints, `PeopleModule` registration, `health.lifestyle` <!-- id: 2 -->
 - [ ] P3-03 `WorkoutPlanService` blueprint on create, update, and template assign <!-- id: 3 -->
 
