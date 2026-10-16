@@ -29,6 +29,15 @@ export class AccountsRepository extends BaseRepository<
     return rows[0] ?? null;
   }
 
+  async listCodesByAccountType(accountType: string): Promise<string[]> {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select({ code: accounts.code })
+      .from(accounts)
+      .where(eq(accounts.account_type, accountType));
+    return rows.map((row: { code: string }) => row.code);
+  }
+
   async findByControlRole(role: string): Promise<Account | null> {
     const db = this.getDb() as any;
     const rows = await db

@@ -31,12 +31,40 @@ const CONTROL_ACCOUNT_CODES = new Set([
   '4900',
 ]);
 
+/** Starting code band per type; matches seeded CoA thousands. */
+const ACCOUNT_TYPE_CODE_BASE: Record<AccountType, number> = {
+  asset: 1000,
+  liability: 2000,
+  equity: 3000,
+  income: 4000,
+  expense: 5000,
+};
+
 @Injectable()
 export class AccountsService {
   constructor(
     private readonly repository: AccountsRepository,
     private readonly paginationHelper: PaginationHelper,
   ) {}
+
+  async allocateCode(accountType: AccountType): Promise<string> {
+    const base = ACCOUNT_TYPE_CODE_BASE[accountType];
+    const codes = await this.repository.listCodesByAccountType(accountType);
+    let max = base - 10;
+    for (const code of codes) {
+      if (!/^\d+$/.test(code)) continue;
+      const n = Number(code);
+      if (n >= base && n > max) max = n;
+    }
+    let next = max + 10;
+    for (let i = 0; i < 100; i++) {
+      const candidate = String(next);
+      const existing = await this.repository.findByCode(candidate);
+      if (!existing) return candidate;
+      next += 10;
+    }
+    throw new BusinessRuleError('Unable to allocate a unique account code');
+  }
 
   toDto(account: Account): AccountDto {
     return {
@@ -87,9 +115,14 @@ export class AccountsService {
   }
 
   async create(dto: AccountCreateDto, _actor: AuthenticatedUser): Promise<AccountDto> {
-    const existing = await this.repository.findByCode(dto.code);
+    const code =
+      dto.code !== undefined && dto.code.trim() !== ''
+        ? dto.code.trim()
+        : await this.allocateCode(dto.account_type);
+
+    const existing = await this.repository.findByCode(code);
     if (existing) {
-      throw new ConflictError(`Account with code '${dto.code}' already exists`);
+      throw new ConflictError(`Account with code '${code}' already exists`);
     }
 
     if (dto.parent_id !== null && dto.parent_id !== undefined) {
@@ -101,7 +134,7 @@ export class AccountsService {
 
     const now = new Date();
     const created = await this.repository.insertAccount({
-      code: dto.code,
+      code,
       name: dto.name,
       account_type: dto.account_type,
       parent_id: dto.parent_id ?? null,
