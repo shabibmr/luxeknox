@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   addMoney,
+  allocate,
+  parseRatePercent,
+  prorate,
   cmpMoney,
   fromCents,
   mulMoneyPercent,
@@ -119,5 +122,52 @@ describe('qty helpers', () => {
     expect(subQty('15.000', '2.000')).toBe('13.000');
     expect(cmpQty('14.000', '15.000')).toBe(-1);
     expect(cmpQty('15.000', '15')).toBe(0);
+  });
+});
+
+describe('prorate', () => {
+  it('rounds half-up on odd cents', () => {
+    expect(prorate('100.00', 1, 3)).toBe('33.33');
+    expect(prorate('100.00', 2, 3)).toBe('66.67');
+    expect(prorate('0.05', 1, 2)).toBe('0.03');
+  });
+
+  it('returns the full amount when numerator equals denominator', () => {
+    expect(prorate('1234.56', 30, 30)).toBe('1234.56');
+  });
+
+  it('handles negatives away from zero and rejects bad denominators', () => {
+    expect(prorate('-0.05', 1, 2)).toBe('-0.03');
+    expect(() => prorate('1.00', 1, 0)).toThrow();
+    expect(() => prorate('1.00', 1.5, 3)).toThrow();
+  });
+});
+
+describe('allocate', () => {
+  it('splits 1/3 without drift', () => {
+    expect(allocate('100.00', [1, 1, 1])).toEqual(['33.34', '33.33', '33.33']);
+  });
+
+  it('always sums to the total', () => {
+    const parts = allocate('0.07', [3, 3, 3, 1]);
+    expect(parts.reduce((s, p) => addMoney(s, p), '0.00')).toBe('0.07');
+    const neg = allocate('-100.01', [2, 1, 1]);
+    expect(neg.reduce((s, p) => addMoney(s, p), '0.00')).toBe('-100.01');
+  });
+
+  it('gives zero-weight entries nothing and rejects invalid weights', () => {
+    expect(allocate('10.00', [1, 0, 1])).toEqual(['5.00', '0.00', '5.00']);
+    expect(() => allocate('1.00', [])).toThrow();
+    expect(() => allocate('1.00', [0, 0])).toThrow();
+    expect(() => allocate('1.00', [-1, 2])).toThrow();
+  });
+});
+
+describe('parseRatePercent', () => {
+  it('normalises to 2dp and rejects invalid or negative input', () => {
+    expect(parseRatePercent('18')).toBe('18.00');
+    expect(parseRatePercent('12.5')).toBe('12.50');
+    expect(parseRatePercent('-1')).toBeNull();
+    expect(parseRatePercent('abc')).toBeNull();
   });
 });

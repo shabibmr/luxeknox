@@ -13,10 +13,9 @@ import { BusinessRuleError, NotFoundError } from '../platform/errors/app-error';
 import {
   addMoney,
   cmpMoney,
-  fromCents,
+  prorate,
   roundMoney,
   subMoney,
-  toCents,
 } from '../platform/money/money';
 import { SettingsService } from '../sys/settings.service';
 import { AccountingPostingService } from './accounting-posting.service';
@@ -175,13 +174,7 @@ export class RevenueRecognitionService {
         if (spanEnd >= schedule.ends_on || daysInSpan >= daysLeftInTerm) {
           share = remainingAmount;
         } else {
-          const shareCents = Math.round(
-            (Number(toCents(remainingAmount)) * daysInSpan) / daysLeftInTerm,
-          );
-          share = fromCents(BigInt(shareCents));
-          if (cmpMoney(share, remainingAmount) > 0) {
-            share = remainingAmount;
-          }
+          share = prorate(remainingAmount, daysInSpan, daysLeftInTerm);
         }
 
         if (cmpMoney(share, '0.00') <= 0) {

@@ -16,10 +16,10 @@ import { NotFoundError } from '../platform/errors/app-error';
 import {
   addMoney,
   cmpMoney,
-  fromCents,
+  parseRatePercent,
+  prorate,
   roundMoney,
   subMoney,
-  toCents,
 } from '../platform/money/money';
 import { SettingsService } from '../sys/settings.service';
 import { AccountsRepository } from './accounts.repository';
@@ -154,11 +154,7 @@ export class GoLiveService implements OnModuleInit {
       if (unexpiredDays >= totalDays) {
         unexpiredAmount = totalNet;
       } else {
-        const cents = Math.round((Number(toCents(totalNet)) * unexpiredDays) / totalDays);
-        unexpiredAmount = fromCents(BigInt(cents));
-        if (cmpMoney(unexpiredAmount, totalNet) > 0) {
-          unexpiredAmount = totalNet;
-        }
+        unexpiredAmount = prorate(totalNet, unexpiredDays, totalDays);
       }
 
       let incomeAccountId = defaultIncome4000.id;
@@ -240,11 +236,7 @@ export class GoLiveService implements OnModuleInit {
       if (unexpiredDays >= totalDays) {
         unexpiredAmount = totalNet;
       } else {
-        const cents = Math.round((Number(toCents(totalNet)) * unexpiredDays) / totalDays);
-        unexpiredAmount = fromCents(BigInt(cents));
-        if (cmpMoney(unexpiredAmount, totalNet) > 0) {
-          unexpiredAmount = totalNet;
-        }
+        unexpiredAmount = prorate(totalNet, unexpiredDays, totalDays);
       }
 
       let incomeAccountId = defaultIncome4100.id;
@@ -424,9 +416,9 @@ export class GoLiveService implements OnModuleInit {
 
       const taxRateVal = await this.settingsService.getSetting('tax_rate_percent');
       if (taxRateVal) {
-        const parsed = parseFloat(taxRateVal);
-        if (Number.isFinite(parsed) && parsed >= 0) {
-          gymTaxRate = parsed.toFixed(2);
+        const parsed = parseRatePercent(taxRateVal);
+        if (parsed !== null) {
+          gymTaxRate = parsed;
         }
       }
 
@@ -475,8 +467,7 @@ export class GoLiveService implements OnModuleInit {
     let taxMatched = false;
     if (matchingTaxCodes.length > 0) {
       const code = matchingTaxCodes[0];
-      const parsedCodeRate = parseFloat(code.rate_percent);
-      defaultTaxRate = Number.isFinite(parsedCodeRate) ? parsedCodeRate.toFixed(2) : '0.00';
+      defaultTaxRate = parseRatePercent(code.rate_percent) ?? '0.00';
       taxMatched = Boolean(code.is_active) && gymTaxRate === defaultTaxRate;
     }
 

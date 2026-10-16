@@ -173,6 +173,81 @@ export function mulQtyUnitCost(quantity: number | string, unitCost: number | str
   return fromCents(quot);
 }
 
+/**
+ * Parse a non-negative percentage setting into a 2dp string (half-up), or null
+ * when it is not a valid non-negative decimal. E.g. "18" -> "18.00".
+ */
+export function parseRatePercent(value: number | string): string | null {
+  const str = String(value).trim();
+  if (!/^\d+(\.\d+)?$/.test(str)) return null;
+  return roundMoney(str);
+}
+
+function toWholeBigInt(value: number | bigint, label: string): bigint {
+  if (typeof value === 'bigint') return value;
+  if (!Number.isSafeInteger(value)) {
+    throw new Error(`Invalid ${label}: ${value} is not a whole number`);
+  }
+  return BigInt(value);
+}
+
+/**
+ * Prorate a money amount: amount × numerator ÷ denominator, half-up (away from
+ * zero on ties) to cents. Integer maths only; numerator and denominator are
+ * whole numbers (e.g. days). E.g. prorate('100.00', 1, 3) -> "33.33".
+ */
+export function prorate(
+  amount: number | string,
+  numerator: number | bigint,
+  denominator: number | bigint,
+): string {
+  const num = toWholeBigInt(numerator, 'numerator');
+  const den = toWholeBigInt(denominator, 'denominator');
+  if (den <= 0n) {
+    throw new Error('Denominator must be positive');
+  }
+  const raw = toCents(amount) * num;
+  const half = den / 2n;
+  const quot = raw >= 0n ? (raw + half) / den : (raw - half) / den;
+  return fromCents(quot);
+}
+
+/**
+ * Split a money amount across weights using largest-remainder so the parts sum
+ * to the amount exactly. Ties on the remainder go to the earlier weight.
+ * E.g. allocate('100.00', [1, 1, 1]) -> ["33.34", "33.33", "33.33"].
+ */
+export function allocate(amount: number | string, weights: Array<number | bigint>): string[] {
+  if (weights.length === 0) {
+    throw new Error('Weights must not be empty');
+  }
+  const ws = weights.map((w) => toWholeBigInt(w, 'weight'));
+  if (ws.some((w) => w < 0n)) {
+    throw new Error('Weights must not be negative');
+  }
+  const totalWeight = ws.reduce((sum, w) => sum + w, 0n);
+  if (totalWeight === 0n) {
+    throw new Error('Weights must not all be zero');
+  }
+
+  const total = toCents(amount);
+  const negative = total < 0n;
+  const abs = negative ? -total : total;
+
+  const shares = ws.map((w) => (abs * w) / totalWeight);
+  const remainders = ws.map((w, i) => ({ i, rem: (abs * w) % totalWeight }));
+  let leftover = abs - shares.reduce((sum, s) => sum + s, 0n);
+
+  remainders.sort((a, b) => (a.rem === b.rem ? a.i - b.i : a.rem > b.rem ? -1 : 1));
+  for (const { i } of remainders) {
+    if (leftover === 0n) break;
+    shares[i] += 1n;
+    leftover -= 1n;
+  }
+
+  return shares.map((s) => fromCents(negative ? -s : s));
+}
+
 /** Compare quantities at 3 decimal places: -1 / 0 / 1. */
 export function cmpQty(a: number | string, b: number | string): -1 | 0 | 1 {
   const diff = toScaled(a, 3, 'quantity') - toScaled(b, 3, 'quantity');
