@@ -267,8 +267,8 @@ export class WorkoutSessionService {
       completedAt,
       totalVolume.toFixed(2),
       durationMinutes,
-      dto.client_feedback_rating,
-      dto.notes,
+      dto.client_feedback_rating ?? undefined,
+      dto.notes ?? undefined,
       extra,
     );
 
