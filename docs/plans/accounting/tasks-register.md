@@ -1,7 +1,7 @@
 # Accounting module task register
 
 **Plan:** [implementation-plan.md](./implementation-plan.md)
-**Updated:** 2026-10-14
+**Updated:** 2026-10-16
 **Rule:** This file is the status source. Change the marker here when a task moves. Do not duplicate status into the plan.
 **Depends on** lists direct predecessors only. Start a task when every ID in that cell is `[x]`.
 
@@ -134,6 +134,32 @@ Later rows stay `[>]` until a new plan pulls them in.
 | ACC-099 | `[x]` | Go-live setup: map payment methods to accounts, show the unearned preview and opening-journal match, enable posting | ACC-054, ACC-064, ACC-091 | Every failing check is listed. The enable action is hidden without `accounting.posting_toggle` |
 | ACC-100 | `[x]` | Journals link on the existing payment detail screen in `app/lib/features/payments/` | ACC-076, ACC-090 | Hidden without `accounting.read`. Lists the payment's journals and opens the journal detail |
 
+## Phase 9b — Staff, commissions, owners
+
+Decisions 15 to 21 in ADR-0013. Schema edits go into `0025_accounting.sql` in place (app is in development), then reset the local database.
+
+| ID | Status | Task | Depends on | Done when |
+|---|---|---|---|---|
+| ACC-110 | `[ ]` | Amend ADR-0013 with decisions 15 to 21. Add the new tables and columns to `docs/Entities-List.md` and `docs/database-entities.md` | ACC-003 | ADR lists twenty-one decisions. Entity docs match the schema after ACC-111 |
+| ACC-111 | `[ ]` | Schema: `journal_lines.party_user_id`, `business_owners`, `commission_rules` (kind `standard` or `referred`, user nullable for the gym default), `commission_accruals`, `salary_accruals`, `base_salary` on `employees` and `trainers`, `payment_allocations.party_user_id`, `pt_subscriptions.referred_by_user_id` | ACC-110, ACC-018 | Migrate from empty succeeds on `localhost:3308`. Drift check is clean |
+| ACC-112 | `[ ]` | Seed `2150`, `2160`, `3100`, `5300`. Add `2150` and `2160` to the control account set. Seed `accounting.commissions_read`, `commissions_write`, `owners_write` for admin and super_admin only | ACC-111, ACC-016 | Re-running the seed does not duplicate codes. Other roles are unchanged |
+| ACC-113 | `[ ]` | Posting service accepts `partyUserId` on a line and stores it. Manual and opening journals accept it | ACC-111 | A line with a party tag round-trips through the journal detail |
+| ACC-114 | `[ ]` | Commission rules: list, create, end-date. Per person and kind (`standard`, `referred`) with a gym default row per kind | ACC-112 | `commissions_write` required. Overlapping rules for one person and kind are rejected. An employee can have only `referred` rules |
+| ACC-115 | `[ ]` | On PT invoice post, write a `commission_accruals` row and post `Dr 5300 / Cr 2150` tagged to the trainer | ACC-113, ACC-114, ACC-051 | Base is net of tax and discount. Rate is frozen on the row. Couple PT pays the primary's trainer. No rule means no accrual. Referral accruals follow ACC-127 |
+| ACC-116 | `[ ]` | On refund, credit note, or adjustment, reverse the accrual in proportion | ACC-115, ACC-053, ACC-057 | A full refund zeroes the accrual. A partial refund reverses the same share |
+| ACC-117 | `[ ]` | Payment voucher allocation to a staff or owner party, debiting `2150` or `2160` | ACC-113, ACC-042 | Allocation cannot exceed the party's open balance. Allocation sum still equals the voucher total |
+| ACC-118 | `[ ]` | Monthly salary accrual job: `Dr 5200 / Cr 2150` per person with a `base_salary` | ACC-113, ACC-060 | A second run in the same period posts nothing. Terminated and inactive people are skipped |
+| ACC-119 | `[ ]` | Owners: `business_owners` list and create. Capital introduced and drawings wrapper endpoints | ACC-112, ACC-025 | `owners_write` required. Capital credits `3000`, drawings debit `3100`, both tagged to the owner |
+| ACC-120 | `[ ]` | Party balance report: payable or receivable per trainer, employee, or owner for a date range, with the lines behind it | ACC-113, ACC-070 | Sum of party balances on `2150` equals the `2150` trial balance row |
+| ACC-121 | `[ ]` | Commission statement per trainer: accruals, reversals, payouts, closing balance | ACC-116, ACC-117, ACC-120 | Closing balance equals the party balance for that trainer |
+| ACC-122 | `[ ]` | Vitest for commission at sale, referral (none, same trainer, other trainer, employee), partial refund, no rule, trainer reassignment after sale, salary idempotency, over-payout, capital and drawings | ACC-115, ACC-116, ACC-117, ACC-118, ACC-119, ACC-127 | `pnpm --filter api exec vitest run src/acct` passes |
+| ACC-123 | `[ ]` | Go-live: opening journal may carry per-party `2150`, `2160`, `3000` balances. Preview lists them | ACC-113, ACC-064 | Party balances in the opening journal appear in the party report |
+| ACC-124 | `[ ]` | Dump OpenAPI and regenerate `packages/api_client` | ACC-114, ACC-117, ACC-119, ACC-120, ACC-121 | Client compiles |
+| ACC-125 | `[ ]` | Flutter: commission rules, trainer commission statement, owners with capital and drawings, payout from a party balance | ACC-124, ACC-091 | Hidden without the matching permission. Loading, empty, and error states use shared widgets |
+| ACC-126 | `[ ]` | Flutter widget tests for rules form, statement, and owner capital entry | ACC-125 | Tests pass. `dart analyze` is clean for the feature |
+| ACC-127 | `[ ]` | Referral: `referred_by_user_id` on PT create and renew (API and DTO). Accrual rules: no referrer pays `standard`; referrer equals assigned trainer pays `referred` on one accrual; any other trainer or employee earns a second `referred` accrual | ACC-111, ACC-115 | Referrer must be an active trainer or employee. A referrer is never paid twice on one sale. A refund reverses both accruals. Reassigning the trainer later does not change the referrer |
+| ACC-128 | `[ ]` | Flutter: "Referred by" picker on the Add PT form (none, trainer, employee), shown only to roles that can sell PT. Referral rate shown on the commission rules screen | ACC-127, ACC-124 | Picker lists active trainers and employees. Default is none. Renewal asks again |
+
 ## Phase 10 — Later
 
 These are recorded so the next plan can start from them. Do not implement them under this register.
@@ -142,7 +168,7 @@ These are recorded so the next plan can start from them. Do not implement them u
 |---|---|---|---|---|
 | ACC-200 | `[>]` | Bank statement lines and reconciliation against `1010` and other bank accounts | ACC-021, ACC-042, ACC-052 | Needs a statement import and a match to journal lines. Card/UPI settlements via ACC-045 make `1020` reconcilable too |
 | ACC-201 | `[>]` | Fixed assets, cost, accumulated depreciation, and a monthly depreciation journal | ACC-021, ACC-060 | Gym equipment. Uses the journal engine and the monthly job |
-| ACC-202 | `[>]` | Payroll: salary structures, payslips, and statutory deductions | ACC-021, ACC-041 | Until then, salaries are expense vouchers to `5200` |
+| ACC-202 | `[>]` | Payroll: salary structures, payslips, and statutory deductions | ACC-021, ACC-041, ACC-118 | Flat monthly accrual to `5200` / `2150` ships in ACC-118 |
 | ACC-203 | `[>]` | Inventory: turn on `items.inventory_tracked`, warehouses, goods receipts, stock movements | ACC-033, ACC-040 | Purchase bills already carry item lines |
 | ACC-204 | `[>]` | Budgets per account and period | ACC-034, ACC-070 | Compare to the trial balance |
 | ACC-205 | `[>]` | Backfill journals for `payments` dated before go-live | ACC-025, ACC-051 | This plan uses an opening journal instead. A backfill must not run while opening balances exist |
@@ -182,7 +208,7 @@ One person owns a shared file even when the wave lists the tasks together:
 
 | Marker | Count |
 |---|---|
-| `[ ]` TODO | 2 |
+| `[ ]` TODO | 21 |
 | `[~]` DOING | 0 |
 | `[x]` DONE | 65 |
 | `[!]` BLOCKED | 0 |

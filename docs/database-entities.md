@@ -462,7 +462,7 @@ Same versioning rule as workouts: meals (and their foods) hang off `diet_plan_ve
 * **Purpose**: Facility operating parameters and configuration flags.
 * **Supporting Screens**: Gym & Hardware Settings.
 * **Key Attributes**: `id`, `setting_key`, `setting_value`, `category` (general, membership, attendance_gate, booking_rules, billing, workout, diet, notification, measurement, accounting).
-* **Accounting keys** (defaults): `accounting.posting_enabled` (`false`), `accounting.fiscal_year_start_month` (`4`), `accounting.default_tax_code` (seeded GST 18% code).
+* **Accounting keys** (defaults): `accounting.posting_enabled` (`true`), `accounting.fiscal_year_start_month` (`4`), `accounting.default_tax_code` (seeded GST 18% code).
 
 ### `audit_logs`
 

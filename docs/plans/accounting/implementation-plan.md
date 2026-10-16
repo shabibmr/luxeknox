@@ -17,7 +17,7 @@ Inventory, bank reconciliation, payroll, and fixed assets are named in the regis
 2. **The general ledger is the posted journal lines.** Reports query `journal_lines`. There is no second ledger table.
 3. **Posted journals are immutable.** A correction is a reversing journal. Draft source documents can be edited. Posted ones cannot.
 4. **One source, one journal.** Unique `(source_type, source_id)` on `journal_entries`. Replaying a post returns the original journal.
-5. **Books start at go-live.** Historical `payments` rows are not backfilled. The opening balances are one manual journal dated the day before go-live. A setting `accounting.posting_enabled` gates automatic posts. While it is `false`, payments behave exactly as they do today.
+5. **Books start at go-live.** Historical `payments` rows are not backfilled. The opening balances are one manual journal dated the day before go-live. A setting `accounting.posting_enabled` gates automatic posts and defaults to `true`. While it is `false`, payments behave exactly as they do today.
 6. **Single gym.** No `gym_id`. ADR-0004 stands.
 7. **Money.** `DECIMAL(12,2)` stored as strings. All arithmetic goes through `toCents`, `addMoney`, `subMoney`, `cmpMoney`, and `roundMoney` in `apps/api/src/platform/money/money.ts`. Tax is computed per line, half-up to 2dp. Document total equals the sum of rounded lines.
 8. **Currency.** The existing `gym_settings.currency` (default `INR`). No multi-currency.
@@ -242,7 +242,7 @@ Settings keys, added to the settings catalogue:
 
 | Key | Default |
 |---|---|
-| `accounting.posting_enabled` | `false` |
+| `accounting.posting_enabled` | `true` |
 | `accounting.fiscal_year_start_month` | `4` |
 | `accounting.default_tax_code` | slug of the seeded GST 18% code |
 
