@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { DomainEventBus } from '../platform/events/domain-events';
 import {
@@ -10,6 +10,10 @@ import {
 import { PaginationHelper, createPaginatedResponse } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { MemberRepository } from '../people/member.repository';
+import { MedicalHistoryRepository } from '../people/medical-history.repository';
+import { TrainerRepository } from '../people/trainer.repository';
+import { EmployeeRepository } from '../people/employee.repository';
+import { NotificationService } from '../notif/notification.service';
 import { assertMemberAccess } from '../people/row-scope';
 import { PtAccessService } from '../pt/pt-access.service';
 import { WorkoutPlanRepository } from './workout-plan.repository';
@@ -25,7 +29,7 @@ import type {
   WorkoutSetUpdateDto,
   WorkoutSetWriteDto,
 } from './workout-session.dto';
-import type { WorkoutSessionExercise } from '../platform/db/schema/workout';
+import type { WorkoutSession, WorkoutSessionExercise } from '../platform/db/schema/workout';
 
 @Injectable()
 export class WorkoutSessionService {
@@ -35,7 +39,11 @@ export class WorkoutSessionService {
     private readonly memberRepo: MemberRepository,
     private readonly eventBus: DomainEventBus,
     private readonly paginationHelper: PaginationHelper,
-    private readonly ptAccess?: PtAccessService,
+    @Optional() private readonly ptAccess?: PtAccessService,
+    @Optional() private readonly medicalHistoryRepo?: MedicalHistoryRepository,
+    @Optional() private readonly trainerRepo?: TrainerRepository,
+    @Optional() private readonly employeeRepo?: EmployeeRepository,
+    @Optional() private readonly notificationService?: NotificationService,
   ) {}
 
   async listSessions(
@@ -279,7 +287,108 @@ export class WorkoutSessionService {
       },
     });
 
+    if (
+      dto.pain_discomfort_score !== undefined &&
+      dto.pain_discomfort_score !== null &&
+      dto.pain_discomfort_score >= 4
+    ) {
+      await this.handleHighPainSafetyTrigger(
+        session,
+        dto.pain_discomfort_score,
+        dto.pain_notes,
+        completedAt,
+        actor,
+      );
+    }
+
     return (await this.sessionRepo.findSessionById(sessionId))!;
+  }
+
+  private async handleHighPainSafetyTrigger(
+    session: WorkoutSession,
+    painScore: number,
+    painNotes: string | null | undefined,
+    completedAt: Date,
+    actor: AuthenticatedUser,
+  ): Promise<void> {
+    const notesSuffix = painNotes ? `: ${painNotes}` : '';
+    await this.medicalHistoryRepo?.insertHistory({
+      member_id: session.member_id,
+      title: `Active Discomfort Alert (Score: ${painScore}/10)`,
+      description: `High pain or discomfort reported during workout session #${session.id}${notesSuffix}`,
+      diagnosed_date: completedAt.toISOString().slice(0, 10),
+      clearance_status: 'active',
+      created_at: completedAt,
+    });
+
+    const recipientUserIds: number[] = [];
+
+    // 1. Assigned trainer
+    let trainerId = session.trainer_id;
+    if (!trainerId) {
+      const member = await this.memberRepo.findById(session.member_id);
+      trainerId = member?.assigned_trainer_id ?? null;
+    }
+    if (trainerId && this.trainerRepo) {
+      const trainer = await this.trainerRepo.findById(trainerId);
+      if (trainer?.user_id) {
+        recipientUserIds.push(trainer.user_id);
+      }
+    }
+
+    // 2. Head coach / management
+    if (this.employeeRepo) {
+      const headCoaches = await this.employeeRepo.findManyFiltered({
+        q: 'Head Coach',
+        status: 'active',
+        limit: 5,
+        offset: 0,
+      });
+      for (const hc of headCoaches.rows) {
+        if (hc.user_id) recipientUserIds.push(hc.user_id);
+      }
+      if (headCoaches.rows.length === 0) {
+        const coaches = await this.employeeRepo.findManyFiltered({
+          q: 'Coach',
+          status: 'active',
+          limit: 5,
+          offset: 0,
+        });
+        for (const c of coaches.rows) {
+          if (c.user_id) recipientUserIds.push(c.user_id);
+        }
+      }
+    }
+
+    const uniqueRecipients = Array.from(new Set(recipientUserIds)).filter((id) => id > 0);
+    if (this.notificationService && uniqueRecipients.length > 0) {
+      await this.notificationService.dispatch({
+        recipientUserIds: uniqueRecipients,
+        title: 'High Pain/Discomfort Safety Alert',
+        message: `Member #${session.member_id} reported a high pain/discomfort score of ${painScore}/10 in workout session #${session.id}.${painNotes ? ` Notes: ${painNotes}` : ''}`,
+        typeCode: 'announcement',
+        dataPayload: {
+          session_id: session.id,
+          member_id: session.member_id,
+          pain_discomfort_score: painScore,
+          pain_notes: painNotes ?? null,
+          priority: 'high',
+        },
+      });
+    }
+
+    this.eventBus.emitSync({
+      eventName: 'workout_session.safety_alert',
+      occurredAt: completedAt,
+      payload: {
+        session_id: session.id,
+        member_id: session.member_id,
+        pain_discomfort_score: painScore,
+        pain_notes: painNotes ?? null,
+        recipient_user_ids: uniqueRecipients,
+        actor_id: actor.id,
+      },
+    });
   }
 
   async getActive(

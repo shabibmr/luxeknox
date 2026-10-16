@@ -49,6 +49,10 @@ function buildService(overrides: {
   memberRepo?: Partial<Record<string, unknown>>;
   eventBus?: Partial<Record<string, unknown>>;
   ptAccess?: Partial<Record<string, unknown>> | null;
+  medicalHistoryRepo?: Partial<Record<string, unknown>>;
+  trainerRepo?: Partial<Record<string, unknown>>;
+  employeeRepo?: Partial<Record<string, unknown>>;
+  notificationService?: Partial<Record<string, unknown>>;
 } = {}) {
   const sessionRepo = {
     findSessions: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
@@ -99,6 +103,32 @@ function buildService(overrides: {
           ...overrides.ptAccess,
         };
 
+  const medicalHistoryRepo = {
+    insertHistory: vi.fn().mockResolvedValue(1),
+    ...overrides.medicalHistoryRepo,
+  };
+
+  const trainerRepo = {
+    findById: vi.fn().mockImplementation(async (id: number) => {
+      if (id === 20) return { id: 20, user_id: 2, first_name: 'Trainer', last_name: 'One' };
+      return null;
+    }),
+    ...overrides.trainerRepo,
+  };
+
+  const employeeRepo = {
+    findManyFiltered: vi.fn().mockResolvedValue({
+      rows: [{ id: 1, user_id: 10, job_title: 'Head Coach', status: 'active' }],
+      total: 1,
+    }),
+    ...overrides.employeeRepo,
+  };
+
+  const notificationService = {
+    dispatch: vi.fn().mockResolvedValue(1),
+    ...overrides.notificationService,
+  };
+
   const service = new WorkoutSessionService(
     sessionRepo as any,
     planRepo as any,
@@ -106,9 +136,24 @@ function buildService(overrides: {
     eventBus as any,
     paginationHelper as any,
     ptAccess as any,
+    medicalHistoryRepo as any,
+    trainerRepo as any,
+    employeeRepo as any,
+    notificationService as any,
   );
 
-  return { service, sessionRepo, planRepo, memberRepo, eventBus, ptAccess };
+  return {
+    service,
+    sessionRepo,
+    planRepo,
+    memberRepo,
+    eventBus,
+    ptAccess,
+    medicalHistoryRepo,
+    trainerRepo,
+    employeeRepo,
+    notificationService,
+  };
 }
 
 describe('WorkoutSessionService', () => {
