@@ -19,21 +19,18 @@ void main() {
 
   const tFromAccount = Account(
     id: '101',
-    code: '1000',
     name: 'Operating Cash',
     type: 'asset',
   );
 
   const tToAccount = Account(
     id: '102',
-    code: '1010',
     name: 'Petty Cash',
     type: 'asset',
   );
 
   const tFeeAccount = Account(
     id: '501',
-    code: '5200',
     name: 'Bank & Processing Fees',
     type: 'expense',
   );

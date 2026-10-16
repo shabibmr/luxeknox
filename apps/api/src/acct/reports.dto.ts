@@ -13,7 +13,6 @@ export type TrialBalanceQueryDto = z.infer<typeof trialBalanceQuerySchema>;
 
 export interface TrialBalanceAccountDto {
   account_id: number;
-  account_code: string;
   account_name: string;
   account_type: string;
   debit: string;
@@ -37,7 +36,6 @@ export type ProfitAndLossQueryDto = z.infer<typeof profitAndLossQuerySchema>;
 
 export interface ProfitAndLossAccountDto {
   account_id: number;
-  account_code: string;
   account_name: string;
   amount: string;
 }
@@ -60,7 +58,6 @@ export type BalanceSheetQueryDto = z.infer<typeof balanceSheetQuerySchema>;
 
 export interface BalanceSheetAccountDto {
   account_id: number;
-  account_code: string;
   account_name: string;
   amount: string;
 }
@@ -88,7 +85,6 @@ export type DayBookQueryDto = z.infer<typeof dayBookQuerySchema>;
 export interface DayBookLineDto {
   id: number;
   account_id: number;
-  account_code: string;
   account_name: string;
   debit: string;
   credit: string;

@@ -79,24 +79,24 @@ export class GoLiveService implements OnModuleInit {
   async getUnearnedPreview(goLiveDate?: string): Promise<UnearnedPreviewResponseDto> {
     const targetDate = goLiveDate ?? new Date().toISOString().slice(0, 10);
 
-    const unearned2200 = await this.accountsRepository.findByCode('2200');
+    const unearned2200 = await this.accountsRepository.findByControlRole('unearned_membership');
     if (!unearned2200) {
-      throw new NotFoundError('Unearned membership revenue account (2200) was not found');
+      throw new NotFoundError('Unearned membership revenue account was not found');
     }
 
-    const unearned2210 = await this.accountsRepository.findByCode('2210');
+    const unearned2210 = await this.accountsRepository.findByControlRole('unearned_pt');
     if (!unearned2210) {
-      throw new NotFoundError('Unearned PT revenue account (2210) was not found');
+      throw new NotFoundError('Unearned personal training revenue account was not found');
     }
 
-    const defaultIncome4000 = await this.accountsRepository.findByCode('4000');
+    const defaultIncome4000 = await this.accountsRepository.findByName('Membership revenue');
     if (!defaultIncome4000) {
-      throw new NotFoundError('Membership revenue account (4000) was not found');
+      throw new NotFoundError('Membership revenue account was not found');
     }
 
-    const defaultIncome4100 = await this.accountsRepository.findByCode('4100');
+    const defaultIncome4100 = await this.accountsRepository.findByName('Personal training revenue');
     if (!defaultIncome4100) {
-      throw new NotFoundError('PT revenue account (4100) was not found');
+      throw new NotFoundError('Personal training revenue account was not found');
     }
 
     const db = this.db as any;
@@ -178,7 +178,6 @@ export class GoLiveService implements OnModuleInit {
         ends_on: m.endDate,
         unearned_account_id: unearned2200.id,
         income_account_id: incomeAccountId,
-        account_code: '2200',
         total_net: totalNet,
         unexpired_amount: unexpiredAmount,
       });
@@ -260,7 +259,6 @@ export class GoLiveService implements OnModuleInit {
         ends_on: pt.endDate,
         unearned_account_id: unearned2210.id,
         income_account_id: incomeAccountId,
-        account_code: '2210',
         total_net: totalNet,
         unexpired_amount: unexpiredAmount,
       });
@@ -312,7 +310,7 @@ export class GoLiveService implements OnModuleInit {
   }
 
   /**
-   * ACC-064 / ACC-099: Checks opening balance journal net credits on accounts 2200 and 2210 against preview.
+   * ACC-064 / ACC-099: Checks opening balance journal net credits on unearned membership/PT against preview.
    * Returns failing check messages if missing or mismatched, naming both actual and expected amounts.
    */
   async validateOpeningJournalMatch(
@@ -346,8 +344,8 @@ export class GoLiveService implements OnModuleInit {
       };
     }
 
-    const unearned2200 = await this.accountsRepository.findByCode('2200');
-    const unearned2210 = await this.accountsRepository.findByCode('2210');
+    const unearned2200 = await this.accountsRepository.findByControlRole('unearned_membership');
+    const unearned2210 = await this.accountsRepository.findByControlRole('unearned_pt');
 
     let actual2200 = '0.00';
     let actual2210 = '0.00';
@@ -377,14 +375,14 @@ export class GoLiveService implements OnModuleInit {
     const match2200 = cmpMoney(actual2200, preview.totals.unearned_membership_total) === 0;
     if (!match2200) {
       failingReasons.push(
-        `Opening balance journal 2200 unearned membership balance (${actual2200}) does not match unearned preview (${preview.totals.unearned_membership_total}).`,
+        `Opening balance journal unearned membership balance (${actual2200}) does not match unearned preview (${preview.totals.unearned_membership_total}).`,
       );
     }
 
     const match2210 = cmpMoney(actual2210, preview.totals.unearned_pt_total) === 0;
     if (!match2210) {
       failingReasons.push(
-        `Opening balance journal 2210 unearned PT balance (${actual2210}) does not match unearned preview (${preview.totals.unearned_pt_total}).`,
+        `Opening balance journal unearned personal training balance (${actual2210}) does not match unearned preview (${preview.totals.unearned_pt_total}).`,
       );
     }
 
@@ -435,7 +433,6 @@ export class GoLiveService implements OnModuleInit {
         is_active: paymentMethods.is_active,
         is_digital: paymentMethods.is_digital,
         account_id: paymentMethods.account_id,
-        account_code: accounts.code,
         account_name: accounts.name,
       })
       .from(paymentMethods)
@@ -449,7 +446,6 @@ export class GoLiveService implements OnModuleInit {
       is_active: Boolean(pm.is_active),
       is_digital: Boolean(pm.is_digital),
       account_id: pm.account_id ?? null,
-      account_code: pm.account_code ?? null,
       account_name: pm.account_name ?? null,
     }));
 
@@ -561,7 +557,6 @@ export class GoLiveService implements OnModuleInit {
         is_active: paymentMethods.is_active,
         is_digital: paymentMethods.is_digital,
         account_id: paymentMethods.account_id,
-        account_code: accounts.code,
         account_name: accounts.name,
       })
       .from(paymentMethods)
@@ -575,7 +570,6 @@ export class GoLiveService implements OnModuleInit {
       is_active: Boolean(pm.is_active),
       is_digital: Boolean(pm.is_digital),
       account_id: pm.account_id ?? null,
-      account_code: pm.account_code ?? null,
       account_name: pm.account_name ?? null,
     };
   }

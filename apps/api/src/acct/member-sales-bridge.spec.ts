@@ -13,7 +13,6 @@ vi.mock('../platform/db/transaction-context', () => ({
 const ACCOUNTS: Record<string, Account> = {
   '1000': {
     id: 1000,
-    code: '1000',
     name: 'Cash',
     account_type: 'asset',
     parent_id: null,
@@ -26,7 +25,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '1010': {
     id: 1010,
-    code: '1010',
     name: 'Bank',
     account_type: 'asset',
     parent_id: null,
@@ -39,7 +37,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '1020': {
     id: 1020,
-    code: '1020',
     name: 'Card/UPI clearing',
     account_type: 'asset',
     parent_id: null,
@@ -52,7 +49,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '1100': {
     id: 1100,
-    code: '1100',
     name: 'Accounts receivable',
     account_type: 'asset',
     parent_id: null,
@@ -65,7 +61,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '2100': {
     id: 2100,
-    code: '2100',
     name: 'Output CGST',
     account_type: 'liability',
     parent_id: null,
@@ -78,7 +73,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '2110': {
     id: 2110,
-    code: '2110',
     name: 'Output SGST',
     account_type: 'liability',
     parent_id: null,
@@ -91,7 +85,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '2200': {
     id: 2200,
-    code: '2200',
     name: 'Unearned membership revenue',
     account_type: 'liability',
     parent_id: null,
@@ -104,7 +97,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '2210': {
     id: 2210,
-    code: '2210',
     name: 'Unearned PT revenue',
     account_type: 'liability',
     parent_id: null,
@@ -117,7 +109,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '4000': {
     id: 4000,
-    code: '4000',
     name: 'Membership revenue',
     account_type: 'income',
     parent_id: null,
@@ -130,7 +121,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '4100': {
     id: 4100,
-    code: '4100',
     name: 'Personal training revenue',
     account_type: 'income',
     parent_id: null,
@@ -143,7 +133,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '4200': {
     id: 4200,
-    code: '4200',
     name: 'Other sales',
     account_type: 'income',
     parent_id: null,
@@ -156,7 +145,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '4300': {
     id: 4300,
-    code: '4300',
     name: 'Forfeited membership income',
     account_type: 'income',
     parent_id: null,
@@ -169,7 +157,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '4900': {
     id: 4900,
-    code: '4900',
     name: 'Sales discounts',
     account_type: 'income',
     parent_id: null,
@@ -182,7 +169,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '5950': {
     id: 5950,
-    code: '5950',
     name: 'Rounding off',
     account_type: 'expense',
     parent_id: null,
@@ -259,7 +245,10 @@ describe('Member Sales Bridge & Revenue Recognition (ACC-056)', () => {
     };
 
     accountsRepository = {
-      findByCode: vi.fn().mockImplementation(async (code: string) => ACCOUNTS[code] ?? null),
+      findByControlRole: vi.fn().mockImplementation(async (role: string) =>
+        Object.values(ACCOUNTS).find((a) => a.control_role === role) ?? null),
+      findByName: vi.fn().mockImplementation(async (name: string) =>
+        Object.values(ACCOUNTS).find((a) => a.name === name) ?? null),
     };
 
     taxCodesRepository = {

@@ -24,7 +24,6 @@ const ADMIN_USER: AuthenticatedUser = {
 
 const BANK_ACCOUNT = {
   id: 101,
-  code: '1010',
   name: 'HDFC Bank Operating',
   account_type: 'asset',
   parent_id: null,
@@ -38,7 +37,6 @@ const BANK_ACCOUNT = {
 
 const NON_BANK_ACCOUNT = {
   id: 102,
-  code: '1020',
   name: 'Petty Cash',
   account_type: 'asset',
   parent_id: null,
@@ -52,7 +50,6 @@ const NON_BANK_ACCOUNT = {
 
 const AP_ACCOUNT = {
   id: 2000,
-  code: '2000',
   name: 'Accounts Payable',
   account_type: 'liability',
   parent_id: null,
@@ -144,10 +141,6 @@ describe('PaymentVouchersService', () => {
       }),
       findByControlRole: vi.fn().mockImplementation(async (role: string) => {
         if (role === 'ap') return AP_ACCOUNT;
-        return null;
-      }),
-      findByCode: vi.fn().mockImplementation(async (code: string) => {
-        if (code === '2000') return AP_ACCOUNT;
         return null;
       }),
     };

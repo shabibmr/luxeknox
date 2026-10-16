@@ -29,7 +29,6 @@ abstract class AccountingRepository {
   Future<Either<Failure, Account>> getAccount(String id);
 
   Future<Either<Failure, Account>> createAccount({
-    String? code,
     required String name,
     required String accountType,
     String? parentId,
@@ -130,6 +129,7 @@ abstract class AccountingRepository {
     required String vendorId,
     required DateTime billDate,
     DateTime? dueDate,
+    String? supplierInvoiceNo,
     required List<PurchaseBillLine> lines,
     String? idempotencyKey,
   });
@@ -291,30 +291,22 @@ abstract class AccountingRepository {
     int? limit,
     int? offset,
     String? kind,
+    int? categoryId,
     bool? isActive,
+    bool? inventoryTracked,
     String? search,
   });
 
-  Future<Either<Failure, Item>> getItem(String id);
+  Future<Either<Failure, Item>> getItem(int id);
 
-  Future<Either<Failure, Item>> createItem({
-    required String name,
-    required String kind,
-    required String incomeAccountId,
-    required String expenseAccountId,
-    String? defaultTaxCodeId,
-    bool? isActive,
-    bool? inventoryTracked,
-  });
+  Future<Either<Failure, Item>> createItem(ItemDraft draft);
 
-  Future<Either<Failure, Item>> updateItem({
-    required String id,
-    String? name,
-    String? incomeAccountId,
-    String? expenseAccountId,
-    String? defaultTaxCodeId,
+  Future<Either<Failure, Item>> updateItem(int id, ItemDraft draft);
+
+  Future<Either<Failure, List<Uom>>> getUoms({bool? isActive});
+
+  Future<Either<Failure, List<ItemCategory>>> getItemCategories({
     bool? isActive,
-    bool? inventoryTracked,
   });
 
   // Reports

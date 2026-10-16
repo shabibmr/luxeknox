@@ -9,7 +9,6 @@ export const unearnedPreviewItemSchema = z.object({
   ends_on: z.string(),
   unearned_account_id: z.number(),
   income_account_id: z.number(),
-  account_code: z.enum(['2200', '2210']),
   total_net: z.string(),
   unexpired_amount: z.string(),
 });
@@ -34,7 +33,6 @@ export const goLivePaymentMethodSchema = z.object({
   is_active: z.boolean(),
   is_digital: z.boolean(),
   account_id: z.number().nullable(),
-  account_code: z.string().nullable(),
   account_name: z.string().nullable(),
 });
 

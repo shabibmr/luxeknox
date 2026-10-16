@@ -42,7 +42,6 @@ const SAMPLE_CHECKLIST: GoLiveChecklistResponseDto = {
       is_active: true,
       is_digital: false,
       account_id: 1000,
-      account_code: '1000',
       account_name: 'Cash on Hand',
     },
   ],
@@ -64,7 +63,6 @@ const SAMPLE_PAYMENT_METHOD: GoLivePaymentMethodDto = {
   is_active: true,
   is_digital: false,
   account_id: 1000,
-  account_code: '1000',
   account_name: 'Cash on Hand',
 };
 

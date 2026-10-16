@@ -24,7 +24,6 @@ void main() {
     isActive: true,
     isDigital: false,
     accountId: 10,
-    accountCode: '1000',
     accountName: 'Cash on Hand',
   );
 
@@ -234,7 +233,6 @@ void main() {
                 isActive: true,
                 isDigital: true,
                 accountId: 20,
-                accountCode: '1020',
                 accountName: 'UPI Clearing',
               ),
             ));

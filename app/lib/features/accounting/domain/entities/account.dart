@@ -3,7 +3,6 @@ import 'package:equatable/equatable.dart';
 class Account extends Equatable {
   const Account({
     required this.id,
-    required this.code,
     required this.name,
     required this.type,
     this.isControl = false,
@@ -14,7 +13,6 @@ class Account extends Equatable {
   });
 
   final String id;
-  final String code;
   final String name;
   final String type;
   final bool isControl;
@@ -26,7 +24,6 @@ class Account extends Equatable {
   @override
   List<Object?> get props => [
     id,
-    code,
     name,
     type,
     isControl,

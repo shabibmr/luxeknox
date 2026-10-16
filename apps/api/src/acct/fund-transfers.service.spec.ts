@@ -23,11 +23,10 @@ const ADMIN_USER: AuthenticatedUser = {
   sessionId: 1,
 };
 
-function account(id: number, code: string, overrides: Record<string, unknown> = {}) {
+function account(id: number, name: string, overrides: Record<string, unknown> = {}) {
   return {
     id,
-    code,
-    name: `Account ${code}`,
+    name,
     account_type: 'asset',
     parent_id: null,
     is_active: true,
@@ -40,11 +39,11 @@ function account(id: number, code: string, overrides: Record<string, unknown> = 
   };
 }
 
-const CASH = account(1, '1000');
-const BANK = account(2, '1010');
-const CARD_CLEARING = account(3, '1020');
-const FEE_ACCOUNT = account(4, '5500', { account_type: 'expense', is_bank: false });
-const INCOME_ACCOUNT = account(5, '4200', { account_type: 'income', is_bank: false });
+const CASH = account(1, 'Cash');
+const BANK = account(2, 'Bank');
+const CARD_CLEARING = account(3, 'Card/UPI clearing');
+const FEE_ACCOUNT = account(4, 'Bank and processor charges', { account_type: 'expense', is_bank: false });
+const INCOME_ACCOUNT = account(5, 'Other sales', { account_type: 'income', is_bank: false });
 const ACCOUNTS = [CASH, BANK, CARD_CLEARING, FEE_ACCOUNT, INCOME_ACCOUNT];
 
 function draftTransfer(overrides: Record<string, unknown> = {}) {
@@ -96,9 +95,9 @@ describe('FundTransfersService', () => {
       findById: vi
         .fn()
         .mockImplementation(async (id: number) => ACCOUNTS.find((a) => a.id === id) ?? null),
-      findByCode: vi
+      findByName: vi
         .fn()
-        .mockImplementation(async (code: string) => ACCOUNTS.find((a) => a.code === code) ?? null),
+        .mockImplementation(async (name: string) => ACCOUNTS.find((a) => a.name === name) ?? null),
     };
     paginationHelper = { normalizeParams: vi.fn() };
 

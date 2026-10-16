@@ -20,7 +20,6 @@ void main() {
 
   const tBankAccount = Account(
     id: 'acc-bank',
-    code: '1020',
     name: 'Operating Bank Account',
     type: 'asset',
     isActive: true,

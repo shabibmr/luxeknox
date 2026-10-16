@@ -20,7 +20,6 @@ extension AccountModelMapper on api.Account {
   Account toDomain() {
     return Account(
       id: id.toString(),
-      code: code,
       name: name,
       type: accountType.name,
       isControl: isControl,
@@ -33,7 +32,6 @@ extension AccountModelMapper on api.Account {
 }
 
 api.AccountCreate toAccountCreate({
-  String? code,
   required String name,
   required String accountType,
   String? parentId,
@@ -44,7 +42,6 @@ api.AccountCreate toAccountCreate({
 }) {
   return api.AccountCreate(
     (b) => b
-      ..code = code
       ..name = name
       ..accountType = api.AccountType.valueOf(accountType)
       ..parentId = parentId == null ? null : int.tryParse(parentId)
@@ -77,7 +74,6 @@ extension JournalLineModelMapper on api.JournalLine {
       id: id.toString(),
       journalId: journalEntryId.toString(),
       accountId: accountId.toString(),
-      accountCode: null,
       accountName: null,
       debit: debit,
       credit: credit,
@@ -673,7 +669,6 @@ extension TrialBalanceAccountModelMapper on api.TrialBalanceAccount {
   TrialBalanceAccountItem toDomain() {
     return TrialBalanceAccountItem(
       accountId: accountId.toString(),
-      accountCode: accountCode,
       accountName: accountName,
       debit: debit,
       credit: credit,
@@ -697,7 +692,6 @@ extension ProfitAndLossAccountModelMapper on api.ProfitAndLossAccount {
   ReportAccountItem toDomain() {
     return ReportAccountItem(
       accountId: accountId.toString(),
-      accountCode: accountCode,
       accountName: accountName,
       amount: amount,
     );
@@ -722,7 +716,6 @@ extension BalanceSheetAccountModelMapper on api.BalanceSheetAccount {
   ReportAccountItem toDomain() {
     return ReportAccountItem(
       accountId: accountId.toString(),
-      accountCode: accountCode,
       accountName: accountName,
       amount: amount,
     );
@@ -751,7 +744,6 @@ extension DayBookLineModelMapper on api.DayBookLine {
     return DayBookLineItem(
       id: id.toString(),
       accountId: accountId.toString(),
-      accountCode: accountCode,
       accountName: accountName,
       debit: debit,
       credit: credit,
@@ -871,7 +863,6 @@ extension UnearnedPreviewItemModelMapper on api.UnearnedPreviewItem {
       endsOn: endsOn.toDateTime(),
       unearnedAccountId: unearnedAccountId.toString(),
       incomeAccountId: incomeAccountId.toString(),
-      accountCode: accountCode,
       totalNet: totalNet,
       unexpiredAmount: unexpiredAmount,
     );

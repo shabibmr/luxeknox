@@ -42,7 +42,6 @@ void main() {
 
   const tBankAccount = Account(
     id: '1',
-    code: '1000',
     name: 'HDFC Bank',
     type: 'asset',
     isBank: true,
@@ -51,7 +50,6 @@ void main() {
 
   const tExpenseAccount = Account(
     id: '2',
-    code: '5000',
     name: 'Rent',
     type: 'expense',
     isBank: false,
@@ -319,7 +317,6 @@ void main() {
   group('Cash and Bank account sorting', () {
     const acc2000 = Account(
       id: '20',
-      code: '2000',
       name: 'ICICI Current A/C',
       type: 'asset',
       isBank: true,
@@ -327,7 +324,6 @@ void main() {
     );
     const acc1000 = Account(
       id: '10',
-      code: '1000',
       name: 'HDFC Main A/C',
       type: 'asset',
       isBank: true,
@@ -335,7 +331,6 @@ void main() {
     );
     const acc1050 = Account(
       id: '15',
-      code: '1050',
       name: 'Cash in Hand',
       type: 'asset',
       isBank: true,
@@ -343,7 +338,6 @@ void main() {
     );
     const nonBankAcc = Account(
       id: '50',
-      code: '5000',
       name: 'Office Rent',
       type: 'expense',
       isBank: false,
@@ -351,7 +345,7 @@ void main() {
     );
 
     blocTest<AccountingHomeCubit, AccountingHomeState>(
-      'filters isBank == true and sorts accounts ascending by code',
+      'filters isBank == true and sorts accounts ascending by name',
       build: () {
         when(() => mockGetOpenItems(any()))
             .thenAnswer((_) async => const Right(tArReport));
@@ -375,7 +369,7 @@ void main() {
           status: LoadStatus.success,
           openAr: tArReport,
           openAp: tArReport,
-          bankAndCashAccounts: const [acc1000, acc1050, acc2000],
+          bankAndCashAccounts: const [acc1050, acc1000, acc2000],
           currentPeriod: tOpenPeriod,
         ),
       ],

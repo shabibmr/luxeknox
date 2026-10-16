@@ -18,7 +18,6 @@ const Object _sentinel = Object();
 class PurchaseBillLineDraft extends Equatable {
   const PurchaseBillLineDraft({
     this.accountId,
-    this.accountCode,
     this.accountName,
     this.itemId,
     this.itemName,
@@ -31,7 +30,6 @@ class PurchaseBillLineDraft extends Equatable {
   });
 
   final String? accountId;
-  final String? accountCode;
   final String? accountName;
   final String? itemId;
   final String? itemName;
@@ -50,7 +48,6 @@ class PurchaseBillLineDraft extends Equatable {
 
   PurchaseBillLineDraft copyWith({
     Object? accountId = _sentinel,
-    Object? accountCode = _sentinel,
     Object? accountName = _sentinel,
     Object? itemId = _sentinel,
     Object? itemName = _sentinel,
@@ -65,9 +62,6 @@ class PurchaseBillLineDraft extends Equatable {
       accountId: identical(accountId, _sentinel)
           ? this.accountId
           : (accountId as String?),
-      accountCode: identical(accountCode, _sentinel)
-          ? this.accountCode
-          : (accountCode as String?),
       accountName: identical(accountName, _sentinel)
           ? this.accountName
           : (accountName as String?),
@@ -91,7 +85,6 @@ class PurchaseBillLineDraft extends Equatable {
   @override
   List<Object?> get props => [
         accountId,
-        accountCode,
         accountName,
         itemId,
         itemName,
@@ -297,7 +290,6 @@ class PurchaseBillFormCubit extends Cubit<PurchaseBillFormState> {
   void updateLine(
     int index, {
     Object? accountId = _sentinel,
-    Object? accountCode = _sentinel,
     Object? accountName = _sentinel,
     Object? itemId = _sentinel,
     Object? itemName = _sentinel,
@@ -313,7 +305,6 @@ class PurchaseBillFormCubit extends Cubit<PurchaseBillFormState> {
 
     final updatedLine = current.copyWith(
       accountId: accountId,
-      accountCode: accountCode,
       accountName: accountName,
       itemId: itemId,
       itemName: itemName,
@@ -334,7 +325,6 @@ class PurchaseBillFormCubit extends Cubit<PurchaseBillFormState> {
     updateLine(
       index,
       accountId: account?.id,
-      accountCode: account?.code,
       accountName: account?.name,
     );
   }

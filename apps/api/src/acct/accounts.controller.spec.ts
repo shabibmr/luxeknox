@@ -22,7 +22,6 @@ const ADMIN_USER: AuthenticatedUser = {
 
 const SAMPLE_ACCOUNT: AccountDto = {
   id: 10,
-  code: '5000',
   name: 'Rent',
   account_type: 'expense',
   parent_id: null,
@@ -66,7 +65,6 @@ describe('AccountsController', () => {
     ).toEqual(['accounting.accounts_write']);
 
     const dto = {
-      code: '5000',
       name: 'Rent',
       account_type: 'expense' as const,
       is_active: true,
@@ -108,7 +106,6 @@ describe('AccountsController', () => {
     expect(() =>
       pipe.transform(
         {
-          code: '5000',
           name: 'Rent',
           account_type: 'invalid_type',
         },
@@ -117,7 +114,7 @@ describe('AccountsController', () => {
     ).toThrow();
   });
 
-  it('rejects create body missing code or name in validation pipe', () => {
+  it('rejects create body missing name in validation pipe', () => {
     const pipe = new ZodValidationPipe(accountCreateSchema);
 
     expect(() =>

@@ -52,7 +52,6 @@ GoLivePaymentMethodMapping goLivePaymentMethodMappingFromJson(
     isActive: (json['is_active'] ?? json['isActive'] ?? true) as bool,
     isDigital: (json['is_digital'] ?? json['isDigital'] ?? false) as bool,
     accountId: rawAccountId != null ? (rawAccountId as num).toInt() : null,
-    accountCode: (json['account_code'] ?? json['accountCode'])?.toString(),
     accountName: (json['account_name'] ?? json['accountName'])?.toString(),
   );
 }
@@ -144,7 +143,6 @@ extension GoLivePaymentMethodModelMapper on api.GoLivePaymentMethod {
       isActive: isActive,
       isDigital: isDigital,
       accountId: accountId,
-      accountCode: accountCode,
       accountName: accountName,
     );
   }

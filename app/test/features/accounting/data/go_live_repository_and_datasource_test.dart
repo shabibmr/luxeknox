@@ -10,6 +10,8 @@ import 'package:mocktail/mocktail.dart';
 
 class MockACCTApi extends Mock implements api.ACCTApi {}
 
+class MockINVApi extends Mock implements api.INVApi {}
+
 class MockDio extends Mock implements Dio {}
 
 class MockAccountingRemoteDataSource extends Mock
@@ -95,13 +97,11 @@ void main() {
         isActive: true,
         isDigital: false,
         accountId: 10,
-        accountCode: '1000',
         accountName: 'Cash on Hand',
       );
 
       final updated = mapping.copyWith(clearAccountId: true);
       expect(updated.accountId, isNull);
-      expect(updated.accountCode, isNull);
       expect(updated.accountName, isNull);
       expect(updated.methodName, 'Cash');
     });
@@ -115,7 +115,7 @@ void main() {
     setUp(() {
       mockAcctApi = MockACCTApi();
       mockDio = MockDio();
-      dataSource = AccountingRemoteDataSourceImpl(mockAcctApi, mockDio);
+      dataSource = AccountingRemoteDataSourceImpl(mockAcctApi, MockINVApi(), mockDio);
     });
 
     final reqOptions = RequestOptions(path: '');
@@ -318,7 +318,6 @@ void main() {
         (mapping) {
           expect(mapping.id, 2);
           expect(mapping.accountId, 1020);
-          expect(mapping.accountCode, '1020');
         },
       );
     });

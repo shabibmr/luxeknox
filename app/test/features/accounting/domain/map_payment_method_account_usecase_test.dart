@@ -23,7 +23,6 @@ void main() {
     isActive: true,
     isDigital: false,
     accountId: 10,
-    accountCode: '1000',
     accountName: 'Cash on Hand',
   );
 
@@ -58,7 +57,6 @@ void main() {
       isActive: true,
       isDigital: false,
       accountId: null,
-      accountCode: null,
       accountName: null,
     );
 

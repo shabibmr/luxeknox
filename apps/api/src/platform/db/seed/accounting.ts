@@ -16,40 +16,40 @@ import {
   type NewUom,
 } from '../schema/accounting';
 
-/** Seeded chart of accounts — codes are stable lookup keys. */
+/** Seeded chart of accounts — names are stable unique lookup keys. */
 const SEED_ACCOUNTS: ReadonlyArray<
   Omit<NewAccount, 'id' | 'created_at' | 'updated_at' | 'parent_id'>
 > = [
-  { code: '1000', name: 'Cash', account_type: 'asset', is_active: true, is_bank: true, is_control: false, control_role: null },
-  { code: '1010', name: 'Bank', account_type: 'asset', is_active: true, is_bank: true, is_control: false, control_role: null },
-  { code: '1020', name: 'Card/UPI clearing', account_type: 'asset', is_active: true, is_bank: true, is_control: false, control_role: null },
-  { code: '1100', name: 'Accounts receivable', account_type: 'asset', is_active: true, is_bank: false, is_control: true, control_role: 'ar' },
-  { code: '1300', name: 'Input tax', account_type: 'asset', is_active: true, is_bank: false, is_control: true, control_role: 'input_tax' },
-  { code: '1400', name: 'Inventory', account_type: 'asset', is_active: true, is_bank: false, is_control: true, control_role: 'inventory' },
-  { code: '2000', name: 'Accounts payable', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'ap' },
-  { code: '2100', name: 'Output CGST', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'output_cgst' },
-  { code: '2110', name: 'Output SGST', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'output_sgst' },
-  { code: '2120', name: 'Output IGST', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'output_igst' },
-  { code: '2200', name: 'Unearned membership revenue', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'unearned_membership' },
-  { code: '2210', name: 'Unearned personal training revenue', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'unearned_pt' },
-  { code: '3000', name: "Owner's capital", account_type: 'equity', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '3100', name: 'Retained earnings', account_type: 'equity', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '4000', name: 'Membership revenue', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '4100', name: 'Personal training revenue', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '4200', name: 'Other sales', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '4250', name: 'Merchandise sales', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '4300', name: 'Forfeited membership income', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '4900', name: 'Sales discounts', account_type: 'income', is_active: true, is_bank: false, is_control: true, control_role: 'discounts' },
-  { code: '5000', name: 'Rent', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '5050', name: 'Cost of goods sold', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '5100', name: 'Utilities', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '5200', name: 'Salaries', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '5300', name: 'Supplies', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '5400', name: 'Repairs and maintenance', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '5500', name: 'Bank and processor charges', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '5900', name: 'General expense', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '5960', name: 'Inventory adjustments', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
-  { code: '5950', name: 'Rounding off', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Cash', account_type: 'asset', is_active: true, is_bank: true, is_control: false, control_role: null },
+  { name: 'Bank', account_type: 'asset', is_active: true, is_bank: true, is_control: false, control_role: null },
+  { name: 'Card/UPI clearing', account_type: 'asset', is_active: true, is_bank: true, is_control: false, control_role: null },
+  { name: 'Accounts receivable', account_type: 'asset', is_active: true, is_bank: false, is_control: true, control_role: 'ar' },
+  { name: 'Input tax', account_type: 'asset', is_active: true, is_bank: false, is_control: true, control_role: 'input_tax' },
+  { name: 'Inventory', account_type: 'asset', is_active: true, is_bank: false, is_control: true, control_role: 'inventory' },
+  { name: 'Accounts payable', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'ap' },
+  { name: 'Output CGST', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'output_cgst' },
+  { name: 'Output SGST', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'output_sgst' },
+  { name: 'Output IGST', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'output_igst' },
+  { name: 'Unearned membership revenue', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'unearned_membership' },
+  { name: 'Unearned personal training revenue', account_type: 'liability', is_active: true, is_bank: false, is_control: true, control_role: 'unearned_pt' },
+  { name: "Owner's capital", account_type: 'equity', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Retained earnings', account_type: 'equity', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Membership revenue', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Personal training revenue', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Other sales', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Merchandise sales', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Forfeited membership income', account_type: 'income', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Sales discounts', account_type: 'income', is_active: true, is_bank: false, is_control: true, control_role: 'discounts' },
+  { name: 'Rent', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Cost of goods sold', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Utilities', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Salaries', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Supplies', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Repairs and maintenance', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Bank and processor charges', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'General expense', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Inventory adjustments', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
+  { name: 'Rounding off', account_type: 'expense', is_active: true, is_bank: false, is_control: false, control_role: null },
 ];
 
 const SEED_UOMS: ReadonlyArray<Omit<NewUom, 'id' | 'created_at' | 'updated_at' | 'is_active'>> = [
@@ -112,17 +112,17 @@ function buildFiscalPeriods(startsOn: string): Array<Pick<NewAccountingPeriod, '
 
 async function ensureAccounts(db: DrizzleDb): Promise<Map<string, number>> {
   const now = new Date();
-  const existing = await db.select({ id: accounts.id, code: accounts.code }).from(accounts);
-  const byCode = new Map(existing.map((row) => [row.code, row.id]));
+  const existing = await db.select({ id: accounts.id, name: accounts.name }).from(accounts);
+  const byName = new Map(existing.map((row) => [row.name, row.id]));
 
-  const missing = SEED_ACCOUNTS.filter((account) => !byCode.has(account.code));
+  const missing = SEED_ACCOUNTS.filter((account) => !byName.has(account.name));
   if (missing.length > 0) {
     await db.insert(accounts).values(missing.map((account) => ({ ...account, created_at: now })));
-    const refreshed = await db.select({ id: accounts.id, code: accounts.code }).from(accounts);
-    for (const row of refreshed) byCode.set(row.code, row.id);
+    const refreshed = await db.select({ id: accounts.id, name: accounts.name }).from(accounts);
+    for (const row of refreshed) byName.set(row.name, row.id);
   }
 
-  return byCode;
+  return byName;
 }
 
 async function ensureUoms(db: DrizzleDb): Promise<number> {
@@ -161,12 +161,12 @@ async function ensureTaxCodes(
     for (const row of refreshed) byCode.set(row.code, row.id);
   }
 
-  const inputTaxId = accountIds.get('1300');
-  const cgstId = accountIds.get('2100');
-  const sgstId = accountIds.get('2110');
-  const igstId = accountIds.get('2120');
+  const inputTaxId = accountIds.get('Input tax');
+  const cgstId = accountIds.get('Output CGST');
+  const sgstId = accountIds.get('Output SGST');
+  const igstId = accountIds.get('Output IGST');
   if (!inputTaxId || !cgstId || !sgstId || !igstId) {
-    throw new Error('[Seed] Missing tax control accounts (1300/2100/2110/2120)');
+    throw new Error('[Seed] Missing tax control accounts (Input tax / Output CGST/SGST/IGST)');
   }
 
   const gst18Id = byCode.get('gst_18');
@@ -264,7 +264,7 @@ async function ensureFiscalYear(db: DrizzleDb): Promise<void> {
 
 /**
  * Idempotent accounting seed: chart, tax codes (GST/IGST/exempt), current FY + months.
- * Re-running does not duplicate account codes or tax codes.
+ * Re-running does not duplicate account names or tax codes.
  */
 export async function seedAccounting(db: DrizzleDb): Promise<{
   accounts: number;

@@ -7,6 +7,8 @@ import 'package:mocktail/mocktail.dart';
 
 class MockACCTApi extends Mock implements api.ACCTApi {}
 
+class MockINVApi extends Mock implements api.INVApi {}
+
 void main() {
   late MockACCTApi mockAcctApi;
   late AccountingRemoteDataSourceImpl dataSource;
@@ -17,7 +19,6 @@ void main() {
   setUpAll(() {
     registerFallbackValue(
       api.AccountCreate((b) => b
-        ..code = '1000'
         ..name = 'Cash'
         ..accountType = api.AccountType.asset),
     );
@@ -86,6 +87,7 @@ void main() {
       api.ItemCreate((b) => b
         ..name = 'Product'
         ..itemKind = api.ItemKind.goods
+        ..uomId = 1
         ..incomeAccountId = 1
         ..expenseAccountId = 2),
     );
@@ -97,7 +99,7 @@ void main() {
 
   setUp(() {
     mockAcctApi = MockACCTApi();
-    dataSource = AccountingRemoteDataSourceImpl(mockAcctApi);
+    dataSource = AccountingRemoteDataSourceImpl(mockAcctApi, MockINVApi());
   });
 
   group('Accounts', () {
@@ -145,7 +147,6 @@ void main() {
       final tAccount = api.Account((b) {
         b
           ..id = 1
-          ..code = '1000'
           ..name = 'Cash'
           ..accountType = api.AccountType.asset
           ..isActive = true
@@ -167,14 +168,12 @@ void main() {
 
     test('createAccount forwards AccountCreate and returns data', () async {
       final tCreate = api.AccountCreate((b) => b
-        ..code = '1000'
         ..name = 'Cash'
         ..accountType = api.AccountType.asset);
 
       final tAccount = api.Account((b) {
         b
           ..id = 1
-          ..code = '1000'
           ..name = 'Cash'
           ..accountType = api.AccountType.asset
           ..isActive = true
@@ -198,7 +197,6 @@ void main() {
       final tAccount = api.Account((b) {
         b
           ..id = 1
-          ..code = '1000'
           ..name = 'Cash New'
           ..accountType = api.AccountType.asset
           ..isActive = true

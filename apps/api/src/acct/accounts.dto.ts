@@ -3,7 +3,6 @@ import { ACCOUNT_TYPES, type AccountType } from '../platform/db/schema/accountin
 
 export const accountCreateSchema = z
   .object({
-    code: z.string().trim().min(1).max(32).optional(),
     name: z.string().trim().min(1).max(150),
     account_type: z.enum(ACCOUNT_TYPES),
     parent_id: z.number().int().positive().nullable().optional(),
@@ -40,7 +39,6 @@ export type AccountFilterQueryDto = z.infer<typeof accountFilterQuerySchema>;
 
 export interface AccountDto {
   id: number;
-  code: string;
   name: string;
   account_type: AccountType;
   parent_id: number | null;

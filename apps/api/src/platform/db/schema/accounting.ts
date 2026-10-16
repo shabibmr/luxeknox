@@ -109,7 +109,6 @@ export const accounts = mysqlTable(
   'accounts',
   {
     id: bigint('id', { mode: 'number', unsigned: true }).primaryKey().autoincrement(),
-    code: varchar('code', { length: 32 }).notNull(),
     name: varchar('name', { length: 150 }).notNull(),
     account_type: varchar('account_type', { length: 16 }).notNull(),
     parent_id: bigint('parent_id', { mode: 'number', unsigned: true }).references(
@@ -123,7 +122,7 @@ export const accounts = mysqlTable(
     updated_at: utcDatetime('updated_at'),
   },
   (table) => [
-    uniqueIndex('accounts_code_unique').on(table.code),
+    uniqueIndex('accounts_name_unique').on(table.name),
     index('accounts_account_type_idx').on(table.account_type),
     index('accounts_is_active_idx').on(table.is_active),
     index('accounts_control_role_idx').on(table.control_role),

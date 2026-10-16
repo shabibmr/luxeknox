@@ -17,7 +17,6 @@ void main() {
 
   const tActiveAccount = Account(
     id: '1',
-    code: '1010',
     name: 'Operating Bank Account',
     type: 'asset',
     isBank: true,
@@ -27,7 +26,6 @@ void main() {
 
   const tInactiveAccount = Account(
     id: '2',
-    code: '2020',
     name: 'Deactivated Term Loan',
     type: 'liability',
     isBank: false,

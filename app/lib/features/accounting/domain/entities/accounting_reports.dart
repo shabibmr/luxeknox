@@ -3,14 +3,12 @@ import 'package:equatable/equatable.dart';
 class TrialBalanceAccountItem extends Equatable {
   const TrialBalanceAccountItem({
     required this.accountId,
-    required this.accountCode,
     required this.accountName,
     required this.debit,
     required this.credit,
   });
 
   final String accountId;
-  final String accountCode;
   final String accountName;
   final String debit;
   final String credit;
@@ -18,7 +16,6 @@ class TrialBalanceAccountItem extends Equatable {
   @override
   List<Object?> get props => [
     accountId,
-    accountCode,
     accountName,
     debit,
     credit,
@@ -53,20 +50,17 @@ class TrialBalanceReport extends Equatable {
 class ReportAccountItem extends Equatable {
   const ReportAccountItem({
     required this.accountId,
-    required this.accountCode,
     required this.accountName,
     required this.amount,
   });
 
   final String accountId;
-  final String accountCode;
   final String accountName;
   final String amount;
 
   @override
   List<Object?> get props => [
     accountId,
-    accountCode,
     accountName,
     amount,
   ];
@@ -147,7 +141,6 @@ class DayBookLineItem extends Equatable {
   const DayBookLineItem({
     required this.id,
     required this.accountId,
-    required this.accountCode,
     required this.accountName,
     required this.debit,
     required this.credit,
@@ -156,7 +149,6 @@ class DayBookLineItem extends Equatable {
 
   final String id;
   final String accountId;
-  final String accountCode;
   final String accountName;
   final String debit;
   final String credit;
@@ -166,7 +158,6 @@ class DayBookLineItem extends Equatable {
   List<Object?> get props => [
     id,
     accountId,
-    accountCode,
     accountName,
     debit,
     credit,
@@ -350,7 +341,6 @@ class UnearnedPreviewReportItem extends Equatable {
     required this.endsOn,
     required this.unearnedAccountId,
     required this.incomeAccountId,
-    required this.accountCode,
     required this.totalNet,
     required this.unexpiredAmount,
   });
@@ -363,7 +353,6 @@ class UnearnedPreviewReportItem extends Equatable {
   final DateTime endsOn;
   final String unearnedAccountId;
   final String incomeAccountId;
-  final String accountCode;
   final String totalNet;
   final String unexpiredAmount;
 
@@ -377,7 +366,6 @@ class UnearnedPreviewReportItem extends Equatable {
     endsOn,
     unearnedAccountId,
     incomeAccountId,
-    accountCode,
     totalNet,
     unexpiredAmount,
   ];

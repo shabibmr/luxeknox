@@ -29,14 +29,12 @@ void main() {
     accounts: const [
       TrialBalanceAccountItem(
         accountId: '1',
-        accountCode: '1000',
         accountName: 'Cash',
         debit: '1500.00',
         credit: '0.00',
       ),
       TrialBalanceAccountItem(
         accountId: '2',
-        accountCode: '2000',
         accountName: 'Payables',
         debit: '0.00',
         credit: '1500.00',
@@ -53,7 +51,6 @@ void main() {
     incomeAccounts: const [
       ReportAccountItem(
         accountId: '3',
-        accountCode: '4000',
         accountName: 'Membership Income',
         amount: '900.00',
       ),
@@ -61,7 +58,6 @@ void main() {
     expenseAccounts: const [
       ReportAccountItem(
         accountId: '4',
-        accountCode: '5000',
         accountName: 'Rent',
         amount: '300.00',
       ),
@@ -79,7 +75,6 @@ void main() {
     assetAccounts: const [
       ReportAccountItem(
         accountId: '1',
-        accountCode: '1000',
         accountName: 'Cash',
         amount: '2000.00',
       ),
@@ -87,7 +82,6 @@ void main() {
     liabilityAccounts: const [
       ReportAccountItem(
         accountId: '2',
-        accountCode: '2000',
         accountName: 'Payables',
         amount: '800.00',
       ),
@@ -95,7 +89,6 @@ void main() {
     equityAccounts: const [
       ReportAccountItem(
         accountId: '5',
-        accountCode: '3000',
         accountName: 'Capital',
         amount: '600.00',
       ),
@@ -116,7 +109,6 @@ void main() {
           DayBookLineItem(
             id: 'l-1',
             accountId: '4',
-            accountCode: '5000',
             accountName: 'Rent',
             debit: '250.00',
             credit: '0.00',
@@ -124,7 +116,6 @@ void main() {
           DayBookLineItem(
             id: 'l-2',
             accountId: '1',
-            accountCode: '1000',
             accountName: 'Cash',
             debit: '0.00',
             credit: '250.00',

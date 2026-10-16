@@ -34,7 +34,6 @@ describe('ReportsService (Phase 7 - ACC-070 to ACC-075)', () => {
         accounts: [
           {
             account_id: 1,
-            account_code: '1000',
             account_name: 'Cash',
             account_type: 'asset',
             debit: '5000.00',
@@ -42,7 +41,6 @@ describe('ReportsService (Phase 7 - ACC-070 to ACC-075)', () => {
           },
           {
             account_id: 2,
-            account_code: '2000',
             account_name: 'Accounts payable',
             account_type: 'liability',
             debit: '0.00',
@@ -50,7 +48,6 @@ describe('ReportsService (Phase 7 - ACC-070 to ACC-075)', () => {
           },
           {
             account_id: 3,
-            account_code: '3000',
             account_name: "Owner's capital",
             account_type: 'equity',
             debit: '0.00',
@@ -93,13 +90,13 @@ describe('ReportsService (Phase 7 - ACC-070 to ACC-075)', () => {
     it('returns profit and loss with only income and expense accounts and net profit', async () => {
       repository.getProfitAndLoss.mockResolvedValue({
         incomeAccounts: [
-          { account_id: 10, account_code: '4000', account_name: 'Membership revenue', amount: '12000.00' },
-          { account_id: 11, account_code: '4100', account_name: 'Personal training revenue', amount: '8000.00' },
+          { account_id: 10, account_name: 'Membership revenue', amount: '12000.00' },
+          { account_id: 11, account_name: 'Personal training revenue', amount: '8000.00' },
         ],
         totalIncome: '20000.00',
         expenseAccounts: [
-          { account_id: 20, account_code: '5000', account_name: 'Rent', amount: '5000.00' },
-          { account_id: 21, account_code: '5100', account_name: 'Utilities', amount: '1500.00' },
+          { account_id: 20, account_name: 'Rent', amount: '5000.00' },
+          { account_id: 21, account_name: 'Utilities', amount: '1500.00' },
         ],
         totalExpense: '6500.00',
         netProfit: '13500.00',
@@ -111,8 +108,8 @@ describe('ReportsService (Phase 7 - ACC-070 to ACC-075)', () => {
       expect(result.income_accounts).toHaveLength(2);
       expect(result.expense_accounts).toHaveLength(2);
       // All accounts must be income or expense only
-      expect(result.income_accounts.every((a) => a.account_code.startsWith('4'))).toBe(true);
-      expect(result.expense_accounts.every((a) => a.account_code.startsWith('5'))).toBe(true);
+      expect(result.income_accounts.every((a) => a.account_name.length > 0)).toBe(true);
+      expect(result.expense_accounts.every((a) => a.account_name.length > 0)).toBe(true);
       expect(result.total_income).toBe('20000.00');
       expect(result.total_expense).toBe('6500.00');
       expect(result.net_profit).toBe('13500.00');
@@ -125,16 +122,16 @@ describe('ReportsService (Phase 7 - ACC-070 to ACC-075)', () => {
         asOf: '2026-06-30',
         fiscalYearStart: '2026-04-01',
         assetAccounts: [
-          { account_id: 1, account_code: '1000', account_name: 'Cash', amount: '15000.00' },
-          { account_id: 2, account_code: '1010', account_name: 'Bank', amount: '25000.00' },
+          { account_id: 1, account_name: 'Cash', amount: '15000.00' },
+          { account_id: 2, account_name: 'Bank', amount: '25000.00' },
         ],
         totalAssets: '40000.00',
         liabilityAccounts: [
-          { account_id: 3, account_code: '2000', account_name: 'Accounts payable', amount: '10000.00' },
+          { account_id: 3, account_name: 'Accounts payable', amount: '10000.00' },
         ],
         totalLiabilities: '10000.00',
         equityAccounts: [
-          { account_id: 4, account_code: '3000', account_name: "Owner's capital", amount: '20000.00' },
+          { account_id: 4, account_name: "Owner's capital", amount: '20000.00' },
         ],
         retainedEarnings: '0.00',
         currentYearEarnings: '10000.00',
@@ -173,7 +170,6 @@ describe('ReportsService (Phase 7 - ACC-070 to ACC-075)', () => {
               {
                 id: 1,
                 account_id: 1100,
-                account_code: '1100',
                 account_name: 'Accounts receivable',
                 debit: '1180.00',
                 credit: '0.00',
@@ -184,7 +180,6 @@ describe('ReportsService (Phase 7 - ACC-070 to ACC-075)', () => {
               {
                 id: 2,
                 account_id: 4200,
-                account_code: '4200',
                 account_name: 'Other sales',
                 debit: '0.00',
                 credit: '1000.00',
@@ -195,7 +190,6 @@ describe('ReportsService (Phase 7 - ACC-070 to ACC-075)', () => {
               {
                 id: 3,
                 account_id: 2100,
-                account_code: '2100',
                 account_name: 'Output CGST',
                 debit: '0.00',
                 credit: '90.00',
@@ -206,7 +200,6 @@ describe('ReportsService (Phase 7 - ACC-070 to ACC-075)', () => {
               {
                 id: 4,
                 account_id: 2110,
-                account_code: '2110',
                 account_name: 'Output SGST',
                 debit: '0.00',
                 credit: '90.00',

@@ -26,7 +26,6 @@ const CURRENT_USER: AuthenticatedUser = {
 
 const BANK_ACCOUNT: Account = {
   id: 1,
-  code: '1000',
   name: 'Operating Bank Account',
   account_type: 'asset',
   parent_id: null,
@@ -40,7 +39,6 @@ const BANK_ACCOUNT: Account = {
 
 const NON_BANK_ACCOUNT: Account = {
   id: 2,
-  code: '1050',
   name: 'Prepaid Expenses',
   account_type: 'asset',
   parent_id: null,
@@ -54,7 +52,6 @@ const NON_BANK_ACCOUNT: Account = {
 
 const INACTIVE_BANK_ACCOUNT: Account = {
   id: 3,
-  code: '1010',
   name: 'Closed Bank Account',
   account_type: 'asset',
   parent_id: null,
@@ -68,7 +65,6 @@ const INACTIVE_BANK_ACCOUNT: Account = {
 
 const EXPENSE_ACCOUNT: Account = {
   id: 10,
-  code: '5100',
   name: 'Office Supplies',
   account_type: 'expense',
   parent_id: null,
@@ -82,7 +78,6 @@ const EXPENSE_ACCOUNT: Account = {
 
 const ASSET_ACCOUNT: Account = {
   id: 11,
-  code: '1500',
   name: 'Office Equipment',
   account_type: 'asset',
   parent_id: null,
@@ -96,7 +91,6 @@ const ASSET_ACCOUNT: Account = {
 
 const INCOME_ACCOUNT: Account = {
   id: 12,
-  code: '4000',
   name: 'Sales Revenue',
   account_type: 'income',
   parent_id: null,
@@ -110,7 +104,6 @@ const INCOME_ACCOUNT: Account = {
 
 const CONTROL_ACCOUNT: Account = {
   id: 13,
-  code: '1100',
   name: 'Accounts Receivable',
   account_type: 'asset',
   parent_id: null,
@@ -124,7 +117,6 @@ const CONTROL_ACCOUNT: Account = {
 
 const INPUT_TAX_ACCOUNT: Account = {
   id: 20,
-  code: '1300',
   name: 'Input Tax GST',
   account_type: 'asset',
   parent_id: null,
@@ -138,7 +130,6 @@ const INPUT_TAX_ACCOUNT: Account = {
 
 const AP_ACCOUNT: Account = {
   id: 30,
-  code: '2000',
   name: 'Accounts Payable',
   account_type: 'liability',
   parent_id: null,
@@ -215,11 +206,6 @@ describe('ExpensesService', () => {
       findByControlRole: vi.fn().mockImplementation(async (role: string) => {
         if (role === 'input_tax') return INPUT_TAX_ACCOUNT;
         if (role === 'ap') return AP_ACCOUNT;
-        return null;
-      }),
-      findByCode: vi.fn().mockImplementation(async (code: string) => {
-        if (code === '1300') return INPUT_TAX_ACCOUNT;
-        if (code === '2000') return AP_ACCOUNT;
         return null;
       }),
     };

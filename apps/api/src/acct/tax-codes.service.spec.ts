@@ -27,7 +27,6 @@ const ADMIN_USER: AuthenticatedUser = {
 
 const CGST_ACCOUNT: Account = {
   id: 2100,
-  code: '2100',
   name: 'Output CGST',
   account_type: 'liability',
   parent_id: null,
@@ -41,7 +40,6 @@ const CGST_ACCOUNT: Account = {
 
 const SGST_ACCOUNT: Account = {
   id: 2110,
-  code: '2110',
   name: 'Output SGST',
   account_type: 'liability',
   parent_id: null,
@@ -55,7 +53,6 @@ const SGST_ACCOUNT: Account = {
 
 const INPUT_TAX_ACCOUNT: Account = {
   id: 1300,
-  code: '1300',
   name: 'Input tax',
   account_type: 'asset',
   parent_id: null,

@@ -33,7 +33,6 @@ void main() {
 
   const tBankAssetAccount = Account(
     id: '1',
-    code: '1000',
     name: 'Operating Bank Account',
     type: 'asset',
     isBank: true,
@@ -43,7 +42,6 @@ void main() {
 
   const tControlAccount = Account(
     id: '2',
-    code: '1200',
     name: 'Accounts Receivable',
     type: 'asset',
     isBank: false,
@@ -54,7 +52,6 @@ void main() {
 
   const tInactiveLiabilityAccount = Account(
     id: '3',
-    code: '2000',
     name: 'Old Equipment Loan',
     type: 'liability',
     isBank: false,

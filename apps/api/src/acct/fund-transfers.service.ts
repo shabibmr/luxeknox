@@ -21,7 +21,7 @@ import {
 } from './fund-transfers.dto';
 import { FundTransfersRepository } from './fund-transfers.repository';
 
-const BANK_CHARGES_ACCOUNT_CODE = '5500';
+const BANK_CHARGES_ACCOUNT_NAME = 'Bank and processor charges';
 
 @Injectable()
 export class FundTransfersService {
@@ -266,9 +266,9 @@ export class FundTransfersService {
 
     let resolvedId = feeAccountId;
     if (resolvedId === null) {
-      const defaultAccount = await this.accountsRepository.findByCode(BANK_CHARGES_ACCOUNT_CODE);
+      const defaultAccount = await this.accountsRepository.findByName(BANK_CHARGES_ACCOUNT_NAME);
       if (!defaultAccount) {
-        throw new BusinessRuleError('Bank and processor charges account (5500) not found');
+        throw new BusinessRuleError('Bank and processor charges account not found');
       }
       resolvedId = defaultAccount.id;
     }

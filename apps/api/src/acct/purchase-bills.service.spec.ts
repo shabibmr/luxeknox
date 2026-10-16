@@ -45,7 +45,6 @@ const VENDOR_INACTIVE: Vendor = {
 
 const EXPENSE_ACCOUNT: Account = {
   id: 5010,
-  code: '5010',
   name: 'Equipment Maintenance',
   account_type: 'expense',
   parent_id: null,
@@ -59,7 +58,6 @@ const EXPENSE_ACCOUNT: Account = {
 
 const CONTROL_ACCOUNT: Account = {
   id: 2000,
-  code: '2000',
   name: 'Accounts Payable',
   account_type: 'liability',
   parent_id: null,
@@ -73,7 +71,6 @@ const CONTROL_ACCOUNT: Account = {
 
 const INPUT_TAX_ACCOUNT: Account = {
   id: 1300,
-  code: '1300',
   name: 'Input Tax Receivable',
   account_type: 'asset',
   parent_id: null,
@@ -87,7 +84,6 @@ const INPUT_TAX_ACCOUNT: Account = {
 
 const INACTIVE_ACCOUNT: Account = {
   id: 5099,
-  code: '5099',
   name: 'Old Repairs Account',
   account_type: 'expense',
   parent_id: null,
@@ -116,7 +112,6 @@ const TAX_CODE_INACTIVE: TaxCode = {
 
 const INVENTORY_ACCOUNT: Account = {
   id: 1400,
-  code: '1400',
   name: 'Inventory',
   account_type: 'asset',
   parent_id: null,
@@ -227,11 +222,6 @@ describe('PurchaseBillsService', () => {
         if (id === INPUT_TAX_ACCOUNT.id) return INPUT_TAX_ACCOUNT;
         if (id === INACTIVE_ACCOUNT.id) return INACTIVE_ACCOUNT;
         if (id === INVENTORY_ACCOUNT.id) return INVENTORY_ACCOUNT;
-        return null;
-      }),
-      findByCode: vi.fn().mockImplementation(async (code: string) => {
-        if (code === '2000') return CONTROL_ACCOUNT;
-        if (code === '1300') return INPUT_TAX_ACCOUNT;
         return null;
       }),
       findByControlRole: vi.fn().mockImplementation(async (role: string) => {

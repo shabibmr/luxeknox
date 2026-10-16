@@ -152,7 +152,7 @@ describe('CounterSalesService', () => {
     findById: ReturnType<typeof vi.fn>;
     listComponents: ReturnType<typeof vi.fn>;
   };
-  let accountsRepository: { findByCode: ReturnType<typeof vi.fn> };
+  let accountsRepository: { findByName: ReturnType<typeof vi.fn> };
   let postingService: { postJournal: ReturnType<typeof vi.fn> };
   let stockService: { issue: ReturnType<typeof vi.fn>; receive: ReturnType<typeof vi.fn> };
   let paginationHelper: { normalizeParams: ReturnType<typeof vi.fn> };
@@ -196,7 +196,7 @@ describe('CounterSalesService', () => {
         { name: 'SGST', rate_percent: '9.00', output_account_id: 2102, input_account_id: 1302 },
       ]),
     };
-    accountsRepository = { findByCode: vi.fn() };
+    accountsRepository = { findByName: vi.fn() };
     postingService = {
       postJournal: vi.fn().mockImplementation(async () => {
         expect(insideTransaction).toBe(true);

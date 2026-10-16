@@ -39,7 +39,6 @@ class GoLivePaymentMethodMapping extends Equatable {
     required this.isActive,
     required this.isDigital,
     this.accountId,
-    this.accountCode,
     this.accountName,
   });
 
@@ -48,7 +47,6 @@ class GoLivePaymentMethodMapping extends Equatable {
   final bool isActive;
   final bool isDigital;
   final int? accountId;
-  final String? accountCode;
   final String? accountName;
 
   GoLivePaymentMethodMapping copyWith({
@@ -57,7 +55,6 @@ class GoLivePaymentMethodMapping extends Equatable {
     bool? isActive,
     bool? isDigital,
     int? accountId,
-    String? accountCode,
     String? accountName,
     bool clearAccountId = false,
   }) {
@@ -67,7 +64,6 @@ class GoLivePaymentMethodMapping extends Equatable {
       isActive: isActive ?? this.isActive,
       isDigital: isDigital ?? this.isDigital,
       accountId: clearAccountId ? null : (accountId ?? this.accountId),
-      accountCode: clearAccountId ? null : (accountCode ?? this.accountCode),
       accountName: clearAccountId ? null : (accountName ?? this.accountName),
     );
   }
@@ -79,7 +75,6 @@ class GoLivePaymentMethodMapping extends Equatable {
         isActive,
         isDigital,
         accountId,
-        accountCode,
         accountName,
       ];
 }

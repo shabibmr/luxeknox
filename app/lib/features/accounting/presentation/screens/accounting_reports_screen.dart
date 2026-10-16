@@ -514,10 +514,6 @@ class _AccountAmountHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          SizedBox(
-            width: 72,
-            child: Text(AccountingStrings.codeLabel, style: style),
-          ),
           Expanded(child: Text(AccountingStrings.nameLabel, style: style)),
           SizedBox(
             width: 104,
@@ -535,13 +531,11 @@ class _AccountAmountHeader extends StatelessWidget {
 
 class _AccountAmountRow extends StatelessWidget {
   const _AccountAmountRow({
-    required this.code,
     required this.name,
     required this.amount,
     this.bold = false,
   });
 
-  final String code;
   final String name;
   final String amount;
   final bool bold;
@@ -556,7 +550,6 @@ class _AccountAmountRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 72, child: Text(code, style: style)),
           Expanded(child: Text(name, style: style)),
           SizedBox(
             width: 104,
@@ -588,10 +581,6 @@ class _TrialBalanceTable extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 children: [
-                  SizedBox(
-                    width: 72,
-                    child: Text(AccountingStrings.codeLabel, style: headerStyle),
-                  ),
                   Expanded(
                     child: Text(AccountingStrings.nameLabel, style: headerStyle),
                   ),
@@ -621,10 +610,6 @@ class _TrialBalanceTable extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      width: 72,
-                      child: Text(account.accountCode),
-                    ),
                     Expanded(child: Text(account.accountName)),
                     SizedBox(
                       width: 96,
@@ -642,7 +627,6 @@ class _TrialBalanceTable extends StatelessWidget {
               padding: const EdgeInsets.only(top: 8),
               child: Row(
                 children: [
-                  const SizedBox(width: 72),
                   Expanded(
                     child: Text(
                       AccountingStrings.reportTotalsTitle,
@@ -690,13 +674,11 @@ class _ProfitAndLossTable extends StatelessWidget {
                 const Divider(height: 1),
                 for (final account in report.incomeAccounts)
                   _AccountAmountRow(
-                    code: account.accountCode,
                     name: account.accountName,
                     amount: account.amount,
                   ),
                 const Divider(height: 1),
                 _AccountAmountRow(
-                  code: '',
                   name: AccountingStrings.totalIncome,
                   amount: report.totalIncome,
                   bold: true,
@@ -717,13 +699,11 @@ class _ProfitAndLossTable extends StatelessWidget {
                 const Divider(height: 1),
                 for (final account in report.expenseAccounts)
                   _AccountAmountRow(
-                    code: account.accountCode,
                     name: account.accountName,
                     amount: account.amount,
                   ),
                 const Divider(height: 1),
                 _AccountAmountRow(
-                  code: '',
                   name: AccountingStrings.totalExpense,
                   amount: report.totalExpense,
                   bold: true,
@@ -776,13 +756,11 @@ class _BalanceSheetTable extends StatelessWidget {
                 const Divider(height: 1),
                 for (final account in report.assetAccounts)
                   _AccountAmountRow(
-                    code: account.accountCode,
                     name: account.accountName,
                     amount: account.amount,
                   ),
                 const Divider(height: 1),
                 _AccountAmountRow(
-                  code: '',
                   name: AccountingStrings.totalAssets,
                   amount: report.totalAssets,
                   bold: true,
@@ -803,13 +781,11 @@ class _BalanceSheetTable extends StatelessWidget {
                 const Divider(height: 1),
                 for (final account in report.liabilityAccounts)
                   _AccountAmountRow(
-                    code: account.accountCode,
                     name: account.accountName,
                     amount: account.amount,
                   ),
                 const Divider(height: 1),
                 _AccountAmountRow(
-                  code: '',
                   name: AccountingStrings.totalLiabilities,
                   amount: report.totalLiabilities,
                   bold: true,
@@ -830,18 +806,15 @@ class _BalanceSheetTable extends StatelessWidget {
                 const Divider(height: 1),
                 for (final account in report.equityAccounts)
                   _AccountAmountRow(
-                    code: account.accountCode,
                     name: account.accountName,
                     amount: account.amount,
                   ),
                 _AccountAmountRow(
-                  code: '',
                   name: AccountingStrings.currentYearEarnings,
                   amount: report.currentYearEarnings,
                 ),
                 const Divider(height: 1),
                 _AccountAmountRow(
-                  code: '',
                   name: AccountingStrings.totalEquity,
                   amount: report.totalEquity,
                   bold: true,
@@ -934,10 +907,6 @@ class _DayBookJournalCard extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  SizedBox(
-                    width: 72,
-                    child: Text(AccountingStrings.codeLabel, style: headerStyle),
-                  ),
                   Expanded(
                     child: Text(AccountingStrings.nameLabel, style: headerStyle),
                   ),
@@ -966,7 +935,6 @@ class _DayBookJournalCard extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(width: 72, child: Text(line.accountCode)),
                       Expanded(child: Text(line.accountName)),
                       SizedBox(width: 88, child: _MoneyText(line.debit)),
                       SizedBox(width: 88, child: _MoneyText(line.credit)),

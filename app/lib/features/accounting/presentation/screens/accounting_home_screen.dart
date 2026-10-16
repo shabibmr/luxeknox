@@ -334,7 +334,7 @@ class _BankAndCashSection extends StatelessWidget {
   final List<Account> accounts;
 
   bool _isCash(Account account) {
-    return account.name.toLowerCase().contains('cash') || account.code == '1000';
+    return account.isBank && account.name.toLowerCase().contains('cash');
   }
 
   @override

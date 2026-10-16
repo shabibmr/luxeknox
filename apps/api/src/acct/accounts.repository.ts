@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, eq, inArray, like, or, type SQL } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, like, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
@@ -19,23 +19,14 @@ export class AccountsRepository extends BaseRepository<
     super(db, accounts);
   }
 
-  async findByCode(code: string): Promise<Account | null> {
+  async findByName(name: string): Promise<Account | null> {
     const db = this.getDb() as any;
     const rows = await db
       .select()
       .from(accounts)
-      .where(eq(accounts.code, code))
+      .where(eq(accounts.name, name))
       .limit(1);
     return rows[0] ?? null;
-  }
-
-  async listCodesByAccountType(accountType: string): Promise<string[]> {
-    const db = this.getDb() as any;
-    const rows = await db
-      .select({ code: accounts.code })
-      .from(accounts)
-      .where(eq(accounts.account_type, accountType));
-    return rows.map((row: { code: string }) => row.code);
   }
 
   async findByControlRole(role: string): Promise<Account | null> {
@@ -96,7 +87,7 @@ export class AccountsRepository extends BaseRepository<
     }
     if (params.search) {
       const pattern = `%${params.search}%`;
-      conditions.push(or(like(accounts.code, pattern), like(accounts.name, pattern)) as SQL);
+      conditions.push(like(accounts.name, pattern));
     }
 
     const where = conditions.length ? and(...conditions) : undefined;
@@ -109,7 +100,7 @@ export class AccountsRepository extends BaseRepository<
     }
 
     const rows = await listQ
-      .orderBy(asc(accounts.code), asc(accounts.id))
+      .orderBy(asc(accounts.name), asc(accounts.id))
       .limit(params.limit)
       .offset(params.offset);
     const totalRows = await countQ;

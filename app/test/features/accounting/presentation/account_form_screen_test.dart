@@ -43,7 +43,6 @@ void main() {
 
   const tAccount = Account(
     id: 'acc-1',
-    code: '1000',
     name: 'Cash on Hand',
     type: 'asset',
     isActive: true,
@@ -53,7 +52,6 @@ void main() {
 
   const tControlAccount = Account(
     id: 'acc-control',
-    code: '1200',
     name: 'Accounts Receivable',
     type: 'asset',
     isActive: true,
@@ -194,8 +192,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(AccountingStrings.createAccountTitle), findsOneWidget);
-      expect(find.widgetWithText(TextFormField, AccountingStrings.codeLabel),
-          findsNothing);
       expect(find.widgetWithText(TextFormField, AccountingStrings.nameLabel),
           findsOneWidget);
       expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
@@ -270,7 +266,6 @@ void main() {
       await tester.tap(find.widgetWithText(ElevatedButton, AccountingStrings.create));
       await tester.pumpAndSettle();
 
-      expect(find.text(AccountingStrings.codeRequired), findsNothing);
       expect(find.text(AccountingStrings.nameRequired), findsOneWidget);
       expect(find.text(AccountingStrings.typeRequired), findsOneWidget);
 
@@ -366,8 +361,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(AccountingStrings.editAccountTitle), findsOneWidget);
-      expect(find.widgetWithText(TextFormField, AccountingStrings.codeLabel),
-          findsNothing);
       expect(find.text('Cash on Hand'), findsOneWidget);
 
       // Type dropdown is disabled (onChanged is null)

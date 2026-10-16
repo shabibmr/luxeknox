@@ -81,9 +81,9 @@ export class SalesBridgeService {
     }
 
     return runInTransaction(this.db, async () => {
-      const arAccount = await this.accountsRepository.findByCode('1100');
+      const arAccount = await this.accountsRepository.findByControlRole('ar');
       if (!arAccount) {
-        throw new NotFoundError('Accounts receivable account (1100) was not found');
+        throw new NotFoundError('Accounts receivable account was not found');
       }
 
       let creditedAccountId: number;
@@ -94,9 +94,9 @@ export class SalesBridgeService {
 
       if (payment.membership_id != null) {
         isUnearned = true;
-        const unearnedAccount = await this.accountsRepository.findByCode('2200');
+        const unearnedAccount = await this.accountsRepository.findByControlRole('unearned_membership');
         if (!unearnedAccount) {
-          throw new NotFoundError('Unearned membership revenue account (2200) was not found');
+          throw new NotFoundError('Unearned membership revenue account was not found');
         }
         creditedAccountId = unearnedAccount.id;
 
@@ -127,17 +127,17 @@ export class SalesBridgeService {
         }
 
         if (targetIncomeAccountId == null) {
-          const membershipIncomeAccount = await this.accountsRepository.findByCode('4000');
+          const membershipIncomeAccount = await this.accountsRepository.findByName('Membership revenue');
           if (!membershipIncomeAccount) {
-            throw new NotFoundError('Membership revenue account (4000) was not found');
+            throw new NotFoundError('Membership revenue account was not found');
           }
           targetIncomeAccountId = membershipIncomeAccount.id;
         }
       } else if (payment.pt_subscription_id != null) {
         isUnearned = true;
-        const unearnedPtAccount = await this.accountsRepository.findByCode('2210');
+        const unearnedPtAccount = await this.accountsRepository.findByControlRole('unearned_pt');
         if (!unearnedPtAccount) {
-          throw new NotFoundError('Unearned personal training revenue account (2210) was not found');
+          throw new NotFoundError('Unearned personal training revenue account was not found');
         }
         creditedAccountId = unearnedPtAccount.id;
 
@@ -168,9 +168,9 @@ export class SalesBridgeService {
         }
 
         if (targetIncomeAccountId == null) {
-          const ptIncomeAccount = await this.accountsRepository.findByCode('4100');
+          const ptIncomeAccount = await this.accountsRepository.findByName('Personal training revenue');
           if (!ptIncomeAccount) {
-            throw new NotFoundError('Personal training revenue account (4100) was not found');
+            throw new NotFoundError('Personal training revenue account was not found');
           }
           targetIncomeAccountId = ptIncomeAccount.id;
         }
@@ -191,9 +191,9 @@ export class SalesBridgeService {
         if (foundIncomeAccountId != null) {
           creditedAccountId = foundIncomeAccountId;
         } else {
-          const otherSalesAccount = await this.accountsRepository.findByCode('4200');
+          const otherSalesAccount = await this.accountsRepository.findByName('Other sales');
           if (!otherSalesAccount) {
-            throw new NotFoundError('Other sales account (4200) was not found');
+            throw new NotFoundError('Other sales account was not found');
           }
           creditedAccountId = otherSalesAccount.id;
         }
@@ -213,7 +213,7 @@ export class SalesBridgeService {
       // 2. Debit Sales Discounts (4900) when discount > 0
       const discount = roundMoney(String(payment.discount_amount));
       if (cmpMoney(discount, '0') > 0) {
-        const discountAccount = await this.accountsRepository.findByCode('4900');
+        const discountAccount = await this.accountsRepository.findByControlRole('discounts');
         if (discountAccount) {
           lines.push({
             accountId: discountAccount.id,
@@ -259,7 +259,7 @@ export class SalesBridgeService {
 
       const taxGap = subMoney(paymentTax, compTaxSum);
       if (cmpMoney(taxGap, '0') !== 0) {
-        const roundingAccount = await this.accountsRepository.findByCode('5950');
+        const roundingAccount = await this.accountsRepository.findByName('Rounding off');
         if (roundingAccount) {
           if (cmpMoney(taxGap, '0') > 0) {
             lines.push({
@@ -346,9 +346,9 @@ export class SalesBridgeService {
         throw new BusinessRuleError('Payment method has no linked account_id');
       }
 
-      const arAccount = await this.accountsRepository.findByCode('1100');
+      const arAccount = await this.accountsRepository.findByControlRole('ar');
       if (!arAccount) {
-        throw new NotFoundError('Accounts receivable account (1100) was not found');
+        throw new NotFoundError('Accounts receivable account was not found');
       }
 
       const entryDate = toDateString(history.timestamp);
@@ -462,9 +462,9 @@ export class SalesBridgeService {
         }
         creditAccountId = method.accountId;
       } else {
-        const arAccount = await this.accountsRepository.findByCode('1100');
+        const arAccount = await this.accountsRepository.findByControlRole('ar');
         if (!arAccount) {
-          throw new NotFoundError('Accounts receivable account (1100) was not found');
+          throw new NotFoundError('Accounts receivable account was not found');
         }
         creditAccountId = arAccount.id;
       }
@@ -549,9 +549,9 @@ export class SalesBridgeService {
     return runInTransaction(this.db, async () => {
       const adj = roundMoney(options.adjustmentAmount);
       const isDecrease = cmpMoney(adj, '0') < 0;
-      const arAccount = await this.accountsRepository.findByCode('1100');
+      const arAccount = await this.accountsRepository.findByControlRole('ar');
       if (!arAccount) {
-        throw new NotFoundError('Accounts receivable account (1100) was not found');
+        throw new NotFoundError('Accounts receivable account was not found');
       }
       const creditedAccount = await this.resolveCreditedAccount(payment);
       const entryDate = toDateString(history.timestamp);
@@ -710,17 +710,17 @@ export class SalesBridgeService {
 
   private async resolveCreditedAccount(payment: Payment) {
     if (payment.membership_id != null) {
-      const acc = await this.accountsRepository.findByCode('2200');
-      if (!acc) throw new NotFoundError('Account 2200 was not found');
+      const acc = await this.accountsRepository.findByControlRole('unearned_membership');
+      if (!acc) throw new NotFoundError('Unearned membership revenue account was not found');
       return acc;
     }
     if (payment.pt_subscription_id != null) {
-      const acc = await this.accountsRepository.findByCode('2210');
-      if (!acc) throw new NotFoundError('Account 2210 was not found');
+      const acc = await this.accountsRepository.findByControlRole('unearned_pt');
+      if (!acc) throw new NotFoundError('Unearned personal training revenue account was not found');
       return acc;
     }
-    const acc = await this.accountsRepository.findByCode('4200');
-    if (!acc) throw new NotFoundError('Account 4200 was not found');
+    const acc = await this.accountsRepository.findByName('Other sales');
+    if (!acc) throw new NotFoundError('Other sales account was not found');
     return acc;
   }
 

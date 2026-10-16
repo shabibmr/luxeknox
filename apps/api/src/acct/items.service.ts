@@ -156,32 +156,39 @@ export class ItemsService {
     inventoryAccountId: number | null | undefined;
     cogsAccountId: number | null | undefined;
   }): Promise<{ inventoryAccountId: number; cogsAccountId: number }> {
-    const inventoryAccountId = await this.resolveDefaultAccount(
+    const inventoryAccountId = await this.resolveDefaultInventoryAccount(
       input.inventoryAccountId,
-      '1400',
-      'inventory_account_id',
     );
     await this.validateAssetAccount(inventoryAccountId);
 
-    const cogsAccountId = await this.resolveDefaultAccount(
-      input.cogsAccountId,
-      '5050',
-      'cogs_account_id',
-    );
+    const cogsAccountId = await this.resolveDefaultCogsAccount(input.cogsAccountId);
     await this.validateExpenseAccount(cogsAccountId);
 
     return { inventoryAccountId, cogsAccountId };
   }
 
-  private async resolveDefaultAccount(
+  private async resolveDefaultInventoryAccount(
     accountId: number | null | undefined,
-    code: string,
-    field: string,
   ): Promise<number> {
     if (accountId != null) return accountId;
-    const account = await this.repository.findAccountByCode(code);
+    const account = await this.repository.findAccountByControlRole('inventory');
     if (!account || !account.is_active) {
-      throw this.trackedRule(`Default account ${code} was not found`, [field]);
+      throw this.trackedRule('Default inventory account was not found', [
+        'inventory_account_id',
+      ]);
+    }
+    return account.id;
+  }
+
+  private async resolveDefaultCogsAccount(
+    accountId: number | null | undefined,
+  ): Promise<number> {
+    if (accountId != null) return accountId;
+    const account = await this.repository.findAccountByName('Cost of goods sold');
+    if (!account || !account.is_active) {
+      throw this.trackedRule('Default Cost of goods sold account was not found', [
+        'cogs_account_id',
+      ]);
     }
     return account.id;
   }

@@ -228,7 +228,6 @@ class JournalEntryFormCubit extends Cubit<JournalEntryFormState> {
         id: '',
         journalId: '',
         accountId: l.account!.id,
-        accountCode: l.account?.code,
         accountName: l.account?.name,
         debit: l.debit.isEmpty ? '0' : l.debit,
         credit: l.credit.isEmpty ? '0' : l.credit,

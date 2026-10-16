@@ -19,7 +19,6 @@ void main() {
 
   const tAccount1 = Account(
     id: 'acc-1',
-    code: '1000',
     name: 'Cash',
     type: 'asset',
     isActive: true,
@@ -27,7 +26,6 @@ void main() {
 
   const tAccount2 = Account(
     id: 'acc-2',
-    code: '2000',
     name: 'Accounts Payable',
     type: 'liability',
     isActive: true,

@@ -9,7 +9,6 @@ import '../repositories/accounting_repository.dart';
 
 class CreateAccountParams extends Equatable {
   const CreateAccountParams({
-    this.code,
     required this.name,
     required this.accountType,
     this.parentId,
@@ -19,7 +18,6 @@ class CreateAccountParams extends Equatable {
     this.controlRole,
   });
 
-  final String? code;
   final String name;
   final String accountType;
   final String? parentId;
@@ -30,7 +28,6 @@ class CreateAccountParams extends Equatable {
 
   @override
   List<Object?> get props => [
-    code,
     name,
     accountType,
     parentId,
@@ -50,7 +47,6 @@ class CreateAccountUseCase implements UseCase<Account, CreateAccountParams> {
   @override
   Future<Either<Failure, Account>> call(CreateAccountParams params) {
     return _repository.createAccount(
-      code: params.code,
       name: params.name,
       accountType: params.accountType,
       parentId: params.parentId,

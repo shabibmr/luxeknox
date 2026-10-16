@@ -445,7 +445,6 @@ class _PurchaseBillLineItemState extends State<_PurchaseBillLineItem> {
     final selectedAccount = line.accountId != null
         ? Account(
             id: line.accountId!,
-            code: line.accountCode ?? '',
             name: line.accountName ?? line.accountId!,
             type: 'expense',
           )

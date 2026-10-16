@@ -6,7 +6,7 @@ import type { TaxCodesRepository } from './tax-codes.repository';
 
 export interface TaxLineDeps {
   taxCodesRepository: Pick<TaxCodesRepository, 'listComponents'>;
-  accountsRepository: Pick<AccountsRepository, 'findByCode'>;
+  accountsRepository: Pick<AccountsRepository, 'findByName'>;
 }
 
 export interface TaxLineParams {
@@ -23,7 +23,7 @@ export interface TaxLineParams {
 /**
  * Splits a tax amount across a tax code's output components, proportional to their rates
  * (half-up per component). Any cents left over (or over-allocated) go to `5950 Rounding off`,
- * when that account exists, on the matching side.
+ * when that account exists, on the matching side. Looked up by name "Rounding off".
  *
  * Purchase bills post input tax through the control account path, not this helper.
  */
@@ -70,7 +70,7 @@ export async function buildTaxComponentLines(
 
   const taxGapCents = taxAmountCents - compTaxSumCents;
   if (taxGapCents !== 0n) {
-    const roundingAccount = await deps.accountsRepository.findByCode('5950');
+    const roundingAccount = await deps.accountsRepository.findByName('Rounding off');
     if (roundingAccount) {
       const gap = fromCents(taxGapCents > 0n ? taxGapCents : -taxGapCents);
       const gapSide = taxGapCents > 0n ? side : side === 'debit' ? 'credit' : 'debit';

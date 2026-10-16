@@ -10,7 +10,6 @@ vi.mock('../platform/db/transaction-context', () => ({
 const ACCOUNTS: Record<string, Account> = {
   '2200': {
     id: 2200,
-    code: '2200',
     name: 'Unearned membership revenue',
     account_type: 'liability',
     parent_id: null,
@@ -23,7 +22,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '2210': {
     id: 2210,
-    code: '2210',
     name: 'Unearned PT revenue',
     account_type: 'liability',
     parent_id: null,
@@ -36,7 +34,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '4300': {
     id: 4300,
-    code: '4300',
     name: 'Forfeited membership income',
     account_type: 'income',
     parent_id: null,
@@ -77,7 +74,7 @@ describe('RevenueRecognitionPortService', () => {
     postJournal: ReturnType<typeof vi.fn>;
   };
   let accountsRepository: {
-    findByCode: ReturnType<typeof vi.fn>;
+    findByName: ReturnType<typeof vi.fn>;
   };
   let settingsService: {
     getSetting: ReturnType<typeof vi.fn>;
@@ -100,7 +97,8 @@ describe('RevenueRecognitionPortService', () => {
     };
 
     accountsRepository = {
-      findByCode: vi.fn().mockImplementation(async (code: string) => ACCOUNTS[code] ?? null),
+      findByName: vi.fn().mockImplementation(async (name: string) =>
+        Object.values(ACCOUNTS).find((a) => a.name === name) ?? null),
     };
 
     settingsService = {
@@ -347,8 +345,8 @@ describe('RevenueRecognitionPortService', () => {
       });
     });
 
-    it('throws NotFoundError if account 4300 is missing when unearned remaining > 0', async () => {
-      accountsRepository.findByCode.mockResolvedValue(null);
+    it('throws NotFoundError if Forfeited membership income account is missing when unearned remaining > 0', async () => {
+      accountsRepository.findByName.mockResolvedValue(null);
       const schedule = makeSchedule({
         total_amount: '1000.00',
         recognized_amount: '0.00',

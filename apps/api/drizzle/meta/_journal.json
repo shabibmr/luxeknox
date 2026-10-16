@@ -190,6 +190,14 @@
       "when": 1792300000000,
       "tag": "0030_items_item_kind_check",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "5",
+      "when": 1792400000000,
+      "tag": "0031_accounts_drop_code",
+      "breakpoints": true
     }
   ]
 }
+

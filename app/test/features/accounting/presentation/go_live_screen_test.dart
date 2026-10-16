@@ -37,7 +37,6 @@ void main() {
     isActive: true,
     isDigital: false,
     accountId: 10,
-    accountCode: '1000',
     accountName: 'Cash on Hand',
   );
 
@@ -152,7 +151,6 @@ void main() {
 
   const tTestAccount = Account(
     id: '20',
-    code: '1020',
     name: 'UPI Clearing',
     type: 'asset',
     isBank: true,

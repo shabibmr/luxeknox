@@ -197,9 +197,9 @@ export class RevenueRecognitionPortService {
         return;
       }
 
-      const forfeitAccount = await this.accountsRepository.findByCode('4300');
+      const forfeitAccount = await this.accountsRepository.findByName('Forfeited membership income');
       if (!forfeitAccount) {
-        throw new NotFoundError('Forfeited membership income account (4300) was not found');
+        throw new NotFoundError('Forfeited membership income account was not found');
       }
 
       const entryDate = input.cancelDate ?? new Date().toISOString().slice(0, 10);
@@ -281,9 +281,9 @@ export class RevenueRecognitionPortService {
         return;
       }
 
-      const forfeitAccount = await this.accountsRepository.findByCode('4300');
+      const forfeitAccount = await this.accountsRepository.findByName('Forfeited membership income');
       if (!forfeitAccount) {
-        throw new NotFoundError('Forfeited membership income account (4300) was not found');
+        throw new NotFoundError('Forfeited membership income account was not found');
       }
 
       const entryDate = input.cancelDate ?? new Date().toISOString().slice(0, 10);

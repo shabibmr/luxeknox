@@ -84,11 +84,11 @@ export class ExpensesService {
       throw new NotFoundError(`Paid-from account ${accountId} was not found`);
     }
     if (!account.is_active) {
-      throw new BusinessRuleError(`Paid-from account ${account.code} is inactive`);
+      throw new BusinessRuleError(`Paid-from account ${account.name} is inactive`);
     }
     if (!account.is_bank) {
       throw new BusinessRuleError(
-        `Paid-from account ${account.code} must be a bank or cash account (is_bank = true)`,
+        `Paid-from account ${account.name} must be a bank or cash account (is_bank = true)`,
       );
     }
     return account;
@@ -100,7 +100,7 @@ export class ExpensesService {
       throw new NotFoundError(`Account ${accountId} was not found`);
     }
     if (!account.is_active) {
-      throw new BusinessRuleError(`Account ${account.code} is inactive`);
+      throw new BusinessRuleError(`Account ${account.name} is inactive`);
     }
     if (account.account_type !== 'expense' && account.account_type !== 'asset') {
       throw new BusinessRuleError(
@@ -109,7 +109,7 @@ export class ExpensesService {
     }
     if (account.is_control) {
       throw new BusinessRuleError(
-        `Control account ${account.code} cannot be directly posted in expense lines`,
+        `Control account ${account.name} cannot be directly posted in expense lines`,
       );
     }
     return account;
@@ -358,14 +358,9 @@ export class ExpensesService {
     return runInTransaction(this.db, async () => {
       let inputTaxAccountId: number | null = null;
       if (cmpMoney(expense.tax_amount, '0.00') > 0) {
-        let inputTaxAcc = await this.accountsRepository.findByControlRole('input_tax');
+        const inputTaxAcc = await this.accountsRepository.findByControlRole('input_tax');
         if (!inputTaxAcc) {
-          inputTaxAcc = await this.accountsRepository.findByCode('1300');
-        }
-        if (!inputTaxAcc) {
-          throw new BusinessRuleError(
-            'Input tax control account (input_tax / 1300) not found',
-          );
+          throw new BusinessRuleError('Input tax control account (input_tax) not found');
         }
         inputTaxAccountId = inputTaxAcc.id;
       }
@@ -400,14 +395,9 @@ export class ExpensesService {
         });
       } else {
         // Credit expense credits AP
-        let apAcc = await this.accountsRepository.findByControlRole('ap');
+        const apAcc = await this.accountsRepository.findByControlRole('ap');
         if (!apAcc) {
-          apAcc = await this.accountsRepository.findByCode('2000');
-        }
-        if (!apAcc) {
-          throw new BusinessRuleError(
-            'Accounts payable control account (ap / 2000) not found',
-          );
+          throw new BusinessRuleError('Accounts payable control account (ap) not found');
         }
         journalLines.push({
           accountId: apAcc.id,

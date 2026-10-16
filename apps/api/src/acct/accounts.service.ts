@@ -19,27 +19,6 @@ import {
   type AccountUpdateDto,
 } from './accounts.dto';
 
-const CONTROL_ACCOUNT_CODES = new Set([
-  '1100',
-  '1300',
-  '2000',
-  '2100',
-  '2110',
-  '2120',
-  '2200',
-  '2210',
-  '4900',
-]);
-
-/** Starting code band per type; matches seeded CoA thousands. */
-const ACCOUNT_TYPE_CODE_BASE: Record<AccountType, number> = {
-  asset: 1000,
-  liability: 2000,
-  equity: 3000,
-  income: 4000,
-  expense: 5000,
-};
-
 @Injectable()
 export class AccountsService {
   constructor(
@@ -47,29 +26,9 @@ export class AccountsService {
     private readonly paginationHelper: PaginationHelper,
   ) {}
 
-  async allocateCode(accountType: AccountType): Promise<string> {
-    const base = ACCOUNT_TYPE_CODE_BASE[accountType];
-    const codes = await this.repository.listCodesByAccountType(accountType);
-    let max = base - 10;
-    for (const code of codes) {
-      if (!/^\d+$/.test(code)) continue;
-      const n = Number(code);
-      if (n >= base && n > max) max = n;
-    }
-    let next = max + 10;
-    for (let i = 0; i < 100; i++) {
-      const candidate = String(next);
-      const existing = await this.repository.findByCode(candidate);
-      if (!existing) return candidate;
-      next += 10;
-    }
-    throw new BusinessRuleError('Unable to allocate a unique account code');
-  }
-
   toDto(account: Account): AccountDto {
     return {
       id: account.id,
-      code: account.code,
       name: account.name,
       account_type: account.account_type as AccountType,
       parent_id: account.parent_id ?? null,
@@ -115,14 +74,9 @@ export class AccountsService {
   }
 
   async create(dto: AccountCreateDto, _actor: AuthenticatedUser): Promise<AccountDto> {
-    const code =
-      dto.code !== undefined && dto.code.trim() !== ''
-        ? dto.code.trim()
-        : await this.allocateCode(dto.account_type);
-
-    const existing = await this.repository.findByCode(code);
+    const existing = await this.repository.findByName(dto.name);
     if (existing) {
-      throw new ConflictError(`Account with code '${code}' already exists`);
+      throw new ConflictError(`Account with name '${dto.name}' already exists`);
     }
 
     if (dto.parent_id !== null && dto.parent_id !== undefined) {
@@ -134,7 +88,6 @@ export class AccountsService {
 
     const now = new Date();
     const created = await this.repository.insertAccount({
-      code,
       name: dto.name,
       account_type: dto.account_type,
       parent_id: dto.parent_id ?? null,
@@ -170,9 +123,15 @@ export class AccountsService {
     }
 
     if (dto.is_active === false) {
-      const isControlCode = CONTROL_ACCOUNT_CODES.has(account.code);
-      if (account.is_control === true || account.control_role !== null || isControlCode) {
+      if (account.is_control === true || account.control_role !== null) {
         throw new BusinessRuleError('Control accounts used by the system cannot be deactivated');
+      }
+    }
+
+    if (dto.name !== undefined && dto.name !== account.name) {
+      const conflict = await this.repository.findByName(dto.name);
+      if (conflict && conflict.id !== id) {
+        throw new ConflictError(`Account with name '${dto.name}' already exists`);
       }
     }
 

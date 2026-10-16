@@ -11,7 +11,6 @@ import { GoLiveService } from './go-live.service';
 const ACCOUNTS: Record<string, Account> = {
   '2200': {
     id: 2200,
-    code: '2200',
     name: 'Unearned membership revenue',
     account_type: 'liability',
     parent_id: null,
@@ -24,8 +23,7 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '2210': {
     id: 2210,
-    code: '2210',
-    name: 'Unearned PT revenue',
+    name: 'Unearned personal training revenue',
     account_type: 'liability',
     parent_id: null,
     is_active: true,
@@ -37,7 +35,6 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '4000': {
     id: 4000,
-    code: '4000',
     name: 'Membership revenue',
     account_type: 'income',
     parent_id: null,
@@ -50,8 +47,7 @@ const ACCOUNTS: Record<string, Account> = {
   },
   '4100': {
     id: 4100,
-    code: '4100',
-    name: 'PT revenue',
+    name: 'Personal training revenue',
     account_type: 'income',
     parent_id: null,
     is_active: true,
@@ -71,7 +67,10 @@ describe('GoLiveService (ACC-064 & ACC-099)', () => {
 
   beforeEach(() => {
     accountsRepository = {
-      findByCode: vi.fn().mockImplementation(async (code: string) => ACCOUNTS[code] ?? null),
+      findByControlRole: vi.fn().mockImplementation(async (role: string) =>
+        Object.values(ACCOUNTS).find((a) => a.control_role === role) ?? null),
+      findByName: vi.fn().mockImplementation(async (name: string) =>
+        Object.values(ACCOUNTS).find((a) => a.name === name) ?? null),
       findById: vi.fn().mockImplementation(async (id: number) => Object.values(ACCOUNTS).find((a) => a.id === id) ?? null),
     };
 
@@ -150,11 +149,9 @@ describe('GoLiveService (ACC-064 & ACC-099)', () => {
 
       const membItem = preview.items.find((i) => i.kind === 'membership');
       expect(membItem?.unexpired_amount).toBe('1033.33');
-      expect(membItem?.account_code).toBe('2200');
 
       const ptItem = preview.items.find((i) => i.kind === 'pt');
       expect(ptItem?.unexpired_amount).toBe('3100.00');
-      expect(ptItem?.account_code).toBe('2210');
 
       expect(preview.totals.unearned_membership_total).toBe('1033.33');
       expect(preview.totals.unearned_pt_total).toBe('3100.00');
@@ -174,7 +171,6 @@ describe('GoLiveService (ACC-064 & ACC-099)', () => {
           ends_on: '2026-03-31',
           unearned_account_id: 2200,
           income_account_id: 4000,
-          account_code: '2200' as const,
           total_net: '3000.00',
           unexpired_amount: '1033.33',
         },
@@ -229,8 +225,12 @@ describe('GoLiveService (ACC-064 & ACC-099)', () => {
 
       const result = await goLiveService.validateOpeningJournalMatch('2026-03-01');
       expect(result.failingReasons).toHaveLength(2);
-      expect(result.failingReasons[0]).toContain('2200 unearned membership balance (800.00) does not match unearned preview (1000.00)');
-      expect(result.failingReasons[1]).toContain('2210 unearned PT balance (1500.00) does not match unearned preview (2000.00)');
+      expect(result.failingReasons[0]).toContain(
+        'unearned membership balance (800.00) does not match unearned preview (1000.00)',
+      );
+      expect(result.failingReasons[1]).toContain(
+        'unearned personal training balance (1500.00) does not match unearned preview (2000.00)',
+      );
       expect(result.openingJournalFound).toBe(true);
       expect(result.openingJournalMatches).toBe(false);
       expect(result.actual2200).toBe('800.00');
@@ -341,7 +341,6 @@ describe('GoLiveService (ACC-064 & ACC-099)', () => {
                     is_active: true,
                     is_digital: true,
                     account_id: 1010,
-                    account_code: '1010',
                     account_name: 'Bank Account',
                   },
                 ]),
@@ -395,7 +394,6 @@ describe('GoLiveService (ACC-064 & ACC-099)', () => {
         matched: true,
       });
       expect(checklist.payment_methods).toHaveLength(1);
-      expect(checklist.payment_methods[0].account_code).toBe('1010');
       expect(mockSettingsService.checkPostingPrerequisites).toHaveBeenCalledWith({
         goLiveDate: '2026-03-01',
       });
@@ -443,7 +441,6 @@ describe('GoLiveService (ACC-064 & ACC-099)', () => {
                     is_active: true,
                     is_digital: false,
                     account_id: null,
-                    account_code: null,
                     account_name: null,
                   },
                 ]),
@@ -516,7 +513,6 @@ describe('GoLiveService (ACC-064 & ACC-099)', () => {
                   is_active: true,
                   is_digital: false,
                   account_id: 1000,
-                  account_code: '1000',
                   account_name: 'Cash on hand',
                 },
               ]),
@@ -532,7 +528,6 @@ describe('GoLiveService (ACC-064 & ACC-099)', () => {
 
       accountsRepository.findById = vi.fn().mockResolvedValue({
         id: 1000,
-        code: '1000',
         name: 'Cash on hand',
       });
 
@@ -540,7 +535,6 @@ describe('GoLiveService (ACC-064 & ACC-099)', () => {
 
       expect(result.id).toBe(1);
       expect(result.account_id).toBe(1000);
-      expect(result.account_code).toBe('1000');
       expect(result.account_name).toBe('Cash on hand');
       expect(mockDb.update).toHaveBeenCalled();
     });
@@ -562,7 +556,6 @@ describe('GoLiveService (ACC-064 & ACC-099)', () => {
                   is_active: true,
                   is_digital: false,
                   account_id: null,
-                  account_code: null,
                   account_name: null,
                 },
               ]),
@@ -579,7 +572,6 @@ describe('GoLiveService (ACC-064 & ACC-099)', () => {
       const result = await goLiveService.mapPaymentMethodAccount(1, null);
 
       expect(result.account_id).toBeNull();
-      expect(result.account_code).toBeNull();
       expect(result.account_name).toBeNull();
       expect(accountsRepository.findById).not.toHaveBeenCalled();
     });

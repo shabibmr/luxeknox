@@ -420,27 +420,17 @@ export class PurchaseBillsService {
     }
 
     return runInTransaction(this.db, async () => {
-      let apAcc = await this.accountsRepository.findByControlRole('ap');
+      const apAcc = await this.accountsRepository.findByControlRole('ap');
       if (!apAcc) {
-        apAcc = await this.accountsRepository.findByCode('2000');
-      }
-      if (!apAcc) {
-        throw new BusinessRuleError(
-          'Accounts payable control account (ap / 2000) not found',
-        );
+        throw new BusinessRuleError('Accounts payable control account (ap) not found');
       }
       const apAccountId = apAcc.id;
 
       let inputTaxAccountId: number | null = null;
       if (cmpMoney(bill.tax_amount, '0.00') > 0) {
-        let inputTaxAcc = await this.accountsRepository.findByControlRole('input_tax');
+        const inputTaxAcc = await this.accountsRepository.findByControlRole('input_tax');
         if (!inputTaxAcc) {
-          inputTaxAcc = await this.accountsRepository.findByCode('1300');
-        }
-        if (!inputTaxAcc) {
-          throw new BusinessRuleError(
-            'Input tax control account (input_tax / 1300) not found',
-          );
+          throw new BusinessRuleError('Input tax control account (input_tax) not found');
         }
         inputTaxAccountId = inputTaxAcc.id;
       }

@@ -121,7 +121,6 @@ class AccountingStrings {
   static const String totalUnearned = 'Total Unearned';
 
   // Field Labels
-  static const String codeLabel = 'Account Code';
   static const String nameLabel = 'Name';
   static const String typeLabel = 'Account Type';
   static const String descriptionLabel = 'Description';
@@ -162,6 +161,8 @@ class AccountingStrings {
 
   // Accounts Form & Picker
   static const String searchAccounts = 'Search accounts...';
+  static const String searchItems = 'Search by name or code...';
+  static const String selectItem = 'Select an item';
   static const String allTypes = 'All Types';
   static const String allStatuses = 'All Statuses';
   static const String activeOnly = 'Active Only';
@@ -181,7 +182,6 @@ class AccountingStrings {
   static const String accountTypeEquity = 'Equity';
   static const String accountTypeIncome = 'Income';
   static const String accountTypeExpense = 'Expense';
-  static const String codeRequired = 'Account code is required.';
   static const String nameRequired = 'Account name is required.';
   static const String typeRequired = 'Account type is required.';
   static const String accountSavedSuccess = 'Account saved successfully.';
@@ -287,6 +287,7 @@ class AccountingStrings {
   static const String quantityLabel = 'Quantity';
   static const String taxCodeLabel = 'Tax Code';
   static const String itemLabel = 'Item';
+  static const String supplierInvoiceNoLabel = 'Supplier Invoice #';
 
   static const String expenseNumberLabel = 'Expense #';
   static const String payeeLabel = 'Payee';

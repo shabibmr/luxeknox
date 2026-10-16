@@ -24,7 +24,6 @@ void main() {
 
   const tAccount = Account(
     id: 'acc-1',
-    code: '1000',
     name: 'Cash on Hand',
     type: 'asset',
     isActive: true,
@@ -34,7 +33,6 @@ void main() {
 
   const tCreatedAccount = Account(
     id: 'acc-2',
-    code: '1010',
     name: 'Petty Cash',
     type: 'asset',
     isActive: true,
@@ -45,7 +43,6 @@ void main() {
 
   const tUpdatedAccount = Account(
     id: 'acc-1',
-    code: '1000',
     name: 'Cash on Hand Updated',
     type: 'asset',
     isActive: false,
@@ -56,7 +53,6 @@ void main() {
     registerFallbackValue(const GetAccountParams(id: 'dummy'));
     registerFallbackValue(
       const CreateAccountParams(
-        code: 'dummy',
         name: 'dummy',
         accountType: 'asset',
       ),

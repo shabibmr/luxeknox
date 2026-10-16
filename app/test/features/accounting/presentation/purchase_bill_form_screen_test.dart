@@ -127,7 +127,6 @@ void main() {
       lines: const [
         PurchaseBillLineDraft(
           accountId: 'acc-1',
-          accountCode: '5000',
           accountName: 'Equipment',
           description: 'Power Rack',
           quantity: '2',

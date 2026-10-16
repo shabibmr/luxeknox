@@ -17,7 +17,6 @@ void main() {
 
   const tAccount = Account(
     id: '1',
-    code: '1000',
     name: 'Cash on Hand',
     type: 'asset',
     isBank: true,

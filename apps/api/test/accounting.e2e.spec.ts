@@ -75,12 +75,12 @@ describe('Accounting Lifecycle E2E (ACC-081)', () => {
     adminToken = await loginAdmin();
 
     const accountsRepo = testApp.app.get(AccountsRepository);
-    bankAccount = (await accountsRepo.findByCode('1010'))!;
-    equityAccount = (await accountsRepo.findByCode('3000'))!;
-    arAccount = (await accountsRepo.findByCode('1100'))!;
-    unearnedAccount = (await accountsRepo.findByCode('2200'))!;
-    incomeAccount = (await accountsRepo.findByCode('4000'))!;
-    forfeitAccount = (await accountsRepo.findByCode('4300'))!;
+    bankAccount = (await accountsRepo.findByName('Bank'))!;
+    equityAccount = (await accountsRepo.findByName("Owner's capital"))!;
+    arAccount = (await accountsRepo.findByControlRole('ar'))!;
+    unearnedAccount = (await accountsRepo.findByControlRole('unearned_membership'))!;
+    incomeAccount = (await accountsRepo.findByName('Membership revenue'))!;
+    forfeitAccount = (await accountsRepo.findByName('Forfeited membership income'))!;
 
     expect(bankAccount).toBeDefined();
     expect(equityAccount).toBeDefined();
@@ -129,7 +129,7 @@ describe('Accounting Lifecycle E2E (ACC-081)', () => {
       totalDebit = addMoney(totalDebit, unearnedMemb);
     }
     if (cmpMoney(unearnedPt, '0.00') > 0) {
-      const ptAccount = (await accountsRepo.findByCode('2210'))!;
+      const ptAccount = (await accountsRepo.findByControlRole('unearned_pt'))!;
       lines.push({
         account_id: ptAccount.id,
         credit: unearnedPt,
@@ -513,19 +513,19 @@ describe('Accounting Lifecycle E2E (ACC-081)', () => {
     expect(tb.total_debit).toBe('59000.00');
 
     // 2. Account 4000 has the prorated recognized amount (1600.00)
-    const acc4000 = tb.accounts.find((a: any) => a.account_code === '4000');
+    const acc4000 = tb.accounts.find((a: any) => a.account_name === 'Membership revenue');
     expect(acc4000).toBeDefined();
     expect(acc4000?.credit).toBe('1600.00');
     expect(acc4000?.debit).toBe('0.00');
 
     // 3. Account 4300 has the remaining forfeited amount (1400.00)
-    const acc4300 = tb.accounts.find((a: any) => a.account_code === '4300');
+    const acc4300 = tb.accounts.find((a: any) => a.account_name === 'Forfeited membership income');
     expect(acc4300).toBeDefined();
     expect(acc4300?.credit).toBe('1400.00');
     expect(acc4300?.debit).toBe('0.00');
 
     // 4. Account 2200 net balance is zero (fully recognized 1600 + forfeited 1400 = 3000 credited)
-    const acc2200 = tb.accounts.find((a: any) => a.account_code === '2200');
+    const acc2200 = tb.accounts.find((a: any) => a.account_name === 'Unearned membership revenue');
     expect(acc2200).toBeDefined();
     expect(acc2200?.debit).toBe('3000.00');
     expect(acc2200?.credit).toBe('3000.00');
@@ -533,11 +533,11 @@ describe('Accounting Lifecycle E2E (ACC-081)', () => {
     expect(net2200).toBe('0.00');
 
     // 5. Account 1010 Bank holds 50000 opening + 3000 collected = 53000.00 debit
-    const acc1010 = tb.accounts.find((a: any) => a.account_code === '1010');
+    const acc1010 = tb.accounts.find((a: any) => a.account_name === 'Bank');
     expect(acc1010?.debit).toBe('53000.00');
 
     // 6. Account 3000 Owner's capital holds 50000.00 credit
-    const acc3000 = tb.accounts.find((a: any) => a.account_code === '3000');
+    const acc3000 = tb.accounts.find((a: any) => a.account_name === "Owner's capital");
     expect(acc3000?.credit).toBe('50000.00');
 
     // 7. Schedule unearned is zero and 4300 holds the rest

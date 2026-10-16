@@ -51,7 +51,6 @@ class JournalLine extends Equatable {
     required this.id,
     required this.journalId,
     required this.accountId,
-    this.accountCode,
     this.accountName,
     required this.debit,
     required this.credit,
@@ -61,7 +60,6 @@ class JournalLine extends Equatable {
   final String id;
   final String journalId;
   final String accountId;
-  final String? accountCode;
   final String? accountName;
   final String debit;
   final String credit;
@@ -72,7 +70,6 @@ class JournalLine extends Equatable {
     id,
     journalId,
     accountId,
-    accountCode,
     accountName,
     debit,
     credit,

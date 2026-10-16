@@ -21,7 +21,6 @@ void main() {
   final tApiAccount = api.Account((b) {
     b
       ..id = 1
-      ..code = '1000'
       ..name = 'Cash on Hand'
       ..accountType = api.AccountType.asset
       ..isActive = true
@@ -44,7 +43,6 @@ void main() {
   setUpAll(() {
     registerFallbackValue(
       api.AccountCreate((b) => b
-        ..code = '1000'
         ..name = 'Cash'
         ..accountType = api.AccountType.asset),
     );
@@ -95,7 +93,6 @@ void main() {
           expect(page.items.length, 1);
           final acc = page.items.first;
           expect(acc.id, '1');
-          expect(acc.code, '1000');
           expect(acc.name, 'Cash on Hand');
           expect(acc.type, 'asset');
           expect(acc.isBank, isTrue);
@@ -156,7 +153,6 @@ void main() {
           .thenAnswer((_) async => tApiAccount);
 
       final result = await repository.createAccount(
-        code: '1000',
         name: 'Cash on Hand',
         accountType: 'asset',
         isBank: true,
@@ -165,7 +161,7 @@ void main() {
       expect(result.isRight(), isTrue);
       result.fold(
         (failure) => fail('expected right'),
-        (account) => expect(account.code, '1000'),
+        (account) => expect(account.name, 'Cash on Hand'),
       );
     });
 

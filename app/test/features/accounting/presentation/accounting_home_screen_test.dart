@@ -47,7 +47,6 @@ void main() {
 
   const tBankAccount = Account(
     id: '1',
-    code: '1010',
     name: 'Bank of Baroda',
     type: 'asset',
     isBank: true,
@@ -261,19 +260,9 @@ void main() {
     expect(find.text(AccountingStrings.draftDocumentsWarning), findsNothing);
   });
 
-  testWidgets('renders cash and bank accounts with distinct icons based on code and name', (tester) async {
-    const tCashByCode = Account(
-      id: 'c1',
-      code: '1000',
-      name: 'Main Safe',
-      type: 'asset',
-      isBank: true,
-      isActive: true,
-    );
-
+  testWidgets('renders cash and bank accounts with distinct icons based on name', (tester) async {
     const tCashByName = Account(
       id: 'c2',
-      code: '1005',
       name: 'Petty Cash',
       type: 'asset',
       isBank: true,
@@ -282,8 +271,15 @@ void main() {
 
     const tBank = Account(
       id: 'b1',
-      code: '1020',
       name: 'HDFC Current Account',
+      type: 'asset',
+      isBank: true,
+      isActive: true,
+    );
+
+    const tBankNoCashInName = Account(
+      id: 'c1',
+      name: 'Main Safe',
       type: 'asset',
       isBank: true,
       isActive: true,
@@ -292,7 +288,7 @@ void main() {
     when(() => mockCubit.state).thenReturn(
       const AccountingHomeState(
         status: LoadStatus.success,
-        bankAndCashAccounts: [tCashByCode, tCashByName, tBank],
+        bankAndCashAccounts: [tBankNoCashInName, tCashByName, tBank],
       ),
     );
 
@@ -307,10 +303,19 @@ void main() {
     expect(find.text('Petty Cash'), findsOneWidget);
     expect(find.text('HDFC Current Account'), findsOneWidget);
 
-    // 2 cash accounts should have payments_outlined icon
-    expect(find.byIcon(Icons.payments_outlined), findsNWidgets(2));
-    // 1 bank account should have account_balance icon
-    expect(find.byIcon(Icons.account_balance), findsOneWidget);
+    // Cash heuristic: isBank && name contains "cash" (list tile icons are size 20)
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Icon && w.icon == Icons.payments_outlined && w.size == 20,
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Icon && w.icon == Icons.account_balance && w.size == 20,
+      ),
+      findsNWidgets(2),
+    );
   });
 
   testWidgets('pull to refresh invokes cubit load', (tester) async {

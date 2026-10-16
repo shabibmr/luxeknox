@@ -22,7 +22,6 @@ const ADMIN_USER: AuthenticatedUser = {
 
 const SAMPLE_ACCOUNT: Account = {
   id: 10,
-  code: '5000',
   name: 'Rent',
   account_type: 'expense',
   parent_id: null,
@@ -36,7 +35,6 @@ const SAMPLE_ACCOUNT: Account = {
 
 const CONTROL_ACCOUNT: Account = {
   id: 3,
-  code: '1100',
   name: 'Accounts receivable',
   account_type: 'asset',
   parent_id: null,
@@ -55,13 +53,12 @@ describe('AccountsService', () => {
 
   beforeEach(() => {
     repository = {
-      findByCode: vi.fn(),
+      findByName: vi.fn(),
       findById: vi.fn(),
       findByIds: vi.fn(),
       insertAccount: vi.fn(),
       updateAccount: vi.fn(),
       findMany: vi.fn(),
-      listCodesByAccountType: vi.fn(),
     };
     paginationHelper = {
       normalizeParams: vi.fn().mockResolvedValue({ limit: 20, offset: 0 }),
@@ -94,10 +91,10 @@ describe('AccountsService', () => {
       expect(result.data).toHaveLength(1);
       expect(result.data[0]).toMatchObject({
         id: 10,
-        code: '5000',
         name: 'Rent',
         account_type: 'expense',
       });
+      expect(result.data[0]).not.toHaveProperty('code');
       expect(result.meta.total).toBe(1);
     });
   });
@@ -110,7 +107,8 @@ describe('AccountsService', () => {
 
       expect(repository.findById).toHaveBeenCalledWith(10);
       expect(result.id).toBe(10);
-      expect(result.code).toBe('5000');
+      expect(result.name).toBe('Rent');
+      expect(result).not.toHaveProperty('code');
     });
 
     it('throws NotFoundError when account does not exist', async () => {
@@ -124,17 +122,15 @@ describe('AccountsService', () => {
 
   describe('create', () => {
     it('creates a new account successfully', async () => {
-      repository.findByCode.mockResolvedValue(null);
+      repository.findByName.mockResolvedValue(null);
       repository.insertAccount.mockResolvedValue({
         ...SAMPLE_ACCOUNT,
         id: 11,
-        code: '5010',
         name: 'Office Rent',
       });
 
       const result = await service.create(
         {
-          code: '5010',
           name: 'Office Rent',
           account_type: 'expense',
           is_active: true,
@@ -144,10 +140,9 @@ describe('AccountsService', () => {
         ADMIN_USER,
       );
 
-      expect(repository.findByCode).toHaveBeenCalledWith('5010');
+      expect(repository.findByName).toHaveBeenCalledWith('Office Rent');
       expect(repository.insertAccount).toHaveBeenCalledWith(
         expect.objectContaining({
-          code: '5010',
           name: 'Office Rent',
           account_type: 'expense',
           is_active: true,
@@ -156,50 +151,17 @@ describe('AccountsService', () => {
         }),
       );
       expect(result.id).toBe(11);
-      expect(result.code).toBe('5010');
+      expect(result.name).toBe('Office Rent');
+      expect(result).not.toHaveProperty('code');
     });
 
-    it('allocates the next code in the type band when code is omitted', async () => {
-      repository.listCodesByAccountType.mockResolvedValue(['5000', '5050', '5960']);
-      repository.findByCode.mockResolvedValue(null);
-      repository.insertAccount.mockResolvedValue({
-        ...SAMPLE_ACCOUNT,
-        id: 12,
-        code: '5970',
-        name: 'New Expense',
-      });
-
-      const result = await service.create(
-        {
-          name: 'New Expense',
-          account_type: 'expense',
-          is_active: true,
-          is_bank: false,
-          is_control: false,
-        },
-        ADMIN_USER,
-      );
-
-      expect(repository.listCodesByAccountType).toHaveBeenCalledWith('expense');
-      expect(repository.findByCode).toHaveBeenCalledWith('5970');
-      expect(repository.insertAccount).toHaveBeenCalledWith(
-        expect.objectContaining({
-          code: '5970',
-          name: 'New Expense',
-          account_type: 'expense',
-        }),
-      );
-      expect(result.code).toBe('5970');
-    });
-
-    it('throws ConflictError when account code already exists', async () => {
-      repository.findByCode.mockResolvedValue(SAMPLE_ACCOUNT);
+    it('throws ConflictError when account name already exists', async () => {
+      repository.findByName.mockResolvedValue(SAMPLE_ACCOUNT);
 
       await expect(
         service.create(
           {
-            code: '5000',
-            name: 'Duplicate Rent',
+            name: 'Rent',
             account_type: 'expense',
           },
           ADMIN_USER,
@@ -208,13 +170,12 @@ describe('AccountsService', () => {
     });
 
     it('validates parent_id exists when provided on create', async () => {
-      repository.findByCode.mockResolvedValue(null);
+      repository.findByName.mockResolvedValue(null);
       repository.findById.mockResolvedValue(null);
 
       await expect(
         service.create(
           {
-            code: '5020',
             name: 'Sub-rent',
             account_type: 'expense',
             parent_id: 999,
@@ -229,6 +190,7 @@ describe('AccountsService', () => {
   describe('update', () => {
     it('updates allowed account fields successfully', async () => {
       repository.findById.mockResolvedValue(SAMPLE_ACCOUNT);
+      repository.findByName.mockResolvedValue(null);
       repository.updateAccount.mockResolvedValue({
         ...SAMPLE_ACCOUNT,
         name: 'Updated Rent',
@@ -297,7 +259,6 @@ describe('AccountsService', () => {
       const customControl: Account = {
         ...SAMPLE_ACCOUNT,
         id: 20,
-        code: '1999',
         is_control: true,
         control_role: null,
       };
@@ -316,7 +277,6 @@ describe('AccountsService', () => {
       const roleAccount: Account = {
         ...SAMPLE_ACCOUNT,
         id: 21,
-        code: '1998',
         is_control: false,
         control_role: 'discounts',
       };
@@ -331,40 +291,9 @@ describe('AccountsService', () => {
       expect(repository.updateAccount).not.toHaveBeenCalled();
     });
 
-    it.each([
-      '1100',
-      '1300',
-      '2000',
-      '2100',
-      '2110',
-      '2120',
-      '2200',
-      '2210',
-      '4900',
-    ])(
-      'CRITICAL RULE: rejects deactivating seeded control account code %s',
-      async (code) => {
-        const seededAccount: Account = {
-          ...SAMPLE_ACCOUNT,
-          id: 55,
-          code,
-          is_control: false,
-          control_role: null,
-        };
-        repository.findById.mockResolvedValue(seededAccount);
-
-        await expect(
-          service.update(55, { is_active: false }, ADMIN_USER),
-        ).rejects.toMatchObject({
-          name: 'BusinessRuleError',
-          message: 'Control accounts used by the system cannot be deactivated',
-        });
-        expect(repository.updateAccount).not.toHaveBeenCalled();
-      },
-    );
-
     it('allows updating name or is_active: true on control account', async () => {
       repository.findById.mockResolvedValue(CONTROL_ACCOUNT);
+      repository.findByName.mockResolvedValue(null);
       repository.updateAccount.mockResolvedValue({
         ...CONTROL_ACCOUNT,
         name: 'Trade Receivables',
@@ -379,6 +308,19 @@ describe('AccountsService', () => {
 
       expect(result.name).toBe('Trade Receivables');
       expect(repository.updateAccount).toHaveBeenCalled();
+    });
+
+    it('throws ConflictError when renaming to an existing name', async () => {
+      repository.findById.mockResolvedValue(SAMPLE_ACCOUNT);
+      repository.findByName.mockResolvedValue({
+        ...SAMPLE_ACCOUNT,
+        id: 99,
+        name: 'Utilities',
+      });
+
+      await expect(
+        service.update(10, { name: 'Utilities' }, ADMIN_USER),
+      ).rejects.toBeInstanceOf(ConflictError);
     });
   });
 });

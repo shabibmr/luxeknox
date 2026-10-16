@@ -69,7 +69,6 @@ export class ReportsRepository {
     const rows = await db
       .select({
         accountId: accounts.id,
-        accountCode: accounts.code,
         accountName: accounts.name,
         accountType: accounts.account_type,
         debit: sql<string>`COALESCE(SUM(${journalLines.debit}), '0.00')`,
@@ -79,8 +78,8 @@ export class ReportsRepository {
       .innerJoin(journalEntries, eq(journalLines.journal_entry_id, journalEntries.id))
       .innerJoin(accounts, eq(journalLines.account_id, accounts.id))
       .where(and(...conditions))
-      .groupBy(accounts.id, accounts.code, accounts.name, accounts.account_type)
-      .orderBy(asc(accounts.code));
+      .groupBy(accounts.id, accounts.name, accounts.account_type)
+      .orderBy(asc(accounts.name));
 
     const resultAccounts: TrialBalanceAccountDto[] = [];
     for (const row of rows) {
@@ -89,7 +88,6 @@ export class ReportsRepository {
       if (debitCents > 0n || creditCents > 0n) {
         resultAccounts.push({
           account_id: Number(row.accountId),
-          account_code: String(row.accountCode),
           account_name: String(row.accountName),
           account_type: String(row.accountType),
           debit: fromCents(debitCents),
@@ -129,7 +127,6 @@ export class ReportsRepository {
     const rows = await db
       .select({
         accountId: accounts.id,
-        accountCode: accounts.code,
         accountName: accounts.name,
         accountType: accounts.account_type,
         debit: sql<string>`COALESCE(SUM(${journalLines.debit}), '0.00')`,
@@ -139,8 +136,8 @@ export class ReportsRepository {
       .innerJoin(journalEntries, eq(journalLines.journal_entry_id, journalEntries.id))
       .innerJoin(accounts, eq(journalLines.account_id, accounts.id))
       .where(and(...conditions))
-      .groupBy(accounts.id, accounts.code, accounts.name, accounts.account_type)
-      .orderBy(asc(accounts.code));
+      .groupBy(accounts.id, accounts.name, accounts.account_type)
+      .orderBy(asc(accounts.name));
 
     const incomeAccounts: ProfitAndLossAccountDto[] = [];
     const expenseAccounts: ProfitAndLossAccountDto[] = [];
@@ -158,7 +155,6 @@ export class ReportsRepository {
         totalIncomeCents += netCents;
         incomeAccounts.push({
           account_id: Number(r.accountId),
-          account_code: String(r.accountCode),
           account_name: String(r.accountName),
           amount: fromCents(netCents),
         });
@@ -168,7 +164,6 @@ export class ReportsRepository {
         totalExpenseCents += netCents;
         expenseAccounts.push({
           account_id: Number(r.accountId),
-          account_code: String(r.accountCode),
           account_name: String(r.accountName),
           amount: fromCents(netCents),
         });
@@ -225,7 +220,6 @@ export class ReportsRepository {
     const rows = await db
       .select({
         accountId: accounts.id,
-        accountCode: accounts.code,
         accountName: accounts.name,
         accountType: accounts.account_type,
         debit: sql<string>`COALESCE(SUM(${journalLines.debit}), '0.00')`,
@@ -235,8 +229,8 @@ export class ReportsRepository {
       .innerJoin(journalEntries, eq(journalLines.journal_entry_id, journalEntries.id))
       .innerJoin(accounts, eq(journalLines.account_id, accounts.id))
       .where(lte(journalEntries.entry_date, asOf))
-      .groupBy(accounts.id, accounts.code, accounts.name, accounts.account_type)
-      .orderBy(asc(accounts.code));
+      .groupBy(accounts.id, accounts.name, accounts.account_type)
+      .orderBy(asc(accounts.name));
 
     const assetAccounts: BalanceSheetAccountDto[] = [];
     const liabilityAccounts: BalanceSheetAccountDto[] = [];
@@ -256,7 +250,6 @@ export class ReportsRepository {
         totalAssetCents += net;
         assetAccounts.push({
           account_id: Number(r.accountId),
-          account_code: String(r.accountCode),
           account_name: String(r.accountName),
           amount: fromCents(net),
         });
@@ -265,7 +258,6 @@ export class ReportsRepository {
         totalLiabilityCents += net;
         liabilityAccounts.push({
           account_id: Number(r.accountId),
-          account_code: String(r.accountCode),
           account_name: String(r.accountName),
           amount: fromCents(net),
         });
@@ -274,7 +266,6 @@ export class ReportsRepository {
         equityAccountsCents += net;
         equityAccounts.push({
           account_id: Number(r.accountId),
-          account_code: String(r.accountCode),
           account_name: String(r.accountName),
           amount: fromCents(net),
         });
@@ -344,7 +335,6 @@ export class ReportsRepository {
         id: journalLines.id,
         journalEntryId: journalLines.journal_entry_id,
         accountId: journalLines.account_id,
-        accountCode: accounts.code,
         accountName: accounts.name,
         debit: journalLines.debit,
         credit: journalLines.credit,
@@ -365,7 +355,6 @@ export class ReportsRepository {
       const lineDto: DayBookLineDto = {
         id: Number(l.id),
         account_id: Number(l.accountId),
-        account_code: String(l.accountCode),
         account_name: String(l.accountName),
         debit: fromCents(toCents(l.debit)),
         credit: fromCents(toCents(l.credit)),
@@ -543,7 +532,6 @@ export class ReportsRepository {
     const taxAccounts = await db
       .select({
         id: accounts.id,
-        code: accounts.code,
         controlRole: accounts.control_role,
         debit: sql<string>`COALESCE(SUM(${journalLines.debit}), '0.00')`,
         credit: sql<string>`COALESCE(SUM(${journalLines.credit}), '0.00')`,
@@ -563,7 +551,7 @@ export class ReportsRepository {
           lte(journalEntries.entry_date, to),
         ),
       )
-      .groupBy(accounts.id, accounts.code, accounts.control_role);
+      .groupBy(accounts.id, accounts.control_role);
 
     let outputCgstCents = 0n;
     let outputSgstCents = 0n;

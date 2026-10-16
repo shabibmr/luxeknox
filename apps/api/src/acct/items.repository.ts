@@ -107,9 +107,19 @@ export class ItemsRepository extends BaseRepository<
     return rows[0] ?? null;
   }
 
-  async findAccountByCode(code: string): Promise<Account | null> {
+  async findAccountByControlRole(role: string): Promise<Account | null> {
     const db = this.getDb() as any;
-    const rows = await db.select().from(accounts).where(eq(accounts.code, code)).limit(1);
+    const rows = await db
+      .select()
+      .from(accounts)
+      .where(eq(accounts.control_role, role))
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
+  async findAccountByName(name: string): Promise<Account | null> {
+    const db = this.getDb() as any;
+    const rows = await db.select().from(accounts).where(eq(accounts.name, name)).limit(1);
     return rows[0] ?? null;
   }
 

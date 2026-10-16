@@ -17,7 +17,6 @@ const ADMIN_USER: AuthenticatedUser = {
 
 const INCOME_ACCOUNT = {
   id: 4000,
-  code: '4000',
   name: 'Membership revenue',
   account_type: 'income',
   parent_id: null,
@@ -31,7 +30,6 @@ const INCOME_ACCOUNT = {
 
 const EXPENSE_ACCOUNT = {
   id: 5000,
-  code: '5000',
   name: 'Rent',
   account_type: 'expense',
   parent_id: null,
@@ -63,7 +61,6 @@ const UOM = {
 
 const INVENTORY_ACCOUNT = {
   id: 1400,
-  code: '1400',
   name: 'Inventory',
   account_type: 'asset',
   parent_id: null,
@@ -77,7 +74,6 @@ const INVENTORY_ACCOUNT = {
 
 const COGS_ACCOUNT = {
   id: 5050,
-  code: '5050',
   name: 'Cost of goods sold',
   account_type: 'expense',
   parent_id: null,
@@ -130,9 +126,12 @@ describe('ItemsService', () => {
         if (id === 5050) return COGS_ACCOUNT;
         return null;
       }),
-      findAccountByCode: vi.fn().mockImplementation(async (code: string) => {
-        if (code === '1400') return INVENTORY_ACCOUNT;
-        if (code === '5050') return COGS_ACCOUNT;
+      findAccountByControlRole: vi.fn().mockImplementation(async (role: string) => {
+        if (role === 'inventory') return INVENTORY_ACCOUNT;
+        return null;
+      }),
+      findAccountByName: vi.fn().mockImplementation(async (name: string) => {
+        if (name === 'Cost of goods sold') return COGS_ACCOUNT;
         return null;
       }),
       findUomById: vi.fn().mockImplementation(async (id: number) => (id === 1 ? UOM : null)),

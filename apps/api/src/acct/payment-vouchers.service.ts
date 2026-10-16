@@ -254,9 +254,7 @@ export class PaymentVouchersService {
       }
 
       // Resolve Accounts Payable
-      const apAccount =
-        (await this.accountsRepository.findByControlRole('ap')) ??
-        (await this.accountsRepository.findByCode('2000'));
+      const apAccount = await this.accountsRepository.findByControlRole('ap');
       if (!apAccount) {
         throw new BusinessRuleError('Accounts payable account not found');
       }

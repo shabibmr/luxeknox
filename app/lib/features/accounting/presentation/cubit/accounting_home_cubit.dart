@@ -90,7 +90,7 @@ class AccountingHomeCubit extends Cubit<AccountingHomeState> {
             .whereType<Account>()
             .where((a) => a.isBank)
             .toList()
-          ..sort((Account a, Account b) => a.code.compareTo(b.code));
+          ..sort((Account a, Account b) => a.name.compareTo(b.name));
       },
     );
     periodsResult.fold(

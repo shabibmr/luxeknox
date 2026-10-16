@@ -131,9 +131,9 @@ describe('Inventory lite E2E (IL-16)', () => {
 
     adminToken = await loginAdmin();
 
-    const [cash] = await testApp.db.select().from(accounts).where(eq(accounts.code, '1000')).limit(1);
-    const [income] = await testApp.db.select().from(accounts).where(eq(accounts.code, '4250')).limit(1);
-    const [expense] = await testApp.db.select().from(accounts).where(eq(accounts.code, '5000')).limit(1);
+    const [cash] = await testApp.db.select().from(accounts).where(eq(accounts.name, 'Cash')).limit(1);
+    const [income] = await testApp.db.select().from(accounts).where(eq(accounts.name, 'Merchandise sales')).limit(1);
+    const [expense] = await testApp.db.select().from(accounts).where(eq(accounts.name, 'Rent')).limit(1);
     const [pcs] = await testApp.db.select().from(uoms).where(eq(uoms.code, 'PCS')).limit(1);
     const [exempt] = await testApp.db.select().from(taxCodes).where(eq(taxCodes.code, 'exempt')).limit(1);
 

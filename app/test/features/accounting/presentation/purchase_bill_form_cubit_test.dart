@@ -36,7 +36,6 @@ void main() {
   final tVendor = const Vendor(id: 'v-101', name: 'Vendor 1');
   final tAccount = const Account(
     id: 'acc-1',
-    code: '5000',
     name: 'Office Supplies',
     type: 'expense',
   );
@@ -179,7 +178,6 @@ void main() {
     test('helper setters setLineAccount and setLineTaxCode work correctly', () {
       cubit.setLineAccount(0, tAccount);
       expect(cubit.state.lines[0].accountId, 'acc-1');
-      expect(cubit.state.lines[0].accountCode, '5000');
       expect(cubit.state.lines[0].accountName, 'Office Supplies');
 
       cubit.setLineTaxCode(0, tTaxCode);
