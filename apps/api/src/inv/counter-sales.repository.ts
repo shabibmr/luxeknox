@@ -213,6 +213,40 @@ export class CounterSalesRepository extends BaseRepository<
       .where(eq(counterSales.id, id));
   }
 
+  /** Line ids in insert order — used to attach stock movements and freeze costs (IL-31). */
+  async listLineIds(saleId: number): Promise<Array<{ id: number; item_id: number; quantity: string }>> {
+    const db = this.getDb() as any;
+    return db
+      .select({
+        id: counterSaleLines.id,
+        item_id: counterSaleLines.item_id,
+        quantity: counterSaleLines.quantity,
+      })
+      .from(counterSaleLines)
+      .where(eq(counterSaleLines.counter_sale_id, saleId))
+      .orderBy(asc(counterSaleLines.id));
+  }
+
+  async updateLineCosts(
+    lineId: number,
+    unitCost: string,
+    costAmount: string,
+  ): Promise<void> {
+    const db = this.getDb() as any;
+    await db
+      .update(counterSaleLines)
+      .set({ unit_cost: unitCost, cost_amount: costAmount })
+      .where(eq(counterSaleLines.id, lineId));
+  }
+
+  async updateCogsAmount(saleId: number, cogsAmount: string): Promise<void> {
+    const db = this.getDb() as any;
+    await db
+      .update(counterSales)
+      .set({ cogs_amount: cogsAmount, updated_at: new Date() })
+      .where(eq(counterSales.id, saleId));
+  }
+
   async findDetail(id: number): Promise<CounterSaleDetail | null> {
     const db = this.getDb() as any;
     const headers = await db

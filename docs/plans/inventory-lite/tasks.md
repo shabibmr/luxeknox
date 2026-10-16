@@ -36,7 +36,7 @@ Start a task when every ID in *Needs* is `[x]`.
 
 | ID | Status | Task | Needs | Done when |
 |---|---|---|---|---|
-| IL-31 | `[ ]` | Rework counter sale (IL-14) to use the ledger: issue tracked lines at average cost, freeze `unit_cost` and `cost_amount`, add Dr `5050` / Cr `1400` per tracked line to the same journal. Update the IL-14 specs | IL-14, IL-30 | Journal balances with COGS; a service-only sale has no COGS; selling above on-hand is refused and nothing is posted |
+| IL-31 | `[x]` | Rework counter sale (IL-14) to use the ledger: issue tracked lines at average cost, freeze `unit_cost` and `cost_amount`, add Dr `5050` / Cr `1400` per tracked line to the same journal. Update the IL-14 specs | IL-14, IL-30 | Journal balances with COGS; a service-only sale has no COGS; selling above on-hand is refused and nothing is posted |
 | IL-33 | `[ ]` | Purchase bill post hook: tracked lines debit Inventory and `receive` stock at `net_amount`, in the posting transaction. Replay of a post receives nothing twice. Responses add `item_name`, `uom_code`, `inventory_tracked`, `returned_quantity` (0) | IL-30, IL-32 | Posting a bill for 10 units sets `item_stock` to 10 and debits `1400` for the net; a locked period rolls back journal and stock; a second post returns the original journal |
 | IL-34 | `[ ]` | Refuse debit notes against bills with tracked lines (`debit_note_tracked_deferred`). Land it straight after IL-33 so no tracked bill can be debit-noted without a stock reversal | IL-33 | Service-only bills still take debit notes; a tracked bill gives 422 |
 

@@ -11,6 +11,7 @@ import { saleWriteSchema, type SaleWrite } from './counter-sales.dto';
 import type { CounterSalesRepository, CounterSaleDetail } from './counter-sales.repository';
 import { CounterSalesService } from './counter-sales.service';
 import type { InventoryItemRow, InventoryItemsRepository } from './items.repository';
+import type { StockService } from './stock.service';
 
 vi.mock('../platform/db/transaction-context', () => ({
   runInTransaction: async (_db: unknown, fn: () => Promise<unknown>) => {
@@ -142,6 +143,9 @@ describe('CounterSalesService', () => {
     attachJournal: ReturnType<typeof vi.fn>;
     findDetail: ReturnType<typeof vi.fn>;
     findMany: ReturnType<typeof vi.fn>;
+    listLineIds: ReturnType<typeof vi.fn>;
+    updateLineCosts: ReturnType<typeof vi.fn>;
+    updateCogsAmount: ReturnType<typeof vi.fn>;
   };
   let itemsRepository: { findReadById: ReturnType<typeof vi.fn> };
   let taxCodesRepository: {
@@ -150,6 +154,7 @@ describe('CounterSalesService', () => {
   };
   let accountsRepository: { findByCode: ReturnType<typeof vi.fn> };
   let postingService: { postJournal: ReturnType<typeof vi.fn> };
+  let stockService: { issue: ReturnType<typeof vi.fn>; receive: ReturnType<typeof vi.fn> };
   let paginationHelper: { normalizeParams: ReturnType<typeof vi.fn> };
   let service: CounterSalesService;
 
@@ -179,6 +184,9 @@ describe('CounterSalesService', () => {
       attachJournal: vi.fn().mockResolvedValue(undefined),
       findDetail: vi.fn().mockImplementation(async (id: number) => detailFor(id)),
       findMany: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
+      listLineIds: vi.fn().mockResolvedValue([{ id: 1, item_id: 10, quantity: '2.000' }]),
+      updateLineCosts: vi.fn().mockResolvedValue(undefined),
+      updateCogsAmount: vi.fn().mockResolvedValue(undefined),
     };
     itemsRepository = { findReadById: vi.fn().mockResolvedValue(ITEM) };
     taxCodesRepository = {
@@ -195,6 +203,10 @@ describe('CounterSalesService', () => {
         return { id: 77, journal_number: 'JRN00000077', lines: [] };
       }),
     };
+    stockService = {
+      issue: vi.fn(),
+      receive: vi.fn(),
+    };
     paginationHelper = {
       normalizeParams: vi.fn().mockResolvedValue({ limit: 20, offset: 0 }),
     };
@@ -204,6 +216,7 @@ describe('CounterSalesService', () => {
       taxCodesRepository as unknown as TaxCodesRepository,
       accountsRepository as unknown as AccountsRepository,
       postingService as unknown as AccountingPostingService,
+      stockService as unknown as StockService,
       {} as never,
       paginationHelper as unknown as PaginationHelper,
     );
@@ -263,6 +276,7 @@ describe('CounterSalesService', () => {
       ]),
     );
     expect(posted.lines.some((line: PostJournalLineInput) => line.accountId === 5050)).toBe(false);
+    expect(stockService.issue).not.toHaveBeenCalled();
     expect(salesRepository.attachJournal).toHaveBeenCalledWith(50, 77);
   });
 
@@ -401,6 +415,111 @@ describe('CounterSalesService', () => {
   it('returns 404 for an unknown sale', async () => {
     salesRepository.findDetail.mockResolvedValue(null);
     await expect(service.getById(99, ACTOR)).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  describe('IL-31 stock issue and COGS', () => {
+    const TRACKED: InventoryItemRow = {
+      ...ITEM,
+      inventory_tracked: true,
+      inventory_account_id: 1400,
+      cogs_account_id: 5050,
+    };
+
+    it('issues stock, freezes costs, and posts balanced COGS for tracked lines', async () => {
+      itemsRepository.findReadById.mockResolvedValue(TRACKED);
+      stockService.issue.mockResolvedValue({
+        qtyOnHand: '13.000',
+        stockValue: '1430.00',
+        avgCost: '110.0000',
+        unitCost: '110.0000',
+        value: '220.00',
+      });
+      salesRepository.findDetail.mockImplementation(async (id: number) => {
+        const d = detailFor(id);
+        return {
+          ...d,
+          cogs_amount: '220.00',
+          lines: [
+            {
+              ...d.lines[0]!,
+              unit_cost: '110.0000',
+              cost_amount: '220.00',
+            },
+          ],
+        };
+      });
+
+      const sale = await service.create(splitSale, ACTOR);
+
+      expect(stockService.issue).toHaveBeenCalledWith(10, '2.000', {
+        sourceType: 'counter_sale',
+        sourceId: 50,
+        sourceLineId: 1,
+        movementDate: '2026-10-16',
+      });
+      expect(salesRepository.updateLineCosts).toHaveBeenCalledWith(1, '110.0000', '220.00');
+      expect(salesRepository.updateCogsAmount).toHaveBeenCalledWith(50, '220.00');
+      expect(sale.cogs_amount).toBe('220.00');
+      expect(sale.lines[0]?.unit_cost).toBe('110.0000');
+      expect(sale.lines[0]?.cost_amount).toBe('220.00');
+
+      const posted = postingService.postJournal.mock.calls[0][0];
+      const totals = sideTotals(posted.lines);
+      expect(totals.debit).toBe(totals.credit);
+      expect(totals.debit).toBe(toCents('456.00')); // 236 sale + 220 COGS
+      expect(posted.lines).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ accountId: 5050, debit: '220.00' }),
+          expect.objectContaining({ accountId: 1400, credit: '220.00' }),
+        ]),
+      );
+    });
+
+    it('posts no COGS for a service-only (untracked) sale', async () => {
+      const serviceItem: InventoryItemRow = {
+        ...ITEM,
+        item_kind: 'service',
+        inventory_tracked: false,
+        inventory_account_id: null,
+        cogs_account_id: null,
+      };
+      itemsRepository.findReadById.mockResolvedValue(serviceItem);
+
+      await service.create(splitSale, ACTOR);
+
+      expect(stockService.issue).not.toHaveBeenCalled();
+      expect(salesRepository.updateLineCosts).not.toHaveBeenCalled();
+      expect(salesRepository.updateCogsAmount).not.toHaveBeenCalled();
+      const posted = postingService.postJournal.mock.calls[0][0];
+      expect(posted.lines.some((line: PostJournalLineInput) => line.accountId === 5050)).toBe(
+        false,
+      );
+      expect(posted.lines.some((line: PostJournalLineInput) => line.accountId === 1400)).toBe(
+        false,
+      );
+    });
+
+    it('refuses selling above on-hand and does not post a journal', async () => {
+      itemsRepository.findReadById.mockResolvedValue(TRACKED);
+      stockService.issue.mockRejectedValue(
+        new BusinessRuleError('Insufficient stock on hand', [
+          { rule: 'insufficient_stock', item_id: 10, requested: '2.000', available: '1.000' },
+        ]),
+      );
+
+      await expect(service.create(splitSale, ACTOR)).rejects.toMatchObject({
+        details: [
+          expect.objectContaining({
+            rule: 'insufficient_stock',
+            item_id: 10,
+            requested: '2.000',
+            available: '1.000',
+          }),
+        ],
+      });
+      expect(postingService.postJournal).not.toHaveBeenCalled();
+      expect(salesRepository.attachJournal).not.toHaveBeenCalled();
+    });
   });
 });
 

@@ -20,6 +20,8 @@ import {
   counterSaleLines,
   counterSales,
   counterSaleTenders,
+  itemStock,
+  stockMovements,
 } from '../src/platform/db/schema/inventory';
 import { paymentMethods } from '../src/platform/db/schema/payments';
 import { toCents } from '../src/platform/money/money';
@@ -116,6 +118,8 @@ describe('Inventory lite E2E (IL-16)', () => {
       }
     }
 
+    await testApp.db.delete(stockMovements).where(inArray(stockMovements.item_id, itemIds));
+    await testApp.db.delete(itemStock).where(inArray(itemStock.item_id, itemIds));
     await testApp.db.delete(items).where(inArray(items.id, itemIds));
   }
 
@@ -229,6 +233,15 @@ describe('Inventory lite E2E (IL-16)', () => {
   });
 
   it('IL-14: posts a counter sale with a balanced journal and refuses tender mismatch', async () => {
+    // IL-31: tracked sales issue stock — seed on-hand so the create path can post COGS.
+    await testApp.db.insert(itemStock).values({
+      item_id: itemId,
+      qty_on_hand: '10.000',
+      stock_value: '1000.00',
+      avg_cost: '100.0000',
+      row_version: 1,
+    });
+
     const mismatch = await authJson(
       'POST',
       '/inventory/sales',
@@ -271,17 +284,21 @@ describe('Inventory lite E2E (IL-16)', () => {
       sale_number: string;
       total_amount: string;
       tax_amount: string;
+      cogs_amount: string;
       journal_entry_id: number;
       journal_number: string;
-      lines: unknown[];
+      lines: Array<{ unit_cost: string | null; cost_amount: string | null }>;
       tenders: unknown[];
     };
     expect(sale.sale_number).toMatch(/^SAL-/);
     expect(sale.total_amount).toBe('200.00');
     expect(sale.tax_amount).toBe('0.00');
+    expect(sale.cogs_amount).toBe('200.00');
     expect(sale.journal_entry_id).toBeGreaterThan(0);
     expect(sale.journal_number).toMatch(/^JRN/);
     expect(sale.lines).toHaveLength(1);
+    expect(sale.lines[0]?.unit_cost).toBe('100.0000');
+    expect(sale.lines[0]?.cost_amount).toBe('200.00');
     expect(sale.tenders).toHaveLength(2);
 
     saleId = sale.id;
@@ -299,7 +316,8 @@ describe('Inventory lite E2E (IL-16)', () => {
       if (line.credit != null) credit += toCents(String(line.credit));
     }
     expect(debit).toBe(credit);
-    expect(debit).toBe(toCents('200.00'));
+    // Sale total 200 + COGS 200
+    expect(debit).toBe(toCents('400.00'));
 
     const replay = await authJson(
       'POST',

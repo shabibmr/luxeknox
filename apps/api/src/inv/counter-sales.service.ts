@@ -30,6 +30,7 @@ import {
   type SalePaymentMethodRow,
 } from './counter-sales.repository';
 import { InventoryItemsRepository, type InventoryItemRow } from './items.repository';
+import { StockService } from './stock.service';
 
 interface PreparedLine {
   item_id: number;
@@ -39,9 +40,16 @@ interface PreparedLine {
   discount_amount: string;
   tax_code_id: number | null;
   income_account_id: number;
+  inventory_tracked: boolean;
+  inventory_account_id: number | null;
+  cogs_account_id: number | null;
   gross: string;
   net_amount: string;
   tax_amount: string;
+  /** Set after stock issue for tracked lines. */
+  unit_cost: string | null;
+  cost_amount: string | null;
+  source_line_id: number | null;
 }
 
 interface PreparedTender {
@@ -69,6 +77,7 @@ export class CounterSalesService {
     private readonly taxCodesRepository: TaxCodesRepository,
     private readonly accountsRepository: AccountsRepository,
     private readonly postingService: AccountingPostingService,
+    private readonly stockService: StockService,
     @Inject(DRIZZLE_DB_TOKEN) private readonly db: DrizzleDb<any>,
     private readonly paginationHelper: PaginationHelper,
   ) {}
@@ -245,7 +254,47 @@ export class CounterSalesService {
         })),
       );
 
-      const journalLines = await this.buildJournalLines(preparedLines, preparedTenders, saleNumber, memberId);
+      const insertedLines = await this.salesRepository.listLineIds(saleId);
+      if (insertedLines.length !== preparedLines.length) {
+        throw new Error(`Counter sale ${saleId} line count mismatch after insert`);
+      }
+
+      let cogsAmount = '0.00';
+      for (let i = 0; i < preparedLines.length; i++) {
+        const line = preparedLines[i]!;
+        const inserted = insertedLines[i]!;
+        line.source_line_id = inserted.id;
+        if (!line.inventory_tracked) continue;
+
+        if (line.cogs_account_id == null || line.inventory_account_id == null) {
+          throw new BusinessRuleError(
+            `Tracked item ${line.item_id} is missing COGS or inventory account`,
+            [{ rule: 'tracked_item_accounts_missing', item_id: line.item_id }],
+          );
+        }
+
+        const issued = await this.stockService.issue(line.item_id, line.quantity, {
+          sourceType: 'counter_sale',
+          sourceId: saleId,
+          sourceLineId: inserted.id,
+          movementDate: saleDate,
+        });
+        line.unit_cost = issued.unitCost;
+        line.cost_amount = issued.value;
+        cogsAmount = addMoney(cogsAmount, issued.value);
+        await this.salesRepository.updateLineCosts(inserted.id, issued.unitCost, issued.value);
+      }
+
+      if (cmpMoney(cogsAmount, '0.00') !== 0) {
+        await this.salesRepository.updateCogsAmount(saleId, cogsAmount);
+      }
+
+      const journalLines = await this.buildJournalLines(
+        preparedLines,
+        preparedTenders,
+        saleNumber,
+        memberId,
+      );
       const journal = await this.postingService.postJournal({
         entryDate: saleDate,
         sourceType: 'counter_sale',
@@ -338,9 +387,15 @@ export class CounterSalesService {
         discount_amount: discount,
         tax_code_id: taxCodeId,
         income_account_id: item.income_account_id,
+        inventory_tracked: Boolean(item.inventory_tracked),
+        inventory_account_id: item.inventory_account_id ?? null,
+        cogs_account_id: item.cogs_account_id ?? null,
         gross,
         net_amount: net,
         tax_amount: taxAmount,
+        unit_cost: null,
+        cost_amount: null,
+        source_line_id: null,
       });
     }
 
@@ -418,6 +473,25 @@ export class CounterSalesService {
         },
       );
       journalLines.push(...taxLines);
+
+      if (
+        line.inventory_tracked &&
+        line.cost_amount != null &&
+        cmpMoney(line.cost_amount, '0.00') > 0 &&
+        line.cogs_account_id != null &&
+        line.inventory_account_id != null
+      ) {
+        journalLines.push({
+          accountId: line.cogs_account_id,
+          debit: line.cost_amount,
+          memo: `COGS ${line.item_name}`,
+        });
+        journalLines.push({
+          accountId: line.inventory_account_id,
+          credit: line.cost_amount,
+          memo: `Inventory out ${line.item_name}`,
+        });
+      }
     }
     return journalLines;
   }
