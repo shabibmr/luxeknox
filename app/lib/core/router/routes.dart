@@ -196,6 +196,11 @@ class Routes {
   static const String adminPaymentsDetail = '/admin/payments/:id';
   static const String adminPaymentsOutstanding = '/admin/payments/outstanding';
 
+  // Inventory (More branch)
+  static const String adminInventoryItems = '/admin/inventory/items';
+  static const String adminInventoryCounterSale =
+      '/admin/inventory/counter-sale';
+
   // Accounting Stack
   static const String adminAccounting = '/admin/accounting';
   static const String adminAccountingAccounts = '/admin/accounting/accounts';

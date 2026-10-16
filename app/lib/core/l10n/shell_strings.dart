@@ -94,6 +94,8 @@ abstract final class ShellStrings {
   static const reports = 'Reports';
   static const settings = 'Settings';
   static const systemAlerts = 'System Alerts';
+  static const inventoryItems = 'Items';
+  static const counterSale = 'Counter Sale';
 
   static const notFoundTitle = 'Page not found';
   static const notFoundMessage = 'This link does not match any screen.';

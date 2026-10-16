@@ -51,9 +51,13 @@ class DestinationHubItem {
     required this.title,
     required this.path,
     this.icon,
+    this.requiredCapability,
   });
 
   final String title;
   final String path;
   final IconData? icon;
+
+  /// Permission slug needed to show this tile; null means always shown.
+  final String? requiredCapability;
 }

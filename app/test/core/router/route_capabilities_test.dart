@@ -10,6 +10,17 @@ void main() {
       expect(RouteCapabilities.requiredSlug(Routes.memberHome), isNull);
     });
 
+    test('gates inventory routes', () {
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminInventoryItems),
+        'inventory.read',
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminInventoryCounterSale),
+        'inventory.sales_write',
+      );
+    });
+
     test('matches specific create/mutate prefixes', () {
       expect(
         RouteCapabilities.requiredSlug(Routes.adminMembershipsCreate),

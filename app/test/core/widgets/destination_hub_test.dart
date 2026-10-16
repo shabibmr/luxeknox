@@ -135,8 +135,39 @@ void main() {
       expect(find.text(label), findsWidgets);
     }
 
+    await tester.scrollUntilVisible(
+      find.text('Member Goals'),
+      -300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('Member Goals'));
     await tester.pumpAndSettle();
     expect(find.text('Member Goals page'), findsOneWidget);
+  });
+
+  testWidgets('MoreHubScreen hides inventory tiles without capability', (
+    tester,
+  ) async {
+    Future<void> pump(bool Function(String) canAccess) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MoreHubScreen(onOpenPath: (_) {}, canAccess: canAccess),
+        ),
+      );
+    }
+
+    await pump((_) => false);
+    await tester.scrollUntilVisible(find.text('System Alerts'), 200);
+    expect(find.text('Items'), findsNothing);
+    expect(find.text('Counter Sale'), findsNothing);
+
+    await pump((slug) => slug == 'inventory.read');
+    await tester.scrollUntilVisible(find.text('Items'), 200);
+    expect(find.text('Items'), findsOneWidget);
+    expect(find.text('Counter Sale'), findsNothing);
+
+    await pump((_) => true);
+    await tester.scrollUntilVisible(find.text('Counter Sale'), 200);
+    expect(find.text('Counter Sale'), findsOneWidget);
   });
 }

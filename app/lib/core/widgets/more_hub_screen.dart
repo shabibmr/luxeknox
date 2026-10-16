@@ -10,7 +10,15 @@ import 'destination_hub_screen.dart';
 /// [footer] is optional so callers in the router layer can inject
 /// feature widgets (e.g. sign-out) without core importing features.
 class MoreHubScreen extends StatelessWidget {
-  const MoreHubScreen({super.key, required this.onOpenPath, this.footer});
+  const MoreHubScreen({
+    super.key,
+    required this.onOpenPath,
+    this.footer,
+    this.canAccess,
+  });
+
+  /// Decides whether a gated tile is shown; null shows every tile.
+  final bool Function(String slug)? canAccess;
 
   /// Called when a hub tile is tapped, after navigation.
   final ValueChanged<String> onOpenPath;
@@ -99,13 +107,28 @@ class MoreHubScreen extends StatelessWidget {
       title: ShellStrings.systemAlerts,
       path: Routes.adminAlerts,
     ),
+    DestinationHubItem(
+      title: ShellStrings.inventoryItems,
+      path: Routes.adminInventoryItems,
+      requiredCapability: 'inventory.read',
+    ),
+    DestinationHubItem(
+      title: ShellStrings.counterSale,
+      path: Routes.adminInventoryCounterSale,
+      requiredCapability: 'inventory.sales_write',
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
     return DestinationHubScreen(
       title: ShellStrings.moreHubTitle,
-      items: _items,
+      items: [
+        for (final item in _items)
+          if (item.requiredCapability == null ||
+              (canAccess?.call(item.requiredCapability!) ?? true))
+            item,
+      ],
       footer: footer,
       onSelected: onOpenPath,
     );

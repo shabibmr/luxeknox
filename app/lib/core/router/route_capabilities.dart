@@ -16,6 +16,8 @@ abstract final class RouteCapabilities {
     ('/admin/payments/record', 'payments.create'),
     ('/admin/payments/methods', 'payments.read'),
     ('/admin/payments/outstanding', 'payments.read'),
+    ('/admin/inventory/counter-sale', 'inventory.sales_write'),
+    ('/admin/inventory', 'inventory.read'),
     ('/admin/accounting/journals/create', 'accounting.journals_write'),
     ('/admin/accounting/accounts/create', 'accounting.accounts_write'),
     ('/admin/accounting/vendors/create', 'accounting.vendors_write'),

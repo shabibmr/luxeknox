@@ -627,6 +627,16 @@ StatefulShellRoute createAdminBranchRoute() {
             builder: (context, state) => const SystemAlertsScreen(),
           ),
           GoRoute(
+            path: Routes.adminInventoryItems,
+            builder: (context, state) =>
+                const PlaceholderScreen(title: ShellStrings.inventoryItems),
+          ),
+          GoRoute(
+            path: Routes.adminInventoryCounterSale,
+            builder: (context, state) =>
+                const PlaceholderScreen(title: ShellStrings.counterSale),
+          ),
+          GoRoute(
             path: Routes.adminPackages,
             builder: (context, state) =>
                 const MembershipPackagesCatalogScreen(),
@@ -903,6 +913,9 @@ class _AdminAdaptiveShellState extends State<_AdminAdaptiveShell> {
           if (showHub)
             Positioned.fill(
               child: MoreHubScreen(
+                canAccess: (slug) =>
+                    session is SessionAuthenticated &&
+                    session.capabilities.can(slug),
                 onOpenPath: (_) {
                   setState(() => _showMoreHub = false);
                 },
