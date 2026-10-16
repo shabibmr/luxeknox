@@ -17,19 +17,16 @@ class ExpenseFormLineDraft extends Equatable {
     this.account,
     this.description = '',
     this.amount = '',
-    this.taxCodeId,
   });
 
   final Account? account;
   final String description;
   final String amount;
-  final String? taxCodeId;
 
   ExpenseFormLineDraft copyWith({
     Object? account = _sentinel,
     String? description,
     String? amount,
-    Object? taxCodeId = _sentinel,
   }) {
     return ExpenseFormLineDraft(
       account: identical(account, _sentinel)
@@ -37,14 +34,11 @@ class ExpenseFormLineDraft extends Equatable {
           : (account as Account?),
       description: description ?? this.description,
       amount: amount ?? this.amount,
-      taxCodeId: identical(taxCodeId, _sentinel)
-          ? this.taxCodeId
-          : (taxCodeId as String?),
     );
   }
 
   @override
-  List<Object?> get props => [account, description, amount, taxCodeId];
+  List<Object?> get props => [account, description, amount];
 }
 
 class ExpenseFormState extends Equatable {
@@ -198,7 +192,6 @@ class ExpenseFormCubit extends Cubit<ExpenseFormState> {
     Object? account = _sentinel,
     String? description,
     String? amount,
-    Object? taxCodeId = _sentinel,
   }) {
     if (index < 0 || index >= state.lines.length) return;
     final current = state.lines[index];
@@ -206,7 +199,6 @@ class ExpenseFormCubit extends Cubit<ExpenseFormState> {
       account: account,
       description: description,
       amount: amount,
-      taxCodeId: taxCodeId,
     );
     final updatedLines = List<ExpenseFormLineDraft>.from(state.lines);
     updatedLines[index] = updated;
@@ -227,7 +219,6 @@ class ExpenseFormCubit extends Cubit<ExpenseFormState> {
         quantity: '1',
         unitPrice: l.amount,
         amount: l.amount,
-        taxCodeId: l.taxCodeId,
       );
     }).toList();
 

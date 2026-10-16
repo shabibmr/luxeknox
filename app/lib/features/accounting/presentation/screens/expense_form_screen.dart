@@ -334,44 +334,20 @@ class _ExpenseLineCard extends StatelessWidget {
               },
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: TextFormField(
-                    key: Key('line_amount_field_$index'),
-                    initialValue: line.amount,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: AccountingStrings.amountLabel,
-                      prefixText: '\$ ',
-                    ),
-                    onChanged: (amt) {
-                      context
-                          .read<ExpenseFormCubit>()
-                          .updateLine(index, amount: amt);
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 2,
-                  child: TextFormField(
-                    key: Key('line_tax_code_field_$index'),
-                    initialValue: line.taxCodeId ?? '',
-                    decoration: const InputDecoration(
-                      labelText: AccountingStrings.taxCodeLabel,
-                    ),
-                    onChanged: (tc) {
-                      context.read<ExpenseFormCubit>().updateLine(
-                            index,
-                            taxCodeId: tc.trim().isEmpty ? null : tc.trim(),
-                          );
-                    },
-                  ),
-                ),
-              ],
+            TextFormField(
+              key: Key('line_amount_field_$index'),
+              initialValue: line.amount,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: AccountingStrings.amountLabel,
+                prefixText: '\$ ',
+              ),
+              onChanged: (amt) {
+                context
+                    .read<ExpenseFormCubit>()
+                    .updateLine(index, amount: amt);
+              },
             ),
           ],
         ),
