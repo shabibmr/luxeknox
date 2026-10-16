@@ -16,7 +16,7 @@ Method | HTTP request | Description
 [**createItem**](ACCTApi.md#createitem) | **POST** /accounting/items | Create item
 [**createJournal**](ACCTApi.md#createjournal) | **POST** /accounting/journals | Create a manual or opening-balance journal
 [**createPaymentVoucher**](ACCTApi.md#createpaymentvoucher) | **POST** /accounting/payment-vouchers | Create a draft payment voucher
-[**createPurchaseBill**](ACCTApi.md#createpurchasebill) | **POST** /accounting/purchase-bills | Create a draft purchase bill
+[**createPurchaseBill**](ACCTApi.md#createpurchasebill) | **POST** /accounting/purchase-bills | Create and post a purchase bill
 [**createTaxCode**](ACCTApi.md#createtaxcode) | **POST** /accounting/tax-codes | Create a tax code
 [**createVendor**](ACCTApi.md#createvendor) | **POST** /accounting/vendors | Create vendor
 [**enablePosting**](ACCTApi.md#enableposting) | **POST** /accounting/go-live/enable-posting | Enable accounting journal posting
@@ -56,7 +56,6 @@ Method | HTTP request | Description
 [**postExpense**](ACCTApi.md#postexpense) | **POST** /accounting/expenses/{id}/post | Post an expense voucher to general ledger
 [**postFundTransfer**](ACCTApi.md#postfundtransfer) | **POST** /accounting/fund-transfers/{id}/post | Post fund transfer to GL
 [**postPaymentVoucher**](ACCTApi.md#postpaymentvoucher) | **POST** /accounting/payment-vouchers/{id}/post | Post a payment voucher to GL
-[**postPurchaseBill**](ACCTApi.md#postpurchasebill) | **POST** /accounting/purchase-bills/{id}/post | Post a purchase bill to the general ledger
 [**reverseJournal**](ACCTApi.md#reversejournal) | **POST** /accounting/journals/{id}/reverse | Reverse a posted journal
 [**unlockAccountingPeriod**](ACCTApi.md#unlockaccountingperiod) | **POST** /accounting/periods/{id}/unlock | Unlock an accounting period
 [**updateAccount**](ACCTApi.md#updateaccount) | **PATCH** /accounting/accounts/{id} | Update an account
@@ -64,7 +63,6 @@ Method | HTTP request | Description
 [**updateFundTransfer**](ACCTApi.md#updatefundtransfer) | **PATCH** /accounting/fund-transfers/{id} | Update fund transfer
 [**updateItem**](ACCTApi.md#updateitem) | **PATCH** /accounting/items/{id} | Update item
 [**updatePaymentVoucher**](ACCTApi.md#updatepaymentvoucher) | **PATCH** /accounting/payment-vouchers/{id} | Update a draft payment voucher
-[**updatePurchaseBill**](ACCTApi.md#updatepurchasebill) | **PATCH** /accounting/purchase-bills/{id} | Update a draft purchase bill
 [**updateTaxCode**](ACCTApi.md#updatetaxcode) | **PATCH** /accounting/tax-codes/{id} | Update a tax code
 [**updateVendor**](ACCTApi.md#updatevendor) | **PATCH** /accounting/vendors/{id} | Update vendor
 
@@ -369,7 +367,7 @@ Name | Type | Description  | Notes
 # **createPurchaseBill**
 > PurchaseBill createPurchaseBill(purchaseBillCreate, idempotencyKey)
 
-Create a draft purchase bill
+Create and post a purchase bill
 
 ### Example
 ```dart
@@ -2110,47 +2108,6 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **postPurchaseBill**
-> PurchaseBill postPurchaseBill(id)
-
-Post a purchase bill to the general ledger
-
-### Example
-```dart
-import 'package:api_client/api.dart';
-
-final api = ApiClient().getACCTApi();
-final int id = 789; // int | 
-
-try {
-    final response = api.postPurchaseBill(id);
-    print(response);
-} on DioException catch (e) {
-    print('Exception when calling ACCTApi->postPurchaseBill: $e\n');
-}
-```
-
-### Parameters
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **id** | **int**|  | 
-
-### Return type
-
-[**PurchaseBill**](PurchaseBill.md)
-
-### Authorization
-
-[bearerAuth](../README.md#bearerAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
 # **reverseJournal**
 > Journal reverseJournal(id, journalReverse, idempotencyKey)
 
@@ -2440,49 +2397,6 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**PaymentVoucher**](PaymentVoucher.md)
-
-### Authorization
-
-[bearerAuth](../README.md#bearerAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **updatePurchaseBill**
-> PurchaseBill updatePurchaseBill(id, purchaseBillUpdate)
-
-Update a draft purchase bill
-
-### Example
-```dart
-import 'package:api_client/api.dart';
-
-final api = ApiClient().getACCTApi();
-final int id = 789; // int | 
-final PurchaseBillUpdate purchaseBillUpdate = ; // PurchaseBillUpdate | 
-
-try {
-    final response = api.updatePurchaseBill(id, purchaseBillUpdate);
-    print(response);
-} on DioException catch (e) {
-    print('Exception when calling ACCTApi->updatePurchaseBill: $e\n');
-}
-```
-
-### Parameters
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **id** | **int**|  | 
- **purchaseBillUpdate** | [**PurchaseBillUpdate**](PurchaseBillUpdate.md)|  | 
-
-### Return type
-
-[**PurchaseBill**](PurchaseBill.md)
 
 ### Authorization
 

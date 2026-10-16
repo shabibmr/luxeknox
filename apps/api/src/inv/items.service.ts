@@ -12,15 +12,17 @@ import {
   type InventoryItemDto,
 } from './items.dto';
 import { InventoryItemsRepository, type InventoryItemRow } from './items.repository';
+import { StockRepository } from './stock.repository';
 
 @Injectable()
 export class InventoryItemsService {
   constructor(
     private readonly repository: InventoryItemsRepository,
+    private readonly stockRepository: StockRepository,
     private readonly paginationHelper: PaginationHelper,
   ) {}
 
-  toDto(row: InventoryItemRow): InventoryItemDto {
+  toDto(row: InventoryItemRow, hasMovements: boolean): InventoryItemDto {
     return {
       id: row.id,
       name: row.name,
@@ -41,7 +43,7 @@ export class InventoryItemsService {
       cogs_account_id: row.cogs_account_id ?? null,
       inventory_tracked: Boolean(row.inventory_tracked),
       reorder_level: row.reorder_level ?? null,
-      has_movements: false,
+      has_movements: hasMovements,
       is_active: Boolean(row.is_active),
       row_version: row.row_version,
       created_at: row.created_at,
@@ -55,20 +57,54 @@ export class InventoryItemsService {
   ): Promise<PaginatedResponse<InventoryItemDto>> {
     const filters = inventoryItemFilterQuerySchema.parse(rawQuery);
     const pagination = await this.paginationHelper.normalizeParams(rawQuery);
-    const offset = pagination.offset ?? 0;
-
-    const { rows, total } = await this.repository.findMany({
+    const requestCursor = typeof rawQuery.cursor === 'string' ? rawQuery.cursor : null;
+    const filterParams = {
       itemKind: filters.item_kind,
       search: filters.search,
       categoryId: filters.category_id,
       isActive: filters.is_active,
       inventoryTracked: filters.inventory_tracked,
+    };
+
+    if (pagination.mode === 'cursor' && pagination.cursor) {
+      const { rows, total } = await this.repository.findMany({
+        ...filterParams,
+        limit: pagination.limit + 1,
+        cursor: pagination.cursor,
+      });
+
+      const withMovements = await this.stockRepository.findItemIdsWithMovements(
+        rows.map((row) => row.id),
+      );
+
+      return createPaginatedResponse({
+        items: rows.map((row) => this.toDto(row, withMovements.has(row.id))),
+        limit: pagination.limit,
+        requestCursor,
+        total,
+        cursorExtractor: (item) => ({
+          createdAt:
+            item.created_at instanceof Date
+              ? item.created_at.toISOString()
+              : String(item.created_at),
+          id: item.id,
+        }),
+      });
+    }
+
+    const offset = pagination.offset ?? 0;
+    const { rows, total } = await this.repository.findMany({
+      ...filterParams,
       limit: pagination.limit,
       offset,
     });
 
+    const withMovements = await this.stockRepository.findItemIdsWithMovements(
+      rows.map((row) => row.id),
+    );
+
     return createPaginatedResponse({
-      items: rows.map((row) => this.toDto(row)),
+      items: rows.map((row) => this.toDto(row, withMovements.has(row.id))),
       limit: pagination.limit,
       offset,
       total,
@@ -80,6 +116,7 @@ export class InventoryItemsService {
     if (!item) {
       throw new NotFoundError(`Item ${id} was not found`);
     }
-    return this.toDto(item);
+    const withMovements = await this.stockRepository.findItemIdsWithMovements([id]);
+    return this.toDto(item, withMovements.has(id));
   }
 }

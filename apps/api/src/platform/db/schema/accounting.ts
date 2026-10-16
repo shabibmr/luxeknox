@@ -1,6 +1,8 @@
+import { sql } from 'drizzle-orm';
 import {
   bigint,
   boolean,
+  check,
   date,
   decimal,
   index,
@@ -309,6 +311,7 @@ export const items = mysqlTable(
     index('items_is_active_idx').on(table.is_active),
     index('items_item_kind_idx').on(table.item_kind),
     index('items_category_id_idx').on(table.category_id),
+    check('items_item_kind_chk', sql`${table.item_kind} IN ('service', 'goods')`),
   ],
 );
 

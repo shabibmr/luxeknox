@@ -40,6 +40,7 @@ tags:
   - name: SYS
   - name: MEDIA
   - name: ACCT
+  - name: INV
 security:
   - bearerAuth: []
 paths:
@@ -7726,7 +7727,7 @@ paths:
           $ref: "#/components/responses/Error429"
     post:
       operationId: createPurchaseBill
-      summary: Create a draft purchase bill
+      summary: Create and post a purchase bill
       tags: [ACCT]
       x-status: mvp
       x-parity: required
@@ -7771,78 +7772,6 @@ paths:
       x-status: mvp
       x-parity: required
       x-permission: accounting.read
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/Id"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PurchaseBill"
-        "400":
-          $ref: "#/components/responses/Error400"
-        "401":
-          $ref: "#/components/responses/Error401"
-        "403":
-          $ref: "#/components/responses/Error403"
-        "404":
-          $ref: "#/components/responses/Error404"
-        "409":
-          $ref: "#/components/responses/Error409"
-        "422":
-          $ref: "#/components/responses/Error422"
-        "429":
-          $ref: "#/components/responses/Error429"
-    patch:
-      operationId: updatePurchaseBill
-      summary: Update a draft purchase bill
-      tags: [ACCT]
-      x-status: mvp
-      x-parity: required
-      x-permission: accounting.purchases_write
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/Id"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PurchaseBillUpdate"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PurchaseBill"
-        "400":
-          $ref: "#/components/responses/Error400"
-        "401":
-          $ref: "#/components/responses/Error401"
-        "403":
-          $ref: "#/components/responses/Error403"
-        "404":
-          $ref: "#/components/responses/Error404"
-        "409":
-          $ref: "#/components/responses/Error409"
-        "422":
-          $ref: "#/components/responses/Error422"
-        "429":
-          $ref: "#/components/responses/Error429"
-
-  /accounting/purchase-bills/{id}/post:
-    post:
-      operationId: postPurchaseBill
-      summary: Post a purchase bill to the general ledger
-      tags: [ACCT]
-      x-status: mvp
-      x-parity: required
-      x-permission: accounting.purchases_write
       security:
         - bearerAuth: []
       parameters:
@@ -9028,6 +8957,97 @@ paths:
         "429":
           $ref: "#/components/responses/Error429"
 
+  /inventory/items:
+    get:
+      operationId: listInventoryItems
+      summary: List inventory items
+      tags: [INV]
+      x-status: mvp
+      x-parity: required
+      x-permission: inventory.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Cursor"
+        - name: search
+          in: query
+          description: Name or SKU
+          schema:
+            type: string
+        - name: item_kind
+          in: query
+          schema:
+            $ref: "#/components/schemas/ItemKind"
+        - name: category_id
+          in: query
+          schema:
+            $ref: "#/components/schemas/Id"
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: inventory_tracked
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryItemPage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /inventory/items/{id}:
+    get:
+      operationId: getInventoryItem
+      summary: Get inventory item by ID
+      tags: [INV]
+      x-status: mvp
+      x-parity: required
+      x-permission: inventory.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryItem"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -9171,6 +9191,11 @@ components:
       pattern: "^-?\\d+\\.\\d{2}$"
       description: DECIMAL(12,2) as a two-decimal string. Never a JSON number.
       example: "1299.00"
+    Quantity3:
+      type: string
+      pattern: "^\\d+\\.\\d{3}$"
+      description: DECIMAL(14,3) quantity as a three-decimal string. Never a JSON number.
+      example: "10.000"
     Id:
       type: integer
       format: int64
@@ -12467,10 +12492,11 @@ components:
 
     AccountCreate:
       type: object
-      required: [code, name, account_type]
+      required: [name, account_type]
       properties:
         code:
           type: string
+          description: Optional. When omitted, the server allocates the next code in the account-type band.
         name:
           type: string
         account_type:
@@ -12809,39 +12835,121 @@ components:
 
     Item:
       type: object
-      required: [id, name, item_kind, inventory_tracked, income_account_id, expense_account_id, is_active]
+      required:
+        [
+          id,
+          name,
+          item_kind,
+          uom_id,
+          inventory_tracked,
+          income_account_id,
+          expense_account_id,
+          is_active,
+          row_version,
+          created_at,
+        ]
       properties:
         id:
           $ref: "#/components/schemas/Id"
         name:
           type: string
+        sku:
+          type: string
+          maxLength: 64
+          nullable: true
+        hsn_sac:
+          type: string
+          maxLength: 16
+          nullable: true
         item_kind:
           $ref: "#/components/schemas/ItemKind"
+        category_id:
+          type: integer
+          format: int64
+          nullable: true
+        uom_id:
+          $ref: "#/components/schemas/Id"
+        sale_rate:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          nullable: true
+        purchase_rate:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          nullable: true
+        reorder_level:
+          allOf:
+            - $ref: "#/components/schemas/Quantity3"
+          nullable: true
         inventory_tracked:
           type: boolean
         income_account_id:
           $ref: "#/components/schemas/Id"
         expense_account_id:
           $ref: "#/components/schemas/Id"
+        inventory_account_id:
+          type: integer
+          format: int64
+          nullable: true
+        cogs_account_id:
+          type: integer
+          format: int64
+          nullable: true
         tax_code_id:
           type: integer
           format: int64
           nullable: true
         is_active:
           type: boolean
+        row_version:
+          type: integer
+          minimum: 1
+        created_at:
+          $ref: "#/components/schemas/DateTime"
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
 
     ItemCreate:
       type: object
-      required: [name, item_kind, income_account_id, expense_account_id]
+      required: [name, item_kind, uom_id, income_account_id, expense_account_id]
       properties:
         name:
           type: string
+          maxLength: 150
         item_kind:
           $ref: "#/components/schemas/ItemKind"
+        uom_id:
+          $ref: "#/components/schemas/Id"
         income_account_id:
           $ref: "#/components/schemas/Id"
         expense_account_id:
           $ref: "#/components/schemas/Id"
+        sku:
+          type: string
+          maxLength: 64
+          nullable: true
+        hsn_sac:
+          type: string
+          maxLength: 16
+          nullable: true
+        category_id:
+          type: integer
+          format: int64
+          nullable: true
+        sale_rate:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          nullable: true
+        purchase_rate:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          nullable: true
+        reorder_level:
+          allOf:
+            - $ref: "#/components/schemas/Quantity3"
+          nullable: true
         tax_code_id:
           type: integer
           format: int64
@@ -12852,16 +12960,51 @@ components:
         inventory_tracked:
           type: boolean
           default: false
+        inventory_account_id:
+          type: integer
+          format: int64
+          nullable: true
+        cogs_account_id:
+          type: integer
+          format: int64
+          nullable: true
 
     ItemUpdate:
       type: object
       properties:
         name:
           type: string
+          maxLength: 150
+        uom_id:
+          $ref: "#/components/schemas/Id"
         income_account_id:
           $ref: "#/components/schemas/Id"
         expense_account_id:
           $ref: "#/components/schemas/Id"
+        sku:
+          type: string
+          maxLength: 64
+          nullable: true
+        hsn_sac:
+          type: string
+          maxLength: 16
+          nullable: true
+        category_id:
+          type: integer
+          format: int64
+          nullable: true
+        sale_rate:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          nullable: true
+        purchase_rate:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          nullable: true
+        reorder_level:
+          allOf:
+            - $ref: "#/components/schemas/Quantity3"
+          nullable: true
         tax_code_id:
           type: integer
           format: int64
@@ -12870,6 +13013,14 @@ components:
           type: boolean
         inventory_tracked:
           type: boolean
+        inventory_account_id:
+          type: integer
+          format: int64
+          nullable: true
+        cogs_account_id:
+          type: integer
+          format: int64
+          nullable: true
 
     ItemPage:
       type: object
@@ -12879,6 +13030,109 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Item"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    InventoryItem:
+      type: object
+      required:
+        [
+          id,
+          name,
+          item_kind,
+          uom_id,
+          uom_code,
+          uom_decimal_places,
+          inventory_tracked,
+          income_account_id,
+          expense_account_id,
+          has_movements,
+          is_active,
+          row_version,
+          created_at,
+        ]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+        sku:
+          type: string
+          maxLength: 64
+          nullable: true
+        hsn_sac:
+          type: string
+          maxLength: 16
+          nullable: true
+        item_kind:
+          $ref: "#/components/schemas/ItemKind"
+        category_id:
+          type: integer
+          format: int64
+          nullable: true
+        category_name:
+          type: string
+          nullable: true
+        uom_id:
+          $ref: "#/components/schemas/Id"
+        uom_code:
+          type: string
+        uom_decimal_places:
+          type: integer
+          minimum: 0
+          maximum: 3
+        sale_rate:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          nullable: true
+        purchase_rate:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          nullable: true
+        reorder_level:
+          allOf:
+            - $ref: "#/components/schemas/Quantity3"
+          nullable: true
+        tax_code_id:
+          type: integer
+          format: int64
+          nullable: true
+        income_account_id:
+          $ref: "#/components/schemas/Id"
+        expense_account_id:
+          $ref: "#/components/schemas/Id"
+        inventory_account_id:
+          type: integer
+          format: int64
+          nullable: true
+        cogs_account_id:
+          type: integer
+          format: int64
+          nullable: true
+        inventory_tracked:
+          type: boolean
+        has_movements:
+          type: boolean
+        is_active:
+          type: boolean
+        row_version:
+          type: integer
+          minimum: 1
+        created_at:
+          $ref: "#/components/schemas/DateTime"
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    InventoryItemPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryItem"
         meta:
           $ref: "#/components/schemas/PageMeta"
 
@@ -13035,21 +13289,6 @@ components:
     PurchaseBillCreate:
       type: object
       required: [vendor_id, bill_date, lines]
-      properties:
-        vendor_id:
-          $ref: "#/components/schemas/Id"
-        bill_date:
-          $ref: "#/components/schemas/Date"
-        due_date:
-          $ref: "#/components/schemas/Date"
-          nullable: true
-        lines:
-          type: array
-          items:
-            $ref: "#/components/schemas/PurchaseBillLineWrite"
-
-    PurchaseBillUpdate:
-      type: object
       properties:
         vendor_id:
           $ref: "#/components/schemas/Id"

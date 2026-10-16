@@ -233,6 +233,7 @@ export class ItemsService {
       if (cogsAccountId != null) await this.validateExpenseAccount(cogsAccountId);
     }
 
+    const now = new Date();
     const created = await this.repository.insertItem({
       name: dto.name,
       sku,
@@ -250,7 +251,8 @@ export class ItemsService {
       cogs_account_id: cogsAccountId,
       tax_code_id: dto.tax_code_id ?? null,
       is_active: dto.is_active ?? true,
-      created_at: new Date(),
+      created_at: now,
+      updated_at: now,
     });
 
     return this.toDto(created);
@@ -299,7 +301,10 @@ export class ItemsService {
       if (dto.cogs_account_id != null) await this.validateExpenseAccount(dto.cogs_account_id);
     }
 
-    const patch: Partial<NewItem> = { row_version: existing.row_version + 1 };
+    const patch: Partial<NewItem> = {
+      row_version: existing.row_version + 1,
+      updated_at: new Date(),
+    };
     if (dto.name !== undefined) patch.name = dto.name;
     if (sku !== undefined) patch.sku = sku;
     if (dto.hsn_sac !== undefined) patch.hsn_sac = blankToNull(dto.hsn_sac) ?? null;

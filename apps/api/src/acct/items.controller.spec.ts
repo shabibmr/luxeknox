@@ -139,16 +139,32 @@ describe('ItemsController', () => {
         income_account_id: 4000,
         expense_account_id: 5000,
         sale_rate: '10.5',
-        reorder_level: 1,
+        purchase_rate: '10.005',
+        reorder_level: '1.250',
       };
       const result = createPipe.transform(payload);
       expect(result.name).toBe('Gym Towel');
       expect(result.item_kind).toBe('goods');
       expect(result.uom_id).toBe(1);
       expect(result.sale_rate).toBe('10.50');
-      expect(result.reorder_level).toBe('1.000');
+      expect(result.purchase_rate).toBe('10.01');
+      expect(result.reorder_level).toBe('1.250');
       expect(result.inventory_tracked).toBe(false);
       expect(result.is_active).toBe(true);
+    });
+
+    it('rejects sale_rate and purchase_rate as JSON numbers', () => {
+      const base = {
+        name: 'Gym Towel',
+        item_kind: 'goods',
+        uom_id: 1,
+        income_account_id: 4000,
+        expense_account_id: 5000,
+      };
+      expect(() => createPipe.transform({ ...base, sale_rate: 10.5 })).toThrow();
+      expect(() => createPipe.transform({ ...base, purchase_rate: 5 })).toThrow();
+      expect(() => updatePipe.transform({ sale_rate: 10.5 })).toThrow();
+      expect(() => updatePipe.transform({ purchase_rate: 5 })).toThrow();
     });
 
     it('rejects create payload missing required fields', () => {

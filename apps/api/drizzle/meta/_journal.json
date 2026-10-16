@@ -183,6 +183,13 @@
       "when": 1792200000000,
       "tag": "0029_purchase_bills_supplier_invoice_no",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1792300000000,
+      "tag": "0030_items_item_kind_check",
+      "breakpoints": true
     }
   ]
 }

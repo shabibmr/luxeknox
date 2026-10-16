@@ -12,7 +12,21 @@ class _$Item extends Item {
   @override
   final String name;
   @override
+  final String? sku;
+  @override
+  final String? hsnSac;
+  @override
   final ItemKind itemKind;
+  @override
+  final int? categoryId;
+  @override
+  final int uomId;
+  @override
+  final String? saleRate;
+  @override
+  final String? purchaseRate;
+  @override
+  final String? reorderLevel;
   @override
   final bool inventoryTracked;
   @override
@@ -20,9 +34,19 @@ class _$Item extends Item {
   @override
   final int expenseAccountId;
   @override
+  final int? inventoryAccountId;
+  @override
+  final int? cogsAccountId;
+  @override
   final int? taxCodeId;
   @override
   final bool isActive;
+  @override
+  final int rowVersion;
+  @override
+  final DateTime createdAt;
+  @override
+  final DateTime? updatedAt;
 
   factory _$Item([void Function(ItemBuilder)? updates]) =>
       (ItemBuilder()..update(updates))._build();
@@ -30,12 +54,24 @@ class _$Item extends Item {
   _$Item._(
       {required this.id,
       required this.name,
+      this.sku,
+      this.hsnSac,
       required this.itemKind,
+      this.categoryId,
+      required this.uomId,
+      this.saleRate,
+      this.purchaseRate,
+      this.reorderLevel,
       required this.inventoryTracked,
       required this.incomeAccountId,
       required this.expenseAccountId,
+      this.inventoryAccountId,
+      this.cogsAccountId,
       this.taxCodeId,
-      required this.isActive})
+      required this.isActive,
+      required this.rowVersion,
+      required this.createdAt,
+      this.updatedAt})
       : super._();
   @override
   Item rebuild(void Function(ItemBuilder) updates) =>
@@ -50,12 +86,24 @@ class _$Item extends Item {
     return other is Item &&
         id == other.id &&
         name == other.name &&
+        sku == other.sku &&
+        hsnSac == other.hsnSac &&
         itemKind == other.itemKind &&
+        categoryId == other.categoryId &&
+        uomId == other.uomId &&
+        saleRate == other.saleRate &&
+        purchaseRate == other.purchaseRate &&
+        reorderLevel == other.reorderLevel &&
         inventoryTracked == other.inventoryTracked &&
         incomeAccountId == other.incomeAccountId &&
         expenseAccountId == other.expenseAccountId &&
+        inventoryAccountId == other.inventoryAccountId &&
+        cogsAccountId == other.cogsAccountId &&
         taxCodeId == other.taxCodeId &&
-        isActive == other.isActive;
+        isActive == other.isActive &&
+        rowVersion == other.rowVersion &&
+        createdAt == other.createdAt &&
+        updatedAt == other.updatedAt;
   }
 
   @override
@@ -63,12 +111,24 @@ class _$Item extends Item {
     var _$hash = 0;
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
+    _$hash = $jc(_$hash, sku.hashCode);
+    _$hash = $jc(_$hash, hsnSac.hashCode);
     _$hash = $jc(_$hash, itemKind.hashCode);
+    _$hash = $jc(_$hash, categoryId.hashCode);
+    _$hash = $jc(_$hash, uomId.hashCode);
+    _$hash = $jc(_$hash, saleRate.hashCode);
+    _$hash = $jc(_$hash, purchaseRate.hashCode);
+    _$hash = $jc(_$hash, reorderLevel.hashCode);
     _$hash = $jc(_$hash, inventoryTracked.hashCode);
     _$hash = $jc(_$hash, incomeAccountId.hashCode);
     _$hash = $jc(_$hash, expenseAccountId.hashCode);
+    _$hash = $jc(_$hash, inventoryAccountId.hashCode);
+    _$hash = $jc(_$hash, cogsAccountId.hashCode);
     _$hash = $jc(_$hash, taxCodeId.hashCode);
     _$hash = $jc(_$hash, isActive.hashCode);
+    _$hash = $jc(_$hash, rowVersion.hashCode);
+    _$hash = $jc(_$hash, createdAt.hashCode);
+    _$hash = $jc(_$hash, updatedAt.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -78,12 +138,24 @@ class _$Item extends Item {
     return (newBuiltValueToStringHelper(r'Item')
           ..add('id', id)
           ..add('name', name)
+          ..add('sku', sku)
+          ..add('hsnSac', hsnSac)
           ..add('itemKind', itemKind)
+          ..add('categoryId', categoryId)
+          ..add('uomId', uomId)
+          ..add('saleRate', saleRate)
+          ..add('purchaseRate', purchaseRate)
+          ..add('reorderLevel', reorderLevel)
           ..add('inventoryTracked', inventoryTracked)
           ..add('incomeAccountId', incomeAccountId)
           ..add('expenseAccountId', expenseAccountId)
+          ..add('inventoryAccountId', inventoryAccountId)
+          ..add('cogsAccountId', cogsAccountId)
           ..add('taxCodeId', taxCodeId)
-          ..add('isActive', isActive))
+          ..add('isActive', isActive)
+          ..add('rowVersion', rowVersion)
+          ..add('createdAt', createdAt)
+          ..add('updatedAt', updatedAt))
         .toString();
   }
 }
@@ -99,9 +171,37 @@ class ItemBuilder implements Builder<Item, ItemBuilder> {
   String? get name => _$this._name;
   set name(String? name) => _$this._name = name;
 
+  String? _sku;
+  String? get sku => _$this._sku;
+  set sku(String? sku) => _$this._sku = sku;
+
+  String? _hsnSac;
+  String? get hsnSac => _$this._hsnSac;
+  set hsnSac(String? hsnSac) => _$this._hsnSac = hsnSac;
+
   ItemKind? _itemKind;
   ItemKind? get itemKind => _$this._itemKind;
   set itemKind(ItemKind? itemKind) => _$this._itemKind = itemKind;
+
+  int? _categoryId;
+  int? get categoryId => _$this._categoryId;
+  set categoryId(int? categoryId) => _$this._categoryId = categoryId;
+
+  int? _uomId;
+  int? get uomId => _$this._uomId;
+  set uomId(int? uomId) => _$this._uomId = uomId;
+
+  String? _saleRate;
+  String? get saleRate => _$this._saleRate;
+  set saleRate(String? saleRate) => _$this._saleRate = saleRate;
+
+  String? _purchaseRate;
+  String? get purchaseRate => _$this._purchaseRate;
+  set purchaseRate(String? purchaseRate) => _$this._purchaseRate = purchaseRate;
+
+  String? _reorderLevel;
+  String? get reorderLevel => _$this._reorderLevel;
+  set reorderLevel(String? reorderLevel) => _$this._reorderLevel = reorderLevel;
 
   bool? _inventoryTracked;
   bool? get inventoryTracked => _$this._inventoryTracked;
@@ -118,6 +218,16 @@ class ItemBuilder implements Builder<Item, ItemBuilder> {
   set expenseAccountId(int? expenseAccountId) =>
       _$this._expenseAccountId = expenseAccountId;
 
+  int? _inventoryAccountId;
+  int? get inventoryAccountId => _$this._inventoryAccountId;
+  set inventoryAccountId(int? inventoryAccountId) =>
+      _$this._inventoryAccountId = inventoryAccountId;
+
+  int? _cogsAccountId;
+  int? get cogsAccountId => _$this._cogsAccountId;
+  set cogsAccountId(int? cogsAccountId) =>
+      _$this._cogsAccountId = cogsAccountId;
+
   int? _taxCodeId;
   int? get taxCodeId => _$this._taxCodeId;
   set taxCodeId(int? taxCodeId) => _$this._taxCodeId = taxCodeId;
@@ -125,6 +235,18 @@ class ItemBuilder implements Builder<Item, ItemBuilder> {
   bool? _isActive;
   bool? get isActive => _$this._isActive;
   set isActive(bool? isActive) => _$this._isActive = isActive;
+
+  int? _rowVersion;
+  int? get rowVersion => _$this._rowVersion;
+  set rowVersion(int? rowVersion) => _$this._rowVersion = rowVersion;
+
+  DateTime? _createdAt;
+  DateTime? get createdAt => _$this._createdAt;
+  set createdAt(DateTime? createdAt) => _$this._createdAt = createdAt;
+
+  DateTime? _updatedAt;
+  DateTime? get updatedAt => _$this._updatedAt;
+  set updatedAt(DateTime? updatedAt) => _$this._updatedAt = updatedAt;
 
   ItemBuilder() {
     Item._defaults(this);
@@ -135,12 +257,24 @@ class ItemBuilder implements Builder<Item, ItemBuilder> {
     if ($v != null) {
       _id = $v.id;
       _name = $v.name;
+      _sku = $v.sku;
+      _hsnSac = $v.hsnSac;
       _itemKind = $v.itemKind;
+      _categoryId = $v.categoryId;
+      _uomId = $v.uomId;
+      _saleRate = $v.saleRate;
+      _purchaseRate = $v.purchaseRate;
+      _reorderLevel = $v.reorderLevel;
       _inventoryTracked = $v.inventoryTracked;
       _incomeAccountId = $v.incomeAccountId;
       _expenseAccountId = $v.expenseAccountId;
+      _inventoryAccountId = $v.inventoryAccountId;
+      _cogsAccountId = $v.cogsAccountId;
       _taxCodeId = $v.taxCodeId;
       _isActive = $v.isActive;
+      _rowVersion = $v.rowVersion;
+      _createdAt = $v.createdAt;
+      _updatedAt = $v.updatedAt;
       _$v = null;
     }
     return this;
@@ -164,17 +298,31 @@ class ItemBuilder implements Builder<Item, ItemBuilder> {
         _$Item._(
           id: BuiltValueNullFieldError.checkNotNull(id, r'Item', 'id'),
           name: BuiltValueNullFieldError.checkNotNull(name, r'Item', 'name'),
+          sku: sku,
+          hsnSac: hsnSac,
           itemKind: BuiltValueNullFieldError.checkNotNull(
               itemKind, r'Item', 'itemKind'),
+          categoryId: categoryId,
+          uomId: BuiltValueNullFieldError.checkNotNull(uomId, r'Item', 'uomId'),
+          saleRate: saleRate,
+          purchaseRate: purchaseRate,
+          reorderLevel: reorderLevel,
           inventoryTracked: BuiltValueNullFieldError.checkNotNull(
               inventoryTracked, r'Item', 'inventoryTracked'),
           incomeAccountId: BuiltValueNullFieldError.checkNotNull(
               incomeAccountId, r'Item', 'incomeAccountId'),
           expenseAccountId: BuiltValueNullFieldError.checkNotNull(
               expenseAccountId, r'Item', 'expenseAccountId'),
+          inventoryAccountId: inventoryAccountId,
+          cogsAccountId: cogsAccountId,
           taxCodeId: taxCodeId,
           isActive: BuiltValueNullFieldError.checkNotNull(
               isActive, r'Item', 'isActive'),
+          rowVersion: BuiltValueNullFieldError.checkNotNull(
+              rowVersion, r'Item', 'rowVersion'),
+          createdAt: BuiltValueNullFieldError.checkNotNull(
+              createdAt, r'Item', 'createdAt'),
+          updatedAt: updatedAt,
         );
     replace(_$result);
     return _$result;

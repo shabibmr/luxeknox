@@ -6,7 +6,8 @@ export type ItemKind = (typeof ITEM_KINDS)[number];
 
 export const itemKindSchema = z.enum(ITEM_KINDS);
 
-const moneySchema = z.union([z.string(), z.number()]).transform((value, ctx) => {
+/** Money fields accept a decimal string only — never a JSON number. */
+const moneySchema = z.string().transform((value, ctx) => {
   try {
     return roundMoney(value);
   } catch {

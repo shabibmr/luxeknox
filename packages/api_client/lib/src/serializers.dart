@@ -120,6 +120,8 @@ import 'package:api_client/src/model/health.dart';
 import 'package:api_client/src/model/health_condition.dart';
 import 'package:api_client/src/model/health_condition_page.dart';
 import 'package:api_client/src/model/health_condition_write.dart';
+import 'package:api_client/src/model/inventory_item.dart';
+import 'package:api_client/src/model/inventory_item_page.dart';
 import 'package:api_client/src/model/item.dart';
 import 'package:api_client/src/model/item_create.dart';
 import 'package:api_client/src/model/item_kind.dart';
@@ -244,7 +246,6 @@ import 'package:api_client/src/model/purchase_bill_line.dart';
 import 'package:api_client/src/model/purchase_bill_line_write.dart';
 import 'package:api_client/src/model/purchase_bill_page.dart';
 import 'package:api_client/src/model/purchase_bill_status.dart';
-import 'package:api_client/src/model/purchase_bill_update.dart';
 import 'package:api_client/src/model/ready.dart';
 import 'package:api_client/src/model/ready_jobs.dart';
 import 'package:api_client/src/model/refresh_request.dart';
@@ -422,6 +423,8 @@ part 'serializers.g.dart';
   HealthCondition,
   HealthConditionPage,
   HealthConditionWrite,
+  InventoryItem,
+  InventoryItemPage,
   Item,
   ItemCreate,
   ItemKind,
@@ -546,7 +549,6 @@ part 'serializers.g.dart';
   PurchaseBillLineWrite,
   PurchaseBillPage,
   PurchaseBillStatus,
-  PurchaseBillUpdate,
   Ready,
   ReadyJobs,
   RefreshRequest,
@@ -883,6 +885,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(EmergencyContact)]),
         () => ListBuilder<EmergencyContact>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(InventoryItem)]),
+        () => ListBuilder<InventoryItem>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(DietPlanMealsWriteMealsInnerFoodsInner)]),

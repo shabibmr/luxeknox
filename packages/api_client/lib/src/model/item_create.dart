@@ -14,11 +14,20 @@ part 'item_create.g.dart';
 /// Properties:
 /// * [name] 
 /// * [itemKind] 
+/// * [uomId] 
 /// * [incomeAccountId] 
 /// * [expenseAccountId] 
+/// * [sku] 
+/// * [hsnSac] 
+/// * [categoryId] 
+/// * [saleRate] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
+/// * [purchaseRate] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
+/// * [reorderLevel] - DECIMAL(14,3) quantity as a three-decimal string. Never a JSON number.
 /// * [taxCodeId] 
 /// * [isActive] 
 /// * [inventoryTracked] 
+/// * [inventoryAccountId] 
+/// * [cogsAccountId] 
 @BuiltValue()
 abstract class ItemCreate implements Built<ItemCreate, ItemCreateBuilder> {
   @BuiltValueField(wireName: r'name')
@@ -28,11 +37,35 @@ abstract class ItemCreate implements Built<ItemCreate, ItemCreateBuilder> {
   ItemKind get itemKind;
   // enum itemKindEnum {  service,  goods,  };
 
+  @BuiltValueField(wireName: r'uom_id')
+  int get uomId;
+
   @BuiltValueField(wireName: r'income_account_id')
   int get incomeAccountId;
 
   @BuiltValueField(wireName: r'expense_account_id')
   int get expenseAccountId;
+
+  @BuiltValueField(wireName: r'sku')
+  String? get sku;
+
+  @BuiltValueField(wireName: r'hsn_sac')
+  String? get hsnSac;
+
+  @BuiltValueField(wireName: r'category_id')
+  int? get categoryId;
+
+  /// DECIMAL(12,2) as a two-decimal string. Never a JSON number.
+  @BuiltValueField(wireName: r'sale_rate')
+  String? get saleRate;
+
+  /// DECIMAL(12,2) as a two-decimal string. Never a JSON number.
+  @BuiltValueField(wireName: r'purchase_rate')
+  String? get purchaseRate;
+
+  /// DECIMAL(14,3) quantity as a three-decimal string. Never a JSON number.
+  @BuiltValueField(wireName: r'reorder_level')
+  String? get reorderLevel;
 
   @BuiltValueField(wireName: r'tax_code_id')
   int? get taxCodeId;
@@ -42,6 +75,12 @@ abstract class ItemCreate implements Built<ItemCreate, ItemCreateBuilder> {
 
   @BuiltValueField(wireName: r'inventory_tracked')
   bool? get inventoryTracked;
+
+  @BuiltValueField(wireName: r'inventory_account_id')
+  int? get inventoryAccountId;
+
+  @BuiltValueField(wireName: r'cogs_account_id')
+  int? get cogsAccountId;
 
   ItemCreate._();
 
@@ -78,6 +117,11 @@ class _$ItemCreateSerializer implements PrimitiveSerializer<ItemCreate> {
       object.itemKind,
       specifiedType: const FullType(ItemKind),
     );
+    yield r'uom_id';
+    yield serializers.serialize(
+      object.uomId,
+      specifiedType: const FullType(int),
+    );
     yield r'income_account_id';
     yield serializers.serialize(
       object.incomeAccountId,
@@ -88,6 +132,48 @@ class _$ItemCreateSerializer implements PrimitiveSerializer<ItemCreate> {
       object.expenseAccountId,
       specifiedType: const FullType(int),
     );
+    if (object.sku != null) {
+      yield r'sku';
+      yield serializers.serialize(
+        object.sku,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.hsnSac != null) {
+      yield r'hsn_sac';
+      yield serializers.serialize(
+        object.hsnSac,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.categoryId != null) {
+      yield r'category_id';
+      yield serializers.serialize(
+        object.categoryId,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.saleRate != null) {
+      yield r'sale_rate';
+      yield serializers.serialize(
+        object.saleRate,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.purchaseRate != null) {
+      yield r'purchase_rate';
+      yield serializers.serialize(
+        object.purchaseRate,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.reorderLevel != null) {
+      yield r'reorder_level';
+      yield serializers.serialize(
+        object.reorderLevel,
+        specifiedType: const FullType(String),
+      );
+    }
     if (object.taxCodeId != null) {
       yield r'tax_code_id';
       yield serializers.serialize(
@@ -107,6 +193,20 @@ class _$ItemCreateSerializer implements PrimitiveSerializer<ItemCreate> {
       yield serializers.serialize(
         object.inventoryTracked,
         specifiedType: const FullType(bool),
+      );
+    }
+    if (object.inventoryAccountId != null) {
+      yield r'inventory_account_id';
+      yield serializers.serialize(
+        object.inventoryAccountId,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.cogsAccountId != null) {
+      yield r'cogs_account_id';
+      yield serializers.serialize(
+        object.cogsAccountId,
+        specifiedType: const FullType(int),
       );
     }
   }
@@ -146,6 +246,13 @@ class _$ItemCreateSerializer implements PrimitiveSerializer<ItemCreate> {
           ) as ItemKind;
           result.itemKind = valueDes;
           break;
+        case r'uom_id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.uomId = valueDes;
+          break;
         case r'income_account_id':
           final valueDes = serializers.deserialize(
             value,
@@ -159,6 +266,54 @@ class _$ItemCreateSerializer implements PrimitiveSerializer<ItemCreate> {
             specifiedType: const FullType(int),
           ) as int;
           result.expenseAccountId = valueDes;
+          break;
+        case r'sku':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.sku = valueDes;
+          break;
+        case r'hsn_sac':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.hsnSac = valueDes;
+          break;
+        case r'category_id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.categoryId = valueDes;
+          break;
+        case r'sale_rate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.saleRate = valueDes;
+          break;
+        case r'purchase_rate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.purchaseRate = valueDes;
+          break;
+        case r'reorder_level':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.reorderLevel = valueDes;
           break;
         case r'tax_code_id':
           final valueDes = serializers.deserialize(
@@ -183,6 +338,22 @@ class _$ItemCreateSerializer implements PrimitiveSerializer<ItemCreate> {
           ) as bool?;
           if (valueDes == null) continue;
           result.inventoryTracked = valueDes;
+          break;
+        case r'inventory_account_id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.inventoryAccountId = valueDes;
+          break;
+        case r'cogs_account_id':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.cogsAccountId = valueDes;
           break;
         default:
           unhandled.add(key);

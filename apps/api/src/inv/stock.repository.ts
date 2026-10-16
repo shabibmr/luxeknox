@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
@@ -81,5 +81,16 @@ export class StockRepository extends BaseRepository<typeof itemStock, ItemStock,
   async insertMovement(row: NewStockMovement): Promise<void> {
     const db = this.getDb() as any;
     await db.insert(stockMovements).values(row);
+  }
+
+  /** Item ids among `itemIds` that have at least one `stock_movements` row. */
+  async findItemIdsWithMovements(itemIds: number[]): Promise<Set<number>> {
+    if (itemIds.length === 0) return new Set();
+    const db = this.getDb() as any;
+    const rows = await db
+      .selectDistinct({ item_id: stockMovements.item_id })
+      .from(stockMovements)
+      .where(inArray(stockMovements.item_id, itemIds));
+    return new Set((rows as Array<{ item_id: number }>).map((row) => Number(row.item_id)));
   }
 }

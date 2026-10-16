@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, desc, eq, like, or, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, like, or, sql, type SQL } from 'drizzle-orm';
 import type { ItemKind } from '../acct/items.dto';
 import { BaseRepository } from '../platform/db/base.repository';
 import type { DrizzleDb } from '../platform/db/client';
@@ -103,10 +103,23 @@ export class InventoryItemsRepository extends BaseRepository<typeof items, Item,
   }
 
   async findMany(
-    params: ItemListFilter & { limit: number; offset: number },
+    params: ItemListFilter & {
+      limit: number;
+      offset?: number;
+      cursor?: { createdAt: string; id: number };
+    },
   ): Promise<{ rows: InventoryItemRow[]; total: number }> {
     const db = this.getDb() as any;
-    const where = itemListWhere(params);
+    const filterWhere = itemListWhere(params);
+    const listConditions: SQL[] = [];
+    if (filterWhere) listConditions.push(filterWhere);
+    if (params.cursor) {
+      const cursorDate = new Date(params.cursor.createdAt);
+      listConditions.push(
+        sql`(${items.created_at} < ${cursorDate} OR (${items.created_at} = ${cursorDate} AND ${items.id} < ${params.cursor.id}))`,
+      );
+    }
+    const listWhere = listConditions.length > 0 ? and(...listConditions) : undefined;
 
     let listQ = db
       .select(itemReadColumns)
@@ -114,12 +127,18 @@ export class InventoryItemsRepository extends BaseRepository<typeof items, Item,
       .innerJoin(uoms, eq(items.uom_id, uoms.id))
       .leftJoin(itemCategories, eq(items.category_id, itemCategories.id));
     let countQ = db.select({ value: count() }).from(items);
-    if (where) {
-      listQ = listQ.where(where);
-      countQ = countQ.where(where);
+    if (listWhere) {
+      listQ = listQ.where(listWhere);
+    }
+    if (filterWhere) {
+      countQ = countQ.where(filterWhere);
     }
 
-    const rows = await listQ.orderBy(desc(items.id)).limit(params.limit).offset(params.offset);
+    const offset = params.cursor ? 0 : (params.offset ?? 0);
+    const rows = await listQ
+      .orderBy(desc(items.created_at), desc(items.id))
+      .limit(params.limit)
+      .offset(offset);
     const totalRows = await countQ;
     return { rows: rows as InventoryItemRow[], total: Number(totalRows[0]?.value ?? 0) };
   }

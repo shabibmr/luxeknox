@@ -115,6 +115,9 @@ doc/Health.md
 doc/HealthCondition.md
 doc/HealthConditionPage.md
 doc/HealthConditionWrite.md
+doc/INVApi.md
+doc/InventoryItem.md
+doc/InventoryItemPage.md
 doc/Item.md
 doc/ItemCreate.md
 doc/ItemKind.md
@@ -245,7 +248,6 @@ doc/PurchaseBillLine.md
 doc/PurchaseBillLineWrite.md
 doc/PurchaseBillPage.md
 doc/PurchaseBillStatus.md
-doc/PurchaseBillUpdate.md
 doc/RBACApi.md
 doc/RPTApi.md
 doc/Ready.md
@@ -328,6 +330,7 @@ lib/src/api/dash_api.dart
 lib/src/api/diet_api.dart
 lib/src/api/goal_api.dart
 lib/src/api/health_api.dart
+lib/src/api/inv_api.dart
 lib/src/api/media_api.dart
 lib/src/api/memb_api.dart
 lib/src/api/notif_api.dart
@@ -453,6 +456,8 @@ lib/src/model/health.dart
 lib/src/model/health_condition.dart
 lib/src/model/health_condition_page.dart
 lib/src/model/health_condition_write.dart
+lib/src/model/inventory_item.dart
+lib/src/model/inventory_item_page.dart
 lib/src/model/item.dart
 lib/src/model/item_create.dart
 lib/src/model/item_kind.dart
@@ -577,7 +582,6 @@ lib/src/model/purchase_bill_line.dart
 lib/src/model/purchase_bill_line_write.dart
 lib/src/model/purchase_bill_page.dart
 lib/src/model/purchase_bill_status.dart
-lib/src/model/purchase_bill_update.dart
 lib/src/model/ready.dart
 lib/src/model/ready_jobs.dart
 lib/src/model/refresh_request.dart
@@ -647,4 +651,3 @@ lib/src/model/workout_set_update.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
-test/pt_package_type_test.dart

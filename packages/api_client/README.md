@@ -80,7 +80,7 @@ Class | Method | HTTP request | Description
 [*ACCTApi*](doc/ACCTApi.md) | [**createItem**](doc/ACCTApi.md#createitem) | **POST** /accounting/items | Create item
 [*ACCTApi*](doc/ACCTApi.md) | [**createJournal**](doc/ACCTApi.md#createjournal) | **POST** /accounting/journals | Create a manual or opening-balance journal
 [*ACCTApi*](doc/ACCTApi.md) | [**createPaymentVoucher**](doc/ACCTApi.md#createpaymentvoucher) | **POST** /accounting/payment-vouchers | Create a draft payment voucher
-[*ACCTApi*](doc/ACCTApi.md) | [**createPurchaseBill**](doc/ACCTApi.md#createpurchasebill) | **POST** /accounting/purchase-bills | Create a draft purchase bill
+[*ACCTApi*](doc/ACCTApi.md) | [**createPurchaseBill**](doc/ACCTApi.md#createpurchasebill) | **POST** /accounting/purchase-bills | Create and post a purchase bill
 [*ACCTApi*](doc/ACCTApi.md) | [**createTaxCode**](doc/ACCTApi.md#createtaxcode) | **POST** /accounting/tax-codes | Create a tax code
 [*ACCTApi*](doc/ACCTApi.md) | [**createVendor**](doc/ACCTApi.md#createvendor) | **POST** /accounting/vendors | Create vendor
 [*ACCTApi*](doc/ACCTApi.md) | [**enablePosting**](doc/ACCTApi.md#enableposting) | **POST** /accounting/go-live/enable-posting | Enable accounting journal posting
@@ -120,7 +120,6 @@ Class | Method | HTTP request | Description
 [*ACCTApi*](doc/ACCTApi.md) | [**postExpense**](doc/ACCTApi.md#postexpense) | **POST** /accounting/expenses/{id}/post | Post an expense voucher to general ledger
 [*ACCTApi*](doc/ACCTApi.md) | [**postFundTransfer**](doc/ACCTApi.md#postfundtransfer) | **POST** /accounting/fund-transfers/{id}/post | Post fund transfer to GL
 [*ACCTApi*](doc/ACCTApi.md) | [**postPaymentVoucher**](doc/ACCTApi.md#postpaymentvoucher) | **POST** /accounting/payment-vouchers/{id}/post | Post a payment voucher to GL
-[*ACCTApi*](doc/ACCTApi.md) | [**postPurchaseBill**](doc/ACCTApi.md#postpurchasebill) | **POST** /accounting/purchase-bills/{id}/post | Post a purchase bill to the general ledger
 [*ACCTApi*](doc/ACCTApi.md) | [**reverseJournal**](doc/ACCTApi.md#reversejournal) | **POST** /accounting/journals/{id}/reverse | Reverse a posted journal
 [*ACCTApi*](doc/ACCTApi.md) | [**unlockAccountingPeriod**](doc/ACCTApi.md#unlockaccountingperiod) | **POST** /accounting/periods/{id}/unlock | Unlock an accounting period
 [*ACCTApi*](doc/ACCTApi.md) | [**updateAccount**](doc/ACCTApi.md#updateaccount) | **PATCH** /accounting/accounts/{id} | Update an account
@@ -128,7 +127,6 @@ Class | Method | HTTP request | Description
 [*ACCTApi*](doc/ACCTApi.md) | [**updateFundTransfer**](doc/ACCTApi.md#updatefundtransfer) | **PATCH** /accounting/fund-transfers/{id} | Update fund transfer
 [*ACCTApi*](doc/ACCTApi.md) | [**updateItem**](doc/ACCTApi.md#updateitem) | **PATCH** /accounting/items/{id} | Update item
 [*ACCTApi*](doc/ACCTApi.md) | [**updatePaymentVoucher**](doc/ACCTApi.md#updatepaymentvoucher) | **PATCH** /accounting/payment-vouchers/{id} | Update a draft payment voucher
-[*ACCTApi*](doc/ACCTApi.md) | [**updatePurchaseBill**](doc/ACCTApi.md#updatepurchasebill) | **PATCH** /accounting/purchase-bills/{id} | Update a draft purchase bill
 [*ACCTApi*](doc/ACCTApi.md) | [**updateTaxCode**](doc/ACCTApi.md#updatetaxcode) | **PATCH** /accounting/tax-codes/{id} | Update a tax code
 [*ACCTApi*](doc/ACCTApi.md) | [**updateVendor**](doc/ACCTApi.md#updatevendor) | **PATCH** /accounting/vendors/{id} | Update vendor
 [*APIApi*](doc/APIApi.md) | [**getHealth**](doc/APIApi.md#gethealth) | **GET** /health | Process liveness
@@ -206,6 +204,8 @@ Class | Method | HTTP request | Description
 [*HEALTHApi*](doc/HEALTHApi.md) | [**updateHealthCondition**](doc/HEALTHApi.md#updatehealthcondition) | **PATCH** /health-conditions/{id} | Update a condition
 [*HEALTHApi*](doc/HEALTHApi.md) | [**updateMedicalHistory**](doc/HEALTHApi.md#updatemedicalhistory) | **PATCH** /members/{id}/medical-histories/{historyId} | Update a medical history row
 [*HEALTHApi*](doc/HEALTHApi.md) | [**verifyMemberDocument**](doc/HEALTHApi.md#verifymemberdocument) | **POST** /members/{id}/documents/{documentId}/verify | Verify a document
+[*INVApi*](doc/INVApi.md) | [**getInventoryItem**](doc/INVApi.md#getinventoryitem) | **GET** /inventory/items/{id} | Get inventory item by ID
+[*INVApi*](doc/INVApi.md) | [**listInventoryItems**](doc/INVApi.md#listinventoryitems) | **GET** /inventory/items | List inventory items
 [*MEDIAApi*](doc/MEDIAApi.md) | [**createMediaUpload**](doc/MEDIAApi.md#createmediaupload) | **POST** /media/uploads | Signed PUT slot (ADR-0008)
 [*MEDIAApi*](doc/MEDIAApi.md) | [**getMediaObject**](doc/MEDIAApi.md#getmediaobject) | **GET** /media/objects | Local adapter signed GET (ADR-0008 HMAC query auth)
 [*MEDIAApi*](doc/MEDIAApi.md) | [**getMediaUrl**](doc/MEDIAApi.md#getmediaurl) | **GET** /media/{key} | Short-lived signed GET (ADR-0008)
@@ -433,6 +433,8 @@ Class | Method | HTTP request | Description
  - [HealthCondition](doc/HealthCondition.md)
  - [HealthConditionPage](doc/HealthConditionPage.md)
  - [HealthConditionWrite](doc/HealthConditionWrite.md)
+ - [InventoryItem](doc/InventoryItem.md)
+ - [InventoryItemPage](doc/InventoryItemPage.md)
  - [Item](doc/Item.md)
  - [ItemCreate](doc/ItemCreate.md)
  - [ItemKind](doc/ItemKind.md)
@@ -557,7 +559,6 @@ Class | Method | HTTP request | Description
  - [PurchaseBillLineWrite](doc/PurchaseBillLineWrite.md)
  - [PurchaseBillPage](doc/PurchaseBillPage.md)
  - [PurchaseBillStatus](doc/PurchaseBillStatus.md)
- - [PurchaseBillUpdate](doc/PurchaseBillUpdate.md)
  - [Ready](doc/Ready.md)
  - [ReadyJobs](doc/ReadyJobs.md)
  - [RefreshRequest](doc/RefreshRequest.md)

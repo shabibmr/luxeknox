@@ -126,6 +126,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(HealthConditionPage.serializer)
       ..add(HealthConditionWrite.serializer)
       ..add(HealthStatusEnum.serializer)
+      ..add(InventoryItem.serializer)
+      ..add(InventoryItemPage.serializer)
       ..add(Item.serializer)
       ..add(ItemCreate.serializer)
       ..add(ItemKind.serializer)
@@ -454,6 +456,9 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(HealthCondition)]),
           () => ListBuilder<HealthCondition>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(InventoryItem)]),
+          () => ListBuilder<InventoryItem>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Item)]),
           () => ListBuilder<Item>())

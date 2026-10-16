@@ -233,8 +233,11 @@ describe('ItemsService', () => {
         tax_code_id: 1,
         is_active: true,
         created_at: expect.any(Date),
+        updated_at: expect.any(Date),
       });
       expect(result.id).toBe(10);
+      const insertArg = repository.insertItem.mock.calls[0][0];
+      expect(insertArg.updated_at).toEqual(insertArg.created_at);
     });
 
     it('creates a tracked goods item with default inventory and COGS accounts', async () => {
@@ -435,10 +438,13 @@ describe('ItemsService', () => {
         name: 'Updated Session',
         is_active: false,
       };
+      const updatedAt = new Date('2026-10-16T12:00:00.000Z');
       repository.updateItem.mockResolvedValue({
         ...ITEM_ROW,
         name: 'Updated Session',
         is_active: false,
+        row_version: 2,
+        updated_at: updatedAt,
       });
 
       const result = await service.update(10, dto, ADMIN_USER);
@@ -448,9 +454,11 @@ describe('ItemsService', () => {
         name: 'Updated Session',
         is_active: false,
         row_version: 2,
+        updated_at: expect.any(Date),
       });
       expect(result.name).toBe('Updated Session');
       expect(result.is_active).toBe(false);
+      expect(result.updated_at).toEqual(updatedAt);
     });
 
     it('rejects tracking a service item on update', async () => {
@@ -502,6 +510,7 @@ describe('ItemsService', () => {
       expect(repository.updateItem).toHaveBeenCalledWith(10, {
         row_version: 2,
         tax_code_id: null,
+        updated_at: expect.any(Date),
       });
       expect(result.tax_code_id).toBeNull();
     });

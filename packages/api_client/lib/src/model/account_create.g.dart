@@ -8,7 +8,7 @@ part of 'account_create.dart';
 
 class _$AccountCreate extends AccountCreate {
   @override
-  final String code;
+  final String? code;
   @override
   final String name;
   @override
@@ -28,7 +28,7 @@ class _$AccountCreate extends AccountCreate {
       (AccountCreateBuilder()..update(updates))._build();
 
   _$AccountCreate._(
-      {required this.code,
+      {this.code,
       required this.name,
       required this.accountType,
       this.parentId,
@@ -161,8 +161,7 @@ class AccountCreateBuilder
   _$AccountCreate _build() {
     final _$result = _$v ??
         _$AccountCreate._(
-          code: BuiltValueNullFieldError.checkNotNull(
-              code, r'AccountCreate', 'code'),
+          code: code,
           name: BuiltValueNullFieldError.checkNotNull(
               name, r'AccountCreate', 'name'),
           accountType: BuiltValueNullFieldError.checkNotNull(

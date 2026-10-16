@@ -17,6 +17,7 @@ import 'package:api_client/src/api/dash_api.dart';
 import 'package:api_client/src/api/diet_api.dart';
 import 'package:api_client/src/api/goal_api.dart';
 import 'package:api_client/src/api/health_api.dart';
+import 'package:api_client/src/api/inv_api.dart';
 import 'package:api_client/src/api/media_api.dart';
 import 'package:api_client/src/api/memb_api.dart';
 import 'package:api_client/src/api/notif_api.dart';
@@ -169,6 +170,12 @@ class ApiClient {
   /// by doing that all interceptors will not be executed
   HEALTHApi getHEALTHApi() {
     return HEALTHApi(dio, serializers);
+  }
+
+  /// Get INVApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  INVApi getINVApi() {
+    return INVApi(dio, serializers);
   }
 
   /// Get MEDIAApi instance, base route and serializer can be overridden by a given but be careful,
