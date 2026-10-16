@@ -149,6 +149,8 @@ import '../../features/accounting/presentation/cubit/go_live_cubit.dart'
     as _i533;
 import '../../features/accounting/presentation/cubit/item_detail_cubit.dart'
     as _i1009;
+import '../../features/accounting/presentation/cubit/item_form_cubit.dart'
+    as _i521;
 import '../../features/accounting/presentation/cubit/items_cubit.dart' as _i149;
 import '../../features/accounting/presentation/cubit/journal_detail_cubit.dart'
     as _i494;
@@ -607,7 +609,7 @@ import '../../features/scheduling/presentation/bloc/book_schedule_bloc.dart'
 import '../../features/scheduling/presentation/cubit/facilities_cubit.dart'
     as _i115;
 import '../../features/scheduling/presentation/cubit/open_slots_cubit.dart'
-    as _i521;
+    as _i522;
 import '../../features/scheduling/presentation/cubit/schedule_calendar_cubit.dart'
     as _i1056;
 import '../../features/scheduling/presentation/cubit/schedule_detail_cubit.dart'
@@ -1731,6 +1733,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i771.DietLogRepository>(
       () => _i532.DietLogRepositoryImpl(gh<_i785.DietLogRemoteDataSource>()),
     );
+    gh.factory<_i521.ItemFormCubit>(
+      () => _i521.ItemFormCubit(
+        gh<_i220.GetItemUseCase>(),
+        gh<_i850.CreateItemUseCase>(),
+        gh<_i467.UpdateItemUseCase>(),
+        gh<_i307.GetAccountUseCase>(),
+        gh<_i571.GetTaxCodesUseCase>(),
+      ),
+    );
     gh.factory<_i928.AccountingReportsCubit>(
       () => _i928.AccountingReportsCubit(
         gh<_i12.GetTrialBalanceUseCase>(),
@@ -2069,8 +2080,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i551.UnlockAccountingPeriodUseCase>(),
       ),
     );
-    gh.factory<_i521.OpenSlotsCubit>(
-      () => _i521.OpenSlotsCubit(
+    gh.factory<_i522.OpenSlotsCubit>(
+      () => _i522.OpenSlotsCubit(
         gh<_i502.GetAssignedTrainerUseCase>(),
         gh<_i871.GetTrainerAvailabilityUseCase>(),
         gh<_i777.ListSchedulesUseCase>(),

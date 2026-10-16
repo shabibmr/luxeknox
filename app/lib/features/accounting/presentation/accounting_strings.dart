@@ -428,4 +428,16 @@ class AccountingStrings {
 
   static const String searchUoms = 'Search units';
   static const String itemCategoryNone = 'No category';
+  static const String itemNameRequired = 'Name is required.';
+  static const String itemNameTooLong = 'Name must be 150 characters or fewer.';
+  static const String itemSkuTooLong = 'SKU must be 64 characters or fewer.';
+  static const String itemHsnSacTooLong =
+      'HSN/SAC must be 16 characters or fewer.';
+  static const String itemRateInvalid = 'Enter a number of 0 or more.';
+  static const String itemUomRequired = 'Choose a unit of measure.';
+  static const String itemAccountRequired = 'Choose an account.';
+  static const String itemSavedSnack = 'Item saved.';
+  static const String itemNoTaxCode = 'No tax code';
+  static const String itemTrackingLocked =
+      'Tracking and unit cannot change once stock has moved.';
 }

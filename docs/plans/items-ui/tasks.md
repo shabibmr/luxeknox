@@ -7,7 +7,7 @@
 | ID | Status | Task | Needs | Done when |
 |---|---|---|---|---|
 | IU-01 | `[x]` | Add `GET /inventory/uoms` and `GET /inventory/item-categories` in `apps/api/src/inv/` (`inventory.read`, `is_active` filter, no pagination). Specs for controller and service | — | Specs pass; UOM rows return `id`, `code`, `decimal_places` |
-| IU-02 | `[ ]` | Regenerate the OpenAPI doc and `packages/api_client` (`Uom`, `ItemCategory`, new `INVApi` methods) | IU-01 | `dart analyze packages/api_client` clean; generated diff limited to new models and API methods |
+| IU-02 | `[x]` | Regenerate the OpenAPI doc and `packages/api_client` (`Uom`, `ItemCategory`, new `INVApi` methods) | IU-01 | `dart analyze packages/api_client` clean; generated diff limited to new models and API methods |
 
 ## B. Data layer
 
@@ -46,8 +46,8 @@
 | ID | Status | Task | Needs | Done when |
 |---|---|---|---|---|
 | IU-50 | `[x]` | `UomPickerSheet` and a category dropdown using `getUoms` / `getItemCategories`; inactive rows visible but not selectable | IU-13 | Widget test: select returns the UOM; inactive row disabled |
-| IU-51 | `[ ]` | `ItemFormCubit`: create and edit modes; fields from `ItemCreate`; client checks per plan decision 7; the tracking toggle defaults inventory (`1400`) and COGS (`5050`) accounts; `hasMovements` locks tracking and UOM; `itemKind` locked in edit; API errors map to a form-level message | IU-13, IU-50 | Cubit tests: name required; negative rate rejected; tracking on without accounts refused; locked fields cannot change; create and edit payloads are right |
-| IU-52 | `[ ]` | `ItemFormScreen`: kind segmented control, name, SKU, HSN/SAC, category, UOM, rates, tax code picker, income / expense `AccountPickerSheet`, active switch, tracking section with inventory and COGS pickers and reorder level; submit disabled while saving; on success go to item detail and show a saved snackbar | IU-51, IU-22 | Widget test: tracking section appears and disappears; submit disabled when invalid; server error text shown |
+| IU-51 | `[x]` | `ItemFormCubit`: create and edit modes; fields from `ItemCreate`; client checks per plan decision 7; the tracking toggle defaults inventory (`1400`) and COGS (`5050`) accounts; `hasMovements` locks tracking and UOM; `itemKind` locked in edit; API errors map to a form-level message | IU-13, IU-50 | Cubit tests: name required; negative rate rejected; tracking on without accounts refused; locked fields cannot change; create and edit payloads are right |
+| IU-52 | `[x]` | `ItemFormScreen`: kind segmented control, name, SKU, HSN/SAC, category, UOM, rates, tax code picker, income / expense `AccountPickerSheet`, active switch, tracking section with inventory and COGS pickers and reorder level; submit disabled while saving; on success go to item detail and show a saved snackbar | IU-51, IU-22 | Widget test: tracking section appears and disappears; submit disabled when invalid; server error text shown |
 
 ## G. Verify
 
