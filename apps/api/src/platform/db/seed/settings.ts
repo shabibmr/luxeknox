@@ -31,8 +31,8 @@ export const SEED_GYM_SETTINGS: readonly GymSettingDefinition[] = [
   },
   {
     setting_key: 'accounting.posting_enabled',
-    setting_value: 'false',
-    description: 'When true, member sales post automatic journals; default off until go-live',
+    setting_value: 'true',
+    description: 'When true, member sales post automatic journals; default on',
   },
   {
     setting_key: 'accounting.fiscal_year_start_month',

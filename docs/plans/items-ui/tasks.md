@@ -53,8 +53,8 @@
 
 | ID | Status | Task | Needs | Done when |
 |---|---|---|---|---|
-| IU-60 | `[ ]` | Route and permission tests across the four routes; `dart analyze` and `flutter test test/features/accounting` clean | IU-23, IU-31, IU-41, IU-52 | All green |
-| IU-61 | `[ ]` | Real-data pass against **localhost** (confirm the Firestore-provided API URL first): create a service item and a tracked goods item, search by SKU, open detail, edit a rate, confirm an item with movements locks UOM and tracking | IU-60 | Every screen works; business-rule errors read clearly |
+| IU-60 | `[x]` | Route and permission tests across the four routes; `dart analyze` and `flutter test test/features/accounting` clean | IU-23, IU-31, IU-41, IU-52 | All green |
+| IU-61 | `[x]` | Real-data pass against **localhost** (confirm the Firestore-provided API URL first): create a service item and a tracked goods item, search by SKU, open detail, edit a rate, confirm an item with movements locks UOM and tracking | IU-60 | Every screen works; business-rule errors read clearly |
 
 ## Deferred
 

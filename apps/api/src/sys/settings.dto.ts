@@ -69,7 +69,7 @@ export const SETTING_CATALOGUE: readonly SettingDefinition[] = [
   { setting_key: 'default_page_size', category: 'general', default_value: '20', description: 'Default page size for list endpoints', validate: integer(1, 200) },
   { setting_key: 'currency', category: 'billing', default_value: 'INR', description: 'Billing currency code (ISO 4217)', validate: (value) => /^[A-Z]{3}$/.test(value) },
   { setting_key: 'tax_rate_percent', category: 'billing', default_value: '18.00', description: 'Tax rate percent', validate: decimal(0, 100) },
-  { setting_key: 'accounting.posting_enabled', category: 'billing', default_value: 'false', description: 'Enable automatic journal posting from member sales', validate: boolean },
+  { setting_key: 'accounting.posting_enabled', category: 'billing', default_value: 'true', description: 'Enable automatic journal posting from member sales', validate: boolean },
   { setting_key: 'accounting.fiscal_year_start_month', category: 'billing', default_value: '4', description: 'Fiscal year start month (1-12)', validate: integer(1, 12) },
   { setting_key: 'accounting.default_tax_code', category: 'billing', default_value: 'gst_18', description: 'Default tax code slug for sales posting', validate: text(32) },
   { setting_key: 'payments_activate_membership_on_partial', category: 'membership', default_value: 'false', description: 'Activate membership when an invoice is partially paid', validate: boolean },
