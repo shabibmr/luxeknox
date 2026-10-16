@@ -204,15 +204,25 @@ abstract class AccountingRemoteDataSource {
   });
 
   // Items
-  Future<api.ItemPage> listItems({
+  Future<api.InventoryItemPage> listItems({
     int? limit,
     int? offset,
     api.ItemKind? itemKind,
+    int? categoryId,
     bool? isActive,
+    bool? inventoryTracked,
     String? search,
   });
 
-  Future<api.Item> getItem(int id);
+  Future<api.InventoryItem> getItem(int id);
+
+  Future<api.UomPage> listUoms({int? limit, int? offset, bool? isActive});
+
+  Future<api.ItemCategoryPage> listItemCategories({
+    int? limit,
+    int? offset,
+    bool? isActive,
+  });
 
   Future<api.Item> createItem(api.ItemCreate itemCreate);
 
@@ -268,10 +278,11 @@ abstract class AccountingRemoteDataSource {
 
 @LazySingleton(as: AccountingRemoteDataSource)
 class AccountingRemoteDataSourceImpl implements AccountingRemoteDataSource {
-  AccountingRemoteDataSourceImpl(this._acctApi, [Dio? dio])
+  AccountingRemoteDataSourceImpl(this._acctApi, this._invApi, [Dio? dio])
       : _dio = dio ?? Dio();
 
   final api.ACCTApi _acctApi;
+  final api.INVApi _invApi;
   final Dio _dio;
 
   T _unwrap<T>(Response<T> response) {
@@ -755,27 +766,53 @@ class AccountingRemoteDataSourceImpl implements AccountingRemoteDataSource {
 
   // Items
   @override
-  Future<api.ItemPage> listItems({
+  Future<api.InventoryItemPage> listItems({
     int? limit,
     int? offset,
     api.ItemKind? itemKind,
+    int? categoryId,
     bool? isActive,
+    bool? inventoryTracked,
     String? search,
   }) async {
     return _unwrap(
-      await _acctApi.listItems(
+      await _invApi.listInventoryItems(
         limit: limit,
         offset: offset,
         itemKind: itemKind,
+        categoryId: categoryId,
         isActive: isActive,
+        inventoryTracked: inventoryTracked,
         search: search,
       ),
     );
   }
 
   @override
-  Future<api.Item> getItem(int id) async {
-    return _unwrap(await _acctApi.getItem(id: id));
+  Future<api.InventoryItem> getItem(int id) async {
+    return _unwrap(await _invApi.getInventoryItem(id: id));
+  }
+
+  @override
+  Future<api.UomPage> listUoms({int? limit, int? offset, bool? isActive}) async {
+    return _unwrap(
+      await _invApi.listUoms(limit: limit, offset: offset, isActive: isActive),
+    );
+  }
+
+  @override
+  Future<api.ItemCategoryPage> listItemCategories({
+    int? limit,
+    int? offset,
+    bool? isActive,
+  }) async {
+    return _unwrap(
+      await _invApi.listItemCategories(
+        limit: limit,
+        offset: offset,
+        isActive: isActive,
+      ),
+    );
   }
 
   @override

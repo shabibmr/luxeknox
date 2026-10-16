@@ -444,6 +444,12 @@ class _PurchaseBillCard extends StatelessWidget {
                             fontSize: 16,
                           ),
                         ),
+                        if (bill.supplierInvoiceNo != null &&
+                            bill.supplierInvoiceNo!.isNotEmpty)
+                          Text(
+                            '${AccountingStrings.supplierInvoiceNoLabel} ${bill.supplierInvoiceNo}',
+                            style: theme.textTheme.bodySmall,
+                          ),
                         const SizedBox(height: 4),
                         Text(
                           vendorDisplayName,

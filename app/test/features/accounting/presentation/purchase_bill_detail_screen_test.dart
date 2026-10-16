@@ -252,6 +252,63 @@ void main() {
     });
   });
 
+  group('Item and supplier invoice display', () {
+    testWidgets('shows item name, quantity with UOM and supplier invoice no',
+        (tester) async {
+      final bill = PurchaseBill(
+        id: 'pb-11',
+        billNumber: 'BILL-2026-0011',
+        supplierInvoiceNo: 'SUP-88',
+        vendorId: 'v-101',
+        billDate: tDate,
+        subtotal: '1100.00',
+        taxAmount: '0.00',
+        totalAmount: '1100.00',
+        status: 'posted',
+        allocatedAmount: '0.00',
+        journalEntryId: 'JRN-2026-0099',
+        lines: const [
+          PurchaseBillLine(
+            id: 'l1',
+            billId: 'pb-11',
+            itemId: '9',
+            itemName: 'Whey Protein',
+            uomCode: 'KG',
+            inventoryTracked: true,
+            quantity: '2.500',
+            unitPrice: '400.00',
+            amount: '1000.00',
+          ),
+          PurchaseBillLine(
+            id: 'l2',
+            billId: 'pb-11',
+            accountId: 'acc-600',
+            description: 'Delivery',
+            quantity: '1',
+            unitPrice: '100.00',
+            amount: '100.00',
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(
+          state: PurchaseBillDetailState(
+            status: LoadStatus.success,
+            bill: bill,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('SUP-88'), findsOneWidget);
+      expect(find.text('Whey Protein'), findsOneWidget);
+      expect(find.text('2.500 KG'), findsOneWidget);
+      expect(find.text('Delivery'), findsOneWidget);
+      expect(find.text('1'), findsOneWidget);
+      expect(find.text('JRN-2026-0099'), findsOneWidget);
+    });
+  });
+
   group('Loading and Error states', () {
     testWidgets('shows loading indicator on loading state', (tester) async {
       await tester.pumpWidget(

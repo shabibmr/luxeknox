@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
+import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
@@ -456,6 +457,12 @@ class _QuickActionsSection extends StatelessWidget {
               label: const Text(AccountingStrings.vendorsTitle),
               onPressed: () => context.go(Routes.adminAccountingVendors),
             ),
+            if (context.can('inventory.read'))
+              ActionChip(
+                avatar: const Icon(Icons.inventory_2_outlined, size: 18),
+                label: const Text(AccountingStrings.itemsTitle),
+                onPressed: () => context.go(Routes.adminAccountingItems),
+              ),
             ActionChip(
               avatar: const Icon(Icons.bar_chart_outlined, size: 18),
               label: const Text(AccountingStrings.viewReports),

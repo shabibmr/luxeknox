@@ -12,6 +12,7 @@ class CreatePurchaseBillParams extends Equatable {
     required this.vendorId,
     required this.billDate,
     this.dueDate,
+    this.supplierInvoiceNo,
     required this.lines,
     this.idempotencyKey,
   });
@@ -19,11 +20,19 @@ class CreatePurchaseBillParams extends Equatable {
   final String vendorId;
   final DateTime billDate;
   final DateTime? dueDate;
+  final String? supplierInvoiceNo;
   final List<PurchaseBillLine> lines;
   final String? idempotencyKey;
 
   @override
-  List<Object?> get props => [vendorId, billDate, dueDate, lines, idempotencyKey];
+  List<Object?> get props => [
+    vendorId,
+    billDate,
+    dueDate,
+    supplierInvoiceNo,
+    lines,
+    idempotencyKey,
+  ];
 }
 
 @lazySingleton
@@ -39,6 +48,7 @@ class CreatePurchaseBillUseCase
       vendorId: params.vendorId,
       billDate: params.billDate,
       dueDate: params.dueDate,
+      supplierInvoiceNo: params.supplierInvoiceNo,
       lines: params.lines,
       idempotencyKey: params.idempotencyKey,
     );

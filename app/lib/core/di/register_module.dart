@@ -77,6 +77,9 @@ abstract class RegisterModule {
   ACCTApi acctApi(Dio dio) => ACCTApi(dio, standardSerializers);
 
   @lazySingleton
+  INVApi invApi(Dio dio) => INVApi(dio, standardSerializers);
+
+  @lazySingleton
   RPTApi rptApi(Dio dio) => RPTApi(dio, standardSerializers);
 
   @lazySingleton

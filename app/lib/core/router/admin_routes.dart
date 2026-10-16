@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/accounting/domain/entities/expense_voucher.dart';
 import '../../features/accounting/domain/entities/fund_transfer.dart';
 import '../../features/accounting/domain/entities/journal.dart';
+import '../../features/accounting/domain/entities/item.dart';
 import '../../features/accounting/domain/entities/payment_voucher.dart';
 import '../../features/accounting/domain/entities/purchase_bill.dart';
 import '../../features/accounting/presentation/screens/account_form_screen.dart';
@@ -26,6 +27,9 @@ import '../../features/accounting/presentation/screens/payment_vouchers_list_scr
 import '../../features/accounting/presentation/screens/purchase_bill_detail_screen.dart';
 import '../../features/accounting/presentation/screens/purchase_bill_form_screen.dart';
 import '../../features/accounting/presentation/screens/purchase_bills_list_screen.dart';
+import '../../features/accounting/presentation/screens/item_detail_screen.dart';
+import '../../features/accounting/presentation/screens/item_form_screen.dart';
+import '../../features/accounting/presentation/screens/items_list_screen.dart';
 import '../../features/accounting/presentation/screens/vendor_form_screen.dart';
 import '../../features/accounting/presentation/screens/vendors_list_screen.dart';
 import '../../features/alerts/presentation/screens/system_alerts_screen.dart';
@@ -425,8 +429,7 @@ StatefulShellRoute createAdminBranchRoute() {
                 routes: [
                   GoRoute(
                     path: 'create',
-                    builder: (context, state) =>
-                        const JournalEntryFormScreen(),
+                    builder: (context, state) => const JournalEntryFormScreen(),
                   ),
                   GoRoute(
                     path: ':id',
@@ -449,9 +452,35 @@ StatefulShellRoute createAdminBranchRoute() {
                   ),
                   GoRoute(
                     path: ':id/edit',
-                    builder: (context, state) => VendorFormScreen(
-                      vendorId: state.pathParameters['id'],
+                    builder: (context, state) =>
+                        VendorFormScreen(vendorId: state.pathParameters['id']),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'items',
+                builder: (context, state) => const ItemsListScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (context, state) => const ItemFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) => ItemDetailScreen(
+                      itemId: int.tryParse(state.pathParameters['id']!) ?? 0,
+                      initialItem: state.extra is Item
+                          ? state.extra as Item
+                          : null,
                     ),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (context, state) => ItemFormScreen(
+                          itemId: int.tryParse(state.pathParameters['id']!),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -897,9 +926,9 @@ class _AdminAdaptiveShellState extends State<_AdminAdaptiveShell> {
 
     final selectedIndex =
         (!canReadAccounting &&
-                widget.navigationShell.currentIndex == _adminMoreBranchIndex)
-            ? 4
-            : widget.navigationShell.currentIndex;
+            widget.navigationShell.currentIndex == _adminMoreBranchIndex)
+        ? 4
+        : widget.navigationShell.currentIndex;
 
     // Keep [navigationShell] mounted under the hub so other tab stacks
     // are not disposed while More chrome is visible.

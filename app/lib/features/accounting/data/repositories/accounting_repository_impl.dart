@@ -74,7 +74,6 @@ class AccountingRepositoryImpl implements AccountingRepository {
 
   @override
   Future<Either<Failure, Account>> createAccount({
-    String? code,
     required String name,
     required String accountType,
     String? parentId,
@@ -86,7 +85,6 @@ class AccountingRepositoryImpl implements AccountingRepository {
     try {
       final created = await _remoteDataSource.createAccount(
         toAccountCreate(
-          code: code,
           name: name,
           accountType: accountType,
           parentId: parentId,
@@ -413,6 +411,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
     required String vendorId,
     required DateTime billDate,
     DateTime? dueDate,
+    String? supplierInvoiceNo,
     required List<PurchaseBillLine> lines,
     String? idempotencyKey,
   }) async {
@@ -422,6 +421,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
           vendorId: vendorId,
           billDate: billDate,
           dueDate: dueDate,
+          supplierInvoiceNo: supplierInvoiceNo,
           lines: lines,
         ),
         idempotencyKey: idempotencyKey,
@@ -954,7 +954,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
     int? limit,
     int? offset,
     String? kind,
+    int? categoryId,
     bool? isActive,
+    bool? inventoryTracked,
     String? search,
   }) async {
     try {
@@ -962,7 +964,9 @@ class AccountingRepositoryImpl implements AccountingRepository {
         limit: limit,
         offset: offset,
         itemKind: kind == null ? null : api.ItemKind.valueOf(kind),
+        categoryId: categoryId,
         isActive: isActive,
+        inventoryTracked: inventoryTracked,
         search: search,
       );
       return Right(
@@ -978,70 +982,63 @@ class AccountingRepositoryImpl implements AccountingRepository {
   }
 
   @override
-  Future<Either<Failure, Item>> getItem(String id) async {
-    final intId = _parseId(id);
-    if (intId == null) return const Left(NotFoundFailure());
+  Future<Either<Failure, Item>> getItem(int id) async {
     try {
-      final model = await _remoteDataSource.getItem(intId);
+      final model = await _remoteDataSource.getItem(id);
       return Right(model.toDomain());
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }
   }
 
+  // Writes go to /accounting/items; the read shape (UOM code, movements)
+  // only exists on /inventory/items, so the saved row is re-read.
   @override
-  Future<Either<Failure, Item>> createItem({
-    required String name,
-    required String kind,
-    required String incomeAccountId,
-    required String expenseAccountId,
-    String? defaultTaxCodeId,
-    bool? isActive,
-    bool? inventoryTracked,
-  }) async {
+  Future<Either<Failure, Item>> createItem(ItemDraft draft) async {
     try {
-      final created = await _remoteDataSource.createItem(
-        toItemCreate(
-          name: name,
-          kind: kind,
-          incomeAccountId: incomeAccountId,
-          expenseAccountId: expenseAccountId,
-          defaultTaxCodeId: defaultTaxCodeId,
-          isActive: isActive,
-          inventoryTracked: inventoryTracked,
-        ),
-      );
-      return Right(created.toDomain());
+      final created = await _remoteDataSource.createItem(toItemCreate(draft));
+      return Right((await _remoteDataSource.getItem(created.id)).toDomain());
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }
   }
 
   @override
-  Future<Either<Failure, Item>> updateItem({
-    required String id,
-    String? name,
-    String? incomeAccountId,
-    String? expenseAccountId,
-    String? defaultTaxCodeId,
-    bool? isActive,
-    bool? inventoryTracked,
-  }) async {
-    final intId = _parseId(id);
-    if (intId == null) return const Left(NotFoundFailure());
+  Future<Either<Failure, Item>> updateItem(int id, ItemDraft draft) async {
     try {
-      final updated = await _remoteDataSource.updateItem(
-        id: intId,
-        itemUpdate: toItemUpdate(
-          name: name,
-          incomeAccountId: incomeAccountId,
-          expenseAccountId: expenseAccountId,
-          defaultTaxCodeId: defaultTaxCodeId,
-          isActive: isActive,
-          inventoryTracked: inventoryTracked,
-        ),
+      await _remoteDataSource.updateItem(
+        id: id,
+        itemUpdate: toItemUpdate(draft),
       );
-      return Right(updated.toDomain());
+      return Right((await _remoteDataSource.getItem(id)).toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Uom>>> getUoms({bool? isActive}) async {
+    try {
+      final page = await _remoteDataSource.listUoms(
+        limit: 100,
+        isActive: isActive,
+      );
+      return Right(page.data.map((u) => u.toDomain()).toList());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ItemCategory>>> getItemCategories({
+    bool? isActive,
+  }) async {
+    try {
+      final page = await _remoteDataSource.listItemCategories(
+        limit: 100,
+        isActive: isActive,
+      );
+      return Right(page.data.map((c) => c.toDomain()).toList());
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

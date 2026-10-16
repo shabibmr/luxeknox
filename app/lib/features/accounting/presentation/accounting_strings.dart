@@ -30,6 +30,10 @@ class AccountingStrings {
   static const String vendorDetailTitle = 'Vendor Details';
   static const String createVendorTitle = 'New Vendor';
   static const String editVendorTitle = 'Edit Vendor';
+  static const String itemsTitle = 'Items';
+  static const String itemDetailTitle = 'Item Details';
+  static const String createItemTitle = 'New Item';
+  static const String editItemTitle = 'Edit Item';
   static const String reportsTitle = 'Accounting Reports';
   static const String periodsTitle = 'Fiscal Periods';
   static const String goLiveTitle = 'Accounting Go-Live';

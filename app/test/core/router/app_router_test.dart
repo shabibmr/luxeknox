@@ -260,6 +260,40 @@ void main() {
       },
     );
 
+    test('item routes: write slug gates create/edit, inventory.read the list', () {
+      String? redirectFor(List<String> slugs, String path) => appRedirectLogic(
+        sessionState: SessionAuthenticated(
+          principal: adminPrincipal,
+          capabilities: Capabilities(slugs: slugs),
+        ),
+        uri: Uri.parse(path),
+      );
+
+      expect(
+        redirectFor(['accounting.read'], Routes.adminAccountingItemsCreate),
+        Routes.adminDashboard,
+      );
+      expect(
+        redirectFor(['accounting.read'], Routes.adminAccountingItemEditById('5')),
+        Routes.adminDashboard,
+      );
+      expect(
+        redirectFor(['inventory.read'], Routes.adminAccountingItems),
+        isNull,
+      );
+      expect(
+        redirectFor(['inventory.read'], Routes.adminAccountingItemById('5')),
+        isNull,
+      );
+      expect(
+        redirectFor(
+          ['accounting.accounts_write'],
+          Routes.adminAccountingItemsCreate,
+        ),
+        isNull,
+      );
+    });
+
     test(
       'admin with accounting.read accessing /admin/accounting stays on path',
       () {

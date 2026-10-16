@@ -4,6 +4,7 @@ class PurchaseBill extends Equatable {
   const PurchaseBill({
     required this.id,
     required this.billNumber,
+    this.supplierInvoiceNo,
     required this.vendorId,
     this.vendorName,
     required this.billDate,
@@ -20,6 +21,7 @@ class PurchaseBill extends Equatable {
 
   final String id;
   final String billNumber;
+  final String? supplierInvoiceNo;
   final String vendorId;
   final String? vendorName;
   final DateTime billDate;
@@ -37,6 +39,7 @@ class PurchaseBill extends Equatable {
   List<Object?> get props => [
     id,
     billNumber,
+    supplierInvoiceNo,
     vendorId,
     vendorName,
     billDate,
@@ -56,8 +59,11 @@ class PurchaseBillLine extends Equatable {
   const PurchaseBillLine({
     required this.id,
     required this.billId,
-    required this.accountId,
+    this.accountId,
     this.itemId,
+    this.itemName,
+    this.uomCode,
+    this.inventoryTracked = false,
     this.description,
     required this.quantity,
     required this.unitPrice,
@@ -68,8 +74,12 @@ class PurchaseBillLine extends Equatable {
 
   final String id;
   final String billId;
-  final String accountId;
+  /// Null on item lines the server routes (tracked: inventory account).
+  final String? accountId;
   final String? itemId;
+  final String? itemName;
+  final String? uomCode;
+  final bool inventoryTracked;
   final String? description;
   final String quantity;
   final String unitPrice;
@@ -83,6 +93,9 @@ class PurchaseBillLine extends Equatable {
     billId,
     accountId,
     itemId,
+    itemName,
+    uomCode,
+    inventoryTracked,
     description,
     quantity,
     unitPrice,

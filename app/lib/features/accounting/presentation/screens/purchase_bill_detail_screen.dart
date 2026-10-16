@@ -270,6 +270,20 @@ class _PurchaseBillDetailView extends StatelessWidget {
                 ),
               ],
             ),
+            if (bill.supplierInvoiceNo != null &&
+                bill.supplierInvoiceNo!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              const Text(
+                AccountingStrings.supplierInvoiceNoLabel,
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                bill.supplierInvoiceNo!,
+                key: const Key('supplier_invoice_no_text'),
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
             const SizedBox(height: 12),
             Row(
               children: [
@@ -399,21 +413,36 @@ class _PurchaseBillDetailView extends StatelessWidget {
     );
   }
 
+  String _lineName(PurchaseBillLine line) {
+    final name = line.itemName;
+    if (name != null && name.isNotEmpty) return name;
+    final desc = line.description;
+    return desc != null && desc.isNotEmpty ? desc : '-';
+  }
+
   DataRow _buildLineDataRow(PurchaseBillLine line, int index) {
     return DataRow(
       cells: [
         DataCell(
-          Text(line.description != null && line.description!.isNotEmpty
-              ? line.description!
-              : '-'),
+          Text(
+            key: Key('line_name_$index'),
+            _lineName(line),
+          ),
         ),
         DataCell(
           Text(
-            line.accountId,
+            line.accountId ?? '-',
             style: const TextStyle(fontFamily: 'monospace'),
           ),
         ),
-        DataCell(Text(line.quantity)),
+        DataCell(
+          Text(
+            line.uomCode == null || line.uomCode!.isEmpty
+                ? line.quantity
+                : '${line.quantity} ${line.uomCode}',
+            key: Key('line_qty_$index'),
+          ),
+        ),
         DataCell(Text(_formatAmount(line.unitPrice))),
         DataCell(Text(_formatAmount(line.amount))),
         DataCell(Text(_formatAmount(line.taxAmount ?? '0.00'))),

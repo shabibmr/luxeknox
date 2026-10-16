@@ -236,6 +236,9 @@ extension PurchaseBillLineModelMapper on api.PurchaseBillLine {
       billId: purchaseBillId.toString(),
       accountId: accountId.toString(),
       itemId: itemId?.toString(),
+      itemName: itemName,
+      uomCode: uomCode,
+      inventoryTracked: inventoryTracked,
       description: description,
       quantity: quantity,
       unitPrice: rate,
@@ -251,6 +254,7 @@ extension PurchaseBillModelMapper on api.PurchaseBill {
     return PurchaseBill(
       id: id.toString(),
       billNumber: billNumber,
+      supplierInvoiceNo: supplierInvoiceNo,
       vendorId: vendorId.toString(),
       vendorName: null,
       billDate: billDate.toDateTime(),
@@ -271,19 +275,21 @@ api.PurchaseBillCreate toPurchaseBillCreate({
   required String vendorId,
   required DateTime billDate,
   DateTime? dueDate,
+  String? supplierInvoiceNo,
   required List<PurchaseBillLine> lines,
 }) {
   return api.PurchaseBillCreate(
     (b) => b
       ..vendorId = int.parse(vendorId)
       ..billDate = billDate.toDate()
+      ..supplierInvoiceNo = supplierInvoiceNo
       ..dueDate = dueDate?.toDate()
       ..lines = ListBuilder<api.PurchaseBillLineWrite>(
         lines.map(
           (l) => api.PurchaseBillLineWrite(
             (lb) => lb
               ..itemId = l.itemId == null ? null : int.tryParse(l.itemId!)
-              ..accountId = int.parse(l.accountId)
+              ..accountId = l.accountId == null ? null : int.tryParse(l.accountId!)
               ..description = l.description
               ..quantity = l.quantity
               ..rate = l.unitPrice
@@ -348,7 +354,7 @@ api.ExpenseCreate toExpenseCreate({
         lines.map(
           (l) => api.ExpenseLineCreate(
             (lb) => lb
-              ..accountId = int.parse(l.accountId)
+              ..accountId = int.parse(l.accountId!)
               ..description = l.description
               ..amount = l.amount
               ..taxCodeId =
@@ -379,7 +385,7 @@ api.ExpenseUpdate toExpenseUpdate({
               lines.map(
                 (l) => api.ExpenseLineCreate(
                   (lb) => lb
-                    ..accountId = int.parse(l.accountId)
+                    ..accountId = int.parse(l.accountId!)
                     ..description = l.description
                     ..amount = l.amount
                     ..taxCodeId =
@@ -604,63 +610,106 @@ api.TaxCodeUpdate toTaxCodeUpdate({
 }
 
 // Items
-extension ItemModelMapper on api.Item {
+extension InventoryItemModelMapper on api.InventoryItem {
   Item toDomain() {
     return Item(
-      id: id.toString(),
+      id: id,
       name: name,
-      code: '',
       kind: itemKind.name,
-      incomeAccountId: incomeAccountId.toString(),
-      expenseAccountId: expenseAccountId.toString(),
-      defaultTaxCodeId: taxCodeId?.toString(),
+      sku: sku,
+      hsnSac: hsnSac,
+      categoryId: categoryId,
+      categoryName: categoryName,
+      uomId: uomId,
+      uomCode: uomCode,
+      uomDecimalPlaces: uomDecimalPlaces,
+      saleRate: saleRate,
+      purchaseRate: purchaseRate,
+      taxCodeId: taxCodeId,
+      incomeAccountId: incomeAccountId,
+      expenseAccountId: expenseAccountId,
+      inventoryAccountId: inventoryAccountId,
+      cogsAccountId: cogsAccountId,
+      inventoryTracked: inventoryTracked,
+      reorderLevel: reorderLevel,
+      hasMovements: hasMovements,
       isActive: isActive,
-      rowVersion: 1,
+      rowVersion: rowVersion,
     );
   }
 }
 
-api.ItemCreate toItemCreate({
-  required String name,
-  required String kind,
-  required String incomeAccountId,
-  required String expenseAccountId,
-  String? defaultTaxCodeId,
-  bool? isActive,
-  bool? inventoryTracked,
-}) {
-  return api.ItemCreate(
-    (b) => b
-      ..name = name
-      ..itemKind = api.ItemKind.valueOf(kind)
-      ..incomeAccountId = int.parse(incomeAccountId)
-      ..expenseAccountId = int.parse(expenseAccountId)
-      ..taxCodeId =
-          defaultTaxCodeId == null ? null : int.tryParse(defaultTaxCodeId)
-      ..isActive = isActive
-      ..inventoryTracked = inventoryTracked,
+extension UomModelMapper on api.Uom {
+  Uom toDomain() => Uom(
+    id: id,
+    code: code,
+    name: name,
+    decimalPlaces: decimalPlaces,
+    isActive: isActive,
   );
 }
 
-api.ItemUpdate toItemUpdate({
-  String? name,
-  String? incomeAccountId,
-  String? expenseAccountId,
-  String? defaultTaxCodeId,
-  bool? isActive,
-  bool? inventoryTracked,
-}) {
+extension ItemCategoryModelMapper on api.ItemCategory {
+  ItemCategory toDomain() =>
+      ItemCategory(id: id, name: name, parentId: parentId, isActive: isActive);
+}
+
+/// Blank text becomes null; otherwise the number is fixed to [places]
+/// decimals. Text that is not a number is passed through so the server
+/// can reject it with a field error.
+String? _decimalOrNull(String? raw, int places) {
+  final text = raw?.trim();
+  if (text == null || text.isEmpty) return null;
+  final value = double.tryParse(text);
+  return value == null ? text : value.toStringAsFixed(places);
+}
+
+String? _textOrNull(String? raw) {
+  final text = raw?.trim();
+  return text == null || text.isEmpty ? null : text;
+}
+
+api.ItemCreate toItemCreate(ItemDraft d) {
+  return api.ItemCreate(
+    (b) => b
+      ..name = d.name.trim()
+      ..itemKind = api.ItemKind.valueOf(d.kind)
+      ..uomId = d.uomId
+      ..incomeAccountId = d.incomeAccountId
+      ..expenseAccountId = d.expenseAccountId
+      ..sku = _textOrNull(d.sku)
+      ..hsnSac = _textOrNull(d.hsnSac)
+      ..categoryId = d.categoryId
+      ..saleRate = _decimalOrNull(d.saleRate, 2)
+      ..purchaseRate = _decimalOrNull(d.purchaseRate, 2)
+      ..reorderLevel = _decimalOrNull(d.reorderLevel, 3)
+      ..taxCodeId = d.taxCodeId
+      ..isActive = d.isActive
+      ..inventoryTracked = d.inventoryTracked
+      ..inventoryAccountId = d.inventoryAccountId
+      ..cogsAccountId = d.cogsAccountId,
+  );
+}
+
+/// The update DTO has no `item_kind`, so the draft's kind is ignored.
+api.ItemUpdate toItemUpdate(ItemDraft d) {
   return api.ItemUpdate(
     (b) => b
-      ..name = name
-      ..incomeAccountId =
-          incomeAccountId == null ? null : int.tryParse(incomeAccountId)
-      ..expenseAccountId =
-          expenseAccountId == null ? null : int.tryParse(expenseAccountId)
-      ..taxCodeId =
-          defaultTaxCodeId == null ? null : int.tryParse(defaultTaxCodeId)
-      ..isActive = isActive
-      ..inventoryTracked = inventoryTracked,
+      ..name = d.name.trim()
+      ..uomId = d.uomId
+      ..incomeAccountId = d.incomeAccountId
+      ..expenseAccountId = d.expenseAccountId
+      ..sku = _textOrNull(d.sku)
+      ..hsnSac = _textOrNull(d.hsnSac)
+      ..categoryId = d.categoryId
+      ..saleRate = _decimalOrNull(d.saleRate, 2)
+      ..purchaseRate = _decimalOrNull(d.purchaseRate, 2)
+      ..reorderLevel = _decimalOrNull(d.reorderLevel, 3)
+      ..taxCodeId = d.taxCodeId
+      ..isActive = d.isActive
+      ..inventoryTracked = d.inventoryTracked
+      ..inventoryAccountId = d.inventoryAccountId
+      ..cogsAccountId = d.cogsAccountId,
   );
 }
 

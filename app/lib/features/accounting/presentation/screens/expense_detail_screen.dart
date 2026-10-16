@@ -423,7 +423,7 @@ class _ExpenseDetailView extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 8),
-                          child: Text(line.accountId),
+                          child: Text(line.accountId ?? "-"),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(

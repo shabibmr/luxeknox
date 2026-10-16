@@ -59,8 +59,8 @@ Start a task when every ID in *Needs* is `[x]`.
 
 | ID | Status | Task | Needs | Done when |
 |---|---|---|---|---|
-| IL-23 | `[ ]` | Purchase entry data layer: `PurchaseBillLine` gains `itemName`, `uomCode`, `inventoryTracked`; bill entity and mappers gain `supplierInvoiceNo`; regenerate freezed and the injector; `account_id` optional in the write model | IL-17 | Mapper tests cover tracked, untracked and service lines |
-| IL-25 | `[ ]` | Purchase bill detail and list: show item name, quantity with UOM, supplier invoice number, and the journal number after posting | IL-23 | Widget test with a tracked and a service line |
+| IL-23 | `[x]` | Purchase entry data layer: `PurchaseBillLine` gains `itemName`, `uomCode`, `inventoryTracked`; bill entity and mappers gain `supplierInvoiceNo`; regenerate freezed and the injector; `account_id` optional in the write model | IL-17 | Mapper tests cover tracked, untracked and service lines |
+| IL-25 | `[x]` | Purchase bill detail and list: show item name, quantity with UOM, supplier invoice number, and the journal number after posting | IL-23 | Widget test with a tracked and a service line |
 | IL-24 | `[ ]` | Purchase entry form (`purchase_bill_form_screen.dart` and its cubit): `ItemSearchField` per line, defaults from the item, UOM suffix and decimal limit on quantity, account picker hidden for tracked items, "rate excludes tax" hint, live totals (display only), supplier invoice number, **Save draft** and **Save & post** (create, then post with its own idempotency key) | IL-22, IL-23 | Cubit test: picking an item fills rate and tax; Save & post calls create then post once; a server error (period locked) shows on the form |
 
 ## Later (tables exist, no code)
