@@ -156,14 +156,14 @@ void main() {
     );
   }
 
-  testWidgets('renders accounts with code, name, and badges', (tester) async {
+  testWidgets('renders accounts with name and badges', (tester) async {
     await tester.pumpWidget(buildTestableWidget());
     await tester.pumpAndSettle();
 
-    // Verify account code and name
-    expect(find.text('1000'), findsOneWidget);
+    // Verify account name only (codes are not shown in UI references)
+    expect(find.text('1000'), findsNothing);
     expect(find.text('Operating Bank Account'), findsOneWidget);
-    expect(find.text('1200'), findsOneWidget);
+    expect(find.text('1200'), findsNothing);
     expect(find.text('Accounts Receivable'), findsOneWidget);
 
     // Verify bank icon and badge
@@ -189,7 +189,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Inactive account remains visible in the list by default
-    expect(find.text('2000'), findsOneWidget);
+    expect(find.text('2000'), findsNothing);
     expect(find.text('Old Equipment Loan'), findsOneWidget);
 
     // Inactive account is clearly marked with inactive badge

@@ -112,9 +112,9 @@ void main() {
     await tester.tap(find.text('Open Picker'));
     await tester.pumpAndSettle();
 
-    // Active account is visible
+    // Active account is visible by name only
     expect(find.text('Operating Bank Account'), findsOneWidget);
-    expect(find.text('1010'), findsOneWidget);
+    expect(find.text('1010'), findsNothing);
 
     // Tap active account
     await tester.tap(find.text('Operating Bank Account'));
@@ -216,8 +216,9 @@ void main() {
       ),
     );
 
-    // Displays code and name: "1010 - Operating Bank Account"
-    expect(find.text('1010 - Operating Bank Account'), findsOneWidget);
+    // Displays account name only (no code in references)
+    expect(find.text('Operating Bank Account'), findsOneWidget);
+    expect(find.text('1010 - Operating Bank Account'), findsNothing);
 
     // Clear selection
     await tester.tap(find.byIcon(Icons.clear));

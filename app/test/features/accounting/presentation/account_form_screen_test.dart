@@ -70,7 +70,6 @@ void main() {
         .thenAnswer((_) async {});
     when(
       () => mockAccountFormCubit.create(
-        code: any(named: 'code'),
         name: any(named: 'name'),
         accountType: any(named: 'accountType'),
         parentId: any(named: 'parentId'),
@@ -196,7 +195,7 @@ void main() {
 
       expect(find.text(AccountingStrings.createAccountTitle), findsOneWidget);
       expect(find.widgetWithText(TextFormField, AccountingStrings.codeLabel),
-          findsOneWidget);
+          findsNothing);
       expect(find.widgetWithText(TextFormField, AccountingStrings.nameLabel),
           findsOneWidget);
       expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
@@ -220,17 +219,7 @@ void main() {
         findsOneWidget,
       );
 
-      // Verify code field is enabled
-      final codeField = tester.widget<TextFormField>(
-        find.widgetWithText(TextFormField, AccountingStrings.codeLabel),
-      );
-      expect(codeField.enabled, isTrue);
-
-      // Enter code, name, and pick type
-      await tester.enterText(
-        find.widgetWithText(TextFormField, AccountingStrings.codeLabel),
-        '1010',
-      );
+      // Enter name and pick type
       await tester.enterText(
         find.widgetWithText(TextFormField, AccountingStrings.nameLabel),
         'Main Operating Account',
@@ -253,7 +242,6 @@ void main() {
 
       verify(
         () => mockAccountFormCubit.create(
-          code: '1010',
           name: 'Main Operating Account',
           accountType: 'asset',
           parentId: null,
@@ -282,13 +270,12 @@ void main() {
       await tester.tap(find.widgetWithText(ElevatedButton, AccountingStrings.create));
       await tester.pumpAndSettle();
 
-      expect(find.text(AccountingStrings.codeRequired), findsOneWidget);
+      expect(find.text(AccountingStrings.codeRequired), findsNothing);
       expect(find.text(AccountingStrings.nameRequired), findsOneWidget);
       expect(find.text(AccountingStrings.typeRequired), findsOneWidget);
 
       verifyNever(
         () => mockAccountFormCubit.create(
-          code: any(named: 'code'),
           name: any(named: 'name'),
           accountType: any(named: 'accountType'),
           parentId: any(named: 'parentId'),
@@ -304,7 +291,6 @@ void main() {
         (tester) async {
       when(
         () => mockAccountFormCubit.create(
-          code: any(named: 'code'),
           name: any(named: 'name'),
           accountType: any(named: 'accountType'),
           parentId: any(named: 'parentId'),
@@ -317,7 +303,7 @@ void main() {
 
       when(() => mockAccountFormCubit.state).thenReturn(
         const AccountFormState(
-          failure: BusinessRuleFailure('Code already in use'),
+          failure: BusinessRuleFailure('Unable to create account'),
         ),
       );
 
@@ -326,10 +312,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.enterText(
-        find.widgetWithText(TextFormField, AccountingStrings.codeLabel),
-        '1000',
-      );
       await tester.enterText(
         find.widgetWithText(TextFormField, AccountingStrings.nameLabel),
         'Cash',
@@ -343,7 +325,7 @@ void main() {
       await tester.tap(find.widgetWithText(ElevatedButton, AccountingStrings.create));
       await tester.pumpAndSettle();
 
-      expect(find.text('Code already in use'), findsOneWidget);
+      expect(find.text('Unable to create account'), findsOneWidget);
     });
 
     testWidgets('enabling isControl shows control role field', (tester) async {
@@ -371,7 +353,7 @@ void main() {
   });
 
   group('AccountFormScreen - Edit Mode', () {
-    testWidgets('renders existing account with disabled code and type',
+    testWidgets('renders existing account with disabled type',
         (tester) async {
       await tester.pumpWidget(
         wrap(
@@ -384,14 +366,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(AccountingStrings.editAccountTitle), findsOneWidget);
-      expect(find.text('1000'), findsOneWidget);
+      expect(find.widgetWithText(TextFormField, AccountingStrings.codeLabel),
+          findsNothing);
       expect(find.text('Cash on Hand'), findsOneWidget);
-
-      // Code field is disabled
-      final codeField = tester.widget<TextFormField>(
-        find.widgetWithText(TextFormField, AccountingStrings.codeLabel),
-      );
-      expect(codeField.enabled, isFalse);
 
       // Type dropdown is disabled (onChanged is null)
       final typeDropdown = tester.widget<DropdownButtonFormField<String>>(

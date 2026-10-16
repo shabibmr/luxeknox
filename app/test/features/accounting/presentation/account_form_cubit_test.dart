@@ -165,7 +165,6 @@ void main() {
 
   group('create', () {
     const createParams = CreateAccountParams(
-      code: '1010',
       name: 'Petty Cash',
       accountType: 'asset',
       parentId: 'acc-1',
@@ -184,7 +183,6 @@ void main() {
         return cubit;
       },
       act: (cubit) => cubit.create(
-        code: '1010',
         name: 'Petty Cash',
         accountType: 'asset',
         parentId: 'acc-1',
@@ -211,11 +209,10 @@ void main() {
       build: () {
         when(
           () => mockCreateAccount(any()),
-        ).thenAnswer((_) async => const Left(BusinessRuleFailure('Code exists')));
+        ).thenAnswer((_) async => const Left(BusinessRuleFailure('Create failed')));
         return cubit;
       },
       act: (cubit) => cubit.create(
-        code: '1010',
         name: 'Petty Cash',
         accountType: 'asset',
       ),
@@ -223,7 +220,7 @@ void main() {
         const AccountFormState(isSubmitting: true),
         const AccountFormState(
           status: LoadStatus.failure,
-          failure: BusinessRuleFailure('Code exists'),
+          failure: BusinessRuleFailure('Create failed'),
           isSubmitting: false,
         ),
       ],
@@ -231,7 +228,6 @@ void main() {
         verify(
           () => mockCreateAccount(
             const CreateAccountParams(
-              code: '1010',
               name: 'Petty Cash',
               accountType: 'asset',
             ),
@@ -246,7 +242,6 @@ void main() {
       ).thenAnswer((_) async => const Right(tCreatedAccount));
 
       final result = await cubit.create(
-        code: '1010',
         name: 'Petty Cash',
         accountType: 'asset',
       );
@@ -257,10 +252,9 @@ void main() {
     test('returns false on failure', () async {
       when(
         () => mockCreateAccount(any()),
-      ).thenAnswer((_) async => const Left(BusinessRuleFailure('Code exists')));
+      ).thenAnswer((_) async => const Left(BusinessRuleFailure('Create failed')));
 
       final result = await cubit.create(
-        code: '1010',
         name: 'Petty Cash',
         accountType: 'asset',
       );
