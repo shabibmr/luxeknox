@@ -24,8 +24,8 @@
 |---|---|---|---|---|
 | IU-20 | `[x]` | `routes.dart`: `adminAccountingItems`, `…ItemsCreate`, `…ItemsDetail`, `…ItemsEdit` plus `adminAccountingItemById` / `…ItemEditById` helpers | — | Constants follow the vendor naming |
 | IU-21 | `[x]` | `route_capabilities.dart`: `items/create` and `items/:id/edit` → `accounting.accounts_write` (before the `/admin/accounting` catch-all); `items` and `items/:id` → `inventory.read` | IU-20 | Router test: a user with only `accounting.read` is refused on create; `inventory.read` opens the list |
-| IU-22 | `[ ]` | `admin_routes.dart`: `items` route with children `create`, `:id`, `:id/edit` (`create` before `:id`; detail accepts an `Item` in `extra`), in the accounting branch | IU-20 | Deep link to `/admin/accounting/items/5` opens detail |
-| IU-23 | `[ ]` | Accounting home: **Items** button beside Vendors, shown only with `inventory.read`. Add all item strings to `accounting_strings.dart` | IU-22 | Widget test: button visible with the capability, hidden without it, tap navigates |
+| IU-22 | `[x]` | `admin_routes.dart`: `items` route with children `create`, `:id`, `:id/edit` (`create` before `:id`; detail accepts an `Item` in `extra`), in the accounting branch | IU-20 | Deep link to `/admin/accounting/items/5` opens detail |
+| IU-23 | `[x]` | Accounting home: **Items** button beside Vendors, shown only with `inventory.read`. Add all item strings to `accounting_strings.dart` | IU-22 | Widget test: button visible with the capability, hidden without it, tap navigates |
 
 ## D. List
 

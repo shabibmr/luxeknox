@@ -389,10 +389,10 @@ void main() {
     testWidgets('tap navigates to the items route', (tester) async {
       final router = GoRouter(
         routes: [
-          GoRoute(path: '/', builder: (_, __) => const AccountingHomeScreen()),
+          GoRoute(path: '/', builder: (_, _) => const AccountingHomeScreen()),
           GoRoute(
             path: Routes.adminAccountingItems,
-            builder: (_, __) => const Text('items-list'),
+            builder: (_, _) => const Text('items-list'),
           ),
         ],
       );
