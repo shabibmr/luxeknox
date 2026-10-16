@@ -1,9 +1,21 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Res,
+  StreamableFile,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiProduces, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
 import { RequirePermission } from '../rbac/require-permission.decorator';
+import { PtProgressReviewPdfService } from './pt-progress-review-pdf.service';
 import {
   PtProgressReviewService,
   ptProgressReviewDraftSchema,
@@ -14,7 +26,10 @@ import {
 @ApiBearerAuth('bearer')
 @Controller()
 export class PtProgressReviewController {
-  constructor(private readonly service: PtProgressReviewService) {}
+  constructor(
+    private readonly service: PtProgressReviewService,
+    private readonly pdfService: PtProgressReviewPdfService,
+  ) {}
 
   @Post('members/:memberId/pt-reviews')
   @RequirePermission('pt_reviews.write')
@@ -34,6 +49,25 @@ export class PtProgressReviewController {
   @ApiParam({ name: 'id', type: Number })
   get(@Param('id', ParseIntPipe) id: number, @CurrentUser() actor: AuthenticatedUser) {
     return this.service.get(id, actor);
+  }
+
+  @Get('reviews/:id/export-pdf')
+  @RequirePermission('pt_reviews.read')
+  @ApiOperation({
+    operationId: 'exportPtProgressReviewPdf',
+    summary: 'Export the review presentation card as PDF',
+  })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiProduces('application/pdf')
+  async exportPdf(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const { filename, buffer } = await this.pdfService.exportPresentationCard(id, actor);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return new StreamableFile(buffer);
   }
 
   @Patch('reviews/:id/trainer-sign')

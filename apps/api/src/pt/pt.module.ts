@@ -11,6 +11,7 @@ import { SysModule } from '../sys/sys.module';
 import { PtAccessModule } from './pt-access.module';
 import { PtJobsService } from './pt-jobs.service';
 import { PtProgressReviewController } from './pt-progress-review.controller';
+import { PtProgressReviewPdfService } from './pt-progress-review-pdf.service';
 import { PtProgressReviewRepository } from './pt-progress-review.repository';
 import { PtProgressReviewService } from './pt-progress-review.service';
 import { PtProductController } from './pt-product.controller';
@@ -39,6 +40,7 @@ import { PtSubscriptionService } from './pt-subscription.service';
     PtJobsService,
     PtProgressReviewRepository,
     PtProgressReviewService,
+    PtProgressReviewPdfService,
   ],
   exports: [PtSubscriptionService, PtProgressReviewService],
 })

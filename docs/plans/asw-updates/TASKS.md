@@ -38,7 +38,7 @@ Source Document: [Luxe knox pt client  file.pdf](./Luxe%20knox%20pt%20client%20%
 **Phase 5: Backend PT Progress Reviews & Presentation Card**
 - [x] PTF-16 `PtProgressReviewService`: create draft, auto-calculate deltas (start vs current vs target) <!-- id: 16 -->
 - [x] PTF-17 Review tri-party sign-off state machine (Trainer $\rightarrow$ Client $\rightarrow$ Manager) <!-- id: 17 -->
-- [ ] PTF-18 Presentation Card PDF export endpoint (matching Page 8 layout) <!-- id: 18 -->
+- [x] PTF-18 Presentation Card PDF export endpoint (matching Page 8 layout) <!-- id: 18 -->
 
 **Phase 6: Contract and Docs**
 - [ ] PTF-19 Update `docs/openapi/v1.yaml` with all new schemas and paths <!-- id: 19 -->
