@@ -130,3 +130,39 @@ erDiagram
    * Submit positive PAR-Q+ $\rightarrow$ verify PT booking is blocked until clearance is recorded.
    * Build 12-week workout plan $\rightarrow$ run live session with RIR and Pain score $\rightarrow$ verify session log.
    * Create 4-week Progress Review $\rightarrow$ execute Client and Manager digital sign-offs $\rightarrow$ export PDF card.
+
+---
+
+## 6. Implementation Phases & Task Dependencies
+
+The detailed execution breakdown comprises 32 discrete tasks registered in [TASKS.md](./TASKS.md). The dependency progression across layers is structured as follows:
+
+1. **Phase 1: Schema & Seed (PTF-01 – PTF-06)**
+   * Foundation tables (`par_q_screenings`, `member_lifestyle_intakes`, `pt_progress_reviews`) and schema alterations can be created independently in parallel (PTF-01 to PTF-05).
+   * Seed data generation (**PTF-06**) requires all schema updates (PTF-01..PTF-05) to be in place.
+
+2. **Phase 2 – Phase 5: Core Backend Services & Workflows**
+   * **PAR-Q+ & Medical Gate (PTF-07 – PTF-09)**: Depends on `par_q_screenings` schema (PTF-01); controller (PTF-08) and booking interceptor (PTF-09) depend on `ParQService` (PTF-07).
+   * **Lifestyle & Macrocycle Blueprint (PTF-10 – PTF-12)**: `LifestyleIntakeService` (PTF-10) depends on PTF-02; controller (PTF-11) depends on PTF-10; `WorkoutPlanService` (PTF-12) depends on PTF-04.
+   * **Workout Micro-Execution & Pain Hook (PTF-13 – PTF-15)**: Set logging with RIR/duration (PTF-13) depends on PTF-04; multi-metric completion (PTF-14) depends on PTF-04 & PTF-13; safety trigger alert (PTF-15) hooks into PTF-14.
+   * **PT Progress Reviews & Presentation Card (PTF-16 – PTF-18)**: Review drafting service (PTF-16) depends on PTF-03; tri-party sign-off state machine (PTF-17) depends on PTF-16; PDF export (PTF-18) depends on PTF-16 & PTF-17.
+
+3. **Phase 6: Contract & Documentation (PTF-19 – PTF-21)**
+   * OpenAPI spec update (**PTF-19**) consolidates all finalized backend DTOs/routes (PTF-08, PTF-11, PTF-12, PTF-13, PTF-14, PTF-17, PTF-18).
+   * Database entities and FRD doc updates (**PTF-20**) depend on Phase 1 schemas (PTF-01..PTF-05).
+   * Consolidated screens matrix update (**PTF-21**) documents Screen 45 review flows (PTF-16, PTF-17).
+
+4. **Phase 7: Flutter Client & Domain (PTF-22 – PTF-26)**
+   * API Client code generation (**PTF-22**) depends strictly on the OpenAPI contract (**PTF-19**).
+   * Flutter Domain layer entities, repositories, and use cases (**PTF-23** through **PTF-26**) depend on the generated API client (**PTF-22**).
+
+5. **Phase 8: Flutter UI & Screens (PTF-27 – PTF-31)**
+   * PAR-Q+ Screening widget (**PTF-27**) depends on Health domain (PTF-23).
+   * Member Dossier tabs & badge (**PTF-28**) depend on Health & Lifestyle domains (PTF-23, PTF-24).
+   * Workout Plan Builder Blueprint step (**PTF-29**) and Live Workout Tracker with RIR/Pain modal (**PTF-30**) depend on Workout domain (PTF-25).
+   * Screen 45 Progress Review Screen (**PTF-31**) depends on PT Review domain (PTF-26) and PDF export endpoint (PTF-18).
+
+6. **Phase 9: Comprehensive Verification (PTF-32)**
+   * Final end-to-end integration test passes across API, OpenAPI schema validation, Flutter static analysis, unit/widget tests, and manual walkthroughs depend on the full implementation (PTF-06, PTF-09, PTF-15, PTF-20, PTF-21, PTF-27..PTF-31).
+
+For the complete dependency graph and per-task dependency matrix, refer to [TASKS.md](./TASKS.md#dependency-graph).
