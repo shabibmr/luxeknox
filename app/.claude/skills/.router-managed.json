@@ -2,5 +2,9 @@
  "imagegen-frontend-web": "imagegen-frontend-web",
  "flutter-mobile-design": "flutter-mobile-design",
  "computer-use": "computer-use",
- "flutter-ui": "flutter-ui"
+ "flutter-ui": "flutter-ui",
+ "imagegen-frontend-mobile": "imagegen-frontend-mobile",
+ "google-workspace": "google-workspace",
+ "built-in-browser": "built-in-browser",
+ "docs": "docs"
 }
