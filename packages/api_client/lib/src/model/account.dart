@@ -13,7 +13,6 @@ part 'account.g.dart';
 ///
 /// Properties:
 /// * [id] 
-/// * [code] 
 /// * [name] 
 /// * [accountType] 
 /// * [parentId] 
@@ -27,9 +26,6 @@ part 'account.g.dart';
 abstract class Account implements Built<Account, AccountBuilder> {
   @BuiltValueField(wireName: r'id')
   int get id;
-
-  @BuiltValueField(wireName: r'code')
-  String get code;
 
   @BuiltValueField(wireName: r'name')
   String get name;
@@ -88,11 +84,6 @@ class _$AccountSerializer implements PrimitiveSerializer<Account> {
     yield serializers.serialize(
       object.id,
       specifiedType: const FullType(int),
-    );
-    yield r'code';
-    yield serializers.serialize(
-      object.code,
-      specifiedType: const FullType(String),
     );
     yield r'name';
     yield serializers.serialize(
@@ -174,13 +165,6 @@ class _$AccountSerializer implements PrimitiveSerializer<Account> {
             specifiedType: const FullType(int),
           ) as int;
           result.id = valueDes;
-          break;
-        case r'code':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(String),
-          ) as String;
-          result.code = valueDes;
           break;
         case r'name':
           final valueDes = serializers.deserialize(

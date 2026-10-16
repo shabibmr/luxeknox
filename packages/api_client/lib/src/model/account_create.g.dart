@@ -8,8 +8,6 @@ part of 'account_create.dart';
 
 class _$AccountCreate extends AccountCreate {
   @override
-  final String? code;
-  @override
   final String name;
   @override
   final AccountType accountType;
@@ -28,8 +26,7 @@ class _$AccountCreate extends AccountCreate {
       (AccountCreateBuilder()..update(updates))._build();
 
   _$AccountCreate._(
-      {this.code,
-      required this.name,
+      {required this.name,
       required this.accountType,
       this.parentId,
       this.isActive,
@@ -48,7 +45,6 @@ class _$AccountCreate extends AccountCreate {
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
     return other is AccountCreate &&
-        code == other.code &&
         name == other.name &&
         accountType == other.accountType &&
         parentId == other.parentId &&
@@ -61,7 +57,6 @@ class _$AccountCreate extends AccountCreate {
   @override
   int get hashCode {
     var _$hash = 0;
-    _$hash = $jc(_$hash, code.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
     _$hash = $jc(_$hash, accountType.hashCode);
     _$hash = $jc(_$hash, parentId.hashCode);
@@ -76,7 +71,6 @@ class _$AccountCreate extends AccountCreate {
   @override
   String toString() {
     return (newBuiltValueToStringHelper(r'AccountCreate')
-          ..add('code', code)
           ..add('name', name)
           ..add('accountType', accountType)
           ..add('parentId', parentId)
@@ -91,10 +85,6 @@ class _$AccountCreate extends AccountCreate {
 class AccountCreateBuilder
     implements Builder<AccountCreate, AccountCreateBuilder> {
   _$AccountCreate? _$v;
-
-  String? _code;
-  String? get code => _$this._code;
-  set code(String? code) => _$this._code = code;
 
   String? _name;
   String? get name => _$this._name;
@@ -132,7 +122,6 @@ class AccountCreateBuilder
   AccountCreateBuilder get _$this {
     final $v = _$v;
     if ($v != null) {
-      _code = $v.code;
       _name = $v.name;
       _accountType = $v.accountType;
       _parentId = $v.parentId;
@@ -161,7 +150,6 @@ class AccountCreateBuilder
   _$AccountCreate _build() {
     final _$result = _$v ??
         _$AccountCreate._(
-          code: code,
           name: BuiltValueNullFieldError.checkNotNull(
               name, r'AccountCreate', 'name'),
           accountType: BuiltValueNullFieldError.checkNotNull(

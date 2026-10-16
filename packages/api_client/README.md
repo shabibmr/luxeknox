@@ -206,6 +206,8 @@ Class | Method | HTTP request | Description
 [*HEALTHApi*](doc/HEALTHApi.md) | [**verifyMemberDocument**](doc/HEALTHApi.md#verifymemberdocument) | **POST** /members/{id}/documents/{documentId}/verify | Verify a document
 [*INVApi*](doc/INVApi.md) | [**getInventoryItem**](doc/INVApi.md#getinventoryitem) | **GET** /inventory/items/{id} | Get inventory item by ID
 [*INVApi*](doc/INVApi.md) | [**listInventoryItems**](doc/INVApi.md#listinventoryitems) | **GET** /inventory/items | List inventory items
+[*INVApi*](doc/INVApi.md) | [**listItemCategories**](doc/INVApi.md#listitemcategories) | **GET** /inventory/item-categories | List item categories
+[*INVApi*](doc/INVApi.md) | [**listUoms**](doc/INVApi.md#listuoms) | **GET** /inventory/uoms | List units of measure
 [*MEDIAApi*](doc/MEDIAApi.md) | [**createMediaUpload**](doc/MEDIAApi.md#createmediaupload) | **POST** /media/uploads | Signed PUT slot (ADR-0008)
 [*MEDIAApi*](doc/MEDIAApi.md) | [**getMediaObject**](doc/MEDIAApi.md#getmediaobject) | **GET** /media/objects | Local adapter signed GET (ADR-0008 HMAC query auth)
 [*MEDIAApi*](doc/MEDIAApi.md) | [**getMediaUrl**](doc/MEDIAApi.md#getmediaurl) | **GET** /media/{key} | Short-lived signed GET (ADR-0008)
@@ -436,6 +438,8 @@ Class | Method | HTTP request | Description
  - [InventoryItem](doc/InventoryItem.md)
  - [InventoryItemPage](doc/InventoryItemPage.md)
  - [Item](doc/Item.md)
+ - [ItemCategory](doc/ItemCategory.md)
+ - [ItemCategoryPage](doc/ItemCategoryPage.md)
  - [ItemCreate](doc/ItemCreate.md)
  - [ItemKind](doc/ItemKind.md)
  - [ItemPage](doc/ItemPage.md)
@@ -605,6 +609,8 @@ Class | Method | HTTP request | Description
  - [UnearnedPreviewItem](doc/UnearnedPreviewItem.md)
  - [UnearnedPreviewResponse](doc/UnearnedPreviewResponse.md)
  - [UnearnedPreviewTotals](doc/UnearnedPreviewTotals.md)
+ - [Uom](doc/Uom.md)
+ - [UomPage](doc/UomPage.md)
  - [User](doc/User.md)
  - [UserStatus](doc/UserStatus.md)
  - [UserType](doc/UserType.md)

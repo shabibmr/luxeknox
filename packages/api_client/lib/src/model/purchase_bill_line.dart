@@ -14,6 +14,10 @@ part 'purchase_bill_line.g.dart';
 /// * [id] 
 /// * [purchaseBillId] 
 /// * [itemId] 
+/// * [itemName] 
+/// * [uomCode] 
+/// * [inventoryTracked] 
+/// * [returnedQuantity] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
 /// * [accountId] 
 /// * [description] 
 /// * [quantity] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
@@ -31,6 +35,19 @@ abstract class PurchaseBillLine implements Built<PurchaseBillLine, PurchaseBillL
 
   @BuiltValueField(wireName: r'item_id')
   int? get itemId;
+
+  @BuiltValueField(wireName: r'item_name')
+  String get itemName;
+
+  @BuiltValueField(wireName: r'uom_code')
+  String get uomCode;
+
+  @BuiltValueField(wireName: r'inventory_tracked')
+  bool get inventoryTracked;
+
+  /// DECIMAL(12,2) as a two-decimal string. Never a JSON number.
+  @BuiltValueField(wireName: r'returned_quantity')
+  String get returnedQuantity;
 
   @BuiltValueField(wireName: r'account_id')
   int get accountId;
@@ -97,6 +114,26 @@ class _$PurchaseBillLineSerializer implements PrimitiveSerializer<PurchaseBillLi
         specifiedType: const FullType(int),
       );
     }
+    yield r'item_name';
+    yield serializers.serialize(
+      object.itemName,
+      specifiedType: const FullType(String),
+    );
+    yield r'uom_code';
+    yield serializers.serialize(
+      object.uomCode,
+      specifiedType: const FullType(String),
+    );
+    yield r'inventory_tracked';
+    yield serializers.serialize(
+      object.inventoryTracked,
+      specifiedType: const FullType(bool),
+    );
+    yield r'returned_quantity';
+    yield serializers.serialize(
+      object.returnedQuantity,
+      specifiedType: const FullType(String),
+    );
     yield r'account_id';
     yield serializers.serialize(
       object.accountId,
@@ -180,6 +217,34 @@ class _$PurchaseBillLineSerializer implements PrimitiveSerializer<PurchaseBillLi
           ) as int?;
           if (valueDes == null) continue;
           result.itemId = valueDes;
+          break;
+        case r'item_name':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.itemName = valueDes;
+          break;
+        case r'uom_code':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.uomCode = valueDes;
+          break;
+        case r'inventory_tracked':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.inventoryTracked = valueDes;
+          break;
+        case r'returned_quantity':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.returnedQuantity = valueDes;
           break;
         case r'account_id':
           final valueDes = serializers.deserialize(

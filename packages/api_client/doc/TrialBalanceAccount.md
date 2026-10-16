@@ -9,7 +9,6 @@ import 'package:api_client/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **accountId** | **int** |  | 
-**accountCode** | **String** |  | 
 **accountName** | **String** |  | 
 **accountType** | **String** |  | 
 **debit** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | 

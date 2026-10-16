@@ -38,22 +38,22 @@ Start a task when every ID in *Needs* is `[x]`.
 |---|---|---|---|---|
 | IL-31 | `[x]` | Rework counter sale (IL-14) to use the ledger: issue tracked lines at average cost, freeze `unit_cost` and `cost_amount`, add Dr `5050` / Cr `1400` per tracked line to the same journal. Update the IL-14 specs | IL-14, IL-30 | Journal balances with COGS; a service-only sale has no COGS; selling above on-hand is refused and nothing is posted |
 | IL-33 | `[x]` | Purchase bill post hook: tracked lines debit Inventory and `receive` stock at `net_amount`, in the posting transaction. Replay of a post receives nothing twice. Responses add `item_name`, `uom_code`, `inventory_tracked`, `returned_quantity` (0) | IL-30, IL-32 | Posting a bill for 10 units sets `item_stock` to 10 and debits `1400` for the net; a locked period rolls back journal and stock; a second post returns the original journal |
-| IL-34 | `[ ]` | Refuse debit notes against bills with tracked lines (`debit_note_tracked_deferred`). Land it straight after IL-33 so no tracked bill can be debit-noted without a stock reversal | IL-33 | Service-only bills still take debit notes; a tracked bill gives 422 |
+| IL-34 | `[x]` | Refuse debit notes against bills with tracked lines (`debit_note_tracked_deferred`). Land it straight after IL-33 so no tracked bill can be debit-noted without a stock reversal | IL-33 | Service-only bills still take debit notes; a tracked bill gives 422 |
 
 ## E. API contract and backend tests (wave 5)
 
 | ID | Status | Task | Needs | Done when |
 |---|---|---|---|---|
-| IL-17 | `[ ]` | `openapi:dump`, regenerate `packages/api_client`, `openapi:check` (after the purchase bill changes too). Can start as soon as IL-33 lands, even while IL-31, IL-34 and IL-35 are open; regenerate again if IL-35 changes the contract | IL-15, IL-33 | Check passes; `INVApi` generated; purchase bill line fields present |
-| IL-35 | `[ ]` | Vitest and e2e for IL-30 to IL-34: two bills then a sale (average cost and COGS), service plus tracked mixed bill, UOM decimals, replay, period lock, debit-note guard | IL-31, IL-33, IL-34 | `vitest run src/inv src/acct src/platform/money` green; every journal balances |
+| IL-17 | `[x]` | `openapi:dump`, regenerate `packages/api_client`, `openapi:check` (after the purchase bill changes too). Can start as soon as IL-33 lands, even while IL-31, IL-34 and IL-35 are open; regenerate again if IL-35 changes the contract | IL-15, IL-33 | Check passes; `INVApi` generated; purchase bill line fields present |
+| IL-35 | `[x]` | Vitest and e2e for IL-30 to IL-34: two bills then a sale (average cost and COGS), service plus tracked mixed bill, UOM decimals, replay, period lock, debit-note guard | IL-31, IL-33, IL-34 | `vitest run src/inv src/acct src/platform/money` green; every journal balances |
 
 ## F. Flutter, item search (wave 6 — runs in parallel with G)
 
 | ID | Status | Task | Needs | Done when |
 |---|---|---|---|---|
-| IL-20 | `[ ]` | Freezed entity `Item` (counter sale entities wait for IL-94) | IL-17 | Field names match the contract |
-| IL-21 | `[ ]` | Datasource on `INVApi`, mapper, repository (`searchItems`, `getItem`); register in `register_module.dart`; regenerate injector | IL-20 | Repository tests pass with a mocked client |
-| IL-22 | `[ ]` | `ItemSearchField`: debounced search by name or SKU, with the shared `App*` loading/empty/error widgets | IL-21 | Widget test: typing shows results, selecting returns the item |
+| IL-20 | `[x]` | Freezed entity `Item` (counter sale entities wait for IL-94) | IL-17 | Field names match the contract |
+| IL-21 | `[x]` | Datasource on `INVApi`, mapper, repository (`searchItems`, `getItem`); register in `register_module.dart`; regenerate injector | IL-20 | Repository tests pass with a mocked client |
+| IL-22 | `[x]` | `ItemSearchField`: debounced search by name or SKU, with the shared `App*` loading/empty/error widgets | IL-21 | Widget test: typing shows results, selecting returns the item |
 
 ## G. Flutter, purchase entry (waves 6 and 7)
 

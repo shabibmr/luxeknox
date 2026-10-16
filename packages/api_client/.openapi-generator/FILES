@@ -119,6 +119,8 @@ doc/INVApi.md
 doc/InventoryItem.md
 doc/InventoryItemPage.md
 doc/Item.md
+doc/ItemCategory.md
+doc/ItemCategoryPage.md
 doc/ItemCreate.md
 doc/ItemKind.md
 doc/ItemPage.md
@@ -298,6 +300,8 @@ doc/TrialBalanceReport.md
 doc/UnearnedPreviewItem.md
 doc/UnearnedPreviewResponse.md
 doc/UnearnedPreviewTotals.md
+doc/Uom.md
+doc/UomPage.md
 doc/User.md
 doc/UserStatus.md
 doc/UserType.md
@@ -459,6 +463,8 @@ lib/src/model/health_condition_write.dart
 lib/src/model/inventory_item.dart
 lib/src/model/inventory_item_page.dart
 lib/src/model/item.dart
+lib/src/model/item_category.dart
+lib/src/model/item_category_page.dart
 lib/src/model/item_create.dart
 lib/src/model/item_kind.dart
 lib/src/model/item_page.dart
@@ -628,6 +634,8 @@ lib/src/model/trial_balance_report.dart
 lib/src/model/unearned_preview_item.dart
 lib/src/model/unearned_preview_response.dart
 lib/src/model/unearned_preview_totals.dart
+lib/src/model/uom.dart
+lib/src/model/uom_page.dart
 lib/src/model/user.dart
 lib/src/model/user_status.dart
 lib/src/model/user_type.dart

@@ -12,7 +12,6 @@ part 'account_create.g.dart';
 /// AccountCreate
 ///
 /// Properties:
-/// * [code] 
 /// * [name] 
 /// * [accountType] 
 /// * [parentId] 
@@ -22,9 +21,6 @@ part 'account_create.g.dart';
 /// * [controlRole] 
 @BuiltValue()
 abstract class AccountCreate implements Built<AccountCreate, AccountCreateBuilder> {
-  @BuiltValueField(wireName: r'code')
-  String? get code;
-
   @BuiltValueField(wireName: r'name')
   String get name;
 
@@ -73,13 +69,6 @@ class _$AccountCreateSerializer implements PrimitiveSerializer<AccountCreate> {
     AccountCreate object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    if (object.code != null) {
-      yield r'code';
-      yield serializers.serialize(
-        object.code,
-        specifiedType: const FullType(String),
-      );
-    }
     yield r'name';
     yield serializers.serialize(
       object.name,
@@ -148,14 +137,6 @@ class _$AccountCreateSerializer implements PrimitiveSerializer<AccountCreate> {
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
-        case r'code':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
-          result.code = valueDes;
-          break;
         case r'name':
           final valueDes = serializers.deserialize(
             value,

@@ -67,6 +67,15 @@ export class DebitNotesService {
     return subMoney(subMoney(bill.total_amount, postedDebitNotes), postedAllocations);
   }
 
+  /** Debit notes carry no stock reversal yet, so a bill with tracked lines cannot take one. */
+  private assertNoTrackedLines(lines: { inventory_tracked?: boolean }[]): void {
+    if (lines.some((line) => line.inventory_tracked)) {
+      throw new BusinessRuleError('Debit notes against bills with stock-tracked lines are not supported yet', [
+        { rule: 'debit_note_tracked_deferred' },
+      ]);
+    }
+  }
+
   async create(
     dto: DebitNoteCreateDto,
     _currentUser?: AuthenticatedUser,
@@ -79,6 +88,7 @@ export class DebitNotesService {
     if (bill.status !== 'posted') {
       throw new BusinessRuleError('Debit notes can only be issued against posted purchase bills');
     }
+    this.assertNoTrackedLines(await this.purchaseBillsRepository.listLines(bill.id));
 
     let taxAmount = '0.00';
     if (dto.tax_code_id != null) {
@@ -153,6 +163,7 @@ export class DebitNotesService {
       if (!bill.lines || bill.lines.length === 0) {
         throw new BusinessRuleError('Referenced purchase bill has no lines');
       }
+      this.assertNoTrackedLines(bill.lines);
 
       const openBalance = await this.openBillBalance(bill);
 
@@ -162,27 +173,17 @@ export class DebitNotesService {
         );
       }
 
-      let apAcc = await this.accountsRepository.findByControlRole('ap');
+      const apAcc = await this.accountsRepository.findByControlRole('ap');
       if (!apAcc) {
-        apAcc = await this.accountsRepository.findByCode('2000');
-      }
-      if (!apAcc) {
-        throw new BusinessRuleError(
-          'Accounts payable control account (ap / 2000) not found',
-        );
+        throw new BusinessRuleError('Accounts payable control account (ap) not found');
       }
       const apAccountId = apAcc.id;
 
       let inputTaxAccountId: number | null = null;
       if (cmpMoney(debitNote.tax_amount, '0.00') > 0) {
-        let inputTaxAcc = await this.accountsRepository.findByControlRole('input_tax');
+        const inputTaxAcc = await this.accountsRepository.findByControlRole('input_tax');
         if (!inputTaxAcc) {
-          inputTaxAcc = await this.accountsRepository.findByCode('1300');
-        }
-        if (!inputTaxAcc) {
-          throw new BusinessRuleError(
-            'Input tax control account (input_tax / 1300) not found',
-          );
+          throw new BusinessRuleError('Input tax control account (input_tax) not found');
         }
         inputTaxAccountId = inputTaxAcc.id;
       }

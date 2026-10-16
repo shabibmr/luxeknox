@@ -12,6 +12,8 @@ class _$PurchaseBill extends PurchaseBill {
   @override
   final String billNumber;
   @override
+  final String? supplierInvoiceNo;
+  @override
   final int vendorId;
   @override
   final Date billDate;
@@ -42,6 +44,7 @@ class _$PurchaseBill extends PurchaseBill {
   _$PurchaseBill._(
       {required this.id,
       required this.billNumber,
+      this.supplierInvoiceNo,
       required this.vendorId,
       required this.billDate,
       this.dueDate,
@@ -68,6 +71,7 @@ class _$PurchaseBill extends PurchaseBill {
     return other is PurchaseBill &&
         id == other.id &&
         billNumber == other.billNumber &&
+        supplierInvoiceNo == other.supplierInvoiceNo &&
         vendorId == other.vendorId &&
         billDate == other.billDate &&
         dueDate == other.dueDate &&
@@ -87,6 +91,7 @@ class _$PurchaseBill extends PurchaseBill {
     var _$hash = 0;
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, billNumber.hashCode);
+    _$hash = $jc(_$hash, supplierInvoiceNo.hashCode);
     _$hash = $jc(_$hash, vendorId.hashCode);
     _$hash = $jc(_$hash, billDate.hashCode);
     _$hash = $jc(_$hash, dueDate.hashCode);
@@ -108,6 +113,7 @@ class _$PurchaseBill extends PurchaseBill {
     return (newBuiltValueToStringHelper(r'PurchaseBill')
           ..add('id', id)
           ..add('billNumber', billNumber)
+          ..add('supplierInvoiceNo', supplierInvoiceNo)
           ..add('vendorId', vendorId)
           ..add('billDate', billDate)
           ..add('dueDate', dueDate)
@@ -135,6 +141,11 @@ class PurchaseBillBuilder
   String? _billNumber;
   String? get billNumber => _$this._billNumber;
   set billNumber(String? billNumber) => _$this._billNumber = billNumber;
+
+  String? _supplierInvoiceNo;
+  String? get supplierInvoiceNo => _$this._supplierInvoiceNo;
+  set supplierInvoiceNo(String? supplierInvoiceNo) =>
+      _$this._supplierInvoiceNo = supplierInvoiceNo;
 
   int? _vendorId;
   int? get vendorId => _$this._vendorId;
@@ -195,6 +206,7 @@ class PurchaseBillBuilder
     if ($v != null) {
       _id = $v.id;
       _billNumber = $v.billNumber;
+      _supplierInvoiceNo = $v.supplierInvoiceNo;
       _vendorId = $v.vendorId;
       _billDate = $v.billDate;
       _dueDate = $v.dueDate;
@@ -234,6 +246,7 @@ class PurchaseBillBuilder
                 id, r'PurchaseBill', 'id'),
             billNumber: BuiltValueNullFieldError.checkNotNull(
                 billNumber, r'PurchaseBill', 'billNumber'),
+            supplierInvoiceNo: supplierInvoiceNo,
             vendorId: BuiltValueNullFieldError.checkNotNull(
                 vendorId, r'PurchaseBill', 'vendorId'),
             billDate: BuiltValueNullFieldError.checkNotNull(

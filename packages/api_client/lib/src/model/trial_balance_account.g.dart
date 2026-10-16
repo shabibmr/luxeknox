@@ -10,8 +10,6 @@ class _$TrialBalanceAccount extends TrialBalanceAccount {
   @override
   final int accountId;
   @override
-  final String accountCode;
-  @override
   final String accountName;
   @override
   final String accountType;
@@ -26,7 +24,6 @@ class _$TrialBalanceAccount extends TrialBalanceAccount {
 
   _$TrialBalanceAccount._(
       {required this.accountId,
-      required this.accountCode,
       required this.accountName,
       required this.accountType,
       required this.debit,
@@ -46,7 +43,6 @@ class _$TrialBalanceAccount extends TrialBalanceAccount {
     if (identical(other, this)) return true;
     return other is TrialBalanceAccount &&
         accountId == other.accountId &&
-        accountCode == other.accountCode &&
         accountName == other.accountName &&
         accountType == other.accountType &&
         debit == other.debit &&
@@ -57,7 +53,6 @@ class _$TrialBalanceAccount extends TrialBalanceAccount {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, accountId.hashCode);
-    _$hash = $jc(_$hash, accountCode.hashCode);
     _$hash = $jc(_$hash, accountName.hashCode);
     _$hash = $jc(_$hash, accountType.hashCode);
     _$hash = $jc(_$hash, debit.hashCode);
@@ -70,7 +65,6 @@ class _$TrialBalanceAccount extends TrialBalanceAccount {
   String toString() {
     return (newBuiltValueToStringHelper(r'TrialBalanceAccount')
           ..add('accountId', accountId)
-          ..add('accountCode', accountCode)
           ..add('accountName', accountName)
           ..add('accountType', accountType)
           ..add('debit', debit)
@@ -86,10 +80,6 @@ class TrialBalanceAccountBuilder
   int? _accountId;
   int? get accountId => _$this._accountId;
   set accountId(int? accountId) => _$this._accountId = accountId;
-
-  String? _accountCode;
-  String? get accountCode => _$this._accountCode;
-  set accountCode(String? accountCode) => _$this._accountCode = accountCode;
 
   String? _accountName;
   String? get accountName => _$this._accountName;
@@ -115,7 +105,6 @@ class TrialBalanceAccountBuilder
     final $v = _$v;
     if ($v != null) {
       _accountId = $v.accountId;
-      _accountCode = $v.accountCode;
       _accountName = $v.accountName;
       _accountType = $v.accountType;
       _debit = $v.debit;
@@ -143,8 +132,6 @@ class TrialBalanceAccountBuilder
         _$TrialBalanceAccount._(
           accountId: BuiltValueNullFieldError.checkNotNull(
               accountId, r'TrialBalanceAccount', 'accountId'),
-          accountCode: BuiltValueNullFieldError.checkNotNull(
-              accountCode, r'TrialBalanceAccount', 'accountCode'),
           accountName: BuiltValueNullFieldError.checkNotNull(
               accountName, r'TrialBalanceAccount', 'accountName'),
           accountType: BuiltValueNullFieldError.checkNotNull(

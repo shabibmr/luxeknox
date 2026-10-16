@@ -77,13 +77,8 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
           return null;
         }),
         findByControlRole: vi.fn().mockImplementation((role) => {
-          if (role === 'ap') return { id: 2000, name: 'Accounts payable', code: '2000' };
-          if (role === 'input_tax') return { id: 1300, name: 'Input tax', code: '1300' };
-          return null;
-        }),
-        findByCode: vi.fn().mockImplementation((code) => {
-          if (code === '2000') return { id: 2000, name: 'Accounts payable', code: '2000' };
-          if (code === '1300') return { id: 1300, name: 'Input tax', code: '1300' };
+          if (role === 'ap') return { id: 2000, name: 'Accounts payable' };
+          if (role === 'input_tax') return { id: 1300, name: 'Input tax' };
           return null;
         }),
       } as any;
@@ -211,11 +206,7 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
           return null;
         }),
         findByControlRole: vi.fn().mockImplementation((role) => {
-          if (role === 'input_tax') return { id: 1300, name: 'Input tax', code: '1300' };
-          return null;
-        }),
-        findByCode: vi.fn().mockImplementation((code) => {
-          if (code === '1300') return { id: 1300, name: 'Input tax', code: '1300' };
+          if (role === 'input_tax') return { id: 1300, name: 'Input tax' };
           return null;
         }),
       } as any;
@@ -396,17 +387,13 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
       const billsRepo = {
         findById: vi.fn().mockResolvedValue(mockBill),
         findWithLines: vi.fn().mockResolvedValue(mockBill),
+        listLines: vi.fn().mockResolvedValue([]),
       } as any;
 
       const accountsRepo = {
         findByControlRole: vi.fn().mockImplementation((role) => {
-          if (role === 'ap') return { id: 2000, name: 'Accounts payable', code: '2000' };
-          if (role === 'input_tax') return { id: 1300, name: 'Input tax', code: '1300' };
-          return null;
-        }),
-        findByCode: vi.fn().mockImplementation((code) => {
-          if (code === '2000') return { id: 2000, name: 'Accounts payable', code: '2000' };
-          if (code === '1300') return { id: 1300, name: 'Input tax', code: '1300' };
+          if (role === 'ap') return { id: 2000, name: 'Accounts payable' };
+          if (role === 'input_tax') return { id: 1300, name: 'Input tax' };
           return null;
         }),
       } as any;
@@ -475,6 +462,7 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
           status: 'posted',
           total_amount: '236.00',
         }),
+        listLines: vi.fn().mockResolvedValue([]),
       } as any;
 
       const service = new DebitNotesService(

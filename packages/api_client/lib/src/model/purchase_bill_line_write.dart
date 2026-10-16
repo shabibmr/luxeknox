@@ -23,7 +23,7 @@ abstract class PurchaseBillLineWrite implements Built<PurchaseBillLineWrite, Pur
   int? get itemId;
 
   @BuiltValueField(wireName: r'account_id')
-  int get accountId;
+  int? get accountId;
 
   @BuiltValueField(wireName: r'description')
   String? get description;
@@ -69,11 +69,13 @@ class _$PurchaseBillLineWriteSerializer implements PrimitiveSerializer<PurchaseB
         specifiedType: const FullType(int),
       );
     }
-    yield r'account_id';
-    yield serializers.serialize(
-      object.accountId,
-      specifiedType: const FullType(int),
-    );
+    if (object.accountId != null) {
+      yield r'account_id';
+      yield serializers.serialize(
+        object.accountId,
+        specifiedType: const FullType(int),
+      );
+    }
     if (object.description != null) {
       yield r'description';
       yield serializers.serialize(
@@ -134,8 +136,9 @@ class _$PurchaseBillLineWriteSerializer implements PrimitiveSerializer<PurchaseB
         case r'account_id':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(int),
-          ) as int;
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
           result.accountId = valueDes;
           break;
         case r'description':

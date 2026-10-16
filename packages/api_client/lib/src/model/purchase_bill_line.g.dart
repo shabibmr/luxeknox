@@ -14,6 +14,14 @@ class _$PurchaseBillLine extends PurchaseBillLine {
   @override
   final int? itemId;
   @override
+  final String itemName;
+  @override
+  final String uomCode;
+  @override
+  final bool inventoryTracked;
+  @override
+  final String returnedQuantity;
+  @override
   final int accountId;
   @override
   final String? description;
@@ -36,6 +44,10 @@ class _$PurchaseBillLine extends PurchaseBillLine {
       {required this.id,
       required this.purchaseBillId,
       this.itemId,
+      required this.itemName,
+      required this.uomCode,
+      required this.inventoryTracked,
+      required this.returnedQuantity,
       required this.accountId,
       this.description,
       required this.quantity,
@@ -59,6 +71,10 @@ class _$PurchaseBillLine extends PurchaseBillLine {
         id == other.id &&
         purchaseBillId == other.purchaseBillId &&
         itemId == other.itemId &&
+        itemName == other.itemName &&
+        uomCode == other.uomCode &&
+        inventoryTracked == other.inventoryTracked &&
+        returnedQuantity == other.returnedQuantity &&
         accountId == other.accountId &&
         description == other.description &&
         quantity == other.quantity &&
@@ -74,6 +90,10 @@ class _$PurchaseBillLine extends PurchaseBillLine {
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, purchaseBillId.hashCode);
     _$hash = $jc(_$hash, itemId.hashCode);
+    _$hash = $jc(_$hash, itemName.hashCode);
+    _$hash = $jc(_$hash, uomCode.hashCode);
+    _$hash = $jc(_$hash, inventoryTracked.hashCode);
+    _$hash = $jc(_$hash, returnedQuantity.hashCode);
     _$hash = $jc(_$hash, accountId.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
     _$hash = $jc(_$hash, quantity.hashCode);
@@ -91,6 +111,10 @@ class _$PurchaseBillLine extends PurchaseBillLine {
           ..add('id', id)
           ..add('purchaseBillId', purchaseBillId)
           ..add('itemId', itemId)
+          ..add('itemName', itemName)
+          ..add('uomCode', uomCode)
+          ..add('inventoryTracked', inventoryTracked)
+          ..add('returnedQuantity', returnedQuantity)
           ..add('accountId', accountId)
           ..add('description', description)
           ..add('quantity', quantity)
@@ -118,6 +142,24 @@ class PurchaseBillLineBuilder
   int? _itemId;
   int? get itemId => _$this._itemId;
   set itemId(int? itemId) => _$this._itemId = itemId;
+
+  String? _itemName;
+  String? get itemName => _$this._itemName;
+  set itemName(String? itemName) => _$this._itemName = itemName;
+
+  String? _uomCode;
+  String? get uomCode => _$this._uomCode;
+  set uomCode(String? uomCode) => _$this._uomCode = uomCode;
+
+  bool? _inventoryTracked;
+  bool? get inventoryTracked => _$this._inventoryTracked;
+  set inventoryTracked(bool? inventoryTracked) =>
+      _$this._inventoryTracked = inventoryTracked;
+
+  String? _returnedQuantity;
+  String? get returnedQuantity => _$this._returnedQuantity;
+  set returnedQuantity(String? returnedQuantity) =>
+      _$this._returnedQuantity = returnedQuantity;
 
   int? _accountId;
   int? get accountId => _$this._accountId;
@@ -157,6 +199,10 @@ class PurchaseBillLineBuilder
       _id = $v.id;
       _purchaseBillId = $v.purchaseBillId;
       _itemId = $v.itemId;
+      _itemName = $v.itemName;
+      _uomCode = $v.uomCode;
+      _inventoryTracked = $v.inventoryTracked;
+      _returnedQuantity = $v.returnedQuantity;
       _accountId = $v.accountId;
       _description = $v.description;
       _quantity = $v.quantity;
@@ -190,6 +236,14 @@ class PurchaseBillLineBuilder
           purchaseBillId: BuiltValueNullFieldError.checkNotNull(
               purchaseBillId, r'PurchaseBillLine', 'purchaseBillId'),
           itemId: itemId,
+          itemName: BuiltValueNullFieldError.checkNotNull(
+              itemName, r'PurchaseBillLine', 'itemName'),
+          uomCode: BuiltValueNullFieldError.checkNotNull(
+              uomCode, r'PurchaseBillLine', 'uomCode'),
+          inventoryTracked: BuiltValueNullFieldError.checkNotNull(
+              inventoryTracked, r'PurchaseBillLine', 'inventoryTracked'),
+          returnedQuantity: BuiltValueNullFieldError.checkNotNull(
+              returnedQuantity, r'PurchaseBillLine', 'returnedQuantity'),
           accountId: BuiltValueNullFieldError.checkNotNull(
               accountId, r'PurchaseBillLine', 'accountId'),
           description: description,

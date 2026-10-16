@@ -9,7 +9,7 @@ import 'package:api_client/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **itemId** | **int** |  | [optional] 
-**accountId** | **int** |  | 
+**accountId** | **int** |  | [optional] 
 **description** | **String** |  | [optional] 
 **quantity** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | [optional] 
 **rate** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | 

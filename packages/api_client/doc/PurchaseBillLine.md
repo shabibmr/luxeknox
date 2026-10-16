@@ -11,6 +11,10 @@ Name | Type | Description | Notes
 **id** | **int** |  | 
 **purchaseBillId** | **int** |  | 
 **itemId** | **int** |  | [optional] 
+**itemName** | **String** |  | 
+**uomCode** | **String** |  | 
+**inventoryTracked** | **bool** |  | 
+**returnedQuantity** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | 
 **accountId** | **int** |  | 
 **description** | **String** |  | [optional] 
 **quantity** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | 

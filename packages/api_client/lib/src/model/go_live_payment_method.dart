@@ -16,7 +16,6 @@ part 'go_live_payment_method.g.dart';
 /// * [isActive] 
 /// * [isDigital] 
 /// * [accountId] 
-/// * [accountCode] 
 /// * [accountName] 
 @BuiltValue()
 abstract class GoLivePaymentMethod implements Built<GoLivePaymentMethod, GoLivePaymentMethodBuilder> {
@@ -34,9 +33,6 @@ abstract class GoLivePaymentMethod implements Built<GoLivePaymentMethod, GoLiveP
 
   @BuiltValueField(wireName: r'account_id')
   int? get accountId;
-
-  @BuiltValueField(wireName: r'account_code')
-  String? get accountCode;
 
   @BuiltValueField(wireName: r'account_name')
   String? get accountName;
@@ -89,13 +85,6 @@ class _$GoLivePaymentMethodSerializer implements PrimitiveSerializer<GoLivePayme
       yield serializers.serialize(
         object.accountId,
         specifiedType: const FullType(int),
-      );
-    }
-    if (object.accountCode != null) {
-      yield r'account_code';
-      yield serializers.serialize(
-        object.accountCode,
-        specifiedType: const FullType(String),
       );
     }
     if (object.accountName != null) {
@@ -163,14 +152,6 @@ class _$GoLivePaymentMethodSerializer implements PrimitiveSerializer<GoLivePayme
           ) as int?;
           if (valueDes == null) continue;
           result.accountId = valueDes;
-          break;
-        case r'account_code':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
-          result.accountCode = valueDes;
           break;
         case r'account_name':
           final valueDes = serializers.deserialize(

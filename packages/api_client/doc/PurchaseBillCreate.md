@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **vendorId** | **int** |  | 
 **billDate** | [**Date**](Date.md) |  | 
+**supplierInvoiceNo** | **String** |  | [optional] 
 **dueDate** | [**Date**](Date.md) |  | [optional] 
 **lines** | [**BuiltList&lt;PurchaseBillLineWrite&gt;**](PurchaseBillLineWrite.md) |  | 
 

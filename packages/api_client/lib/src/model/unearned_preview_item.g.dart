@@ -80,8 +80,6 @@ class _$UnearnedPreviewItem extends UnearnedPreviewItem {
   @override
   final int incomeAccountId;
   @override
-  final String accountCode;
-  @override
   final String totalNet;
   @override
   final String unexpiredAmount;
@@ -99,7 +97,6 @@ class _$UnearnedPreviewItem extends UnearnedPreviewItem {
       required this.endsOn,
       required this.unearnedAccountId,
       required this.incomeAccountId,
-      required this.accountCode,
       required this.totalNet,
       required this.unexpiredAmount})
       : super._();
@@ -124,7 +121,6 @@ class _$UnearnedPreviewItem extends UnearnedPreviewItem {
         endsOn == other.endsOn &&
         unearnedAccountId == other.unearnedAccountId &&
         incomeAccountId == other.incomeAccountId &&
-        accountCode == other.accountCode &&
         totalNet == other.totalNet &&
         unexpiredAmount == other.unexpiredAmount;
   }
@@ -140,7 +136,6 @@ class _$UnearnedPreviewItem extends UnearnedPreviewItem {
     _$hash = $jc(_$hash, endsOn.hashCode);
     _$hash = $jc(_$hash, unearnedAccountId.hashCode);
     _$hash = $jc(_$hash, incomeAccountId.hashCode);
-    _$hash = $jc(_$hash, accountCode.hashCode);
     _$hash = $jc(_$hash, totalNet.hashCode);
     _$hash = $jc(_$hash, unexpiredAmount.hashCode);
     _$hash = $jf(_$hash);
@@ -158,7 +153,6 @@ class _$UnearnedPreviewItem extends UnearnedPreviewItem {
           ..add('endsOn', endsOn)
           ..add('unearnedAccountId', unearnedAccountId)
           ..add('incomeAccountId', incomeAccountId)
-          ..add('accountCode', accountCode)
           ..add('totalNet', totalNet)
           ..add('unexpiredAmount', unexpiredAmount))
         .toString();
@@ -203,10 +197,6 @@ class UnearnedPreviewItemBuilder
   set incomeAccountId(int? incomeAccountId) =>
       _$this._incomeAccountId = incomeAccountId;
 
-  String? _accountCode;
-  String? get accountCode => _$this._accountCode;
-  set accountCode(String? accountCode) => _$this._accountCode = accountCode;
-
   String? _totalNet;
   String? get totalNet => _$this._totalNet;
   set totalNet(String? totalNet) => _$this._totalNet = totalNet;
@@ -231,7 +221,6 @@ class UnearnedPreviewItemBuilder
       _endsOn = $v.endsOn;
       _unearnedAccountId = $v.unearnedAccountId;
       _incomeAccountId = $v.incomeAccountId;
-      _accountCode = $v.accountCode;
       _totalNet = $v.totalNet;
       _unexpiredAmount = $v.unexpiredAmount;
       _$v = null;
@@ -271,8 +260,6 @@ class UnearnedPreviewItemBuilder
               unearnedAccountId, r'UnearnedPreviewItem', 'unearnedAccountId'),
           incomeAccountId: BuiltValueNullFieldError.checkNotNull(
               incomeAccountId, r'UnearnedPreviewItem', 'incomeAccountId'),
-          accountCode: BuiltValueNullFieldError.checkNotNull(
-              accountCode, r'UnearnedPreviewItem', 'accountCode'),
           totalNet: BuiltValueNullFieldError.checkNotNull(
               totalNet, r'UnearnedPreviewItem', 'totalNet'),
           unexpiredAmount: BuiltValueNullFieldError.checkNotNull(

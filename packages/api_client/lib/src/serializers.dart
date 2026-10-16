@@ -123,6 +123,8 @@ import 'package:api_client/src/model/health_condition_write.dart';
 import 'package:api_client/src/model/inventory_item.dart';
 import 'package:api_client/src/model/inventory_item_page.dart';
 import 'package:api_client/src/model/item.dart';
+import 'package:api_client/src/model/item_category.dart';
+import 'package:api_client/src/model/item_category_page.dart';
 import 'package:api_client/src/model/item_create.dart';
 import 'package:api_client/src/model/item_kind.dart';
 import 'package:api_client/src/model/item_page.dart';
@@ -292,6 +294,8 @@ import 'package:api_client/src/model/trial_balance_report.dart';
 import 'package:api_client/src/model/unearned_preview_item.dart';
 import 'package:api_client/src/model/unearned_preview_response.dart';
 import 'package:api_client/src/model/unearned_preview_totals.dart';
+import 'package:api_client/src/model/uom.dart';
+import 'package:api_client/src/model/uom_page.dart';
 import 'package:api_client/src/model/user.dart';
 import 'package:api_client/src/model/user_status.dart';
 import 'package:api_client/src/model/user_type.dart';
@@ -426,6 +430,8 @@ part 'serializers.g.dart';
   InventoryItem,
   InventoryItemPage,
   Item,
+  ItemCategory,
+  ItemCategoryPage,
   ItemCreate,
   ItemKind,
   ItemPage,
@@ -595,6 +601,8 @@ part 'serializers.g.dart';
   UnearnedPreviewItem,
   UnearnedPreviewResponse,
   UnearnedPreviewTotals,
+  Uom,
+  UomPage,
   User,
   UserStatus,
   UserType,
@@ -895,6 +903,10 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<DietPlanMealsWriteMealsInnerFoodsInner>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ItemCategory)]),
+        () => ListBuilder<ItemCategory>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(Account)]),
         () => ListBuilder<Account>(),
       )
@@ -981,6 +993,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(GstTaxCodeSummary)]),
         () => ListBuilder<GstTaxCodeSummary>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(Uom)]),
+        () => ListBuilder<Uom>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(DietPlanMeal)]),

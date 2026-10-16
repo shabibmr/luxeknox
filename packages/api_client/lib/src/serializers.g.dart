@@ -129,6 +129,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(InventoryItem.serializer)
       ..add(InventoryItemPage.serializer)
       ..add(Item.serializer)
+      ..add(ItemCategory.serializer)
+      ..add(ItemCategoryPage.serializer)
       ..add(ItemCreate.serializer)
       ..add(ItemKind.serializer)
       ..add(ItemPage.serializer)
@@ -315,6 +317,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(UnearnedPreviewItemKindEnum.serializer)
       ..add(UnearnedPreviewResponse.serializer)
       ..add(UnearnedPreviewTotals.serializer)
+      ..add(Uom.serializer)
+      ..add(UomPage.serializer)
       ..add(User.serializer)
       ..add(UserStatus.serializer)
       ..add(UserType.serializer)
@@ -461,6 +465,9 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Item)]),
           () => ListBuilder<Item>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(ItemCategory)]),
+          () => ListBuilder<ItemCategory>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Journal)]),
           () => ListBuilder<Journal>())
@@ -690,6 +697,9 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(
               BuiltList, const [const FullType(UnearnedPreviewItem)]),
           () => ListBuilder<UnearnedPreviewItem>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(Uom)]),
+          () => ListBuilder<Uom>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Vendor)]),
           () => ListBuilder<Vendor>())

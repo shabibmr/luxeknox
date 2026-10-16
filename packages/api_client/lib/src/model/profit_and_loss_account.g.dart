@@ -10,8 +10,6 @@ class _$ProfitAndLossAccount extends ProfitAndLossAccount {
   @override
   final int accountId;
   @override
-  final String accountCode;
-  @override
   final String accountName;
   @override
   final String amount;
@@ -22,7 +20,6 @@ class _$ProfitAndLossAccount extends ProfitAndLossAccount {
 
   _$ProfitAndLossAccount._(
       {required this.accountId,
-      required this.accountCode,
       required this.accountName,
       required this.amount})
       : super._();
@@ -40,7 +37,6 @@ class _$ProfitAndLossAccount extends ProfitAndLossAccount {
     if (identical(other, this)) return true;
     return other is ProfitAndLossAccount &&
         accountId == other.accountId &&
-        accountCode == other.accountCode &&
         accountName == other.accountName &&
         amount == other.amount;
   }
@@ -49,7 +45,6 @@ class _$ProfitAndLossAccount extends ProfitAndLossAccount {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, accountId.hashCode);
-    _$hash = $jc(_$hash, accountCode.hashCode);
     _$hash = $jc(_$hash, accountName.hashCode);
     _$hash = $jc(_$hash, amount.hashCode);
     _$hash = $jf(_$hash);
@@ -60,7 +55,6 @@ class _$ProfitAndLossAccount extends ProfitAndLossAccount {
   String toString() {
     return (newBuiltValueToStringHelper(r'ProfitAndLossAccount')
           ..add('accountId', accountId)
-          ..add('accountCode', accountCode)
           ..add('accountName', accountName)
           ..add('amount', amount))
         .toString();
@@ -74,10 +68,6 @@ class ProfitAndLossAccountBuilder
   int? _accountId;
   int? get accountId => _$this._accountId;
   set accountId(int? accountId) => _$this._accountId = accountId;
-
-  String? _accountCode;
-  String? get accountCode => _$this._accountCode;
-  set accountCode(String? accountCode) => _$this._accountCode = accountCode;
 
   String? _accountName;
   String? get accountName => _$this._accountName;
@@ -95,7 +85,6 @@ class ProfitAndLossAccountBuilder
     final $v = _$v;
     if ($v != null) {
       _accountId = $v.accountId;
-      _accountCode = $v.accountCode;
       _accountName = $v.accountName;
       _amount = $v.amount;
       _$v = null;
@@ -121,8 +110,6 @@ class ProfitAndLossAccountBuilder
         _$ProfitAndLossAccount._(
           accountId: BuiltValueNullFieldError.checkNotNull(
               accountId, r'ProfitAndLossAccount', 'accountId'),
-          accountCode: BuiltValueNullFieldError.checkNotNull(
-              accountCode, r'ProfitAndLossAccount', 'accountCode'),
           accountName: BuiltValueNullFieldError.checkNotNull(
               accountName, r'ProfitAndLossAccount', 'accountName'),
           amount: BuiltValueNullFieldError.checkNotNull(

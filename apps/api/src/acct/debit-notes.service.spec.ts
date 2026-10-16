@@ -27,7 +27,6 @@ const CURRENT_USER: AuthenticatedUser = {
 
 const AP_ACCOUNT: Account = {
   id: 2000,
-  code: '2000',
   name: 'Accounts Payable',
   account_type: 'liability',
   parent_id: null,
@@ -41,7 +40,6 @@ const AP_ACCOUNT: Account = {
 
 const INPUT_TAX_ACCOUNT: Account = {
   id: 1300,
-  code: '1300',
   name: 'Input Tax Receivable',
   account_type: 'asset',
   parent_id: null,
@@ -55,7 +53,6 @@ const INPUT_TAX_ACCOUNT: Account = {
 
 const EXPENSE_ACCOUNT_1: Account = {
   id: 5010,
-  code: '5010',
   name: 'Equipment Maintenance',
   account_type: 'expense',
   parent_id: null,
@@ -69,7 +66,6 @@ const EXPENSE_ACCOUNT_1: Account = {
 
 const EXPENSE_ACCOUNT_2: Account = {
   id: 5020,
-  code: '5020',
   name: 'Facility Cleaning',
   account_type: 'expense',
   parent_id: null,
@@ -109,6 +105,7 @@ describe('DebitNotesService', () => {
     purchaseBillsRepository = {
       findById: vi.fn(),
       findWithLines: vi.fn(),
+      listLines: vi.fn().mockResolvedValue([]),
     };
 
     accountingPostingService = {
@@ -125,11 +122,6 @@ describe('DebitNotesService', () => {
         if (id === INPUT_TAX_ACCOUNT.id) return INPUT_TAX_ACCOUNT;
         if (id === EXPENSE_ACCOUNT_1.id) return EXPENSE_ACCOUNT_1;
         if (id === EXPENSE_ACCOUNT_2.id) return EXPENSE_ACCOUNT_2;
-        return null;
-      }),
-      findByCode: vi.fn().mockImplementation(async (code: string) => {
-        if (code === '2000') return AP_ACCOUNT;
-        if (code === '1300') return INPUT_TAX_ACCOUNT;
         return null;
       }),
       findByControlRole: vi.fn().mockImplementation(async (role: string) => {
@@ -254,6 +246,26 @@ describe('DebitNotesService', () => {
           CURRENT_USER,
         ),
       ).rejects.toThrow(BusinessRuleError);
+    });
+
+    it('rejects creation against a bill with tracked lines (debit_note_tracked_deferred)', async () => {
+      purchaseBillsRepository.findById.mockResolvedValue({
+        id: 5,
+        status: 'posted',
+        total_amount: '1180.00',
+      });
+      purchaseBillsRepository.listLines.mockResolvedValue([
+        { id: 1, item_id: 3, inventory_tracked: true },
+        { id: 2, item_id: null, inventory_tracked: false },
+      ]);
+
+      await expect(
+        service.create({ purchase_bill_id: 5, debit_note_date: '2026-04-12', amount: '100.00' } as any),
+      ).rejects.toMatchObject({
+        name: 'BusinessRuleError',
+        details: [{ rule: 'debit_note_tracked_deferred' }],
+      });
+      expect(repository.insertDebitNote).not.toHaveBeenCalled();
     });
 
     it('rejects creation if debit note amount exceeds open bill balance', async () => {

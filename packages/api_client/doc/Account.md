@@ -9,7 +9,6 @@ import 'package:api_client/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **int** |  | 
-**code** | **String** |  | 
 **name** | **String** |  | 
 **accountType** | [**AccountType**](AccountType.md) |  | 
 **parentId** | **int** |  | [optional] 

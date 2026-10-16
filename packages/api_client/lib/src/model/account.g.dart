@@ -10,8 +10,6 @@ class _$Account extends Account {
   @override
   final int id;
   @override
-  final String code;
-  @override
   final String name;
   @override
   final AccountType accountType;
@@ -35,7 +33,6 @@ class _$Account extends Account {
 
   _$Account._(
       {required this.id,
-      required this.code,
       required this.name,
       required this.accountType,
       this.parentId,
@@ -58,7 +55,6 @@ class _$Account extends Account {
     if (identical(other, this)) return true;
     return other is Account &&
         id == other.id &&
-        code == other.code &&
         name == other.name &&
         accountType == other.accountType &&
         parentId == other.parentId &&
@@ -74,7 +70,6 @@ class _$Account extends Account {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, id.hashCode);
-    _$hash = $jc(_$hash, code.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
     _$hash = $jc(_$hash, accountType.hashCode);
     _$hash = $jc(_$hash, parentId.hashCode);
@@ -92,7 +87,6 @@ class _$Account extends Account {
   String toString() {
     return (newBuiltValueToStringHelper(r'Account')
           ..add('id', id)
-          ..add('code', code)
           ..add('name', name)
           ..add('accountType', accountType)
           ..add('parentId', parentId)
@@ -112,10 +106,6 @@ class AccountBuilder implements Builder<Account, AccountBuilder> {
   int? _id;
   int? get id => _$this._id;
   set id(int? id) => _$this._id = id;
-
-  String? _code;
-  String? get code => _$this._code;
-  set code(String? code) => _$this._code = code;
 
   String? _name;
   String? get name => _$this._name;
@@ -162,7 +152,6 @@ class AccountBuilder implements Builder<Account, AccountBuilder> {
     final $v = _$v;
     if ($v != null) {
       _id = $v.id;
-      _code = $v.code;
       _name = $v.name;
       _accountType = $v.accountType;
       _parentId = $v.parentId;
@@ -194,7 +183,6 @@ class AccountBuilder implements Builder<Account, AccountBuilder> {
     final _$result = _$v ??
         _$Account._(
           id: BuiltValueNullFieldError.checkNotNull(id, r'Account', 'id'),
-          code: BuiltValueNullFieldError.checkNotNull(code, r'Account', 'code'),
           name: BuiltValueNullFieldError.checkNotNull(name, r'Account', 'name'),
           accountType: BuiltValueNullFieldError.checkNotNull(
               accountType, r'Account', 'accountType'),

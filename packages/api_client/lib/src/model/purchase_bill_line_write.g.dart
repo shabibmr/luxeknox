@@ -10,7 +10,7 @@ class _$PurchaseBillLineWrite extends PurchaseBillLineWrite {
   @override
   final int? itemId;
   @override
-  final int accountId;
+  final int? accountId;
   @override
   final String? description;
   @override
@@ -26,7 +26,7 @@ class _$PurchaseBillLineWrite extends PurchaseBillLineWrite {
 
   _$PurchaseBillLineWrite._(
       {this.itemId,
-      required this.accountId,
+      this.accountId,
       this.description,
       this.quantity,
       required this.rate,
@@ -142,8 +142,7 @@ class PurchaseBillLineWriteBuilder
     final _$result = _$v ??
         _$PurchaseBillLineWrite._(
           itemId: itemId,
-          accountId: BuiltValueNullFieldError.checkNotNull(
-              accountId, r'PurchaseBillLineWrite', 'accountId'),
+          accountId: accountId,
           description: description,
           quantity: quantity,
           rate: BuiltValueNullFieldError.checkNotNull(

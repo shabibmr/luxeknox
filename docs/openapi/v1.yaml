@@ -9048,6 +9048,84 @@ paths:
         "429":
           $ref: "#/components/responses/Error429"
 
+  /inventory/uoms:
+    get:
+      operationId: listUoms
+      summary: List units of measure
+      tags: [INV]
+      x-status: mvp
+      x-parity: required
+      x-permission: inventory.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UomPage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /inventory/item-categories:
+    get:
+      operationId: listItemCategories
+      summary: List item categories
+      tags: [INV]
+      x-status: mvp
+      x-parity: required
+      x-permission: inventory.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemCategoryPage"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -12461,12 +12539,10 @@ components:
 
     Account:
       type: object
-      required: [id, code, name, account_type, is_active, is_bank, is_control, created_at]
+      required: [id, name, account_type, is_active, is_bank, is_control, created_at]
       properties:
         id:
           $ref: "#/components/schemas/Id"
-        code:
-          type: string
         name:
           type: string
         account_type:
@@ -12494,9 +12570,6 @@ components:
       type: object
       required: [name, account_type]
       properties:
-        code:
-          type: string
-          description: Optional. When omitted, the server allocates the next code in the account-type band.
         name:
           type: string
         account_type:
@@ -13136,6 +13209,58 @@ components:
         meta:
           $ref: "#/components/schemas/PageMeta"
 
+    Uom:
+      type: object
+      required: [id, code, name, decimal_places, is_active]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        code:
+          type: string
+        name:
+          type: string
+        decimal_places:
+          type: integer
+        is_active:
+          type: boolean
+
+    UomPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Uom"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    ItemCategory:
+      type: object
+      required: [id, name, is_active]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+        parent_id:
+          type: integer
+          format: int64
+          nullable: true
+        is_active:
+          type: boolean
+
+    ItemCategoryPage:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemCategory"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
     FiscalYear:
       type: object
       required: [id, label, starts_on, ends_on]
@@ -13197,7 +13322,7 @@ components:
 
     PurchaseBillLine:
       type: object
-      required: [id, purchase_bill_id, account_id, quantity, rate, net_amount, tax_amount]
+      required: [id, purchase_bill_id, account_id, quantity, rate, net_amount, tax_amount, item_name, uom_code, inventory_tracked, returned_quantity]
       properties:
         id:
           $ref: "#/components/schemas/Id"
@@ -13207,6 +13332,16 @@ components:
           type: integer
           format: int64
           nullable: true
+        item_name:
+          type: string
+          nullable: true
+        uom_code:
+          type: string
+          nullable: true
+        inventory_tracked:
+          type: boolean
+        returned_quantity:
+          $ref: "#/components/schemas/Money"
         account_id:
           $ref: "#/components/schemas/Id"
         description:
@@ -13227,7 +13362,7 @@ components:
 
     PurchaseBillLineWrite:
       type: object
-      required: [account_id, rate]
+      required: [rate]
       properties:
         item_id:
           type: integer
@@ -13235,6 +13370,7 @@ components:
           nullable: true
         account_id:
           $ref: "#/components/schemas/Id"
+          nullable: true
         description:
           type: string
           nullable: true
@@ -13255,6 +13391,9 @@ components:
           $ref: "#/components/schemas/Id"
         bill_number:
           type: string
+        supplier_invoice_no:
+          type: string
+          nullable: true
         vendor_id:
           $ref: "#/components/schemas/Id"
         bill_date:
@@ -13294,6 +13433,9 @@ components:
           $ref: "#/components/schemas/Id"
         bill_date:
           $ref: "#/components/schemas/Date"
+        supplier_invoice_no:
+          type: string
+          nullable: true
         due_date:
           $ref: "#/components/schemas/Date"
           nullable: true
@@ -13729,12 +13871,10 @@ components:
 
     TrialBalanceAccount:
       type: object
-      required: [account_id, account_code, account_name, account_type, debit, credit]
+      required: [account_id, account_name, account_type, debit, credit]
       properties:
         account_id:
           $ref: "#/components/schemas/Id"
-        account_code:
-          type: string
         account_name:
           type: string
         account_type:
@@ -13764,12 +13904,10 @@ components:
 
     ProfitAndLossAccount:
       type: object
-      required: [account_id, account_code, account_name, amount]
+      required: [account_id, account_name, amount]
       properties:
         account_id:
           $ref: "#/components/schemas/Id"
-        account_code:
-          type: string
         account_name:
           type: string
         amount:
@@ -13800,12 +13938,10 @@ components:
 
     BalanceSheetAccount:
       type: object
-      required: [account_id, account_code, account_name, amount]
+      required: [account_id, account_name, amount]
       properties:
         account_id:
           $ref: "#/components/schemas/Id"
-        account_code:
-          type: string
         account_name:
           type: string
         amount:
@@ -13844,14 +13980,12 @@ components:
 
     DayBookLine:
       type: object
-      required: [id, account_id, account_code, account_name, debit, credit]
+      required: [id, account_id, account_name, debit, credit]
       properties:
         id:
           $ref: "#/components/schemas/Id"
         account_id:
           $ref: "#/components/schemas/Id"
-        account_code:
-          type: string
         account_name:
           type: string
         debit:
@@ -14027,7 +14161,7 @@ components:
 
     UnearnedPreviewItem:
       type: object
-      required: [kind, source_id, payment_id, member_id, starts_on, ends_on, unearned_account_id, income_account_id, account_code, total_net, unexpired_amount]
+      required: [kind, source_id, payment_id, member_id, starts_on, ends_on, unearned_account_id, income_account_id, total_net, unexpired_amount]
       properties:
         kind:
           type: string
@@ -14046,8 +14180,6 @@ components:
           $ref: "#/components/schemas/Id"
         income_account_id:
           $ref: "#/components/schemas/Id"
-        account_code:
-          type: string
         total_net:
           $ref: "#/components/schemas/Money"
         unexpired_amount:
@@ -14091,9 +14223,6 @@ components:
           type: boolean
         account_id:
           $ref: "#/components/schemas/Id"
-          nullable: true
-        account_code:
-          type: string
           nullable: true
         account_name:
           type: string

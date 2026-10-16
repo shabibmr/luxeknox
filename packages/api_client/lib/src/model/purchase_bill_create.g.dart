@@ -12,6 +12,8 @@ class _$PurchaseBillCreate extends PurchaseBillCreate {
   @override
   final Date billDate;
   @override
+  final String? supplierInvoiceNo;
+  @override
   final Date? dueDate;
   @override
   final BuiltList<PurchaseBillLineWrite> lines;
@@ -23,6 +25,7 @@ class _$PurchaseBillCreate extends PurchaseBillCreate {
   _$PurchaseBillCreate._(
       {required this.vendorId,
       required this.billDate,
+      this.supplierInvoiceNo,
       this.dueDate,
       required this.lines})
       : super._();
@@ -41,6 +44,7 @@ class _$PurchaseBillCreate extends PurchaseBillCreate {
     return other is PurchaseBillCreate &&
         vendorId == other.vendorId &&
         billDate == other.billDate &&
+        supplierInvoiceNo == other.supplierInvoiceNo &&
         dueDate == other.dueDate &&
         lines == other.lines;
   }
@@ -50,6 +54,7 @@ class _$PurchaseBillCreate extends PurchaseBillCreate {
     var _$hash = 0;
     _$hash = $jc(_$hash, vendorId.hashCode);
     _$hash = $jc(_$hash, billDate.hashCode);
+    _$hash = $jc(_$hash, supplierInvoiceNo.hashCode);
     _$hash = $jc(_$hash, dueDate.hashCode);
     _$hash = $jc(_$hash, lines.hashCode);
     _$hash = $jf(_$hash);
@@ -61,6 +66,7 @@ class _$PurchaseBillCreate extends PurchaseBillCreate {
     return (newBuiltValueToStringHelper(r'PurchaseBillCreate')
           ..add('vendorId', vendorId)
           ..add('billDate', billDate)
+          ..add('supplierInvoiceNo', supplierInvoiceNo)
           ..add('dueDate', dueDate)
           ..add('lines', lines))
         .toString();
@@ -78,6 +84,11 @@ class PurchaseBillCreateBuilder
   Date? _billDate;
   Date? get billDate => _$this._billDate;
   set billDate(Date? billDate) => _$this._billDate = billDate;
+
+  String? _supplierInvoiceNo;
+  String? get supplierInvoiceNo => _$this._supplierInvoiceNo;
+  set supplierInvoiceNo(String? supplierInvoiceNo) =>
+      _$this._supplierInvoiceNo = supplierInvoiceNo;
 
   Date? _dueDate;
   Date? get dueDate => _$this._dueDate;
@@ -97,6 +108,7 @@ class PurchaseBillCreateBuilder
     if ($v != null) {
       _vendorId = $v.vendorId;
       _billDate = $v.billDate;
+      _supplierInvoiceNo = $v.supplierInvoiceNo;
       _dueDate = $v.dueDate;
       _lines = $v.lines.toBuilder();
       _$v = null;
@@ -126,6 +138,7 @@ class PurchaseBillCreateBuilder
                 vendorId, r'PurchaseBillCreate', 'vendorId'),
             billDate: BuiltValueNullFieldError.checkNotNull(
                 billDate, r'PurchaseBillCreate', 'billDate'),
+            supplierInvoiceNo: supplierInvoiceNo,
             dueDate: dueDate,
             lines: lines.build(),
           );

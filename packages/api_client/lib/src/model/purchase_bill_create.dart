@@ -16,6 +16,7 @@ part 'purchase_bill_create.g.dart';
 /// Properties:
 /// * [vendorId] 
 /// * [billDate] 
+/// * [supplierInvoiceNo] 
 /// * [dueDate] 
 /// * [lines] 
 @BuiltValue()
@@ -25,6 +26,9 @@ abstract class PurchaseBillCreate implements Built<PurchaseBillCreate, PurchaseB
 
   @BuiltValueField(wireName: r'bill_date')
   Date get billDate;
+
+  @BuiltValueField(wireName: r'supplier_invoice_no')
+  String? get supplierInvoiceNo;
 
   @BuiltValueField(wireName: r'due_date')
   Date? get dueDate;
@@ -65,6 +69,13 @@ class _$PurchaseBillCreateSerializer implements PrimitiveSerializer<PurchaseBill
       object.billDate,
       specifiedType: const FullType(Date),
     );
+    if (object.supplierInvoiceNo != null) {
+      yield r'supplier_invoice_no';
+      yield serializers.serialize(
+        object.supplierInvoiceNo,
+        specifiedType: const FullType(String),
+      );
+    }
     if (object.dueDate != null) {
       yield r'due_date';
       yield serializers.serialize(
@@ -113,6 +124,14 @@ class _$PurchaseBillCreateSerializer implements PrimitiveSerializer<PurchaseBill
             specifiedType: const FullType(Date),
           ) as Date;
           result.billDate = valueDes;
+          break;
+        case r'supplier_invoice_no':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.supplierInvoiceNo = valueDes;
           break;
         case r'due_date':
           final valueDes = serializers.deserialize(

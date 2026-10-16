@@ -16,7 +16,6 @@ Name | Type | Description | Notes
 **endsOn** | [**Date**](Date.md) |  | 
 **unearnedAccountId** | **int** |  | 
 **incomeAccountId** | **int** |  | 
-**accountCode** | **String** |  | 
 **totalNet** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | 
 **unexpiredAmount** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | 
 

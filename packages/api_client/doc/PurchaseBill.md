@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **int** |  | 
 **billNumber** | **String** |  | 
+**supplierInvoiceNo** | **String** |  | [optional] 
 **vendorId** | **int** |  | 
 **billDate** | [**Date**](Date.md) |  | 
 **dueDate** | [**Date**](Date.md) |  | [optional] 

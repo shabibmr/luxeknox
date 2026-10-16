@@ -12,7 +12,6 @@ part 'trial_balance_account.g.dart';
 ///
 /// Properties:
 /// * [accountId] 
-/// * [accountCode] 
 /// * [accountName] 
 /// * [accountType] 
 /// * [debit] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
@@ -21,9 +20,6 @@ part 'trial_balance_account.g.dart';
 abstract class TrialBalanceAccount implements Built<TrialBalanceAccount, TrialBalanceAccountBuilder> {
   @BuiltValueField(wireName: r'account_id')
   int get accountId;
-
-  @BuiltValueField(wireName: r'account_code')
-  String get accountCode;
 
   @BuiltValueField(wireName: r'account_name')
   String get accountName;
@@ -66,11 +62,6 @@ class _$TrialBalanceAccountSerializer implements PrimitiveSerializer<TrialBalanc
     yield serializers.serialize(
       object.accountId,
       specifiedType: const FullType(int),
-    );
-    yield r'account_code';
-    yield serializers.serialize(
-      object.accountCode,
-      specifiedType: const FullType(String),
     );
     yield r'account_name';
     yield serializers.serialize(
@@ -121,13 +112,6 @@ class _$TrialBalanceAccountSerializer implements PrimitiveSerializer<TrialBalanc
             specifiedType: const FullType(int),
           ) as int;
           result.accountId = valueDes;
-          break;
-        case r'account_code':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(String),
-          ) as String;
-          result.accountCode = valueDes;
           break;
         case r'account_name':
           final valueDes = serializers.deserialize(

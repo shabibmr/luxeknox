@@ -21,7 +21,6 @@ part 'unearned_preview_item.g.dart';
 /// * [endsOn] 
 /// * [unearnedAccountId] 
 /// * [incomeAccountId] 
-/// * [accountCode] 
 /// * [totalNet] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
 /// * [unexpiredAmount] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
 @BuiltValue()
@@ -50,9 +49,6 @@ abstract class UnearnedPreviewItem implements Built<UnearnedPreviewItem, Unearne
 
   @BuiltValueField(wireName: r'income_account_id')
   int get incomeAccountId;
-
-  @BuiltValueField(wireName: r'account_code')
-  String get accountCode;
 
   /// DECIMAL(12,2) as a two-decimal string. Never a JSON number.
   @BuiltValueField(wireName: r'total_net')
@@ -124,11 +120,6 @@ class _$UnearnedPreviewItemSerializer implements PrimitiveSerializer<UnearnedPre
     yield serializers.serialize(
       object.incomeAccountId,
       specifiedType: const FullType(int),
-    );
-    yield r'account_code';
-    yield serializers.serialize(
-      object.accountCode,
-      specifiedType: const FullType(String),
     );
     yield r'total_net';
     yield serializers.serialize(
@@ -218,13 +209,6 @@ class _$UnearnedPreviewItemSerializer implements PrimitiveSerializer<UnearnedPre
             specifiedType: const FullType(int),
           ) as int;
           result.incomeAccountId = valueDes;
-          break;
-        case r'account_code':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(String),
-          ) as String;
-          result.accountCode = valueDes;
           break;
         case r'total_net':
           final valueDes = serializers.deserialize(

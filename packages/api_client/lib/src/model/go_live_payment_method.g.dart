@@ -18,8 +18,6 @@ class _$GoLivePaymentMethod extends GoLivePaymentMethod {
   @override
   final int? accountId;
   @override
-  final String? accountCode;
-  @override
   final String? accountName;
 
   factory _$GoLivePaymentMethod(
@@ -32,7 +30,6 @@ class _$GoLivePaymentMethod extends GoLivePaymentMethod {
       required this.isActive,
       required this.isDigital,
       this.accountId,
-      this.accountCode,
       this.accountName})
       : super._();
   @override
@@ -53,7 +50,6 @@ class _$GoLivePaymentMethod extends GoLivePaymentMethod {
         isActive == other.isActive &&
         isDigital == other.isDigital &&
         accountId == other.accountId &&
-        accountCode == other.accountCode &&
         accountName == other.accountName;
   }
 
@@ -65,7 +61,6 @@ class _$GoLivePaymentMethod extends GoLivePaymentMethod {
     _$hash = $jc(_$hash, isActive.hashCode);
     _$hash = $jc(_$hash, isDigital.hashCode);
     _$hash = $jc(_$hash, accountId.hashCode);
-    _$hash = $jc(_$hash, accountCode.hashCode);
     _$hash = $jc(_$hash, accountName.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -79,7 +74,6 @@ class _$GoLivePaymentMethod extends GoLivePaymentMethod {
           ..add('isActive', isActive)
           ..add('isDigital', isDigital)
           ..add('accountId', accountId)
-          ..add('accountCode', accountCode)
           ..add('accountName', accountName))
         .toString();
   }
@@ -109,10 +103,6 @@ class GoLivePaymentMethodBuilder
   int? get accountId => _$this._accountId;
   set accountId(int? accountId) => _$this._accountId = accountId;
 
-  String? _accountCode;
-  String? get accountCode => _$this._accountCode;
-  set accountCode(String? accountCode) => _$this._accountCode = accountCode;
-
   String? _accountName;
   String? get accountName => _$this._accountName;
   set accountName(String? accountName) => _$this._accountName = accountName;
@@ -129,7 +119,6 @@ class GoLivePaymentMethodBuilder
       _isActive = $v.isActive;
       _isDigital = $v.isDigital;
       _accountId = $v.accountId;
-      _accountCode = $v.accountCode;
       _accountName = $v.accountName;
       _$v = null;
     }
@@ -161,7 +150,6 @@ class GoLivePaymentMethodBuilder
           isDigital: BuiltValueNullFieldError.checkNotNull(
               isDigital, r'GoLivePaymentMethod', 'isDigital'),
           accountId: accountId,
-          accountCode: accountCode,
           accountName: accountName,
         );
     replace(_$result);

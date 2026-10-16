@@ -13,7 +13,6 @@ part 'day_book_line.g.dart';
 /// Properties:
 /// * [id] 
 /// * [accountId] 
-/// * [accountCode] 
 /// * [accountName] 
 /// * [debit] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
 /// * [credit] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
@@ -27,9 +26,6 @@ abstract class DayBookLine implements Built<DayBookLine, DayBookLineBuilder> {
 
   @BuiltValueField(wireName: r'account_id')
   int get accountId;
-
-  @BuiltValueField(wireName: r'account_code')
-  String get accountCode;
 
   @BuiltValueField(wireName: r'account_name')
   String get accountName;
@@ -83,11 +79,6 @@ class _$DayBookLineSerializer implements PrimitiveSerializer<DayBookLine> {
     yield serializers.serialize(
       object.accountId,
       specifiedType: const FullType(int),
-    );
-    yield r'account_code';
-    yield serializers.serialize(
-      object.accountCode,
-      specifiedType: const FullType(String),
     );
     yield r'account_name';
     yield serializers.serialize(
@@ -161,13 +152,6 @@ class _$DayBookLineSerializer implements PrimitiveSerializer<DayBookLine> {
             specifiedType: const FullType(int),
           ) as int;
           result.accountId = valueDes;
-          break;
-        case r'account_code':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(String),
-          ) as String;
-          result.accountCode = valueDes;
           break;
         case r'account_name':
           final valueDes = serializers.deserialize(

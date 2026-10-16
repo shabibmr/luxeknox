@@ -12,8 +12,6 @@ class _$DayBookLine extends DayBookLine {
   @override
   final int accountId;
   @override
-  final String accountCode;
-  @override
   final String accountName;
   @override
   final String debit;
@@ -32,7 +30,6 @@ class _$DayBookLine extends DayBookLine {
   _$DayBookLine._(
       {required this.id,
       required this.accountId,
-      required this.accountCode,
       required this.accountName,
       required this.debit,
       required this.credit,
@@ -53,7 +50,6 @@ class _$DayBookLine extends DayBookLine {
     return other is DayBookLine &&
         id == other.id &&
         accountId == other.accountId &&
-        accountCode == other.accountCode &&
         accountName == other.accountName &&
         debit == other.debit &&
         credit == other.credit &&
@@ -67,7 +63,6 @@ class _$DayBookLine extends DayBookLine {
     var _$hash = 0;
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, accountId.hashCode);
-    _$hash = $jc(_$hash, accountCode.hashCode);
     _$hash = $jc(_$hash, accountName.hashCode);
     _$hash = $jc(_$hash, debit.hashCode);
     _$hash = $jc(_$hash, credit.hashCode);
@@ -83,7 +78,6 @@ class _$DayBookLine extends DayBookLine {
     return (newBuiltValueToStringHelper(r'DayBookLine')
           ..add('id', id)
           ..add('accountId', accountId)
-          ..add('accountCode', accountCode)
           ..add('accountName', accountName)
           ..add('debit', debit)
           ..add('credit', credit)
@@ -104,10 +98,6 @@ class DayBookLineBuilder implements Builder<DayBookLine, DayBookLineBuilder> {
   int? _accountId;
   int? get accountId => _$this._accountId;
   set accountId(int? accountId) => _$this._accountId = accountId;
-
-  String? _accountCode;
-  String? get accountCode => _$this._accountCode;
-  set accountCode(String? accountCode) => _$this._accountCode = accountCode;
 
   String? _accountName;
   String? get accountName => _$this._accountName;
@@ -142,7 +132,6 @@ class DayBookLineBuilder implements Builder<DayBookLine, DayBookLineBuilder> {
     if ($v != null) {
       _id = $v.id;
       _accountId = $v.accountId;
-      _accountCode = $v.accountCode;
       _accountName = $v.accountName;
       _debit = $v.debit;
       _credit = $v.credit;
@@ -173,8 +162,6 @@ class DayBookLineBuilder implements Builder<DayBookLine, DayBookLineBuilder> {
           id: BuiltValueNullFieldError.checkNotNull(id, r'DayBookLine', 'id'),
           accountId: BuiltValueNullFieldError.checkNotNull(
               accountId, r'DayBookLine', 'accountId'),
-          accountCode: BuiltValueNullFieldError.checkNotNull(
-              accountCode, r'DayBookLine', 'accountCode'),
           accountName: BuiltValueNullFieldError.checkNotNull(
               accountName, r'DayBookLine', 'accountName'),
           debit: BuiltValueNullFieldError.checkNotNull(
