@@ -126,6 +126,25 @@ void main() {
       expect(RouteCapabilities.requiredSlug(Routes.adminDietPlans), isNull);
     });
 
+    test('gates accounting item routes', () {
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminAccountingItems),
+        'inventory.read',
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminAccountingItemById('5')),
+        'inventory.read',
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminAccountingItemsCreate),
+        'accounting.accounts_write',
+      );
+      expect(
+        RouteCapabilities.requiredSlug(Routes.adminAccountingItemEditById('5')),
+        'accounting.accounts_write',
+      );
+    });
+
     test('matches category prefixes for reports and settings', () {
       expect(
         RouteCapabilities.requiredSlug(Routes.adminReportsCategory('revenue')),

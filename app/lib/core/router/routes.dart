@@ -218,6 +218,13 @@ class Routes {
       '/admin/accounting/vendors/create';
   static const String adminAccountingVendorsEdit =
       '/admin/accounting/vendors/:id/edit';
+  static const String adminAccountingItems = '/admin/accounting/items';
+  static const String adminAccountingItemsCreate =
+      '/admin/accounting/items/create';
+  static const String adminAccountingItemsDetail =
+      '/admin/accounting/items/:id';
+  static const String adminAccountingItemsEdit =
+      '/admin/accounting/items/:id/edit';
   static const String adminAccountingBills = '/admin/accounting/bills';
   static const String adminAccountingBillsCreate =
       '/admin/accounting/bills/create';
@@ -251,6 +258,10 @@ class Routes {
       '/admin/accounting/accounts/$id/edit';
   static String adminAccountingVendorEditById(String id) =>
       '/admin/accounting/vendors/$id/edit';
+  static String adminAccountingItemById(String id) =>
+      '/admin/accounting/items/$id';
+  static String adminAccountingItemEditById(String id) =>
+      '/admin/accounting/items/$id/edit';
   static String adminAccountingBillById(String id) =>
       '/admin/accounting/bills/$id';
   static String adminAccountingExpenseById(String id) =>
