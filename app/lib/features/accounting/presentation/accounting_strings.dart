@@ -292,6 +292,11 @@ class AccountingStrings {
   static const String taxCodeLabel = 'Tax Code';
   static const String itemLabel = 'Item';
   static const String supplierInvoiceNoLabel = 'Supplier Invoice #';
+  static const String saveDraft = 'Save draft';
+  static const String saveAndPost = 'Save & post';
+  static const String billDraftSavedSuccess =
+      'Purchase bill saved as draft.';
+  static const String rateExcludesTaxHint = 'Rate excludes tax';
 
   static const String expenseNumberLabel = 'Expense #';
   static const String payeeLabel = 'Payee';

@@ -80,7 +80,7 @@ Class | Method | HTTP request | Description
 [*ACCTApi*](doc/ACCTApi.md) | [**createItem**](doc/ACCTApi.md#createitem) | **POST** /accounting/items | Create item
 [*ACCTApi*](doc/ACCTApi.md) | [**createJournal**](doc/ACCTApi.md#createjournal) | **POST** /accounting/journals | Create a manual or opening-balance journal
 [*ACCTApi*](doc/ACCTApi.md) | [**createPaymentVoucher**](doc/ACCTApi.md#createpaymentvoucher) | **POST** /accounting/payment-vouchers | Create a draft payment voucher
-[*ACCTApi*](doc/ACCTApi.md) | [**createPurchaseBill**](doc/ACCTApi.md#createpurchasebill) | **POST** /accounting/purchase-bills | Create and post a purchase bill
+[*ACCTApi*](doc/ACCTApi.md) | [**createPurchaseBill**](doc/ACCTApi.md#createpurchasebill) | **POST** /accounting/purchase-bills | Create a purchase bill (posted unless draft is true)
 [*ACCTApi*](doc/ACCTApi.md) | [**createTaxCode**](doc/ACCTApi.md#createtaxcode) | **POST** /accounting/tax-codes | Create a tax code
 [*ACCTApi*](doc/ACCTApi.md) | [**createVendor**](doc/ACCTApi.md#createvendor) | **POST** /accounting/vendors | Create vendor
 [*ACCTApi*](doc/ACCTApi.md) | [**enablePosting**](doc/ACCTApi.md#enableposting) | **POST** /accounting/go-live/enable-posting | Enable accounting journal posting
@@ -120,6 +120,7 @@ Class | Method | HTTP request | Description
 [*ACCTApi*](doc/ACCTApi.md) | [**postExpense**](doc/ACCTApi.md#postexpense) | **POST** /accounting/expenses/{id}/post | Post an expense voucher to general ledger
 [*ACCTApi*](doc/ACCTApi.md) | [**postFundTransfer**](doc/ACCTApi.md#postfundtransfer) | **POST** /accounting/fund-transfers/{id}/post | Post fund transfer to GL
 [*ACCTApi*](doc/ACCTApi.md) | [**postPaymentVoucher**](doc/ACCTApi.md#postpaymentvoucher) | **POST** /accounting/payment-vouchers/{id}/post | Post a payment voucher to GL
+[*ACCTApi*](doc/ACCTApi.md) | [**postPurchaseBill**](doc/ACCTApi.md#postpurchasebill) | **POST** /accounting/purchase-bills/{id}/post | Post a draft purchase bill
 [*ACCTApi*](doc/ACCTApi.md) | [**reverseJournal**](doc/ACCTApi.md#reversejournal) | **POST** /accounting/journals/{id}/reverse | Reverse a posted journal
 [*ACCTApi*](doc/ACCTApi.md) | [**unlockAccountingPeriod**](doc/ACCTApi.md#unlockaccountingperiod) | **POST** /accounting/periods/{id}/unlock | Unlock an accounting period
 [*ACCTApi*](doc/ACCTApi.md) | [**updateAccount**](doc/ACCTApi.md#updateaccount) | **PATCH** /accounting/accounts/{id} | Update an account

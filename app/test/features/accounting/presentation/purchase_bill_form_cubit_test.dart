@@ -5,6 +5,7 @@ import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/core/pagination/cursor_page.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/features/accounting/domain/entities/account.dart';
+import 'package:luxeknox/features/accounting/domain/entities/item.dart';
 import 'package:luxeknox/features/accounting/domain/entities/purchase_bill.dart';
 import 'package:luxeknox/features/accounting/domain/entities/tax_code.dart';
 import 'package:luxeknox/features/accounting/domain/entities/vendor.dart';
@@ -12,11 +13,15 @@ import 'package:luxeknox/features/accounting/domain/usecases/create_purchase_bil
 import 'package:luxeknox/features/accounting/domain/usecases/get_accounts_usecase.dart';
 import 'package:luxeknox/features/accounting/domain/usecases/get_tax_codes_usecase.dart';
 import 'package:luxeknox/features/accounting/domain/usecases/get_vendors_usecase.dart';
+import 'package:luxeknox/features/accounting/domain/usecases/post_purchase_bill_usecase.dart';
 import 'package:luxeknox/features/accounting/presentation/cubit/purchase_bill_form_cubit.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockCreatePurchaseBillUseCase extends Mock
     implements CreatePurchaseBillUseCase {}
+
+class MockPostPurchaseBillUseCase extends Mock
+    implements PostPurchaseBillUseCase {}
 
 class MockGetVendorsUseCase extends Mock implements GetVendorsUseCase {}
 
@@ -26,6 +31,7 @@ class MockGetTaxCodesUseCase extends Mock implements GetTaxCodesUseCase {}
 
 void main() {
   late MockCreatePurchaseBillUseCase mockCreatePurchaseBill;
+  late MockPostPurchaseBillUseCase mockPostPurchaseBill;
   late MockGetVendorsUseCase mockGetVendors;
   late MockGetAccountsUseCase mockGetAccounts;
   late MockGetTaxCodesUseCase mockGetTaxCodes;
@@ -44,6 +50,47 @@ void main() {
     code: 'GST18',
     name: 'GST 18%',
     ratePercent: '18.0',
+  );
+
+  final tPostedBill = PurchaseBill(
+    id: 'pb-100',
+    billNumber: 'BILL-100',
+    vendorId: 'v-101',
+    vendorName: 'Vendor 1',
+    billDate: tDate,
+    subtotal: '200.00',
+    taxAmount: '36.00',
+    totalAmount: '236.00',
+    status: 'posted',
+    allocatedAmount: '0.00',
+    journalEntryId: 'je-1',
+  );
+
+  const tKgItem = Item(
+    id: 7,
+    name: 'Basmati rice',
+    kind: 'goods',
+    uomId: 2,
+    uomCode: 'KG',
+    uomDecimalPlaces: 3,
+    incomeAccountId: 40,
+    expenseAccountId: 50,
+    inventoryAccountId: 14,
+    inventoryTracked: true,
+    purchaseRate: '80.00',
+    taxCodeId: 1,
+  );
+
+  const tPcsService = Item(
+    id: 8,
+    name: 'Belt',
+    kind: 'goods',
+    uomId: 1,
+    uomCode: 'PCS',
+    uomDecimalPlaces: 0,
+    incomeAccountId: 40,
+    expenseAccountId: 1,
+    purchaseRate: '25.50',
   );
 
   final tCreatedBill = PurchaseBill(
@@ -80,6 +127,7 @@ void main() {
         lines: const [],
       ),
     );
+    registerFallbackValue(const PostPurchaseBillParams(id: 'x'));
     registerFallbackValue(const GetVendorsParams());
     registerFallbackValue(const GetAccountsParams());
     registerFallbackValue(const GetTaxCodesParams());
@@ -87,12 +135,14 @@ void main() {
 
   setUp(() {
     mockCreatePurchaseBill = MockCreatePurchaseBillUseCase();
+    mockPostPurchaseBill = MockPostPurchaseBillUseCase();
     mockGetVendors = MockGetVendorsUseCase();
     mockGetAccounts = MockGetAccountsUseCase();
     mockGetTaxCodes = MockGetTaxCodesUseCase();
 
     cubit = PurchaseBillFormCubit(
       mockCreatePurchaseBill,
+      mockPostPurchaseBill,
       mockGetVendors,
       mockGetAccounts,
       mockGetTaxCodes,
@@ -202,97 +252,211 @@ void main() {
       expect(cubit.state.canSubmit, true);
     });
 
-    blocTest<PurchaseBillFormCubit, PurchaseBillFormState>(
-      'submit succeeds and emits success with createdBill',
-      build: () {
-        when(() => mockCreatePurchaseBill(any())).thenAnswer(
-          (_) async => Right(tCreatedBill),
-        );
-        return cubit;
-      },
-      seed: () => PurchaseBillFormState(
-        vendorId: 'v-101',
-        vendorName: 'Vendor 1',
-        billDate: tDate,
-        dueDate: tDate.add(const Duration(days: 30)),
-        lines: const [
-          PurchaseBillLineDraft(
-            accountId: 'acc-1',
-            quantity: '2',
-            rate: '100.00',
-            taxCodeId: 'tc-1',
-            taxRatePercent: 18.0,
-          ),
-        ],
-      ),
-      act: (cubit) => cubit.submit(),
-      expect: () => [
-        isA<PurchaseBillFormState>()
-            .having((s) => s.isSubmitting, 'isSubmitting', true)
-            .having((s) => s.failure, 'failure', isNull),
-        isA<PurchaseBillFormState>()
-            .having((s) => s.status, 'status', LoadStatus.success)
-            .having((s) => s.createdBill, 'createdBill', tCreatedBill)
-            .having((s) => s.isSubmitting, 'isSubmitting', false),
-      ],
-      verify: (_) {
-        verify(
-          () => mockCreatePurchaseBill(
-            CreatePurchaseBillParams(
-              vendorId: 'v-101',
-              billDate: tDate,
-              dueDate: tDate.add(const Duration(days: 30)),
-              lines: const [
-                PurchaseBillLine(
-                  id: '',
-                  billId: '',
-                  accountId: 'acc-1',
-                  quantity: '2',
-                  unitPrice: '100.00',
-                  amount: '200.00',
-                  taxCodeId: 'tc-1',
-                  taxAmount: '36.00',
-                ),
-              ],
+    PurchaseBillFormState seeded({String supplierInvoiceNo = ''}) =>
+        PurchaseBillFormState(
+          vendorId: 'v-101',
+          vendorName: 'Vendor 1',
+          billDate: tDate,
+          dueDate: tDate.add(const Duration(days: 30)),
+          supplierInvoiceNo: supplierInvoiceNo,
+          lines: const [
+            PurchaseBillLineDraft(
+              accountId: 'acc-1',
+              quantity: '2',
+              rate: '100.00',
+              taxCodeId: 'tc-1',
+              taxRatePercent: 18.0,
             ),
-          ),
-        ).called(1);
-      },
-    );
-
-    blocTest<PurchaseBillFormCubit, PurchaseBillFormState>(
-      'submit fails and emits failure',
-      build: () {
-        when(() => mockCreatePurchaseBill(any())).thenAnswer(
-          (_) async => const Left(BusinessRuleFailure('Invalid purchase bill')),
+          ],
         );
-        return cubit;
-      },
-      seed: () => PurchaseBillFormState(
-        vendorId: 'v-101',
-        billDate: tDate,
-        lines: const [
-          PurchaseBillLineDraft(
-            accountId: 'acc-1',
-            quantity: '1',
-            rate: '50.00',
-          ),
-        ],
-      ),
-      act: (cubit) => cubit.submit(),
-      expect: () => [
-        isA<PurchaseBillFormState>()
-            .having((s) => s.isSubmitting, 'isSubmitting', true),
-        isA<PurchaseBillFormState>()
-            .having((s) => s.status, 'status', LoadStatus.failure)
-            .having(
-              (s) => s.failure,
-              'failure',
-              const BusinessRuleFailure('Invalid purchase bill'),
-            )
-            .having((s) => s.isSubmitting, 'isSubmitting', false),
-      ],
-    );
+
+    test('saveDraft creates a draft once and never posts', () async {
+      when(() => mockCreatePurchaseBill(any()))
+          .thenAnswer((_) async => Right(tCreatedBill));
+      cubit.emit(seeded(supplierInvoiceNo: '  INV-9 '));
+
+      final ok = await cubit.saveDraft();
+
+      expect(ok, true);
+      final params = verify(() => mockCreatePurchaseBill(captureAny()))
+          .captured
+          .single as CreatePurchaseBillParams;
+      expect(params.draft, true);
+      expect(params.supplierInvoiceNo, 'INV-9');
+      expect(params.idempotencyKey, isNotEmpty);
+      verifyNever(() => mockPostPurchaseBill(any()));
+      expect(cubit.state.status, LoadStatus.success);
+      expect(cubit.state.createdBill, tCreatedBill);
+      expect(cubit.state.isSubmitting, false);
+    });
+
+    test('saveAndPost creates then posts once, with separate keys', () async {
+      when(() => mockCreatePurchaseBill(any()))
+          .thenAnswer((_) async => Right(tCreatedBill));
+      when(() => mockPostPurchaseBill(any()))
+          .thenAnswer((_) async => Right(tPostedBill));
+      cubit.emit(seeded());
+
+      final ok = await cubit.saveAndPost();
+
+      expect(ok, true);
+      final create = verify(() => mockCreatePurchaseBill(captureAny()))
+          .captured
+          .single as CreatePurchaseBillParams;
+      final post = verify(() => mockPostPurchaseBill(captureAny()))
+          .captured
+          .single as PostPurchaseBillParams;
+      expect(post.id, 'pb-100');
+      expect(post.idempotencyKey, isNotEmpty);
+      expect(post.idempotencyKey, isNot(create.idempotencyKey));
+      expect(create.supplierInvoiceNo, isNull);
+      expect(cubit.state.createdBill, tPostedBill);
+      expect(cubit.state.status, LoadStatus.success);
+    });
+
+    test('a post error (period locked) shows on the form and keeps the draft',
+        () async {
+      when(() => mockCreatePurchaseBill(any()))
+          .thenAnswer((_) async => Right(tCreatedBill));
+      when(() => mockPostPurchaseBill(any())).thenAnswer(
+        (_) async => const Left(BusinessRuleFailure('Period is locked')),
+      );
+      cubit.emit(seeded());
+
+      final ok = await cubit.saveAndPost();
+
+      expect(ok, false);
+      expect(cubit.state.status, LoadStatus.failure);
+      expect(cubit.state.failure, const BusinessRuleFailure('Period is locked'));
+      expect(cubit.state.isSubmitting, false);
+      expect(cubit.state.createdBill, tCreatedBill);
+    });
+
+    test('retrying after a post error posts the same draft with the same key',
+        () async {
+      when(() => mockCreatePurchaseBill(any()))
+          .thenAnswer((_) async => Right(tCreatedBill));
+      var calls = 0;
+      when(() => mockPostPurchaseBill(any())).thenAnswer((_) async {
+        calls++;
+        return calls == 1
+            ? const Left(BusinessRuleFailure('Period is locked'))
+            : Right(tPostedBill);
+      });
+      cubit.emit(seeded());
+
+      await cubit.saveAndPost();
+      final ok = await cubit.saveAndPost();
+
+      expect(ok, true);
+      verify(() => mockCreatePurchaseBill(any())).called(1);
+      final keys = verify(() => mockPostPurchaseBill(captureAny()))
+          .captured
+          .cast<PostPurchaseBillParams>()
+          .map((p) => p.idempotencyKey)
+          .toList();
+      expect(keys, hasLength(2));
+      expect(keys[0], keys[1]);
+      expect(cubit.state.createdBill, tPostedBill);
+    });
+
+    test('a create error emits failure and does not post', () async {
+      when(() => mockCreatePurchaseBill(any())).thenAnswer(
+        (_) async => const Left(BusinessRuleFailure('Invalid purchase bill')),
+      );
+      cubit.emit(seeded());
+
+      final ok = await cubit.saveAndPost();
+
+      expect(ok, false);
+      expect(
+        cubit.state.failure,
+        const BusinessRuleFailure('Invalid purchase bill'),
+      );
+      expect(cubit.state.createdBill, isNull);
+      verifyNever(() => mockPostPurchaseBill(any()));
+    });
+  });
+
+  group('item lines', () {
+    setUp(() {
+      cubit.emit(
+        cubit.state.copyWith(
+          availableAccounts: const [
+            Account(id: '1', name: 'Repairs', type: 'expense'),
+          ],
+          availableTaxCodes: const [
+            TaxCode(id: '1', code: 'GST5', name: 'GST 5%', ratePercent: '5.0'),
+          ],
+        ),
+      );
+    });
+
+    test('picking a tracked item fills rate, tax and UOM and drops the account',
+        () {
+      cubit.setLineAccount(0, tAccount);
+      cubit.setLineItem(0, tKgItem);
+
+      final line = cubit.state.lines[0];
+      expect(line.itemId, '7');
+      expect(line.itemName, 'Basmati rice');
+      expect(line.uomCode, 'KG');
+      expect(line.uomDecimalPlaces, 3);
+      expect(line.inventoryTracked, true);
+      expect(line.rate, '80.00');
+      expect(line.taxCodeId, '1');
+      expect(line.taxRatePercent, 5.0);
+      expect(line.accountId, isNull);
+    });
+
+    test('a tracked line needs no account to submit', () {
+      cubit.setVendor('v-101');
+      cubit.setLineItem(0, tKgItem);
+      expect(cubit.state.canSubmit, true);
+    });
+
+    test('an untracked item defaults to its expense account', () {
+      cubit.setLineItem(0, tPcsService);
+
+      final line = cubit.state.lines[0];
+      expect(line.inventoryTracked, false);
+      expect(line.accountId, '1');
+      expect(line.accountName, 'Repairs');
+      expect(line.rate, '25.50');
+      expect(line.uomDecimalPlaces, 0);
+    });
+
+    test('a fractional quantity is trimmed to the UOM decimals', () {
+      cubit.updateLine(0, quantity: '2.375');
+      cubit.setLineItem(0, tPcsService);
+      expect(cubit.state.lines[0].quantity, '2');
+    });
+
+    test('tracked lines are sent without an account id', () async {
+      when(() => mockCreatePurchaseBill(any()))
+          .thenAnswer((_) async => Right(tCreatedBill));
+      cubit.setVendor('v-101');
+      cubit.setLineItem(0, tKgItem);
+      cubit.updateLine(0, quantity: '10');
+
+      await cubit.saveDraft();
+
+      final params = verify(() => mockCreatePurchaseBill(captureAny()))
+          .captured
+          .single as CreatePurchaseBillParams;
+      expect(params.lines.single.itemId, '7');
+      expect(params.lines.single.accountId, isNull);
+      expect(params.lines.single.quantity, '10');
+    });
+
+    test('clearing the item returns to a plain account line', () {
+      cubit.setLineItem(0, tKgItem);
+      cubit.setLineItem(0, null);
+      final line = cubit.state.lines[0];
+      expect(line.itemId, isNull);
+      expect(line.inventoryTracked, false);
+      expect(line.uomCode, isNull);
+    });
   });
 
   group('loadDependencies', () {

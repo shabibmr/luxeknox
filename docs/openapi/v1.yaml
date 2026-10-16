@@ -7727,7 +7727,7 @@ paths:
           $ref: "#/components/responses/Error429"
     post:
       operationId: createPurchaseBill
-      summary: Create and post a purchase bill
+      summary: Create a purchase bill (posted unless draft is true)
       tags: [ACCT]
       x-status: mvp
       x-parity: required
@@ -7776,6 +7776,41 @@ paths:
         - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseBill"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+
+  /accounting/purchase-bills/{id}/post:
+    post:
+      operationId: postPurchaseBill
+      summary: Post a draft purchase bill
+      tags: [ACCT]
+      x-status: mvp
+      x-parity: required
+      x-permission: accounting.purchases_write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "200":
           description: OK
@@ -13439,6 +13474,9 @@ components:
         due_date:
           $ref: "#/components/schemas/Date"
           nullable: true
+        draft:
+          type: boolean
+          description: When true the bill is saved as a draft and posted later via POST /accounting/purchase-bills/{id}/post.
         lines:
           type: array
           items:

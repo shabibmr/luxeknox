@@ -47,7 +47,9 @@ void main() {
 
     when(() => mockPurchaseBillFormCubit.loadDependencies())
         .thenAnswer((_) async {});
-    when(() => mockPurchaseBillFormCubit.submit())
+    when(() => mockPurchaseBillFormCubit.saveAndPost())
+        .thenAnswer((_) async => true);
+    when(() => mockPurchaseBillFormCubit.saveDraft())
         .thenAnswer((_) async => true);
     when(() => mockPurchaseBillFormCubit.addLine()).thenReturn(null);
     when(() => mockPurchaseBillFormCubit.removeLine(any())).thenReturn(null);
@@ -183,7 +185,7 @@ void main() {
     verify(() => mockPurchaseBillFormCubit.addLine()).called(1);
   });
 
-  testWidgets('tapping submit button invokes cubit.submit when canSubmit is true',
+  testWidgets('tapping submit button invokes cubit.saveAndPost when canSubmit is true',
       (tester) async {
     final validState = PurchaseBillFormState(
       vendorId: 'v-101',
@@ -206,6 +208,59 @@ void main() {
     await tester.tap(submitButton);
     await tester.pump();
 
-    verify(() => mockPurchaseBillFormCubit.submit()).called(1);
+    verify(() => mockPurchaseBillFormCubit.saveAndPost()).called(1);
+  });
+
+  testWidgets('tapping Save draft invokes cubit.saveDraft', (tester) async {
+    final validState = PurchaseBillFormState(
+      vendorId: 'v-101',
+      billDate: tDate,
+      availableVendors: [tVendor],
+      lines: const [
+        PurchaseBillLineDraft(accountId: 'acc-1', quantity: '1', rate: '100.00'),
+      ],
+    );
+
+    await tester.pumpWidget(buildTestableWidget(state: validState));
+    await tester.pumpAndSettle();
+
+    final draftButton = find.byKey(const Key('save_draft_button'));
+    await tester.ensureVisible(draftButton);
+    await tester.tap(draftButton);
+    await tester.pump();
+
+    verify(() => mockPurchaseBillFormCubit.saveDraft()).called(1);
+    verifyNever(() => mockPurchaseBillFormCubit.saveAndPost());
+  });
+
+  testWidgets(
+      'a tracked item line hides the account picker and shows UOM and the tax hint',
+      (tester) async {
+    final trackedState = PurchaseBillFormState(
+      vendorId: 'v-101',
+      billDate: tDate,
+      availableVendors: [tVendor],
+      lines: const [
+        PurchaseBillLineDraft(
+          itemId: '7',
+          itemName: 'Basmati rice',
+          uomCode: 'KG',
+          inventoryTracked: true,
+          quantity: '10',
+          rate: '80.00',
+        ),
+        PurchaseBillLineDraft(accountId: 'acc-1', quantity: '1', rate: '5.00'),
+      ],
+    );
+
+    await tester.pumpWidget(buildTestableWidget(state: trackedState));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('account_picker_0')), findsNothing);
+    expect(find.byKey(const Key('account_picker_1')), findsOneWidget);
+    expect(find.text('KG'), findsOneWidget);
+    expect(find.text('Basmati rice'), findsOneWidget);
+    expect(find.text(AccountingStrings.rateExcludesTaxHint), findsNWidgets(2));
+    expect(find.byKey(const Key('supplier_invoice_no_field')), findsOneWidget);
   });
 }

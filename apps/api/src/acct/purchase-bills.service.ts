@@ -358,7 +358,13 @@ export class PurchaseBillsService {
         processedLines,
       );
 
-      // A bill is created and posted in one transaction; a post failure rolls the insert back.
+      if (dto.draft) {
+        const draft = await this.repository.findWithLines(created.id);
+        if (!draft) throw new NotFoundError(`Purchase bill ${created.id} was not found`);
+        return this.toDtoWithLines(draft);
+      }
+
+      // Otherwise the bill is created and posted in one transaction; a post failure rolls the insert back.
       return this.post(created.id, currentUser);
     });
   }

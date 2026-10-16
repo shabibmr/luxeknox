@@ -16,6 +16,8 @@ class _$PurchaseBillCreate extends PurchaseBillCreate {
   @override
   final Date? dueDate;
   @override
+  final bool? draft;
+  @override
   final BuiltList<PurchaseBillLineWrite> lines;
 
   factory _$PurchaseBillCreate(
@@ -27,6 +29,7 @@ class _$PurchaseBillCreate extends PurchaseBillCreate {
       required this.billDate,
       this.supplierInvoiceNo,
       this.dueDate,
+      this.draft,
       required this.lines})
       : super._();
   @override
@@ -46,6 +49,7 @@ class _$PurchaseBillCreate extends PurchaseBillCreate {
         billDate == other.billDate &&
         supplierInvoiceNo == other.supplierInvoiceNo &&
         dueDate == other.dueDate &&
+        draft == other.draft &&
         lines == other.lines;
   }
 
@@ -56,6 +60,7 @@ class _$PurchaseBillCreate extends PurchaseBillCreate {
     _$hash = $jc(_$hash, billDate.hashCode);
     _$hash = $jc(_$hash, supplierInvoiceNo.hashCode);
     _$hash = $jc(_$hash, dueDate.hashCode);
+    _$hash = $jc(_$hash, draft.hashCode);
     _$hash = $jc(_$hash, lines.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -68,6 +73,7 @@ class _$PurchaseBillCreate extends PurchaseBillCreate {
           ..add('billDate', billDate)
           ..add('supplierInvoiceNo', supplierInvoiceNo)
           ..add('dueDate', dueDate)
+          ..add('draft', draft)
           ..add('lines', lines))
         .toString();
   }
@@ -94,6 +100,10 @@ class PurchaseBillCreateBuilder
   Date? get dueDate => _$this._dueDate;
   set dueDate(Date? dueDate) => _$this._dueDate = dueDate;
 
+  bool? _draft;
+  bool? get draft => _$this._draft;
+  set draft(bool? draft) => _$this._draft = draft;
+
   ListBuilder<PurchaseBillLineWrite>? _lines;
   ListBuilder<PurchaseBillLineWrite> get lines =>
       _$this._lines ??= ListBuilder<PurchaseBillLineWrite>();
@@ -110,6 +120,7 @@ class PurchaseBillCreateBuilder
       _billDate = $v.billDate;
       _supplierInvoiceNo = $v.supplierInvoiceNo;
       _dueDate = $v.dueDate;
+      _draft = $v.draft;
       _lines = $v.lines.toBuilder();
       _$v = null;
     }
@@ -140,6 +151,7 @@ class PurchaseBillCreateBuilder
                 billDate, r'PurchaseBillCreate', 'billDate'),
             supplierInvoiceNo: supplierInvoiceNo,
             dueDate: dueDate,
+            draft: draft,
             lines: lines.build(),
           );
     } catch (_) {

@@ -66,6 +66,8 @@ export const purchaseBillCreateSchema = z
     bill_date: dateSchema,
     due_date: dateSchema.nullable().optional(),
     supplier_invoice_no: optionalText(64, 'supplier_invoice_no'),
+    /** When true the bill is saved as a draft and posted later via `POST :id/post`. */
+    draft: z.boolean().optional(),
     lines: z
       .array(purchaseBillLineWriteSchema)
       .min(1, 'At least one purchase bill line is required'),

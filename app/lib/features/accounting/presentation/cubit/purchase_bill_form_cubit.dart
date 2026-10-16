@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/idempotency/idempotency_key.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/account.dart';
+import '../../domain/entities/item.dart';
 import '../../domain/entities/purchase_bill.dart';
 import '../../domain/entities/tax_code.dart';
 import '../../domain/entities/vendor.dart';
@@ -12,6 +14,7 @@ import '../../domain/usecases/create_purchase_bill_usecase.dart';
 import '../../domain/usecases/get_accounts_usecase.dart';
 import '../../domain/usecases/get_tax_codes_usecase.dart';
 import '../../domain/usecases/get_vendors_usecase.dart';
+import '../../domain/usecases/post_purchase_bill_usecase.dart';
 
 const Object _sentinel = Object();
 
@@ -21,6 +24,9 @@ class PurchaseBillLineDraft extends Equatable {
     this.accountName,
     this.itemId,
     this.itemName,
+    this.uomCode,
+    this.uomDecimalPlaces = 3,
+    this.inventoryTracked = false,
     this.description = '',
     this.quantity = '1',
     this.rate = '0.00',
@@ -33,6 +39,13 @@ class PurchaseBillLineDraft extends Equatable {
   final String? accountName;
   final String? itemId;
   final String? itemName;
+  final String? uomCode;
+
+  /// Decimal places the item's UOM allows on quantity (3 when no item).
+  final int uomDecimalPlaces;
+
+  /// Tracked lines are routed to the Inventory account by the server.
+  final bool inventoryTracked;
   final String description;
   final String quantity;
   final String rate;
@@ -51,6 +64,9 @@ class PurchaseBillLineDraft extends Equatable {
     Object? accountName = _sentinel,
     Object? itemId = _sentinel,
     Object? itemName = _sentinel,
+    Object? uomCode = _sentinel,
+    int? uomDecimalPlaces,
+    bool? inventoryTracked,
     String? description,
     String? quantity,
     String? rate,
@@ -69,6 +85,11 @@ class PurchaseBillLineDraft extends Equatable {
       itemName: identical(itemName, _sentinel)
           ? this.itemName
           : (itemName as String?),
+      uomCode: identical(uomCode, _sentinel)
+          ? this.uomCode
+          : (uomCode as String?),
+      uomDecimalPlaces: uomDecimalPlaces ?? this.uomDecimalPlaces,
+      inventoryTracked: inventoryTracked ?? this.inventoryTracked,
       description: description ?? this.description,
       quantity: quantity ?? this.quantity,
       rate: rate ?? this.rate,
@@ -88,6 +109,9 @@ class PurchaseBillLineDraft extends Equatable {
         accountName,
         itemId,
         itemName,
+        uomCode,
+        uomDecimalPlaces,
+        inventoryTracked,
         description,
         quantity,
         rate,
@@ -104,6 +128,7 @@ class PurchaseBillFormState extends Equatable {
     this.vendorName,
     DateTime? billDate,
     this.dueDate,
+    this.supplierInvoiceNo = '',
     this.lines = const [PurchaseBillLineDraft()],
     this.availableVendors = const [],
     this.availableAccounts = const [],
@@ -124,6 +149,7 @@ class PurchaseBillFormState extends Equatable {
   final String? vendorName;
   final DateTime billDate;
   final DateTime? dueDate;
+  final String supplierInvoiceNo;
   final List<PurchaseBillLineDraft> lines;
   final List<Vendor> availableVendors;
   final List<Account> availableAccounts;
@@ -148,7 +174,10 @@ class PurchaseBillFormState extends Equatable {
   bool get hasValidLines {
     if (lines.isEmpty) return false;
     return lines.every((l) {
-      if (l.accountId == null || l.accountId!.isEmpty) return false;
+      if (!l.inventoryTracked &&
+          (l.accountId == null || l.accountId!.isEmpty)) {
+        return false;
+      }
       final q = double.tryParse(l.quantity);
       final r = double.tryParse(l.rate);
       return q != null && q > 0 && r != null && r >= 0;
@@ -167,6 +196,7 @@ class PurchaseBillFormState extends Equatable {
     Object? vendorName = _sentinel,
     DateTime? billDate,
     Object? dueDate = _sentinel,
+    String? supplierInvoiceNo,
     List<PurchaseBillLineDraft>? lines,
     List<Vendor>? availableVendors,
     List<Account>? availableAccounts,
@@ -188,6 +218,7 @@ class PurchaseBillFormState extends Equatable {
       dueDate: identical(dueDate, _sentinel)
           ? this.dueDate
           : (dueDate as DateTime?),
+      supplierInvoiceNo: supplierInvoiceNo ?? this.supplierInvoiceNo,
       lines: lines ?? this.lines,
       availableVendors: availableVendors ?? this.availableVendors,
       availableAccounts: availableAccounts ?? this.availableAccounts,
@@ -211,6 +242,7 @@ class PurchaseBillFormState extends Equatable {
         vendorName,
         billDate,
         dueDate,
+        supplierInvoiceNo,
         lines,
         availableVendors,
         availableAccounts,
@@ -226,12 +258,14 @@ class PurchaseBillFormState extends Equatable {
 class PurchaseBillFormCubit extends Cubit<PurchaseBillFormState> {
   PurchaseBillFormCubit(
     this._createPurchaseBill,
+    this._postPurchaseBill,
     this._getVendors,
     this._getAccounts,
     this._getTaxCodes,
   ) : super(PurchaseBillFormState());
 
   final CreatePurchaseBillUseCase _createPurchaseBill;
+  final PostPurchaseBillUseCase _postPurchaseBill;
   final GetVendorsUseCase _getVendors;
   final GetAccountsUseCase _getAccounts;
   final GetTaxCodesUseCase _getTaxCodes;
@@ -272,6 +306,10 @@ class PurchaseBillFormCubit extends Cubit<PurchaseBillFormState> {
     emit(state.copyWith(dueDate: date));
   }
 
+  void setSupplierInvoiceNo(String value) {
+    emit(state.copyWith(supplierInvoiceNo: value));
+  }
+
   void addLine() {
     emit(
       state.copyWith(
@@ -293,6 +331,9 @@ class PurchaseBillFormCubit extends Cubit<PurchaseBillFormState> {
     Object? accountName = _sentinel,
     Object? itemId = _sentinel,
     Object? itemName = _sentinel,
+    Object? uomCode = _sentinel,
+    int? uomDecimalPlaces,
+    bool? inventoryTracked,
     String? description,
     String? quantity,
     String? rate,
@@ -308,6 +349,9 @@ class PurchaseBillFormCubit extends Cubit<PurchaseBillFormState> {
       accountName: accountName,
       itemId: itemId,
       itemName: itemName,
+      uomCode: uomCode,
+      uomDecimalPlaces: uomDecimalPlaces,
+      inventoryTracked: inventoryTracked,
       description: description,
       quantity: quantity,
       rate: rate,
@@ -341,16 +385,148 @@ class PurchaseBillFormCubit extends Cubit<PurchaseBillFormState> {
     );
   }
 
-  Future<bool> submit() async {
+  /// Applies an item pick to a line: UOM, tracked flag and the item's
+  /// purchase rate, tax code and (for untracked items) expense account.
+  /// Passing null clears the item and goes back to a plain account line.
+  void setLineItem(int index, Item? item) {
+    if (index < 0 || index >= state.lines.length) return;
+    if (item == null) {
+      updateLine(
+        index,
+        itemId: null,
+        itemName: null,
+        uomCode: null,
+        uomDecimalPlaces: 3,
+        inventoryTracked: false,
+      );
+      return;
+    }
+
+    final taxCode = _findTaxCode(item.taxCodeId?.toString());
+    final account = item.inventoryTracked
+        ? null
+        : _findAccount(item.expenseAccountId.toString());
+    final places = item.uomDecimalPlaces;
+    final current = state.lines[index];
+
+    updateLine(
+      index,
+      itemId: item.id.toString(),
+      itemName: item.name,
+      uomCode: item.uomCode,
+      uomDecimalPlaces: places,
+      inventoryTracked: item.inventoryTracked,
+      rate: item.purchaseRate ?? current.rate,
+      quantity: _clampQuantity(current.quantity, places),
+      accountId: account?.id,
+      accountName: account?.name,
+      taxCodeId: taxCode?.id,
+      taxCodeName: taxCode?.name,
+      taxRatePercent:
+          taxCode == null ? 0.0 : (double.tryParse(taxCode.ratePercent) ?? 0.0),
+    );
+  }
+
+  TaxCode? _findTaxCode(String? id) {
+    if (id == null) return null;
+    for (final t in state.availableTaxCodes) {
+      if (t.id == id) return t;
+    }
+    return null;
+  }
+
+  Account? _findAccount(String id) {
+    for (final a in state.availableAccounts) {
+      if (a.id == id) return a;
+    }
+    return null;
+  }
+
+  /// Trims [value] to [places] decimals (0 drops the fraction).
+  static String _clampQuantity(String value, int places) {
+    final dot = value.indexOf('.');
+    if (dot < 0) return value;
+    if (places <= 0) return value.substring(0, dot);
+    final end = dot + 1 + places;
+    return end >= value.length ? value : value.substring(0, end);
+  }
+
+  /// Creates the bill as a draft. Returns true when the draft exists.
+  Future<bool> saveDraft() => _save(post: false);
+
+  /// Creates the draft, then posts it with its own idempotency key. If the
+  /// post fails (for example a locked period) the draft is kept, and the next
+  /// call posts that draft instead of creating a second one.
+  Future<bool> saveAndPost() => _save(post: true);
+
+  String? _createKey;
+  String? _postKey;
+
+  Future<bool> _save({required bool post}) async {
     if (!state.canSubmit) return false;
 
-    emit(state.copyWith(isSubmitting: true, failure: null));
+    emit(
+      state.copyWith(
+        status: LoadStatus.loading,
+        isSubmitting: true,
+        failure: null,
+      ),
+    );
 
-    final mappedLines = state.lines.map((l) {
+    var bill = state.createdBill;
+    if (bill == null) {
+      _createKey ??= newIdempotencyKey();
+      final created = await _createPurchaseBill(
+        CreatePurchaseBillParams(
+          vendorId: state.vendorId!,
+          billDate: state.billDate,
+          dueDate: state.dueDate,
+          supplierInvoiceNo: state.supplierInvoiceNo.trim().isEmpty
+              ? null
+              : state.supplierInvoiceNo.trim(),
+          lines: _mapLines(),
+          draft: true,
+          idempotencyKey: _createKey,
+        ),
+      );
+      final createdBill = created.fold<PurchaseBill?>((failure) {
+        _emitFailure(failure);
+        return null;
+      }, (b) => b);
+      if (createdBill == null) return false;
+      bill = createdBill;
+      _createKey = null;
+      emit(state.copyWith(createdBill: bill));
+    }
+
+    if (!post) {
+      _emitSuccess(bill);
+      return true;
+    }
+
+    _postKey ??= newIdempotencyKey();
+    final posted = await _postPurchaseBill(
+      PostPurchaseBillParams(id: bill.id, idempotencyKey: _postKey),
+    );
+    return posted.fold(
+      (failure) {
+        _emitFailure(failure);
+        return false;
+      },
+      (b) {
+        _postKey = null;
+        _emitSuccess(b);
+        return true;
+      },
+    );
+  }
+
+  List<PurchaseBillLine> _mapLines() {
+    return state.lines.map((l) {
       return PurchaseBillLine(
         id: '',
         billId: '',
-        accountId: l.accountId!,
+        accountId: l.inventoryTracked ? null : l.accountId,
         itemId: l.itemId,
         description: l.description.trim().isEmpty ? null : l.description.trim(),
         quantity: l.quantity.trim().isEmpty ? '1' : l.quantity.trim(),
@@ -360,38 +536,26 @@ class PurchaseBillFormCubit extends Cubit<PurchaseBillFormState> {
         taxAmount: l.taxAmount.toStringAsFixed(2),
       );
     }).toList();
+  }
 
-    final result = await _createPurchaseBill(
-      CreatePurchaseBillParams(
-        vendorId: state.vendorId!,
-        billDate: state.billDate,
-        dueDate: state.dueDate,
-        lines: mappedLines,
+  void _emitFailure(Failure failure) {
+    emit(
+      state.copyWith(
+        status: LoadStatus.failure,
+        failure: failure,
+        isSubmitting: false,
       ),
     );
+  }
 
-    return result.fold(
-      (failure) {
-        emit(
-          state.copyWith(
-            status: LoadStatus.failure,
-            failure: failure,
-            isSubmitting: false,
-          ),
-        );
-        return false;
-      },
-      (bill) {
-        emit(
-          state.copyWith(
-            status: LoadStatus.success,
-            createdBill: bill,
-            isSubmitting: false,
-            failure: null,
-          ),
-        );
-        return true;
-      },
+  void _emitSuccess(PurchaseBill bill) {
+    emit(
+      state.copyWith(
+        status: LoadStatus.success,
+        createdBill: bill,
+        isSubmitting: false,
+        failure: null,
+      ),
     );
   }
 }

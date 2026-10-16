@@ -14,6 +14,7 @@ class CreatePurchaseBillParams extends Equatable {
     this.dueDate,
     this.supplierInvoiceNo,
     required this.lines,
+    this.draft = false,
     this.idempotencyKey,
   });
 
@@ -22,6 +23,7 @@ class CreatePurchaseBillParams extends Equatable {
   final DateTime? dueDate;
   final String? supplierInvoiceNo;
   final List<PurchaseBillLine> lines;
+  final bool draft;
   final String? idempotencyKey;
 
   @override
@@ -31,6 +33,7 @@ class CreatePurchaseBillParams extends Equatable {
     dueDate,
     supplierInvoiceNo,
     lines,
+    draft,
     idempotencyKey,
   ];
 }
@@ -50,6 +53,7 @@ class CreatePurchaseBillUseCase
       dueDate: params.dueDate,
       supplierInvoiceNo: params.supplierInvoiceNo,
       lines: params.lines,
+      draft: params.draft,
       idempotencyKey: params.idempotencyKey,
     );
   }

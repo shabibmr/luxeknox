@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,11 +9,13 @@ import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../domain/entities/account.dart';
+import '../../domain/entities/item.dart';
 import '../../domain/entities/tax_code.dart';
 import '../../domain/entities/vendor.dart';
 import '../accounting_strings.dart';
 import '../cubit/purchase_bill_form_cubit.dart';
 import '../widgets/account_picker_sheet.dart';
+import '../widgets/item_search_field.dart';
 
 class PurchaseBillFormScreen extends StatelessWidget {
   const PurchaseBillFormScreen({
@@ -69,8 +72,12 @@ class _PurchaseBillFormView extends StatelessWidget {
       listener: (context, state) {
         if (state.status == LoadStatus.success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(AccountingStrings.billCreatedSuccess),
+            SnackBar(
+              content: Text(
+                state.createdBill?.status == 'posted'
+                    ? AccountingStrings.billPostedSuccess
+                    : AccountingStrings.billDraftSavedSuccess,
+              ),
             ),
           );
           if (Navigator.of(context).canPop()) {
@@ -158,6 +165,20 @@ class _PurchaseBillFormView extends StatelessWidget {
                           );
                     },
                   ),
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  key: const Key('supplier_invoice_no_field'),
+                  initialValue: state.supplierInvoiceNo,
+                  decoration: const InputDecoration(
+                    labelText: AccountingStrings.supplierInvoiceNoLabel,
+                    prefixIcon: Icon(Icons.receipt_long),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (val) => context
+                      .read<PurchaseBillFormCubit>()
+                      .setSupplierInvoiceNo(val),
+                ),
                 const SizedBox(height: 16),
 
                 // Bill Date and Due Date Pickers
@@ -254,6 +275,9 @@ class _PurchaseBillFormView extends StatelessWidget {
                     line: state.lines[i],
                     availableTaxCodes: state.availableTaxCodes,
                     canDelete: state.lines.length > 1,
+                    onItemChanged: (item) => context
+                        .read<PurchaseBillFormCubit>()
+                        .setLineItem(i, item),
                     onAccountChanged: (account) => context
                         .read<PurchaseBillFormCubit>()
                         .setLineAccount(i, account),
@@ -346,22 +370,45 @@ class _PurchaseBillFormView extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Submit Button
-                ElevatedButton(
-                  key: const Key('submit_bill_button'),
-                  onPressed: state.canSubmit
-                      ? () => context.read<PurchaseBillFormCubit>().submit()
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: state.isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text(AccountingStrings.create),
+                // Save buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        key: const Key('save_draft_button'),
+                        onPressed: state.canSubmit
+                            ? () =>
+                                context.read<PurchaseBillFormCubit>().saveDraft()
+                            : null,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text(AccountingStrings.saveDraft),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        key: const Key('submit_bill_button'),
+                        onPressed: state.canSubmit
+                            ? () => context
+                                .read<PurchaseBillFormCubit>()
+                                .saveAndPost()
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: state.isSubmitting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text(AccountingStrings.saveAndPost),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -379,6 +426,7 @@ class _PurchaseBillLineItem extends StatefulWidget {
     required this.line,
     required this.availableTaxCodes,
     required this.canDelete,
+    required this.onItemChanged,
     required this.onAccountChanged,
     required this.onDescriptionChanged,
     required this.onQuantityChanged,
@@ -391,6 +439,7 @@ class _PurchaseBillLineItem extends StatefulWidget {
   final PurchaseBillLineDraft line;
   final List<TaxCode> availableTaxCodes;
   final bool canDelete;
+  final ValueChanged<Item?> onItemChanged;
   final ValueChanged<Account?> onAccountChanged;
   final ValueChanged<String> onDescriptionChanged;
   final ValueChanged<String> onQuantityChanged;
@@ -450,6 +499,23 @@ class _PurchaseBillLineItemState extends State<_PurchaseBillLineItem> {
           )
         : null;
 
+    final selectedItem = line.itemId == null
+        ? null
+        : Item(
+            id: int.tryParse(line.itemId!) ?? 0,
+            name: line.itemName ?? line.itemId!,
+            kind: line.inventoryTracked ? 'goods' : 'service',
+            uomId: 0,
+            uomCode: line.uomCode ?? '',
+            uomDecimalPlaces: line.uomDecimalPlaces,
+            incomeAccountId: 0,
+            expenseAccountId: 0,
+            inventoryTracked: line.inventoryTracked,
+          );
+    final qtyPattern = line.uomDecimalPlaces <= 0
+        ? RegExp(r'^\d*$')
+        : RegExp('^\\d*\\.?\\d{0,${line.uomDecimalPlaces}}\$');
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: Padding(
@@ -475,15 +541,27 @@ class _PurchaseBillLineItemState extends State<_PurchaseBillLineItem> {
             ),
             const SizedBox(height: 8),
 
-            // Account Picker
-            AccountPickerField(
-              key: Key('account_picker_$index'),
-              fieldKey: Key('account_picker_field_$index'),
-              value: selectedAccount,
-              activeOnly: true,
-              onChanged: widget.onAccountChanged,
+            // Item picker
+            ItemSearchField(
+              key: Key('item_picker_$index'),
+              fieldKey: Key('item_picker_field_$index'),
+              value: selectedItem,
+              kind: null,
+              onChanged: widget.onItemChanged,
             ),
             const SizedBox(height: 8),
+
+            // Account picker (the server routes tracked items itself)
+            if (!line.inventoryTracked) ...[
+              AccountPickerField(
+                key: Key('account_picker_$index'),
+                fieldKey: Key('account_picker_field_$index'),
+                value: selectedAccount,
+                activeOnly: true,
+                onChanged: widget.onAccountChanged,
+              ),
+              const SizedBox(height: 8),
+            ],
 
             // Description
             TextFormField(
@@ -506,9 +584,13 @@ class _PurchaseBillLineItemState extends State<_PurchaseBillLineItem> {
                     controller: _qtyController,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(qtyPattern),
+                    ],
+                    decoration: InputDecoration(
                       labelText: AccountingStrings.quantityLabel,
-                      border: OutlineInputBorder(),
+                      suffixText: line.uomCode,
+                      border: const OutlineInputBorder(),
                     ),
                     onChanged: widget.onQuantityChanged,
                   ),
@@ -522,6 +604,7 @@ class _PurchaseBillLineItemState extends State<_PurchaseBillLineItem> {
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
                       labelText: AccountingStrings.rateLabel,
+                      helperText: AccountingStrings.rateExcludesTaxHint,
                       prefixText: '\$',
                       border: OutlineInputBorder(),
                     ),

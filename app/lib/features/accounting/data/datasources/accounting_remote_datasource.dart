@@ -92,6 +92,8 @@ abstract class AccountingRemoteDataSource {
     String? idempotencyKey,
   });
 
+  Future<api.PurchaseBill> postPurchaseBill(int id, {String? idempotencyKey});
+
   // Expenses
   Future<api.ExpenseVoucherPage> listExpenses({
     int? limit,
@@ -498,6 +500,16 @@ class AccountingRemoteDataSourceImpl implements AccountingRemoteDataSource {
         purchaseBillCreate: purchaseBillCreate,
         idempotencyKey: idempotencyKey,
       ),
+    );
+  }
+
+  @override
+  Future<api.PurchaseBill> postPurchaseBill(
+    int id, {
+    String? idempotencyKey,
+  }) async {
+    return _unwrap(
+      await _acctApi.postPurchaseBill(id: id, idempotencyKey: idempotencyKey),
     );
   }
 

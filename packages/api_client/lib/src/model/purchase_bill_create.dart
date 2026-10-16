@@ -18,6 +18,7 @@ part 'purchase_bill_create.g.dart';
 /// * [billDate] 
 /// * [supplierInvoiceNo] 
 /// * [dueDate] 
+/// * [draft] - When true the bill is saved as a draft and posted later via POST /accounting/purchase-bills/{id}/post.
 /// * [lines] 
 @BuiltValue()
 abstract class PurchaseBillCreate implements Built<PurchaseBillCreate, PurchaseBillCreateBuilder> {
@@ -32,6 +33,10 @@ abstract class PurchaseBillCreate implements Built<PurchaseBillCreate, PurchaseB
 
   @BuiltValueField(wireName: r'due_date')
   Date? get dueDate;
+
+  /// When true the bill is saved as a draft and posted later via POST /accounting/purchase-bills/{id}/post.
+  @BuiltValueField(wireName: r'draft')
+  bool? get draft;
 
   @BuiltValueField(wireName: r'lines')
   BuiltList<PurchaseBillLineWrite> get lines;
@@ -81,6 +86,13 @@ class _$PurchaseBillCreateSerializer implements PrimitiveSerializer<PurchaseBill
       yield serializers.serialize(
         object.dueDate,
         specifiedType: const FullType(Date),
+      );
+    }
+    if (object.draft != null) {
+      yield r'draft';
+      yield serializers.serialize(
+        object.draft,
+        specifiedType: const FullType(bool),
       );
     }
     yield r'lines';
@@ -140,6 +152,14 @@ class _$PurchaseBillCreateSerializer implements PrimitiveSerializer<PurchaseBill
           ) as Date?;
           if (valueDes == null) continue;
           result.dueDate = valueDes;
+          break;
+        case r'draft':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(bool),
+          ) as bool?;
+          if (valueDes == null) continue;
+          result.draft = valueDes;
           break;
         case r'lines':
           final valueDes = serializers.deserialize(

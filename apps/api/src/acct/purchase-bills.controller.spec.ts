@@ -57,6 +57,7 @@ describe('PurchaseBillsController', () => {
       }),
       getById: vi.fn().mockResolvedValue(SAMPLE_BILL_DTO),
       create: vi.fn().mockResolvedValue(SAMPLE_BILL_DTO),
+      post: vi.fn().mockResolvedValue(SAMPLE_BILL_DTO),
     };
     controller = new PurchaseBillsController(service as PurchaseBillsService);
   });
@@ -105,8 +106,13 @@ describe('PurchaseBillsController', () => {
     expect(res.bill_number).toBe('BIL00000010');
   });
 
-  it('has no separate update or post routes', () => {
+  it('delegates post to service.post', async () => {
+    const res = await controller.post(10, ADMIN_USER);
+    expect(service.post).toHaveBeenCalledWith(10, ADMIN_USER);
+    expect(res.id).toBe(10);
+  });
+
+  it('has no update route', () => {
     expect((PurchaseBillsController.prototype as unknown as Record<string, unknown>).update).toBeUndefined();
-    expect((PurchaseBillsController.prototype as unknown as Record<string, unknown>).post).toBeUndefined();
   });
 });

@@ -131,6 +131,12 @@ abstract class AccountingRepository {
     DateTime? dueDate,
     String? supplierInvoiceNo,
     required List<PurchaseBillLine> lines,
+    bool draft = false,
+    String? idempotencyKey,
+  });
+
+  Future<Either<Failure, PurchaseBill>> postPurchaseBill(
+    String id, {
     String? idempotencyKey,
   });
 

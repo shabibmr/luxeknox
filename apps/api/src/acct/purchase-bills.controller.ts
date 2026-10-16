@@ -47,7 +47,7 @@ export class PurchaseBillsController {
   @RequirePermission('accounting.purchases_write')
   @UseIdempotency()
   @HttpCode(201)
-  @ApiOperation({ operationId: 'createPurchaseBill', summary: 'Create and post a purchase bill' })
+  @ApiOperation({ operationId: 'createPurchaseBill', summary: 'Create a purchase bill (posted unless draft is true)' })
   @ApiHeader({
     name: 'Idempotency-Key',
     required: false,
@@ -69,5 +69,23 @@ export class PurchaseBillsController {
     @CurrentUser() currentUser: AuthenticatedUser,
   ): Promise<PurchaseBillDto> {
     return this.service.getById(id, currentUser);
+  }
+
+  @Post(':id/post')
+  @RequirePermission('accounting.purchases_write')
+  @UseIdempotency()
+  @HttpCode(200)
+  @ApiParam({ name: 'id', type: Number })
+  @ApiOperation({ operationId: 'postPurchaseBill', summary: 'Post a draft purchase bill' })
+  @ApiHeader({
+    name: 'Idempotency-Key',
+    required: false,
+    description: 'Replay-safe key for posting a purchase bill',
+  })
+  async post(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ): Promise<PurchaseBillDto> {
+    return this.service.post(id, currentUser);
   }
 }

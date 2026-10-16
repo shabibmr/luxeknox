@@ -413,6 +413,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
     DateTime? dueDate,
     String? supplierInvoiceNo,
     required List<PurchaseBillLine> lines,
+    bool draft = false,
     String? idempotencyKey,
   }) async {
     try {
@@ -423,10 +424,29 @@ class AccountingRepositoryImpl implements AccountingRepository {
           dueDate: dueDate,
           supplierInvoiceNo: supplierInvoiceNo,
           lines: lines,
+          draft: draft,
         ),
         idempotencyKey: idempotencyKey,
       );
       return Right(created.toDomain());
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PurchaseBill>> postPurchaseBill(
+    String id, {
+    String? idempotencyKey,
+  }) async {
+    final intId = _parseId(id);
+    if (intId == null) return const Left(NotFoundFailure());
+    try {
+      final posted = await _remoteDataSource.postPurchaseBill(
+        intId,
+        idempotencyKey: idempotencyKey,
+      );
+      return Right(posted.toDomain());
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

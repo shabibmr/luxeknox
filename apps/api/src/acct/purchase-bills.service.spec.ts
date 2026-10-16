@@ -381,6 +381,56 @@ describe('PurchaseBillsService', () => {
       expect(result.lines).toHaveLength(1);
     });
 
+    it('saves a draft without posting when draft is true', async () => {
+      const draftBill: PurchaseBillWithLines = {
+        id: 2,
+        bill_number: 'BIL00000002',
+        vendor_id: VENDOR_ACTIVE.id,
+        bill_date: '2026-04-15',
+        due_date: null,
+        supplier_invoice_no: null,
+        status: 'draft',
+        subtotal: '100.00',
+        tax_amount: '0.00',
+        total_amount: '100.00',
+        journal_entry_id: null,
+        row_version: 1,
+        created_at: new Date('2026-04-15T10:00:00.000Z'),
+        updated_at: null,
+        lines: [
+          {
+            id: 20,
+            purchase_bill_id: 2,
+            item_id: null,
+            account_id: EXPENSE_ACCOUNT.id,
+            description: null,
+            quantity: '1.000',
+            rate: '100.00',
+            tax_code_id: null,
+            net_amount: '100.00',
+            tax_amount: '0.00',
+          },
+        ],
+      };
+      repository.insertBill.mockResolvedValue(draftBill);
+      repository.findWithLines.mockResolvedValue(draftBill);
+      const postSpy = vi.spyOn(service, 'post');
+
+      const result = await service.create(
+        {
+          vendor_id: VENDOR_ACTIVE.id,
+          bill_date: '2026-04-15',
+          draft: true,
+          lines: [{ account_id: EXPENSE_ACCOUNT.id, quantity: '1', rate: '100.00' }],
+        },
+        CURRENT_USER,
+      );
+
+      expect(postSpy).not.toHaveBeenCalled();
+      expect(result.status).toBe('draft');
+      expect(result.journal_entry_id).toBeNull();
+    });
+
     it('propagates a post failure so the surrounding transaction rolls back the insert', async () => {
       repository.insertBill.mockImplementation(async (header, lines) => ({
         id: 7,

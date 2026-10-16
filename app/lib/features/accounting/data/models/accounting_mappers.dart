@@ -277,10 +277,12 @@ api.PurchaseBillCreate toPurchaseBillCreate({
   DateTime? dueDate,
   String? supplierInvoiceNo,
   required List<PurchaseBillLine> lines,
+  bool draft = false,
 }) {
   return api.PurchaseBillCreate(
     (b) => b
       ..vendorId = int.parse(vendorId)
+      ..draft = draft
       ..billDate = billDate.toDate()
       ..supplierInvoiceNo = supplierInvoiceNo
       ..dueDate = dueDate?.toDate()

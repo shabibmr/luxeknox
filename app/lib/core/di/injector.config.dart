@@ -111,6 +111,8 @@ import '../../features/accounting/domain/usecases/post_fund_transfer_usecase.dar
     as _i827;
 import '../../features/accounting/domain/usecases/post_payment_voucher_usecase.dart'
     as _i664;
+import '../../features/accounting/domain/usecases/post_purchase_bill_usecase.dart'
+    as _i324;
 import '../../features/accounting/domain/usecases/reverse_journal_usecase.dart'
     as _i791;
 import '../../features/accounting/domain/usecases/unlock_accounting_period_usecase.dart'
@@ -145,6 +147,9 @@ import '../../features/accounting/presentation/cubit/fund_transfers_cubit.dart'
     as _i386;
 import '../../features/accounting/presentation/cubit/go_live_cubit.dart'
     as _i533;
+import '../../features/accounting/presentation/cubit/item_detail_cubit.dart'
+    as _i1009;
+import '../../features/accounting/presentation/cubit/items_cubit.dart' as _i149;
 import '../../features/accounting/presentation/cubit/journal_detail_cubit.dart'
     as _i494;
 import '../../features/accounting/presentation/cubit/journal_entry_form_cubit.dart'
@@ -564,7 +569,7 @@ import '../../features/people/presentation/cubit/employee_roles_cubit.dart'
 import '../../features/people/presentation/cubit/employees_directory_cubit.dart'
     as _i369;
 import '../../features/people/presentation/cubit/member_dossier_cubit.dart'
-    as _i149;
+    as _i150;
 import '../../features/people/presentation/cubit/my_trainer_profile_cubit.dart'
     as _i634;
 import '../../features/people/presentation/cubit/trainer_form_cubit.dart'
@@ -1412,6 +1417,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i664.PostPaymentVoucherUseCase>(
       () => _i664.PostPaymentVoucherUseCase(gh<_i330.AccountingRepository>()),
     );
+    gh.lazySingleton<_i324.PostPurchaseBillUseCase>(
+      () => _i324.PostPurchaseBillUseCase(gh<_i330.AccountingRepository>()),
+    );
     gh.lazySingleton<_i791.ReverseJournalUseCase>(
       () => _i791.ReverseJournalUseCase(gh<_i330.AccountingRepository>()),
     );
@@ -1487,6 +1495,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i275.ExerciseRepository>(
       () => _i340.ExerciseRepositoryImpl(gh<_i100.ExerciseRemoteDataSource>()),
+    );
+    gh.factory<_i149.ItemsCubit>(
+      () => _i149.ItemsCubit(
+        gh<_i649.GetItemsUseCase>(),
+        debounceDuration: gh<Duration>(),
+      ),
     );
     gh.factory<_i69.LoginCubit>(
       () => _i69.LoginCubit(gh<_i893.SessionCubit>()),
@@ -1807,14 +1821,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i645.GetPaymentsUseCase>(
       () => _i645.GetPaymentsUseCase(gh<_i663.PaymentsRepository>()),
     );
-    gh.factory<_i75.PurchaseBillFormCubit>(
-      () => _i75.PurchaseBillFormCubit(
-        gh<_i988.CreatePurchaseBillUseCase>(),
-        gh<_i612.GetVendorsUseCase>(),
-        gh<_i676.GetAccountsUseCase>(),
-        gh<_i571.GetTaxCodesUseCase>(),
-      ),
-    );
     gh.factory<_i269.MembershipRenewCubit>(
       () => _i269.MembershipRenewCubit(
         gh<_i74.GetMembershipUseCase>(),
@@ -2119,11 +2125,23 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i415.MembersDirectoryBloc>(
       () => _i415.MembersDirectoryBloc(gh<_i436.ListMembersUseCase>()),
     );
+    gh.factory<_i75.PurchaseBillFormCubit>(
+      () => _i75.PurchaseBillFormCubit(
+        gh<_i988.CreatePurchaseBillUseCase>(),
+        gh<_i324.PostPurchaseBillUseCase>(),
+        gh<_i612.GetVendorsUseCase>(),
+        gh<_i676.GetAccountsUseCase>(),
+        gh<_i571.GetTaxCodesUseCase>(),
+      ),
+    );
     gh.factory<_i449.SystemAlertsCubit>(
       () => _i449.SystemAlertsCubit(gh<_i1065.ListSystemAlertsUseCase>()),
     );
     gh.factory<_i144.PaymentDetailCubit>(
       () => _i144.PaymentDetailCubit(gh<_i835.GetPaymentUseCase>()),
+    );
+    gh.factory<_i1009.ItemDetailCubit>(
+      () => _i1009.ItemDetailCubit(gh<_i220.GetItemUseCase>()),
     );
     gh.factory<_i948.ScheduleDetailCubit>(
       () => _i948.ScheduleDetailCubit(
@@ -2320,8 +2338,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i516.ListWorkoutPlanVersionsUseCase>(),
       ),
     );
-    gh.factory<_i149.MemberDossierCubit>(
-      () => _i149.MemberDossierCubit(
+    gh.factory<_i150.MemberDossierCubit>(
+      () => _i150.MemberDossierCubit(
         gh<_i562.GetMemberUseCase>(),
         gh<_i862.UpdateMemberUseCase>(),
         gh<_i370.GetMembershipsUseCase>(),
