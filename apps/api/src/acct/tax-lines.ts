@@ -17,22 +17,21 @@ export interface TaxLineParams {
   /** Side the component accounts are posted on. */
   side: 'debit' | 'credit';
   memoPrefix: string;
-  /** Component account: the output account (sales) or the input account (purchases). */
-  accountKind?: 'output' | 'input';
   memberId?: number | null;
-  vendorId?: number | null;
 }
 
 /**
- * Splits a tax amount across a tax code's components, proportional to their rates (half-up
- * per component). Any cents left over (or over-allocated) go to `5950 Rounding off`, when
- * that account exists, on the matching side.
+ * Splits a tax amount across a tax code's output components, proportional to their rates
+ * (half-up per component). Any cents left over (or over-allocated) go to `5950 Rounding off`,
+ * when that account exists, on the matching side.
+ *
+ * Purchase bills post input tax through the control account path, not this helper.
  */
 export async function buildTaxComponentLines(
   deps: TaxLineDeps,
   params: TaxLineParams,
 ): Promise<PostJournalLineInput[]> {
-  const { taxCode, taxAmount, side, memoPrefix, accountKind = 'output' } = params;
+  const { taxCode, taxAmount, side, memoPrefix } = params;
   const lines: PostJournalLineInput[] = [];
   if (cmpMoney(taxAmount, '0') <= 0 || !taxCode) {
     return lines;
@@ -45,7 +44,6 @@ export async function buildTaxComponentLines(
 
   const party = {
     ...(params.memberId !== undefined ? { memberId: params.memberId } : {}),
-    ...(params.vendorId !== undefined ? { vendorId: params.vendorId } : {}),
   };
 
   const taxAmountCents = toCents(taxAmount);
@@ -62,7 +60,7 @@ export async function buildTaxComponentLines(
     const compTax = fromCents(cTaxCents);
     if (cmpMoney(compTax, '0') > 0) {
       lines.push({
-        accountId: accountKind === 'input' ? comp.input_account_id : comp.output_account_id,
+        accountId: comp.output_account_id,
         ...(side === 'debit' ? { debit: compTax } : { credit: compTax }),
         ...party,
         memo: `${memoPrefix} (${comp.name})`,

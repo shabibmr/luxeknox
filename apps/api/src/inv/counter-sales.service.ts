@@ -468,7 +468,6 @@ export class CounterSalesService {
           taxAmount: line.tax_amount,
           side: 'credit',
           memoPrefix: `Output tax ${saleNumber}`,
-          accountKind: 'output',
           ...party,
         },
       );

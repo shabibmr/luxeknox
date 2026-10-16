@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { ItemKind } from '../acct/items.dto';
+import { mapItemDto } from '../acct/items.mapper';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { NotFoundError } from '../platform/errors/app-error';
 import {
@@ -24,30 +24,11 @@ export class InventoryItemsService {
 
   toDto(row: InventoryItemRow, hasMovements: boolean): InventoryItemDto {
     return {
-      id: row.id,
-      name: row.name,
-      sku: row.sku ?? null,
-      hsn_sac: row.hsn_sac ?? null,
-      item_kind: row.item_kind as ItemKind,
-      category_id: row.category_id ?? null,
+      ...mapItemDto(row),
       category_name: row.category_name ?? null,
-      uom_id: row.uom_id,
       uom_code: row.uom_code,
       uom_decimal_places: Number(row.uom_decimal_places),
-      sale_rate: row.sale_rate ?? null,
-      purchase_rate: row.purchase_rate ?? null,
-      tax_code_id: row.tax_code_id ?? null,
-      income_account_id: row.income_account_id,
-      expense_account_id: row.expense_account_id,
-      inventory_account_id: row.inventory_account_id ?? null,
-      cogs_account_id: row.cogs_account_id ?? null,
-      inventory_tracked: Boolean(row.inventory_tracked),
-      reorder_level: row.reorder_level ?? null,
       has_movements: hasMovements,
-      is_active: Boolean(row.is_active),
-      row_version: row.row_version,
-      created_at: row.created_at,
-      updated_at: row.updated_at ?? null,
     };
   }
 

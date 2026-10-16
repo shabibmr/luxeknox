@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
+import { isDuplicateKeyError } from '../platform/db/db-error';
 import type { Account, Item, NewItem } from '../platform/db/schema/accounting';
 import { BusinessRuleError, NotFoundError } from '../platform/errors/app-error';
 import {
@@ -11,15 +12,22 @@ import {
   itemFilterQuerySchema,
   type ItemCreateDto,
   type ItemDto,
-  type ItemKind,
   type ItemUpdateDto,
 } from './items.dto';
+import { mapItemDto } from './items.mapper';
 import { ItemsRepository } from './items.repository';
 
 function blankToNull(value: string | null | undefined): string | null | undefined {
   if (value == null) return value;
   const trimmed = value.trim();
   return trimmed.length === 0 ? null : trimmed;
+}
+
+function rethrowSkuDuplicate(error: unknown, sku: string | null | undefined): never {
+  if (sku && isDuplicateKeyError(error)) {
+    throw new BusinessRuleError(`SKU ${sku} is already in use`);
+  }
+  throw error;
 }
 
 @Injectable()
@@ -30,28 +38,7 @@ export class ItemsService {
   ) {}
 
   toDto(row: Item): ItemDto {
-    return {
-      id: row.id,
-      name: row.name,
-      sku: row.sku ?? null,
-      hsn_sac: row.hsn_sac ?? null,
-      item_kind: row.item_kind as ItemKind,
-      category_id: row.category_id ?? null,
-      uom_id: row.uom_id,
-      inventory_tracked: Boolean(row.inventory_tracked),
-      sale_rate: row.sale_rate ?? null,
-      purchase_rate: row.purchase_rate ?? null,
-      reorder_level: row.reorder_level ?? null,
-      income_account_id: row.income_account_id,
-      expense_account_id: row.expense_account_id,
-      inventory_account_id: row.inventory_account_id ?? null,
-      cogs_account_id: row.cogs_account_id ?? null,
-      tax_code_id: row.tax_code_id ?? null,
-      is_active: Boolean(row.is_active),
-      row_version: row.row_version,
-      created_at: row.created_at,
-      updated_at: row.updated_at ?? null,
-    };
+    return mapItemDto(row);
   }
 
   async list(
@@ -234,26 +221,31 @@ export class ItemsService {
     }
 
     const now = new Date();
-    const created = await this.repository.insertItem({
-      name: dto.name,
-      sku,
-      hsn_sac: blankToNull(dto.hsn_sac) ?? null,
-      item_kind: dto.item_kind,
-      category_id: dto.category_id ?? null,
-      uom_id: dto.uom_id,
-      inventory_tracked: tracked,
-      sale_rate: dto.sale_rate ?? null,
-      purchase_rate: dto.purchase_rate ?? null,
-      reorder_level: dto.reorder_level ?? null,
-      income_account_id: dto.income_account_id,
-      expense_account_id: dto.expense_account_id,
-      inventory_account_id: inventoryAccountId,
-      cogs_account_id: cogsAccountId,
-      tax_code_id: dto.tax_code_id ?? null,
-      is_active: dto.is_active ?? true,
-      created_at: now,
-      updated_at: now,
-    });
+    let created: Item;
+    try {
+      created = await this.repository.insertItem({
+        name: dto.name,
+        sku,
+        hsn_sac: blankToNull(dto.hsn_sac) ?? null,
+        item_kind: dto.item_kind,
+        category_id: dto.category_id ?? null,
+        uom_id: dto.uom_id,
+        inventory_tracked: tracked,
+        sale_rate: dto.sale_rate ?? null,
+        purchase_rate: dto.purchase_rate ?? null,
+        reorder_level: dto.reorder_level ?? null,
+        income_account_id: dto.income_account_id,
+        expense_account_id: dto.expense_account_id,
+        inventory_account_id: inventoryAccountId,
+        cogs_account_id: cogsAccountId,
+        tax_code_id: dto.tax_code_id ?? null,
+        is_active: dto.is_active ?? true,
+        created_at: now,
+        updated_at: now,
+      });
+    } catch (error) {
+      rethrowSkuDuplicate(error, sku);
+    }
 
     return this.toDto(created);
   }
@@ -325,7 +317,12 @@ export class ItemsService {
       patch.cogs_account_id = cogsAccountId;
     }
 
-    const updated = await this.repository.updateItem(id, patch);
+    let updated: Item;
+    try {
+      updated = await this.repository.updateItem(id, patch);
+    } catch (error) {
+      rethrowSkuDuplicate(error, sku ?? null);
+    }
     return this.toDto(updated);
   }
 }

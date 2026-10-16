@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { roundMoney } from '../platform/money/money';
+import { roundMoney, roundQty3 } from '../platform/money/money';
 
 export const ITEM_KINDS = ['service', 'goods'] as const;
 export type ItemKind = (typeof ITEM_KINDS)[number];
@@ -19,24 +19,6 @@ const moneySchema = z.string().transform((value, ctx) => {
 const nonNegativeMoneySchema = moneySchema.refine((value) => !value.startsWith('-'), {
   message: 'Amount must be zero or positive',
 });
-
-/** Half-up to 3 decimal places. Quantities and reorder levels only. */
-function roundQty3(amount: number | string): string {
-  const str = String(amount).trim();
-  if (!/^\d+(\.\d+)?$/.test(str)) {
-    throw new Error(`Invalid quantity: "${amount}"`);
-  }
-  const [intPart, fracPart = ''] = str.split('.');
-  const digits = `${fracPart}0000`;
-  let scaled =
-    BigInt(intPart) * 1000n +
-    BigInt(digits[0]) * 100n +
-    BigInt(digits[1]) * 10n +
-    BigInt(digits[2]);
-  if (digits[3] >= '5') scaled += 1n;
-  const scaledStr = scaled.toString().padStart(4, '0');
-  return `${scaledStr.slice(0, -3)}.${scaledStr.slice(-3)}`;
-}
 
 const qtySchema = z.union([z.string(), z.number()]).transform((value, ctx) => {
   try {

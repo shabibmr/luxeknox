@@ -267,6 +267,25 @@ describe('ItemsService', () => {
       );
     });
 
+    it('maps a concurrent duplicate SKU insert to BusinessRuleError', async () => {
+      repository.findBySku.mockResolvedValue(null);
+      repository.insertItem.mockRejectedValue(
+        new Error("Duplicate entry 'SHAKE' for key 'items.ITEMS_SKU_UNIQUE'"),
+      );
+
+      const dto = {
+        name: 'Protein Shake',
+        item_kind: 'goods' as const,
+        uom_id: 1,
+        income_account_id: 4000,
+        expense_account_id: 5000,
+        sku: 'SHAKE',
+      };
+
+      await expect(service.create(dto, ADMIN_USER)).rejects.toBeInstanceOf(BusinessRuleError);
+      await expect(service.create(dto, ADMIN_USER)).rejects.toThrow('SKU SHAKE is already in use');
+    });
+
     it('rejects tracking a service item', async () => {
       const dto = {
         name: 'Session',
@@ -513,6 +532,20 @@ describe('ItemsService', () => {
         updated_at: expect.any(Date),
       });
       expect(result.tax_code_id).toBeNull();
+    });
+
+    it('maps a concurrent duplicate SKU update to BusinessRuleError', async () => {
+      repository.findBySku.mockResolvedValue(null);
+      repository.updateItem.mockRejectedValue(
+        new Error("Duplicate entry 'SHAKE' for key 'items_sku_unique'"),
+      );
+
+      await expect(service.update(10, { sku: 'SHAKE' }, ADMIN_USER)).rejects.toBeInstanceOf(
+        BusinessRuleError,
+      );
+      await expect(service.update(10, { sku: 'SHAKE' }, ADMIN_USER)).rejects.toThrow(
+        'SKU SHAKE is already in use',
+      );
     });
   });
 });

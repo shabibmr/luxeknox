@@ -14,6 +14,7 @@ import {
   addQty,
   subQty,
   roundMoney,
+  roundQty3,
   subMoney,
   toCents,
 } from './money';
@@ -22,6 +23,13 @@ describe('money helpers', () => {
   it('rounds half-up to cents', () => {
     expect(roundMoney('1.225')).toBe('1.23');
     expect(roundMoney('1.224')).toBe('1.22');
+  });
+
+  it('rounds quantities half-up to 3 decimals', () => {
+    expect(roundQty3('1.250')).toBe('1.250');
+    expect(roundQty3('1.2505')).toBe('1.251');
+    expect(roundQty3('1.2504')).toBe('1.250');
+    expect(roundQty3(2)).toBe('2.000');
   });
 
   it('adds and subtracts without float drift', () => {

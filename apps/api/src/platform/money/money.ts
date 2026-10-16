@@ -141,6 +141,26 @@ function fromQtyMilli(units: bigint): string {
 }
 
 /**
+ * Half-up to 3 decimal places for quantities / reorder levels.
+ * Extra fraction digits beyond 3 are used only for rounding.
+ */
+export function roundQty3(amount: number | string): string {
+  const str = String(amount).trim();
+  if (!/^\d+(\.\d+)?$/.test(str)) {
+    throw new Error(`Invalid quantity: "${amount}"`);
+  }
+  const [intPart, fracPart = ''] = str.split('.');
+  const digits = `${fracPart}0000`;
+  let scaled =
+    BigInt(intPart) * 1000n +
+    BigInt(digits[0]) * 100n +
+    BigInt(digits[1]) * 10n +
+    BigInt(digits[2]);
+  if (digits[3] >= '5') scaled += 1n;
+  return fromQtyMilli(scaled);
+}
+
+/**
  * Moving-average unit cost: money value ÷ quantity, half-up to 4 decimals.
  * E.g. divValueByQty('1650.00', '15.000') -> "110.0000".
  */

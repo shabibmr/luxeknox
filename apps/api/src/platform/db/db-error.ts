@@ -18,6 +18,13 @@ export interface TranslateDbErrorOptions {
   foreignKeyMessage?: string;
 }
 
+/** True when the driver reports a unique-constraint / duplicate-key failure. */
+export function isDuplicateKeyError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const msg = error.message || '';
+  return /Duplicate|ER_DUP_ENTRY/i.test(msg) || msg.includes('UNIQUE constraint failed');
+}
+
 export function translateDbError(error: unknown, options: TranslateDbErrorOptions = {}): Error {
   if (!(error instanceof Error)) {
     return new AppError({ code: ErrorCode.INTERNAL_ERROR, message: 'Database error' });
@@ -26,7 +33,7 @@ export function translateDbError(error: unknown, options: TranslateDbErrorOption
   const msg = error.message || '';
 
   // MySQL: "Duplicate entry ... for key ..."
-  if (/Duplicate|ER_DUP_ENTRY/i.test(msg) || msg.includes('UNIQUE constraint failed')) {
+  if (isDuplicateKeyError(error)) {
     return new ConflictError(options.duplicateMessage ?? 'Resource already exists; unique constraint violation');
   }
 
