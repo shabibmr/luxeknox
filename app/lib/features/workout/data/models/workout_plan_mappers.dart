@@ -153,6 +153,7 @@ extension WorkoutSessionExerciseModelMapper on api.WorkoutSessionExercise {
       weightLiftedKg: weightLiftedKg,
       rpeScore: rpeScore,
       isCompleted: isCompleted,
+      notes: notes,
     );
   }
 }
@@ -185,6 +186,7 @@ api.WorkoutSetWrite toWorkoutSetWrite({
   num? weightLiftedKg,
   num? rpeScore,
   bool? isCompleted,
+  String? notes,
 }) {
   return api.WorkoutSetWrite(
     (b) => b
@@ -193,7 +195,8 @@ api.WorkoutSetWrite toWorkoutSetWrite({
       ..repsCompleted = repsCompleted
       ..weightLiftedKg = weightLiftedKg
       ..rpeScore = rpeScore
-      ..isCompleted = isCompleted,
+      ..isCompleted = isCompleted
+      ..notes = notes,
   );
 }
 
@@ -202,12 +205,14 @@ api.WorkoutSetUpdate toWorkoutSetUpdate({
   num? weightLiftedKg,
   num? rpeScore,
   bool? isCompleted,
+  String? notes,
 }) {
   return api.WorkoutSetUpdate(
     (b) => b
       ..repsCompleted = repsCompleted
       ..weightLiftedKg = weightLiftedKg
       ..rpeScore = rpeScore
-      ..isCompleted = isCompleted,
+      ..isCompleted = isCompleted
+      ..notes = notes,
   );
 }

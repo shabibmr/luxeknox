@@ -72,15 +72,20 @@ void main() {
     String id = 'set1',
     String exerciseId = '100',
     int setNumber = 1,
+    int? repsCompleted = 10,
+    num? weightLiftedKg = 50,
+    bool isCompleted = true,
+    String? notes,
   }) {
     return WorkoutSessionSet(
       id: id,
       workoutSessionId: 's1',
       exerciseId: exerciseId,
       setNumber: setNumber,
-      repsCompleted: 10,
-      weightLiftedKg: 50,
-      isCompleted: true,
+      repsCompleted: repsCompleted,
+      weightLiftedKg: weightLiftedKg,
+      isCompleted: isCompleted,
+      notes: notes,
     );
   }
 
@@ -652,5 +657,156 @@ void main() {
           .having((s) => s.failure, 'failure', isA<NetworkFailure>())
           .having((s) => s.session, 'session', isNull),
     ],
+  );
+
+  blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
+    'logs set with notes and starts rest timer',
+    build: () {
+      when(() => startSession(any())).thenAnswer((_) async => Right(session()));
+      when(() => getPlan('3')).thenAnswer((_) async => Right(plan()));
+      when(() => logSet(any())).thenAnswer((invocation) async {
+        final params =
+            invocation.positionalArguments.first as LogWorkoutSetParams;
+        return Right(
+          loggedSet(
+            repsCompleted: params.repsCompleted,
+            weightLiftedKg: params.weightLiftedKg,
+            isCompleted: params.isCompleted ?? true,
+            notes: params.notes,
+          ),
+        );
+      });
+      return buildBloc();
+    },
+    act: (bloc) async {
+      bloc.add(const ActiveWorkoutStarted(workoutPlanId: '3'));
+      await bloc.stream.firstWhere(
+        (s) => s.status == LoadStatus.success && s.session != null,
+      );
+      bloc.add(
+        const ActiveWorkoutSetLogged(
+          exerciseId: '100',
+          repsCompleted: 8,
+          weightLiftedKg: 60,
+          notes: 'Felt strong on bench',
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s.loggedSets.isNotEmpty);
+    },
+    verify: (_) {
+      final captured =
+          verify(() => logSet(captureAny())).captured.single
+              as LogWorkoutSetParams;
+      expect(captured.notes, 'Felt strong on bench');
+      expect(captured.repsCompleted, 8);
+      expect(captured.weightLiftedKg, 60);
+      expect(restTimer.state.isRunning, isTrue);
+    },
+  );
+
+  blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
+    'skips set with mandatory reason tag and comment without starting rest timer',
+    build: () {
+      when(() => startSession(any())).thenAnswer((_) async => Right(session()));
+      when(() => getPlan('3')).thenAnswer((_) async => Right(plan()));
+      when(() => logSet(any())).thenAnswer((invocation) async {
+        final params =
+            invocation.positionalArguments.first as LogWorkoutSetParams;
+        return Right(
+          loggedSet(
+            repsCompleted: params.repsCompleted,
+            weightLiftedKg: params.weightLiftedKg,
+            isCompleted: params.isCompleted ?? false,
+            notes: params.notes,
+          ),
+        );
+      });
+      return buildBloc();
+    },
+    act: (bloc) async {
+      bloc.add(const ActiveWorkoutStarted(workoutPlanId: '3'));
+      await bloc.stream.firstWhere(
+        (s) => s.status == LoadStatus.success && s.session != null,
+      );
+      bloc.add(
+        const ActiveWorkoutSetSkipped(
+          exerciseId: '100',
+          reason: 'Pain / Discomfort',
+          comment: 'Left shoulder impingement',
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s.loggedSets.isNotEmpty);
+    },
+    verify: (_) {
+      final captured =
+          verify(() => logSet(captureAny())).captured.single
+              as LogWorkoutSetParams;
+      expect(captured.isCompleted, isFalse);
+      expect(captured.repsCompleted, 0);
+      expect(captured.weightLiftedKg, 0);
+      expect(
+        captured.notes,
+        'SKIPPED: [Pain / Discomfort] Left shoulder impingement',
+      );
+      expect(restTimer.state.isRunning, isFalse);
+    },
+  );
+
+  blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
+    'edits set with updated notes',
+    build: () {
+      when(() => startSession(any())).thenAnswer((_) async => Right(session()));
+      when(() => getPlan('3')).thenAnswer((_) async => Right(plan()));
+      when(() => logSet(any())).thenAnswer((_) async => Right(loggedSet()));
+      when(() => updateSet(any())).thenAnswer((invocation) async {
+        final params =
+            invocation.positionalArguments.first as UpdateWorkoutSetParams;
+        return Right(
+          loggedSet(
+            id: params.setId,
+            repsCompleted: params.reps,
+            weightLiftedKg: params.weightKg,
+            notes: params.notes,
+          ),
+        );
+      });
+      return buildBloc();
+    },
+    act: (bloc) async {
+      bloc.add(const ActiveWorkoutStarted(workoutPlanId: '3'));
+      await bloc.stream.firstWhere(
+        (s) => s.status == LoadStatus.success && s.session != null,
+      );
+      bloc.add(
+        const ActiveWorkoutSetLogged(
+          exerciseId: '100',
+          repsCompleted: 8,
+          weightLiftedKg: 50,
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s.loggedSets.length == 1);
+      bloc.add(
+        const ActiveWorkoutSetEdited(
+          setId: 'set1',
+          reps: 10,
+          weightKg: 55,
+          notes: 'Adjusted grip',
+        ),
+      );
+      await bloc.stream.firstWhere(
+        (s) => s.loggedSets.any((set) => set.notes == 'Adjusted grip'),
+      );
+    },
+    verify: (bloc) {
+      final captured =
+          verify(() => updateSet(captureAny())).captured.single
+              as UpdateWorkoutSetParams;
+      expect(captured.notes, 'Adjusted grip');
+      expect(captured.reps, 10);
+      expect(captured.weightKg, 55);
+      expect(bloc.state.loggedSets.single.notes, 'Adjusted grip');
+      expect(bloc.state.loggedSets.single.repsCompleted, 10);
+      expect(bloc.state.loggedSets.single.weightLiftedKg, 55);
+    },
   );
 }

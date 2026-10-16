@@ -15,6 +15,7 @@ class UpdateWorkoutSetParams extends Equatable {
     this.weightKg,
     this.rpe,
     this.isCompleted,
+    this.notes,
   });
 
   final String sessionId;
@@ -23,6 +24,7 @@ class UpdateWorkoutSetParams extends Equatable {
   final num? weightKg;
   final num? rpe;
   final bool? isCompleted;
+  final String? notes;
 
   @override
   List<Object?> get props => [
@@ -32,6 +34,7 @@ class UpdateWorkoutSetParams extends Equatable {
     weightKg,
     rpe,
     isCompleted,
+    notes,
   ];
 }
 
@@ -53,6 +56,7 @@ class UpdateWorkoutSetUseCase
       weightKg: params.weightKg,
       rpe: params.rpe,
       isCompleted: params.isCompleted,
+      notes: params.notes,
     );
   }
 }

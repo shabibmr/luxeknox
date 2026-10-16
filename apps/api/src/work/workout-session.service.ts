@@ -166,6 +166,7 @@ export class WorkoutSessionService {
       weight_lifted_kg: String(dto.weight_lifted_kg ?? 0),
       rpe_score: dto.rpe_score ? String(dto.rpe_score) : null,
       is_completed: dto.is_completed ?? true,
+      notes: dto.notes ?? null,
       created_at: new Date(),
     });
   }
@@ -275,7 +276,7 @@ export class WorkoutSessionService {
     const patch: Partial<
       Pick<
         WorkoutSessionExercise,
-        'reps_completed' | 'weight_lifted_kg' | 'rpe_score' | 'is_completed'
+        'reps_completed' | 'weight_lifted_kg' | 'rpe_score' | 'is_completed' | 'notes'
       >
     > = {};
     if (dto.reps_completed !== undefined) {
@@ -289,6 +290,9 @@ export class WorkoutSessionService {
     }
     if (dto.is_completed !== undefined) {
       patch.is_completed = dto.is_completed;
+    }
+    if (dto.notes !== undefined) {
+      patch.notes = dto.notes;
     }
 
     return this.sessionRepo.updateSessionExercise(setId, patch);
@@ -334,5 +338,24 @@ export class WorkoutSessionService {
     await assertMemberAccess(this.memberRepo, actor, memberId);
 
     return this.sessionRepo.findPersonalRecords(memberId, exerciseId);
+  }
+
+  async getExerciseHistory(
+    memberId: number | undefined,
+    exerciseId: number,
+    actor: AuthenticatedUser,
+  ) {
+    let effectiveMemberId = memberId;
+    if (actor.userType === 'member') {
+      effectiveMemberId = actor.profileId ?? undefined;
+    }
+
+    if (!effectiveMemberId) {
+      throw new BadRequestError('member_id is required');
+    }
+
+    await assertMemberAccess(this.memberRepo, actor, effectiveMemberId);
+
+    return this.sessionRepo.findExerciseHistory(effectiveMemberId, exerciseId);
   }
 }

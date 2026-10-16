@@ -77,6 +77,7 @@ export 'package:api_client/src/model/error_body.dart';
 export 'package:api_client/src/model/error_code.dart';
 export 'package:api_client/src/model/error_detail.dart';
 export 'package:api_client/src/model/exercise.dart';
+export 'package:api_client/src/model/exercise_history_session.dart';
 export 'package:api_client/src/model/exercise_page.dart';
 export 'package:api_client/src/model/exercise_write.dart';
 export 'package:api_client/src/model/facility.dart';

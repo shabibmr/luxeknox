@@ -62,12 +62,14 @@ final class ActiveWorkoutSetLogged extends ActiveWorkoutEvent {
     this.repsCompleted,
     this.weightLiftedKg,
     this.rpeScore,
+    this.notes,
   });
 
   final String exerciseId;
   final int? repsCompleted;
   final num? weightLiftedKg;
   final num? rpeScore;
+  final String? notes;
 
   @override
   List<Object?> get props => [
@@ -75,6 +77,7 @@ final class ActiveWorkoutSetLogged extends ActiveWorkoutEvent {
     repsCompleted,
     weightLiftedKg,
     rpeScore,
+    notes,
   ];
 }
 
@@ -84,15 +87,32 @@ final class ActiveWorkoutSetEdited extends ActiveWorkoutEvent {
     this.reps,
     this.weightKg,
     this.rpe,
+    this.notes,
   });
 
   final String setId;
   final int? reps;
   final num? weightKg;
   final num? rpe;
+  final String? notes;
 
   @override
-  List<Object?> get props => [setId, reps, weightKg, rpe];
+  List<Object?> get props => [setId, reps, weightKg, rpe, notes];
+}
+
+final class ActiveWorkoutSetSkipped extends ActiveWorkoutEvent {
+  const ActiveWorkoutSetSkipped({
+    required this.exerciseId,
+    required this.reason,
+    required this.comment,
+  });
+
+  final String exerciseId;
+  final String reason;
+  final String comment;
+
+  @override
+  List<Object?> get props => [exerciseId, reason, comment];
 }
 
 final class ActiveWorkoutSetDeleted extends ActiveWorkoutEvent {
@@ -144,6 +164,62 @@ abstract class ActiveWorkoutState with _$ActiveWorkoutState {
 
   List<WorkoutPlanExercise> get planExercises => plan?.exercises ?? const [];
 
+  WorkoutPlanExercise? get selectedPlanExercise {
+    if (selectedExerciseId == null) return null;
+    for (final e in planExercises) {
+      if (e.exerciseId == selectedExerciseId) return e;
+    }
+    return null;
+  }
+
+  WorkoutPlanExercise? get nextPlanExercise {
+    if (selectedExerciseId == null) return null;
+    final exercises = planExercises;
+    final index = exercises.indexWhere((e) => e.exerciseId == selectedExerciseId);
+    if (index >= 0 && index < exercises.length - 1) {
+      return exercises[index + 1];
+    }
+    return null;
+  }
+
+  /// The index of the first exercise whose logged or skipped set count < targetSets.
+  /// If all exercises are completed or no targets are defined, returns planExercises.length - 1.
+  int get currentActiveExerciseIndex {
+    final exercises = planExercises;
+    if (exercises.isEmpty) return 0;
+    for (var i = 0; i < exercises.length; i++) {
+      final ex = exercises[i];
+      final target = ex.targetSets ?? 1;
+      final count = loggedSets.where((s) => s.exerciseId == ex.exerciseId).length;
+      if (count < target) {
+        return i;
+      }
+    }
+    return exercises.length - 1;
+  }
+
+  /// Whether a given exercise ID belongs to a future exercise that is locked.
+  bool isFutureExercise(String? exerciseId) {
+    if (exerciseId == null) return false;
+    final exercises = planExercises;
+    if (exercises.isEmpty) return false;
+    final index = exercises.indexWhere((e) => e.exerciseId == exerciseId);
+    if (index < 0) return false;
+    return index > currentActiveExerciseIndex;
+  }
+
+  /// Returns true only if every prescribed exercise has reached its target sets (completed or skipped).
+  bool get areAllPlannedExercisesCompleted {
+    final exercises = planExercises;
+    if (exercises.isEmpty) return loggedSets.isNotEmpty;
+    for (final ex in exercises) {
+      final target = ex.targetSets ?? 1;
+      final count = loggedSets.where((s) => s.exerciseId == ex.exerciseId).length;
+      if (count < target) return false;
+    }
+    return true;
+  }
+
   int nextSetNumberFor(String exerciseId) {
     var maxNumber = 0;
     for (final s in loggedSets) {
@@ -186,6 +262,7 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
     on<ActiveWorkoutStarted>(_onStarted);
     on<ActiveWorkoutExerciseSelected>(_onExerciseSelected);
     on<ActiveWorkoutSetLogged>(_onSetLogged, transformer: sequential());
+    on<ActiveWorkoutSetSkipped>(_onSetSkipped, transformer: sequential());
     on<ActiveWorkoutSetEdited>(_onSetEdited, transformer: sequential());
     on<ActiveWorkoutSetDeleted>(_onSetDeleted, transformer: sequential());
     on<ActiveWorkoutCompletionRequested>(_onComplete);
@@ -398,6 +475,7 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
         repsCompleted: event.repsCompleted,
         weightLiftedKg: event.weightLiftedKg,
         rpeScore: event.rpeScore,
+        notes: event.notes,
       ),
     );
 
@@ -427,6 +505,57 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
     );
   }
 
+  Future<void> _onSetSkipped(
+    ActiveWorkoutSetSkipped event,
+    Emitter<ActiveWorkoutState> emit,
+  ) async {
+    final current = state;
+    if (current.session == null || current.completed) return;
+    if (current.status == LoadStatus.loading) return;
+
+    final setNumber = current.nextSetNumberFor(event.exerciseId);
+    final sessionId = current.session!.id;
+    emit(state.copyWith(logging: true, failure: null, message: null));
+
+    final noteContent = 'SKIPPED: [${event.reason}] ${event.comment}';
+
+    final result = await _logSet(
+      LogWorkoutSetParams(
+        sessionId: sessionId,
+        exerciseId: event.exerciseId,
+        setNumber: setNumber,
+        repsCompleted: 0,
+        weightLiftedKg: 0,
+        isCompleted: false,
+        notes: noteContent,
+      ),
+    );
+
+    result.fold(
+      (failure) {
+        emit(
+          state.copyWith(
+            logging: false,
+            status: LoadStatus.failure,
+            failure: failure,
+            message: null,
+          ),
+        );
+      },
+      (logged) {
+        emit(
+          state.copyWith(
+            status: LoadStatus.success,
+            logging: false,
+            failure: null,
+            message: null,
+            loggedSets: [...state.loggedSets, logged],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _onSetEdited(
     ActiveWorkoutSetEdited event,
     Emitter<ActiveWorkoutState> emit,
@@ -444,6 +573,7 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
         reps: event.reps,
         weightKg: event.weightKg,
         rpe: event.rpe,
+        notes: event.notes,
       ),
     );
 

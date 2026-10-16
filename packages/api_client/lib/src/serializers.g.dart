@@ -61,6 +61,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ErrorCode.serializer)
       ..add(ErrorDetail.serializer)
       ..add(Exercise.serializer)
+      ..add(ExerciseHistorySession.serializer)
       ..add(ExercisePage.serializer)
       ..add(ExerciseWrite.serializer)
       ..add(Facility.serializer)
@@ -495,6 +496,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(WorkoutSession)]),
           () => ListBuilder<WorkoutSession>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(WorkoutSessionExercise)]),
+          () => ListBuilder<WorkoutSessionExercise>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(WorkoutSessionExercise)]),

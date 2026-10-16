@@ -62,6 +62,7 @@ import 'package:api_client/src/model/error_body.dart';
 import 'package:api_client/src/model/error_code.dart';
 import 'package:api_client/src/model/error_detail.dart';
 import 'package:api_client/src/model/exercise.dart';
+import 'package:api_client/src/model/exercise_history_session.dart';
 import 'package:api_client/src/model/exercise_page.dart';
 import 'package:api_client/src/model/exercise_write.dart';
 import 'package:api_client/src/model/facility.dart';
@@ -283,6 +284,7 @@ part 'serializers.g.dart';
   ErrorCode,
   ErrorDetail,
   Exercise,
+  ExerciseHistorySession,
   ExercisePage,
   ExerciseWrite,
   Facility,
@@ -633,6 +635,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(Membership)]),
         () => ListBuilder<Membership>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ExerciseHistorySession)]),
+        () => ListBuilder<ExerciseHistorySession>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(Notification)]),

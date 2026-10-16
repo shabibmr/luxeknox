@@ -17,6 +17,7 @@ Method | HTTP request | Description
 [**deleteWorkoutSet**](WORKApi.md#deleteworkoutset) | **DELETE** /workout-sessions/{id}/sets/{setId} | Delete a logged set
 [**getActiveWorkoutSession**](WORKApi.md#getactiveworkoutsession) | **GET** /workout-sessions/active | Get the member&#39;s active (in-progress) workout session
 [**getExercise**](WORKApi.md#getexercise) | **GET** /exercises/{id} | Exercise detail
+[**getExerciseHistory**](WORKApi.md#getexercisehistory) | **GET** /workout-sessions/exercise-history | Recent session performance for an exercise
 [**getPersonalRecords**](WORKApi.md#getpersonalrecords) | **GET** /workout-sessions/personal-records | Member personal records across completed sessions
 [**getWorkoutPlan**](WORKApi.md#getworkoutplan) | **GET** /workout-plans/{id} | Plan with current version line items
 [**getWorkoutSession**](WORKApi.md#getworkoutsession) | **GET** /workout-sessions/{id} | Get workout session details
@@ -352,6 +353,49 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**Exercise**](Exercise.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getExerciseHistory**
+> BuiltList<ExerciseHistorySession> getExerciseHistory(exerciseId, memberId)
+
+Recent session performance for an exercise
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getWORKApi();
+final int exerciseId = 789; // int | 
+final int memberId = 789; // int | 
+
+try {
+    final response = api.getExerciseHistory(exerciseId, memberId);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling WORKApi->getExerciseHistory: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **exerciseId** | **int**|  | 
+ **memberId** | **int**|  | [optional] 
+
+### Return type
+
+[**BuiltList&lt;ExerciseHistorySession&gt;**](ExerciseHistorySession.md)
 
 ### Authorization
 

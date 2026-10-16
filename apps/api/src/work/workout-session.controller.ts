@@ -80,6 +80,18 @@ export class WorkoutSessionController {
     return this.service.getPersonalRecords(memberId, exerciseId, currentUser);
   }
 
+  @Get('exercise-history')
+  @RequirePermission('workouts.read')
+  @ApiOperation({ operationId: 'getExerciseHistory', summary: 'Recent session performance for an exercise' })
+  async getExerciseHistory(
+    @Query('member_id') memberIdStr: string | undefined,
+    @Query('exercise_id', ParseIntPipe) exerciseId: number,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    const memberId = memberIdStr ? parseInt(memberIdStr, 10) : undefined;
+    return this.service.getExerciseHistory(memberId, exerciseId, currentUser);
+  }
+
   @Get(':id')
   @RequirePermission('workouts.read')
   @ApiOperation({ operationId: 'getWorkoutSession', summary: 'Get workout session details' })

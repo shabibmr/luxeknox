@@ -62,6 +62,12 @@ void main() {
     required ActiveWorkoutState initialState,
     Stream<ActiveWorkoutState>? stream,
   }) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
     whenListen(
       bloc,
       stream ?? const Stream<ActiveWorkoutState>.empty(),

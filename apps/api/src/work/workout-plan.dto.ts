@@ -87,6 +87,7 @@ export const workoutSetWriteSchema = z.object({
   weight_lifted_kg: z.number().min(0).optional().default(0),
   rpe_score: z.number().min(1).max(10).optional(),
   is_completed: z.boolean().optional().default(true),
+  notes: z.string().trim().max(1000).nullable().optional(),
 });
 
 export type WorkoutSetWriteDto = z.infer<typeof workoutSetWriteSchema>;

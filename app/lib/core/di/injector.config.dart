@@ -503,6 +503,8 @@ import '../../features/workout/domain/usecases/delete_workout_set_usecase.dart'
     as _i799;
 import '../../features/workout/domain/usecases/get_active_workout_session_usecase.dart'
     as _i896;
+import '../../features/workout/domain/usecases/get_exercise_history_usecase.dart'
+    as _i34;
 import '../../features/workout/domain/usecases/get_workout_plan_usecase.dart'
     as _i391;
 import '../../features/workout/domain/usecases/list_workout_plan_versions_usecase.dart'
@@ -1192,6 +1194,9 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i896.GetActiveWorkoutSessionUseCase(
         gh<_i14.WorkoutSessionRepository>(),
       ),
+    );
+    gh.lazySingleton<_i34.GetExerciseHistoryUseCase>(
+      () => _i34.GetExerciseHistoryUseCase(gh<_i14.WorkoutSessionRepository>()),
     );
     gh.lazySingleton<_i736.ListWorkoutSessionsUseCase>(
       () =>

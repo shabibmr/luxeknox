@@ -15,6 +15,7 @@ part 'workout_set_update.g.dart';
 /// * [weightLiftedKg] 
 /// * [rpeScore] 
 /// * [isCompleted] 
+/// * [notes] 
 @BuiltValue()
 abstract class WorkoutSetUpdate implements Built<WorkoutSetUpdate, WorkoutSetUpdateBuilder> {
   @BuiltValueField(wireName: r'reps_completed')
@@ -28,6 +29,9 @@ abstract class WorkoutSetUpdate implements Built<WorkoutSetUpdate, WorkoutSetUpd
 
   @BuiltValueField(wireName: r'is_completed')
   bool? get isCompleted;
+
+  @BuiltValueField(wireName: r'notes')
+  String? get notes;
 
   WorkoutSetUpdate._();
 
@@ -78,6 +82,13 @@ class _$WorkoutSetUpdateSerializer implements PrimitiveSerializer<WorkoutSetUpda
       yield serializers.serialize(
         object.isCompleted,
         specifiedType: const FullType(bool),
+      );
+    }
+    if (object.notes != null) {
+      yield r'notes';
+      yield serializers.serialize(
+        object.notes,
+        specifiedType: const FullType(String),
       );
     }
   }
@@ -134,6 +145,14 @@ class _$WorkoutSetUpdateSerializer implements PrimitiveSerializer<WorkoutSetUpda
           ) as bool?;
           if (valueDes == null) continue;
           result.isCompleted = valueDes;
+          break;
+        case r'notes':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.notes = valueDes;
           break;
         default:
           unhandled.add(key);

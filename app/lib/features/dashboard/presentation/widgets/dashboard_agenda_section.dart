@@ -6,7 +6,9 @@ import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../session/domain/entities/user_type.dart';
+import '../../../scheduling/domain/entities/schedule_enums.dart';
 import '../../../scheduling/domain/entities/schedule_session.dart';
+import '../../../workout/presentation/workout_strings.dart';
 import '../cubit/dashboard_agenda_cubit.dart';
 import '../dashboard_strings.dart';
 import 'dashboard_skeleton.dart';
@@ -91,11 +93,91 @@ class DashboardAgendaSection extends StatelessWidget {
             ? DashboardStrings.todayAgendaTrainerEmpty
             : DashboardStrings.todayAgendaMemberEmpty;
 
+        ScheduleSession? attendedSession;
+        ScheduleParticipantEntry? attendedParticipant;
+        if (role == UserType.trainer) {
+          for (final s in state.todayItems) {
+            if (s.status == ScheduleSessionStatus.cancelled ||
+                s.status == ScheduleSessionStatus.completed) {
+              continue;
+            }
+            for (final p in s.participants) {
+              if (p.attended == true) {
+                attendedSession = s;
+                attendedParticipant = p;
+                break;
+              }
+            }
+            if (attendedSession != null) break;
+          }
+        }
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (attendedSession != null && attendedParticipant != null) ...[
+                Card(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.notifications_active,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              WorkoutStrings.sessionAlertTitle,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Member is checked in for "${attendedSession.title}"! Ready to start.',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer,
+                              ),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton.icon(
+                          icon: const Icon(Icons.play_circle_fill),
+                          label: const Text(WorkoutStrings.startWorkoutCTA),
+                          onPressed: () {
+                            context.go(
+                              Routes.trainerMembersWorkoutActiveById(
+                                attendedParticipant!.memberId,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               TodayAgendaCard(
                 items: state.todayItems,
                 title: todayTitle,

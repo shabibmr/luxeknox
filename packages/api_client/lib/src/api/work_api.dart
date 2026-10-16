@@ -12,6 +12,7 @@ import 'package:api_client/src/api_util.dart';
 import 'package:api_client/src/model/assign_plan_request.dart';
 import 'package:api_client/src/model/error_body.dart';
 import 'package:api_client/src/model/exercise.dart';
+import 'package:api_client/src/model/exercise_history_session.dart';
 import 'package:api_client/src/model/exercise_page.dart';
 import 'package:api_client/src/model/exercise_write.dart';
 import 'package:api_client/src/model/personal_record.dart';
@@ -714,6 +715,95 @@ class WORKApi {
     }
 
     return Response<Exercise>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Recent session performance for an exercise
+  /// 
+  ///
+  /// Parameters:
+  /// * [exerciseId] 
+  /// * [memberId] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [BuiltList<ExerciseHistorySession>] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<BuiltList<ExerciseHistorySession>>> getExerciseHistory({ 
+    required int exerciseId,
+    int? memberId,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/workout-sessions/exercise-history';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      if (memberId != null) r'member_id': encodeQueryParameter(_serializers, memberId, const FullType(int)),
+      r'exercise_id': encodeQueryParameter(_serializers, exerciseId, const FullType(int)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    BuiltList<ExerciseHistorySession>? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(BuiltList, [FullType(ExerciseHistorySession)]),
+      ) as BuiltList<ExerciseHistorySession>;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<BuiltList<ExerciseHistorySession>>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

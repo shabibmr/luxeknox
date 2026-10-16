@@ -4603,6 +4603,40 @@ paths:
           $ref: "#/components/responses/Error422"
         "429":
           $ref: "#/components/responses/Error429"
+  /workout-sessions/exercise-history:
+    get:
+      operationId: getExerciseHistory
+      summary: Recent session performance for an exercise
+      tags: [WORK]
+      x-status: mvp
+      x-parity: required
+      x-permission: workouts.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: member_id, in: query, schema: { type: integer, format: int64 } }
+        - { name: exercise_id, in: query, required: true, schema: { type: integer, format: int64 } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ExerciseHistorySession"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
   /workout-sessions/{id}:
     get:
       operationId: getWorkoutSession
@@ -9221,6 +9255,9 @@ components:
           nullable: true
         is_completed:
           type: boolean
+        notes:
+          type: string
+          nullable: true
     WorkoutSetWrite:
       type: object
       required: [exercise_id, set_number]
@@ -9237,6 +9274,9 @@ components:
           type: number
         is_completed:
           type: boolean
+        notes:
+          type: string
+          nullable: true
     WorkoutSetUpdate:
       type: object
       properties:
@@ -9248,6 +9288,9 @@ components:
           type: number
         is_completed:
           type: boolean
+        notes:
+          type: string
+          nullable: true
     WorkoutSessionPage:
       type: object
       required: [data, meta]
@@ -9274,6 +9317,21 @@ components:
           type: number
         achieved_at:
           $ref: "#/components/schemas/DateTime"
+    ExerciseHistorySession:
+      type: object
+      required: [session_id, started_at, sets]
+      properties:
+        session_id:
+          $ref: "#/components/schemas/Id"
+        started_at:
+          $ref: "#/components/schemas/DateTime"
+        completed_at:
+          $ref: "#/components/schemas/DateTime"
+          nullable: true
+        sets:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkoutSessionExercise"
     Food:
       type: object
       required: [id, name, serving_unit, is_active]

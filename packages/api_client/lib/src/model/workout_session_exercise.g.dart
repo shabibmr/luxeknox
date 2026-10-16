@@ -23,6 +23,8 @@ class _$WorkoutSessionExercise extends WorkoutSessionExercise {
   final num? rpeScore;
   @override
   final bool? isCompleted;
+  @override
+  final String? notes;
 
   factory _$WorkoutSessionExercise(
           [void Function(WorkoutSessionExerciseBuilder)? updates]) =>
@@ -36,7 +38,8 @@ class _$WorkoutSessionExercise extends WorkoutSessionExercise {
       this.repsCompleted,
       this.weightLiftedKg,
       this.rpeScore,
-      this.isCompleted})
+      this.isCompleted,
+      this.notes})
       : super._();
   @override
   WorkoutSessionExercise rebuild(
@@ -58,7 +61,8 @@ class _$WorkoutSessionExercise extends WorkoutSessionExercise {
         repsCompleted == other.repsCompleted &&
         weightLiftedKg == other.weightLiftedKg &&
         rpeScore == other.rpeScore &&
-        isCompleted == other.isCompleted;
+        isCompleted == other.isCompleted &&
+        notes == other.notes;
   }
 
   @override
@@ -72,6 +76,7 @@ class _$WorkoutSessionExercise extends WorkoutSessionExercise {
     _$hash = $jc(_$hash, weightLiftedKg.hashCode);
     _$hash = $jc(_$hash, rpeScore.hashCode);
     _$hash = $jc(_$hash, isCompleted.hashCode);
+    _$hash = $jc(_$hash, notes.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -86,7 +91,8 @@ class _$WorkoutSessionExercise extends WorkoutSessionExercise {
           ..add('repsCompleted', repsCompleted)
           ..add('weightLiftedKg', weightLiftedKg)
           ..add('rpeScore', rpeScore)
-          ..add('isCompleted', isCompleted))
+          ..add('isCompleted', isCompleted)
+          ..add('notes', notes))
         .toString();
   }
 }
@@ -130,6 +136,10 @@ class WorkoutSessionExerciseBuilder
   bool? get isCompleted => _$this._isCompleted;
   set isCompleted(bool? isCompleted) => _$this._isCompleted = isCompleted;
 
+  String? _notes;
+  String? get notes => _$this._notes;
+  set notes(String? notes) => _$this._notes = notes;
+
   WorkoutSessionExerciseBuilder() {
     WorkoutSessionExercise._defaults(this);
   }
@@ -145,6 +155,7 @@ class WorkoutSessionExerciseBuilder
       _weightLiftedKg = $v.weightLiftedKg;
       _rpeScore = $v.rpeScore;
       _isCompleted = $v.isCompleted;
+      _notes = $v.notes;
       _$v = null;
     }
     return this;
@@ -178,6 +189,7 @@ class WorkoutSessionExerciseBuilder
           weightLiftedKg: weightLiftedKg,
           rpeScore: rpeScore,
           isCompleted: isCompleted,
+          notes: notes,
         );
     replace(_$result);
     return _$result;

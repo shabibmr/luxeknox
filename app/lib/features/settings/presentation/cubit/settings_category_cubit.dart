@@ -39,6 +39,7 @@ class SettingsCategoryCubit extends Cubit<SettingsCategoryState> {
   final UpdateSettingsUseCase _updateSettings;
 
   SettingCategory? _category;
+  SettingCategory? get category => _category;
   int _loadGeneration = 0;
 
   bool get _editable => state.status == LoadStatus.success;

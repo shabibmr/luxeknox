@@ -19,6 +19,7 @@ part 'workout_session_exercise.g.dart';
 /// * [weightLiftedKg] 
 /// * [rpeScore] 
 /// * [isCompleted] 
+/// * [notes] 
 @BuiltValue()
 abstract class WorkoutSessionExercise implements Built<WorkoutSessionExercise, WorkoutSessionExerciseBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -44,6 +45,9 @@ abstract class WorkoutSessionExercise implements Built<WorkoutSessionExercise, W
 
   @BuiltValueField(wireName: r'is_completed')
   bool? get isCompleted;
+
+  @BuiltValueField(wireName: r'notes')
+  String? get notes;
 
   WorkoutSessionExercise._();
 
@@ -114,6 +118,13 @@ class _$WorkoutSessionExerciseSerializer implements PrimitiveSerializer<WorkoutS
       yield serializers.serialize(
         object.isCompleted,
         specifiedType: const FullType(bool),
+      );
+    }
+    if (object.notes != null) {
+      yield r'notes';
+      yield serializers.serialize(
+        object.notes,
+        specifiedType: const FullType(String),
       );
     }
   }
@@ -198,6 +209,14 @@ class _$WorkoutSessionExerciseSerializer implements PrimitiveSerializer<WorkoutS
           ) as bool?;
           if (valueDes == null) continue;
           result.isCompleted = valueDes;
+          break;
+        case r'notes':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.notes = valueDes;
           break;
         default:
           unhandled.add(key);

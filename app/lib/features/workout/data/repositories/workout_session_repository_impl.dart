@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/map_thrown.dart';
 import '../../../../core/pagination/cursor_page.dart';
+import '../../domain/entities/exercise_history_session.dart';
 import '../../domain/entities/workout_session.dart';
 import '../../domain/entities/workout_session_set.dart';
 import '../../domain/repositories/workout_session_repository.dart';
@@ -77,6 +78,7 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
     num? weightLiftedKg,
     num? rpeScore,
     bool? isCompleted,
+    String? notes,
   }) async {
     final intId = _parseId(sessionId);
     if (intId == null || int.tryParse(exerciseId) == null) {
@@ -92,6 +94,7 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
           weightLiftedKg: weightLiftedKg,
           rpeScore: rpeScore,
           isCompleted: isCompleted,
+          notes: notes,
         ),
       );
       return Right(logged.toDomain());
@@ -152,6 +155,7 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
     num? weightKg,
     num? rpe,
     bool? isCompleted,
+    String? notes,
   }) async {
     final sid = _parseId(sessionId);
     final stid = _parseId(setId);
@@ -167,6 +171,7 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
           weightLiftedKg: weightKg,
           rpeScore: rpe,
           isCompleted: isCompleted,
+          notes: notes,
         ),
       );
       return Right(updated.toDomain());
@@ -188,6 +193,35 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
     try {
       await _remoteDataSource.deleteSet(sid, stid);
       return const Right(unit);
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ExerciseHistorySession>>> getExerciseHistory({
+    String? memberId,
+    required String exerciseId,
+  }) async {
+    final eid = _parseId(exerciseId);
+    if (eid == null) {
+      return const Left(ValidationFailure(['Invalid exercise id']));
+    }
+    final mid = memberId == null ? null : _parseId(memberId);
+    try {
+      final list = await _remoteDataSource.getExerciseHistory(
+        memberId: mid,
+        exerciseId: eid,
+      );
+      final domainList = list.map((item) {
+        return ExerciseHistorySession(
+          sessionId: item.sessionId.toString(),
+          startedAt: item.startedAt.toLocal(),
+          completedAt: item.completedAt?.toLocal(),
+          sets: (item.sets.toList()).map((s) => s.toDomain()).toList(),
+        );
+      }).toList();
+      return Right(domainList);
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

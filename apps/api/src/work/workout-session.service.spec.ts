@@ -54,6 +54,7 @@ function buildService(overrides: {
     findSetsBySessionId: vi.fn().mockResolvedValue([]),
     completeSession: vi.fn(),
     findPersonalRecords: vi.fn().mockResolvedValue([]),
+    findExerciseHistory: vi.fn().mockResolvedValue([]),
     findSetInSession: vi.fn(),
     updateSessionExercise: vi.fn(),
     deleteSessionExercise: vi.fn(),
@@ -600,6 +601,76 @@ describe('WorkoutSessionService', () => {
         BusinessRuleError,
       );
       expect(sessionRepo.deleteSessionExercise).not.toHaveBeenCalled();
+    });
+
+    it('updateSet updates notes', async () => {
+      const { service, sessionRepo } = buildService();
+
+      sessionRepo.findSessionById.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        completed_at: null,
+      });
+      sessionRepo.findSetInSession.mockResolvedValue({
+        id: 501,
+        workout_session_id: 50,
+        exercise_id: 1,
+        set_number: 1,
+      });
+      sessionRepo.updateSessionExercise.mockResolvedValue({
+        id: 501,
+        notes: 'Adjusted foot placement',
+      });
+
+      const updated = await service.updateSet(
+        50,
+        501,
+        { notes: 'Adjusted foot placement' },
+        memberActor,
+      );
+
+      expect(sessionRepo.updateSessionExercise).toHaveBeenCalledWith(
+        501,
+        expect.objectContaining({ notes: 'Adjusted foot placement' }),
+      );
+      expect(updated.notes).toBe('Adjusted foot placement');
+    });
+  });
+
+  describe('exercise history query', () => {
+    it('returns recent session performance for an exercise for member', async () => {
+      const { service, sessionRepo } = buildService();
+      sessionRepo.findExerciseHistory.mockResolvedValue([
+        {
+          session_id: 48,
+          started_at: new Date('2026-10-09T07:00:00Z'),
+          completed_at: new Date('2026-10-09T07:50:00Z'),
+          sets: [{ id: 481, set_number: 1, reps_completed: 10, weight_lifted_kg: '60.00' }],
+        },
+      ]);
+
+      const history = await service.getExerciseHistory(undefined, 1, memberActor);
+
+      expect(sessionRepo.findExerciseHistory).toHaveBeenCalledWith(30, 1);
+      expect(history).toHaveLength(1);
+      expect(history[0].session_id).toBe(48);
+    });
+
+    it('allows assigned trainer to query exercise history for member', async () => {
+      const { service, sessionRepo } = buildService();
+      sessionRepo.findExerciseHistory.mockResolvedValue([]);
+
+      await service.getExerciseHistory(30, 1, trainerActor);
+
+      expect(sessionRepo.findExerciseHistory).toHaveBeenCalledWith(30, 1);
+    });
+
+    it('rejects trainer query when member_id is missing', async () => {
+      const { service } = buildService();
+
+      await expect(
+        service.getExerciseHistory(undefined, 1, trainerActor),
+      ).rejects.toThrow(BadRequestError);
     });
   });
 });

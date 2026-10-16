@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LuxeKnox - Trainer-Led Workout Session Mock UI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0d11;
+      --surface: #14171f;
+      --surface-elevated: #1c212c;
+      --surface-card: #222836;
+      --border: #2c3345;
+      --border-focus: #3b82f6;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-glow: rgba(59, 130, 246, 0.25);
+      --accent: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.2);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.2);
+      --error: #ef4444;
+      --error-glow: rgba(239, 68, 68, 0.2);
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: #06080b;
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+    }
+
+    /* Top Demo Control Header */
+    .demo-bar {
+      width: 100%;
+      max-width: 440px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .demo-bar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .demo-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .demo-badge {
+      font-size: 11px;
+      background: var(--surface-card);
+      padding: 2px 8px;
+      border-radius: 12px;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .demo-nav {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .demo-btn {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .demo-btn:hover {
+      color: var(--text);
+      border-color: var(--primary);
+    }
+    .demo-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    /* Device Mockup Shell */
+    .phone-frame {
+      width: 100%;
+      max-width: 430px;
+      height: 860px;
+      background: var(--bg);
+      border: 3px solid #232936;
+      border-radius: 44px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255,255,255,0.05);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      height: 44px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      z-index: 10;
+      user-select: none;
+    }
+    .island {
+      width: 110px;
+      height: 24px;
+      background: #000;
+      border-radius: 20px;
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* App Header */
+    .app-header {
+      padding: 8px 20px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      background: var(--surface);
+    }
+    .app-header h2 {
+      font-size: 17px;
+      font-weight: 700;
+    }
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      transition: background 0.15s;
+    }
+    .icon-btn:hover {
+      background: var(--surface-card);
+    }
+
+    /* Content Area */
+    .screen-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      position: relative;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .screen {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeIn 0.25s ease-out;
+    }
+    .screen.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Card Components */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+    }
+    .card-highlight {
+      border-color: rgba(59, 130, 246, 0.4);
+      background: linear-gradient(180deg, rgba(59,130,246,0.07) 0%, var(--surface) 100%);
+    }
+
+    /* Session Alert Banner */
+    .alert-banner {
+      background: linear-gradient(135deg, #1e2e4a 0%, #172133 100%);
+      border: 1px solid #3b82f6;
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 8px 24px var(--primary-glow);
+      position: relative;
+      overflow: hidden;
+    }
+    .alert-banner::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa, #3b82f6);
+      background-size: 200% 100%;
+      animation: shimmer 2s linear infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+    .alert-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #93c5fd;
+    }
+    .pulsing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3b82f6;
+      box-shadow: 0 0 8px #60a5fa;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.6; }
+    }
+
+    /* Typography & Meta */
+    .title-lg { font-size: 18px; font-weight: 800; }
+    .title-md { font-size: 15px; font-weight: 700; }
+    .title-sm { font-size: 13px; font-weight: 600; }
+    .body-sm { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+    .body-xs { font-size: 11px; color: var(--text-dim); }
+
+    /* Buttons */
+    .btn {
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+      box-shadow: 0 4px 14px var(--success-glow);
+    }
+    .btn-success:hover {
+      background: #059669;
+    }
+    .btn-danger-outline {
+      background: transparent;
+      border: 1px solid var(--error);
+      color: var(--error);
+    }
+    .btn-danger-outline:hover {
+      background: var(--error-glow);
+    }
+    .btn-secondary {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-secondary:hover {
+      background: #2b3345;
+    }
+    .btn-tonal {
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    .btn-tonal:hover {
+      background: rgba(59, 130, 246, 0.25);
+    }
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+    .btn-full { width: 100%; }
+
+    /* Rest Timer Bar */
+    .rest-timer-bar {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .timer-display {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .timer-ring {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 3px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      border-top-color: var(--accent);
+    }
+    .timer-active .timer-ring {
+      border-color: var(--accent);
+      border-top-color: transparent;
+      animation: spin 3s linear infinite;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .timer-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* Active Exercise Hero */
+    .exercise-hero {
+      background: linear-gradient(145deg, #1e2638 0%, #161b26 100%);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .exercise-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .chip {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+    .chip-accent {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+    }
+
+    /* Stepper Controls */
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .stepper-btn {
+      width: 44px;
+      height: 44px;
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .stepper-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    .input-box {
+      flex: 1;
+      height: 44px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-box:focus {
+      border-color: var(--border-focus);
+    }
+    .text-input {
+      width: 100%;
+      height: 42px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0 12px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+    .text-input:focus {
+      border-color: var(--border-focus);
+    }
+
+    /* Logged Sets Feed */
+    .logged-set-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--surface-elevated);
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .set-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .set-badge-skipped {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
+    .tag-skipped {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Modal / Bottom Sheet Overlay */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .bottom-sheet {
+      width: 100%;
+      max-height: 85%;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-radius: 28px 28px 0 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+      animation: slideUp 0.25s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      align-self: center;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Demo Bar (Quick Navigation Between Steps) -->
+  <div class="demo-bar">
+    <div class="demo-bar-header">
+      <div class="demo-title">
+        <span>⚡</span> Simulated Workflow
+      </div>
+      <div class="demo-badge">Step-by-Step Interactive</div>
+    </div>
+    <div class="demo-nav">
+      <button class="demo-btn active" onclick="showScreen('screen-dashboard')">1. Dashboard Alert</button>
+      <button class="demo-btn" onclick="showScreen('screen-overview')">2. Plan Overview</button>
+      <button class="demo-btn" onclick="showScreen('screen-active')">3. Active Session</button>
+      <button class="demo-btn" onclick="showScreen('screen-complete')">4. Session Summary</button>
+    </div>
+  </div>
+
+  <!-- Mobile Device Simulation Frame -->
+  <div class="phone-frame">
+    <!-- Device Status Bar -->
+    <div class="status-bar">
+      <span>09:41</span>
+      <div class="island"></div>
+      <span>5G 98%</span>
+    </div>
+
+    <!-- App Header -->
+    <div class="app-header">
+      <button class="icon-btn" id="headerBackBtn" onclick="handleBack()">&larr;</button>
+      <h2 id="headerTitle">Trainer Dashboard</h2>
+      <button class="icon-btn" onclick="openExerciseHistory()">&#128269;</button>
+    </div>
+
+    <!-- Main Screens Container -->
+    <div class="screen-container">
+
+      <!-- ================= SCREEN 1: TRAINER DASHBOARD ================= -->
+      <div class="screen active" id="screen-dashboard">
+        <!-- Trainer Welcome Card -->
+        <div class="card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #1d4ed8); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff;">AB</div>
+            <div>
+              <div class="title-md">Trainer Alex Brooks</div>
+              <div class="body-xs">LuxeKnox Fitness Club · Floor 2</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 1 REQUIREMENT: Dashboard shows Session Time Alert -->
+        <div class="alert-banner">
+          <div class="alert-tag">
+            <span class="pulsing-dot"></span>
+            <span>Session Time Alert · 10:00 AM</span>
+          </div>
+          <div class="title-md" style="color:#fff;">Member Present & Waiting</div>
+          <div class="body-sm" style="color:#cbd5e1;">
+            <strong>Marcus Vance</strong> has checked in via RFID turnstile. Today's assigned plan: <strong>Hypertrophy Upper Body A</strong>.
+          </div>
+          <button class="btn btn-primary btn-full" onclick="showScreen('screen-overview')">
+            <span>&#9654;</span> View Workout Plan & Start
+          </button>
+        </div>
+
+        <!-- Today's Agenda Preview -->
+        <div class="card">
+          <div class="title-sm" style="color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Today's Personal Training</div>
+          <div class="logged-set-item">
+            <div>
+              <div class="title-sm">Marcus Vance</div>
+              <div class="body-xs">10:00 AM – 11:00 AM · Present</div>
+            </div>
+            <span class="chip chip-accent" style="font-size:11px;">Checked In</span>
+          </div>
+          <div class="logged-set-item" style="opacity:0.6;">
+            <div>
+              <div class="title-sm">Elena Rostova</div>
+              <div class="body-xs">02:30 PM – 03:30 PM · Scheduled</div>
+            </div>
+            <span class="body-xs">Upcoming</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SCREEN 2: WORKOUT PLAN OVERVIEW ================= -->
+      <div class="screen" id="screen-overview">
+        <!-- Member Profile Header -->
+        <div class="card" style="background:var(--surface-elevated);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div class="body-xs" style="text-transform:uppercase; color:var(--primary); font-weight:700;">Client Dossier</div>
+              <div class="title-lg">Marcus Vance</div>
+              <div class="body-xs">Member ID: MEM-88219 · Goal: Hypertrophy</div>
+            </div>
+            <span class="chip chip-accent">Attendance: Present</span>
+          </div>
+        </div>
+
+        <!-- Plan Overview Details -->
+        <div class="card card-highlight">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div class="title-md">Upper Body Hypertrophy (Day 1)</div>
+              <div class="body-xs">4 Prescribed Exercises · 13 Total Sets</div>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button class="btn btn-secondary btn-sm" onclick="openComments('plan', 'plan-upper-a', 'Workout Plan: Upper Body Hypertrophy')" title="Comments & Notes">
+                💬 Notes
+              </button>
+              <span class="chip" style="background:#2563eb; color:#fff; border:none;">Active Plan</span>
+            </div>
+          </div>
+          <div class="body-sm">
+            Focus on mechanical tension on chest and shoulder pressing, followed by strict tricep lockout isolation.
+          </div>
+        </div>
+
+        <!-- Prescribed Exercises List Preview -->
+        <div class="title-sm" style="margin-top:4px;">Prescribed Exercises for Today:</div>
+
+        <div class="card" style="padding:12px; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="set-badge">1</span>
+              <div>
+                <div class="title-sm">Barbell Bench Press</div>
+                <div class="body-xs">4 sets · 8-10 reps · 75 kg · 90s rest</div>
+              </div>
+            </div>
+            <span class="body-xs" style="color:var(--text-dim);">&#8250;</span>
+          </div>
+        </div>
+
+        <div class="card" style="padding:12px; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="set-badge">2</span>
+              <div>
+                <div class="title-sm">Incline Dumbbell Press</div>
+                <div class="body-xs">3 sets · 10-12 reps · 28 kg · 60s rest</div>
+              </div>
+            </div>
+            <span class="body-xs" style="color:var(--text-dim);">&#8250;</span>
+          </div>
+        </div>
+
+        <div class="card" style="padding:12px; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="set-badge">3</span>
+              <div>
+                <div class="title-sm">Cable Tricep Pushdown</div>
+                <div class="body-xs">3 sets · 12-15 reps · 25 kg · 60s rest</div>
+              </div>
+            </div>
+            <span class="body-xs" style="color:var(--text-dim);">&#8250;</span>
+          </div>
+        </div>
+
+        <div class="card" style="padding:12px; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="set-badge">4</span>
+              <div>
+                <div class="title-sm">Overhead DB Extension</div>
+                <div class="body-xs">3 sets · 12 reps · 20 kg · 60s rest</div>
+              </div>
+            </div>
+            <span class="body-xs" style="color:var(--text-dim);">&#8250;</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" style="margin-top:8px; padding:15px;" onclick="startWorkoutSession()">
+          <span>&#9654;</span> Start Workout Session
+        </button>
+      </div>
+
+      <!-- ================= SCREEN 3: ACTIVE WORKOUT SESSION ================= -->
+      <div class="screen" id="screen-active">
+        <!-- Live Rest Timer Bar -->
+        <div class="rest-timer-bar" id="restTimerBar">
+          <div class="timer-display">
+            <div class="timer-ring" id="timerRing">
+              <span id="timerSeconds">90</span>
+            </div>
+            <div>
+              <div class="title-sm" id="timerStatusLabel">Rest Timer (Idle)</div>
+              <div class="body-xs" id="timerSubLabel">Press "Done" on set to trigger</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-secondary btn-sm" onclick="addRest(15)">+15s</button>
+            <button class="btn btn-danger-outline btn-sm" id="btnSkipRestEarly" onclick="resetTimer()" style="display:none; padding:4px 8px; font-size:11px;">Skip Rest</button>
+            <button class="btn btn-tonal btn-sm" onclick="triggerTimerZero()">Trigger 0:00</button>
+          </div>
+        </div>
+
+        <!-- Active Exercise Hero Card with History & Comments Buttons -->
+        <div class="exercise-hero">
+          <div class="exercise-header-row">
+            <div>
+              <div class="body-xs" style="color:#93c5fd; text-transform:uppercase; font-weight:700; letter-spacing:0.5px;" id="heroExerciseCounter">EXERCISE 1 OF 4</div>
+              <div class="title-lg" id="heroExerciseName">Barbell Bench Press</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-secondary btn-sm" id="btnExerciseComments" onclick="openCurrentExerciseComments()" title="Comments & Form Cues">
+                💬 Notes
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="openExerciseHistory()" title="View past weights & reps">
+                <span>&#128337;</span> History
+              </button>
+            </div>
+          </div>
+
+          <div class="chip-group">
+            <span class="chip" id="chipTargetSets">Target: 4 sets</span>
+            <span class="chip" id="chipTargetReps">8-10 reps</span>
+            <span class="chip chip-accent" id="chipTargetWeight">75 kg</span>
+            <span class="chip" id="chipTargetRest">Rest: 90s</span>
+          </div>
+        </div>
+
+        <!-- Exercise Switcher Chips -->
+        <div style="display:flex; gap:6px; overflow-x:auto; padding-bottom:4px;" id="exerciseTabsRow">
+          <button class="btn btn-sm btn-primary" id="exTab0" onclick="switchExercise(0)">1. Bench Press</button>
+          <button class="btn btn-sm btn-secondary" id="exTab1" onclick="switchExercise(1)">2. Incline DB 🔒</button>
+          <button class="btn btn-sm btn-secondary" id="exTab2" onclick="switchExercise(2)">3. Cable Pushdown 🔒</button>
+          <button class="btn btn-sm btn-secondary" id="exTab3" onclick="switchExercise(3)">4. Overhead DB 🔒</button>
+        </div>
+
+        <!-- Locked Banner for Future Exercises -->
+        <div class="card" id="cardFutureLocked" style="display:none; text-align:center; padding:24px 16px; border:1px dashed var(--border); background:rgba(255,255,255,0.02);">
+          <div style="font-size:32px; margin-bottom:8px;">🔒</div>
+          <div class="title-sm" style="color:var(--text-muted); font-weight:700;">Future Exercise Locked</div>
+          <div class="body-xs" style="color:var(--text-dim); margin-top:4px;" id="lockedExerciseReason">
+            Complete earlier exercises before logging sets here. You may preview target weights and historical logs.
+          </div>
+        </div>
+
+        <!-- Completed Banner when all planned sets for this exercise are done -->
+        <div class="card" id="cardExerciseFinished" style="display:none; text-align:center; padding:20px 16px; background:rgba(16,185,129,0.08); border:1px solid var(--success);">
+          <div style="font-size:28px; margin-bottom:6px;">✓</div>
+          <div class="title-sm" style="color:var(--success); font-weight:700;">All Prescribed Sets Completed</div>
+          <div class="body-xs" style="color:var(--text-muted); margin-top:4px;">
+            Target sets reached. Proceed to the next exercise tab or seal the session below.
+          </div>
+        </div>
+
+        <!-- Requirement 4, 7, 8: Set Details Controls with Steppers & Notes -->
+        <div class="card" id="cardSetForm">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="title-sm" id="setFormTitle">Set Details (Set #1 of 4)</div>
+            <span class="body-xs" style="color:var(--text-dim);" id="restLockStatus">Pre-filled from plan</span>
+          </div>
+
+          <!-- Weight Stepper -->
+          <div>
+            <div class="body-xs" style="margin-bottom:6px;">Weight (kg)</div>
+            <div class="control-row">
+              <button class="stepper-btn" onclick="adjustWeight(-2.5)">-</button>
+              <input type="number" step="0.5" id="inputWeight" class="input-box" value="75">
+              <button class="stepper-btn" onclick="adjustWeight(2.5)">+</button>
+            </div>
+          </div>
+
+          <!-- Reps Stepper -->
+          <div>
+            <div class="body-xs" style="margin-bottom:6px;">Reps Completed</div>
+            <div class="control-row">
+              <button class="stepper-btn" onclick="adjustReps(-1)">-</button>
+              <input type="number" id="inputReps" class="input-box" value="10">
+              <button class="stepper-btn" onclick="adjustReps(1)">+</button>
+            </div>
+          </div>
+
+          <!-- Inline Notes -->
+          <div>
+            <div class="body-xs" style="margin-bottom:6px;">Set Notes / Form Cues (Optional)</div>
+            <input type="text" id="inputSetNotes" class="text-input" placeholder="e.g. Clean pauses, slight arch, RPE 8">
+          </div>
+
+          <div id="restWarningMsg" class="body-xs" style="display:none; color:var(--error); text-align:center; margin-top:2px;">
+            ⏳ Rest countdown in progress — tap "Skip Rest" above to unlock immediately.
+          </div>
+
+          <!-- Primary Actions: Skip Set & Done CTA -->
+          <div style="display:flex; gap:10px; margin-top:4px;">
+            <!-- Requirement 8: Mandatory Skip button -->
+            <button class="btn btn-danger-outline" style="flex:1;" id="btnSkipSet" onclick="openSkipDialog()">
+              Skip Set
+            </button>
+            <!-- Requirement 5: Done button which starts rest timer -->
+            <button class="btn btn-success" style="flex:2;" id="btnDoneSet" onclick="logDoneSet()">
+              <span>&#10003;</span> Done · Set #1
+            </button>
+          </div>
+        </div>
+
+        <!-- Real-Time Logged Sets Stream -->
+        <div class="card" style="padding:14px;">
+          <div class="title-sm">Logged Sets for this Session</div>
+          <div id="loggedSetsList" style="display:flex; flex-direction:column; gap:8px;">
+            <div class="body-xs" style="text-align:center; color:var(--text-dim); padding:10px;">No sets logged yet. Complete or skip Set #1 above.</div>
+          </div>
+        </div>
+
+        <!-- Complete Workout Session CTA (Gated until all exercises completed) -->
+        <button class="btn btn-secondary btn-full" id="btnFinishWorkout" onclick="openCompleteDialog()" disabled style="opacity:0.4; cursor:not-allowed;">
+          Finish & Complete Workout (Complete all exercises first)
+        </button>
+      </div>
+
+      <!-- ================= SCREEN 4: WORKOUT SUMMARY ================= -->
+      <div class="screen" id="screen-complete">
+        <div style="text-align:center; padding:24px 0 12px;">
+          <div style="width:68px; height:68px; border-radius:50%; background:rgba(16,185,129,0.2); border:2px solid var(--success); color:var(--success); font-size:32px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px;">
+            &#10003;
+          </div>
+          <div class="title-lg">Workout Complete!</div>
+          <div class="body-sm">Session sealed and synchronized to member's dossier.</div>
+        </div>
+
+        <div class="card">
+          <div class="title-sm" style="color:var(--text-muted); text-transform:uppercase;">Session Recap</div>
+          <div class="logged-set-item">
+            <span class="body-sm">Duration</span>
+            <span class="title-sm" id="summaryDuration">45 min</span>
+          </div>
+          <div class="logged-set-item">
+            <span class="body-sm">Total Volume Lifted</span>
+            <span class="title-sm" id="summaryVolume">3,420 kg</span>
+          </div>
+          <div class="logged-set-item">
+            <span class="body-sm">Total Sets Logged</span>
+            <span class="title-sm" id="summarySetsCount">11 Completed · 1 Skipped</span>
+          </div>
+          <div class="logged-set-item">
+            <span class="body-sm">Client Feedback Rating</span>
+            <span class="title-sm" style="color:var(--accent);">★★★★★ 5.0</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="showScreen('screen-dashboard')">
+          Return to Dashboard
+        </button>
+        <button class="btn btn-secondary btn-full" onclick="showScreen('screen-overview')">
+          Start Another Session
+        </button>
+      </div>
+
+    </div><!-- End screen-container -->
+
+    <!-- ================= MODAL A: EXERCISE HISTORY SHEET ================= -->
+    <div class="modal-overlay" id="historyModal">
+      <div class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div class="title-md">Exercise History</div>
+            <div class="body-xs" id="historyExerciseTitle">Barbell Bench Press · Marcus Vance</div>
+          </div>
+          <button class="icon-btn" onclick="closeModals()">&times;</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;" id="historyRecordsList">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MODAL B: SKIP SET REASON DIALOG ================= -->
+    <div class="modal-overlay" id="skipModal">
+      <div class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="title-md" style="color:var(--error);">Skip Set Confirmation</div>
+          <button class="icon-btn" onclick="closeModals()">&times;</button>
+        </div>
+
+        <div class="body-sm">
+          Skipped sets are audited. Please specify the reason and note mandatory details:
+        </div>
+
+        <div>
+          <label class="body-xs" style="display:block; margin-bottom:6px;">Reason Tag</label>
+          <select id="skipReasonSelect" class="text-input" style="cursor:pointer;">
+            <option value="Fatigue / Exhaustion">Fatigue / Exhaustion</option>
+            <option value="Pain / Discomfort">Pain / Discomfort</option>
+            <option value="Equipment Unavailable">Equipment Unavailable</option>
+            <option value="Time Constraint">Time Constraint</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="body-xs" style="display:block; margin-bottom:6px;">Detailed Comment (Mandatory, min 5 chars)</label>
+          <textarea id="skipCommentText" class="text-input" style="height:70px; padding:8px 12px; resize:none;" placeholder="Explain why set is skipped (e.g. Left shoulder pain during unrack)..."></textarea>
+          <div id="skipValidationErr" class="body-xs" style="color:var(--error); margin-top:4px; display:none;">
+            Comment is required (minimum 5 characters).
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:8px;">
+          <button class="btn btn-secondary" style="flex:1;" onclick="closeModals()">Cancel</button>
+          <button class="btn btn-danger-outline" style="flex:1; border-color:var(--error); background:var(--error); color:#fff;" onclick="confirmSkipSet()">
+            Confirm Skip
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MODAL C: POST-REST PROMPT SHEET ================= -->
+    <div class="modal-overlay" id="postRestModal">
+      <div class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div style="text-align:center; padding:10px 0;">
+          <div style="font-size:36px; margin-bottom:8px;" id="postRestIcon">⏰</div>
+          <div class="title-lg" id="postRestTitle">Rest Complete!</div>
+          <div class="body-sm" id="postRestSubtitle" style="margin-top:6px;">
+            Ready for Set 2 of Barbell Bench Press?
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button class="btn btn-primary btn-full" id="btnPostRestAction" onclick="handlePostRestAction()">
+            Start Set 2
+          </button>
+          <button class="btn btn-secondary btn-full" onclick="addRest(30); closeModals();">
+            +30s Extra Rest
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MODAL D: COMPLETE WORKOUT DIALOG ================= -->
+    <div class="modal-overlay" id="completeModal">
+      <div class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div class="title-md">Finish & Seal Session</div>
+        <div class="body-sm">Rate client performance and add final workout summary notes:</div>
+
+        <div style="display:flex; justify-content:center; gap:8px; font-size:26px; cursor:pointer;" id="starRatingRow">
+          <span onclick="setRating(1)">★</span>
+          <span onclick="setRating(2)">★</span>
+          <span onclick="setRating(3)">★</span>
+          <span onclick="setRating(4)">★</span>
+          <span onclick="setRating(5)">★</span>
+        </div>
+
+        <div>
+          <label class="body-xs" style="display:block; margin-bottom:6px;">Session Summary Notes</label>
+          <textarea id="sessionNotesText" class="text-input" style="height:70px; padding:8px 12px; resize:none;" placeholder="Overall client energy, progress on bench press, adjustments for next week..."></textarea>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-secondary" style="flex:1;" onclick="closeModals()">Cancel</button>
+          <button class="btn btn-primary" style="flex:1;" onclick="finishSession()">Complete Workout</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MODAL E: UNIVERSAL COMMENTS BOTTOM SHEET ================= -->
+    <div class="modal-overlay" id="commentsModal">
+      <div class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div class="body-xs" style="color:var(--primary); font-weight:700; text-transform:uppercase;">Comments & Notes</div>
+            <div class="title-md" id="commentsModalTitle">Workout Plan Comments</div>
+          </div>
+          <button class="icon-btn" onclick="closeModals()">&times;</button>
+        </div>
+
+        <div id="commentsFeed" style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; padding-right:2px;">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <textarea id="commentInputText" class="text-input" style="height:60px; padding:8px 12px; resize:none;" placeholder="Write a note, feedback or form cue..."></textarea>
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:var(--text-muted);">
+              <input type="checkbox" id="commentPrivateToggle" style="cursor:pointer; accent-color:var(--accent);">
+              <span>🔒 Private Note (Visible only to trainer)</span>
+            </label>
+            <button class="btn btn-primary btn-sm" onclick="postComment()">Post</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- End phone-frame -->
+
+  <!-- App Simulation State & Logic -->
+  <script>
+    // State Store
+    const exercisesData = [
+      { id: '100', name: 'Barbell Bench Press', targetSets: 4, targetReps: '8-10', targetWeightKg: 75, restSeconds: 90 },
+      { id: '101', name: 'Incline Dumbbell Press', targetSets: 3, targetReps: '10-12', targetWeightKg: 28, restSeconds: 60 },
+      { id: '102', name: 'Cable Tricep Pushdown', targetSets: 3, targetReps: '12-15', targetWeightKg: 25, restSeconds: 60 },
+      { id: '103', name: 'Overhead DB Extension', targetSets: 3, targetReps: '12', targetWeightKg: 20, restSeconds: 60 },
+    ];
+
+    let currentExerciseIndex = 0;
+    let loggedSets = [];
+    let restTimerInterval = null;
+    let remainingRestSeconds = 90;
+    let isTimerRunning = false;
+    let clientRating = 5;
+
+    // Universal Comments Store (Supports Plan, Exercise, Set entities)
+    let commentsStore = [
+      { id: 'c1', entityType: 'plan', entityId: 'plan-upper-a', author: 'Trainer Alex', text: 'Marcus has high energy today. Focus on controlled eccentrics on DB presses.', isPrivate: true, createdAt: '09:30 AM' },
+      { id: 'c2', entityType: 'exercise', entityId: '100', author: 'Trainer Alex', text: 'Touch barbell at lower sternum. Keep feet driven firmly into floor.', isPrivate: false, createdAt: '09:35 AM' }
+    ];
+    let currentCommentTarget = { entityType: 'plan', entityId: 'plan-upper-a', title: 'Workout Plan Notes' };
+
+    // Navigation & Screen Management
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById(screenId);
+      if (target) target.classList.add('active');
+
+      // Update top demo bar active state
+      document.querySelectorAll('.demo-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick').includes(screenId));
+      });
+
+      // Update app bar title & back button visibility
+      const title = document.getElementById('headerTitle');
+      const back = document.getElementById('headerBackBtn');
+      if (screenId === 'screen-dashboard') {
+        title.innerText = 'Trainer Dashboard';
+        back.style.display = 'none';
+      } else if (screenId === 'screen-overview') {
+        title.innerText = 'Workout Plan Overview';
+        back.style.display = 'flex';
+      } else if (screenId === 'screen-active') {
+        title.innerText = 'Active Workout Session';
+        back.style.display = 'flex';
+      } else if (screenId === 'screen-complete') {
+        title.innerText = 'Workout Summary';
+        back.style.display = 'none';
+      }
+      closeModals();
+    }
+
+    function handleBack() {
+      const activeScreen = document.querySelector('.screen.active').id;
+      if (activeScreen === 'screen-overview') showScreen('screen-dashboard');
+      else if (activeScreen === 'screen-active') showScreen('screen-overview');
+    }
+
+    // Start Session Action
+    function startWorkoutSession() {
+      loggedSets = [];
+      currentExerciseIndex = 0;
+      updateExerciseHero();
+      renderLoggedSets();
+      resetTimer();
+      showScreen('screen-active');
+    }
+
+    // Guardrail 2: Compute first exercise with incomplete sets
+    function getCurrentActiveExerciseIndex() {
+      for (let i = 0; i < exercisesData.length; i++) {
+        const ex = exercisesData[i];
+        const count = loggedSets.filter(s => s.exerciseId === ex.id).length;
+        if (count < ex.targetSets) {
+          return i;
+        }
+      }
+      return exercisesData.length - 1;
+    }
+
+    // Guardrail 4: Verify all planned exercises are completed or skipped
+    function areAllExercisesFinished() {
+      return exercisesData.every(ex => {
+        const count = loggedSets.filter(s => s.exerciseId === ex.id).length;
+        return count >= ex.targetSets;
+      });
+    }
+
+    // Switch Selected Exercise
+    function switchExercise(index) {
+      currentExerciseIndex = index;
+      updateExerciseHero();
+    }
+
+    function getNextSetNumber() {
+      const currentExId = exercisesData[currentExerciseIndex].id;
+      const matching = loggedSets.filter(s => s.exerciseId === currentExId);
+      return matching.length + 1;
+    }
+
+    function updateExerciseHero() {
+      const ex = exercisesData[currentExerciseIndex];
+      const activeIdx = getCurrentActiveExerciseIndex();
+      const isFuture = currentExerciseIndex > activeIdx;
+      const currentCount = loggedSets.filter(s => s.exerciseId === ex.id).length;
+      const isExerciseCompleted = currentCount >= ex.targetSets;
+
+      // Update Exercise Tabs
+      for (let i = 0; i < exercisesData.length; i++) {
+        const tab = document.getElementById(`exTab${i}`);
+        if (tab) {
+          const tabEx = exercisesData[i];
+          const tabCount = loggedSets.filter(s => s.exerciseId === tabEx.id).length;
+          const isTabFuture = i > activeIdx;
+          const isTabDone = tabCount >= tabEx.targetSets;
+
+          let label = `${i + 1}. ${tabEx.name.split(' ')[0]}`;
+          if (isTabDone) label += ' ✓';
+          else if (isTabFuture) label += ' 🔒';
+
+          tab.innerText = label;
+          tab.className = (i === currentExerciseIndex) ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+        }
+      }
+
+      document.getElementById('heroExerciseCounter').innerText = `EXERCISE ${currentExerciseIndex + 1} OF ${exercisesData.length}`;
+      document.getElementById('heroExerciseName').innerText = ex.name;
+      document.getElementById('chipTargetSets').innerText = `Target: ${ex.targetSets} sets`;
+      document.getElementById('chipTargetReps').innerText = `${ex.targetReps} reps`;
+      document.getElementById('chipTargetWeight').innerText = `${ex.targetWeightKg} kg`;
+      document.getElementById('chipTargetRest').innerText = `Rest: ${ex.restSeconds}s`;
+
+      const cardFutureLocked = document.getElementById('cardFutureLocked');
+      const cardExerciseFinished = document.getElementById('cardExerciseFinished');
+      const cardSetForm = document.getElementById('cardSetForm');
+
+      if (isFuture) {
+        // Guardrail 2: Lock future exercise actions
+        cardFutureLocked.style.display = 'block';
+        cardExerciseFinished.style.display = 'none';
+        cardSetForm.style.display = 'none';
+        document.getElementById('lockedExerciseReason').innerText =
+          `Exercise locked. Complete Exercise ${activeIdx + 1} (${exercisesData[activeIdx].name}) before logging sets here.`;
+      } else if (isExerciseCompleted) {
+        // Guardrail 3: Prescribed sets completed
+        cardFutureLocked.style.display = 'none';
+        cardExerciseFinished.style.display = 'block';
+        cardSetForm.style.display = 'none';
+      } else {
+        // Active exercise inputs
+        cardFutureLocked.style.display = 'none';
+        cardExerciseFinished.style.display = 'none';
+        cardSetForm.style.display = 'flex';
+
+        const nextSetNum = currentCount + 1;
+        document.getElementById('setFormTitle').innerText = `Set Details (Set #${nextSetNum} of ${ex.targetSets})`;
+        document.getElementById('btnDoneSet').innerHTML = `<span>&#10003;</span> Done · Set #${nextSetNum}`;
+
+        // Carry over weight or use plan target
+        const pastSets = loggedSets.filter(s => s.exerciseId === ex.id);
+        if (pastSets.length > 0 && pastSets[pastSets.length - 1].weight) {
+          document.getElementById('inputWeight').value = pastSets[pastSets.length - 1].weight;
+        } else {
+          document.getElementById('inputWeight').value = ex.targetWeightKg;
+        }
+        document.getElementById('inputReps').value = parseInt(ex.targetReps.split('-')[0]) || 10;
+        document.getElementById('inputSetNotes').value = '';
+      }
+
+      // Update timer buttons locking (Guardrail 1)
+      updateTimerLocking();
+
+      // Update finish workout button gating (Guardrail 4)
+      updateFinishWorkoutGating();
+    }
+
+    // Guardrail 1: Lock buttons during rest timer
+    function updateTimerLocking() {
+      const btnDone = document.getElementById('btnDoneSet');
+      const btnSkip = document.getElementById('btnSkipSet');
+      const restWarningMsg = document.getElementById('restWarningMsg');
+      const restLockStatus = document.getElementById('restLockStatus');
+      const btnSkipRest = document.getElementById('btnSkipRestEarly');
+
+      if (isTimerRunning) {
+        btnDone.disabled = true;
+        btnDone.style.opacity = '0.4';
+        btnDone.style.cursor = 'not-allowed';
+        btnSkip.disabled = true;
+        btnSkip.style.opacity = '0.4';
+        btnSkip.style.cursor = 'not-allowed';
+        restWarningMsg.style.display = 'block';
+        restLockStatus.innerText = 'Rest in progress (locked)';
+        restLockStatus.style.color = 'var(--error)';
+        btnSkipRest.style.display = 'inline-block';
+      } else {
+        btnDone.disabled = false;
+        btnDone.style.opacity = '1';
+        btnDone.style.cursor = 'pointer';
+        btnSkip.disabled = false;
+        btnSkip.style.opacity = '1';
+        btnSkip.style.cursor = 'pointer';
+        restWarningMsg.style.display = 'none';
+        restLockStatus.innerText = 'Pre-filled from plan';
+        restLockStatus.style.color = 'var(--text-dim)';
+        btnSkipRest.style.display = 'none';
+      }
+    }
+
+    // Guardrail 4: Gate finish workout button until all exercises marked
+    function updateFinishWorkoutGating() {
+      const btnFinish = document.getElementById('btnFinishWorkout');
+      const allDone = areAllExercisesFinished();
+
+      if (allDone) {
+        btnFinish.disabled = false;
+        btnFinish.style.opacity = '1';
+        btnFinish.style.cursor = 'pointer';
+        btnFinish.className = 'btn btn-primary btn-full';
+        btnFinish.innerText = '✓ Finish & Complete Workout';
+      } else {
+        btnFinish.disabled = true;
+        btnFinish.style.opacity = '0.4';
+        btnFinish.style.cursor = 'not-allowed';
+        btnFinish.className = 'btn btn-secondary btn-full';
+        btnFinish.innerText = 'Finish Workout (Complete all planned exercises first)';
+      }
+    }
+
+    // Steppers
+    function adjustWeight(delta) {
+      if (isTimerRunning) return;
+      const box = document.getElementById('inputWeight');
+      let val = parseFloat(box.value) || 0;
+      val = Math.max(0, val + delta);
+      box.value = (val % 1 === 0) ? val.toFixed(0) : val.toFixed(1);
+    }
+
+    function adjustReps(delta) {
+      if (isTimerRunning) return;
+      const box = document.getElementById('inputReps');
+      let val = parseInt(box.value) || 0;
+      val = Math.max(1, val + delta);
+      box.value = val;
+    }
+
+    // Requirement 5: Log Done Set & Trigger Rest Timer
+    function logDoneSet() {
+      if (isTimerRunning) return;
+      const ex = exercisesData[currentExerciseIndex];
+      const setNum = getNextSetNumber();
+      const weight = parseFloat(document.getElementById('inputWeight').value) || 0;
+      const reps = parseInt(document.getElementById('inputReps').value) || 0;
+      const notes = document.getElementById('inputSetNotes').value.trim();
+
+      loggedSets.push({
+        id: Date.now().toString(),
+        exerciseId: ex.id,
+        exerciseName: ex.name,
+        setNumber: setNum,
+        weight: weight,
+        reps: reps,
+        isCompleted: true,
+        notes: notes || null
+      });
+
+      renderLoggedSets();
+      updateExerciseHero();
+
+      // Start automatic rest timer
+      startRestCountdown(ex.restSeconds);
+    }
+
+    // Requirement 8: Mandatory Skip Set Workflow
+    function openSkipDialog() {
+      if (isTimerRunning) return;
+      document.getElementById('skipCommentText').value = '';
+      document.getElementById('skipValidationErr').style.display = 'none';
+      document.getElementById('skipModal').classList.add('active');
+    }
+
+    function confirmSkipSet() {
+      const reason = document.getElementById('skipReasonSelect').value;
+      const comment = document.getElementById('skipCommentText').value.trim();
+
+      if (comment.length < 5) {
+        document.getElementById('skipValidationErr').style.display = 'block';
+        return;
+      }
+
+      const ex = exercisesData[currentExerciseIndex];
+      const setNum = getNextSetNumber();
+
+      loggedSets.push({
+        id: Date.now().toString(),
+        exerciseId: ex.id,
+        exerciseName: ex.name,
+        setNumber: setNum,
+        weight: 0,
+        reps: 0,
+        isCompleted: false,
+        notes: `SKIPPED: [${reason}] ${comment}`
+      });
+
+      closeModals();
+      renderLoggedSets();
+      updateExerciseHero();
+    }
+
+    // Render Logged Sets Feed
+    function renderLoggedSets() {
+      const list = document.getElementById('loggedSetsList');
+      if (loggedSets.length === 0) {
+        list.innerHTML = `<div class="body-xs" style="text-align:center; color:var(--text-dim); padding:10px;">No sets logged yet. Complete or skip Set #1 above.</div>`;
+        return;
+      }
+
+      let html = '';
+      for (let i = loggedSets.length - 1; i >= 0; i--) {
+        const s = loggedSets[i];
+        if (s.isCompleted) {
+          html += `
+            <div class="logged-set-item">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="set-badge">#${s.setNumber}</span>
+                <div>
+                  <div class="title-sm">${s.exerciseName}</div>
+                  <div class="body-xs" style="color:#93c5fd;">${s.weight} kg × ${s.reps} reps</div>
+                  ${s.notes ? `<div class="body-xs" style="font-style:italic; color:var(--text-dim); margin-top:2px;">"${s.notes}"</div>` : ''}
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button class="btn btn-secondary btn-sm" style="padding:4px 8px; font-size:11px;" onclick="openComments('set', '${s.id}', 'Set #${s.setNumber} (${s.exerciseName})')">💬 Note</button>
+                <span class="body-xs" style="color:var(--success); font-weight:700;">✓ Done</span>
+              </div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="logged-set-item" style="border-left:3px solid var(--error);">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="set-badge set-badge-skipped">#${s.setNumber}</span>
+                <div>
+                  <div class="title-sm">${s.exerciseName}</div>
+                  <div style="margin:2px 0;"><span class="tag-skipped">Skipped</span></div>
+                  <div class="body-xs" style="color:#fca5a5; font-style:italic;">${s.notes}</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button class="btn btn-secondary btn-sm" style="padding:4px 8px; font-size:11px;" onclick="openComments('set', '${s.id}', 'Set #${s.setNumber} (${s.exerciseName})')">💬 Note</button>
+                <span class="body-xs" style="color:var(--error); font-weight:700;">—</span>
+              </div>
+            </div>
+          `;
+        }
+      }
+      list.innerHTML = html;
+    }
+
+    // Rest Timer Logic
+    function startRestCountdown(seconds) {
+      clearInterval(restTimerInterval);
+      remainingRestSeconds = seconds;
+      isTimerRunning = true;
+      document.getElementById('restTimerBar').classList.add('timer-active');
+      document.getElementById('timerStatusLabel').innerText = 'Rest in Progress';
+      document.getElementById('timerSubLabel').innerText = 'Countdown active';
+      updateTimerDisplay();
+      updateTimerLocking();
+
+      restTimerInterval = setInterval(() => {
+        remainingRestSeconds--;
+        updateTimerDisplay();
+        if (remainingRestSeconds <= 0) {
+          clearInterval(restTimerInterval);
+          isTimerRunning = false;
+          updateTimerLocking();
+          triggerTimerZero();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const m = Math.floor(remainingRestSeconds / 60);
+      const s = remainingRestSeconds % 60;
+      document.getElementById('timerSeconds').innerText = remainingRestSeconds;
+      document.getElementById('timerStatusLabel').innerText = `Rest: ${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function addRest(seconds) {
+      remainingRestSeconds += seconds;
+      updateTimerDisplay();
+    }
+
+    function resetTimer() {
+      clearInterval(restTimerInterval);
+      isTimerRunning = false;
+      remainingRestSeconds = 0;
+      document.getElementById('restTimerBar').classList.remove('timer-active');
+      document.getElementById('timerSeconds').innerText = '0';
+      document.getElementById('timerStatusLabel').innerText = 'Rest Timer (Idle)';
+      document.getElementById('timerSubLabel').innerText = 'Press "Done" to start';
+      updateTimerLocking();
+    }
+
+    // Interactive Prompt when Timer Reaches 00:00
+    function triggerTimerZero() {
+      resetTimer();
+      const ex = exercisesData[currentExerciseIndex];
+      const completedSets = loggedSets.filter(s => s.exerciseId === ex.id).length;
+      const modal = document.getElementById('postRestModal');
+      const title = document.getElementById('postRestTitle');
+      const subtitle = document.getElementById('postRestSubtitle');
+      const actionBtn = document.getElementById('btnPostRestAction');
+
+      if (completedSets < ex.targetSets) {
+        title.innerText = 'Rest Complete!';
+        subtitle.innerText = `Ready for Set ${completedSets + 1} of ${ex.name}?`;
+        actionBtn.innerText = `Start Set ${completedSets + 1}`;
+        actionBtn.onclick = () => {
+          closeModals();
+          updateExerciseHero();
+        };
+      } else if (currentExerciseIndex < exercisesData.length - 1) {
+        const nextEx = exercisesData[currentExerciseIndex + 1];
+        title.innerText = 'Exercise Complete! 🎉';
+        subtitle.innerText = `All ${ex.targetSets} sets finished for ${ex.name}. Move to ${nextEx.name}?`;
+        actionBtn.innerText = `Next: ${nextEx.name}`;
+        actionBtn.onclick = () => {
+          closeModals();
+          switchExercise(currentExerciseIndex + 1);
+        };
+      } else {
+        title.innerText = 'All Exercises Complete! 🏆';
+        subtitle.innerText = 'Awesome workout session! All planned exercises are finished.';
+        actionBtn.innerText = 'Complete Workout';
+        actionBtn.onclick = () => {
+          closeModals();
+          openCompleteDialog();
+        };
+      }
+
+      modal.classList.add('active');
+    }
+
+    // Requirement 5: Reusable Universal Comments Widget
+    function openCurrentExerciseComments() {
+      const ex = exercisesData[currentExerciseIndex];
+      openComments('exercise', ex.id, `Exercise: ${ex.name}`);
+    }
+
+    function openComments(entityType, entityId, title) {
+      currentCommentTarget = { entityType, entityId, title };
+      document.getElementById('commentsModalTitle').innerText = title;
+      document.getElementById('commentInputText').value = '';
+      document.getElementById('commentPrivateToggle').checked = false;
+      renderCommentsFeed();
+      document.getElementById('commentsModal').classList.add('active');
+    }
+
+    function renderCommentsFeed() {
+      const feed = document.getElementById('commentsFeed');
+      const filtered = commentsStore.filter(c => c.entityType === currentCommentTarget.entityType && c.entityId === currentCommentTarget.entityId);
+
+      if (filtered.length === 0) {
+        feed.innerHTML = `<div class="body-xs" style="text-align:center; color:var(--text-dim); padding:16px;">No comments yet. Write a note or cue below.</div>`;
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(c => {
+        html += `
+          <div style="background:var(--surface-card); border-radius:8px; padding:10px; border:1px solid ${c.isPrivate ? 'var(--accent)' : 'rgba(255,255,255,0.06)'};">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span class="body-xs" style="font-weight:700; color:var(--text);">${c.author}</span>
+              ${c.isPrivate ? '<span style="background:rgba(245,158,11,0.2); color:var(--accent); font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px;">🔒 Trainer Only</span>' : '<span style="color:var(--text-dim); font-size:10px;">Shared</span>'}
+            </div>
+            <div class="body-xs" style="color:var(--text);">${c.text}</div>
+            <div class="body-xs" style="color:var(--text-dim); font-size:10px; margin-top:4px; text-align:right;">${c.createdAt}</div>
+          </div>
+        `;
+      });
+      feed.innerHTML = html;
+    }
+
+    function postComment() {
+      const text = document.getElementById('commentInputText').value.trim();
+      if (!text) return;
+      const isPrivate = document.getElementById('commentPrivateToggle').checked;
+
+      commentsStore.push({
+        id: Date.now().toString(),
+        entityType: currentCommentTarget.entityType,
+        entityId: currentCommentTarget.entityId,
+        author: 'Trainer Alex',
+        text: text,
+        isPrivate: isPrivate,
+        createdAt: 'Just now'
+      });
+
+      document.getElementById('commentInputText').value = '';
+      renderCommentsFeed();
+    }
+
+    // Requirement 9: In-Session Exercise History Sheet
+    function openExerciseHistory() {
+      const ex = exercisesData[currentExerciseIndex];
+      document.getElementById('historyExerciseTitle').innerText = `${ex.name} · Marcus Vance`;
+      const container = document.getElementById('historyRecordsList');
+
+      container.innerHTML = `
+        <div class="card" style="padding:12px;">
+          <div class="title-sm" style="color:var(--primary);">Session: Oct 12, 2026 (4 days ago)</div>
+          <div class="body-xs" style="margin-top:4px;">Set 1: 72.5 kg × 10 reps</div>
+          <div class="body-xs">Set 2: 75.0 kg × 9 reps</div>
+          <div class="body-xs">Set 3: 75.0 kg × 8 reps</div>
+          <div class="body-xs" style="color:var(--text-dim); font-style:italic; margin-top:4px;">Note: "Great bar path, bar moved smoothly"</div>
+        </div>
+        <div class="card" style="padding:12px;">
+          <div class="title-sm" style="color:var(--primary);">Session: Oct 08, 2026 (8 days ago)</div>
+          <div class="body-xs" style="margin-top:4px;">Set 1: 70.0 kg × 10 reps</div>
+          <div class="body-xs">Set 2: 72.5 kg × 10 reps</div>
+          <div class="body-xs"><span class="tag-skipped">Skipped</span> Set 3: "SKIPPED: [Fatigue] Triceps cramped on set 2"</div>
+        </div>
+      `;
+
+      document.getElementById('historyModal').classList.add('active');
+    }
+
+    // Complete Session Dialog
+    function openCompleteDialog() {
+      if (!areAllExercisesFinished()) return;
+      document.getElementById('completeModal').classList.add('active');
+    }
+
+    function setRating(rating) {
+      clientRating = rating;
+      const stars = document.getElementById('starRatingRow').children;
+      for (let i = 0; i < 5; i++) {
+        stars[i].style.color = (i < rating) ? 'var(--accent)' : 'var(--border)';
+      }
+    }
+
+    function finishSession() {
+      closeModals();
+      const completed = loggedSets.filter(s => s.isCompleted).length;
+      const skipped = loggedSets.filter(s => !s.isCompleted).length;
+      let totalVolume = 0;
+      loggedSets.forEach(s => {
+        if (s.isCompleted) totalVolume += (s.weight * s.reps);
+      });
+
+      document.getElementById('summaryVolume').innerText = `${totalVolume.toLocaleString()} kg`;
+      document.getElementById('summarySetsCount').innerText = `${completed} Completed · ${skipped} Skipped`;
+      showScreen('screen-complete');
+    }
+
+    function closeModals() {
+      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+    }
+
+    // Initialize Star Rating
+    setRating(5);
+  </script>
+</body>
+</html>

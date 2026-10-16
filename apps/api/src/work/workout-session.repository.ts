@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, isNotNull, type SQL } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, type SQL } from 'drizzle-orm';
 import { BaseRepository } from '../platform/db/base.repository';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type { DrizzleDb } from '../platform/db/client';
@@ -178,7 +178,7 @@ export class WorkoutSessionRepository extends BaseRepository<
     patch: Partial<
       Pick<
         NewWorkoutSessionExercise,
-        'reps_completed' | 'weight_lifted_kg' | 'rpe_score' | 'is_completed'
+        'reps_completed' | 'weight_lifted_kg' | 'rpe_score' | 'is_completed' | 'notes'
       >
     >,
   ): Promise<WorkoutSessionExercise> {
@@ -290,4 +290,59 @@ export class WorkoutSessionRepository extends BaseRepository<
 
     return Array.from(prMap.values());
   }
+
+  async findExerciseHistory(
+    memberId: number,
+    exerciseId: number,
+    limitSessions = 3,
+  ): Promise<Array<{
+    session_id: number;
+    started_at: Date;
+    completed_at: Date | null;
+    sets: WorkoutSessionExercise[];
+  }>> {
+    const db = this.getDb() as any;
+    const sessionRows = await db
+      .select({
+        id: workoutSessions.id,
+        started_at: workoutSessions.started_at,
+        completed_at: workoutSessions.completed_at,
+      })
+      .from(workoutSessions)
+      .innerJoin(
+        workoutSessionExercises,
+        eq(workoutSessions.id, workoutSessionExercises.workout_session_id),
+      )
+      .where(
+        and(
+          eq(workoutSessions.member_id, memberId),
+          eq(workoutSessionExercises.exercise_id, exerciseId),
+        ),
+      )
+      .groupBy(workoutSessions.id, workoutSessions.started_at, workoutSessions.completed_at)
+      .orderBy(desc(workoutSessions.started_at))
+      .limit(limitSessions);
+
+    if (!sessionRows.length) return [];
+
+    const sessionIds = sessionRows.map((s: any) => s.id);
+    const sets = await db
+      .select()
+      .from(workoutSessionExercises)
+      .where(
+        and(
+          inArray(workoutSessionExercises.workout_session_id, sessionIds),
+          eq(workoutSessionExercises.exercise_id, exerciseId),
+        ),
+      )
+      .orderBy(workoutSessionExercises.set_number);
+
+    return sessionRows.map((s: any) => ({
+      session_id: s.id,
+      started_at: s.started_at,
+      completed_at: s.completed_at,
+      sets: (sets as any[]).filter((st) => st.workout_session_id === s.id),
+    }));
+  }
 }
+
