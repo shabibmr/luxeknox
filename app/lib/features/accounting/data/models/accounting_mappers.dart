@@ -33,7 +33,7 @@ extension AccountModelMapper on api.Account {
 }
 
 api.AccountCreate toAccountCreate({
-  required String code,
+  String? code,
   required String name,
   required String accountType,
   String? parentId,
@@ -295,35 +295,6 @@ api.PurchaseBillCreate toPurchaseBillCreate({
           ),
         ),
       ),
-  );
-}
-
-api.PurchaseBillUpdate toPurchaseBillUpdate({
-  String? vendorId,
-  DateTime? billDate,
-  DateTime? dueDate,
-  List<PurchaseBillLine>? lines,
-}) {
-  return api.PurchaseBillUpdate(
-    (b) => b
-      ..vendorId = vendorId == null ? null : int.tryParse(vendorId)
-      ..billDate = billDate?.toDate()
-      ..dueDate = dueDate?.toDate()
-      ..lines = lines == null
-          ? null
-          : ListBuilder<api.PurchaseBillLineWrite>(
-              lines.map(
-                (l) => api.PurchaseBillLineWrite(
-                  (lb) => lb
-                    ..itemId = l.itemId == null ? null : int.tryParse(l.itemId!)
-                    ..accountId = int.parse(l.accountId)
-                    ..description = l.description
-                    ..quantity = l.quantity
-                    ..rate = l.unitPrice
-                    ..taxCodeId = l.taxCodeId == null ? null : int.tryParse(l.taxCodeId!),
-                ),
-              ),
-            ),
   );
 }
 

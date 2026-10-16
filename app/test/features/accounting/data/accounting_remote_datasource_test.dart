@@ -48,9 +48,6 @@ void main() {
         ..lines.replace([])),
     );
     registerFallbackValue(
-      api.PurchaseBillUpdate((b) => b..vendorId = 2),
-    );
-    registerFallbackValue(
       api.ExpenseCreate((b) => b
         ..expenseDate = api.Date(2026, 1, 1)
         ..paidFromAccountId = 1

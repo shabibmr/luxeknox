@@ -394,7 +394,6 @@ class _BankAndCashSection extends StatelessWidget {
                     ),
                   ),
                   title: Text(account.name),
-                  subtitle: Text(account.code),
                   trailing: AppStatusChip(
                     label: account.isActive
                         ? AccountingStrings.activeBadge

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injector.dart';
@@ -90,7 +89,6 @@ class _AccountFormView extends StatefulWidget {
 class _AccountFormViewState extends State<_AccountFormView> {
   final _formKey = GlobalKey<FormState>();
 
-  late final TextEditingController _codeController;
   late final TextEditingController _nameController;
   late final TextEditingController _parentIdController;
   late final TextEditingController _controlRoleController;
@@ -116,7 +114,6 @@ class _AccountFormViewState extends State<_AccountFormView> {
   @override
   void initState() {
     super.initState();
-    _codeController = TextEditingController();
     _nameController = TextEditingController();
     _parentIdController = TextEditingController();
     _controlRoleController = TextEditingController();
@@ -128,7 +125,6 @@ class _AccountFormViewState extends State<_AccountFormView> {
 
   void _applyAccount(Account account) {
     _loadedAccount = account;
-    _codeController.text = account.code;
     _nameController.text = account.name;
     _accountType = account.type;
     _isBank = account.isBank;
@@ -140,7 +136,6 @@ class _AccountFormViewState extends State<_AccountFormView> {
 
   @override
   void dispose() {
-    _codeController.dispose();
     _nameController.dispose();
     _parentIdController.dispose();
     _controlRoleController.dispose();
@@ -209,7 +204,6 @@ class _AccountFormViewState extends State<_AccountFormView> {
       final controlRole = controlRoleText.isEmpty ? null : controlRoleText;
 
       success = await cubit.create(
-        code: _codeController.text.trim().toUpperCase(),
         name: _nameController.text.trim(),
         accountType: _accountType!,
         parentId: parentId,
@@ -321,28 +315,6 @@ class _AccountFormViewState extends State<_AccountFormView> {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               children: [
-                TextFormField(
-                  controller: _codeController,
-                  decoration: const InputDecoration(
-                    labelText: AccountingStrings.codeLabel,
-                  ),
-                  enabled: !widget.isEditing,
-                  textCapitalization: TextCapitalization.characters,
-                  inputFormatters: [
-                    TextInputFormatter.withFunction(
-                      (oldVal, newVal) => newVal.copyWith(
-                        text: newVal.text.toUpperCase(),
-                      ),
-                    ),
-                  ],
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return AccountingStrings.codeRequired;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(

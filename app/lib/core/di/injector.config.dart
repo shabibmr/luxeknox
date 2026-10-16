@@ -101,8 +101,6 @@ import '../../features/accounting/domain/usecases/post_fund_transfer_usecase.dar
     as _i827;
 import '../../features/accounting/domain/usecases/post_payment_voucher_usecase.dart'
     as _i664;
-import '../../features/accounting/domain/usecases/post_purchase_bill_usecase.dart'
-    as _i324;
 import '../../features/accounting/domain/usecases/reverse_journal_usecase.dart'
     as _i791;
 import '../../features/accounting/domain/usecases/unlock_accounting_period_usecase.dart'
@@ -1210,7 +1208,10 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i864.DeleteDeviceUseCase(gh<_i563.NotificationsRepository>()),
     );
     gh.factory<_i533.GoLiveCubit>(
-      () => _i533.GoLiveCubit(gh<_i330.AccountingRepository>()),
+      () => _i533.GoLiveCubit(
+        gh<_i330.AccountingRepository>(),
+        initialDate: gh<DateTime>(),
+      ),
     );
     gh.lazySingleton<_i7.AlertsRepository>(
       () => _i56.AlertsRepositoryImpl(gh<_i1019.AlertsRemoteDataSource>()),
@@ -1380,9 +1381,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i664.PostPaymentVoucherUseCase>(
       () => _i664.PostPaymentVoucherUseCase(gh<_i330.AccountingRepository>()),
     );
-    gh.lazySingleton<_i324.PostPurchaseBillUseCase>(
-      () => _i324.PostPurchaseBillUseCase(gh<_i330.AccountingRepository>()),
-    );
     gh.lazySingleton<_i791.ReverseJournalUseCase>(
       () => _i791.ReverseJournalUseCase(gh<_i330.AccountingRepository>()),
     );
@@ -1443,6 +1441,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i745.DietMealDetailCubit>(
       () => _i745.DietMealDetailCubit(gh<_i129.GetDietMealUseCase>()),
+    );
+    gh.factory<_i128.PurchaseBillDetailCubit>(
+      () => _i128.PurchaseBillDetailCubit(gh<_i71.GetPurchaseBillUseCase>()),
     );
     gh.factory<_i225.FundTransferDetailCubit>(
       () => _i225.FundTransferDetailCubit(
@@ -1697,12 +1698,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i86.CreateDietPlanUseCase>(),
         gh<_i186.UpdateDietPlanUseCase>(),
         gh<_i805.ReplaceDietPlanMealsUseCase>(),
-      ),
-    );
-    gh.factory<_i128.PurchaseBillDetailCubit>(
-      () => _i128.PurchaseBillDetailCubit(
-        gh<_i71.GetPurchaseBillUseCase>(),
-        gh<_i324.PostPurchaseBillUseCase>(),
       ),
     );
     gh.lazySingleton<_i47.ApproveFreezeUseCase>(

@@ -74,7 +74,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
 
   @override
   Future<Either<Failure, Account>> createAccount({
-    required String code,
+    String? code,
     required String name,
     required String accountType,
     String? parentId,
@@ -427,44 +427,6 @@ class AccountingRepositoryImpl implements AccountingRepository {
         idempotencyKey: idempotencyKey,
       );
       return Right(created.toDomain());
-    } catch (e) {
-      return Left(mapThrownToFailure(e));
-    }
-  }
-
-  @override
-  Future<Either<Failure, PurchaseBill>> updatePurchaseBill({
-    required String id,
-    String? vendorId,
-    DateTime? billDate,
-    DateTime? dueDate,
-    List<PurchaseBillLine>? lines,
-  }) async {
-    final intId = _parseId(id);
-    if (intId == null) return const Left(NotFoundFailure());
-    try {
-      final updated = await _remoteDataSource.updatePurchaseBill(
-        id: intId,
-        purchaseBillUpdate: toPurchaseBillUpdate(
-          vendorId: vendorId,
-          billDate: billDate,
-          dueDate: dueDate,
-          lines: lines,
-        ),
-      );
-      return Right(updated.toDomain());
-    } catch (e) {
-      return Left(mapThrownToFailure(e));
-    }
-  }
-
-  @override
-  Future<Either<Failure, PurchaseBill>> postPurchaseBill(String id) async {
-    final intId = _parseId(id);
-    if (intId == null) return const Left(NotFoundFailure());
-    try {
-      final posted = await _remoteDataSource.postPurchaseBill(intId);
-      return Right(posted.toDomain());
     } catch (e) {
       return Left(mapThrownToFailure(e));
     }

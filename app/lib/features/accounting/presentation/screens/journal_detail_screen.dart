@@ -446,24 +446,9 @@ class _JournalDetailView extends StatelessWidget {
                           horizontal: 8,
                           vertical: 10,
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (line.accountCode != null)
-                              Text(
-                                line.accountCode!,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'monospace',
-                                  fontSize: 13,
-                                ),
-                              ),
-                            Text(
-                              line.accountName ?? line.accountId,
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                          ],
+                        child: Text(
+                          line.accountName ?? line.accountId,
+                          style: theme.textTheme.bodyMedium,
                         ),
                       ),
                       Padding(

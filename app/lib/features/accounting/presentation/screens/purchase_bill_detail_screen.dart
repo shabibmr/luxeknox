@@ -132,17 +132,9 @@ class _PurchaseBillDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<PurchaseBillDetailCubit, PurchaseBillDetailState>(
       listenWhen: (previous, next) =>
-          (next.postSuccess != null &&
-              previous.postSuccess != next.postSuccess) ||
-          (next.failure != null && previous.failure != next.failure),
+          next.failure != null && previous.failure != next.failure,
       listener: (context, state) {
-        if (state.postSuccess != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(AccountingStrings.billPostedSuccess),
-            ),
-          );
-        } else if (state.failure != null) {
+        if (state.failure != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(failureMessage(state.failure!)),
@@ -151,29 +143,10 @@ class _PurchaseBillDetailView extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        final bill = state.bill;
-        final canWrite = context.can('accounting.purchases_write');
-        final isDraft = bill != null && bill.status.toLowerCase() == 'draft';
-        final canPost = isDraft && canWrite;
-
         return Scaffold(
           appBar: AppBar(
             title: const Text(AccountingStrings.billDetailTitle),
             actions: [
-              if (canPost)
-                TextButton(
-                  key: const Key('post_bill_button'),
-                  onPressed: state.isPosting
-                      ? null
-                      : () => context.read<PurchaseBillDetailCubit>().post(),
-                  child: state.isPosting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text(AccountingStrings.post),
-                ),
               IconButton(
                 tooltip: AccountingStrings.refresh,
                 icon: const Icon(Icons.refresh),

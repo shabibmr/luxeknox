@@ -185,23 +185,9 @@ class _AccountPickerViewState extends State<_AccountPickerView> {
                     },
               child: ListTile(
                 enabled: isSelectable,
-                title: Row(
-                  children: [
-                    Text(
-                      account.code,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        account.name,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                title: Text(
+                  account.name,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 subtitle: Padding(
                   padding: const EdgeInsets.only(top: 4),
@@ -294,7 +280,7 @@ class AccountPickerField extends StatelessWidget {
       errorText: errorText,
       enabled: enabled,
       allowClear: allowClear,
-      labelBuilder: (account) => '${account.code} - ${account.name}',
+      labelBuilder: (account) => account.name,
       onPick: (ctx) => showAccountPickerSheet(
         ctx,
         activeOnly: activeOnly,

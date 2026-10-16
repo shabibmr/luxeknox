@@ -174,7 +174,7 @@ class _FundTransferFormViewState extends State<_FundTransferFormView> {
                     ),
                     child: Text(
                       state.fromAccount != null
-                          ? '${state.fromAccount!.code} - ${state.fromAccount!.name}'
+                          ? state.fromAccount!.name
                           : (state.fromAccountId.isNotEmpty
                               ? '#${state.fromAccountId}'
                               : AccountingStrings.selectAccount),
@@ -202,7 +202,7 @@ class _FundTransferFormViewState extends State<_FundTransferFormView> {
                     ),
                     child: Text(
                       state.toAccount != null
-                          ? '${state.toAccount!.code} - ${state.toAccount!.name}'
+                          ? state.toAccount!.name
                           : (state.toAccountId.isNotEmpty
                               ? '#${state.toAccountId}'
                               : AccountingStrings.selectAccount),
@@ -269,7 +269,7 @@ class _FundTransferFormViewState extends State<_FundTransferFormView> {
                     ),
                     child: Text(
                       state.feeAccount != null
-                          ? '${state.feeAccount!.code} - ${state.feeAccount!.name}'
+                          ? state.feeAccount!.name
                           : (state.feeAccountId != null &&
                                   state.feeAccountId!.isNotEmpty
                               ? '#${state.feeAccountId}'

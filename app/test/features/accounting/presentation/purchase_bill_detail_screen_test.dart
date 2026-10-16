@@ -90,9 +90,6 @@ void main() {
   const writeCapabilities = Capabilities(
     slugs: ['accounting.read', 'accounting.purchases_write'],
   );
-  const readOnlyCapabilities = Capabilities(
-    slugs: ['accounting.read'],
-  );
   const noCapabilities = Capabilities(
     slugs: [],
   );
@@ -114,8 +111,6 @@ void main() {
 
     when(() => mockPurchaseBillDetailCubit.load(any()))
         .thenAnswer((_) async {});
-    when(() => mockPurchaseBillDetailCubit.post())
-        .thenAnswer((_) async => true);
     when(() => mockPurchaseBillDetailCubit.setBill(any()))
         .thenReturn(null);
 
@@ -233,101 +228,27 @@ void main() {
     });
   });
 
-  group('CRITICAL ACC-095 Post Button & Journal Entry Id', () {
-    testWidgets(
-        'verifies draft has Post button, clicking Post invokes cubit and displays journal number once posted',
-        (tester) async {
-      final stateController =
-          StreamController<PurchaseBillDetailState>.broadcast();
-
-      whenListen(
-        mockSessionCubit,
-        const Stream<SessionState>.empty(),
-        initialState: const SessionAuthenticated(
-          principal: tPrincipal,
-          capabilities: writeCapabilities,
-        ),
-      );
-
-      whenListen(
-        mockPurchaseBillDetailCubit,
-        stateController.stream,
-        initialState: PurchaseBillDetailState(
-          status: LoadStatus.success,
-          bill: tDraftBill,
-        ),
-      );
-
-      // 1. Initially render draft bill with write permission
+  group('Posted bill', () {
+    testWidgets('shows the journal entry id and no Post button', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: BlocProvider<SessionCubit>.value(
-            value: mockSessionCubit,
-            child: PurchaseBillDetailScreen(
-              billId: 'pb-10',
-              cubit: mockPurchaseBillDetailCubit,
-            ),
+        buildTestableWidget(
+          capabilities: writeCapabilities,
+          state: PurchaseBillDetailState(
+            status: LoadStatus.success,
+            bill: tPostedBill,
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      // Post button must be visible for draft bill
-      final postButton = find.byKey(const Key('post_bill_button'));
-      expect(postButton, findsOneWidget);
-      expect(find.text(AccountingStrings.post), findsOneWidget);
-
-      // Journal entry id should NOT be displayed when draft
-      expect(find.byKey(const Key('journal_entry_id_text')), findsNothing);
-
-      // 2. Click Post button
-      await tester.tap(postButton);
-      await tester.pump();
-
-      // Verifies clicking Post invokes cubit.post()
-      verify(() => mockPurchaseBillDetailCubit.post()).called(1);
-
-      // 3. Now state updates to posted with journalEntryId
-      stateController.add(
-        PurchaseBillDetailState(
-          status: LoadStatus.success,
-          bill: tPostedBill,
-          postSuccess: tPostedBill,
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Post button is now gone because status is posted
       expect(find.byKey(const Key('post_bill_button')), findsNothing);
-
-      // Status chip updated to posted
       expect(
         find.widgetWithText(AppStatusChip, AccountingStrings.statusPosted),
         findsOneWidget,
       );
-
-      // Journal entry id is now displayed!
       expect(find.byKey(const Key('journal_entry_id_text')), findsOneWidget);
       expect(find.text('JRN-2026-0088'), findsOneWidget);
       expect(find.text(AccountingStrings.journalNumberLabel), findsOneWidget);
-
-      await stateController.close();
-    });
-
-    testWidgets('Post button is hidden for read-only user on draft bill',
-        (tester) async {
-      await tester.pumpWidget(
-        buildTestableWidget(
-          capabilities: readOnlyCapabilities,
-          state: PurchaseBillDetailState(
-            status: LoadStatus.success,
-            bill: tDraftBill,
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('post_bill_button')), findsNothing);
     });
   });
 

@@ -29,7 +29,7 @@ abstract class AccountingRepository {
   Future<Either<Failure, Account>> getAccount(String id);
 
   Future<Either<Failure, Account>> createAccount({
-    required String code,
+    String? code,
     required String name,
     required String accountType,
     String? parentId,
@@ -133,16 +133,6 @@ abstract class AccountingRepository {
     required List<PurchaseBillLine> lines,
     String? idempotencyKey,
   });
-
-  Future<Either<Failure, PurchaseBill>> updatePurchaseBill({
-    required String id,
-    String? vendorId,
-    DateTime? billDate,
-    DateTime? dueDate,
-    List<PurchaseBillLine>? lines,
-  });
-
-  Future<Either<Failure, PurchaseBill>> postPurchaseBill(String id);
 
   // Expense Vouchers
   Future<Either<Failure, CursorPage<ExpenseVoucher>>> getExpenses({

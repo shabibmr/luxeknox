@@ -337,9 +337,8 @@ class _PaymentMethodMappingCard extends StatelessWidget {
                             const SizedBox(height: 2),
                             if (isMapped)
                               Text(
-                                method.accountCode != null
-                                    ? '${method.accountCode} - ${method.accountName ?? ''}'
-                                    : 'Account #${method.accountId}',
+                                method.accountName ??
+                                    'Account #${method.accountId}',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -357,7 +356,7 @@ class _PaymentMethodMappingCard extends StatelessWidget {
                       ),
                       AppStatusChip(
                         label: isMapped
-                            ? (method.accountCode ?? AccountingStrings.matchedBadge)
+                            ? AccountingStrings.matchedBadge
                             : AccountingStrings.unmappedAccount,
                         color: isMapped ? Colors.green : Colors.orange,
                       ),

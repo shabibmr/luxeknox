@@ -81,7 +81,6 @@ class AccountFormCubit extends Cubit<AccountFormState> {
   }
 
   Future<bool> create({
-    required String code,
     required String name,
     required String accountType,
     String? parentId,
@@ -94,7 +93,6 @@ class AccountFormCubit extends Cubit<AccountFormState> {
 
     final result = await _createAccount(
       CreateAccountParams(
-        code: code,
         name: name,
         accountType: accountType,
         parentId: parentId,

@@ -9,7 +9,7 @@ import '../repositories/accounting_repository.dart';
 
 class CreateAccountParams extends Equatable {
   const CreateAccountParams({
-    required this.code,
+    this.code,
     required this.name,
     required this.accountType,
     this.parentId,
@@ -19,7 +19,7 @@ class CreateAccountParams extends Equatable {
     this.controlRole,
   });
 
-  final String code;
+  final String? code;
   final String name;
   final String accountType;
   final String? parentId;
