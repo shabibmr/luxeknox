@@ -269,7 +269,8 @@ void main() {
     // Payment Methods Card
     expect(find.text(AccountingStrings.paymentMethodMappingsTitle), findsOneWidget);
     expect(find.text('Cash'), findsOneWidget);
-    expect(find.text('1000 - Cash on Hand'), findsOneWidget);
+    expect(find.text('Cash on Hand'), findsOneWidget);
+    expect(find.text('1000 - Cash on Hand'), findsNothing);
 
     // Opening Balance & Unearned Comparison Card
     expect(find.text(AccountingStrings.unearnedComparisonTitle), findsOneWidget);

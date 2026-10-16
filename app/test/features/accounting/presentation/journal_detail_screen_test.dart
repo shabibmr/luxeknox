@@ -257,10 +257,10 @@ void main() {
         findsOneWidget,
       );
 
-      // Line items: Account codes and names
-      expect(find.text('1000'), findsOneWidget);
+      // Line items: Account names only (no codes in references)
+      expect(find.text('1000'), findsNothing);
       expect(find.text('Operating Bank Account'), findsOneWidget);
-      expect(find.text('4000'), findsOneWidget);
+      expect(find.text('4000'), findsNothing);
       expect(find.text('Membership Income'), findsOneWidget);
 
       // Descriptions
