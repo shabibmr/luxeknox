@@ -300,7 +300,7 @@ describe('PurchaseBillsService', () => {
   });
 
   describe('create (Task ACC-040)', () => {
-    it('creates a draft purchase bill with calculated net amounts, tax amounts, and allocated number', async () => {
+    it('creates the bill with calculated amounts and posts it in the same call', async () => {
       const insertedBill: PurchaseBillWithLines = {
         id: 1,
         bill_number: 'BIL00000001',
@@ -333,6 +333,9 @@ describe('PurchaseBillsService', () => {
       };
 
       repository.insertBill.mockResolvedValue(insertedBill);
+      const postSpy = vi.spyOn(service, 'post').mockResolvedValue(
+        service.toDtoWithLines({ ...insertedBill, status: 'posted', journal_entry_id: 100, row_version: 2 }),
+      );
 
       const result = await service.create(
         {
@@ -378,12 +381,34 @@ describe('PurchaseBillsService', () => {
         ],
       );
 
+      expect(postSpy).toHaveBeenCalledWith(1, CURRENT_USER);
       expect(result.id).toBe(1);
-      expect(result.status).toBe('draft');
+      expect(result.status).toBe('posted');
+      expect(result.journal_entry_id).toBe(100);
       expect(result.subtotal).toBe('200.00');
       expect(result.tax_amount).toBe('36.00');
       expect(result.total_amount).toBe('236.00');
       expect(result.lines).toHaveLength(1);
+    });
+
+    it('propagates a post failure so the surrounding transaction rolls back the insert', async () => {
+      repository.insertBill.mockImplementation(async (header, lines) => ({
+        id: 7,
+        ...header,
+        lines: lines.map((line: any, i: number) => ({ id: i + 1, purchase_bill_id: 7, ...line })),
+      }));
+      vi.spyOn(service, 'post').mockRejectedValue(new BusinessRuleError('Period is locked'));
+
+      await expect(
+        service.create(
+          {
+            vendor_id: VENDOR_ACTIVE.id,
+            bill_date: '2026-04-15',
+            lines: [{ account_id: EXPENSE_ACCOUNT.id, quantity: '1.00', rate: '10.00' }],
+          },
+          CURRENT_USER,
+        ),
+      ).rejects.toThrow('Period is locked');
     });
 
     it('rejects creation if vendor is inactive', async () => {
@@ -500,128 +525,6 @@ describe('PurchaseBillsService', () => {
           CURRENT_USER,
         ),
       ).rejects.toThrow(BusinessRuleError);
-    });
-  });
-
-  describe('update (Task ACC-040)', () => {
-    it('updates a draft purchase bill and recalculates totals and increments row_version', async () => {
-      const existingBill: PurchaseBillWithLines = {
-        id: 1,
-        bill_number: 'BIL00000001',
-        vendor_id: VENDOR_ACTIVE.id,
-        bill_date: '2026-04-15',
-        due_date: null,
-        supplier_invoice_no: null,
-        status: 'draft',
-        subtotal: '100.00',
-        tax_amount: '0.00',
-        total_amount: '100.00',
-        journal_entry_id: null,
-        row_version: 1,
-        created_at: new Date('2026-04-15T10:00:00.000Z'),
-        updated_at: null,
-        lines: [
-          {
-            id: 10,
-            purchase_bill_id: 1,
-            item_id: null,
-            account_id: EXPENSE_ACCOUNT.id,
-            description: 'Original line',
-            quantity: '1.00',
-            rate: '100.00',
-            tax_code_id: null,
-            net_amount: '100.00',
-            tax_amount: '0.00',
-          },
-        ],
-      };
-
-      const updatedBill: PurchaseBillWithLines = {
-        ...existingBill,
-        subtotal: '300.00',
-        tax_amount: '54.00',
-        total_amount: '354.00',
-        row_version: 2,
-        lines: [
-          {
-            id: 11,
-            purchase_bill_id: 1,
-            item_id: null,
-            account_id: EXPENSE_ACCOUNT.id,
-            description: 'Updated line',
-            quantity: '3.00',
-            rate: '100.00',
-            tax_code_id: TAX_CODE_GST18.id,
-            net_amount: '300.00',
-            tax_amount: '54.00',
-          },
-        ],
-      };
-
-      repository.findWithLines
-        .mockResolvedValueOnce(existingBill)
-        .mockResolvedValueOnce(updatedBill);
-
-      const result = await service.update(
-        1,
-        {
-          lines: [
-            {
-              account_id: EXPENSE_ACCOUNT.id,
-              description: 'Updated line',
-              quantity: '3.00',
-              rate: '100.00',
-              tax_code_id: TAX_CODE_GST18.id,
-            },
-          ],
-        },
-        CURRENT_USER,
-      );
-
-      expect(repository.replaceLines).toHaveBeenCalled();
-      expect(repository.updateBill).toHaveBeenCalledWith(
-        1,
-        expect.objectContaining({
-          subtotal: '300.00',
-          tax_amount: '54.00',
-          total_amount: '354.00',
-          row_version: 2,
-        }),
-      );
-      expect(result.subtotal).toBe('300.00');
-      expect(result.total_amount).toBe('354.00');
-    });
-
-    it('rejects editing if purchase bill status is not draft', async () => {
-      const postedBill: PurchaseBillWithLines = {
-        id: 1,
-        bill_number: 'BIL00000001',
-        vendor_id: VENDOR_ACTIVE.id,
-        bill_date: '2026-04-15',
-        due_date: null,
-        supplier_invoice_no: null,
-        status: 'posted',
-        subtotal: '100.00',
-        tax_amount: '0.00',
-        total_amount: '100.00',
-        journal_entry_id: 123,
-        row_version: 2,
-        created_at: new Date('2026-04-15T10:00:00.000Z'),
-        updated_at: null,
-        lines: [],
-      };
-
-      repository.findWithLines.mockResolvedValue(postedBill);
-
-      await expect(
-        service.update(
-          1,
-          {
-            due_date: '2026-05-01',
-          },
-          CURRENT_USER,
-        ),
-      ).rejects.toThrow('Only draft purchase bills can be edited');
     });
   });
 
@@ -858,6 +761,10 @@ describe('PurchaseBillsService', () => {
   });
 
   describe('IL-32 purchase write path', () => {
+    beforeEach(() => {
+      vi.spyOn(service, 'post').mockImplementation(async (id: number) => ({ id }) as any);
+    });
+
     it('accepts a 3dp quantity on KG and uses mulQtyRate', async () => {
       repository.insertBill.mockImplementation(async (header, lines) => ({
         id: 1,

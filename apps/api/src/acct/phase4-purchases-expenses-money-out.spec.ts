@@ -22,8 +22,8 @@ const ACTOR: AuthenticatedUser = {
 };
 
 describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
-  describe('1. Purchase Bill (Draft, lines, posting)', () => {
-    it('creates draft bill with lines and posts balanced journal to AP', async () => {
+  describe('1. Purchase Bill (create posts, lines)', () => {
+    it('creates bill with lines and posts balanced journal to AP', async () => {
       const mockPostJournal = vi.fn().mockResolvedValue({
         id: 101,
         journal_number: 'JRN00000101',
@@ -111,7 +111,7 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
         paginationHelper,
       );
 
-      // Create draft bill
+      // Create (and post) bill
       const created = await service.create(
         {
           vendor_id: 2,
@@ -130,15 +130,12 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
         ACTOR,
       );
 
-      expect(created.status).toBe('draft');
+      // Create posts the bill in the same call.
+      expect(created.status).toBe('posted');
+      expect(created.journal_entry_id).toBe(101);
       expect(created.subtotal).toBe('200.00');
       expect(created.tax_amount).toBe('36.00');
       expect(created.total_amount).toBe('236.00');
-
-      // Post bill
-      const posted = await service.post(10, ACTOR);
-      expect(posted.status).toBe('posted');
-      expect(posted.journal_entry_id).toBe(101);
 
       // Journal entry checks
       expect(mockPostJournal).toHaveBeenCalledTimes(1);

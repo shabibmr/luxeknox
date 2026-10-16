@@ -5,7 +5,6 @@ import {
   HttpCode,
   Param,
   ParseIntPipe,
-  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -18,10 +17,8 @@ import { UseIdempotency } from '../platform/idempotency/idempotency.interceptor'
 import { RequirePermission } from '../rbac/require-permission.decorator';
 import {
   purchaseBillCreateSchema,
-  purchaseBillUpdateSchema,
   type PurchaseBillCreateDto,
   type PurchaseBillDto,
-  type PurchaseBillUpdateDto,
 } from './purchase-bills.dto';
 import { PurchaseBillsService } from './purchase-bills.service';
 
@@ -50,7 +47,7 @@ export class PurchaseBillsController {
   @RequirePermission('accounting.purchases_write')
   @UseIdempotency()
   @HttpCode(201)
-  @ApiOperation({ operationId: 'createPurchaseBill', summary: 'Create a draft purchase bill' })
+  @ApiOperation({ operationId: 'createPurchaseBill', summary: 'Create and post a purchase bill' })
   @ApiHeader({
     name: 'Idempotency-Key',
     required: false,
@@ -72,29 +69,5 @@ export class PurchaseBillsController {
     @CurrentUser() currentUser: AuthenticatedUser,
   ): Promise<PurchaseBillDto> {
     return this.service.getById(id, currentUser);
-  }
-
-  @Patch(':id')
-  @RequirePermission('accounting.purchases_write')
-  @ApiParam({ name: 'id', type: Number })
-  @ApiOperation({ operationId: 'updatePurchaseBill', summary: 'Update a draft purchase bill' })
-  async update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body(new ZodValidationPipe(purchaseBillUpdateSchema)) dto: PurchaseBillUpdateDto,
-    @CurrentUser() currentUser: AuthenticatedUser,
-  ): Promise<PurchaseBillDto> {
-    return this.service.update(id, dto, currentUser);
-  }
-
-  @Post(':id/post')
-  @RequirePermission('accounting.purchases_write')
-  @HttpCode(200)
-  @ApiParam({ name: 'id', type: Number })
-  @ApiOperation({ operationId: 'postPurchaseBill', summary: 'Post a purchase bill to the general ledger' })
-  async post(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() currentUser: AuthenticatedUser,
-  ): Promise<PurchaseBillDto> {
-    return this.service.post(id, currentUser);
   }
 }

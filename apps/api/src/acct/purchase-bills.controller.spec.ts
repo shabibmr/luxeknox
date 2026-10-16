@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { REQUIRE_PERMISSIONS_KEY } from '../rbac/require-permission.decorator';
 import { PurchaseBillsController } from './purchase-bills.controller';
-import type { PurchaseBillCreateDto, PurchaseBillDto, PurchaseBillUpdateDto } from './purchase-bills.dto';
+import type { PurchaseBillCreateDto, PurchaseBillDto } from './purchase-bills.dto';
 import { PurchaseBillsService } from './purchase-bills.service';
 
 const ADMIN_USER: AuthenticatedUser = {
@@ -21,12 +21,12 @@ const SAMPLE_BILL_DTO: PurchaseBillDto = {
   vendor_id: 1,
   bill_date: '2026-04-15',
   due_date: '2026-04-30',
-  status: 'draft',
+  status: 'posted',
   subtotal: '100.00',
   tax_amount: '18.00',
   total_amount: '118.00',
-  journal_entry_id: null,
-  row_version: 1,
+  journal_entry_id: 100,
+  row_version: 2,
   created_at: new Date('2026-04-15T10:00:00.000Z'),
   updated_at: null,
   lines: [
@@ -57,8 +57,6 @@ describe('PurchaseBillsController', () => {
       }),
       getById: vi.fn().mockResolvedValue(SAMPLE_BILL_DTO),
       create: vi.fn().mockResolvedValue(SAMPLE_BILL_DTO),
-      update: vi.fn().mockResolvedValue({ ...SAMPLE_BILL_DTO, due_date: '2026-05-15' }),
-      post: vi.fn().mockResolvedValue({ ...SAMPLE_BILL_DTO, status: 'posted', journal_entry_id: 100 }),
     };
     controller = new PurchaseBillsController(service as PurchaseBillsService);
   });
@@ -78,19 +76,9 @@ describe('PurchaseBillsController', () => {
     expect(meta).toEqual(['accounting.read']);
   });
 
-  it('declares accounting.purchases_write on update', () => {
-    const meta = Reflect.getMetadata(REQUIRE_PERMISSIONS_KEY, PurchaseBillsController.prototype.update);
-    expect(meta).toEqual(['accounting.purchases_write']);
-  });
-
-  it('declares accounting.purchases_write on post', () => {
-    const meta = Reflect.getMetadata(REQUIRE_PERMISSIONS_KEY, PurchaseBillsController.prototype.post);
-    expect(meta).toEqual(['accounting.purchases_write']);
-  });
-
   it('delegates list to service.list', async () => {
-    const res = await controller.list({ status: 'draft' }, ADMIN_USER);
-    expect(service.list).toHaveBeenCalledWith({ status: 'draft' }, ADMIN_USER);
+    const res = await controller.list({ status: 'posted' }, ADMIN_USER);
+    expect(service.list).toHaveBeenCalledWith({ status: 'posted' }, ADMIN_USER);
     expect(res.data).toHaveLength(1);
   });
 
@@ -117,17 +105,8 @@ describe('PurchaseBillsController', () => {
     expect(res.bill_number).toBe('BIL00000010');
   });
 
-  it('delegates update to service.update', async () => {
-    const dto: PurchaseBillUpdateDto = { due_date: '2026-05-15' };
-    const res = await controller.update(10, dto, ADMIN_USER);
-    expect(service.update).toHaveBeenCalledWith(10, dto, ADMIN_USER);
-    expect(res.due_date).toBe('2026-05-15');
-  });
-
-  it('delegates post to service.post', async () => {
-    const res = await controller.post(10, ADMIN_USER);
-    expect(service.post).toHaveBeenCalledWith(10, ADMIN_USER);
-    expect(res.status).toBe('posted');
-    expect(res.journal_entry_id).toBe(100);
+  it('has no separate update or post routes', () => {
+    expect((PurchaseBillsController.prototype as unknown as Record<string, unknown>).update).toBeUndefined();
+    expect((PurchaseBillsController.prototype as unknown as Record<string, unknown>).post).toBeUndefined();
   });
 });
