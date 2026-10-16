@@ -58,6 +58,7 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'HEALTH', action: 'write', slug: 'health.write', description: 'Update health profile and medical history' },
   { module: 'HEALTH', action: 'update', slug: 'health.update', description: 'Update health profile, emergency contacts, and documents' },
   { module: 'HEALTH', action: 'approve', slug: 'health.approve', description: 'Verify member health documents' },
+  { module: 'HEALTH', action: 'lifestyle', slug: 'health.lifestyle', description: 'Create or replace a member lifestyle intake' },
   { module: 'HEALTH', action: 'pii_read', slug: 'health.pii_read', description: 'View sensitive medical documents and PII' },
 
   // MEMB — *.create|update|approve are OpenAPI; *.write/freeze/extend kept legacy

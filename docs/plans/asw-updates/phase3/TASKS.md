@@ -16,7 +16,7 @@ Steps, signatures, and test names are in [PLAN.md](./PLAN.md). This register is 
 
 **Phase 3: Backend Lifestyle Intake & Macrocycle Program Design**
 - [x] P3-01 `LifestyleIntakeService`: replace-style upsert and fetch <!-- id: 1 -->
-- [ ] P3-02 `LifestyleIntakeController` endpoints, `PeopleModule` registration, `health.lifestyle` <!-- id: 2 -->
+- [x] P3-02 `LifestyleIntakeController` endpoints, `PeopleModule` registration, `health.lifestyle` <!-- id: 2 -->
 - [ ] P3-03 `WorkoutPlanService` blueprint on create, update, and template assign <!-- id: 3 -->
 
 Maps to the parent register as P3-01 = PTF-10, P3-02 = PTF-11, P3-03 = PTF-12.
