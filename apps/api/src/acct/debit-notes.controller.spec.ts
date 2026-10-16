@@ -84,8 +84,8 @@ describe('DebitNotesController', () => {
     const dto: DebitNoteCreateDto = {
       purchase_bill_id: 10,
       debit_note_date: '2026-04-20',
-      subtotal: '50.00',
-      tax_amount: '9.00',
+      amount: '50.00',
+      tax_code_id: 1,
       reason: 'Damaged item return',
     };
     const res = await controller.create(dto, ADMIN_USER);

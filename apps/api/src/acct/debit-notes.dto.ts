@@ -15,13 +15,6 @@ const moneyPositiveSchema = z
   .transform((v) => roundMoney(v))
   .refine((v) => cmpMoney(v, '0.00') > 0, { message: 'Amount must be greater than 0' });
 
-const moneyNonNegativeSchema = z
-  .union([z.string(), z.number()])
-  .transform((v) => String(v).trim())
-  .refine((v) => /^\d+(\.\d+)?$/.test(v), { message: 'Invalid money amount' })
-  .transform((v) => roundMoney(v))
-  .refine((v) => cmpMoney(v, '0.00') >= 0, { message: 'Amount must be greater than or equal to 0' });
-
 export const debitNoteCreateSchema = z
   .object({
     purchase_bill_id: z.number().int().positive('purchase_bill_id must be a positive integer'),
@@ -32,8 +25,9 @@ export const debitNoteCreateSchema = z
       .max(1000, 'reason must be at most 1000 characters')
       .nullable()
       .optional(),
-    subtotal: moneyPositiveSchema,
-    tax_amount: moneyNonNegativeSchema.optional().default('0.00'),
+    /** Net (pre-tax) amount. Tax is computed server-side from `tax_code_id`. */
+    amount: moneyPositiveSchema,
+    tax_code_id: z.number().int().positive().nullable().optional(),
   })
   .strict();
 

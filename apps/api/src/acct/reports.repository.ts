@@ -198,6 +198,7 @@ export class ReportsRepository {
     liabilityAccounts: BalanceSheetAccountDto[];
     totalLiabilities: string;
     equityAccounts: BalanceSheetAccountDto[];
+    retainedEarnings: string;
     currentYearEarnings: string;
     totalEquity: string;
     totalLiabilitiesAndEquity: string;
@@ -284,7 +285,14 @@ export class ReportsRepository {
     const currentYearPnl = await this.getProfitAndLoss(fiscalYearStart, asOf);
     const currentYearEarningsCents = toCents(currentYearPnl.netProfit);
 
-    const totalEquityCents = equityAccountsCents + currentYearEarningsCents;
+    // 4. Retained earnings: P&L from the earliest entry up to the day before the fiscal year start.
+    // Without this, income and expense from earlier years drop out and the sheet stops balancing.
+    const dayBeforeStart = new Date(`${fiscalYearStart}T00:00:00Z`);
+    dayBeforeStart.setUTCDate(dayBeforeStart.getUTCDate() - 1);
+    const priorPnl = await this.getProfitAndLoss('0001-01-01', dayBeforeStart.toISOString().substring(0, 10));
+    const retainedEarningsCents = toCents(priorPnl.netProfit);
+
+    const totalEquityCents = equityAccountsCents + retainedEarningsCents + currentYearEarningsCents;
     const totalLiabilitiesAndEquityCents = totalLiabilityCents + totalEquityCents;
 
     return {
@@ -295,6 +303,7 @@ export class ReportsRepository {
       liabilityAccounts,
       totalLiabilities: fromCents(totalLiabilityCents),
       equityAccounts,
+      retainedEarnings: fromCents(retainedEarningsCents),
       currentYearEarnings: fromCents(currentYearEarningsCents),
       totalEquity: fromCents(totalEquityCents),
       totalLiabilitiesAndEquity: fromCents(totalLiabilitiesAndEquityCents),
@@ -529,6 +538,8 @@ export class ReportsRepository {
     // Output SGST (2110): credits - debits
     // Output IGST (2120): credits - debits
     // Input tax (1300): debits - credits
+    // Inner joins with the date filter in WHERE: a tax account with no movement in the range
+    // yields no row, and the totals below start at zero.
     const taxAccounts = await db
       .select({
         id: accounts.id,
@@ -537,26 +548,20 @@ export class ReportsRepository {
         debit: sql<string>`COALESCE(SUM(${journalLines.debit}), '0.00')`,
         credit: sql<string>`COALESCE(SUM(${journalLines.credit}), '0.00')`,
       })
-      .from(accounts)
-      .leftJoin(
-        journalLines,
-        eq(accounts.id, journalLines.account_id),
-      )
-      .leftJoin(
-        journalEntries,
+      .from(journalLines)
+      .innerJoin(journalEntries, eq(journalLines.journal_entry_id, journalEntries.id))
+      .innerJoin(accounts, eq(journalLines.account_id, accounts.id))
+      .where(
         and(
-          eq(journalLines.journal_entry_id, journalEntries.id),
+          inArray(accounts.control_role, [
+            'output_cgst',
+            'output_sgst',
+            'output_igst',
+            'input_tax',
+          ]),
           gte(journalEntries.entry_date, from),
           lte(journalEntries.entry_date, to),
         ),
-      )
-      .where(
-        inArray(accounts.control_role, [
-          'output_cgst',
-          'output_sgst',
-          'output_igst',
-          'input_tax',
-        ]),
       )
       .groupBy(accounts.id, accounts.code, accounts.control_role);
 

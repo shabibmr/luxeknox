@@ -6,11 +6,13 @@ import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import {
   debitNoteNumberCounters,
   debitNotes,
+  paymentAllocations,
+  paymentVouchers,
   type DebitNote,
   type NewDebitNote,
 } from '../platform/db/schema/accounting';
 import { NotFoundError } from '../platform/errors/app-error';
-import { roundMoney } from '../platform/money/money';
+import { fromCents, roundMoney, toCents } from '../platform/money/money';
 
 export interface DebitNoteFilterParams {
   status?: string;
@@ -90,6 +92,25 @@ export class DebitNotesRepository extends BaseRepository<
       );
     const rawTotal = result[0]?.total;
     return rawTotal != null ? roundMoney(rawTotal) : '0.00';
+  }
+
+  async sumPostedAllocationsForBill(billId: number): Promise<string> {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select({ amount: paymentAllocations.amount })
+      .from(paymentAllocations)
+      .innerJoin(paymentVouchers, eq(paymentAllocations.payment_voucher_id, paymentVouchers.id))
+      .where(
+        and(
+          eq(paymentAllocations.purchase_bill_id, billId),
+          eq(paymentVouchers.status, 'posted'),
+        ),
+      );
+    let sum = 0n;
+    for (const r of rows) {
+      sum += toCents(r.amount);
+    }
+    return fromCents(sum);
   }
 
   async findMany(params: DebitNoteFilterParams): Promise<{ rows: DebitNote[]; total: number }> {

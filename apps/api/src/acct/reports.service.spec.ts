@@ -136,6 +136,7 @@ describe('ReportsService (Phase 7 - ACC-070 to ACC-075)', () => {
         equityAccounts: [
           { account_id: 4, account_code: '3000', account_name: "Owner's capital", amount: '20000.00' },
         ],
+        retainedEarnings: '0.00',
         currentYearEarnings: '10000.00',
         totalEquity: '30000.00',
         totalLiabilitiesAndEquity: '40000.00',

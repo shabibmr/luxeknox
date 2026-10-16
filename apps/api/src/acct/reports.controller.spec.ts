@@ -52,6 +52,7 @@ describe('ReportsController', () => {
     liability_accounts: [],
     total_liabilities: '4000.00',
     equity_accounts: [],
+    retained_earnings: '0.00',
     current_year_earnings: '3000.00',
     total_equity: '6000.00',
     total_liabilities_and_equity: '10000.00',

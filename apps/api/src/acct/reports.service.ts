@@ -71,6 +71,7 @@ export class ReportsService {
       liability_accounts: result.liabilityAccounts,
       total_liabilities: result.totalLiabilities,
       equity_accounts: result.equityAccounts,
+      retained_earnings: result.retainedEarnings,
       current_year_earnings: result.currentYearEarnings,
       total_equity: result.totalEquity,
       total_liabilities_and_equity: result.totalLiabilitiesAndEquity,

@@ -14,6 +14,7 @@ import {
   addMoney,
   cmpMoney,
   fromCents,
+  mulMoneyPercent,
   subMoney,
   toCents,
 } from '../platform/money/money';
@@ -27,6 +28,7 @@ import {
 } from './debit-notes.dto';
 import { DebitNotesRepository } from './debit-notes.repository';
 import { PurchaseBillsRepository } from './purchase-bills.repository';
+import { TaxCodesRepository } from './tax-codes.repository';
 
 @Injectable()
 export class DebitNotesService {
@@ -35,6 +37,7 @@ export class DebitNotesService {
     private readonly purchaseBillsRepository: PurchaseBillsRepository,
     private readonly accountingPostingService: AccountingPostingService,
     private readonly accountsRepository: AccountsRepository,
+    private readonly taxCodesRepository: TaxCodesRepository,
     @Inject(DRIZZLE_DB_TOKEN) private readonly db: DrizzleDb<any>,
     private readonly paginationHelper: PaginationHelper,
   ) {}
@@ -57,6 +60,13 @@ export class DebitNotesService {
     };
   }
 
+  /** Open balance = bill total - posted debit notes - posted payment allocations (same as the AP report). */
+  private async openBillBalance(bill: { id: number; total_amount: string }): Promise<string> {
+    const postedDebitNotes = await this.repository.sumPostedDebitNotesForBill(bill.id);
+    const postedAllocations = await this.repository.sumPostedAllocationsForBill(bill.id);
+    return subMoney(subMoney(bill.total_amount, postedDebitNotes), postedAllocations);
+  }
+
   async create(
     dto: DebitNoteCreateDto,
     _currentUser?: AuthenticatedUser,
@@ -70,10 +80,20 @@ export class DebitNotesService {
       throw new BusinessRuleError('Debit notes can only be issued against posted purchase bills');
     }
 
-    const totalAmount = addMoney(dto.subtotal, dto.tax_amount ?? '0.00');
+    let taxAmount = '0.00';
+    if (dto.tax_code_id != null) {
+      const taxCode = await this.taxCodesRepository.findById(dto.tax_code_id);
+      if (!taxCode) {
+        throw new NotFoundError(`Tax code ${dto.tax_code_id} was not found`);
+      }
+      if (!taxCode.is_active) {
+        throw new BusinessRuleError('Tax code is inactive');
+      }
+      taxAmount = mulMoneyPercent(dto.amount, taxCode.rate_percent);
+    }
+    const totalAmount = addMoney(dto.amount, taxAmount);
 
-    const postedSum = await this.repository.sumPostedDebitNotesForBill(bill.id);
-    const openBalance = subMoney(bill.total_amount, postedSum);
+    const openBalance = await this.openBillBalance(bill);
 
     if (cmpMoney(totalAmount, openBalance) > 0) {
       throw new BusinessRuleError(
@@ -89,8 +109,8 @@ export class DebitNotesService {
         purchase_bill_id: bill.id,
         debit_note_date: dto.debit_note_date,
         reason: dto.reason ?? null,
-        subtotal: dto.subtotal,
-        tax_amount: dto.tax_amount ?? '0.00',
+        subtotal: dto.amount,
+        tax_amount: taxAmount,
         total_amount: totalAmount,
         status: 'draft',
         journal_entry_id: null,
@@ -134,8 +154,7 @@ export class DebitNotesService {
         throw new BusinessRuleError('Referenced purchase bill has no lines');
       }
 
-      const postedSum = await this.repository.sumPostedDebitNotesForBill(bill.id);
-      const openBalance = subMoney(bill.total_amount, postedSum);
+      const openBalance = await this.openBillBalance(bill);
 
       if (cmpMoney(debitNote.total_amount, openBalance) > 0) {
         throw new BusinessRuleError(

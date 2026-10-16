@@ -73,6 +73,7 @@ export interface BalanceSheetReportDto {
   liability_accounts: BalanceSheetAccountDto[];
   total_liabilities: string;
   equity_accounts: BalanceSheetAccountDto[];
+  retained_earnings: string;
   current_year_earnings: string;
   total_equity: string;
   total_liabilities_and_equity: string;

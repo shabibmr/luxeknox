@@ -384,6 +384,7 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
       const debitNotesRepo = {
         allocateDebitNoteNumber: vi.fn().mockResolvedValue('DN00000001'),
         sumPostedDebitNotesForBill: vi.fn().mockResolvedValue('0.00'),
+        sumPostedAllocationsForBill: vi.fn().mockResolvedValue('0.00'),
         insertDebitNote: vi.fn().mockImplementation((row) => ({
           ...mockDebitNote,
           ...row,
@@ -421,6 +422,7 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
         billsRepo,
         postingService,
         accountsRepo,
+        { findById: vi.fn().mockResolvedValue({ id: 1, rate_percent: '18.00', is_active: true }) } as any,
         db,
         paginationHelper,
       );
@@ -430,8 +432,8 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
         {
           purchase_bill_id: 10,
           debit_note_date: '2026-05-04',
-          subtotal: '50.00',
-          tax_amount: '9.00',
+          amount: '50.00',
+          tax_code_id: 1,
           reason: 'Defective goods returned',
         },
         ACTOR,
@@ -466,6 +468,7 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
     it('rejects debit note if amount exceeds open bill balance', async () => {
       const debitNotesRepo = {
         sumPostedDebitNotesForBill: vi.fn().mockResolvedValue('200.00'),
+        sumPostedAllocationsForBill: vi.fn().mockResolvedValue('0.00'),
       } as any;
 
       const billsRepo = {
@@ -484,6 +487,7 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
         {} as any,
         {} as any,
         {} as any,
+        {} as any,
       );
 
       // Remaining balance = 236.00 - 200.00 = 36.00
@@ -493,8 +497,7 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
           {
             purchase_bill_id: 10,
             debit_note_date: '2026-05-04',
-            subtotal: '40.00',
-            tax_amount: '0.00',
+            amount: '40.00',
           },
           ACTOR,
         ),

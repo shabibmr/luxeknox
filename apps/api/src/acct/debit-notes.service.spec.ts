@@ -5,6 +5,8 @@ import { BusinessRuleError, NotFoundError } from '../platform/errors/app-error';
 import type { PaginationHelper } from '../platform/http/pagination';
 import type { AccountingPostingService } from './accounting-posting.service';
 import type { AccountsRepository } from './accounts.repository';
+import type { TaxCodesRepository } from './tax-codes.repository';
+import { debitNoteCreateSchema } from './debit-notes.dto';
 import { DebitNotesService } from './debit-notes.service';
 import type { DebitNotesRepository } from './debit-notes.repository';
 import type { PurchaseBillWithLines, PurchaseBillsRepository } from './purchase-bills.repository';
@@ -85,6 +87,7 @@ describe('DebitNotesService', () => {
   let purchaseBillsRepository: Record<string, ReturnType<typeof vi.fn>>;
   let accountingPostingService: { postJournal: ReturnType<typeof vi.fn> };
   let accountsRepository: Record<string, ReturnType<typeof vi.fn>>;
+  let taxCodesRepository: Record<string, ReturnType<typeof vi.fn>>;
   let paginationHelper: { normalizeParams: ReturnType<typeof vi.fn> };
   const db = {} as any;
 
@@ -96,6 +99,11 @@ describe('DebitNotesService', () => {
       findById: vi.fn(),
       findMany: vi.fn(),
       sumPostedDebitNotesForBill: vi.fn().mockResolvedValue('0.00'),
+      sumPostedAllocationsForBill: vi.fn().mockResolvedValue('0.00'),
+    };
+
+    taxCodesRepository = {
+      findById: vi.fn().mockResolvedValue({ id: 1, rate_percent: '18.00', is_active: true }),
     };
 
     purchaseBillsRepository = {
@@ -140,6 +148,7 @@ describe('DebitNotesService', () => {
       purchaseBillsRepository as unknown as PurchaseBillsRepository,
       accountingPostingService as unknown as AccountingPostingService,
       accountsRepository as unknown as AccountsRepository,
+      taxCodesRepository as unknown as TaxCodesRepository,
       db,
       paginationHelper as unknown as PaginationHelper,
     );
@@ -190,8 +199,8 @@ describe('DebitNotesService', () => {
           purchase_bill_id: 5,
           debit_note_date: '2026-04-16',
           reason: 'Damaged item return',
-          subtotal: '200.00',
-          tax_amount: '36.00',
+          amount: '200.00',
+          tax_code_id: 1,
         },
         CURRENT_USER,
       );
@@ -220,7 +229,7 @@ describe('DebitNotesService', () => {
           {
             purchase_bill_id: 999,
             debit_note_date: '2026-04-16',
-            subtotal: '100.00',
+            amount: '100.00',
           },
           CURRENT_USER,
         ),
@@ -240,7 +249,7 @@ describe('DebitNotesService', () => {
           {
             purchase_bill_id: 5,
             debit_note_date: '2026-04-16',
-            subtotal: '100.00',
+            amount: '100.00',
           },
           CURRENT_USER,
         ),
@@ -261,12 +270,67 @@ describe('DebitNotesService', () => {
           {
             purchase_bill_id: 5,
             debit_note_date: '2026-04-16',
-            subtotal: '250.00', // exceeds 200.00
-            tax_amount: '0.00',
+            amount: '250.00', // exceeds 200.00
           },
           CURRENT_USER,
         ),
       ).rejects.toThrow('exceeds open bill balance');
+    });
+  });
+
+  describe('create tax handling (R3)', () => {
+    const bill = { id: 5, status: 'posted', total_amount: '1180.00' };
+
+    it('ignores client tax: computes tax from the tax code', async () => {
+      purchaseBillsRepository.findById.mockResolvedValue(bill);
+      repository.insertDebitNote.mockImplementation(async (row: unknown) => ({
+        id: 1,
+        ...(row as object),
+      }));
+
+      const result = await service.create(
+        { purchase_bill_id: 5, debit_note_date: '2026-04-16', amount: '100.00', tax_code_id: 1 },
+        CURRENT_USER,
+      );
+
+      expect(result.subtotal).toBe('100.00');
+      expect(result.tax_amount).toBe('18.00');
+      expect(result.total_amount).toBe('118.00');
+    });
+
+    it('rejects a client-sent tax_amount at the DTO boundary', () => {
+      expect(() =>
+        debitNoteCreateSchema.parse({
+          purchase_bill_id: 5,
+          debit_note_date: '2026-04-16',
+          amount: '100.00',
+          tax_amount: '0.00',
+        }),
+      ).toThrow();
+    });
+
+    it('treats payment allocations as reducing the open balance (matches the AP report)', async () => {
+      purchaseBillsRepository.findById.mockResolvedValue(bill);
+      repository.sumPostedAllocationsForBill.mockResolvedValue('1100.00'); // open = 80.00
+
+      await expect(
+        service.create(
+          { purchase_bill_id: 5, debit_note_date: '2026-04-16', amount: '100.00' },
+          CURRENT_USER,
+        ),
+      ).rejects.toThrow('exceeds open bill balance');
+    });
+
+    it('rejects an inactive tax code', async () => {
+      purchaseBillsRepository.findById.mockResolvedValue(bill);
+      taxCodesRepository.findById.mockResolvedValue({ id: 1, rate_percent: '18.00', is_active: false });
+
+      await expect(
+        service.create(
+          { purchase_bill_id: 5, debit_note_date: '2026-04-16', amount: '100.00', tax_code_id: 1 },
+          CURRENT_USER,
+        ),
+      ).rejects.toThrow('Tax code is inactive');
     });
   });
 
