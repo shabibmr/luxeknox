@@ -1,27 +1,17 @@
-# Phase 4 stubs — Couple PT linked lifecycle
+# IU-31 — ItemsListScreen
 
-Scope (user chose stubs-only): CP-08/09/10 assuming partner helpers; skip CP-07 purchase.
+**Status:** Done  
+**Plan:** `docs/plans/items-ui/plan.md` §D / `tasks.md` IU-31 `[x]`
 
-## Already present
-- Schema: `partner_subscription_id`, `is_primary`, `package_type`
-- Repo CP-04: `setPartner`, `findPartner`, `lockMembers`, `occurrenceOwnerId`
+## Delivered
 
-## [MODIFY] `apps/api/src/pt/pt-subscription.service.ts`
-- `loadPartner(sub)` / `assertSamePackageType(current, target)`
-- `resolvePair(sub)` → `{ primary, partner }` (caller may be either side)
-- **renew**: type match; if partner, create two linked rows (bill primary, each `renewed_from_id`), shared sessions on primary; single path unchanged
-- **replan** (via reassignTrainer/changeSlot): resolve pair; cancel/regen once on `occurrenceOwnerId`; bump/change/audit both rows; update `assigned_trainer_id` for both when effective
+- `items_list_screen.dart` — full list (search, kind/active/tracked chips, rows, App*, refresh, FAB, detail navigation)
+- `accounting_strings.dart` — item list labels; `searchItems` → name or SKU
+- `items_list_screen_test.dart` — 8 widget tests green
+- Verified: `flutter test …/items_list_screen_test.dart` pass; `dart analyze` clean on screen + strings
 
-## [MODIFY] `apps/api/src/pt/pt-subscription.service.spec.ts`
-- Couple renew happy path + type mismatch + renew from partner side
-- Couple reassign/changeSlot updates both
-- Status transitions move both rows
+## Next open (unblocked)
 
-## [MODIFY] `apps/api/src/pt/pt-access.service.spec.ts`
-- Both members get `full` while active, `read_only` after end
-
-## [MODIFY] `docs/plans/1210-couple-pt-packages/TASKS.md`
-- Mark CP-08/09/10 completed (note stubs; purchase still Phase 3)
-
-## Out of scope
-- CP-07 purchase, CP-05 multi-member conflicts API shape beyond what replan needs, Flutter/OpenAPI
+- IU-41 ItemDetailScreen
+- IU-50 UomPickerSheet
+- IU-02 OpenAPI regen (still `[ ]`)
