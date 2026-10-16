@@ -265,7 +265,6 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PurchaseBillLineWrite.serializer)
       ..add(PurchaseBillPage.serializer)
       ..add(PurchaseBillStatus.serializer)
-      ..add(PurchaseBillUpdate.serializer)
       ..add(Ready.serializer)
       ..add(ReadyDatabaseEnum.serializer)
       ..add(ReadyJobs.serializer)
@@ -591,10 +590,6 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(PurchaseBillLine)]),
           () => ListBuilder<PurchaseBillLine>())
-      ..addBuilderFactory(
-          const FullType(
-              BuiltList, const [const FullType(PurchaseBillLineWrite)]),
-          () => ListBuilder<PurchaseBillLineWrite>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(PurchaseBillLineWrite)]),
