@@ -1,12 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
-import type {
-  Item,
-  PurchaseBill,
-  PurchaseBillLine,
-} from '../platform/db/schema/accounting';
+import type { Item, PurchaseBill } from '../platform/db/schema/accounting';
 import { runInTransaction } from '../platform/db/transaction-context';
 import { BusinessRuleError, NotFoundError } from '../platform/errors/app-error';
 import {
@@ -21,6 +17,7 @@ import {
   mulQtyRate,
   roundMoney,
 } from '../platform/money/money';
+import { StockService } from '../inv/stock.service';
 import { AccountingPostingService, type PostJournalLineInput } from './accounting-posting.service';
 import { AccountsRepository } from './accounts.repository';
 import { ItemsRepository } from './items.repository';
@@ -31,10 +28,10 @@ import {
   type PurchaseBillLineDto,
   type PurchaseBillLineWriteDto,
   type PurchaseBillStatus,
-  type PurchaseBillUpdateDto,
 } from './purchase-bills.dto';
 import {
   PurchaseBillsRepository,
+  type PurchaseBillLineWithItem,
   type PurchaseBillWithLines,
 } from './purchase-bills.repository';
 import { TaxCodesRepository } from './tax-codes.repository';
@@ -58,11 +55,28 @@ export class PurchaseBillsService {
     private readonly vendorsRepository: VendorsRepository,
     private readonly itemsRepository: ItemsRepository,
     private readonly taxCodesRepository: TaxCodesRepository,
+    @Inject(forwardRef(() => StockService))
+    private readonly stockService: StockService,
     @Inject(DRIZZLE_DB_TOKEN) private readonly db: DrizzleDb<any>,
     private readonly paginationHelper: PaginationHelper,
   ) {}
 
-  toLineDto(line: PurchaseBillLine): PurchaseBillLineDto {
+  toLineDto(
+    line: Pick<
+      PurchaseBillLineWithItem,
+      | 'id'
+      | 'purchase_bill_id'
+      | 'item_id'
+      | 'account_id'
+      | 'description'
+      | 'quantity'
+      | 'rate'
+      | 'tax_code_id'
+      | 'net_amount'
+      | 'tax_amount'
+    > &
+      Partial<Pick<PurchaseBillLineWithItem, 'item_name' | 'uom_code' | 'inventory_tracked'>>,
+  ): PurchaseBillLineDto {
     return {
       id: line.id,
       purchase_bill_id: line.purchase_bill_id,
@@ -74,10 +88,19 @@ export class PurchaseBillsService {
       tax_code_id: line.tax_code_id ?? null,
       net_amount: String(line.net_amount),
       tax_amount: String(line.tax_amount),
+      item_name: line.item_name ?? null,
+      uom_code: line.uom_code ?? null,
+      inventory_tracked: Boolean(line.inventory_tracked),
+      returned_quantity: '0.000',
     };
   }
 
-  toDto(bill: PurchaseBill, lines: PurchaseBillLine[] = []): PurchaseBillDto {
+  toDto(
+    bill: PurchaseBill,
+    lines: Array<
+      Parameters<PurchaseBillsService['toLineDto']>[0]
+    > = [],
+  ): PurchaseBillDto {
     return {
       id: bill.id,
       bill_number: bill.bill_number,
@@ -306,7 +329,7 @@ export class PurchaseBillsService {
 
   async create(
     dto: PurchaseBillCreateDto,
-    _currentUser?: AuthenticatedUser,
+    currentUser?: AuthenticatedUser,
   ): Promise<PurchaseBillDto> {
     await this.validateVendor(dto.vendor_id);
     await this.assertUniqueSupplierInvoice(dto.vendor_id, dto.supplier_invoice_no);
@@ -335,66 +358,8 @@ export class PurchaseBillsService {
         processedLines,
       );
 
-      return this.toDtoWithLines(created);
-    });
-  }
-
-  async update(
-    id: number,
-    dto: PurchaseBillUpdateDto,
-    _currentUser?: AuthenticatedUser,
-  ): Promise<PurchaseBillDto> {
-    const bill = await this.repository.findWithLines(id);
-    if (!bill) {
-      throw new NotFoundError(`Purchase bill ${id} was not found`);
-    }
-
-    if (bill.status !== 'draft') {
-      throw new BusinessRuleError('Only draft purchase bills can be edited');
-    }
-
-    const vendorId = dto.vendor_id ?? bill.vendor_id;
-    if (dto.vendor_id != null) {
-      await this.validateVendor(dto.vendor_id);
-    }
-
-    const supplierInvoiceNo =
-      dto.supplier_invoice_no !== undefined
-        ? dto.supplier_invoice_no
-        : bill.supplier_invoice_no;
-    await this.assertUniqueSupplierInvoice(vendorId, supplierInvoiceNo, id);
-
-    return runInTransaction(this.db, async () => {
-      let subtotal = bill.subtotal;
-      let taxAmount = bill.tax_amount;
-      let totalAmount = bill.total_amount;
-
-      if (dto.lines != null) {
-        const processed = await this.processLines(dto.lines);
-        subtotal = processed.subtotal;
-        taxAmount = processed.taxAmount;
-        totalAmount = processed.totalAmount;
-
-        await this.repository.replaceLines(id, processed.processedLines);
-      }
-
-      await this.repository.updateBill(id, {
-        vendor_id: vendorId,
-        bill_date: dto.bill_date ?? bill.bill_date,
-        due_date: dto.due_date !== undefined ? dto.due_date : bill.due_date,
-        supplier_invoice_no: supplierInvoiceNo ?? null,
-        subtotal,
-        tax_amount: taxAmount,
-        total_amount: totalAmount,
-        row_version: bill.row_version + 1,
-        updated_at: new Date(),
-      });
-
-      const updated = await this.repository.findWithLines(id);
-      if (!updated) {
-        throw new NotFoundError(`Purchase bill ${id} was not found`);
-      }
-      return this.toDtoWithLines(updated);
+      // A bill is created and posted in one transaction; a post failure rolls the insert back.
+      return this.post(created.id, currentUser);
     });
   }
 
@@ -523,6 +488,24 @@ export class PurchaseBillsService {
         postedByUserId: currentUser?.id ?? null,
         lines: journalLines,
       });
+
+      // IL-33: receive stock for tracked lines inside the same posting transaction.
+      for (const line of bill.lines) {
+        if (line.item_id == null) continue;
+        const item = await this.itemsRepository.findById(line.item_id);
+        if (!item?.inventory_tracked) continue;
+        await this.stockService.receive(
+          line.item_id,
+          String(line.quantity),
+          String(line.net_amount),
+          {
+            sourceType: 'purchase_bill',
+            sourceId: bill.id,
+            sourceLineId: line.id,
+            movementDate: bill.bill_date,
+          },
+        );
+      }
 
       await this.repository.updateBill(bill.id, {
         status: 'posted',

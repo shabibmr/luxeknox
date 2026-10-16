@@ -4,9 +4,11 @@ import { BaseRepository } from '../platform/db/base.repository';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import {
+  items,
   purchaseBillLines,
   purchaseBillNumberCounters,
   purchaseBills,
+  uoms,
   type NewPurchaseBill,
   type NewPurchaseBillLine,
   type PurchaseBill,
@@ -14,8 +16,14 @@ import {
 } from '../platform/db/schema/accounting';
 import { NotFoundError } from '../platform/errors/app-error';
 
+export type PurchaseBillLineWithItem = PurchaseBillLine & {
+  item_name: string | null;
+  uom_code: string | null;
+  inventory_tracked: boolean;
+};
+
 export type PurchaseBillWithLines = PurchaseBill & {
-  lines: PurchaseBillLine[];
+  lines: PurchaseBillLineWithItem[];
 };
 
 export interface PurchaseBillFilterParams {
@@ -67,13 +75,36 @@ export class PurchaseBillsRepository extends BaseRepository<
     return { ...bill, lines };
   }
 
-  async listLines(billId: number): Promise<PurchaseBillLine[]> {
+  async listLines(billId: number): Promise<PurchaseBillLineWithItem[]> {
     const db = this.getDb() as any;
-    return db
-      .select()
+    const rows = await db
+      .select({
+        id: purchaseBillLines.id,
+        purchase_bill_id: purchaseBillLines.purchase_bill_id,
+        item_id: purchaseBillLines.item_id,
+        account_id: purchaseBillLines.account_id,
+        description: purchaseBillLines.description,
+        quantity: purchaseBillLines.quantity,
+        rate: purchaseBillLines.rate,
+        tax_code_id: purchaseBillLines.tax_code_id,
+        net_amount: purchaseBillLines.net_amount,
+        tax_amount: purchaseBillLines.tax_amount,
+        item_name: items.name,
+        uom_code: uoms.code,
+        inventory_tracked: items.inventory_tracked,
+      })
       .from(purchaseBillLines)
+      .leftJoin(items, eq(purchaseBillLines.item_id, items.id))
+      .leftJoin(uoms, eq(items.uom_id, uoms.id))
       .where(eq(purchaseBillLines.purchase_bill_id, billId))
       .orderBy(asc(purchaseBillLines.id));
+
+    return rows.map((row: Record<string, unknown>) => ({
+      ...row,
+      item_name: (row.item_name as string | null) ?? null,
+      uom_code: (row.uom_code as string | null) ?? null,
+      inventory_tracked: Boolean(row.inventory_tracked),
+    })) as PurchaseBillLineWithItem[];
   }
 
   /**

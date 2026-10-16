@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { AcctModule } from '../acct/acct.module';
 import { PlatformModule } from '../platform/platform.module';
 import { CounterSalesController } from './counter-sales.controller';
@@ -11,7 +11,7 @@ import { StockRepository } from './stock.repository';
 import { StockService } from './stock.service';
 
 @Module({
-  imports: [PlatformModule, AcctModule],
+  imports: [PlatformModule, forwardRef(() => AcctModule)],
   controllers: [InventoryItemsController, CounterSalesController],
   providers: [
     InventoryItemsRepository,

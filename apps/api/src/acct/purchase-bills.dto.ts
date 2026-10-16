@@ -74,21 +74,6 @@ export const purchaseBillCreateSchema = z
 
 export type PurchaseBillCreateDto = z.infer<typeof purchaseBillCreateSchema>;
 
-export const purchaseBillUpdateSchema = z
-  .object({
-    vendor_id: z.number().int().positive('vendor_id must be a positive integer').optional(),
-    bill_date: dateSchema.optional(),
-    due_date: dateSchema.nullable().optional(),
-    supplier_invoice_no: optionalText(64, 'supplier_invoice_no'),
-    lines: z
-      .array(purchaseBillLineWriteSchema)
-      .min(1, 'At least one purchase bill line is required')
-      .optional(),
-  })
-  .strict();
-
-export type PurchaseBillUpdateDto = z.infer<typeof purchaseBillUpdateSchema>;
-
 export const purchaseBillFilterQuerySchema = z.object({
   status: z.enum(PURCHASE_BILL_STATUSES).optional(),
   vendor_id: z
@@ -115,6 +100,11 @@ export interface PurchaseBillLineDto {
   tax_code_id: number | null;
   net_amount: string;
   tax_amount: string;
+  item_name: string | null;
+  uom_code: string | null;
+  inventory_tracked: boolean;
+  /** Always 0 in this slice; debit-note returns come later. */
+  returned_quantity: string;
 }
 
 export interface PurchaseBillDto {

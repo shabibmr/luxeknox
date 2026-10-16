@@ -10,6 +10,7 @@ import type { PurchaseBillWithLines, PurchaseBillsRepository } from './purchase-
 import { PurchaseBillsService } from './purchase-bills.service';
 import type { TaxCodesRepository } from './tax-codes.repository';
 import type { VendorsRepository } from './vendors.repository';
+import type { StockService } from '../inv/stock.service';
 
 vi.mock('../platform/db/transaction-context', () => ({
   runInTransaction: async (_db: unknown, fn: () => Promise<unknown>) => fn(),
@@ -195,6 +196,7 @@ describe('PurchaseBillsService', () => {
   let vendorsRepository: Record<string, ReturnType<typeof vi.fn>>;
   let itemsRepository: Record<string, ReturnType<typeof vi.fn>>;
   let taxCodesRepository: Record<string, ReturnType<typeof vi.fn>>;
+  let stockService: { receive: ReturnType<typeof vi.fn>; issue: ReturnType<typeof vi.fn> };
   let paginationHelper: { normalizeParams: ReturnType<typeof vi.fn> };
   const db = {} as any;
 
@@ -273,6 +275,17 @@ describe('PurchaseBillsService', () => {
       normalizeParams: vi.fn().mockResolvedValue({ limit: 20, offset: 0 }),
     };
 
+    stockService = {
+      receive: vi.fn().mockResolvedValue({
+        qtyOnHand: '10.000',
+        stockValue: '1000.00',
+        avgCost: '100.0000',
+        unitCost: '100.0000',
+        value: '1000.00',
+      }),
+      issue: vi.fn(),
+    };
+
     service = new PurchaseBillsService(
       repository as unknown as PurchaseBillsRepository,
       accountingPostingService as unknown as AccountingPostingService,
@@ -280,6 +293,7 @@ describe('PurchaseBillsService', () => {
       vendorsRepository as unknown as VendorsRepository,
       itemsRepository as unknown as ItemsRepository,
       taxCodesRepository as unknown as TaxCodesRepository,
+      stockService as unknown as StockService,
       db,
       paginationHelper as unknown as PaginationHelper,
     );
@@ -699,6 +713,7 @@ describe('PurchaseBillsService', () => {
 
       expect(result.status).toBe('posted');
       expect(result.journal_entry_id).toBe(777);
+      expect(stockService.receive).not.toHaveBeenCalled();
     });
 
     it('returns idempotently if bill is already posted', async () => {
@@ -726,6 +741,7 @@ describe('PurchaseBillsService', () => {
 
       expect(accountingPostingService.postJournal).not.toHaveBeenCalled();
       expect(repository.updateBill).not.toHaveBeenCalled();
+      expect(stockService.receive).not.toHaveBeenCalled();
       expect(result.status).toBe('posted');
     });
 
@@ -1013,6 +1029,160 @@ describe('PurchaseBillsService', () => {
           }),
         ],
       });
+    });
+  });
+
+  describe('IL-33 purchase post stock receive', () => {
+    it('receives stock for tracked lines and debits inventory on the journal', async () => {
+      const draft: PurchaseBillWithLines = {
+        id: 5,
+        bill_number: 'BIL00000005',
+        vendor_id: VENDOR_ACTIVE.id,
+        bill_date: '2026-04-15',
+        due_date: null,
+        supplier_invoice_no: null,
+        status: 'draft',
+        subtotal: '1000.00',
+        tax_amount: '0.00',
+        total_amount: '1000.00',
+        journal_entry_id: null,
+        row_version: 1,
+        created_at: new Date('2026-04-15T10:00:00.000Z'),
+        updated_at: null,
+        lines: [
+          {
+            id: 50,
+            purchase_bill_id: 5,
+            item_id: ITEM_TRACKED.id,
+            account_id: INVENTORY_ACCOUNT.id,
+            description: ITEM_TRACKED.name,
+            quantity: '10.000',
+            rate: '100.00',
+            tax_code_id: null,
+            net_amount: '1000.00',
+            tax_amount: '0.00',
+            item_name: ITEM_TRACKED.name,
+            uom_code: 'KG',
+            inventory_tracked: true,
+          },
+        ],
+      };
+      const posted: PurchaseBillWithLines = {
+        ...draft,
+        status: 'posted',
+        journal_entry_id: 777,
+        row_version: 2,
+      };
+      repository.findWithLines.mockResolvedValueOnce(draft).mockResolvedValueOnce(posted);
+
+      const result = await service.post(5, CURRENT_USER);
+
+      expect(stockService.receive).toHaveBeenCalledWith(ITEM_TRACKED.id, '10.000', '1000.00', {
+        sourceType: 'purchase_bill',
+        sourceId: 5,
+        sourceLineId: 50,
+        movementDate: '2026-04-15',
+      });
+      expect(accountingPostingService.postJournal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          lines: expect.arrayContaining([
+            expect.objectContaining({
+              accountId: INVENTORY_ACCOUNT.id,
+              debit: '1000.00',
+            }),
+          ]),
+        }),
+      );
+      expect(result.lines[0]).toMatchObject({
+        item_name: ITEM_TRACKED.name,
+        uom_code: 'KG',
+        inventory_tracked: true,
+        returned_quantity: '0.000',
+      });
+    });
+
+    it('does not receive again when posting an already-posted bill', async () => {
+      repository.findWithLines.mockResolvedValue({
+        id: 5,
+        bill_number: 'BIL00000005',
+        vendor_id: VENDOR_ACTIVE.id,
+        bill_date: '2026-04-15',
+        due_date: null,
+        supplier_invoice_no: null,
+        status: 'posted',
+        subtotal: '1000.00',
+        tax_amount: '0.00',
+        total_amount: '1000.00',
+        journal_entry_id: 777,
+        row_version: 2,
+        created_at: new Date('2026-04-15T10:00:00.000Z'),
+        updated_at: null,
+        lines: [
+          {
+            id: 50,
+            purchase_bill_id: 5,
+            item_id: ITEM_TRACKED.id,
+            account_id: INVENTORY_ACCOUNT.id,
+            description: ITEM_TRACKED.name,
+            quantity: '10.000',
+            rate: '100.00',
+            tax_code_id: null,
+            net_amount: '1000.00',
+            tax_amount: '0.00',
+            item_name: ITEM_TRACKED.name,
+            uom_code: 'KG',
+            inventory_tracked: true,
+          },
+        ],
+      });
+
+      const result = await service.post(5, CURRENT_USER);
+      expect(result.journal_entry_id).toBe(777);
+      expect(stockService.receive).not.toHaveBeenCalled();
+      expect(accountingPostingService.postJournal).not.toHaveBeenCalled();
+    });
+
+    it('rolls back without receiving when the period is locked', async () => {
+      repository.findWithLines.mockResolvedValue({
+        id: 5,
+        bill_number: 'BIL00000005',
+        vendor_id: VENDOR_ACTIVE.id,
+        bill_date: '2026-04-15',
+        due_date: null,
+        supplier_invoice_no: null,
+        status: 'draft',
+        subtotal: '1000.00',
+        tax_amount: '0.00',
+        total_amount: '1000.00',
+        journal_entry_id: null,
+        row_version: 1,
+        created_at: new Date('2026-04-15T10:00:00.000Z'),
+        updated_at: null,
+        lines: [
+          {
+            id: 50,
+            purchase_bill_id: 5,
+            item_id: ITEM_TRACKED.id,
+            account_id: INVENTORY_ACCOUNT.id,
+            description: ITEM_TRACKED.name,
+            quantity: '10.000',
+            rate: '100.00',
+            tax_code_id: null,
+            net_amount: '1000.00',
+            tax_amount: '0.00',
+            item_name: ITEM_TRACKED.name,
+            uom_code: 'KG',
+            inventory_tracked: true,
+          },
+        ],
+      });
+      accountingPostingService.postJournal.mockRejectedValue(
+        new BusinessRuleError('Accounting period is locked'),
+      );
+
+      await expect(service.post(5, CURRENT_USER)).rejects.toThrow(/locked/i);
+      expect(stockService.receive).not.toHaveBeenCalled();
+      expect(repository.updateBill).not.toHaveBeenCalled();
     });
   });
 });

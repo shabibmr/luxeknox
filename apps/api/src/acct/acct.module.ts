@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
+import { InvModule } from '../inv/inv.module';
 import { JobModule } from '../job/job.module';
 import { PlatformModule } from '../platform/platform.module';
 import { SysModule } from '../sys/sys.module';
@@ -49,7 +50,7 @@ import { VendorsRepository } from './vendors.repository';
 import { VendorsService } from './vendors.service';
 
 @Module({
-  imports: [PlatformModule, SysModule, JobModule],
+  imports: [PlatformModule, SysModule, JobModule, forwardRef(() => InvModule)],
   controllers: [
     JournalController,
     AccountsController,
