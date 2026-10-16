@@ -61,6 +61,7 @@ describe('AccountsService', () => {
       insertAccount: vi.fn(),
       updateAccount: vi.fn(),
       findMany: vi.fn(),
+      listCodesByAccountType: vi.fn(),
     };
     paginationHelper = {
       normalizeParams: vi.fn().mockResolvedValue({ limit: 20, offset: 0 }),
@@ -156,6 +157,39 @@ describe('AccountsService', () => {
       );
       expect(result.id).toBe(11);
       expect(result.code).toBe('5010');
+    });
+
+    it('allocates the next code in the type band when code is omitted', async () => {
+      repository.listCodesByAccountType.mockResolvedValue(['5000', '5050', '5960']);
+      repository.findByCode.mockResolvedValue(null);
+      repository.insertAccount.mockResolvedValue({
+        ...SAMPLE_ACCOUNT,
+        id: 12,
+        code: '5970',
+        name: 'New Expense',
+      });
+
+      const result = await service.create(
+        {
+          name: 'New Expense',
+          account_type: 'expense',
+          is_active: true,
+          is_bank: false,
+          is_control: false,
+        },
+        ADMIN_USER,
+      );
+
+      expect(repository.listCodesByAccountType).toHaveBeenCalledWith('expense');
+      expect(repository.findByCode).toHaveBeenCalledWith('5970');
+      expect(repository.insertAccount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          code: '5970',
+          name: 'New Expense',
+          account_type: 'expense',
+        }),
+      );
+      expect(result.code).toBe('5970');
     });
 
     it('throws ConflictError when account code already exists', async () => {
