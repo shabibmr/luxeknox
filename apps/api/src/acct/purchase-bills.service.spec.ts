@@ -113,15 +113,72 @@ const TAX_CODE_INACTIVE: TaxCode = {
   is_active: false,
 };
 
+const INVENTORY_ACCOUNT: Account = {
+  id: 1400,
+  code: '1400',
+  name: 'Inventory',
+  account_type: 'asset',
+  parent_id: null,
+  is_active: true,
+  is_bank: false,
+  is_control: true,
+  control_role: 'inventory',
+  created_at: new Date('2026-04-01T00:00:00.000Z'),
+  updated_at: null,
+};
+
+const UOM_PCS = {
+  id: 1,
+  code: 'PCS',
+  name: 'Piece',
+  decimal_places: 0,
+  is_active: true,
+  created_at: new Date('2026-04-01T00:00:00.000Z'),
+  updated_at: null,
+};
+
+const UOM_KG = {
+  id: 2,
+  code: 'KG',
+  name: 'Kilogram',
+  decimal_places: 3,
+  is_active: true,
+  created_at: new Date('2026-04-01T00:00:00.000Z'),
+  updated_at: null,
+};
+
 const ITEM_ACTIVE: Item = {
   id: 101,
   name: 'Treadmill Belt Replacement',
+  sku: null,
+  hsn_sac: null,
   item_kind: 'goods',
+  category_id: null,
+  uom_id: UOM_PCS.id,
   inventory_tracked: false,
+  sale_rate: '100.00',
+  purchase_rate: '80.00',
+  reorder_level: null,
   income_account_id: 4000,
   expense_account_id: 5010,
+  inventory_account_id: null,
+  cogs_account_id: null,
   tax_code_id: 1,
   is_active: true,
+  row_version: 1,
+  created_at: new Date('2026-04-01T00:00:00.000Z'),
+  updated_at: null,
+};
+
+const ITEM_TRACKED: Item = {
+  ...ITEM_ACTIVE,
+  id: 103,
+  name: 'Whey Protein 1kg',
+  uom_id: UOM_KG.id,
+  inventory_tracked: true,
+  purchase_rate: '110.00',
+  inventory_account_id: INVENTORY_ACCOUNT.id,
+  cogs_account_id: 5050,
 };
 
 const ITEM_INACTIVE: Item = {
@@ -150,6 +207,7 @@ describe('PurchaseBillsService', () => {
       updateBill: vi.fn(),
       replaceLines: vi.fn(),
       findMany: vi.fn(),
+      findByVendorSupplierInvoice: vi.fn().mockResolvedValue(null),
     };
 
     accountingPostingService = {
@@ -166,6 +224,7 @@ describe('PurchaseBillsService', () => {
         if (id === CONTROL_ACCOUNT.id) return CONTROL_ACCOUNT;
         if (id === INPUT_TAX_ACCOUNT.id) return INPUT_TAX_ACCOUNT;
         if (id === INACTIVE_ACCOUNT.id) return INACTIVE_ACCOUNT;
+        if (id === INVENTORY_ACCOUNT.id) return INVENTORY_ACCOUNT;
         return null;
       }),
       findByCode: vi.fn().mockImplementation(async (code: string) => {
@@ -192,6 +251,12 @@ describe('PurchaseBillsService', () => {
       findById: vi.fn().mockImplementation(async (id: number) => {
         if (id === ITEM_ACTIVE.id) return ITEM_ACTIVE;
         if (id === ITEM_INACTIVE.id) return ITEM_INACTIVE;
+        if (id === ITEM_TRACKED.id) return ITEM_TRACKED;
+        return null;
+      }),
+      findUomById: vi.fn().mockImplementation(async (id: number) => {
+        if (id === UOM_PCS.id) return UOM_PCS;
+        if (id === UOM_KG.id) return UOM_KG;
         return null;
       }),
     };
@@ -228,6 +293,7 @@ describe('PurchaseBillsService', () => {
         vendor_id: VENDOR_ACTIVE.id,
         bill_date: '2026-04-15',
         due_date: '2026-05-15',
+        supplier_invoice_no: null,
         status: 'draft',
         subtotal: '200.00',
         tax_amount: '36.00',
@@ -243,7 +309,7 @@ describe('PurchaseBillsService', () => {
             item_id: ITEM_ACTIVE.id,
             account_id: EXPENSE_ACCOUNT.id,
             description: 'Belt replacement',
-            quantity: '2.00',
+            quantity: '2.000',
             rate: '100.00',
             tax_code_id: TAX_CODE_GST18.id,
             net_amount: '200.00',
@@ -280,6 +346,7 @@ describe('PurchaseBillsService', () => {
           vendor_id: VENDOR_ACTIVE.id,
           bill_date: '2026-04-15',
           due_date: '2026-05-15',
+          supplier_invoice_no: null,
           status: 'draft',
           subtotal: '200.00',
           tax_amount: '36.00',
@@ -289,7 +356,7 @@ describe('PurchaseBillsService', () => {
           expect.objectContaining({
             item_id: ITEM_ACTIVE.id,
             account_id: EXPENSE_ACCOUNT.id,
-            quantity: '2.00',
+            quantity: '2.000',
             rate: '100.00',
             net_amount: '200.00',
             tax_amount: '36.00',
@@ -430,6 +497,7 @@ describe('PurchaseBillsService', () => {
         vendor_id: VENDOR_ACTIVE.id,
         bill_date: '2026-04-15',
         due_date: null,
+        supplier_invoice_no: null,
         status: 'draft',
         subtotal: '100.00',
         tax_amount: '0.00',
@@ -517,6 +585,7 @@ describe('PurchaseBillsService', () => {
         vendor_id: VENDOR_ACTIVE.id,
         bill_date: '2026-04-15',
         due_date: null,
+        supplier_invoice_no: null,
         status: 'posted',
         subtotal: '100.00',
         tax_amount: '0.00',
@@ -550,6 +619,7 @@ describe('PurchaseBillsService', () => {
         vendor_id: VENDOR_ACTIVE.id,
         bill_date: '2026-04-15',
         due_date: null,
+        supplier_invoice_no: null,
         status: 'draft',
         subtotal: '100.00',
         tax_amount: '18.00',
@@ -638,6 +708,7 @@ describe('PurchaseBillsService', () => {
         vendor_id: VENDOR_ACTIVE.id,
         bill_date: '2026-04-15',
         due_date: null,
+        supplier_invoice_no: null,
         status: 'posted',
         subtotal: '100.00',
         tax_amount: '0.00',
@@ -665,6 +736,7 @@ describe('PurchaseBillsService', () => {
         vendor_id: VENDOR_ACTIVE.id,
         bill_date: '2026-04-15',
         due_date: null,
+        supplier_invoice_no: null,
         status: 'void',
         subtotal: '100.00',
         tax_amount: '0.00',
@@ -690,6 +762,7 @@ describe('PurchaseBillsService', () => {
         vendor_id: VENDOR_ACTIVE.id,
         bill_date: '2026-04-15',
         due_date: null,
+        supplier_invoice_no: null,
         status: 'draft',
         subtotal: '100.00',
         tax_amount: '0.00',
@@ -717,6 +790,7 @@ describe('PurchaseBillsService', () => {
         vendor_id: VENDOR_ACTIVE.id,
         bill_date: '2026-04-15',
         due_date: null,
+        supplier_invoice_no: null,
         status: 'draft',
         subtotal: '100.00',
         tax_amount: '0.00',
@@ -748,6 +822,7 @@ describe('PurchaseBillsService', () => {
         vendor_id: VENDOR_ACTIVE.id,
         bill_date: '2026-04-15',
         due_date: null,
+        supplier_invoice_no: null,
         status: 'draft',
         subtotal: '100.00',
         tax_amount: '0.00',
@@ -765,4 +840,180 @@ describe('PurchaseBillsService', () => {
       expect(result.meta.total).toBe(1);
     });
   });
+
+  describe('IL-32 purchase write path', () => {
+    it('accepts a 3dp quantity on KG and uses mulQtyRate', async () => {
+      repository.insertBill.mockImplementation(async (header, lines) => ({
+        id: 1,
+        ...header,
+        lines: lines.map((line: any, i: number) => ({
+          id: i + 1,
+          purchase_bill_id: 1,
+          ...line,
+        })),
+      }));
+
+      await service.create(
+        {
+          vendor_id: VENDOR_ACTIVE.id,
+          bill_date: '2026-04-15',
+          lines: [
+            {
+              item_id: ITEM_TRACKED.id,
+              quantity: '1.250',
+              rate: '100.00',
+            },
+          ],
+        },
+        CURRENT_USER,
+      );
+
+      expect(repository.insertBill).toHaveBeenCalledWith(
+        expect.anything(),
+        [
+          expect.objectContaining({
+            item_id: ITEM_TRACKED.id,
+            account_id: INVENTORY_ACCOUNT.id,
+            quantity: '1.250',
+            rate: '100.00',
+            net_amount: '125.00',
+            description: ITEM_TRACKED.name,
+            tax_code_id: TAX_CODE_GST18.id,
+          }),
+        ],
+      );
+    });
+
+    it('refuses a fractional quantity on PCS (uom_decimals_exceeded)', async () => {
+      await expect(
+        service.create(
+          {
+            vendor_id: VENDOR_ACTIVE.id,
+            bill_date: '2026-04-15',
+            lines: [
+              {
+                item_id: ITEM_ACTIVE.id,
+                quantity: '1.5',
+                rate: '50.00',
+              },
+            ],
+          },
+          CURRENT_USER,
+        ),
+      ).rejects.toMatchObject({
+        details: [
+          expect.objectContaining({
+            rule: 'uom_decimals_exceeded',
+            uom_code: 'PCS',
+            decimal_places: 0,
+          }),
+        ],
+      });
+    });
+
+    it('ignores client account_id on a tracked line and uses inventory_account_id', async () => {
+      repository.insertBill.mockImplementation(async (header, lines) => ({
+        id: 2,
+        ...header,
+        lines: lines.map((line: any, i: number) => ({
+          id: i + 1,
+          purchase_bill_id: 2,
+          ...line,
+        })),
+      }));
+
+      await service.create(
+        {
+          vendor_id: VENDOR_ACTIVE.id,
+          bill_date: '2026-04-15',
+          lines: [
+            {
+              item_id: ITEM_TRACKED.id,
+              account_id: EXPENSE_ACCOUNT.id,
+              quantity: '2',
+              rate: '50.00',
+              tax_code_id: null,
+            },
+          ],
+        },
+        CURRENT_USER,
+      );
+
+      expect(repository.insertBill).toHaveBeenCalledWith(
+        expect.anything(),
+        [expect.objectContaining({ account_id: INVENTORY_ACCOUNT.id })],
+      );
+    });
+
+    it('defaults untracked item account_id to expense_account_id and applies item purchase_rate', async () => {
+      repository.insertBill.mockImplementation(async (header, lines) => ({
+        id: 3,
+        ...header,
+        lines: lines.map((line: any, i: number) => ({
+          id: i + 1,
+          purchase_bill_id: 3,
+          ...line,
+        })),
+      }));
+
+      await service.create(
+        {
+          vendor_id: VENDOR_ACTIVE.id,
+          bill_date: '2026-04-15',
+          lines: [{ item_id: ITEM_ACTIVE.id, quantity: '2' }],
+        },
+        CURRENT_USER,
+      );
+
+      expect(repository.insertBill).toHaveBeenCalledWith(
+        expect.anything(),
+        [
+          expect.objectContaining({
+            account_id: EXPENSE_ACCOUNT.id,
+            rate: '80.00',
+            net_amount: '160.00',
+            description: ITEM_ACTIVE.name,
+            tax_code_id: TAX_CODE_GST18.id,
+          }),
+        ],
+      );
+    });
+
+    it('refuses a duplicate supplier_invoice_no for the same vendor among non-void bills', async () => {
+      repository.findByVendorSupplierInvoice.mockResolvedValue({
+        id: 99,
+        bill_number: 'BIL00000099',
+        vendor_id: VENDOR_ACTIVE.id,
+        supplier_invoice_no: 'INV-1',
+        status: 'posted',
+      });
+
+      await expect(
+        service.create(
+          {
+            vendor_id: VENDOR_ACTIVE.id,
+            bill_date: '2026-04-15',
+            supplier_invoice_no: 'INV-1',
+            lines: [
+              {
+                account_id: EXPENSE_ACCOUNT.id,
+                quantity: '1',
+                rate: '10.00',
+              },
+            ],
+          },
+          CURRENT_USER,
+        ),
+      ).rejects.toMatchObject({
+        details: [
+          expect.objectContaining({
+            rule: 'duplicate_supplier_invoice',
+            supplier_invoice_no: 'INV-1',
+            existing_bill_id: 99,
+          }),
+        ],
+      });
+    });
+  });
 });
+

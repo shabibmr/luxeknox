@@ -3,6 +3,7 @@ import type { AuthenticatedUser } from '../auth/auth.guard';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type {
+  Item,
   PurchaseBill,
   PurchaseBillLine,
 } from '../platform/db/schema/accounting';
@@ -17,6 +18,7 @@ import {
   addMoney,
   cmpMoney,
   mulMoneyPercent,
+  mulQtyRate,
   roundMoney,
 } from '../platform/money/money';
 import { AccountingPostingService, type PostJournalLineInput } from './accounting-posting.service';
@@ -37,6 +39,15 @@ import {
 } from './purchase-bills.repository';
 import { TaxCodesRepository } from './tax-codes.repository';
 import { VendorsRepository } from './vendors.repository';
+
+function formatQuantity(quantity: string): string {
+  const [whole, frac = ''] = quantity.split('.');
+  return `${whole}.${(frac + '000').slice(0, 3)}`;
+}
+
+function quantityScale(quantity: string): number {
+  return (quantity.split('.')[1] ?? '').replace(/0+$/, '').length;
+}
 
 @Injectable()
 export class PurchaseBillsService {
@@ -73,6 +84,7 @@ export class PurchaseBillsService {
       vendor_id: bill.vendor_id,
       bill_date: bill.bill_date,
       due_date: bill.due_date ?? null,
+      supplier_invoice_no: bill.supplier_invoice_no ?? null,
       status: bill.status as PurchaseBillStatus,
       subtotal: String(bill.subtotal),
       tax_amount: String(bill.tax_amount),
@@ -111,7 +123,7 @@ export class PurchaseBillsService {
     return item;
   }
 
-  private async validateLineAccount(accountId: number) {
+  private async validateLineAccount(accountId: number, opts?: { allowControl?: boolean }) {
     const account = await this.accountsRepository.findById(accountId);
     if (!account) {
       throw new NotFoundError(`Account ${accountId} was not found`);
@@ -119,7 +131,7 @@ export class PurchaseBillsService {
     if (!account.is_active) {
       throw new BusinessRuleError('Account is inactive');
     }
-    if (account.is_control) {
+    if (account.is_control && !opts?.allowControl) {
       throw new BusinessRuleError('Cannot post directly to control accounts');
     }
     return account;
@@ -134,6 +146,56 @@ export class PurchaseBillsService {
       throw new BusinessRuleError('Tax code is inactive');
     }
     return taxCode;
+  }
+
+  private async assertUniqueSupplierInvoice(
+    vendorId: number,
+    supplierInvoiceNo: string | null | undefined,
+    excludeBillId?: number,
+  ) {
+    if (supplierInvoiceNo == null || supplierInvoiceNo === '') return;
+    const existing = await this.repository.findByVendorSupplierInvoice(
+      vendorId,
+      supplierInvoiceNo,
+      excludeBillId,
+    );
+    if (existing) {
+      throw new BusinessRuleError('Duplicate supplier invoice number for this vendor', [
+        {
+          rule: 'duplicate_supplier_invoice',
+          vendor_id: vendorId,
+          supplier_invoice_no: supplierInvoiceNo,
+          existing_bill_id: existing.id,
+        },
+      ]);
+    }
+  }
+
+  private async resolveAccountId(
+    line: PurchaseBillLineWriteDto,
+    item: Item | null,
+  ): Promise<number> {
+    if (item != null && item.inventory_tracked) {
+      if (item.inventory_account_id == null) {
+        throw new BusinessRuleError(
+          `Tracked item ${item.id} is missing inventory_account_id`,
+        );
+      }
+      await this.validateLineAccount(item.inventory_account_id, { allowControl: true });
+      return item.inventory_account_id;
+    }
+
+    if (item != null) {
+      const accountId = line.account_id ?? item.expense_account_id;
+      await this.validateLineAccount(accountId);
+      return accountId;
+    }
+
+    if (line.account_id == null) {
+      throw new BusinessRuleError('account_id is required when item_id is omitted');
+    }
+    await this.validateLineAccount(line.account_id);
+    return line.account_id;
   }
 
   private async processLines(lines: PurchaseBillLineWriteDto[]): Promise<{
@@ -160,21 +222,60 @@ export class PurchaseBillsService {
     const processedLines = [];
 
     for (const line of lines) {
-      if (line.item_id != null) {
-        await this.validateItem(line.item_id);
+      const item =
+        line.item_id != null ? await this.validateItem(line.item_id) : null;
+
+      const accountId = await this.resolveAccountId(line, item);
+
+      let description = line.description ?? null;
+      if (description == null && item != null) {
+        description = item.name;
       }
 
-      await this.validateLineAccount(line.account_id);
+      let rate: string;
+      if (line.rate != null) {
+        rate = roundMoney(line.rate);
+      } else if (item?.purchase_rate != null) {
+        rate = roundMoney(String(item.purchase_rate));
+      } else {
+        throw new BusinessRuleError('rate is required when the item has no purchase_rate');
+      }
+
+      let taxCodeId: number | null =
+        line.tax_code_id !== undefined ? (line.tax_code_id ?? null) : null;
+      if (line.tax_code_id === undefined && item?.tax_code_id != null) {
+        taxCodeId = item.tax_code_id;
+      }
 
       let lineTaxRate: string | null = null;
-      if (line.tax_code_id != null) {
-        const taxCode = await this.validateTaxCode(line.tax_code_id);
+      if (taxCodeId != null) {
+        const taxCode = await this.validateTaxCode(taxCodeId);
         lineTaxRate = taxCode.rate_percent;
       }
 
-      const qty = roundMoney(line.quantity ?? '1.00');
-      const rate = roundMoney(line.rate);
-      const netAmount = roundMoney(Number(qty) * Number(rate));
+      const rawQty = line.quantity ?? '1.000';
+      if (item != null) {
+        const uom = await this.itemsRepository.findUomById(item.uom_id);
+        if (!uom) {
+          throw new NotFoundError(`UOM ${item.uom_id} was not found`);
+        }
+        if (quantityScale(rawQty) > uom.decimal_places) {
+          throw new BusinessRuleError(
+            `Quantity for item ${item.id} has more decimals than ${uom.code} allows`,
+            [
+              {
+                rule: 'uom_decimals_exceeded',
+                item_id: item.id,
+                uom_code: uom.code,
+                decimal_places: uom.decimal_places,
+              },
+            ],
+          );
+        }
+      }
+
+      const qty = formatQuantity(rawQty);
+      const netAmount = mulQtyRate(qty, rate);
       const lineTaxAmount =
         lineTaxRate != null ? mulMoneyPercent(netAmount, lineTaxRate) : '0.00';
 
@@ -182,12 +283,12 @@ export class PurchaseBillsService {
       taxAmount = addMoney(taxAmount, lineTaxAmount);
 
       processedLines.push({
-        item_id: line.item_id ?? null,
-        account_id: line.account_id,
-        description: line.description ?? null,
+        item_id: item?.id ?? null,
+        account_id: accountId,
+        description,
         quantity: qty,
         rate,
-        tax_code_id: line.tax_code_id ?? null,
+        tax_code_id: taxCodeId,
         net_amount: netAmount,
         tax_amount: lineTaxAmount,
       });
@@ -208,6 +309,7 @@ export class PurchaseBillsService {
     _currentUser?: AuthenticatedUser,
   ): Promise<PurchaseBillDto> {
     await this.validateVendor(dto.vendor_id);
+    await this.assertUniqueSupplierInvoice(dto.vendor_id, dto.supplier_invoice_no);
 
     const { processedLines, subtotal, taxAmount, totalAmount } =
       await this.processLines(dto.lines);
@@ -221,6 +323,7 @@ export class PurchaseBillsService {
           vendor_id: dto.vendor_id,
           bill_date: dto.bill_date,
           due_date: dto.due_date ?? null,
+          supplier_invoice_no: dto.supplier_invoice_no ?? null,
           status: 'draft',
           subtotal,
           tax_amount: taxAmount,
@@ -250,9 +353,16 @@ export class PurchaseBillsService {
       throw new BusinessRuleError('Only draft purchase bills can be edited');
     }
 
+    const vendorId = dto.vendor_id ?? bill.vendor_id;
     if (dto.vendor_id != null) {
       await this.validateVendor(dto.vendor_id);
     }
+
+    const supplierInvoiceNo =
+      dto.supplier_invoice_no !== undefined
+        ? dto.supplier_invoice_no
+        : bill.supplier_invoice_no;
+    await this.assertUniqueSupplierInvoice(vendorId, supplierInvoiceNo, id);
 
     return runInTransaction(this.db, async () => {
       let subtotal = bill.subtotal;
@@ -269,9 +379,10 @@ export class PurchaseBillsService {
       }
 
       await this.repository.updateBill(id, {
-        vendor_id: dto.vendor_id ?? bill.vendor_id,
+        vendor_id: vendorId,
         bill_date: dto.bill_date ?? bill.bill_date,
         due_date: dto.due_date !== undefined ? dto.due_date : bill.due_date,
+        supplier_invoice_no: supplierInvoiceNo ?? null,
         subtotal,
         tax_amount: taxAmount,
         total_amount: totalAmount,

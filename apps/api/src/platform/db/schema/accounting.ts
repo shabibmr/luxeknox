@@ -387,6 +387,8 @@ export const purchaseBills = mysqlTable(
       .references(() => vendors.id),
     bill_date: date('bill_date', { mode: 'string' }).notNull(),
     due_date: date('due_date', { mode: 'string' }),
+    /** Vendor's invoice number; uniqueness among non-void bills is enforced in the service. */
+    supplier_invoice_no: varchar('supplier_invoice_no', { length: 64 }),
     status: varchar('status', { length: 16 }).notNull().default('draft'),
     subtotal: decimal('subtotal', { precision: 12, scale: 2 }).notNull().default('0.00'),
     tax_amount: decimal('tax_amount', { precision: 12, scale: 2 }).notNull().default('0.00'),
@@ -402,6 +404,10 @@ export const purchaseBills = mysqlTable(
     uniqueIndex('purchase_bills_bill_number_unique').on(table.bill_number),
     index('purchase_bills_vendor_id_idx').on(table.vendor_id),
     index('purchase_bills_status_idx').on(table.status),
+    index('purchase_bills_vendor_supplier_invoice_idx').on(
+      table.vendor_id,
+      table.supplier_invoice_no,
+    ),
   ],
 );
 

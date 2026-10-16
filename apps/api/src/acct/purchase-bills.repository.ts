@@ -76,6 +76,32 @@ export class PurchaseBillsRepository extends BaseRepository<
       .orderBy(asc(purchaseBillLines.id));
   }
 
+  /**
+   * Find a non-void bill with the same vendor + supplier invoice number.
+   * Partial uniqueness (exclude void) is enforced in the service.
+   */
+  async findByVendorSupplierInvoice(
+    vendorId: number,
+    supplierInvoiceNo: string,
+    excludeBillId?: number,
+  ): Promise<PurchaseBill | null> {
+    const db = this.getDb() as any;
+    const conditions: SQL[] = [
+      eq(purchaseBills.vendor_id, vendorId),
+      eq(purchaseBills.supplier_invoice_no, supplierInvoiceNo),
+      sql`${purchaseBills.status} <> 'void'`,
+    ];
+    if (excludeBillId != null) {
+      conditions.push(sql`${purchaseBills.id} <> ${excludeBillId}`);
+    }
+    const rows = await db
+      .select()
+      .from(purchaseBills)
+      .where(and(...conditions))
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
   async insertBill(
     row: NewPurchaseBill,
     lines: Array<Omit<NewPurchaseBillLine, 'purchase_bill_id'>>,
