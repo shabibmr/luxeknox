@@ -54,3 +54,7 @@ pm2 describe luxeknox-api
 pm2 logs luxeknox-api
 pm2 reload luxeknox-api --update-env
 ```
+
+## iOS
+
+The signed iOS app is built on Codemagic, not by these scripts. See [docs/flutter/codemagic-ios.md](../docs/flutter/codemagic-ios.md). Workflow file: `codemagic.yaml` (`ios-release`).

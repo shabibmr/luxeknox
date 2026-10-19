@@ -1,0 +1,44 @@
+# Codemagic iOS release for the Flutter app in app/.
+# Setup and how to start a build: docs/flutter/codemagic-ios.md
+# Clone the repository root. app/ depends on packages/api_client.
+
+workflows:
+  ios-release:
+    name: iOS release
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.luxeknox.app
+      vars:
+        API_BASE_URL: "https://api.luxeknox.com"
+        APP_ENV: "production"
+    scripts:
+      - name: Set up code signing
+        script: xcode-project use-profiles
+        working_directory: app/ios
+      - name: Get packages
+        script: flutter pub get
+        working_directory: app
+      - name: Build IPA
+        script: |
+          flutter build ipa --release \
+            --build-number="$PROJECT_BUILD_NUMBER" \
+            --export-options-plist="$HOME/export_options.plist" \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=ENV="$APP_ENV"
+        working_directory: app
+    artifacts:
+      - app/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+    # After the App Store Connect API key is connected in Codemagic, uncomment
+    # this block to upload the IPA to TestFlight. See docs/flutter/codemagic-ios.md.
+    # publishing:
+    #   app_store_connect:
+    #     auth: integration
+    #     submit_to_testflight: true
