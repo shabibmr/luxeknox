@@ -171,6 +171,36 @@ export class MembershipRepository extends BaseRepository<
     return rows[0] ?? null;
   }
 
+  /**
+   * Serialises concurrent membership assigns for the same member so two staff cannot both
+   * pass the open-membership check. Must run inside `runInTransaction`.
+   */
+  async lockMember(memberId: number): Promise<void> {
+    const db = this.getDb() as any;
+    await db.execute(sql`SELECT \`id\` FROM \`members\` WHERE \`id\` = ${memberId} FOR UPDATE`);
+  }
+
+  /**
+   * Locks several members in ascending id order. Use for couple assigns so concurrent
+   * sales of the same pair in opposite roles cannot deadlock. Must run inside `runInTransaction`.
+   */
+  async lockMembers(ids: number[]): Promise<void> {
+    const ordered = [...new Set(ids)].sort((a, b) => a - b);
+    for (const id of ordered) {
+      await this.lockMember(id);
+    }
+  }
+
+  /**
+   * Serialises concurrent assigns that claim the same locker. Must run inside `runInTransaction`.
+   */
+  async lockLocker(lockerNumber: string): Promise<void> {
+    const db = this.getDb() as any;
+    await db.execute(
+      sql`SELECT \`id\` FROM \`memberships\` WHERE \`locker_number\` = ${lockerNumber} AND \`status\` IN ('active', 'frozen') FOR UPDATE`,
+    );
+  }
+
   /** DSH-004: membership counts grouped by status, for the admin dashboard summary. */
   async countByStatus(): Promise<Record<string, number>> {
     const db = this.getDb() as any;

@@ -104,8 +104,9 @@ export class MembershipSaleService {
 
   /**
    * FR-MEMB-005/006/CM-07: assign a new contract; at most one active/frozen membership per member.
-   * Open-membership, locker, and partner-replacement checks stay before the transaction.
-   * Returns the row before actor-scoped presentation.
+   * Open-membership, locker, and partner-replacement checks run before the transaction and again
+   * inside it after locking the buyer, partner, and locker. Returns the row before actor-scoped
+   * presentation. Domain events are published only after commit.
    */
   async create(dto: MembershipCreateDto, actor: AuthenticatedUser): Promise<MembershipWithProduct> {
     const member = await this.memberRepository.findById(dto.member_id);
@@ -135,9 +136,8 @@ export class MembershipSaleService {
       );
     }
 
-    let partnerExisting: Membership | null = null;
     if (partner) {
-      partnerExisting = await this.repository.findActiveOrFrozenForMember(partner.id);
+      const partnerExisting = await this.repository.findActiveOrFrozenForMember(partner.id);
       if (partnerExisting) {
         if (!dto.replace_partner_membership) {
           throw new BusinessRuleError(
@@ -171,10 +171,57 @@ export class MembershipSaleService {
 
     const endDate = addDays(dto.start_date, product.duration_days);
     const now = new Date();
+    const memberIds = partner ? [dto.member_id, partner.id] : [dto.member_id];
 
-    const { primaryId, partnerId } = await runInTransaction(this.db, async () => {
-      if (partnerExisting) {
-        await cancelRow(this.repository, this.auditService, partnerExisting, 'replaced_by_couple', actor, now);
+    const { primaryId, partnerId, cancelledPartnerId } = await runInTransaction(this.db, async () => {
+      await this.repository.lockMembers(memberIds);
+      if (dto.locker_number) {
+        await this.repository.lockLocker(dto.locker_number);
+      }
+
+      const existingNow = await this.repository.findActiveOrFrozenForMember(dto.member_id);
+      if (existingNow) {
+        throw new BusinessRuleError(
+          'Member already has an active or frozen membership; use renew/upgrade instead',
+        );
+      }
+
+      let partnerExistingNow: Membership | null = null;
+      if (partner) {
+        partnerExistingNow = await this.repository.findActiveOrFrozenForMember(partner.id);
+        if (partnerExistingNow) {
+          if (!dto.replace_partner_membership) {
+            throw new BusinessRuleError(
+              'Partner has an active or frozen membership; confirm replacement',
+            );
+          }
+          const partnerProduct = await this.productRepository.findById(partnerExistingNow.product_id);
+          if (partnerProduct?.package_type === 'couple') {
+            throw new BusinessRuleError(
+              'Partner is already in a couple membership; replace it from that membership instead',
+            );
+          }
+        }
+      }
+
+      if (dto.locker_number) {
+        const lockerConflictNow = await this.repository.findByLockerNumberActiveOrFrozen(
+          dto.locker_number,
+        );
+        if (lockerConflictNow) {
+          throw new ConflictError(`Locker "${dto.locker_number}" is already assigned`);
+        }
+      }
+
+      if (partnerExistingNow) {
+        await cancelRow(
+          this.repository,
+          this.auditService,
+          partnerExistingNow,
+          'replaced_by_couple',
+          actor,
+          now,
+        );
       }
 
       const primaryMembershipId = await this.repository.insertMembership({
@@ -252,7 +299,11 @@ export class MembershipSaleService {
         actor,
       );
 
-      return { primaryId: primaryMembershipId, partnerId: partnerMembershipId };
+      return {
+        primaryId: primaryMembershipId,
+        partnerId: partnerMembershipId,
+        cancelledPartnerId: partnerExistingNow?.id ?? null,
+      };
     });
 
     await this.domainEventBus.emit({
@@ -267,11 +318,11 @@ export class MembershipSaleService {
         payload: { membershipId: partnerId, memberId: partner.id },
       });
     }
-    if (partnerExisting) {
+    if (cancelledPartnerId != null) {
       await this.domainEventBus.emit({
         eventName: 'membership.cancelled',
         occurredAt: now,
-        payload: { membershipId: partnerExisting.id },
+        payload: { membershipId: cancelledPartnerId },
       });
     }
 
