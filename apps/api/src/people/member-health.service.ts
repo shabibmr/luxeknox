@@ -6,7 +6,9 @@ import {
   PaginationHelper,
   type PaginatedResponse,
 } from '../platform/http/pagination';
-import { NotFoundError } from '../platform/errors/app-error';
+import { BadRequestError, NotFoundError } from '../platform/errors/app-error';
+import { backdatedInstant } from '../reports/reports.timezone';
+import { SettingsService } from '../sys/settings.service';
 import type { MemberHealth } from '../platform/db/schema/member-health';
 import { MemberRepository } from './member.repository';
 import { MemberHealthRepository } from './member-health.repository';
@@ -20,6 +22,7 @@ export class MemberHealthService {
     private readonly memberRepository: MemberRepository,
     private readonly auditService: AuditService,
     private readonly paginationHelper: PaginationHelper,
+    private readonly settingsService: SettingsService,
   ) {}
 
   toDto(row: MemberHealth): MemberHealthRecordDto {
@@ -64,6 +67,7 @@ export class MemberHealthService {
   ): Promise<MemberHealthRecordDto> {
     await requireScopedMember(this.memberRepository, memberId, actor);
     const now = new Date();
+    const recordedAt = await this.resolveRecordedAt(dto.recorded_date, now);
     const id = await this.healthRepository.insertRecord({
       member_id: memberId,
       blood_group: dto.blood_group ?? null,
@@ -73,7 +77,7 @@ export class MemberHealthService {
       dietary_preferences: dto.dietary_preferences ?? null,
       physician_name: dto.physician_name ?? null,
       physician_phone: dto.physician_phone ?? null,
-      recorded_at: now,
+      recorded_at: recordedAt,
       created_at: now,
     });
 
@@ -91,5 +95,12 @@ export class MemberHealthService {
     });
 
     return this.toDto(created);
+  }
+
+  private async resolveRecordedAt(dateRaw: string | undefined, now: Date): Promise<Date> {
+    if (!dateRaw) return now;
+    const instant = backdatedInstant(dateRaw, now, await this.settingsService.getTimezone());
+    if (!instant) throw new BadRequestError('recorded_date cannot be in the future');
+    return instant;
   }
 }

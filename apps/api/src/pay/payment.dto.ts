@@ -35,6 +35,11 @@ export const paymentCreateSchema = z
     expected_row_version: z.number().int().positive().optional(),
     subtotal: moneySchema,
     discount_amount: moneySchema.optional(),
+    /** Gym-local day the money was received (YYYY-MM-DD, not in the future); defaults to now. */
+    payment_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid payment_date format. Expected YYYY-MM-DD')
+      .optional(),
     payment_method_id: z.number().int().positive().optional(),
     tenders: z.array(tenderLineSchema).min(1).optional(),
     transaction_reference: z.string().max(150).optional(),

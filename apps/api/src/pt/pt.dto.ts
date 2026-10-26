@@ -27,6 +27,7 @@ const tenderLine = z
 /** Payment fields shared by purchase and renew — same shape as POST /payments. */
 const paymentFields = {
   discount_amount: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+  payment_date: isoDate.optional(),
   payment_method_id: z.number().int().positive().optional(),
   tenders: z.array(tenderLine).min(1).optional(),
   transaction_reference: z.string().max(150).optional(),

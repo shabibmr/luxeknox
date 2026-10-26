@@ -49,6 +49,9 @@ abstract class CreateMembershipState with _$CreateMembershipState {
     /// "Discount for remaining days" as a decimal string (FR-API-005),
     /// pre-filled from [MembershipReplacementPreview.suggestedCredit].
     String? discountAmount,
+
+    /// Day the money was received; defaults to today.
+    DateTime? paymentDate,
   }) = _CreateMembershipState;
 
   const CreateMembershipState._();
@@ -58,6 +61,14 @@ abstract class CreateMembershipState with _$CreateMembershipState {
       if (p.id == selectedProductId) return p;
     }
     return null;
+  }
+
+  /// Same rule as the API: start date plus the package duration.
+  DateTime? get endDate {
+    final start = startDate;
+    final product = selectedProduct;
+    if (start == null || product == null) return null;
+    return DateTime(start.year, start.month, start.day + product.durationDays);
   }
 
   bool get isCoupleSelected => selectedProduct?.isCouple ?? false;
@@ -122,6 +133,7 @@ class CreateMembershipCubit extends Cubit<CreateMembershipState> {
         selectedMemberId: memberId ?? state.selectedMemberId,
         selectedMember: memberId != null ? null : state.selectedMember,
         startDate: state.startDate ?? DateTime.now(),
+        paymentDate: state.paymentDate ?? DateTime.now(),
       ),
     );
   }
@@ -206,6 +218,18 @@ class CreateMembershipCubit extends Cubit<CreateMembershipState> {
     emit(
       state.copyWith(
         discountAmount: value.isEmpty ? null : value,
+        fieldError: null,
+      ),
+    );
+  }
+
+  void paymentDateChanged(DateTime paymentDate) {
+    if (state.submitting) return;
+    // A sale recorded for an earlier day starts then; start date can still be adjusted after.
+    emit(
+      state.copyWith(
+        paymentDate: paymentDate,
+        startDate: paymentDate,
         fieldError: null,
       ),
     );
@@ -322,6 +346,7 @@ class CreateMembershipCubit extends Cubit<CreateMembershipState> {
         partnerMemberId: isCouple ? partner!.id.toString() : null,
         replacePartnerMembership: isCouple && preview != null ? true : null,
         discountAmount: discount,
+        paymentDate: state.paymentDate,
       );
 
       emit(

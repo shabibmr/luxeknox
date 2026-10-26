@@ -63,7 +63,7 @@ export type MemberPtSummary = {
 
 type PaymentFields = Pick<
   PtPurchaseDto,
-  'discount_amount' | 'payment_method_id' | 'tenders' | 'transaction_reference'
+  'discount_amount' | 'payment_date' | 'payment_method_id' | 'tenders' | 'transaction_reference'
 >;
 
 function requireBundledMembershipId(membershipIds: Map<number, number>, memberId: number): number {
@@ -141,9 +141,6 @@ export class PtSubscriptionService {
     }
 
     const today = await this.today();
-    if (dto.start_date < today) {
-      throw new BadRequestError('start_date cannot be in the past');
-    }
 
     const primaryMember = await this.memberRepository.findById(dto.member_id);
     const primaryLabel = primaryMember
@@ -424,6 +421,7 @@ export class PtSubscriptionService {
           member_id: p.memberId,
           subtotal: p.product.base_price,
           discount_amount: p.payment.discount_amount,
+          payment_date: p.payment.payment_date,
           payment_method_id: p.payment.payment_method_id,
           tenders: p.payment.tenders,
           transaction_reference: p.payment.transaction_reference,

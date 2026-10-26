@@ -21,6 +21,8 @@ class _$MemberHealthWrite extends MemberHealthWrite {
   final String? physicianName;
   @override
   final String? physicianPhone;
+  @override
+  final Date? recordedDate;
 
   factory _$MemberHealthWrite(
           [void Function(MemberHealthWriteBuilder)? updates]) =>
@@ -33,7 +35,8 @@ class _$MemberHealthWrite extends MemberHealthWrite {
       this.allergies,
       this.dietaryPreferences,
       this.physicianName,
-      this.physicianPhone})
+      this.physicianPhone,
+      this.recordedDate})
       : super._();
   @override
   MemberHealthWrite rebuild(void Function(MemberHealthWriteBuilder) updates) =>
@@ -53,7 +56,8 @@ class _$MemberHealthWrite extends MemberHealthWrite {
         allergies == other.allergies &&
         dietaryPreferences == other.dietaryPreferences &&
         physicianName == other.physicianName &&
-        physicianPhone == other.physicianPhone;
+        physicianPhone == other.physicianPhone &&
+        recordedDate == other.recordedDate;
   }
 
   @override
@@ -66,6 +70,7 @@ class _$MemberHealthWrite extends MemberHealthWrite {
     _$hash = $jc(_$hash, dietaryPreferences.hashCode);
     _$hash = $jc(_$hash, physicianName.hashCode);
     _$hash = $jc(_$hash, physicianPhone.hashCode);
+    _$hash = $jc(_$hash, recordedDate.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -79,7 +84,8 @@ class _$MemberHealthWrite extends MemberHealthWrite {
           ..add('allergies', allergies)
           ..add('dietaryPreferences', dietaryPreferences)
           ..add('physicianName', physicianName)
-          ..add('physicianPhone', physicianPhone))
+          ..add('physicianPhone', physicianPhone)
+          ..add('recordedDate', recordedDate))
         .toString();
   }
 }
@@ -120,6 +126,10 @@ class MemberHealthWriteBuilder
   set physicianPhone(String? physicianPhone) =>
       _$this._physicianPhone = physicianPhone;
 
+  Date? _recordedDate;
+  Date? get recordedDate => _$this._recordedDate;
+  set recordedDate(Date? recordedDate) => _$this._recordedDate = recordedDate;
+
   MemberHealthWriteBuilder() {
     MemberHealthWrite._defaults(this);
   }
@@ -134,6 +144,7 @@ class MemberHealthWriteBuilder
       _dietaryPreferences = $v.dietaryPreferences;
       _physicianName = $v.physicianName;
       _physicianPhone = $v.physicianPhone;
+      _recordedDate = $v.recordedDate;
       _$v = null;
     }
     return this;
@@ -162,6 +173,7 @@ class MemberHealthWriteBuilder
           dietaryPreferences: dietaryPreferences,
           physicianName: physicianName,
           physicianPhone: physicianPhone,
+          recordedDate: recordedDate,
         );
     replace(_$result);
     return _$result;

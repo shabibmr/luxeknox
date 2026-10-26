@@ -112,6 +112,9 @@ class PtRepositoryImpl implements PtRepository {
           ..slotStart = _hour(slotStart)
           ..paymentMethodId = payment.paymentMethodId
           ..discountAmount = payment.discountAmount
+          ..paymentDate = payment.paymentDate == null
+              ? null
+              : dateTimeToApiDate(payment.paymentDate!)
           ..transactionReference = payment.transactionReference
           ..partnerMemberId = partnerMemberId,
       ),
@@ -130,6 +133,9 @@ class PtRepositoryImpl implements PtRepository {
         (b) => b
           ..paymentMethodId = payment.paymentMethodId
           ..discountAmount = payment.discountAmount
+          ..paymentDate = payment.paymentDate == null
+              ? null
+              : dateTimeToApiDate(payment.paymentDate!)
           ..transactionReference = payment.transactionReference,
       ),
     );

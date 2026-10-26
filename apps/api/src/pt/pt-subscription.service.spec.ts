@@ -372,8 +372,11 @@ describe('PT subscriptions', () => {
       expect(subsRepo.insertSubscription).not.toHaveBeenCalled();
     });
 
-    it('rejects a past start date', async () => {
-      await expect(purchase({ start_date: '2026-09-28' })).rejects.toBeInstanceOf(BadRequestError);
+    it('accepts a past start date and derives the end date from it', async () => {
+      await purchase({ start_date: '2026-09-28' });
+      expect(subsRepo.insertSubscription).toHaveBeenCalledWith(
+        expect.objectContaining({ start_date: '2026-09-28', status: 'active' }),
+      );
     });
 
     describe('couple packages (CP-07)', () => {

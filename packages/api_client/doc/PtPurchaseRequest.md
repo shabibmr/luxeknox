@@ -9,6 +9,7 @@ import 'package:api_client/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **discountAmount** | **String** | Unsigned money with at most two decimals. Used for sale discount inputs. | [optional] 
+**paymentDate** | [**Date**](Date.md) | Gym-local day the money was received; not in the future. Defaults to now. | [optional] 
 **paymentMethodId** | **int** |  | [optional] 
 **tenders** | [**BuiltList&lt;TenderLine&gt;**](TenderLine.md) |  | [optional] 
 **transactionReference** | **String** |  | [optional] 

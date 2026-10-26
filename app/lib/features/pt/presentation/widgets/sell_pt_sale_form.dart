@@ -93,11 +93,11 @@ class SellPtSaleForm extends StatelessWidget {
           trailing: const Icon(Icons.calendar_today_outlined),
           onTap: () async {
             final now = DateTime.now();
-            final first = DateTime(now.year, now.month, now.day);
-            final end = first.add(const Duration(days: 365));
+            final today = DateTime(now.year, now.month, now.day);
+            final first = today.subtract(const Duration(days: 365));
+            final last = today.add(const Duration(days: 365));
             // showDatePicker asserts first <= initial <= last.
-            final last = end.isBefore(first) ? first : end;
-            final current = state.startDate ?? first;
+            final current = state.startDate ?? today;
             final initial = current.isBefore(first)
                 ? first
                 : (current.isAfter(last) ? last : current);
@@ -134,6 +134,27 @@ class SellPtSaleForm extends StatelessWidget {
             ],
             onChanged: cubit.setPaymentMethod,
           ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text(PtStrings.paymentDate),
+          subtitle: Text(
+            state.paymentDate == null
+                ? '—'
+                : formatCalendarDate(state.paymentDate!),
+          ),
+          trailing: const Icon(Icons.calendar_today_outlined),
+          onTap: () async {
+            final now = DateTime.now();
+            final last = DateTime(now.year, now.month, now.day);
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: state.paymentDate ?? last,
+              firstDate: last.subtract(const Duration(days: 365)),
+              lastDate: last,
+            );
+            if (picked != null) cubit.setPaymentDate(picked);
+          },
+        ),
         TextFormField(
           decoration: const InputDecoration(labelText: PtStrings.discount),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),

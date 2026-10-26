@@ -18,6 +18,7 @@ class CreateMembershipParams extends Equatable {
     this.partnerMemberId,
     this.replacePartnerMembership,
     this.discountAmount,
+    this.paymentDate,
   });
 
   final String memberId;
@@ -29,6 +30,7 @@ class CreateMembershipParams extends Equatable {
   final String? partnerMemberId;
   final bool? replacePartnerMembership;
   final String? discountAmount;
+  final DateTime? paymentDate;
 
   @override
   List<Object?> get props => [
@@ -41,6 +43,7 @@ class CreateMembershipParams extends Equatable {
     partnerMemberId,
     replacePartnerMembership,
     discountAmount,
+    paymentDate,
   ];
 }
 
@@ -63,6 +66,7 @@ class CreateMembershipUseCase
       partnerMemberId: params.partnerMemberId,
       replacePartnerMembership: params.replacePartnerMembership,
       discountAmount: params.discountAmount,
+      paymentDate: params.paymentDate,
     );
   }
 }

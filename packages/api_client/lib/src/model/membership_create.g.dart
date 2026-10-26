@@ -25,6 +25,8 @@ class _$MembershipCreate extends MembershipCreate {
   final bool? replacePartnerMembership;
   @override
   final String? discountAmount;
+  @override
+  final Date? paymentDate;
 
   factory _$MembershipCreate(
           [void Function(MembershipCreateBuilder)? updates]) =>
@@ -39,7 +41,8 @@ class _$MembershipCreate extends MembershipCreate {
       this.autoRenew,
       this.partnerMemberId,
       this.replacePartnerMembership,
-      this.discountAmount})
+      this.discountAmount,
+      this.paymentDate})
       : super._();
   @override
   MembershipCreate rebuild(void Function(MembershipCreateBuilder) updates) =>
@@ -61,7 +64,8 @@ class _$MembershipCreate extends MembershipCreate {
         autoRenew == other.autoRenew &&
         partnerMemberId == other.partnerMemberId &&
         replacePartnerMembership == other.replacePartnerMembership &&
-        discountAmount == other.discountAmount;
+        discountAmount == other.discountAmount &&
+        paymentDate == other.paymentDate;
   }
 
   @override
@@ -76,6 +80,7 @@ class _$MembershipCreate extends MembershipCreate {
     _$hash = $jc(_$hash, partnerMemberId.hashCode);
     _$hash = $jc(_$hash, replacePartnerMembership.hashCode);
     _$hash = $jc(_$hash, discountAmount.hashCode);
+    _$hash = $jc(_$hash, paymentDate.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -91,7 +96,8 @@ class _$MembershipCreate extends MembershipCreate {
           ..add('autoRenew', autoRenew)
           ..add('partnerMemberId', partnerMemberId)
           ..add('replacePartnerMembership', replacePartnerMembership)
-          ..add('discountAmount', discountAmount))
+          ..add('discountAmount', discountAmount)
+          ..add('paymentDate', paymentDate))
         .toString();
   }
 }
@@ -140,6 +146,10 @@ class MembershipCreateBuilder
   set discountAmount(String? discountAmount) =>
       _$this._discountAmount = discountAmount;
 
+  Date? _paymentDate;
+  Date? get paymentDate => _$this._paymentDate;
+  set paymentDate(Date? paymentDate) => _$this._paymentDate = paymentDate;
+
   MembershipCreateBuilder() {
     MembershipCreate._defaults(this);
   }
@@ -156,6 +166,7 @@ class MembershipCreateBuilder
       _partnerMemberId = $v.partnerMemberId;
       _replacePartnerMembership = $v.replacePartnerMembership;
       _discountAmount = $v.discountAmount;
+      _paymentDate = $v.paymentDate;
       _$v = null;
     }
     return this;
@@ -190,6 +201,7 @@ class MembershipCreateBuilder
           partnerMemberId: partnerMemberId,
           replacePartnerMembership: replacePartnerMembership,
           discountAmount: discountAmount,
+          paymentDate: paymentDate,
         );
     replace(_$result);
     return _$result;

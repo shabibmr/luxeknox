@@ -29,6 +29,7 @@ import {
   PaginationHelper,
   type PaginatedResponse,
 } from '../platform/http/pagination';
+import { backdatedInstant } from '../reports/reports.timezone';
 import { SettingsService } from '../sys/settings.service';
 import type {
   PaymentAdjustDto,
@@ -155,6 +156,18 @@ export class PaymentService {
     return { subtotal, discount, tax, total };
   }
 
+  /**
+   * The instant recorded as the payment date. No date, or today (gym timezone), keeps the real
+   * time; an earlier day is stored at noon gym time so it lands in that day for any report.
+   */
+  async resolvePaymentDate(dateRaw: string | undefined, now: Date): Promise<Date> {
+    if (!dateRaw) return now;
+    const timeZone = await this.settingsService.getTimezone();
+    const instant = backdatedInstant(dateRaw, now, timeZone);
+    if (!instant) throw new BadRequestError('payment_date cannot be in the future');
+    return instant;
+  }
+
   resolveStatus(total: string, amountPaid: string): 'pending' | 'partial' | 'paid' | 'refunded' {
     if (cmpMoney(amountPaid, '0') <= 0) {
       return cmpMoney(total, '0') <= 0 ? 'refunded' : 'pending';
@@ -247,6 +260,7 @@ export class PaymentService {
 
     return runInTransaction(this.db, async () => {
       const now = new Date();
+      const paymentDate = await this.resolvePaymentDate(dto.payment_date, now);
       const invoiceNumber = await this.repository.allocateInvoiceNumber();
 
       let membershipId: number | null = dto.membership_id ?? null;
@@ -276,7 +290,7 @@ export class PaymentService {
         status,
         transaction_reference: dto.transaction_reference ?? null,
         cashier_user_id: actor.id,
-        payment_date: now,
+        payment_date: paymentDate,
         row_version: 1,
         created_at: now,
         updated_at: now,
@@ -290,7 +304,7 @@ export class PaymentService {
           action: 'payment_received',
           amount: tender.amount,
           notes: tender.transaction_reference ?? null,
-          timestamp: now,
+          timestamp: paymentDate,
         });
         histories.push(history);
       }

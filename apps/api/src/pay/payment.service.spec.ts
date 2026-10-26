@@ -93,6 +93,7 @@ describe('PaymentService', () => {
     };
     settingsService = {
       getTaxRatePercent: vi.fn().mockResolvedValue('18.00'),
+      getTimezone: vi.fn().mockResolvedValue('UTC'),
       getPaymentsActivateMembershipOnPartial: vi.fn().mockResolvedValue(false),
     };
     auditService = { recordAudit: vi.fn().mockResolvedValue(undefined) };
@@ -313,6 +314,33 @@ describe('PaymentService', () => {
       await expect(service.getById(42, memberActor)).rejects.toMatchObject({
         response: { message: 'Payment not found' },
       });
+    });
+  });
+
+  describe('payment_date', () => {
+    const create = (payment_date?: string) =>
+      service.create(
+        { member_id: 5, subtotal: '100.00', payment_method_id: 1, payment_date },
+        actor,
+      );
+
+    it('stores an earlier day at noon gym time, on the payment and its history', async () => {
+      await create('2020-03-04');
+      const at = new Date('2020-03-04T12:00:00.000Z');
+      expect(repository.insertPayment).toHaveBeenCalledWith(expect.objectContaining({ payment_date: at }));
+      expect(repository.insertHistory).toHaveBeenCalledWith(expect.objectContaining({ timestamp: at }));
+    });
+
+    it('keeps the real time when the date is today', async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      await create(today);
+      const row = repository.insertPayment.mock.calls[0]![0];
+      expect(row.payment_date).toEqual(row.created_at);
+    });
+
+    it('rejects a future date', async () => {
+      await expect(create('2999-01-01')).rejects.toThrow('payment_date cannot be in the future');
+      expect(repository.insertPayment).not.toHaveBeenCalled();
     });
   });
 

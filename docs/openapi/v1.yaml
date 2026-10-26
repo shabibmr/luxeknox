@@ -7616,6 +7616,10 @@ components:
           type: string
         physician_phone:
           type: string
+        recorded_date:
+          type: string
+          format: date
+          description: Day the record applies to (gym timezone); defaults to now, may be in the past, never the future.
     MemberHealthHistoryPage:
       type: object
       required: [data, meta]
@@ -8058,6 +8062,10 @@ components:
       properties:
         discount_amount:
           $ref: "#/components/schemas/DiscountAmount"
+        payment_date:
+          type: string
+          format: date
+          description: Gym-local day the money was received; not in the future. Defaults to now.
         payment_method_id:
           type: integer
           format: int64
@@ -8288,6 +8296,10 @@ components:
         discount_amount:
           $ref: "#/components/schemas/DiscountAmount"
           description: Optional unsigned discount. Payment totals still reject amounts over the subtotal.
+        payment_date:
+          type: string
+          format: date
+          description: Gym-local day the money was received; not in the future. Defaults to now.
     MembershipActionRequest:
       type: object
       properties:
@@ -8947,6 +8959,10 @@ components:
           $ref: "#/components/schemas/Money"
         discount_amount:
           $ref: "#/components/schemas/Money"
+        payment_date:
+          type: string
+          format: date
+          description: Gym-local day the money was received; not in the future. Defaults to now.
         payment_method_id:
           $ref: "#/components/schemas/Id"
         tenders:

@@ -9,6 +9,10 @@ export const memberHealthWriteSchema = z.object({
   dietary_preferences: z.string().trim().max(5000).optional().nullable(),
   physician_name: z.string().trim().max(150).optional().nullable(),
   physician_phone: z.string().trim().max(32).optional().nullable(),
+  recorded_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid recorded_date format. Expected YYYY-MM-DD')
+    .optional(),
 });
 
 export type MemberHealthWriteDto = z.infer<typeof memberHealthWriteSchema>;

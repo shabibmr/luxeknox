@@ -16,6 +16,7 @@ export const membershipCreateSchema = z.object({
   partner_member_id: z.number().int().positive().optional(),
   replace_partner_membership: z.boolean().optional(),
   discount_amount: discountAmountSchema.optional(),
+  payment_date: dateString.optional(),
 });
 
 export type MembershipCreateDto = z.infer<typeof membershipCreateSchema>;

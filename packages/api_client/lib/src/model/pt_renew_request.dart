@@ -5,6 +5,7 @@
 // ignore_for_file: unused_element
 import 'package:api_client/src/model/tender_line.dart';
 import 'package:built_collection/built_collection.dart';
+import 'package:api_client/src/model/date.dart';
 import 'package:api_client/src/model/pt_payment_fields.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
@@ -15,6 +16,7 @@ part 'pt_renew_request.g.dart';
 ///
 /// Properties:
 /// * [discountAmount] - Unsigned money with at most two decimals. Used for sale discount inputs.
+/// * [paymentDate] - Gym-local day the money was received; not in the future. Defaults to now.
 /// * [paymentMethodId] 
 /// * [tenders] 
 /// * [transactionReference] 
@@ -59,6 +61,13 @@ class _$PtRenewRequestSerializer implements PrimitiveSerializer<PtRenewRequest> 
       yield serializers.serialize(
         object.ptProductId,
         specifiedType: const FullType(int),
+      );
+    }
+    if (object.paymentDate != null) {
+      yield r'payment_date';
+      yield serializers.serialize(
+        object.paymentDate,
+        specifiedType: const FullType(Date),
       );
     }
     if (object.transactionReference != null) {
@@ -120,6 +129,14 @@ class _$PtRenewRequestSerializer implements PrimitiveSerializer<PtRenewRequest> 
           ) as int?;
           if (valueDes == null) continue;
           result.ptProductId = valueDes;
+          break;
+        case r'payment_date':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.paymentDate = valueDes;
           break;
         case r'transaction_reference':
           final valueDes = serializers.deserialize(

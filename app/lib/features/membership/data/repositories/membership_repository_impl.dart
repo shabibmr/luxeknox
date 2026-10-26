@@ -150,15 +150,19 @@ class MembershipRepositoryImpl implements MembershipRepository {
     String? partnerMemberId,
     bool? replacePartnerMembership,
     String? discountAmount,
+    DateTime? paymentDate,
   }) async {
     final memberIntId = _parseId(memberId);
     final productIntId = _parseId(productId);
     final methodIntId = _parseId(paymentMethodId);
     if (memberIntId == null || productIntId == null || methodIntId == null) {
-      return const Left(ValidationFailure(['Invalid member, product, or payment method id']));
+      return const Left(
+        ValidationFailure(['Invalid member, product, or payment method id']),
+      );
     }
-    final partnerIntId =
-        partnerMemberId == null ? null : _parseId(partnerMemberId);
+    final partnerIntId = partnerMemberId == null
+        ? null
+        : _parseId(partnerMemberId);
     if (partnerMemberId != null && partnerIntId == null) {
       return const Left(ValidationFailure(['Invalid partner member id']));
     }
@@ -173,7 +177,10 @@ class MembershipRepositoryImpl implements MembershipRepository {
           ..autoRenew = autoRenew
           ..partnerMemberId = partnerIntId
           ..replacePartnerMembership = replacePartnerMembership
-          ..discountAmount = discountAmount;
+          ..discountAmount = discountAmount
+          ..paymentDate = paymentDate == null
+              ? null
+              : dateTimeToApiDate(paymentDate);
       });
       final created = await _remoteDataSource.createMembership(create);
       return Right(created.toDomain());

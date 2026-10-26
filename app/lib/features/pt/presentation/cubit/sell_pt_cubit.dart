@@ -64,6 +64,9 @@ abstract class SellPtState with _$SellPtState {
     String? paymentMethodId,
     String? discount,
 
+    /// Sale only: the day the money was received; defaults to today.
+    DateTime? paymentDate,
+
     /// Sale only: server-computed totals for [product] and [discount]; null
     /// until fetched or while the discount is not a valid amount.
     PtPaymentPreview? preview,
@@ -189,6 +192,7 @@ class SellPtCubit extends Cubit<SellPtState> {
         memberName: memberName,
         status: LoadStatus.loading,
         startDate: _today(),
+        paymentDate: _today(),
       ),
     );
     final productsFuture = _getProducts(const NoParams());
@@ -481,6 +485,15 @@ class SellPtCubit extends Cubit<SellPtState> {
   void setPaymentMethod(String? id) =>
       emit(state.copyWith(paymentMethodId: id));
 
+  /// A sale recorded for an earlier day starts then, unless the start date was already
+  /// set apart from the payment date (changing it would discard the chosen slot).
+  void setPaymentDate(DateTime date) {
+    final day = DateTime(date.year, date.month, date.day);
+    final startFollowsPayment = state.startDate == state.paymentDate;
+    emit(state.copyWith(paymentDate: day));
+    if (startFollowsPayment && day != state.startDate) setStartDate(day);
+  }
+
   void setDiscount(String? value) {
     emit(
       state.copyWith(
@@ -579,6 +592,7 @@ class SellPtCubit extends Cubit<SellPtState> {
       payment: PtPayment(
         paymentMethodId: int.parse(state.paymentMethodId!),
         discountAmount: state.discount,
+        paymentDate: state.paymentDate,
       ),
       partnerMemberId: state.isCoupleSelected ? state.partner?.id : null,
     );

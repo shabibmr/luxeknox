@@ -24,6 +24,8 @@ class _$PtPurchaseRequest extends PtPurchaseRequest {
   @override
   final String? discountAmount;
   @override
+  final Date? paymentDate;
+  @override
   final int? paymentMethodId;
   @override
   final BuiltList<TenderLine>? tenders;
@@ -43,6 +45,7 @@ class _$PtPurchaseRequest extends PtPurchaseRequest {
       required this.memberId,
       required this.trainerId,
       this.discountAmount,
+      this.paymentDate,
       this.paymentMethodId,
       this.tenders,
       this.transactionReference})
@@ -67,6 +70,7 @@ class _$PtPurchaseRequest extends PtPurchaseRequest {
         memberId == other.memberId &&
         trainerId == other.trainerId &&
         discountAmount == other.discountAmount &&
+        paymentDate == other.paymentDate &&
         paymentMethodId == other.paymentMethodId &&
         tenders == other.tenders &&
         transactionReference == other.transactionReference;
@@ -83,6 +87,7 @@ class _$PtPurchaseRequest extends PtPurchaseRequest {
     _$hash = $jc(_$hash, memberId.hashCode);
     _$hash = $jc(_$hash, trainerId.hashCode);
     _$hash = $jc(_$hash, discountAmount.hashCode);
+    _$hash = $jc(_$hash, paymentDate.hashCode);
     _$hash = $jc(_$hash, paymentMethodId.hashCode);
     _$hash = $jc(_$hash, tenders.hashCode);
     _$hash = $jc(_$hash, transactionReference.hashCode);
@@ -101,6 +106,7 @@ class _$PtPurchaseRequest extends PtPurchaseRequest {
           ..add('memberId', memberId)
           ..add('trainerId', trainerId)
           ..add('discountAmount', discountAmount)
+          ..add('paymentDate', paymentDate)
           ..add('paymentMethodId', paymentMethodId)
           ..add('tenders', tenders)
           ..add('transactionReference', transactionReference))
@@ -150,6 +156,11 @@ class PtPurchaseRequestBuilder
   set discountAmount(covariant String? discountAmount) =>
       _$this._discountAmount = discountAmount;
 
+  Date? _paymentDate;
+  Date? get paymentDate => _$this._paymentDate;
+  set paymentDate(covariant Date? paymentDate) =>
+      _$this._paymentDate = paymentDate;
+
   int? _paymentMethodId;
   int? get paymentMethodId => _$this._paymentMethodId;
   set paymentMethodId(covariant int? paymentMethodId) =>
@@ -181,6 +192,7 @@ class PtPurchaseRequestBuilder
       _memberId = $v.memberId;
       _trainerId = $v.trainerId;
       _discountAmount = $v.discountAmount;
+      _paymentDate = $v.paymentDate;
       _paymentMethodId = $v.paymentMethodId;
       _tenders = $v.tenders?.toBuilder();
       _transactionReference = $v.transactionReference;
@@ -220,6 +232,7 @@ class PtPurchaseRequestBuilder
             trainerId: BuiltValueNullFieldError.checkNotNull(
                 trainerId, r'PtPurchaseRequest', 'trainerId'),
             discountAmount: discountAmount,
+            paymentDate: paymentDate,
             paymentMethodId: paymentMethodId,
             tenders: _tenders?.build(),
             transactionReference: transactionReference,

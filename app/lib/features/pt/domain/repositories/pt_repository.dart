@@ -12,17 +12,22 @@ class PtPayment extends Equatable {
   const PtPayment({
     required this.paymentMethodId,
     this.discountAmount,
+    this.paymentDate,
     this.transactionReference,
   });
 
   final int paymentMethodId;
   final String? discountAmount;
+
+  /// Day the money was received; null lets the server use now.
+  final DateTime? paymentDate;
   final String? transactionReference;
 
   @override
   List<Object?> get props => [
     paymentMethodId,
     discountAmount,
+    paymentDate,
     transactionReference,
   ];
 }

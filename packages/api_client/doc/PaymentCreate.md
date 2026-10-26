@@ -13,6 +13,7 @@ Name | Type | Description | Notes
 **productId** | **int** | If set, assign/renew membership in the same transaction when paid. | [optional] 
 **subtotal** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | 
 **discountAmount** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | [optional] 
+**paymentDate** | [**Date**](Date.md) | Gym-local day the money was received; not in the future. Defaults to now. | [optional] 
 **paymentMethodId** | **int** |  | [optional] 
 **tenders** | [**BuiltList&lt;TenderLine&gt;**](TenderLine.md) | Split tender. Sum becomes amount_paid. payment_method_id on header is null when present. | [optional] 
 **transactionReference** | **String** |  | [optional] 

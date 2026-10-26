@@ -287,6 +287,7 @@ export class MembershipSaleService {
           payment_method_id: dto.payment_method_id,
           subtotal: product.base_price,
           discount_amount: dto.discount_amount,
+          payment_date: dto.payment_date,
         },
         actor,
       );
@@ -368,7 +369,9 @@ export class MembershipSaleService {
       }
 
       const partner = await loadPartner(this.repository, existing);
-      const continuation = existing.end_date >= p.today ? addDays(existing.end_date, 1) : p.today;
+      // A lapsed membership restarts from the sale's start date (today, or earlier when backdated).
+      const restart = p.startDate < p.today ? p.startDate : p.today;
+      const continuation = existing.end_date >= p.today ? addDays(existing.end_date, 1) : restart;
       const action: Extract<PtBundleAction, { kind: 'extend' }> = {
         kind: 'extend',
         memberIds: [memberId],

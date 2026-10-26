@@ -329,7 +329,8 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       cubit
         ..selectSlot(7, '17:00:00')
-        ..setDiscount('100.00');
+        ..setDiscount('100.00')
+        ..setPaymentDate(DateTime(2026, 10, 1, 15, 30));
 
       await cubit.submit();
 
@@ -340,9 +341,21 @@ void main() {
       expect(p.slotStart, '17:00:00');
       expect(p.payment.paymentMethodId, 1);
       expect(p.payment.discountAmount, '100.00');
+      expect(p.payment.paymentDate, DateTime(2026, 10, 1));
       expect(cubit.state.result, sold);
     },
   );
+
+  test('a backdated payment date moves the start date with it', () async {
+    final cubit = build();
+    await cubit.init(42);
+    cubit.selectProduct(product);
+
+    cubit.setPaymentDate(DateTime(2026, 9, 6, 15, 30));
+
+    expect(cubit.state.paymentDate, DateTime(2026, 9, 6));
+    expect(cubit.state.startDate, DateTime(2026, 9, 6));
+  });
 
   test('changing the package clears a chosen slot', () async {
     final cubit = build();

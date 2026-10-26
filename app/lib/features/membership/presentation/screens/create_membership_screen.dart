@@ -313,12 +313,43 @@ class _CreateMembershipForm extends StatelessWidget {
                       context: context,
                       initialDate: state.startDate ?? DateTime.now(),
                       firstDate: DateTime.now().subtract(
-                        const Duration(days: 30),
+                        const Duration(days: 365),
                       ),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
                     if (picked != null) {
                       cubit.startDateChanged(picked);
+                    }
+                  },
+          ),
+        ),
+        if (state.endDate != null)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text(MembershipStrings.expiresLabel),
+            subtitle: Text(state.endDate!.toIso8601String().split('T').first),
+          ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text(MembershipStrings.paymentDateLabel),
+          subtitle: Text(
+            state.paymentDate?.toIso8601String().split('T').first ?? '—',
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: state.submitting
+                ? null
+                : () async {
+                    final now = DateTime.now();
+                    final today = DateTime(now.year, now.month, now.day);
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: state.paymentDate ?? today,
+                      firstDate: today.subtract(const Duration(days: 365)),
+                      lastDate: today,
+                    );
+                    if (picked != null) {
+                      cubit.paymentDateChanged(picked);
                     }
                   },
           ),
