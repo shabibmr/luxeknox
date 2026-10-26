@@ -16,7 +16,7 @@ import '../../../../core/widgets/package_grid_picker_field.dart';
 import '../../../people/domain/usecases/get_member_usecase.dart';
 import '../../../people/presentation/widgets/member_picker_sheet.dart';
 import '../../domain/entities/membership_replacement_preview.dart';
-import '../bloc/create_membership_bloc.dart';
+import '../cubit/create_membership_cubit.dart';
 import '../membership_strings.dart';
 
 /// Admin sales flow — create a membership contract for a member (FR-MEMB sales).
@@ -30,8 +30,7 @@ class CreateMembershipScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) =>
-          getIt<CreateMembershipBloc>()
-            ..add(CreateMembershipStarted(memberId: memberId)),
+          getIt<CreateMembershipCubit>()..started(memberId: memberId),
       child: _CreateMembershipBody(memberId: memberId),
     );
   }
@@ -44,7 +43,7 @@ class _CreateMembershipBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<CreateMembershipBloc, CreateMembershipState>(
+    return BlocConsumer<CreateMembershipCubit, CreateMembershipState>(
       listenWhen: (prev, next) =>
           (prev.created == null && next.created != null) ||
           (prev.partnerReplacement == null && next.partnerReplacement != null),
@@ -76,8 +75,8 @@ class _CreateMembershipBody extends StatelessWidget {
                   message: state.failure == null
                       ? MembershipStrings.noneFound
                       : failureMessage(state.failure!),
-                  onRetry: () => context.read<CreateMembershipBloc>().add(
-                    CreateMembershipStarted(memberId: memberId),
+                  onRetry: () => context.read<CreateMembershipCubit>().started(
+                    memberId: memberId,
                   ),
                 )
               : _CreateMembershipForm(
@@ -144,9 +143,7 @@ Future<void> _showReplacePartnerDialog(
     ),
   );
   if (!context.mounted) return;
-  context.read<CreateMembershipBloc>().add(
-    CreateMembershipReplaceConfirmed(confirmed == true),
-  );
+  context.read<CreateMembershipCubit>().replaceConfirmed(confirmed == true);
 }
 
 Future<void> _showPartnerAlreadyCoupleDialog(BuildContext context) async {
@@ -164,9 +161,7 @@ Future<void> _showPartnerAlreadyCoupleDialog(BuildContext context) async {
     ),
   );
   if (!context.mounted) return;
-  context.read<CreateMembershipBloc>().add(
-    const CreateMembershipReplaceConfirmed(false),
-  );
+  context.read<CreateMembershipCubit>().replaceConfirmed(false);
 }
 
 class _CreateMembershipForm extends StatelessWidget {
@@ -198,7 +193,7 @@ class _CreateMembershipForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bloc = context.read<CreateMembershipBloc>();
+    final cubit = context.read<CreateMembershipCubit>();
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -218,7 +213,7 @@ class _CreateMembershipForm extends StatelessWidget {
             enabled: !state.submitting,
             onChanged: (member) {
               if (member != null) {
-                bloc.add(CreateMembershipMemberSelected(member));
+                cubit.memberSelected(member);
               }
             },
           ),
@@ -249,8 +244,7 @@ class _CreateMembershipForm extends StatelessWidget {
                 isCouple: p.isCouple,
               ),
           ],
-          onChanged: (value) =>
-              bloc.add(CreateMembershipProductSelected(value)),
+          onChanged: (value) => cubit.productSelected(value),
         ),
         if (state.isCoupleSelected) ...[
           const SizedBox(height: 16),
@@ -264,7 +258,7 @@ class _CreateMembershipForm extends StatelessWidget {
             excludeMemberIds: _excludePartnerIds,
             onChanged: (member) {
               if (member != null) {
-                bloc.add(CreateMembershipPartnerSelected(member));
+                cubit.partnerSelected(member);
               }
             },
           ),
@@ -299,7 +293,7 @@ class _CreateMembershipForm extends StatelessWidget {
                 ? null
                 : (value) {
                     if (value != null) {
-                      bloc.add(CreateMembershipPaymentMethodSelected(value));
+                      cubit.paymentMethodSelected(value);
                     }
                   },
           ),
@@ -324,7 +318,7 @@ class _CreateMembershipForm extends StatelessWidget {
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
                     if (picked != null) {
-                      bloc.add(CreateMembershipStartDateChanged(picked));
+                      cubit.startDateChanged(picked);
                     }
                   },
           ),
@@ -336,7 +330,7 @@ class _CreateMembershipForm extends StatelessWidget {
             border: OutlineInputBorder(),
           ),
           enabled: !state.submitting,
-          onChanged: (value) => bloc.add(CreateMembershipLockerChanged(value)),
+          onChanged: (value) => cubit.lockerChanged(value),
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
@@ -344,7 +338,7 @@ class _CreateMembershipForm extends StatelessWidget {
           value: state.autoRenew,
           onChanged: state.submitting
               ? null
-              : (value) => bloc.add(CreateMembershipAutoRenewChanged(value)),
+              : (value) => cubit.autoRenewChanged(value),
         ),
         if (state.failure != null) ...[
           const SizedBox(height: 8),
@@ -369,9 +363,7 @@ class _CreateMembershipForm extends StatelessWidget {
         ],
         const SizedBox(height: 24),
         FilledButton(
-          onPressed: state.submitting
-              ? null
-              : () => bloc.add(const CreateMembershipSubmitted()),
+          onPressed: state.submitting ? null : () => cubit.submitted(),
           child: state.submitting
               ? const SizedBox(
                   width: 20,
@@ -513,16 +505,14 @@ class _PriceSummaryState extends State<_PriceSummary> {
     _syncing = true;
     _discountController.text = value;
     _syncing = false;
-    context.read<CreateMembershipBloc>().add(
-      CreateMembershipDiscountChanged(value),
-    );
+    context.read<CreateMembershipCubit>().discountChanged(value);
   }
 
   void _onDiscountEdited() {
     if (_syncing || !mounted) return;
     _syncPercentFromValue();
-    context.read<CreateMembershipBloc>().add(
-      CreateMembershipDiscountChanged(_discountController.text),
+    context.read<CreateMembershipCubit>().discountChanged(
+      _discountController.text,
     );
   }
 

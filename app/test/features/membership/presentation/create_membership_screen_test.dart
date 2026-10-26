@@ -9,7 +9,7 @@ import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/features/membership/domain/entities/membership_product.dart';
 import 'package:luxeknox/features/membership/domain/entities/membership_replacement_preview.dart';
 import 'package:luxeknox/features/membership/domain/entities/membership_status.dart';
-import 'package:luxeknox/features/membership/presentation/bloc/create_membership_bloc.dart';
+import 'package:luxeknox/features/membership/presentation/cubit/create_membership_cubit.dart';
 import 'package:luxeknox/features/membership/presentation/membership_strings.dart';
 import 'package:luxeknox/features/membership/presentation/screens/create_membership_screen.dart';
 import 'package:luxeknox/features/payments/domain/entities/payment_method.dart';
@@ -19,14 +19,13 @@ import 'package:luxeknox/features/people/domain/usecases/get_member_usecase.dart
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockCreateMembershipBloc
-    extends MockBloc<CreateMembershipEvent, CreateMembershipState>
-    implements CreateMembershipBloc {}
+class MockCreateMembershipCubit extends MockCubit<CreateMembershipState>
+    implements CreateMembershipCubit {}
 
 class MockGetMemberUseCase extends Mock implements GetMemberUseCase {}
 
 void main() {
-  late MockCreateMembershipBloc bloc;
+  late MockCreateMembershipCubit cubit;
   late MockGetMemberUseCase getMember;
 
   const gold = MembershipProduct(
@@ -107,8 +106,12 @@ void main() {
   );
 
   setUp(() {
-    bloc = MockCreateMembershipBloc();
-    getIt.registerFactory<CreateMembershipBloc>(() => bloc);
+    cubit = MockCreateMembershipCubit();
+    when(
+      () => cubit.started(memberId: any(named: 'memberId')),
+    ).thenAnswer((_) async {});
+    when(() => cubit.replaceConfirmed(any())).thenReturn(null);
+    getIt.registerFactory<CreateMembershipCubit>(() => cubit);
     getMember = MockGetMemberUseCase();
     when(() => getMember(any())).thenAnswer(
       (_) async => const Right(
@@ -142,7 +145,7 @@ void main() {
 
   testWidgets('locked member shows name instead of id', (tester) async {
     whenListen(
-      bloc,
+      cubit,
       const Stream<CreateMembershipState>.empty(),
       initialState: const CreateMembershipState(
         status: LoadStatus.success,
@@ -160,7 +163,7 @@ void main() {
     tester,
   ) async {
     whenListen(
-      bloc,
+      cubit,
       const Stream<CreateMembershipState>.empty(),
       initialState: const CreateMembershipState(
         status: LoadStatus.success,
@@ -180,7 +183,7 @@ void main() {
 
   testWidgets('shows empty payment methods message', (tester) async {
     whenListen(
-      bloc,
+      cubit,
       const Stream<CreateMembershipState>.empty(),
       initialState: const CreateMembershipState(
         status: LoadStatus.success,
@@ -197,7 +200,7 @@ void main() {
 
   testWidgets('hides partner picker for a single package', (tester) async {
     whenListen(
-      bloc,
+      cubit,
       const Stream<CreateMembershipState>.empty(),
       initialState: singleState(),
     );
@@ -210,7 +213,7 @@ void main() {
 
   testWidgets('shows partner picker for a couple package', (tester) async {
     whenListen(
-      bloc,
+      cubit,
       const Stream<CreateMembershipState>.empty(),
       initialState: coupleState(),
     );
@@ -223,7 +226,7 @@ void main() {
 
   testWidgets('shows submit error when no partner is picked', (tester) async {
     whenListen(
-      bloc,
+      cubit,
       const Stream<CreateMembershipState>.empty(),
       initialState: coupleState(
         fieldError: 'Select a partner for the couple package',
@@ -246,7 +249,7 @@ void main() {
     final controller = StreamController<CreateMembershipState>();
     addTearDown(controller.close);
 
-    whenListen(bloc, controller.stream, initialState: coupleState());
+    whenListen(cubit, controller.stream, initialState: coupleState());
 
     await tester.pumpWidget(wrapScreen());
     await tester.pump();
@@ -277,16 +280,14 @@ void main() {
     await tester.tap(find.text(MembershipStrings.confirm));
     await tester.pumpAndSettle();
 
-    verify(
-      () => bloc.add(const CreateMembershipReplaceConfirmed(true)),
-    ).called(1);
+    verify(() => cubit.replaceConfirmed(true)).called(1);
   });
 
   testWidgets('replace dialog Cancel clears the partner', (tester) async {
     final controller = StreamController<CreateMembershipState>();
     addTearDown(controller.close);
 
-    whenListen(bloc, controller.stream, initialState: coupleState());
+    whenListen(cubit, controller.stream, initialState: coupleState());
 
     await tester.pumpWidget(wrapScreen());
     await tester.pump();
@@ -304,9 +305,7 @@ void main() {
     await tester.tap(find.text(MembershipStrings.cancel));
     await tester.pumpAndSettle();
 
-    verify(
-      () => bloc.add(const CreateMembershipReplaceConfirmed(false)),
-    ).called(1);
+    verify(() => cubit.replaceConfirmed(false)).called(1);
   });
 
   testWidgets('couple membership preview shows an error dialog', (
@@ -315,7 +314,7 @@ void main() {
     final controller = StreamController<CreateMembershipState>();
     addTearDown(controller.close);
 
-    whenListen(bloc, controller.stream, initialState: coupleState());
+    whenListen(cubit, controller.stream, initialState: coupleState());
 
     await tester.pumpWidget(wrapScreen());
     await tester.pump();
@@ -336,14 +335,12 @@ void main() {
     await tester.tap(find.text(MembershipStrings.confirm));
     await tester.pumpAndSettle();
 
-    verify(
-      () => bloc.add(const CreateMembershipReplaceConfirmed(false)),
-    ).called(1);
+    verify(() => cubit.replaceConfirmed(false)).called(1);
   });
 
   testWidgets('discount field is pre-filled from the preview', (tester) async {
     whenListen(
-      bloc,
+      cubit,
       const Stream<CreateMembershipState>.empty(),
       initialState: coupleState(
         selectedPartner: partner,

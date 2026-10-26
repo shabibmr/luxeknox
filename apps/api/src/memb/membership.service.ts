@@ -15,15 +15,15 @@ import { DomainEventBus, type DomainEvent } from '../platform/events/domain-even
 import {
   BadRequestError,
   BusinessRuleError,
-  ConflictError,
   ForbiddenError,
   NotFoundError,
 } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
-import { cmpMoney, fromCents, roundMoney, toCents } from '../platform/money/money';
 import { MemberRepository } from '../people/member.repository';
 import { MembershipProductRepository } from './membership-product.repository';
+import { addDays, cancelRow, loadPartner, renewRow } from './membership-rows';
+import { MembershipSaleService } from './membership-sale.service';
 import {
   type MembershipCreateDto,
   type MembershipActionRequestDto,
@@ -40,16 +40,7 @@ import {
   type MembershipWithProduct,
 } from './membership.repository';
 
-/** Catalog-hidden product that PT-bundled memberships point at (ADR-0012). */
-export const PT_BUNDLE_PRODUCT_CODE = 'PT-BUNDLE';
-
-/** Adds one calendar day to an ISO date string. */
-function addDays(isoDate: string, days: number): string {
-  const [y, m, d] = isoDate.split('-').map(Number);
-  const date = new Date(Date.UTC(y, m - 1, d));
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
-}
+export { PT_BUNDLE_PRODUCT_CODE } from './membership-sale.service';
 
 function daysBetweenInclusive(startIso: string, endIso: string): number {
   const [sy, sm, sd] = startIso.split('-').map(Number);
@@ -59,31 +50,10 @@ function daysBetweenInclusive(startIso: string, endIso: string): number {
   return Math.round((end - start) / 86_400_000) + 1;
 }
 
-/** Plain (non-inclusive) day difference between two ISO dates; negative if `endIso` precedes `startIso`. */
-function daysBetween(startIso: string, endIso: string): number {
-  const [sy, sm, sd] = startIso.split('-').map(Number);
-  const [ey, em, ed] = endIso.split('-').map(Number);
-  const start = Date.UTC(sy, sm - 1, sd);
-  const end = Date.UTC(ey, em - 1, ed);
-  return Math.round((end - start) / 86_400_000);
-}
-
-/** CM-06: round-half-up pro-rated credit, capped at `basePrice`. */
-function proRatedCredit(basePrice: string, remainingDays: number, durationDays: number): string {
-  if (durationDays <= 0) {
-    return roundMoney('0');
-  }
-  const baseCents = toCents(basePrice);
-  const numerator = baseCents * BigInt(remainingDays);
-  const denom = BigInt(durationDays);
-  const half = denom / 2n;
-  const creditCents = (numerator + half) / denom;
-  const credit = fromCents(creditCents);
-  return cmpMoney(credit, basePrice) > 0 ? roundMoney(basePrice) : credit;
-}
-
 @Injectable()
 export class MembershipService {
+  private readonly sale: MembershipSaleService;
+
   constructor(
     private readonly repository: MembershipRepository,
     private readonly productRepository: MembershipProductRepository,
@@ -95,7 +65,17 @@ export class MembershipService {
     private readonly paymentService: PaymentService,
     @Inject(DRIZZLE_DB_TOKEN)
     private readonly db: DrizzleDb<any>,
-  ) {}
+  ) {
+    this.sale = new MembershipSaleService(
+      repository,
+      productRepository,
+      memberRepository,
+      auditService,
+      domainEventBus,
+      paymentService,
+      db,
+    );
+  }
 
   private listScope(actor: AuthenticatedUser): MembershipListScope {
     if (actor.userType === 'admin' || actor.userType === 'employee') {
@@ -181,50 +161,6 @@ export class MembershipService {
     return this.present(membership, actor);
   }
 
-  /** CM-07: cancels `before` inside the current transaction; caller emits the domain event after commit. */
-  private async cancelRow(
-    before: Membership,
-    reason: string | null,
-    actor: AuthenticatedUser,
-    now: Date,
-  ): Promise<void> {
-    await this.repository.updateMembership(before.id, {
-      status: 'cancelled',
-      row_version: before.row_version + 1,
-      updated_at: now,
-    });
-
-    await this.repository.insertHistory({
-      membership_id: before.id,
-      action: 'cancelled',
-      old_end_date: before.end_date,
-      new_end_date: before.end_date,
-      performed_by_user_id: actor.id,
-      timestamp: now,
-    });
-
-    await this.auditService.recordAudit({
-      actorUserId: actor.id,
-      action: 'membership.cancelled',
-      entityName: 'memberships',
-      entityId: before.id,
-      beforeState: { status: before.status },
-      afterState: { status: 'cancelled', reason },
-    });
-  }
-
-  /** CM-08: the linked partner row of a couple membership, or null for a single membership. */
-  private async loadPartner(membership: Membership): Promise<Membership | null> {
-    if (membership.partner_membership_id == null) {
-      return null;
-    }
-    const partner = await this.repository.findPartner(membership);
-    if (!partner) {
-      throw new NotFoundError('Partner membership not found');
-    }
-    return partner;
-  }
-
   /** CM-08: renew/upgrade must stay within the same package type (single <-> couple is rejected). */
   private async assertSamePackageType(
     current: Membership,
@@ -239,45 +175,6 @@ export class MembershipService {
         `Cannot switch between ${currentProduct.package_type} and ${target.package_type} packages`,
       );
     }
-  }
-
-  /** CM-08: renew a row and its history/audit inside the current transaction. */
-  private async renewRow(
-    row: Membership,
-    productId: number,
-    newEndDate: string,
-    actor: AuthenticatedUser,
-    now: Date,
-    via?: string,
-    checkVersion = true,
-  ): Promise<void> {
-    await this.repository.updateMembership(
-      row.id,
-      {
-        product_id: productId,
-        end_date: newEndDate,
-        status: 'active',
-        row_version: row.row_version + 1,
-        updated_at: now,
-      },
-      checkVersion ? row.row_version : undefined,
-    );
-    await this.repository.insertHistory({
-      membership_id: row.id,
-      action: 'renewed',
-      old_end_date: row.end_date,
-      new_end_date: newEndDate,
-      performed_by_user_id: actor.id,
-      timestamp: now,
-    });
-    await this.auditService.recordAudit({
-      actorUserId: actor.id,
-      action: 'membership.renewed',
-      entityName: 'memberships',
-      entityId: row.id,
-      beforeState: { end_date: row.end_date },
-      afterState: via ? { end_date: newEndDate, via } : { end_date: newEndDate },
-    });
   }
 
   /** CM-10: the twin of a paired freeze, or null for a single membership. It must still be pending. */
@@ -297,213 +194,12 @@ export class MembershipService {
 
   /** CM-06: pro-rated credit preview for replacing a member's current membership with a couple purchase. */
   async getReplacementPreview(memberId: number): Promise<MembershipReplacementPreview> {
-    const existing = await this.repository.findActiveOrFrozenForMember(memberId);
-    if (!existing) {
-      throw new NotFoundError('Member has no active or frozen membership to replace');
-    }
-
-    const product = await this.productRepository.findById(existing.product_id);
-    if (!product) {
-      throw new NotFoundError('Membership product not found');
-    }
-
-    const today = new Date().toISOString().slice(0, 10);
-    const effectiveStart = today > existing.start_date ? today : existing.start_date;
-    const remainingDays = Math.max(0, daysBetween(effectiveStart, existing.end_date));
-
-    return {
-      membership_id: existing.id,
-      product_name: product.name,
-      status: existing.status,
-      end_date: existing.end_date,
-      remaining_days: remainingDays,
-      is_couple: product.package_type === 'couple',
-      suggested_credit: proRatedCredit(product.base_price, remainingDays, product.duration_days),
-    };
+    return this.sale.getReplacementPreview(memberId);
   }
 
   /** FR-MEMB-005/006/CM-07: assign a new contract; at most one active/frozen membership per member. */
   async create(dto: MembershipCreateDto, actor: AuthenticatedUser): Promise<MembershipWithProduct> {
-    const member = await this.memberRepository.findById(dto.member_id);
-    if (!member) {
-      throw new NotFoundError('Member not found');
-    }
-
-    const product = await this.productRepository.findById(dto.product_id);
-    if (!product || !product.is_active) {
-      throw new NotFoundError('Membership product not found');
-    }
-
-    const isCouple = product.package_type === 'couple';
-    if (isCouple && dto.partner_member_id == null) {
-      throw new BadRequestError('partner_member_id is required for a couple package');
-    }
-    if (!isCouple && dto.partner_member_id != null) {
-      throw new BadRequestError('partner_member_id is only valid for a couple package');
-    }
-    if (dto.partner_member_id != null && dto.partner_member_id === dto.member_id) {
-      throw new BadRequestError('partner_member_id must differ from member_id');
-    }
-
-    let partner: { id: number } | null = null;
-    if (dto.partner_member_id != null) {
-      partner = await this.memberRepository.findById(dto.partner_member_id);
-      if (!partner) {
-        throw new NotFoundError('Partner member not found');
-      }
-    }
-
-    const existing = await this.repository.findActiveOrFrozenForMember(dto.member_id);
-    if (existing) {
-      throw new BusinessRuleError(
-        'Member already has an active or frozen membership; use renew/upgrade instead',
-      );
-    }
-
-    let partnerExisting: Membership | null = null;
-    if (partner) {
-      partnerExisting = await this.repository.findActiveOrFrozenForMember(partner.id);
-      if (partnerExisting) {
-        if (!dto.replace_partner_membership) {
-          throw new BusinessRuleError(
-            'Partner has an active or frozen membership; confirm replacement',
-          );
-        }
-        const partnerProduct = await this.productRepository.findById(partnerExisting.product_id);
-        if (partnerProduct?.package_type === 'couple') {
-          throw new BusinessRuleError(
-            'Partner is already in a couple membership; replace it from that membership instead',
-          );
-        }
-      }
-    }
-
-    if (dto.locker_number) {
-      const lockerConflict = await this.repository.findByLockerNumberActiveOrFrozen(
-        dto.locker_number,
-      );
-      if (lockerConflict) {
-        throw new ConflictError(`Locker "${dto.locker_number}" is already assigned`);
-      }
-    }
-
-    if (
-      dto.discount_amount !== undefined &&
-      (cmpMoney(dto.discount_amount, '0') < 0 || cmpMoney(dto.discount_amount, product.base_price) > 0)
-    ) {
-      throw new BadRequestError('discount_amount must be between 0 and base_price');
-    }
-
-    const endDate = addDays(dto.start_date, product.duration_days);
-    const now = new Date();
-
-    const { primaryId, partnerId } = await runInTransaction(this.db, async () => {
-      if (partnerExisting) {
-        await this.cancelRow(partnerExisting, 'replaced_by_couple', actor, now);
-      }
-
-      const primaryMembershipId = await this.repository.insertMembership({
-        member_id: dto.member_id,
-        product_id: dto.product_id,
-        start_date: dto.start_date,
-        end_date: endDate,
-        status: 'active',
-        locker_number: dto.locker_number ?? null,
-        auto_renew: dto.auto_renew ?? false,
-        row_version: 1,
-        created_at: now,
-      });
-
-      await this.repository.insertHistory({
-        membership_id: primaryMembershipId,
-        action: 'created',
-        old_end_date: null,
-        new_end_date: endDate,
-        performed_by_user_id: actor.id,
-        timestamp: now,
-      });
-
-      await this.auditService.recordAudit({
-        actorUserId: actor.id,
-        action: 'membership.created',
-        entityName: 'memberships',
-        entityId: primaryMembershipId,
-        afterState: { member_id: dto.member_id, product_id: dto.product_id, end_date: endDate },
-      });
-
-      let partnerMembershipId: number | null = null;
-      if (partner) {
-        partnerMembershipId = await this.repository.insertMembership({
-          member_id: partner.id,
-          product_id: dto.product_id,
-          start_date: dto.start_date,
-          end_date: endDate,
-          status: 'active',
-          locker_number: null,
-          auto_renew: dto.auto_renew ?? false,
-          partner_membership_id: primaryMembershipId,
-          row_version: 1,
-          created_at: now,
-        });
-
-        await this.repository.setPartner(primaryMembershipId, partnerMembershipId);
-
-        await this.repository.insertHistory({
-          membership_id: partnerMembershipId,
-          action: 'created',
-          old_end_date: null,
-          new_end_date: endDate,
-          performed_by_user_id: actor.id,
-          timestamp: now,
-        });
-
-        await this.auditService.recordAudit({
-          actorUserId: actor.id,
-          action: 'membership.created',
-          entityName: 'memberships',
-          entityId: partnerMembershipId,
-          afterState: { member_id: partner.id, product_id: dto.product_id, end_date: endDate },
-        });
-      }
-
-      await this.paymentService.create(
-        {
-          member_id: dto.member_id,
-          membership_id: primaryMembershipId,
-          payment_method_id: dto.payment_method_id,
-          subtotal: product.base_price,
-          discount_amount: dto.discount_amount,
-        },
-        actor,
-      );
-
-      return { primaryId: primaryMembershipId, partnerId: partnerMembershipId };
-    });
-
-    await this.domainEventBus.emit({
-      eventName: 'membership.created',
-      occurredAt: now,
-      payload: { membershipId: primaryId, memberId: dto.member_id },
-    });
-    if (partnerId != null && partner) {
-      await this.domainEventBus.emit({
-        eventName: 'membership.created',
-        occurredAt: now,
-        payload: { membershipId: partnerId, memberId: partner.id },
-      });
-    }
-    if (partnerExisting) {
-      await this.domainEventBus.emit({
-        eventName: 'membership.cancelled',
-        occurredAt: now,
-        payload: { membershipId: partnerExisting.id },
-      });
-    }
-
-    const created = await this.repository.findByIdWithProduct(primaryId);
-    if (!created) {
-      throw new NotFoundError('Membership not found after creation');
-    }
+    const created = await this.sale.create(dto, actor);
     return this.present(created, actor);
   }
 
@@ -525,7 +221,7 @@ export class MembershipService {
       throw new NotFoundError('Membership product not found');
     }
     await this.assertSamePackageType(before, product);
-    const partner = await this.loadPartner(before);
+    const partner = await loadPartner(this.repository, before);
 
     const today = new Date().toISOString().slice(0, 10);
     const continuationStart =
@@ -536,9 +232,9 @@ export class MembershipService {
     const now = new Date();
 
     await runInTransaction(this.db, async () => {
-      await this.renewRow(before, targetProductId, newEndDate, actor, now);
+      await renewRow(this.repository, this.auditService, before, targetProductId, newEndDate, actor, now);
       if (partner) {
-        await this.renewRow(partner, targetProductId, newEndDate, actor, now);
+        await renewRow(this.repository, this.auditService, partner, targetProductId, newEndDate, actor, now);
       }
     });
 
@@ -580,89 +276,7 @@ export class MembershipService {
     actor: AuthenticatedUser;
     now: Date;
   }): Promise<{ membershipIds: Map<number, number>; events: DomainEvent[] }> {
-    const membershipIds = new Map<number, number>();
-    const events: DomainEvent[] = [];
-    const extended = new Set<number>();
-
-    for (const memberId of p.memberIds) {
-      const existing = await this.repository.findActiveOrFrozenForMember(memberId);
-
-      if (existing?.status === 'frozen') {
-        const member = await this.memberRepository.findById(memberId);
-        const who = member ? `${member.first_name} ${member.last_name}`.trim() : 'Member';
-        throw new BusinessRuleError(
-          `${who}'s membership is frozen; unfreeze it before adding Personal Training`,
-        );
-      }
-
-      if (existing) {
-        membershipIds.set(memberId, existing.id);
-        if (extended.has(existing.id)) {
-          continue;
-        }
-        const partner = await this.loadPartner(existing);
-        const continuation =
-          existing.end_date >= p.today ? addDays(existing.end_date, 1) : p.today;
-        const newEndDate = addDays(continuation, p.durationDays);
-        for (const row of partner ? [existing, partner] : [existing]) {
-          await this.renewRow(row, row.product_id, newEndDate, p.actor, p.now, 'pt_bundle');
-          extended.add(row.id);
-          events.push({
-            eventName: 'membership.renewed',
-            occurredAt: p.now,
-            payload: { membershipId: row.id },
-          });
-        }
-        continue;
-      }
-
-      const product = await this.productRepository.findByCode(PT_BUNDLE_PRODUCT_CODE);
-      if (!product) {
-        throw new NotFoundError(
-          `Membership product "${PT_BUNDLE_PRODUCT_CODE}" is missing; run migrations`,
-        );
-      }
-      const membershipId = await this.repository.insertMembership({
-        member_id: memberId,
-        product_id: product.id,
-        start_date: p.startDate,
-        end_date: p.endDate,
-        status: 'active',
-        locker_number: null,
-        auto_renew: false,
-        row_version: 1,
-        created_at: p.now,
-      });
-      await this.repository.insertHistory({
-        membership_id: membershipId,
-        action: 'created',
-        old_end_date: null,
-        new_end_date: p.endDate,
-        performed_by_user_id: p.actor.id,
-        timestamp: p.now,
-      });
-      await this.auditService.recordAudit({
-        actorUserId: p.actor.id,
-        action: 'membership.created',
-        entityName: 'memberships',
-        entityId: membershipId,
-        afterState: {
-          member_id: memberId,
-          product_id: product.id,
-          end_date: p.endDate,
-          via: 'pt_bundle',
-        },
-      });
-      membershipIds.set(memberId, membershipId);
-      extended.add(membershipId);
-      events.push({
-        eventName: 'membership.created',
-        occurredAt: p.now,
-        payload: { membershipId, memberId },
-      });
-    }
-
-    return { membershipIds, events };
+    return this.sale.bundleForPt(p);
   }
 
   /** Publishes events returned by {@link bundleForPt}; call after the transaction commits. */
@@ -690,7 +304,7 @@ export class MembershipService {
     }
 
     await this.assertSamePackageType(before, newProduct);
-    const partner = await this.loadPartner(before);
+    const partner = await loadPartner(this.repository, before);
 
     const newEndDate = addDays(before.start_date, newProduct.duration_days);
     const now = new Date();
@@ -756,12 +370,12 @@ export class MembershipService {
     }
     verifyRowVersion(dto.row_version, before.row_version);
 
-    const partner = await this.loadPartner(before);
+    const partner = await loadPartner(this.repository, before);
     const now = new Date();
     await runInTransaction(this.db, async () => {
-      await this.cancelRow(before, dto.reason ?? null, actor, now);
+      await cancelRow(this.repository, this.auditService, before, dto.reason ?? null, actor, now);
       if (partner) {
-        await this.cancelRow(partner, dto.reason ?? null, actor, now);
+        await cancelRow(this.repository, this.auditService, partner, dto.reason ?? null, actor, now);
       }
     });
 
@@ -822,7 +436,7 @@ export class MembershipService {
       throw new BadRequestError('end_date must not be before start_date');
     }
 
-    const partner = await this.loadPartner(membership);
+    const partner = await loadPartner(this.repository, membership);
 
     // A cancelled/expired/already-frozen row must not be (re)frozen: a direct approval would
     // resurrect it as `frozen`.
@@ -1076,7 +690,7 @@ export class MembershipService {
       throw new NotFoundError('Membership not found');
     }
 
-    const partner = await this.loadPartner(membership);
+    const partner = await loadPartner(this.repository, membership);
     const now = new Date();
 
     const extendRow = async (row: Membership): Promise<number> => {
@@ -1242,12 +856,12 @@ export class MembershipService {
     const newEndDate = addDays(continuationStart, product.duration_days);
 
     await this.assertSamePackageType(existing, product);
-    const partner = await this.loadPartner(existing);
+    const partner = await loadPartner(this.repository, existing);
 
     await runInTransaction(this.db, async () => {
-      await this.renewRow(existing, params.productId, newEndDate, params.actor, now, 'payment');
+      await renewRow(this.repository, this.auditService, existing, params.productId, newEndDate, params.actor, now, 'payment');
       if (partner) {
-        await this.renewRow(partner, params.productId, newEndDate, params.actor, now, 'payment');
+        await renewRow(this.repository, this.auditService, partner, params.productId, newEndDate, params.actor, now, 'payment');
       }
     });
 
