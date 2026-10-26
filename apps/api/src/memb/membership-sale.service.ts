@@ -40,9 +40,9 @@ type PtBundleInput = {
   now: Date;
 };
 
-/** One member's bundle decision. Writes happen only while applying the whole plan. */
+/** One distinct-membership decision. Writes happen only while applying the whole plan. */
 type PtBundleAction =
-  | { kind: 'extend'; memberId: number; rows: Membership[]; newEndDate: string }
+  | { kind: 'extend'; memberIds: number[]; rows: Membership[]; newEndDate: string }
   | { kind: 'create'; memberId: number };
 
 /** CM-06: round-half-up pro-rated credit, capped at `basePrice`. */
@@ -342,9 +342,11 @@ export class MembershipSaleService {
     return this.applyPtBundleActions(actions, p);
   }
 
-  /** Reads only. One action per input member. A frozen membership rejects before any write. */
+  /** Reads only. One extend per distinct open membership. A frozen membership rejects before any write. */
   private async decidePtBundleActions(p: PtBundleInput): Promise<PtBundleAction[]> {
     const actions: PtBundleAction[] = [];
+    const extendByRowId = new Map<number, Extract<PtBundleAction, { kind: 'extend' }>>();
+
     for (const memberId of p.memberIds) {
       const existing = await this.repository.findActiveOrFrozenForMember(memberId);
       if (existing?.status === 'frozen') {
@@ -358,33 +360,39 @@ export class MembershipSaleService {
         actions.push({ kind: 'create', memberId });
         continue;
       }
+
+      const prior = extendByRowId.get(existing.id);
+      if (prior) {
+        prior.memberIds.push(memberId);
+        continue;
+      }
+
       const partner = await loadPartner(this.repository, existing);
       const continuation = existing.end_date >= p.today ? addDays(existing.end_date, 1) : p.today;
-      actions.push({
+      const action: Extract<PtBundleAction, { kind: 'extend' }> = {
         kind: 'extend',
-        memberId,
+        memberIds: [memberId],
         rows: partner ? [existing, partner] : [existing],
         newEndDate: addDays(continuation, p.durationDays),
-      });
+      };
+      actions.push(action);
+      for (const row of action.rows) {
+        extendByRowId.set(row.id, action);
+      }
     }
     return actions;
   }
 
-  /** Applies an already-decided plan. A row already extended for this sale is not extended again. */
+  /** Applies an already-decided plan. Each extend renews its rows once. */
   private async applyPtBundleActions(
     actions: PtBundleAction[],
     p: PtBundleInput,
   ): Promise<{ membershipIds: Map<number, number>; events: DomainEvent[] }> {
     const membershipIds = new Map<number, number>();
     const events: DomainEvent[] = [];
-    const extended = new Set<number>();
 
     for (const action of actions) {
       if (action.kind === 'extend') {
-        membershipIds.set(action.memberId, action.rows[0].id);
-        if (extended.has(action.rows[0].id)) {
-          continue;
-        }
         for (const row of action.rows) {
           await renewRow(
             this.repository,
@@ -396,12 +404,20 @@ export class MembershipSaleService {
             p.now,
             'pt_bundle',
           );
-          extended.add(row.id);
           events.push({
             eventName: 'membership.renewed',
             occurredAt: p.now,
             payload: { membershipId: row.id },
           });
+        }
+        for (const memberId of action.memberIds) {
+          const row = action.rows.find((r) => r.member_id === memberId);
+          if (!row) {
+            throw new BusinessRuleError(
+              `PT bundle extend is missing a membership row for member ${memberId}`,
+            );
+          }
+          membershipIds.set(memberId, row.id);
         }
         continue;
       }
