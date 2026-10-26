@@ -65,6 +65,14 @@ type PaymentFields = Pick<
   'discount_amount' | 'payment_method_id' | 'tenders' | 'transaction_reference'
 >;
 
+function requireBundledMembershipId(membershipIds: Map<number, number>, memberId: number): number {
+  const id = membershipIds.get(memberId);
+  if (id == null) {
+    throw new BusinessRuleError(`PT bundle did not produce a membership for member ${memberId}`);
+  }
+  return id;
+}
+
 @Injectable()
 export class PtSubscriptionService {
   constructor(
@@ -367,9 +375,11 @@ export class PtSubscriptionService {
         actor: p.actor,
         now,
       });
-      const membershipId = bundle.membershipIds.get(p.memberId)!;
+      const membershipId = requireBundledMembershipId(bundle.membershipIds, p.memberId);
       const partnerMembershipId =
-        p.partnerMemberId != null ? bundle.membershipIds.get(p.partnerMemberId)! : null;
+        p.partnerMemberId != null
+          ? requireBundledMembershipId(bundle.membershipIds, p.partnerMemberId)
+          : null;
 
       const weekdays = [...p.weekdays].sort((a, b) => a - b);
       const status = p.startDate <= p.today ? 'active' : 'scheduled';

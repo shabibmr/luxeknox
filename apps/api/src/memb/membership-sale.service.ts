@@ -31,6 +31,21 @@ function daysBetween(startIso: string, endIso: string): number {
   return Math.round((end - start) / 86_400_000);
 }
 
+type PtBundleInput = {
+  memberIds: number[];
+  startDate: string;
+  endDate: string;
+  durationDays: number;
+  today: string;
+  actor: AuthenticatedUser;
+  now: Date;
+};
+
+/** One member's bundle decision. Writes happen only while applying the whole plan. */
+type PtBundleAction =
+  | { kind: 'extend'; memberId: number; rows: Membership[]; newEndDate: string }
+  | { kind: 'create'; memberId: number };
+
 /** CM-06: round-half-up pro-rated credit, capped at `basePrice`. */
 function proRatedCredit(basePrice: string, remainingDays: number, durationDays: number): string {
   if (durationDays <= 0) {
@@ -269,29 +284,26 @@ export class MembershipSaleService {
 
   /**
    * ADR-0012: a PT package includes a gym membership of the same duration, at no extra charge.
-   * Runs inside the caller's (PT sale) transaction:
-   * - no active membership → a new `PT-BUNDLE` membership covering the PT period;
-   * - active membership → extended by the PT duration, the way a renewal continues it
-   *   (a linked couple pair is extended together, once);
-   * - frozen membership → rejected.
-   * Returns domain events for the caller to publish after commit.
+   * Runs inside the caller's (PT sale) transaction. Decides every member first, then applies:
+   * - no active membership → one `PT-BUNDLE` membership covering the PT period, no second payment;
+   * - active membership → one extend of that row and its partner row (kept product, history `renewed`,
+   *   audit `via: pt_bundle`), from the day after end, or from today if it has lapsed;
+   * - frozen membership → one rejection, and nothing is written.
+   * A couple pair is a single extend even when both members are in the sale. Couple PT does not
+   * link the bundled memberships. Returns domain events for the caller to publish after commit.
    */
-  async bundleForPt(p: {
-    memberIds: number[];
-    startDate: string;
-    endDate: string;
-    durationDays: number;
-    today: string;
-    actor: AuthenticatedUser;
-    now: Date;
-  }): Promise<{ membershipIds: Map<number, number>; events: DomainEvent[] }> {
-    const membershipIds = new Map<number, number>();
-    const events: DomainEvent[] = [];
-    const extended = new Set<number>();
+  async bundleForPt(
+    p: PtBundleInput,
+  ): Promise<{ membershipIds: Map<number, number>; events: DomainEvent[] }> {
+    const actions = await this.decidePtBundleActions(p);
+    return this.applyPtBundleActions(actions, p);
+  }
 
+  /** Reads only. One action per input member. A frozen membership rejects before any write. */
+  private async decidePtBundleActions(p: PtBundleInput): Promise<PtBundleAction[]> {
+    const actions: PtBundleAction[] = [];
     for (const memberId of p.memberIds) {
       const existing = await this.repository.findActiveOrFrozenForMember(memberId);
-
       if (existing?.status === 'frozen') {
         const member = await this.memberRepository.findById(memberId);
         const who = member ? `${member.first_name} ${member.last_name}`.trim() : 'Member';
@@ -299,22 +311,44 @@ export class MembershipSaleService {
           `${who}'s membership is frozen; unfreeze it before adding Personal Training`,
         );
       }
+      if (!existing) {
+        actions.push({ kind: 'create', memberId });
+        continue;
+      }
+      const partner = await loadPartner(this.repository, existing);
+      const continuation = existing.end_date >= p.today ? addDays(existing.end_date, 1) : p.today;
+      actions.push({
+        kind: 'extend',
+        memberId,
+        rows: partner ? [existing, partner] : [existing],
+        newEndDate: addDays(continuation, p.durationDays),
+      });
+    }
+    return actions;
+  }
 
-      if (existing) {
-        membershipIds.set(memberId, existing.id);
-        if (extended.has(existing.id)) {
+  /** Applies an already-decided plan. A row already extended for this sale is not extended again. */
+  private async applyPtBundleActions(
+    actions: PtBundleAction[],
+    p: PtBundleInput,
+  ): Promise<{ membershipIds: Map<number, number>; events: DomainEvent[] }> {
+    const membershipIds = new Map<number, number>();
+    const events: DomainEvent[] = [];
+    const extended = new Set<number>();
+
+    for (const action of actions) {
+      if (action.kind === 'extend') {
+        membershipIds.set(action.memberId, action.rows[0].id);
+        if (extended.has(action.rows[0].id)) {
           continue;
         }
-        const partner = await loadPartner(this.repository, existing);
-        const continuation = existing.end_date >= p.today ? addDays(existing.end_date, 1) : p.today;
-        const newEndDate = addDays(continuation, p.durationDays);
-        for (const row of partner ? [existing, partner] : [existing]) {
+        for (const row of action.rows) {
           await renewRow(
             this.repository,
             this.auditService,
             row,
             row.product_id,
-            newEndDate,
+            action.newEndDate,
             p.actor,
             p.now,
             'pt_bundle',
@@ -336,7 +370,7 @@ export class MembershipSaleService {
         );
       }
       const membershipId = await this.repository.insertMembership({
-        member_id: memberId,
+        member_id: action.memberId,
         product_id: product.id,
         start_date: p.startDate,
         end_date: p.endDate,
@@ -360,19 +394,26 @@ export class MembershipSaleService {
         entityName: 'memberships',
         entityId: membershipId,
         afterState: {
-          member_id: memberId,
+          member_id: action.memberId,
           product_id: product.id,
           end_date: p.endDate,
           via: 'pt_bundle',
         },
       });
-      membershipIds.set(memberId, membershipId);
-      extended.add(membershipId);
+      membershipIds.set(action.memberId, membershipId);
       events.push({
         eventName: 'membership.created',
         occurredAt: p.now,
-        payload: { membershipId, memberId },
+        payload: { membershipId, memberId: action.memberId },
       });
+    }
+
+    for (const memberId of p.memberIds) {
+      if (!membershipIds.has(memberId)) {
+        throw new BusinessRuleError(
+          `PT bundle did not produce a membership for member ${memberId}`,
+        );
+      }
     }
 
     return { membershipIds, events };
