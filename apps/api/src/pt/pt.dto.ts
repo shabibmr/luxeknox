@@ -72,6 +72,12 @@ export const ptScheduleGridQuerySchema = z.object({
 });
 export type PtScheduleGridQueryDto = z.infer<typeof ptScheduleGridQuerySchema>;
 
+export const ptPaymentPreviewQuerySchema = z.object({
+  pt_product_id: z.coerce.number().int().positive(),
+  discount_amount: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+});
+export type PtPaymentPreviewQueryDto = z.infer<typeof ptPaymentPreviewQuerySchema>;
+
 export const ptPurchaseSchema = z
   .object({
     member_id: z.number().int().positive(),

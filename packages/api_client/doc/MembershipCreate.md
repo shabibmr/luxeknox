@@ -16,7 +16,7 @@ Name | Type | Description | Notes
 **autoRenew** | **bool** |  | [optional] 
 **partnerMemberId** | **int** | Required for a couple product; rejected for a single product. | [optional] 
 **replacePartnerMembership** | **bool** | Must be true when the partner has an active or frozen single membership; it is cancelled. | [optional] 
-**discountAmount** | **String** | Between 0 and the product base price. | [optional] 
+**discountAmount** | **String** | Optional unsigned discount. Payment totals still reject amounts over the subtotal. | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

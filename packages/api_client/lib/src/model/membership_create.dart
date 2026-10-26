@@ -20,7 +20,7 @@ part 'membership_create.g.dart';
 /// * [autoRenew] 
 /// * [partnerMemberId] - Required for a couple product; rejected for a single product.
 /// * [replacePartnerMembership] - Must be true when the partner has an active or frozen single membership; it is cancelled.
-/// * [discountAmount] - Between 0 and the product base price.
+/// * [discountAmount] - Optional unsigned discount. Payment totals still reject amounts over the subtotal.
 @BuiltValue()
 abstract class MembershipCreate implements Built<MembershipCreate, MembershipCreateBuilder> {
   @BuiltValueField(wireName: r'member_id')
@@ -49,7 +49,7 @@ abstract class MembershipCreate implements Built<MembershipCreate, MembershipCre
   @BuiltValueField(wireName: r'replace_partner_membership')
   bool? get replacePartnerMembership;
 
-  /// Between 0 and the product base price.
+  /// Optional unsigned discount. Payment totals still reject amounts over the subtotal.
   @BuiltValueField(wireName: r'discount_amount')
   String? get discountAmount;
 

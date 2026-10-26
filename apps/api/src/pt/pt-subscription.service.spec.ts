@@ -235,6 +235,16 @@ describe('PT subscriptions', () => {
       admin,
     );
 
+  describe('previewPayment', () => {
+    it('returns the PaymentService totals for the package price and discount', async () => {
+      const totals = { subtotal: '3000.00', discount: '100.00', tax: '522.00', total: '3422.00' };
+      paymentService.computeTotals.mockResolvedValueOnce(totals);
+
+      await expect(service.previewPayment({ pt_product_id: 3, discount_amount: '100.00' })).resolves.toEqual(totals);
+      expect(paymentService.computeTotals).toHaveBeenCalledWith('3000.00', '100.00');
+    });
+  });
+
   describe('purchase', () => {
     it('assigns the trainer, takes payment, and occupies the slot for every PT day', async () => {
       const { subscription, payment } = await purchase();

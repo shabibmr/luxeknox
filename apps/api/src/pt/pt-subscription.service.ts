@@ -29,6 +29,7 @@ import { ScheduleTypeRepository } from '../sched/schedule-type.repository';
 import { SettingsService } from '../sys/settings.service';
 import type {
   PtChangeSlotDto,
+  PtPaymentPreviewQueryDto,
   PtPurchaseDto,
   PtReassignTrainerDto,
   PtRenewDto,
@@ -722,6 +723,12 @@ export class PtSubscriptionService {
         (conflicts.length > 1 ? ` (+${conflicts.length - 1} more date(s))` : ''),
       conflicts,
     );
+  }
+
+  /** What a sale of this package would charge: the same totals `purchase` hands to PaymentService. */
+  async previewPayment(dto: PtPaymentPreviewQueryDto) {
+    const product = await this.requireActiveProduct(dto.pt_product_id);
+    return this.paymentService.computeTotals(product.base_price, dto.discount_amount);
   }
 
   private async requireActiveProduct(id: number): Promise<PtProduct> {

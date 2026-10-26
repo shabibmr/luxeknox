@@ -14,6 +14,7 @@ import 'package:api_client/src/model/error_body.dart';
 import 'package:api_client/src/model/member_pt_summary.dart';
 import 'package:api_client/src/model/pt_change_slot_request.dart';
 import 'package:api_client/src/model/pt_package_type.dart';
+import 'package:api_client/src/model/pt_payment_preview.dart';
 import 'package:api_client/src/model/pt_product.dart';
 import 'package:api_client/src/model/pt_product_page.dart';
 import 'package:api_client/src/model/pt_product_write.dart';
@@ -306,6 +307,95 @@ class PTApi {
     }
 
     return Response<MemberPtSummary>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Subtotal, discount, tax and total a PT sale would charge
+  /// Same server-side computation as the payment taken by &#x60;purchasePtSubscription&#x60; (taxable &#x3D; subtotal − discount, plus the configured tax rate). 
+  ///
+  /// Parameters:
+  /// * [ptProductId] 
+  /// * [discountAmount] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [PtPaymentPreview] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<PtPaymentPreview>> getPtPaymentPreview({ 
+    required int ptProductId,
+    String? discountAmount,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/pt/payment-preview';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      r'pt_product_id': encodeQueryParameter(_serializers, ptProductId, const FullType(int)),
+      if (discountAmount != null) r'discount_amount': encodeQueryParameter(_serializers, discountAmount, const FullType(String)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    PtPaymentPreview? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(PtPaymentPreview),
+      ) as PtPaymentPreview;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<PtPaymentPreview>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

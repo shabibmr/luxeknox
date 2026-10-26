@@ -8,7 +8,7 @@ import 'package:api_client/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**discountAmount** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | [optional] 
+**discountAmount** | **String** | Unsigned money with at most two decimals. Used for sale discount inputs. | [optional] 
 **paymentMethodId** | **int** |  | [optional] 
 **tenders** | [**BuiltList&lt;TenderLine&gt;**](TenderLine.md) |  | [optional] 
 **transactionReference** | **String** |  | [optional] 

@@ -344,11 +344,11 @@ class _Summary extends StatelessWidget {
             row(PtStrings.summaryHour, ptHourLabel(state.slotStart!)),
             row(PtStrings.summaryTrainer, trainer?.name ?? '—'),
             row(PtStrings.summaryAmount, state.product!.basePrice),
-            if (!state.isReplan &&
-                (state.discount ?? '').isNotEmpty &&
-                state.discountInRange) ...[
-              row(PtStrings.summaryDiscount, state.discount!),
-              row(PtStrings.summaryPayable, state.payableAmount),
+            if (!state.isReplan && state.preview != null) ...[
+              if (state.preview!.discount != '0.00')
+                row(PtStrings.summaryDiscount, state.preview!.discount),
+              row(PtStrings.summaryTax, state.preview!.tax),
+              row(PtStrings.summaryTotal, state.preview!.total),
             ],
             if (state.product!.isCouple) note(PtStrings.coupleTotalNote),
             note(

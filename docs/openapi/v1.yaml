@@ -1956,6 +1956,41 @@ paths:
           $ref: "#/components/responses/Error400"
         "422":
           $ref: "#/components/responses/Error422"
+  /pt/payment-preview:
+    get:
+      operationId: getPtPaymentPreview
+      summary: Subtotal, discount, tax and total a PT sale would charge
+      description: >
+        Same server-side computation as the payment taken by `purchasePtSubscription`
+        (taxable = subtotal − discount, plus the configured tax rate).
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_subscriptions.create
+      parameters:
+        - name: pt_product_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: discount_amount
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: "^\\d+(\\.\\d{1,2})?$"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtPaymentPreview"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "404":
+          $ref: "#/components/responses/Error404"
   /pt-subscriptions:
     post:
       operationId: purchasePtSubscription
@@ -8130,6 +8165,18 @@ components:
           $ref: "#/components/schemas/Id"
         name:
           type: string
+    PtPaymentPreview:
+      type: object
+      required: [subtotal, discount, tax, total]
+      properties:
+        subtotal:
+          $ref: "#/components/schemas/Money"
+        discount:
+          $ref: "#/components/schemas/Money"
+        tax:
+          $ref: "#/components/schemas/Money"
+        total:
+          $ref: "#/components/schemas/Money"
     PtScheduleGrid:
       type: object
       required: [member_id, start_date, end_date, weekdays, hours, trainers, cells]

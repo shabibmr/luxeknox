@@ -13,13 +13,13 @@ part 'pt_payment_fields.g.dart';
 /// PtPaymentFields
 ///
 /// Properties:
-/// * [discountAmount] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
+/// * [discountAmount] - Unsigned money with at most two decimals. Used for sale discount inputs.
 /// * [paymentMethodId] 
 /// * [tenders] 
 /// * [transactionReference] 
 @BuiltValue(instantiable: false)
 abstract class PtPaymentFields  {
-  /// DECIMAL(12,2) as a two-decimal string. Never a JSON number.
+  /// Unsigned money with at most two decimals. Used for sale discount inputs.
   @BuiltValueField(wireName: r'discount_amount')
   String? get discountAmount;
 

@@ -16,6 +16,7 @@ import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
 import { RequirePermission } from '../rbac/require-permission.decorator';
 import {
   ptChangeSlotSchema,
+  ptPaymentPreviewQuerySchema,
   ptPurchaseSchema,
   ptReassignTrainerSchema,
   ptRenewSchema,
@@ -79,6 +80,23 @@ export class PtSubscriptionController {
       throw new BadRequestError('Validation failed', parsed.error.errors);
     }
     return this.scheduleService.buildGrid(parsed.data);
+  }
+
+  @Get('pt/payment-preview')
+  @RequirePermission('pt_subscriptions.create')
+  @ApiOperation({
+    operationId: 'getPtPaymentPreview',
+    summary: 'Subtotal, discount, tax and total a PT sale would charge',
+  })
+  @ApiQuery({ name: 'pt_product_id', required: true, type: Number })
+  @ApiQuery({ name: 'discount_amount', required: false, type: String })
+  @ApiResponse({ status: 200, description: 'OK' })
+  paymentPreview(@Query() rawQuery: Record<string, unknown>) {
+    const parsed = ptPaymentPreviewQuerySchema.safeParse(rawQuery);
+    if (!parsed.success) {
+      throw new BadRequestError('Validation failed', parsed.error.errors);
+    }
+    return this.service.previewPayment(parsed.data);
   }
 
   @Post('pt-subscriptions')

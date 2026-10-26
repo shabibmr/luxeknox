@@ -54,6 +54,7 @@ doc/ErrorBody.md
 doc/ErrorCode.md
 doc/ErrorDetail.md
 doc/Exercise.md
+doc/ExerciseHistorySession.md
 doc/ExercisePage.md
 doc/ExerciseWrite.md
 doc/Facility.md
@@ -168,6 +169,7 @@ doc/PtGridCell.md
 doc/PtGridTrainer.md
 doc/PtPackageType.md
 doc/PtPaymentFields.md
+doc/PtPaymentPreview.md
 doc/PtProduct.md
 doc/PtProductPage.md
 doc/PtProductWrite.md
@@ -312,6 +314,7 @@ lib/src/model/error_body.dart
 lib/src/model/error_code.dart
 lib/src/model/error_detail.dart
 lib/src/model/exercise.dart
+lib/src/model/exercise_history_session.dart
 lib/src/model/exercise_page.dart
 lib/src/model/exercise_write.dart
 lib/src/model/facility.dart
@@ -418,6 +421,7 @@ lib/src/model/pt_grid_cell.dart
 lib/src/model/pt_grid_trainer.dart
 lib/src/model/pt_package_type.dart
 lib/src/model/pt_payment_fields.dart
+lib/src/model/pt_payment_preview.dart
 lib/src/model/pt_product.dart
 lib/src/model/pt_product_page.dart
 lib/src/model/pt_product_write.dart
@@ -483,4 +487,4 @@ lib/src/model/workout_set_update.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
-test/pt_package_type_test.dart
+test/pt_payment_preview_test.dart

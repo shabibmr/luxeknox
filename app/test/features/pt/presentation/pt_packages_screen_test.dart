@@ -125,60 +125,58 @@ void main() {
     },
   );
 
-  testWidgets(
-    'create form shows enabled Single/Couple package type toggle',
-    (tester) async {
-      when(
-        () => mockGetProducts(const NoParams()),
-      ).thenAnswer((_) async => const Right(<PtProduct>[]));
+  testWidgets('create form shows enabled Single/Couple package type toggle', (
+    tester,
+  ) async {
+    when(
+      () => mockGetProducts(const NoParams()),
+    ).thenAnswer((_) async => const Right(<PtProduct>[]));
 
-      await tester.pumpWidget(const MaterialApp(home: PtPackagesScreen()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(const MaterialApp(home: PtPackagesScreen()));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
 
-      expect(find.byType(SegmentedButton<PtPackageType>), findsOneWidget);
-      expect(find.text(PtStrings.packageTypeSingle), findsOneWidget);
-      expect(find.text(PtStrings.packageTypeCouple), findsOneWidget);
+    expect(find.byType(SegmentedButton<PtPackageType>), findsOneWidget);
+    expect(find.text(PtStrings.packageTypeSingle), findsOneWidget);
+    expect(find.text(PtStrings.packageTypeCouple), findsOneWidget);
 
-      final toggle = tester.widget<SegmentedButton<PtPackageType>>(
-        find.byType(SegmentedButton<PtPackageType>),
-      );
-      expect(toggle.onSelectionChanged, isNotNull);
-      expect(toggle.selected, equals({PtPackageType.single}));
-    },
-  );
+    final toggle = tester.widget<SegmentedButton<PtPackageType>>(
+      find.byType(SegmentedButton<PtPackageType>),
+    );
+    expect(toggle.onSelectionChanged, isNotNull);
+    expect(toggle.selected, equals({PtPackageType.single}));
+  });
 
-  testWidgets(
-    'edit form shows disabled package type toggle from product',
-    (tester) async {
-      const coupleProduct = PtProduct(
-        id: 2,
-        name: 'Couple PT',
-        code: 'PT-CPL',
-        durationDays: 30,
-        basePrice: '8000.00',
-        isActive: true,
-        packageType: PtPackageType.couple,
-      );
-      when(
-        () => mockGetProducts(const NoParams()),
-      ).thenAnswer((_) async => const Right([coupleProduct]));
+  testWidgets('edit form shows disabled package type toggle from product', (
+    tester,
+  ) async {
+    const coupleProduct = PtProduct(
+      id: 2,
+      name: 'Couple PT',
+      code: 'PT-CPL',
+      durationDays: 30,
+      basePrice: '8000.00',
+      isActive: true,
+      packageType: PtPackageType.couple,
+    );
+    when(
+      () => mockGetProducts(const NoParams()),
+    ).thenAnswer((_) async => const Right([coupleProduct]));
 
-      await tester.pumpWidget(const MaterialApp(home: PtPackagesScreen()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(const MaterialApp(home: PtPackagesScreen()));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Couple PT (PT-CPL)'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('Couple PT (PT-CPL)'));
+    await tester.pumpAndSettle();
 
-      final toggle = tester.widget<SegmentedButton<PtPackageType>>(
-        find.byType(SegmentedButton<PtPackageType>),
-      );
-      expect(toggle.onSelectionChanged, isNull);
-      expect(toggle.selected, equals({PtPackageType.couple}));
-    },
-  );
+    final toggle = tester.widget<SegmentedButton<PtPackageType>>(
+      find.byType(SegmentedButton<PtPackageType>),
+    );
+    expect(toggle.onSelectionChanged, isNull);
+    expect(toggle.selected, equals({PtPackageType.couple}));
+  });
 
   testWidgets('create submits selected couple package type', (tester) async {
     when(
@@ -212,7 +210,9 @@ void main() {
     await tester.tap(find.text(PtStrings.packageTypeCouple));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.widgetWithText(FilledButton, PtStrings.save));
+    await tester.ensureVisible(
+      find.widgetWithText(FilledButton, PtStrings.save),
+    );
     await tester.tap(find.widgetWithText(FilledButton, PtStrings.save));
     await tester.pumpAndSettle();
 

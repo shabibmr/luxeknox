@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/failures.dart';
+import '../entities/pt_payment_preview.dart';
 import '../entities/pt_product.dart';
 import '../entities/pt_schedule_grid.dart';
 import '../entities/pt_subscription.dart';
@@ -40,6 +41,11 @@ abstract class PtRepository {
     required List<int> weekdays,
     int? partnerMemberId,
     int? excludeSubscriptionId,
+  });
+
+  Future<Either<Failure, PtPaymentPreview>> getPaymentPreview({
+    required int ptProductId,
+    String? discountAmount,
   });
 
   Future<Either<Failure, PtSubscription>> purchase({

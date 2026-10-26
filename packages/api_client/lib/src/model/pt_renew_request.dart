@@ -14,7 +14,7 @@ part 'pt_renew_request.g.dart';
 /// PtRenewRequest
 ///
 /// Properties:
-/// * [discountAmount] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
+/// * [discountAmount] - Unsigned money with at most two decimals. Used for sale discount inputs.
 /// * [paymentMethodId] 
 /// * [tenders] 
 /// * [transactionReference] 

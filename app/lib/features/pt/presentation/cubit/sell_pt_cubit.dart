@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -12,6 +14,7 @@ import '../../../payments/domain/entities/payment_method.dart';
 import '../../../payments/domain/usecases/get_payment_methods_usecase.dart';
 import '../../../people/domain/entities/person.dart';
 import '../../../people/domain/usecases/get_member_usecase.dart';
+import '../../domain/entities/pt_payment_preview.dart';
 import '../../domain/entities/pt_product.dart';
 import '../../domain/entities/pt_schedule_grid.dart';
 import '../../domain/entities/pt_subscription.dart';
@@ -60,6 +63,10 @@ abstract class SellPtState with _$SellPtState {
     String? slotStart,
     String? paymentMethodId,
     String? discount,
+
+    /// Sale only: server-computed totals for [product] and [discount]; null
+    /// until fetched or while the discount is not a valid amount.
+    PtPaymentPreview? preview,
     String? reason,
 
     /// Couple packages only: the second member on the sale.
@@ -116,18 +123,6 @@ abstract class SellPtState with _$SellPtState {
     return cents >= 0 && cents <= priceCents;
   }
 
-  /// Sale only: price minus a valid discount; the full price while the
-  /// discount is empty or invalid.
-  String get payableAmount {
-    final price = product?.basePrice ?? '';
-    final priceCents = _moneyToCents(price);
-    if (priceCents == null) return price;
-    final d = discount;
-    final cents = (d == null || !discountInRange) ? 0 : _moneyToCents(d) ?? 0;
-    final net = priceCents - cents;
-    return '${net ~/ 100}.${(net % 100).toString().padLeft(2, '0')}';
-  }
-
   bool get canSubmit =>
       !submitting &&
       canLoadGrid &&
@@ -161,6 +156,7 @@ class SellPtCubit extends Cubit<SellPtState> {
     this._replan, [
     this._getMember,
     this._getPtSummary,
+    this._getPaymentPreview,
   ]) : super(const SellPtState(memberId: 0));
 
   final GetPtProductsUseCase _getProducts;
@@ -170,6 +166,9 @@ class SellPtCubit extends Cubit<SellPtState> {
   final ReplanPtUseCase _replan;
   final GetMemberUseCase? _getMember;
   final GetMemberPtSummaryUseCase? _getPtSummary;
+  final GetPtPaymentPreviewUseCase? _getPaymentPreview;
+
+  Timer? _previewDebounce;
 
   Future<void> Function()? _lastInit;
 
@@ -327,8 +326,10 @@ class SellPtCubit extends Cubit<SellPtState> {
         slotStart: null,
         partner: typeChanged ? null : state.partner,
         partnerCheck: typeChanged ? null : state.partnerCheck,
+        preview: null,
       ),
     );
+    _schedulePreview(immediate: true);
     _maybeLoadGrid();
   }
 
@@ -480,11 +481,52 @@ class SellPtCubit extends Cubit<SellPtState> {
   void setPaymentMethod(String? id) =>
       emit(state.copyWith(paymentMethodId: id));
 
-  void setDiscount(String? value) => emit(
-    state.copyWith(
-      discount: (value == null || value.trim().isEmpty) ? null : value.trim(),
-    ),
-  );
+  void setDiscount(String? value) {
+    emit(
+      state.copyWith(
+        discount: (value == null || value.trim().isEmpty) ? null : value.trim(),
+        preview: null,
+      ),
+    );
+    _schedulePreview();
+  }
+
+  /// Asks the server what the sale would charge (it adds tax), after typing
+  /// settles. A reply for a product/discount that has since changed is dropped.
+  void _schedulePreview({bool immediate = false}) {
+    _previewDebounce?.cancel();
+    final get = _getPaymentPreview;
+    final product = state.product;
+    if (get == null || product == null || state.isReplan) return;
+    if (!state.discountInRange) return;
+    final discount = state.discount;
+    Future<void> fetch() async {
+      final result = await get(
+        GetPtPaymentPreviewParams(
+          ptProductId: product.id,
+          discountAmount: discount,
+        ),
+      );
+      if (isClosed ||
+          state.product?.id != product.id ||
+          state.discount != discount) {
+        return;
+      }
+      result.fold((_) => null, (p) => emit(state.copyWith(preview: p)));
+    }
+
+    if (immediate) {
+      fetch();
+    } else {
+      _previewDebounce = Timer(const Duration(milliseconds: 300), fetch);
+    }
+  }
+
+  @override
+  Future<void> close() {
+    _previewDebounce?.cancel();
+    return super.close();
+  }
 
   void setReason(String? value) => emit(
     state.copyWith(
