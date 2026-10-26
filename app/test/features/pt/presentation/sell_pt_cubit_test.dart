@@ -231,6 +231,35 @@ void main() {
     expect(cubit.state.canSubmit, isTrue);
   });
 
+  test('canSubmit refuses an out-of-range discount on a sale', () async {
+    final cubit = build();
+    await cubit.init(42);
+    cubit
+      ..selectProduct(product) // 3000.00
+      ..setStartDate(DateTime(2026, 10, 5))
+      ..toggleWeekday(1)
+      ..toggleWeekday(3)
+      ..toggleWeekday(5);
+    await Future<void>.delayed(Duration.zero);
+    cubit.selectSlot(7, '17:00:00');
+    expect(cubit.state.canSubmit, isTrue);
+
+    cubit.setDiscount('3000.01');
+    expect(cubit.state.canSubmit, isFalse);
+
+    cubit.setDiscount('-1');
+    expect(cubit.state.canSubmit, isFalse);
+
+    cubit.setDiscount('10.123');
+    expect(cubit.state.canSubmit, isFalse);
+
+    cubit.setDiscount('100.00');
+    expect(cubit.state.canSubmit, isTrue);
+
+    cubit.setDiscount('3000.00');
+    expect(cubit.state.canSubmit, isTrue);
+  });
+
   test(
     'submit sends the purchase with payment and exposes the result',
     () async {

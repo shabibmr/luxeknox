@@ -354,16 +354,26 @@ class CreateMembershipCubit extends Cubit<CreateMembershipState> {
     }
   }
 
-  static final _moneyFormat = RegExp(r'^\d+(\.\d+)?$');
+  static final _moneyFormat = RegExp(r'^\d+(\.\d{1,2})?$');
 
-  /// 0 <= discount <= package price. Parsed only to compare; the string is
+  /// 0 <= discount <= package price, compared in integer cents. The string is
   /// what gets sent (FR-API-005).
   bool _discountInRange(String discount) {
-    // double.tryParse also accepts "1e2" and "+5", which the API rejects.
     if (!_moneyFormat.hasMatch(discount)) return false;
-    final value = double.tryParse(discount);
-    final price = double.tryParse(state.selectedProduct?.basePrice ?? '');
+    final value = _toCents(discount);
+    final price = _toCents(state.selectedProduct?.basePrice ?? '');
     if (value == null || price == null) return false;
     return value >= 0 && value <= price;
+  }
+
+  static int? _toCents(String raw) {
+    if (!_moneyFormat.hasMatch(raw)) return null;
+    final parts = raw.split('.');
+    final whole = int.tryParse(parts[0]);
+    if (whole == null) return null;
+    final frac = parts.length > 1 ? parts[1].padRight(2, '0') : '00';
+    final fracInt = int.tryParse(frac);
+    if (fracInt == null) return null;
+    return whole * 100 + fracInt;
   }
 }

@@ -5,7 +5,6 @@ import type { DrizzleDb } from '../platform/db/client';
 import type { Membership } from '../platform/db/schema/memberships';
 import { runInTransaction } from '../platform/db/transaction-context';
 import {
-  BadRequestError,
   BusinessRuleError,
   ConflictError,
   NotFoundError,
@@ -160,13 +159,6 @@ export class MembershipSaleService {
       if (lockerConflict) {
         throw new ConflictError(`Locker "${dto.locker_number}" is already assigned`);
       }
-    }
-
-    if (
-      dto.discount_amount !== undefined &&
-      (cmpMoney(dto.discount_amount, '0') < 0 || cmpMoney(dto.discount_amount, product.base_price) > 0)
-    ) {
-      throw new BadRequestError('discount_amount must be between 0 and base_price');
     }
 
     const endDate = addDays(dto.start_date, product.duration_days);

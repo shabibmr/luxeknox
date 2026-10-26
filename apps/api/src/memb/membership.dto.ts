@@ -2,10 +2,8 @@ import { z } from 'zod';
 
 const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'must be an ISO date (YYYY-MM-DD)');
 
-const moneySchema = z
-  .union([z.string(), z.number()])
-  .transform((v) => String(v).trim())
-  .refine((v) => /^-?\d+(\.\d+)?$/.test(v), { message: 'Invalid money amount' });
+/** Unsigned money, at most two decimals — shared by membership assign and PT purchase discounts. */
+const discountAmountSchema = z.string().regex(/^\d+(\.\d{1,2})?$/);
 
 /** Mirrors `docs/openapi/v1.yaml` `#/components/schemas/MembershipCreate`. */
 export const membershipCreateSchema = z.object({
@@ -17,7 +15,7 @@ export const membershipCreateSchema = z.object({
   auto_renew: z.boolean().optional(),
   partner_member_id: z.number().int().positive().optional(),
   replace_partner_membership: z.boolean().optional(),
-  discount_amount: moneySchema.optional(),
+  discount_amount: discountAmountSchema.optional(),
 });
 
 export type MembershipCreateDto = z.infer<typeof membershipCreateSchema>;

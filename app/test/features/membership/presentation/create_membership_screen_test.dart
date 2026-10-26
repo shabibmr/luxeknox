@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:luxeknox/core/di/injector.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
+import 'package:luxeknox/core/widgets/app_currency_field.dart';
 import 'package:luxeknox/features/membership/domain/entities/membership_product.dart';
 import 'package:luxeknox/features/membership/domain/entities/membership_replacement_preview.dart';
 import 'package:luxeknox/features/membership/domain/entities/membership_status.dart';
@@ -16,7 +18,6 @@ import 'package:luxeknox/features/payments/domain/entities/payment_method.dart';
 import 'package:luxeknox/features/people/domain/entities/person.dart';
 import 'package:luxeknox/features/people/domain/entities/profile_summary.dart';
 import 'package:luxeknox/features/people/domain/usecases/get_member_usecase.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockCreateMembershipCubit extends MockCubit<CreateMembershipState>
@@ -34,6 +35,14 @@ void main() {
     code: 'GOLD',
     durationDays: 30,
     basePrice: '1299.00',
+    isActive: true,
+  );
+  const silver = MembershipProduct(
+    id: '11',
+    name: 'Silver',
+    code: 'SLV',
+    durationDays: 30,
+    basePrice: '999.00',
     isActive: true,
   );
   const couple = MembershipProduct(
@@ -360,5 +369,113 @@ void main() {
     expect(find.text('733.33'), findsOneWidget);
     expect(find.text(MembershipStrings.packagePriceLabel), findsOneWidget);
     expect(find.text(MembershipStrings.totalDueLabel), findsOneWidget);
+  });
+
+  Finder discountPercentField() => find.byWidgetPredicate(
+    (w) =>
+        w is TextField &&
+        w.decoration?.labelText == MembershipStrings.discountPercent,
+  );
+
+  testWidgets('editing percent updates the amount via discountChanged', (
+    tester,
+  ) async {
+    when(() => cubit.discountChanged(any())).thenReturn(null);
+    whenListen(
+      cubit,
+      const Stream<CreateMembershipState>.empty(),
+      initialState: coupleState(
+        selectedPartner: partner,
+        replaceConfirmed: true,
+      ),
+    );
+
+    await tester.pumpWidget(wrapScreen());
+    await tester.pump();
+
+    await tester.enterText(discountPercentField(), '10');
+    await tester.pump();
+
+    verify(() => cubit.discountChanged('200.00')).called(1);
+  });
+
+  testWidgets('editing amount updates the percent and submits the amount', (
+    tester,
+  ) async {
+    when(() => cubit.discountChanged(any())).thenReturn(null);
+    whenListen(
+      cubit,
+      const Stream<CreateMembershipState>.empty(),
+      initialState: coupleState(
+        selectedPartner: partner,
+        replaceConfirmed: true,
+      ),
+    );
+
+    await tester.pumpWidget(wrapScreen());
+    await tester.pump();
+
+    final amountField = find.descendant(
+      of: find.byType(AppCurrencyField),
+      matching: find.byType(TextFormField),
+    );
+    await tester.enterText(amountField, '500');
+    await tester.pump();
+
+    verify(() => cubit.discountChanged('500')).called(1);
+    expect(find.text('25'), findsOneWidget); // 500 / 2000 = 25%
+  });
+
+  testWidgets(
+    'package change with a percent set recomputes amount and keeps percent',
+    (tester) async {
+      when(() => cubit.discountChanged(any())).thenReturn(null);
+      // Seed with Gold + 10% already reflected as amount; then emit Silver
+      // with the same amount still in state — didUpdateWidget keeps percent
+      // and pushes the recomputed amount.
+      final withGold = CreateMembershipState(
+        status: LoadStatus.success,
+        products: const [gold, silver, couple],
+        paymentMethods: const [cash],
+        selectedMemberId: '100',
+        selectedProductId: '10',
+        selectedPaymentMethodId: '1',
+        startDate: DateTime(2026, 10, 12),
+        discountAmount: '129.90',
+      );
+      final withSilver = withGold.copyWith(selectedProductId: '11');
+
+      whenListen(
+        cubit,
+        Stream<CreateMembershipState>.fromIterable([withSilver]),
+        initialState: withGold,
+      );
+
+      await tester.pumpWidget(wrapScreen());
+      await tester.pump();
+      // Initial frame may already have consumed the stream event; either way
+      // the percent view stays 10 and the amount becomes 99.90 for Silver.
+      await tester.pump();
+
+      verify(() => cubit.discountChanged('99.90')).called(greaterThan(0));
+      expect(find.text('10'), findsOneWidget);
+    },
+  );
+
+  testWidgets('total due is package price minus discount', (tester) async {
+    whenListen(
+      cubit,
+      const Stream<CreateMembershipState>.empty(),
+      initialState: coupleState(
+        selectedPartner: partner,
+        replaceConfirmed: true,
+        discountAmount: '200.00',
+      ),
+    );
+
+    await tester.pumpWidget(wrapScreen());
+    await tester.pump();
+
+    expect(find.text('1800.00'), findsOneWidget);
   });
 }

@@ -501,7 +501,7 @@ void main() {
         verify: (_) => verifyNever(() => createMembership(any())),
       );
 
-      for (final bad in ['2000.01', '-1', 'abc', '1e2', '+5', '1.']) {
+      for (final bad in ['2000.01', '-1', 'abc', '1e2', '+5', '1.', '10.123']) {
         blocTest<CreateMembershipCubit, CreateMembershipState>(
           'rejects discount "$bad" outside 0..price',
           build: cubit,

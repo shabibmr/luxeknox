@@ -372,22 +372,32 @@ describe('MembershipService', () => {
         expect(paymentService.create).not.toHaveBeenCalled();
       });
 
-      it('rejects a discount outside 0..base_price', async () => {
+      it('passes a discount above base_price through to payment (no assign-time range check)', async () => {
         memberRepository.findById.mockResolvedValue({ id: 100 });
         productRepository.findById.mockResolvedValue(makeProduct({ base_price: '100.00' }));
+        repository.insertMembership.mockResolvedValue(5);
+        repository.findByIdWithProduct.mockResolvedValue(
+          makeMembershipWithProduct({ id: 5 }, { id: 1, base_price: '100.00' }),
+        );
 
-        await expect(
-          service.create(
-            {
-              member_id: 100,
-              product_id: 1,
-              start_date: '2026-02-01',
-              payment_method_id: 1,
-              discount_amount: '150.00',
-            },
-            ADMIN_USER,
-          ),
-        ).rejects.toThrow(BadRequestError);
+        await service.create(
+          {
+            member_id: 100,
+            product_id: 1,
+            start_date: '2026-02-01',
+            payment_method_id: 1,
+            discount_amount: '150.00',
+          },
+          ADMIN_USER,
+        );
+
+        expect(paymentService.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            subtotal: '100.00',
+            discount_amount: '150.00',
+          }),
+          ADMIN_USER,
+        );
       });
 
       it('creates two cross-linked rows, cancels the replaced partner row, and pays with the discount', async () => {

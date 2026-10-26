@@ -436,8 +436,7 @@ class _PriceSummaryState extends State<_PriceSummary> {
   late final TextEditingController _percentController;
   var _syncing = false;
 
-  double? get _price =>
-      double.tryParse(widget.state.selectedProduct?.basePrice ?? '');
+  int? get _priceCents => _parseCents(widget.state.selectedProduct?.basePrice);
 
   @override
   void initState() {
@@ -453,10 +452,8 @@ class _PriceSummaryState extends State<_PriceSummary> {
   void didUpdateWidget(covariant _PriceSummary oldWidget) {
     super.didUpdateWidget(oldWidget);
     final next = widget.state.discountAmount ?? '';
-    final oldPrice = double.tryParse(
-      oldWidget.state.selectedProduct?.basePrice ?? '',
-    );
-    if (oldPrice != _price && _percentController.text.isNotEmpty) {
+    final oldPrice = _parseCents(oldWidget.state.selectedProduct?.basePrice);
+    if (oldPrice != _priceCents && _percentController.text.isNotEmpty) {
       // Package changed: keep the percentage, recompute the value.
       _onPercentEdited();
     } else if (_discountController.text != next) {
@@ -479,29 +476,28 @@ class _PriceSummaryState extends State<_PriceSummary> {
   }
 
   void _syncPercentFromValue() {
-    final price = _price;
-    final value = double.tryParse(_discountController.text);
-    final text = (price == null || price <= 0 || value == null || value > price)
+    final priceCents = _priceCents;
+    final valueCents = _parseCents(_discountController.text);
+    final text =
+        (priceCents == null ||
+            priceCents <= 0 ||
+            valueCents == null ||
+            valueCents > priceCents)
         ? ''
-        : _trim(value / price * 100);
+        : _formatPercent(_percentHundredths(valueCents, priceCents));
     if (_percentController.text == text) return;
     _syncing = true;
     _percentController.text = text;
     _syncing = false;
   }
 
-  static String _trim(double v) {
-    final s = v.toStringAsFixed(2);
-    return s.contains('.') ? s.replaceFirst(RegExp(r'\.?0+$'), '') : s;
-  }
-
   void _onPercentEdited() {
     if (_syncing || !mounted) return;
-    final price = _price;
-    final pct = double.tryParse(_percentController.text);
-    final value = (price == null || pct == null)
+    final priceCents = _priceCents;
+    final pctHundredths = _parsePercentHundredths(_percentController.text);
+    final value = (priceCents == null || pctHundredths == null)
         ? ''
-        : (price * pct / 100).toStringAsFixed(2);
+        : _formatCents(_amountFromPercent(priceCents, pctHundredths));
     _syncing = true;
     _discountController.text = value;
     _syncing = false;
@@ -517,20 +513,71 @@ class _PriceSummaryState extends State<_PriceSummary> {
   }
 
   String? get _valueError {
-    final price = _price;
-    final value = double.tryParse(widget.state.discountAmount ?? '');
-    if (price != null && value != null && value > price) {
+    final priceCents = _priceCents;
+    final valueCents = _parseCents(widget.state.discountAmount);
+    if (priceCents != null && valueCents != null && valueCents > priceCents) {
       return MembershipStrings.discountExceedsTotal;
     }
     return null;
   }
 
   String get _totalLabel {
-    final price = _price;
-    final discount = double.tryParse(widget.state.discountAmount ?? '0') ?? 0;
-    if (price == null) return '—';
-    final total = (price - discount).clamp(0, double.infinity);
-    return total.toStringAsFixed(2);
+    final priceCents = _priceCents;
+    final discountCents = _parseCents(widget.state.discountAmount ?? '0') ?? 0;
+    if (priceCents == null) return '—';
+    final total = priceCents - discountCents;
+    return _formatCents(total < 0 ? 0 : total);
+  }
+
+  /// Parses an unsigned money string into integer cents. Partial input while
+  /// typing (e.g. "12.") returns null.
+  static int? _parseCents(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(raw)) return null;
+    final parts = raw.split('.');
+    final whole = int.tryParse(parts[0]);
+    if (whole == null) return null;
+    final frac = parts.length > 1 ? parts[1].padRight(2, '0') : '00';
+    final fracInt = int.tryParse(frac);
+    if (fracInt == null) return null;
+    return whole * 100 + fracInt;
+  }
+
+  /// Percent with up to 2 decimals as hundredths (12.34% → 1234).
+  static int? _parsePercentHundredths(String raw) {
+    if (raw.isEmpty) return null;
+    if (!RegExp(r'^\d{1,3}(\.\d{1,2})?$').hasMatch(raw)) return null;
+    final parts = raw.split('.');
+    final whole = int.tryParse(parts[0]);
+    if (whole == null) return null;
+    final frac = parts.length > 1 ? parts[1].padRight(2, '0') : '00';
+    final fracInt = int.tryParse(frac);
+    if (fracInt == null) return null;
+    return whole * 100 + fracInt;
+  }
+
+  static int _percentHundredths(int amountCents, int priceCents) {
+    // Half-up: amount / price * 10000.
+    return (amountCents * 10000 + priceCents ~/ 2) ~/ priceCents;
+  }
+
+  static int _amountFromPercent(int priceCents, int percentHundredths) {
+    // Half-up: price * percent / 100.
+    return (priceCents * percentHundredths + 5000) ~/ 10000;
+  }
+
+  static String _formatCents(int cents) {
+    final whole = cents ~/ 100;
+    final frac = (cents % 100).toString().padLeft(2, '0');
+    return '$whole.$frac';
+  }
+
+  static String _formatPercent(int hundredths) {
+    final whole = hundredths ~/ 100;
+    final frac = hundredths % 100;
+    if (frac == 0) return '$whole';
+    final s = frac.toString().padLeft(2, '0');
+    return '$whole.${s.replaceFirst(RegExp(r'0+$'), '')}';
   }
 
   @override
@@ -586,7 +633,8 @@ class _PriceSummaryState extends State<_PriceSummary> {
                     label: label,
                     enabled: enabled,
                     required: false,
-                    helperText: _valueError ?? 'Max ${_price ?? '—'}',
+                    helperText: _valueError ??
+                        'Max ${widget.state.selectedProduct?.basePrice ?? '—'}',
                   ),
                 ),
               ],
