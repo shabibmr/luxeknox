@@ -104,12 +104,37 @@ abstract class SellPtState with _$SellPtState {
         (slot == null ? null : ptSlotKey(slot)) != ptSlotKey(r.slotStart);
   }
 
+  /// Sale only: empty is fine; otherwise unsigned ≤2 decimals within 0..price.
+  bool get discountInRange {
+    if (isReplan) return true;
+    final d = discount;
+    if (d == null || d.isEmpty) return true;
+    if (!_discountMoneyFormat.hasMatch(d)) return false;
+    final cents = _moneyToCents(d);
+    final priceCents = _moneyToCents(product?.basePrice ?? '');
+    if (cents == null || priceCents == null) return false;
+    return cents >= 0 && cents <= priceCents;
+  }
+
   bool get canSubmit =>
       !submitting &&
       canLoadGrid &&
       slotChosen &&
       partnerReady &&
-      (isReplan ? replanChanged : paymentMethodId != null);
+      (isReplan ? replanChanged : paymentMethodId != null && discountInRange);
+}
+
+final _discountMoneyFormat = RegExp(r'^\d+(\.\d{1,2})?$');
+
+int? _moneyToCents(String raw) {
+  if (!_discountMoneyFormat.hasMatch(raw)) return null;
+  final parts = raw.split('.');
+  final whole = int.tryParse(parts[0]);
+  if (whole == null) return null;
+  final frac = parts.length > 1 ? parts[1].padRight(2, '0') : '00';
+  final fracInt = int.tryParse(frac);
+  if (fracInt == null) return null;
+  return whole * 100 + fracInt;
 }
 
 /// Drives the "Add Personal Training" flow (package → weekdays → grid → pay)

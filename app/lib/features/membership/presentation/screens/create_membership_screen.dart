@@ -16,7 +16,7 @@ import '../../../../core/widgets/package_grid_picker_field.dart';
 import '../../../people/domain/usecases/get_member_usecase.dart';
 import '../../../people/presentation/widgets/member_picker_sheet.dart';
 import '../../domain/entities/membership_replacement_preview.dart';
-import '../bloc/create_membership_bloc.dart';
+import '../cubit/create_membership_cubit.dart';
 import '../membership_strings.dart';
 
 /// Admin sales flow — create a membership contract for a member (FR-MEMB sales).
@@ -30,8 +30,7 @@ class CreateMembershipScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) =>
-          getIt<CreateMembershipBloc>()
-            ..add(CreateMembershipStarted(memberId: memberId)),
+          getIt<CreateMembershipCubit>()..started(memberId: memberId),
       child: _CreateMembershipBody(memberId: memberId),
     );
   }
@@ -44,7 +43,7 @@ class _CreateMembershipBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<CreateMembershipBloc, CreateMembershipState>(
+    return BlocConsumer<CreateMembershipCubit, CreateMembershipState>(
       listenWhen: (prev, next) =>
           (prev.created == null && next.created != null) ||
           (prev.partnerReplacement == null && next.partnerReplacement != null),
@@ -76,8 +75,8 @@ class _CreateMembershipBody extends StatelessWidget {
                   message: state.failure == null
                       ? MembershipStrings.noneFound
                       : failureMessage(state.failure!),
-                  onRetry: () => context.read<CreateMembershipBloc>().add(
-                    CreateMembershipStarted(memberId: memberId),
+                  onRetry: () => context.read<CreateMembershipCubit>().started(
+                    memberId: memberId,
                   ),
                 )
               : _CreateMembershipForm(
@@ -144,9 +143,7 @@ Future<void> _showReplacePartnerDialog(
     ),
   );
   if (!context.mounted) return;
-  context.read<CreateMembershipBloc>().add(
-    CreateMembershipReplaceConfirmed(confirmed == true),
-  );
+  context.read<CreateMembershipCubit>().replaceConfirmed(confirmed == true);
 }
 
 Future<void> _showPartnerAlreadyCoupleDialog(BuildContext context) async {
@@ -164,9 +161,7 @@ Future<void> _showPartnerAlreadyCoupleDialog(BuildContext context) async {
     ),
   );
   if (!context.mounted) return;
-  context.read<CreateMembershipBloc>().add(
-    const CreateMembershipReplaceConfirmed(false),
-  );
+  context.read<CreateMembershipCubit>().replaceConfirmed(false);
 }
 
 class _CreateMembershipForm extends StatelessWidget {
@@ -198,7 +193,7 @@ class _CreateMembershipForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bloc = context.read<CreateMembershipBloc>();
+    final cubit = context.read<CreateMembershipCubit>();
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -218,7 +213,7 @@ class _CreateMembershipForm extends StatelessWidget {
             enabled: !state.submitting,
             onChanged: (member) {
               if (member != null) {
-                bloc.add(CreateMembershipMemberSelected(member));
+                cubit.memberSelected(member);
               }
             },
           ),
@@ -249,8 +244,7 @@ class _CreateMembershipForm extends StatelessWidget {
                 isCouple: p.isCouple,
               ),
           ],
-          onChanged: (value) =>
-              bloc.add(CreateMembershipProductSelected(value)),
+          onChanged: (value) => cubit.productSelected(value),
         ),
         if (state.isCoupleSelected) ...[
           const SizedBox(height: 16),
@@ -264,7 +258,7 @@ class _CreateMembershipForm extends StatelessWidget {
             excludeMemberIds: _excludePartnerIds,
             onChanged: (member) {
               if (member != null) {
-                bloc.add(CreateMembershipPartnerSelected(member));
+                cubit.partnerSelected(member);
               }
             },
           ),
@@ -299,7 +293,7 @@ class _CreateMembershipForm extends StatelessWidget {
                 ? null
                 : (value) {
                     if (value != null) {
-                      bloc.add(CreateMembershipPaymentMethodSelected(value));
+                      cubit.paymentMethodSelected(value);
                     }
                   },
           ),
@@ -324,7 +318,7 @@ class _CreateMembershipForm extends StatelessWidget {
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
                     if (picked != null) {
-                      bloc.add(CreateMembershipStartDateChanged(picked));
+                      cubit.startDateChanged(picked);
                     }
                   },
           ),
@@ -336,7 +330,7 @@ class _CreateMembershipForm extends StatelessWidget {
             border: OutlineInputBorder(),
           ),
           enabled: !state.submitting,
-          onChanged: (value) => bloc.add(CreateMembershipLockerChanged(value)),
+          onChanged: (value) => cubit.lockerChanged(value),
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
@@ -344,7 +338,7 @@ class _CreateMembershipForm extends StatelessWidget {
           value: state.autoRenew,
           onChanged: state.submitting
               ? null
-              : (value) => bloc.add(CreateMembershipAutoRenewChanged(value)),
+              : (value) => cubit.autoRenewChanged(value),
         ),
         if (state.failure != null) ...[
           const SizedBox(height: 8),
@@ -369,9 +363,7 @@ class _CreateMembershipForm extends StatelessWidget {
         ],
         const SizedBox(height: 24),
         FilledButton(
-          onPressed: state.submitting
-              ? null
-              : () => bloc.add(const CreateMembershipSubmitted()),
+          onPressed: state.submitting ? null : () => cubit.submitted(),
           child: state.submitting
               ? const SizedBox(
                   width: 20,
@@ -444,8 +436,7 @@ class _PriceSummaryState extends State<_PriceSummary> {
   late final TextEditingController _percentController;
   var _syncing = false;
 
-  double? get _price =>
-      double.tryParse(widget.state.selectedProduct?.basePrice ?? '');
+  int? get _priceCents => _parseCents(widget.state.selectedProduct?.basePrice);
 
   @override
   void initState() {
@@ -461,10 +452,8 @@ class _PriceSummaryState extends State<_PriceSummary> {
   void didUpdateWidget(covariant _PriceSummary oldWidget) {
     super.didUpdateWidget(oldWidget);
     final next = widget.state.discountAmount ?? '';
-    final oldPrice = double.tryParse(
-      oldWidget.state.selectedProduct?.basePrice ?? '',
-    );
-    if (oldPrice != _price && _percentController.text.isNotEmpty) {
+    final oldPrice = _parseCents(oldWidget.state.selectedProduct?.basePrice);
+    if (oldPrice != _priceCents && _percentController.text.isNotEmpty) {
       // Package changed: keep the percentage, recompute the value.
       _onPercentEdited();
     } else if (_discountController.text != next) {
@@ -487,60 +476,108 @@ class _PriceSummaryState extends State<_PriceSummary> {
   }
 
   void _syncPercentFromValue() {
-    final price = _price;
-    final value = double.tryParse(_discountController.text);
-    final text = (price == null || price <= 0 || value == null || value > price)
+    final priceCents = _priceCents;
+    final valueCents = _parseCents(_discountController.text);
+    final text =
+        (priceCents == null ||
+            priceCents <= 0 ||
+            valueCents == null ||
+            valueCents > priceCents)
         ? ''
-        : _trim(value / price * 100);
+        : _formatPercent(_percentHundredths(valueCents, priceCents));
     if (_percentController.text == text) return;
     _syncing = true;
     _percentController.text = text;
     _syncing = false;
   }
 
-  static String _trim(double v) {
-    final s = v.toStringAsFixed(2);
-    return s.contains('.') ? s.replaceFirst(RegExp(r'\.?0+$'), '') : s;
-  }
-
   void _onPercentEdited() {
     if (_syncing || !mounted) return;
-    final price = _price;
-    final pct = double.tryParse(_percentController.text);
-    final value = (price == null || pct == null)
+    final priceCents = _priceCents;
+    final pctHundredths = _parsePercentHundredths(_percentController.text);
+    final value = (priceCents == null || pctHundredths == null)
         ? ''
-        : (price * pct / 100).toStringAsFixed(2);
+        : _formatCents(_amountFromPercent(priceCents, pctHundredths));
     _syncing = true;
     _discountController.text = value;
     _syncing = false;
-    context.read<CreateMembershipBloc>().add(
-      CreateMembershipDiscountChanged(value),
-    );
+    context.read<CreateMembershipCubit>().discountChanged(value);
   }
 
   void _onDiscountEdited() {
     if (_syncing || !mounted) return;
     _syncPercentFromValue();
-    context.read<CreateMembershipBloc>().add(
-      CreateMembershipDiscountChanged(_discountController.text),
+    context.read<CreateMembershipCubit>().discountChanged(
+      _discountController.text,
     );
   }
 
   String? get _valueError {
-    final price = _price;
-    final value = double.tryParse(widget.state.discountAmount ?? '');
-    if (price != null && value != null && value > price) {
+    final priceCents = _priceCents;
+    final valueCents = _parseCents(widget.state.discountAmount);
+    if (priceCents != null && valueCents != null && valueCents > priceCents) {
       return MembershipStrings.discountExceedsTotal;
     }
     return null;
   }
 
   String get _totalLabel {
-    final price = _price;
-    final discount = double.tryParse(widget.state.discountAmount ?? '0') ?? 0;
-    if (price == null) return '—';
-    final total = (price - discount).clamp(0, double.infinity);
-    return total.toStringAsFixed(2);
+    final priceCents = _priceCents;
+    final discountCents = _parseCents(widget.state.discountAmount ?? '0') ?? 0;
+    if (priceCents == null) return '—';
+    final total = priceCents - discountCents;
+    return _formatCents(total < 0 ? 0 : total);
+  }
+
+  /// Parses an unsigned money string into integer cents. Partial input while
+  /// typing (e.g. "12.") returns null.
+  static int? _parseCents(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(raw)) return null;
+    final parts = raw.split('.');
+    final whole = int.tryParse(parts[0]);
+    if (whole == null) return null;
+    final frac = parts.length > 1 ? parts[1].padRight(2, '0') : '00';
+    final fracInt = int.tryParse(frac);
+    if (fracInt == null) return null;
+    return whole * 100 + fracInt;
+  }
+
+  /// Percent with up to 2 decimals as hundredths (12.34% → 1234).
+  static int? _parsePercentHundredths(String raw) {
+    if (raw.isEmpty) return null;
+    if (!RegExp(r'^\d{1,3}(\.\d{1,2})?$').hasMatch(raw)) return null;
+    final parts = raw.split('.');
+    final whole = int.tryParse(parts[0]);
+    if (whole == null) return null;
+    final frac = parts.length > 1 ? parts[1].padRight(2, '0') : '00';
+    final fracInt = int.tryParse(frac);
+    if (fracInt == null) return null;
+    return whole * 100 + fracInt;
+  }
+
+  static int _percentHundredths(int amountCents, int priceCents) {
+    // Half-up: amount / price * 10000.
+    return (amountCents * 10000 + priceCents ~/ 2) ~/ priceCents;
+  }
+
+  static int _amountFromPercent(int priceCents, int percentHundredths) {
+    // Half-up: price * percent / 100.
+    return (priceCents * percentHundredths + 5000) ~/ 10000;
+  }
+
+  static String _formatCents(int cents) {
+    final whole = cents ~/ 100;
+    final frac = (cents % 100).toString().padLeft(2, '0');
+    return '$whole.$frac';
+  }
+
+  static String _formatPercent(int hundredths) {
+    final whole = hundredths ~/ 100;
+    final frac = hundredths % 100;
+    if (frac == 0) return '$whole';
+    final s = frac.toString().padLeft(2, '0');
+    return '$whole.${s.replaceFirst(RegExp(r'0+$'), '')}';
   }
 
   @override
@@ -596,7 +633,9 @@ class _PriceSummaryState extends State<_PriceSummary> {
                     label: label,
                     enabled: enabled,
                     required: false,
-                    helperText: _valueError ?? 'Max ${_price ?? '—'}',
+                    helperText:
+                        _valueError ??
+                        'Max ${widget.state.selectedProduct?.basePrice ?? '—'}',
                   ),
                 ),
               ],

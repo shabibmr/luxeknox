@@ -6925,6 +6925,11 @@ components:
       pattern: "^-?\\d+\\.\\d{2}$"
       description: DECIMAL(12,2) as a two-decimal string. Never a JSON number.
       example: "1299.00"
+    DiscountAmount:
+      type: string
+      pattern: "^\\d+(\\.\\d{1,2})?$"
+      description: Unsigned money with at most two decimals. Used for sale discount inputs.
+      example: "50.00"
     Id:
       type: integer
       format: int64
@@ -8017,7 +8022,7 @@ components:
       type: object
       properties:
         discount_amount:
-          $ref: "#/components/schemas/Money"
+          $ref: "#/components/schemas/DiscountAmount"
         payment_method_id:
           type: integer
           format: int64
@@ -8234,8 +8239,8 @@ components:
           type: boolean
           description: Must be true when the partner has an active or frozen single membership; it is cancelled.
         discount_amount:
-          $ref: "#/components/schemas/Money"
-          description: Between 0 and the product base price.
+          $ref: "#/components/schemas/DiscountAmount"
+          description: Optional unsigned discount. Payment totals still reject amounts over the subtotal.
     MembershipActionRequest:
       type: object
       properties:

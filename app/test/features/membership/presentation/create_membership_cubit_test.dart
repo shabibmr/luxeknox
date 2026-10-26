@@ -12,7 +12,7 @@ import 'package:luxeknox/features/membership/domain/entities/membership_status.d
 import 'package:luxeknox/features/membership/domain/usecases/create_membership_usecase.dart';
 import 'package:luxeknox/features/membership/domain/usecases/get_membership_products_usecase.dart';
 import 'package:luxeknox/features/membership/domain/usecases/get_replacement_preview_usecase.dart';
-import 'package:luxeknox/features/membership/presentation/bloc/create_membership_bloc.dart';
+import 'package:luxeknox/features/membership/presentation/cubit/create_membership_cubit.dart';
 import 'package:luxeknox/features/payments/domain/entities/payment_method.dart';
 import 'package:luxeknox/features/payments/domain/usecases/get_payment_methods_usecase.dart';
 import 'package:luxeknox/features/people/domain/entities/profile_summary.dart';
@@ -115,7 +115,7 @@ void main() {
     getReplacementPreview = MockGetReplacementPreview();
   });
 
-  CreateMembershipBloc bloc() => CreateMembershipBloc(
+  CreateMembershipCubit cubit() => CreateMembershipCubit(
     createMembership,
     getProducts,
     getPaymentMethods,
@@ -123,9 +123,8 @@ void main() {
   );
 
   void stubPreview(MembershipReplacementPreview? preview) {
-    when(
-      () => getReplacementPreview(any()),
-    ).thenAnswer((_) async => Right(preview));
+    when(() => getReplacementPreview(any()))
+        .thenAnswer((_) async => Right(preview));
   }
 
   /// A couple sale ready to submit, with [overrides] applied on top.
@@ -169,18 +168,17 @@ void main() {
       (_) async =>
           Right(CursorPage(items: products, nextCursor: null, hasMore: false)),
     );
-    when(
-      () => getPaymentMethods(any()),
-    ).thenAnswer((_) async => Right(methods));
+    when(() => getPaymentMethods(any()))
+        .thenAnswer((_) async => Right(methods));
   }
 
-  blocTest<CreateMembershipBloc, CreateMembershipState>(
+  blocTest<CreateMembershipCubit, CreateMembershipState>(
     'loads active products and payment methods; auto-selects the only method',
     build: () {
       stubCatalog(methods: const [cash, inactive]);
-      return bloc();
+      return cubit();
     },
-    act: (b) => b.add(const CreateMembershipStarted(memberId: '100')),
+    act: (b) => b.started(memberId: '100'),
     expect: () => [
       isA<CreateMembershipState>().having(
         (s) => s.status,
@@ -196,7 +194,7 @@ void main() {
     ],
   );
 
-  blocTest<CreateMembershipBloc, CreateMembershipState>(
+  blocTest<CreateMembershipCubit, CreateMembershipState>(
     'fails the form load when payment methods cannot be fetched',
     build: () {
       when(() => getProducts(any())).thenAnswer(
@@ -204,12 +202,11 @@ void main() {
           CursorPage(items: [gold], nextCursor: null, hasMore: false),
         ),
       );
-      when(
-        () => getPaymentMethods(any()),
-      ).thenAnswer((_) async => const Left(UnknownFailure()));
-      return bloc();
+      when(() => getPaymentMethods(any()))
+          .thenAnswer((_) async => const Left(UnknownFailure()));
+      return cubit();
     },
-    act: (b) => b.add(const CreateMembershipStarted()),
+    act: (b) => b.started(),
     expect: () => [
       isA<CreateMembershipState>().having(
         (s) => s.status,
@@ -222,9 +219,9 @@ void main() {
     ],
   );
 
-  blocTest<CreateMembershipBloc, CreateMembershipState>(
+  blocTest<CreateMembershipCubit, CreateMembershipState>(
     'requires a payment method before submit',
-    build: bloc,
+    build: cubit,
     seed: () => CreateMembershipState(
       status: LoadStatus.success,
       products: const [gold],
@@ -233,7 +230,7 @@ void main() {
       selectedProductId: '10',
       startDate: DateTime(2026, 1, 1),
     ),
-    act: (b) => b.add(const CreateMembershipSubmitted()),
+    act: (b) => b.submitted(),
     expect: () => [
       isA<CreateMembershipState>().having(
         (s) => s.fieldError,
@@ -246,13 +243,12 @@ void main() {
     },
   );
 
-  blocTest<CreateMembershipBloc, CreateMembershipState>(
+  blocTest<CreateMembershipCubit, CreateMembershipState>(
     'submits payment_method_id with the membership',
     build: () {
-      when(
-        () => createMembership(any()),
-      ).thenAnswer((_) async => Right(created));
-      return bloc();
+      when(() => createMembership(any()))
+          .thenAnswer((_) async => Right(created));
+      return cubit();
     },
     seed: () => CreateMembershipState(
       status: LoadStatus.success,
@@ -263,7 +259,7 @@ void main() {
       selectedPaymentMethodId: '2',
       startDate: DateTime(2026, 1, 1),
     ),
-    act: (b) => b.add(const CreateMembershipSubmitted()),
+    act: (b) => b.submitted(),
     verify: (b) {
       expect(b.state.created?.id, '55');
       final captured =
@@ -276,14 +272,14 @@ void main() {
   );
 
   group('couple package', () {
-    blocTest<CreateMembershipBloc, CreateMembershipState>(
+    blocTest<CreateMembershipCubit, CreateMembershipState>(
       'PartnerSelected without a replacement leaves nothing to confirm',
       build: () {
         stubPreview(null);
-        return bloc();
+        return cubit();
       },
       seed: () => coupleSeed(selectedPartner: null),
-      act: (b) => b.add(const CreateMembershipPartnerSelected(partner)),
+      act: (b) => b.partnerSelected(partner),
       expect: () => [
         isA<CreateMembershipState>()
             .having((s) => s.selectedPartner, 'partner', partner)
@@ -298,14 +294,14 @@ void main() {
       },
     );
 
-    blocTest<CreateMembershipBloc, CreateMembershipState>(
+    blocTest<CreateMembershipCubit, CreateMembershipState>(
       'PartnerSelected stores the preview and pre-fills the suggested credit',
       build: () {
         stubPreview(replacement);
-        return bloc();
+        return cubit();
       },
       seed: () => coupleSeed(selectedPartner: null),
-      act: (b) => b.add(const CreateMembershipPartnerSelected(partner)),
+      act: (b) => b.partnerSelected(partner),
       skip: 1,
       expect: () => [
         isA<CreateMembershipState>()
@@ -316,16 +312,15 @@ void main() {
       ],
     );
 
-    blocTest<CreateMembershipBloc, CreateMembershipState>(
+    blocTest<CreateMembershipCubit, CreateMembershipState>(
       'PartnerSelected clears the partner when the preview fails',
       build: () {
-        when(
-          () => getReplacementPreview(any()),
-        ).thenAnswer((_) async => const Left(UnknownFailure()));
-        return bloc();
+        when(() => getReplacementPreview(any()))
+            .thenAnswer((_) async => const Left(UnknownFailure()));
+        return cubit();
       },
       seed: () => coupleSeed(selectedPartner: null),
-      act: (b) => b.add(const CreateMembershipPartnerSelected(partner)),
+      act: (b) => b.partnerSelected(partner),
       skip: 1,
       expect: () => [
         isA<CreateMembershipState>()
@@ -335,12 +330,12 @@ void main() {
       ],
     );
 
-    blocTest<CreateMembershipBloc, CreateMembershipState>(
+    blocTest<CreateMembershipCubit, CreateMembershipState>(
       'ReplaceConfirmed(true) records the confirmation',
-      build: bloc,
+      build: cubit,
       seed: () =>
           coupleSeed(partnerReplacement: replacement, discountAmount: '733.33'),
-      act: (b) => b.add(const CreateMembershipReplaceConfirmed(true)),
+      act: (b) => b.replaceConfirmed(true),
       expect: () => [
         isA<CreateMembershipState>()
             .having((s) => s.replaceConfirmed, 'confirmed', true)
@@ -349,12 +344,12 @@ void main() {
       ],
     );
 
-    blocTest<CreateMembershipBloc, CreateMembershipState>(
+    blocTest<CreateMembershipCubit, CreateMembershipState>(
       'ReplaceConfirmed(false) clears the partner, preview and discount',
-      build: bloc,
+      build: cubit,
       seed: () =>
           coupleSeed(partnerReplacement: replacement, discountAmount: '733.33'),
-      act: (b) => b.add(const CreateMembershipReplaceConfirmed(false)),
+      act: (b) => b.replaceConfirmed(false),
       expect: () => [
         isA<CreateMembershipState>()
             .having((s) => s.selectedPartner, 'partner', isNull)
@@ -364,13 +359,14 @@ void main() {
       ],
     );
 
-    blocTest<CreateMembershipBloc, CreateMembershipState>(
+    blocTest<CreateMembershipCubit, CreateMembershipState>(
       'DiscountChanged stores the trimmed value and clears it when empty',
-      build: bloc,
+      build: cubit,
       seed: () => coupleSeed(discountAmount: '10.00'),
-      act: (b) => b
-        ..add(const CreateMembershipDiscountChanged(' 250.50 '))
-        ..add(const CreateMembershipDiscountChanged('')),
+      act: (b) {
+        b.discountChanged(' 250.50 ');
+        b.discountChanged('');
+      },
       expect: () => [
         isA<CreateMembershipState>().having(
           (s) => s.discountAmount,
@@ -385,15 +381,15 @@ void main() {
       ],
     );
 
-    blocTest<CreateMembershipBloc, CreateMembershipState>(
+    blocTest<CreateMembershipCubit, CreateMembershipState>(
       'selecting a single package clears the partner, preview and discount',
-      build: bloc,
+      build: cubit,
       seed: () => coupleSeed(
         partnerReplacement: replacement,
         replaceConfirmed: true,
         discountAmount: '733.33',
       ),
-      act: (b) => b.add(const CreateMembershipProductSelected('10')),
+      act: (b) => b.productSelected('10'),
       expect: () => [
         isA<CreateMembershipState>()
             .having((s) => s.selectedProductId, 'product', '10')
@@ -405,13 +401,13 @@ void main() {
       ],
     );
 
-    blocTest<CreateMembershipBloc, CreateMembershipState>(
+    blocTest<CreateMembershipCubit, CreateMembershipState>(
       'selecting a couple package after a single one starts with no partner',
-      build: bloc,
-      seed: () => coupleSeed(
-        selectedPartner: null,
-      ).copyWith(selectedProductId: '10', discountAmount: '5.00'),
-      act: (b) => b.add(const CreateMembershipProductSelected('20')),
+      build: cubit,
+      seed: () =>
+          coupleSeed(selectedPartner: null)
+              .copyWith(selectedProductId: '10', discountAmount: '5.00'),
+      act: (b) => b.productSelected('20'),
       expect: () => [
         isA<CreateMembershipState>()
             .having((s) => s.isCoupleSelected, 'isCouple', true)
@@ -419,19 +415,20 @@ void main() {
       ],
     );
 
-    blocTest<CreateMembershipBloc, CreateMembershipState>(
+    blocTest<CreateMembershipCubit, CreateMembershipState>(
       'a stale preview for a replaced partner is ignored',
       build: () {
         when(() => getReplacementPreview(any())).thenAnswer((_) async {
           await Future<void>.delayed(const Duration(milliseconds: 10));
           return Right(replacement);
         });
-        return bloc();
+        return cubit();
       },
       seed: () => coupleSeed(selectedPartner: null),
-      act: (b) {
-        b.add(const CreateMembershipPartnerSelected(partner));
-        b.add(const CreateMembershipProductSelected('10'));
+      act: (b) async {
+        final pending = b.partnerSelected(partner);
+        b.productSelected('10');
+        await pending;
       },
       wait: const Duration(milliseconds: 50),
       verify: (b) {
@@ -441,47 +438,47 @@ void main() {
     );
 
     group('submit validation', () {
-      blocTest<CreateMembershipBloc, CreateMembershipState>(
+      blocTest<CreateMembershipCubit, CreateMembershipState>(
         'requires a partner',
-        build: bloc,
+        build: cubit,
         seed: () => coupleSeed(selectedPartner: null),
-        act: (b) => b.add(const CreateMembershipSubmitted()),
+        act: (b) => b.submitted(),
         expect: () => [fieldError('Select a partner for the couple package')],
         verify: (_) => verifyNever(() => createMembership(any())),
       );
 
-      blocTest<CreateMembershipBloc, CreateMembershipState>(
+      blocTest<CreateMembershipCubit, CreateMembershipState>(
         'rejects the primary member as their own partner',
-        build: bloc,
+        build: cubit,
         seed: () => coupleSeed(selectedMemberId: '200'),
-        act: (b) => b.add(const CreateMembershipSubmitted()),
+        act: (b) => b.submitted(),
         expect: () => [fieldError('Partner must be a different member')],
         verify: (_) => verifyNever(() => createMembership(any())),
       );
 
-      blocTest<CreateMembershipBloc, CreateMembershipState>(
+      blocTest<CreateMembershipCubit, CreateMembershipState>(
         'waits for the partner check to finish',
-        build: bloc,
+        build: cubit,
         seed: () => coupleSeed(checkingPartner: true),
-        act: (b) => b.add(const CreateMembershipSubmitted()),
+        act: (b) => b.submitted(),
         expect: () => [fieldError("Checking the partner's membership")],
         verify: (_) => verifyNever(() => createMembership(any())),
       );
 
-      blocTest<CreateMembershipBloc, CreateMembershipState>(
+      blocTest<CreateMembershipCubit, CreateMembershipState>(
         'requires the replacement to be confirmed when a preview exists',
-        build: bloc,
+        build: cubit,
         seed: () => coupleSeed(partnerReplacement: replacement),
-        act: (b) => b.add(const CreateMembershipSubmitted()),
+        act: (b) => b.submitted(),
         expect: () => [
           fieldError("Confirm replacing the partner's current membership"),
         ],
         verify: (_) => verifyNever(() => createMembership(any())),
       );
 
-      blocTest<CreateMembershipBloc, CreateMembershipState>(
+      blocTest<CreateMembershipCubit, CreateMembershipState>(
         'rejects a partner who is already in a couple membership',
-        build: bloc,
+        build: cubit,
         seed: () => coupleSeed(
           partnerReplacement: MembershipReplacementPreview(
             membershipId: '88',
@@ -494,17 +491,17 @@ void main() {
           ),
           replaceConfirmed: true,
         ),
-        act: (b) => b.add(const CreateMembershipSubmitted()),
+        act: (b) => b.submitted(),
         expect: () => [fieldError('Partner already has a couple membership')],
         verify: (_) => verifyNever(() => createMembership(any())),
       );
 
-      for (final bad in ['2000.01', '-1', 'abc', '1e2', '+5', '1.']) {
-        blocTest<CreateMembershipBloc, CreateMembershipState>(
+      for (final bad in ['2000.01', '-1', 'abc', '1e2', '+5', '1.', '10.123']) {
+        blocTest<CreateMembershipCubit, CreateMembershipState>(
           'rejects discount "$bad" outside 0..price',
-          build: bloc,
+          build: cubit,
           seed: () => coupleSeed(discountAmount: bad),
-          act: (b) => b.add(const CreateMembershipSubmitted()),
+          act: (b) => b.submitted(),
           expect: () => [
             fieldError('Discount must be between 0 and the package price'),
           ],
@@ -514,16 +511,15 @@ void main() {
     });
 
     group('submit', () {
-      blocTest<CreateMembershipBloc, CreateMembershipState>(
+      blocTest<CreateMembershipCubit, CreateMembershipState>(
         'sends the partner and discount, with no replace flag when nothing is replaced',
         build: () {
-          when(
-            () => createMembership(any()),
-          ).thenAnswer((_) async => Right(created));
-          return bloc();
+          when(() => createMembership(any()))
+              .thenAnswer((_) async => Right(created));
+          return cubit();
         },
         seed: () => coupleSeed(discountAmount: '0'),
-        act: (b) => b.add(const CreateMembershipSubmitted()),
+        act: (b) => b.submitted(),
         verify: (b) {
           final p = capturedParams();
           expect(p.productId, '20');
@@ -534,20 +530,19 @@ void main() {
         },
       );
 
-      blocTest<CreateMembershipBloc, CreateMembershipState>(
+      blocTest<CreateMembershipCubit, CreateMembershipState>(
         'sends replace_partner_membership and the edited discount after confirmation',
         build: () {
-          when(
-            () => createMembership(any()),
-          ).thenAnswer((_) async => Right(created));
-          return bloc();
+          when(() => createMembership(any()))
+              .thenAnswer((_) async => Right(created));
+          return cubit();
         },
         seed: () => coupleSeed(
           partnerReplacement: replacement,
           replaceConfirmed: true,
           discountAmount: '700.00',
         ),
-        act: (b) => b.add(const CreateMembershipSubmitted()),
+        act: (b) => b.submitted(),
         verify: (_) {
           final p = capturedParams();
           expect(p.partnerMemberId, '200');
@@ -556,19 +551,18 @@ void main() {
         },
       );
 
-      blocTest<CreateMembershipBloc, CreateMembershipState>(
+      blocTest<CreateMembershipCubit, CreateMembershipState>(
         'a single package never sends partner fields',
         build: () {
-          when(
-            () => createMembership(any()),
-          ).thenAnswer((_) async => Right(created));
-          return bloc();
+          when(() => createMembership(any()))
+              .thenAnswer((_) async => Right(created));
+          return cubit();
         },
         seed: () => coupleSeed(
           partnerReplacement: replacement,
           discountAmount: '700.00',
         ).copyWith(selectedProductId: '10'),
-        act: (b) => b.add(const CreateMembershipSubmitted()),
+        act: (b) => b.submitted(),
         verify: (_) {
           final p = capturedParams();
           expect(p.partnerMemberId, isNull);

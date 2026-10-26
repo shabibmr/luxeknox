@@ -243,7 +243,7 @@ import '../../features/membership/domain/usecases/update_membership_product_usec
     as _i30;
 import '../../features/membership/domain/usecases/upgrade_membership_usecase.dart'
     as _i617;
-import '../../features/membership/presentation/bloc/create_membership_bloc.dart'
+import '../../features/membership/presentation/cubit/create_membership_cubit.dart'
     as _i632;
 import '../../features/membership/presentation/cubit/membership_card_cubit.dart'
     as _i309;
@@ -1830,8 +1830,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i359.GetMembershipProductsUseCase>(),
       ),
     );
-    gh.factory<_i632.CreateMembershipBloc>(
-      () => _i632.CreateMembershipBloc(
+    gh.factory<_i632.CreateMembershipCubit>(
+      () => _i632.CreateMembershipCubit(
         gh<_i65.CreateMembershipUseCase>(),
         gh<_i359.GetMembershipProductsUseCase>(),
         gh<_i789.GetPaymentMethodsUseCase>(),
