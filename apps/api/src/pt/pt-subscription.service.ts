@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
+import { assertPartnerForPackage } from '../memb/membership-partner';
 import { MembershipService } from '../memb/membership.service';
 import { PaymentService } from '../pay/payment.service';
 import type { PaymentDto } from '../pay/payment.dto';
@@ -121,16 +122,7 @@ export class PtSubscriptionService {
     await this.scheduleService.requireMember(dto.member_id);
     await this.scheduleService.requireEligibleTrainer(dto.trainer_id);
 
-    const isCouple = product.package_type === 'couple';
-    if (isCouple && dto.partner_member_id == null) {
-      throw new BadRequestError('partner_member_id is required for a couple package');
-    }
-    if (!isCouple && dto.partner_member_id != null) {
-      throw new BadRequestError('partner_member_id is only valid for a couple package');
-    }
-    if (dto.partner_member_id != null && dto.partner_member_id === dto.member_id) {
-      throw new BadRequestError('partner_member_id must differ from member_id');
-    }
+    assertPartnerForPackage(product.package_type, dto.member_id, dto.partner_member_id);
 
     let partnerMember: { id: number; first_name: string; last_name: string } | null = null;
     if (dto.partner_member_id != null) {
