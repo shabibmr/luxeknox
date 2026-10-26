@@ -121,9 +121,7 @@ abstract class SellPtState with _$SellPtState {
       canLoadGrid &&
       slotChosen &&
       partnerReady &&
-      (isReplan
-          ? replanChanged
-          : paymentMethodId != null && discountInRange);
+      (isReplan ? replanChanged : paymentMethodId != null && discountInRange);
 }
 
 final _discountMoneyFormat = RegExp(r'^\d+(\.\d{1,2})?$');

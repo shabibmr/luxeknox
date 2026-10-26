@@ -29,7 +29,6 @@ class MockReplan extends Mock implements ReplanPtUseCase {}
 
 class MockGetPtSummary extends Mock implements GetMemberPtSummaryUseCase {}
 
-
 void main() {
   late MockGetPtProducts getProducts;
   late MockGetPaymentMethods getPaymentMethods;
@@ -156,14 +155,12 @@ void main() {
     when(
       () => getProducts(any()),
     ).thenAnswer((_) async => const Right([product, coupleProduct, archived]));
-    when(
-      () => getPaymentMethods(any()),
-    ).thenAnswer((_) async => const Right([cash]));
+    when(() => getPaymentMethods(any()))
+        .thenAnswer((_) async => const Right([cash]));
     when(() => getGrid(any())).thenAnswer((_) async => Right(grid));
     when(() => purchase(any())).thenAnswer((_) async => Right(sold));
-    when(() => getPtSummary(any())).thenAnswer(
-      (_) async => const Right(MemberPtSummary()),
-    );
+    when(() => getPtSummary(any()))
+        .thenAnswer((_) async => const Right(MemberPtSummary()));
   });
 
   SellPtCubit build() => SellPtCubit(
@@ -187,30 +184,27 @@ void main() {
     },
   );
 
-  test(
-    'weekdays are chosen freely per member and the grid loads once at least one day is picked',
-    () async {
-      final cubit = build();
-      await cubit.init(42);
-      cubit.selectProduct(product);
-      cubit.setStartDate(DateTime(2026, 10, 5));
-      cubit.toggleWeekday(1);
-      await Future<void>.delayed(Duration.zero);
-      expect(cubit.state.grid, grid);
+  test('weekdays are chosen freely per member and the grid loads once at least one day is picked', () async {
+    final cubit = build();
+    await cubit.init(42);
+    cubit.selectProduct(product);
+    cubit.setStartDate(DateTime(2026, 10, 5));
+    cubit.toggleWeekday(1);
+    await Future<void>.delayed(Duration.zero);
+    expect(cubit.state.grid, grid);
 
-      cubit.toggleWeekday(3);
-      cubit.toggleWeekday(5);
-      cubit.toggleWeekday(6); // a 4th day is accepted — no package-fixed cap
-      await Future<void>.delayed(Duration.zero);
+    cubit.toggleWeekday(3);
+    cubit.toggleWeekday(5);
+    cubit.toggleWeekday(6); // a 4th day is accepted — no package-fixed cap
+    await Future<void>.delayed(Duration.zero);
 
-      expect(cubit.state.weekdays, [1, 3, 5, 6]);
-      final params =
-          verify(() => getGrid(captureAny())).captured.last
-              as GetPtScheduleGridParams;
-      expect(params.weekdays, [1, 3, 5, 6]);
-      expect(params.memberId, 42);
-    },
-  );
+    expect(cubit.state.weekdays, [1, 3, 5, 6]);
+    final params =
+        verify(() => getGrid(captureAny())).captured.last
+            as GetPtScheduleGridParams;
+    expect(params.weekdays, [1, 3, 5, 6]);
+    expect(params.memberId, 42);
+  });
 
   test('occupied cells cannot be selected; free cells can', () async {
     final cubit = build();
@@ -348,9 +342,8 @@ void main() {
   });
 
   test('replan fails visibly when the product cannot be found', () async {
-    when(
-      () => getProducts(any()),
-    ).thenAnswer((_) async => const Right(<PtProduct>[]));
+    when(() => getProducts(any()))
+        .thenAnswer((_) async => const Right(<PtProduct>[]));
     final cubit = build();
     await cubit.initReplan(sold, const []);
 
@@ -359,16 +352,14 @@ void main() {
   });
 
   test('retry after a failed replan init re-runs the replan init', () async {
-    when(
-      () => getProducts(any()),
-    ).thenAnswer((_) async => const Left(NetworkFailure()));
+    when(() => getProducts(any()))
+        .thenAnswer((_) async => const Left(NetworkFailure()));
     final cubit = build();
     await cubit.initReplan(sold, const []);
     expect(cubit.state.failure, isA<NetworkFailure>());
 
-    when(
-      () => getProducts(any()),
-    ).thenAnswer((_) async => const Right([product]));
+    when(() => getProducts(any()))
+        .thenAnswer((_) async => const Right([product]));
     await cubit.retry();
     expect(cubit.state.status, LoadStatus.success);
     expect(cubit.state.isReplan, isTrue);
@@ -420,14 +411,15 @@ void main() {
       return cubit;
     }
 
-    List<String?> keys() => verify(
-      () => purchase(captureAny()),
-    ).captured.cast<PurchasePtParams>().map((p) => p.idempotencyKey).toList();
+    List<String?> keys() =>
+        verify(() => purchase(captureAny())).captured
+            .cast<PurchasePtParams>()
+            .map((p) => p.idempotencyKey)
+            .toList();
 
     test('a retry of the same sale reuses the key', () async {
-      when(
-        () => purchase(any()),
-      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      when(() => purchase(any()))
+          .thenAnswer((_) async => const Left(NetworkFailure()));
       final cubit = await ready();
       await cubit.submit();
       await cubit.submit();
@@ -439,9 +431,8 @@ void main() {
     });
 
     test('a changed sale mints a new key', () async {
-      when(
-        () => purchase(any()),
-      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      when(() => purchase(any()))
+          .thenAnswer((_) async => const Left(NetworkFailure()));
       final cubit = await ready();
       await cubit.submit();
       cubit.setDiscount('50.00');
@@ -475,9 +466,8 @@ void main() {
   });
 
   test('a payment-methods load failure is surfaced, not hidden', () async {
-    when(
-      () => getPaymentMethods(any()),
-    ).thenAnswer((_) async => const Left(NetworkFailure()));
+    when(() => getPaymentMethods(any()))
+        .thenAnswer((_) async => const Left(NetworkFailure()));
     final cubit = build();
     await cubit.init(42);
 
@@ -598,10 +588,13 @@ void main() {
       expect(cubit.state.canSubmit, isFalse);
     });
 
-    test('a partner with no membership is not blocked (PT bundles one)', () async {
-      final cubit = await readyCouple(withPartner: partner);
-      expect(cubit.state.partnerCheck, isA<SellPtPartnerCheckOk>());
-    });
+    test(
+      'a partner with no membership is not blocked (PT bundles one)',
+      () async {
+        final cubit = await readyCouple(withPartner: partner);
+        expect(cubit.state.partnerCheck, isA<SellPtPartnerCheckOk>());
+      },
+    );
 
     test('selecting a single package clears the partner', () async {
       final cubit = await readyCouple(withPartner: partner);
@@ -614,9 +607,8 @@ void main() {
     });
 
     test('changing the partner mints a new purchase idempotency key', () async {
-      when(
-        () => purchase(any()),
-      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      when(() => purchase(any()))
+          .thenAnswer((_) async => const Left(NetworkFailure()));
       final cubit = await readyCouple(withPartner: partner);
       cubit.selectSlot(7, '17:00:00');
       await cubit.submit();

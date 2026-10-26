@@ -633,7 +633,8 @@ class _PriceSummaryState extends State<_PriceSummary> {
                     label: label,
                     enabled: enabled,
                     required: false,
-                    helperText: _valueError ??
+                    helperText:
+                        _valueError ??
                         'Max ${widget.state.selectedProduct?.basePrice ?? '—'}',
                   ),
                 ),

@@ -124,9 +124,8 @@ void main() {
 
   setUp(() {
     cubit = MockSellPtCubit();
-    when(
-      () => cubit.init(any(), memberName: any(named: 'memberName')),
-    ).thenAnswer((_) async {});
+    when(() => cubit.init(any(), memberName: any(named: 'memberName')))
+        .thenAnswer((_) async {});
     when(
       () =>
           cubit.initReplan(any(), any(), memberName: any(named: 'memberName')),

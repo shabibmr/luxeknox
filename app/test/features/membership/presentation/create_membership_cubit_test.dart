@@ -123,9 +123,8 @@ void main() {
   );
 
   void stubPreview(MembershipReplacementPreview? preview) {
-    when(
-      () => getReplacementPreview(any()),
-    ).thenAnswer((_) async => Right(preview));
+    when(() => getReplacementPreview(any()))
+        .thenAnswer((_) async => Right(preview));
   }
 
   /// A couple sale ready to submit, with [overrides] applied on top.
@@ -169,9 +168,8 @@ void main() {
       (_) async =>
           Right(CursorPage(items: products, nextCursor: null, hasMore: false)),
     );
-    when(
-      () => getPaymentMethods(any()),
-    ).thenAnswer((_) async => Right(methods));
+    when(() => getPaymentMethods(any()))
+        .thenAnswer((_) async => Right(methods));
   }
 
   blocTest<CreateMembershipCubit, CreateMembershipState>(
@@ -204,9 +202,8 @@ void main() {
           CursorPage(items: [gold], nextCursor: null, hasMore: false),
         ),
       );
-      when(
-        () => getPaymentMethods(any()),
-      ).thenAnswer((_) async => const Left(UnknownFailure()));
+      when(() => getPaymentMethods(any()))
+          .thenAnswer((_) async => const Left(UnknownFailure()));
       return cubit();
     },
     act: (b) => b.started(),
@@ -249,9 +246,8 @@ void main() {
   blocTest<CreateMembershipCubit, CreateMembershipState>(
     'submits payment_method_id with the membership',
     build: () {
-      when(
-        () => createMembership(any()),
-      ).thenAnswer((_) async => Right(created));
+      when(() => createMembership(any()))
+          .thenAnswer((_) async => Right(created));
       return cubit();
     },
     seed: () => CreateMembershipState(
@@ -319,9 +315,8 @@ void main() {
     blocTest<CreateMembershipCubit, CreateMembershipState>(
       'PartnerSelected clears the partner when the preview fails',
       build: () {
-        when(
-          () => getReplacementPreview(any()),
-        ).thenAnswer((_) async => const Left(UnknownFailure()));
+        when(() => getReplacementPreview(any()))
+            .thenAnswer((_) async => const Left(UnknownFailure()));
         return cubit();
       },
       seed: () => coupleSeed(selectedPartner: null),
@@ -409,9 +404,9 @@ void main() {
     blocTest<CreateMembershipCubit, CreateMembershipState>(
       'selecting a couple package after a single one starts with no partner',
       build: cubit,
-      seed: () => coupleSeed(
-        selectedPartner: null,
-      ).copyWith(selectedProductId: '10', discountAmount: '5.00'),
+      seed: () =>
+          coupleSeed(selectedPartner: null)
+              .copyWith(selectedProductId: '10', discountAmount: '5.00'),
       act: (b) => b.productSelected('20'),
       expect: () => [
         isA<CreateMembershipState>()
@@ -519,9 +514,8 @@ void main() {
       blocTest<CreateMembershipCubit, CreateMembershipState>(
         'sends the partner and discount, with no replace flag when nothing is replaced',
         build: () {
-          when(
-            () => createMembership(any()),
-          ).thenAnswer((_) async => Right(created));
+          when(() => createMembership(any()))
+              .thenAnswer((_) async => Right(created));
           return cubit();
         },
         seed: () => coupleSeed(discountAmount: '0'),
@@ -539,9 +533,8 @@ void main() {
       blocTest<CreateMembershipCubit, CreateMembershipState>(
         'sends replace_partner_membership and the edited discount after confirmation',
         build: () {
-          when(
-            () => createMembership(any()),
-          ).thenAnswer((_) async => Right(created));
+          when(() => createMembership(any()))
+              .thenAnswer((_) async => Right(created));
           return cubit();
         },
         seed: () => coupleSeed(
@@ -561,9 +554,8 @@ void main() {
       blocTest<CreateMembershipCubit, CreateMembershipState>(
         'a single package never sends partner fields',
         build: () {
-          when(
-            () => createMembership(any()),
-          ).thenAnswer((_) async => Right(created));
+          when(() => createMembership(any()))
+              .thenAnswer((_) async => Right(created));
           return cubit();
         },
         seed: () => coupleSeed(

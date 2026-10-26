@@ -116,9 +116,8 @@ void main() {
 
   setUp(() {
     cubit = MockCreateMembershipCubit();
-    when(
-      () => cubit.started(memberId: any(named: 'memberId')),
-    ).thenAnswer((_) async {});
+    when(() => cubit.started(memberId: any(named: 'memberId')))
+        .thenAnswer((_) async {});
     when(() => cubit.replaceConfirmed(any())).thenReturn(null);
     getIt.registerFactory<CreateMembershipCubit>(() => cubit);
     getMember = MockGetMemberUseCase();
