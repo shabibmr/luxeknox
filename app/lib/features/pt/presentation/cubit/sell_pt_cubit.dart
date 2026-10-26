@@ -116,6 +116,18 @@ abstract class SellPtState with _$SellPtState {
     return cents >= 0 && cents <= priceCents;
   }
 
+  /// Sale only: price minus a valid discount; the full price while the
+  /// discount is empty or invalid.
+  String get payableAmount {
+    final price = product?.basePrice ?? '';
+    final priceCents = _moneyToCents(price);
+    if (priceCents == null) return price;
+    final d = discount;
+    final cents = (d == null || !discountInRange) ? 0 : _moneyToCents(d) ?? 0;
+    final net = priceCents - cents;
+    return '${net ~/ 100}.${(net % 100).toString().padLeft(2, '0')}';
+  }
+
   bool get canSubmit =>
       !submitting &&
       canLoadGrid &&

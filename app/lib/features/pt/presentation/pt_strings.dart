@@ -58,6 +58,8 @@ abstract final class PtStrings {
   static const summaryHour = 'Hour';
   static const summaryTrainer = 'Trainer';
   static const summaryAmount = 'Amount';
+  static const summaryDiscount = 'Discount';
+  static const summaryPayable = 'Payable';
   static const sold = 'Personal Training assigned';
   static const replanned = 'Personal Training updated';
 

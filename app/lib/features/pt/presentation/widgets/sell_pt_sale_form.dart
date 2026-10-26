@@ -318,8 +318,9 @@ class _Summary extends StatelessWidget {
       padding: const EdgeInsets.only(top: 4),
       child: Text(
         text,
-        style: Theme.of(context).textTheme.bodySmall
-            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
     );
     return Card(
@@ -343,6 +344,12 @@ class _Summary extends StatelessWidget {
             row(PtStrings.summaryHour, ptHourLabel(state.slotStart!)),
             row(PtStrings.summaryTrainer, trainer?.name ?? '—'),
             row(PtStrings.summaryAmount, state.product!.basePrice),
+            if (!state.isReplan &&
+                (state.discount ?? '').isNotEmpty &&
+                state.discountInRange) ...[
+              row(PtStrings.summaryDiscount, state.discount!),
+              row(PtStrings.summaryPayable, state.payableAmount),
+            ],
             if (state.product!.isCouple) note(PtStrings.coupleTotalNote),
             note(
               state.product!.isCouple
