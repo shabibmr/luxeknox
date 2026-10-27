@@ -14,6 +14,7 @@ class UpdateAccountParams extends Equatable {
     this.parentId,
     this.isActive,
     this.isBank,
+    this.clearParentId = false,
   });
 
   final String id;
@@ -21,9 +22,10 @@ class UpdateAccountParams extends Equatable {
   final String? parentId;
   final bool? isActive;
   final bool? isBank;
+  final bool clearParentId;
 
   @override
-  List<Object?> get props => [id, name, parentId, isActive, isBank];
+  List<Object?> get props => [id, name, parentId, isActive, isBank, clearParentId];
 }
 
 @lazySingleton
@@ -40,6 +42,7 @@ class UpdateAccountUseCase implements UseCase<Account, UpdateAccountParams> {
       parentId: params.parentId,
       isActive: params.isActive,
       isBank: params.isBank,
+      clearParentId: params.clearParentId,
     );
   }
 }

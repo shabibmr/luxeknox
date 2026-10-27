@@ -224,6 +224,34 @@ void main() {
       },
     );
 
+    blocTest<VendorsCubit, VendorsState>(
+      'setSearch alias triggers reload with search string',
+      build: () {
+        when(() => mockGetVendors(any()))
+            .thenAnswer((_) async => const Right(tPage));
+        return cubit;
+      },
+      act: (cubit) => cubit.setSearch('Acme'),
+      expect: () => [
+        const VendorsState(
+          search: 'Acme',
+        ),
+        const VendorsState(
+          status: LoadStatus.loading,
+          search: 'Acme',
+          vendors: [],
+          offset: 0,
+        ),
+        const VendorsState(
+          status: LoadStatus.success,
+          search: 'Acme',
+          vendors: [tVendor1, tVendor2],
+          offset: 2,
+          hasReachedMax: false,
+        ),
+      ],
+    );
+
     test('rapid searchVendors with real debounce only fires latest query', () async {
       final debouncedCubit = VendorsCubit(
         mockGetVendors,

@@ -95,7 +95,10 @@ void main() {
 
   Widget buildTestableWidget({
     Capabilities capabilities = writeCapabilities,
-    VendorsState state = const VendorsState(status: LoadStatus.success),
+    VendorsState state = const VendorsState(
+      status: LoadStatus.success,
+      hasReachedMax: true,
+    ),
   }) {
     whenListen(
       mockSessionCubit,
@@ -298,6 +301,7 @@ void main() {
           state: const VendorsState(
             status: LoadStatus.success,
             vendors: [tVendor1],
+            hasReachedMax: true,
           ),
         ),
       );
@@ -317,6 +321,7 @@ void main() {
           state: const VendorsState(
             status: LoadStatus.success,
             vendors: [tVendor1],
+            hasReachedMax: true,
           ),
         ),
       );

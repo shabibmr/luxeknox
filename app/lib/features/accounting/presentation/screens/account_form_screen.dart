@@ -156,7 +156,7 @@ class _AccountFormViewState extends State<_AccountFormView> {
     result.fold(
       (_) {},
       (acc) {
-        if (mounted) {
+        if (mounted && _parentId == parentId) {
           setState(() {
             _parentAccount = acc;
           });
@@ -225,6 +225,7 @@ class _AccountFormViewState extends State<_AccountFormView> {
         id: id,
         name: _nameController.text.trim(),
         parentId: parentId,
+        clearParentId: parentId == null,
         isActive: _isActive,
         isBank: _isBank,
       );

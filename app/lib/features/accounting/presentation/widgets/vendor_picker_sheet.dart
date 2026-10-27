@@ -80,32 +80,32 @@ class VendorPickerSheet extends StatelessWidget {
           );
         }
 
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: isSelectable ? null : showInactiveSnackBar,
-          child: ListTile(
-            key: Key('vendor_option_${vendor.id}'),
-            enabled: isSelectable,
-            title: Text(
-              vendor.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: subtitleChildren.isEmpty
+        return ListTile(
+          key: Key('vendor_option_${vendor.id}'),
+          title: Text(
+            vendor.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: isSelectable
                 ? null
-                : Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: subtitleChildren,
-                    ),
+                : TextStyle(
+                    color: Theme.of(context).disabledColor,
                   ),
-            onTap: isSelectable
-                ? () => Navigator.of(context).pop(vendor)
-                : showInactiveSnackBar,
           ),
+          subtitle: subtitleChildren.isEmpty
+              ? null
+              : Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: subtitleChildren,
+                  ),
+                ),
+          onTap: isSelectable
+              ? () => Navigator.of(context).pop(vendor)
+              : showInactiveSnackBar,
         );
       },
     );

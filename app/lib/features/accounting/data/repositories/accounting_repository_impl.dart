@@ -107,6 +107,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
     String? parentId,
     bool? isActive,
     bool? isBank,
+    bool clearParentId = false,
   }) async {
     final intId = _parseId(id);
     if (intId == null) return const Left(NotFoundFailure());
@@ -118,6 +119,7 @@ class AccountingRepositoryImpl implements AccountingRepository {
           parentId: parentId,
           isActive: isActive,
           isBank: isBank,
+          clearParentId: clearParentId,
         ),
       );
       return Right(updated.toDomain());

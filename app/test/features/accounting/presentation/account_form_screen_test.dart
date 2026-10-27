@@ -85,6 +85,7 @@ void main() {
         parentId: any(named: 'parentId'),
         isActive: any(named: 'isActive'),
         isBank: any(named: 'isBank'),
+        clearParentId: any(named: 'clearParentId'),
       ),
     ).thenAnswer((_) async => true);
 
@@ -402,6 +403,7 @@ void main() {
           id: tAccount.id,
           name: 'Cash on Hand - Main Vault',
           parentId: null,
+          clearParentId: true,
           isActive: true,
           isBank: false,
         ),
@@ -445,6 +447,7 @@ void main() {
           id: 'acc-child',
           name: 'Petty Cash',
           parentId: 'acc-parent-99',
+          clearParentId: false,
           isActive: true,
           isBank: false,
         ),

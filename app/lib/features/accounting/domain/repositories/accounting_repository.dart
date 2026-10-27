@@ -44,6 +44,7 @@ abstract class AccountingRepository {
     String? parentId,
     bool? isActive,
     bool? isBank,
+    bool clearParentId = false,
   });
 
   // Journals

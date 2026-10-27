@@ -75,12 +75,11 @@ class VendorsState extends Equatable {
 class VendorsCubit extends Cubit<VendorsState> {
   VendorsCubit(
     this._getVendors, {
-    Duration debounceDuration = const Duration(milliseconds: 300),
-  })  : _debounceDuration = debounceDuration,
-        super(const VendorsState());
+    this.debounceDuration = const Duration(milliseconds: 300),
+  }) : super(const VendorsState());
 
   final GetVendorsUseCase _getVendors;
-  final Duration _debounceDuration;
+  final Duration debounceDuration;
   Timer? _debounceTimer;
   int _loadEpoch = 0;
 
@@ -168,14 +167,14 @@ class VendorsCubit extends Cubit<VendorsState> {
       ),
     );
 
-    if (_debounceDuration == Duration.zero) {
+    if (debounceDuration == Duration.zero) {
       load(
         refresh: true,
         search: isClearing ? null : trimmed,
         clearSearch: isClearing,
       );
     } else {
-      _debounceTimer = Timer(_debounceDuration, () {
+      _debounceTimer = Timer(debounceDuration, () {
         load(
           refresh: true,
           search: isClearing ? null : trimmed,
@@ -184,6 +183,8 @@ class VendorsCubit extends Cubit<VendorsState> {
       });
     }
   }
+
+  void setSearch(String? query) => searchVendors(query);
 
   Future<void> filterByActive(bool? isActive) {
     return load(

@@ -89,6 +89,8 @@ import '../../features/accounting/domain/usecases/get_purchase_bill_usecase.dart
     as _i71;
 import '../../features/accounting/domain/usecases/get_purchase_bills_usecase.dart'
     as _i825;
+import '../../features/accounting/domain/usecases/get_tax_code_usecase.dart'
+    as _i1032;
 import '../../features/accounting/domain/usecases/get_tax_codes_usecase.dart'
     as _i571;
 import '../../features/accounting/domain/usecases/get_trial_balance_usecase.dart'
@@ -280,7 +282,7 @@ import '../../features/exercises/domain/usecases/create_exercise_usecase.dart'
 import '../../features/exercises/domain/usecases/deactivate_exercise_usecase.dart'
     as _i708;
 import '../../features/exercises/domain/usecases/get_exercise_usecase.dart'
-    as _i1034;
+    as _i1035;
 import '../../features/exercises/domain/usecases/get_exercises_usecase.dart'
     as _i872;
 import '../../features/exercises/domain/usecases/update_exercise_usecase.dart'
@@ -520,7 +522,7 @@ import '../../features/people/domain/usecases/get_employee_usecase.dart'
     as _i780;
 import '../../features/people/domain/usecases/get_member_usecase.dart' as _i562;
 import '../../features/people/domain/usecases/get_trainer_usecase.dart'
-    as _i1033;
+    as _i1034;
 import '../../features/people/domain/usecases/list_documents_usecase.dart'
     as _i1023;
 import '../../features/people/domain/usecases/list_emergency_contacts_usecase.dart'
@@ -631,7 +633,7 @@ import '../../features/settings/domain/repositories/settings_repository.dart'
 import '../../features/settings/domain/usecases/get_public_settings_usecase.dart'
     as _i744;
 import '../../features/settings/domain/usecases/get_settings_usecase.dart'
-    as _i1032;
+    as _i1033;
 import '../../features/settings/domain/usecases/update_settings_usecase.dart'
     as _i474;
 import '../../features/settings/presentation/cubit/settings_category_cubit.dart'
@@ -1386,6 +1388,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i825.GetPurchaseBillsUseCase>(
       () => _i825.GetPurchaseBillsUseCase(gh<_i330.AccountingRepository>()),
     );
+    gh.lazySingleton<_i1032.GetTaxCodeUseCase>(
+      () => _i1032.GetTaxCodeUseCase(gh<_i330.AccountingRepository>()),
+    );
     gh.lazySingleton<_i571.GetTaxCodesUseCase>(
       () => _i571.GetTaxCodesUseCase(gh<_i330.AccountingRepository>()),
     );
@@ -1467,14 +1472,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i44.ListProgressNotesUseCase>(),
       ),
     );
-    gh.factory<_i495.AccountsCubit>(
-      () => _i495.AccountsCubit(gh<_i676.GetAccountsUseCase>()),
-    );
     gh.lazySingleton<_i744.GetPublicSettingsUseCase>(
       () => _i744.GetPublicSettingsUseCase(gh<_i674.SettingsRepository>()),
     );
-    gh.lazySingleton<_i1032.GetSettingsUseCase>(
-      () => _i1032.GetSettingsUseCase(gh<_i674.SettingsRepository>()),
+    gh.lazySingleton<_i1033.GetSettingsUseCase>(
+      () => _i1033.GetSettingsUseCase(gh<_i674.SettingsRepository>()),
     );
     gh.lazySingleton<_i474.UpdateSettingsUseCase>(
       () => _i474.UpdateSettingsUseCase(gh<_i674.SettingsRepository>()),
@@ -1592,9 +1594,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i939.ReportRepository>(
       () => _i246.ReportRepositoryImpl(gh<_i996.ReportRemoteDataSource>()),
-    );
-    gh.factory<_i984.VendorsCubit>(
-      () => _i984.VendorsCubit(gh<_i612.GetVendorsUseCase>()),
     );
     gh.lazySingleton<_i250.SchedulingRepository>(
       () => _i651.SchedulingRepositoryImpl(
@@ -1884,8 +1883,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i562.GetMemberUseCase>(
       () => _i562.GetMemberUseCase(gh<_i646.PeopleRepository>()),
     );
-    gh.lazySingleton<_i1033.GetTrainerUseCase>(
-      () => _i1033.GetTrainerUseCase(gh<_i646.PeopleRepository>()),
+    gh.lazySingleton<_i1034.GetTrainerUseCase>(
+      () => _i1034.GetTrainerUseCase(gh<_i646.PeopleRepository>()),
     );
     gh.lazySingleton<_i1004.ListEmployeesUseCase>(
       () => _i1004.ListEmployeesUseCase(gh<_i646.PeopleRepository>()),
@@ -2022,6 +2021,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i950.PaymentVouchersCubit>(
       () => _i950.PaymentVouchersCubit(gh<_i539.GetPaymentVouchersUseCase>()),
     );
+    gh.factory<_i495.AccountsCubit>(
+      () => _i495.AccountsCubit(
+        gh<_i676.GetAccountsUseCase>(),
+        debounceDuration: gh<Duration>(),
+      ),
+    );
     gh.factory<_i779.DietHistoryCubit>(
       () => _i779.DietHistoryCubit(gh<_i1025.ListDietLogsUseCase>()),
     );
@@ -2040,8 +2045,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i708.DeactivateExerciseUseCase>(
       () => _i708.DeactivateExerciseUseCase(gh<_i275.ExerciseRepository>()),
     );
-    gh.lazySingleton<_i1034.GetExerciseUseCase>(
-      () => _i1034.GetExerciseUseCase(gh<_i275.ExerciseRepository>()),
+    gh.lazySingleton<_i1035.GetExerciseUseCase>(
+      () => _i1035.GetExerciseUseCase(gh<_i275.ExerciseRepository>()),
     );
     gh.lazySingleton<_i872.GetExercisesUseCase>(
       () => _i872.GetExercisesUseCase(gh<_i275.ExerciseRepository>()),
@@ -2134,7 +2139,7 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i554.EditTrainerProfileCubit>(
       () => _i554.EditTrainerProfileCubit(
-        gh<_i1033.GetTrainerUseCase>(),
+        gh<_i1034.GetTrainerUseCase>(),
         gh<_i166.UpdateTrainerUseCase>(),
       ),
     );
@@ -2203,6 +2208,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i760.FundTransferFormCubit>(
       () => _i760.FundTransferFormCubit(gh<_i468.CreateFundTransferUseCase>()),
     );
+    gh.factory<_i984.VendorsCubit>(
+      () => _i984.VendorsCubit(
+        gh<_i612.GetVendorsUseCase>(),
+        debounceDuration: gh<Duration>(),
+      ),
+    );
     gh.factory<_i300.BookScheduleBloc>(
       () => _i300.BookScheduleBloc(gh<_i777.BookScheduleUseCase>()),
     );
@@ -2217,7 +2228,7 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i873.SettingsCategoryCubit>(
       () => _i873.SettingsCategoryCubit(
-        gh<_i1032.GetSettingsUseCase>(),
+        gh<_i1033.GetSettingsUseCase>(),
         gh<_i474.UpdateSettingsUseCase>(),
       ),
     );
@@ -2228,7 +2239,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i777.GetScheduleUseCase>(),
         gh<_i871.ListScheduleTypesUseCase>(),
         gh<_i871.ListFacilitiesUseCase>(),
-        gh<_i1033.GetTrainerUseCase>(),
+        gh<_i1034.GetTrainerUseCase>(),
       ),
     );
     gh.factory<_i854.MembershipDetailCubit>(
@@ -2317,7 +2328,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i978.TodaysSessionsCubit(gh<_i777.ListSchedulesUseCase>()),
     );
     gh.factory<_i756.ExerciseDetailCubit>(
-      () => _i756.ExerciseDetailCubit(gh<_i1034.GetExerciseUseCase>()),
+      () => _i756.ExerciseDetailCubit(gh<_i1035.GetExerciseUseCase>()),
     );
     gh.factory<_i122.SellPtCubit>(
       () => _i122.SellPtCubit(
@@ -2360,7 +2371,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i862.UpdateMemberUseCase>(),
         gh<_i370.GetMembershipsUseCase>(),
         gh<_i841.GetAttendanceSummaryUseCase>(),
-        gh<_i1033.GetTrainerUseCase>(),
+        gh<_i1034.GetTrainerUseCase>(),
         gh<_i777.ListSchedulesUseCase>(),
         gh<_i929.GetMemberPtSummaryUseCase>(),
         gh<_i929.RenewPtUseCase>(),
