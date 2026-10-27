@@ -8,6 +8,7 @@ import {
   NotFoundError,
 } from '../platform/errors/app-error';
 import { WorkoutPlanService } from './workout-plan.service';
+import { workoutPlanCreateSchema, workoutPlanUpdateSchema } from './workout-plan.dto';
 
 const adminActor: AuthenticatedUser = {
   id: 1,
@@ -717,6 +718,262 @@ describe('WorkoutPlanService', () => {
 
       expect(ptAccess!.assertTrainerCanWrite).toHaveBeenCalledWith(trainerActor, 30);
       expect(planRepo.insertPlan).toHaveBeenCalled();
+    });
+  });
+
+  describe('blueprint (PTF-12)', () => {
+    const blueprintPayload = {
+      primary_objective_12w: 'Squat 100kg',
+      milestone_4w: 'Squat 80kg',
+      sessions_per_week: 4,
+      target_session_duration_minutes: 60,
+      split_type: 'upper lower',
+      cardio_protocol: 'Zone 2 20 min',
+      mobility_protocol: 'hips daily',
+      progression_methods: ['load', 'reps'] as const,
+      main_success_measure: 'Squat load',
+      trainer_programming_notes: 'pause reps',
+    };
+
+    it('create_persists_blueprint_fields', async () => {
+      const { service, planRepo } = buildService();
+
+      planRepo.insertPlan.mockResolvedValue({
+        id: 10,
+        title: 'Strength Block',
+        ...blueprintPayload,
+        status: 'draft',
+        row_version: 1,
+        created_at: new Date(),
+      });
+      planRepo.insertVersion.mockResolvedValue({
+        id: 101,
+        workout_plan_id: 10,
+        version_number: 1,
+        changelog: 'Initial draft version',
+        created_at: new Date(),
+      });
+
+      await service.create(
+        {
+          title: 'Strength Block',
+          ...blueprintPayload,
+          progression_methods: [...blueprintPayload.progression_methods],
+        },
+        trainerActor,
+      );
+
+      expect(planRepo.insertPlan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          primary_objective_12w: 'Squat 100kg',
+          milestone_4w: 'Squat 80kg',
+          sessions_per_week: 4,
+          target_session_duration_minutes: 60,
+          split_type: 'upper lower',
+          cardio_protocol: 'Zone 2 20 min',
+          mobility_protocol: 'hips daily',
+          progression_methods: ['load', 'reps'],
+          main_success_measure: 'Squat load',
+          trainer_programming_notes: 'pause reps',
+        }),
+      );
+    });
+
+    it('create_omitted_blueprint_stores_null', async () => {
+      const { service, planRepo } = buildService();
+
+      planRepo.insertPlan.mockResolvedValue({
+        id: 10,
+        title: 'Bare Plan',
+        status: 'draft',
+        row_version: 1,
+        created_at: new Date(),
+      });
+      planRepo.insertVersion.mockResolvedValue({
+        id: 101,
+        workout_plan_id: 10,
+        version_number: 1,
+        changelog: 'Initial draft version',
+        created_at: new Date(),
+      });
+
+      await service.create({ title: 'Bare Plan' }, trainerActor);
+
+      expect(planRepo.insertPlan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          primary_objective_12w: null,
+          milestone_4w: null,
+          sessions_per_week: null,
+          target_session_duration_minutes: null,
+          split_type: null,
+          cardio_protocol: null,
+          mobility_protocol: null,
+          progression_methods: null,
+          main_success_measure: null,
+          trainer_programming_notes: null,
+        }),
+      );
+    });
+
+    it('update_title_only_does_not_send_blueprint_keys', async () => {
+      const { service, planRepo } = buildService();
+
+      planRepo.findPlanById
+        .mockResolvedValueOnce({
+          id: 10,
+          title: 'Old',
+          member_id: 30,
+          trainer_id: 20,
+          status: 'draft',
+          is_template: false,
+          row_version: 1,
+          primary_objective_12w: 'Keep me',
+          progression_methods: ['load'],
+        })
+        .mockResolvedValueOnce({
+          id: 10,
+          title: 'Renamed',
+          member_id: 30,
+          trainer_id: 20,
+          status: 'draft',
+          is_template: false,
+          row_version: 2,
+          primary_objective_12w: 'Keep me',
+          progression_methods: ['load'],
+        });
+      planRepo.updatePlan.mockResolvedValue({ id: 10 });
+
+      await service.update(10, { title: 'Renamed', row_version: 1 }, trainerActor);
+
+      const changes = planRepo.updatePlan.mock.calls[0][1] as Record<string, unknown>;
+      expect(changes).toEqual(expect.objectContaining({ title: 'Renamed' }));
+      expect(changes).not.toHaveProperty('primary_objective_12w');
+      expect(changes).not.toHaveProperty('progression_methods');
+    });
+
+    it('update_null_clears_objective', async () => {
+      const { service, planRepo } = buildService();
+
+      planRepo.findPlanById
+        .mockResolvedValueOnce({
+          id: 10,
+          title: 'Plan',
+          member_id: 30,
+          trainer_id: 20,
+          status: 'draft',
+          is_template: false,
+          row_version: 1,
+          primary_objective_12w: 'Squat 100kg',
+        })
+        .mockResolvedValueOnce({
+          id: 10,
+          title: 'Plan',
+          member_id: 30,
+          trainer_id: 20,
+          status: 'draft',
+          is_template: false,
+          row_version: 2,
+          primary_objective_12w: null,
+        });
+      planRepo.updatePlan.mockResolvedValue({ id: 10 });
+
+      await service.update(10, { primary_objective_12w: null, row_version: 1 }, trainerActor);
+
+      const changes = planRepo.updatePlan.mock.calls[0][1] as Record<string, unknown>;
+      expect(changes).toEqual(expect.objectContaining({ primary_objective_12w: null }));
+    });
+
+    it('assign_copies_blueprint_from_template', async () => {
+      const { service, planRepo } = buildService();
+
+      const template = {
+        id: 5,
+        title: 'Blueprint Template',
+        description: null,
+        is_template: true,
+        target_goal: null,
+        difficulty: null,
+        duration_weeks: null,
+        trainer_id: 20,
+        status: 'active',
+        ...blueprintPayload,
+        progression_methods: [...blueprintPayload.progression_methods],
+        current_version: { id: 50, version_number: 1, exercises: [] },
+      };
+
+      planRepo.findPlanById
+        .mockResolvedValueOnce(template)
+        .mockResolvedValueOnce({
+          id: 12,
+          title: 'Blueprint Template',
+          member_id: 30,
+          trainer_id: 20,
+          is_template: false,
+          status: 'active',
+          current_version: { id: 120, version_number: 1, exercises: [] },
+        });
+      planRepo.insertPlan.mockResolvedValue({ id: 12 });
+      planRepo.insertVersion.mockResolvedValue({ id: 120 });
+
+      await service.assign(5, { member_id: 30 }, trainerActor);
+
+      expect(planRepo.insertPlan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ...blueprintPayload,
+          progression_methods: ['load', 'reps'],
+          is_template: false,
+          status: 'active',
+        }),
+      );
+    });
+
+    it('schema_rejects_bad_blueprint_bounds', () => {
+      const base = { title: 'x' };
+
+      expect(workoutPlanCreateSchema.safeParse({ ...base, sessions_per_week: 0 }).success).toBe(
+        false,
+      );
+      expect(workoutPlanCreateSchema.safeParse({ ...base, sessions_per_week: 15 }).success).toBe(
+        false,
+      );
+      expect(workoutPlanCreateSchema.safeParse({ ...base, sessions_per_week: 1 }).success).toBe(
+        true,
+      );
+      expect(workoutPlanCreateSchema.safeParse({ ...base, sessions_per_week: 14 }).success).toBe(
+        true,
+      );
+
+      expect(
+        workoutPlanCreateSchema.safeParse({ ...base, target_session_duration_minutes: 14 }).success,
+      ).toBe(false);
+      expect(
+        workoutPlanCreateSchema.safeParse({ ...base, target_session_duration_minutes: 181 }).success,
+      ).toBe(false);
+      expect(
+        workoutPlanCreateSchema.safeParse({ ...base, target_session_duration_minutes: 15 }).success,
+      ).toBe(true);
+      expect(
+        workoutPlanCreateSchema.safeParse({ ...base, target_session_duration_minutes: 180 }).success,
+      ).toBe(true);
+
+      expect(
+        workoutPlanCreateSchema.safeParse({ ...base, progression_methods: ['other'] }).success,
+      ).toBe(false);
+      expect(
+        workoutPlanCreateSchema.safeParse({ ...base, progression_methods: ['load', 'load'] })
+          .success,
+      ).toBe(false);
+      expect(workoutPlanCreateSchema.safeParse({ ...base, progression_methods: [] }).success).toBe(
+        true,
+      );
+
+      expect(
+        workoutPlanCreateSchema.safeParse({ ...base, split_type: 'x'.repeat(65) }).success,
+      ).toBe(false);
+
+      expect(
+        workoutPlanUpdateSchema.safeParse({ primary_objective_12w: null, row_version: 1 }).success,
+      ).toBe(true);
     });
   });
 });

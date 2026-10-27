@@ -58,6 +58,7 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'HEALTH', action: 'write', slug: 'health.write', description: 'Update health profile and medical history' },
   { module: 'HEALTH', action: 'update', slug: 'health.update', description: 'Update health profile, emergency contacts, and documents' },
   { module: 'HEALTH', action: 'approve', slug: 'health.approve', description: 'Verify member health documents' },
+  { module: 'HEALTH', action: 'lifestyle', slug: 'health.lifestyle', description: 'Create or replace a member lifestyle intake' },
   { module: 'HEALTH', action: 'pii_read', slug: 'health.pii_read', description: 'View sensitive medical documents and PII' },
 
   // MEMB — *.create|update|approve are OpenAPI; *.write/freeze/extend kept legacy
@@ -75,6 +76,10 @@ export const SEED_PERMISSIONS: readonly PermissionDefinition[] = [
   { module: 'PT', action: 'read', slug: 'pt_subscriptions.read', description: 'View Personal Training subscriptions' },
   { module: 'PT', action: 'create', slug: 'pt_subscriptions.create', description: 'Sell or renew Personal Training (assign trainer and slot)' },
   { module: 'PT', action: 'manage', slug: 'pt_subscriptions.manage', description: 'Reassign PT trainer or change PT slot mid-subscription' },
+  { module: 'PT', action: 'read', slug: 'pt_reviews.read', description: 'View PT progress reviews' },
+  { module: 'PT', action: 'write', slug: 'pt_reviews.write', description: 'Draft and trainer-sign PT progress reviews' },
+  { module: 'PT', action: 'client_sign', slug: 'pt_reviews.client_sign', description: 'Client sign-off on own PT progress review' },
+  { module: 'PT', action: 'approve', slug: 'pt_reviews.approve', description: 'Manager approval of PT progress reviews' },
 
   // SCHED
   { module: 'SCHED', action: 'read', slug: 'schedules.read', description: 'View class schedules and availability' },

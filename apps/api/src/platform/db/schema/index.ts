@@ -28,3 +28,5 @@ export * from './accounting';
 export * from './inventory';
 export * from './goals';
 export * from './notifications';
+export * from './par-q';
+export * from './lifestyle-intake';

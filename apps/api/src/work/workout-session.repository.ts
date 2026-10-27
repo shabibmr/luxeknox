@@ -26,6 +26,20 @@ export interface PersonalRecordResult {
   achieved_at: Date;
 }
 
+export interface CompleteSessionExtra {
+  effort_rating?: number | null;
+  satisfaction_rating?: number | null;
+  pain_discomfort_score?: number | null;
+  pain_notes?: string | null;
+  trainer_notes?: string | null;
+  next_session_plan?: string | null;
+  session_focus?: string | null;
+  warmup_protocol?: string | null;
+  cooldown_protocol?: string | null;
+  client_signed_at?: Date | null;
+  trainer_signed_at?: Date | null;
+}
+
 @Injectable()
 export class WorkoutSessionRepository extends BaseRepository<
   typeof workoutSessions,
@@ -178,7 +192,13 @@ export class WorkoutSessionRepository extends BaseRepository<
     patch: Partial<
       Pick<
         NewWorkoutSessionExercise,
-        'reps_completed' | 'weight_lifted_kg' | 'rpe_score' | 'is_completed' | 'notes'
+        | 'reps_completed'
+        | 'weight_lifted_kg'
+        | 'rpe_score'
+        | 'actual_rir'
+        | 'actual_duration_seconds'
+        | 'is_completed'
+        | 'notes'
       >
     >,
   ): Promise<WorkoutSessionExercise> {
@@ -208,18 +228,35 @@ export class WorkoutSessionRepository extends BaseRepository<
     durationMinutes: number,
     rating?: number,
     notes?: string,
+    extra?: CompleteSessionExtra,
   ): Promise<WorkoutSession> {
     const db = this.getDb() as any;
+    const patch: Record<string, unknown> = {
+      completed_at: completedAt,
+      total_volume_kg: totalVolumeKg,
+      duration_minutes: durationMinutes,
+      updated_at: new Date(),
+    };
+    if (rating !== undefined) patch.client_feedback_rating = rating;
+    if (notes !== undefined) patch.notes = notes;
+
+    if (extra) {
+      if (extra.effort_rating !== undefined) patch.effort_rating = extra.effort_rating;
+      if (extra.satisfaction_rating !== undefined) patch.satisfaction_rating = extra.satisfaction_rating;
+      if (extra.pain_discomfort_score !== undefined) patch.pain_discomfort_score = extra.pain_discomfort_score;
+      if (extra.pain_notes !== undefined) patch.pain_notes = extra.pain_notes;
+      if (extra.trainer_notes !== undefined) patch.trainer_notes = extra.trainer_notes;
+      if (extra.next_session_plan !== undefined) patch.next_session_plan = extra.next_session_plan;
+      if (extra.session_focus !== undefined) patch.session_focus = extra.session_focus;
+      if (extra.warmup_protocol !== undefined) patch.warmup_protocol = extra.warmup_protocol;
+      if (extra.cooldown_protocol !== undefined) patch.cooldown_protocol = extra.cooldown_protocol;
+      if (extra.client_signed_at !== undefined) patch.client_signed_at = extra.client_signed_at;
+      if (extra.trainer_signed_at !== undefined) patch.trainer_signed_at = extra.trainer_signed_at;
+    }
+
     await db
       .update(workoutSessions)
-      .set({
-        completed_at: completedAt,
-        total_volume_kg: totalVolumeKg,
-        duration_minutes: durationMinutes,
-        client_feedback_rating: rating,
-        notes: notes,
-        updated_at: new Date(),
-      })
+      .set(patch)
       .where(eq(workoutSessions.id, id));
 
     const [updated] = await db

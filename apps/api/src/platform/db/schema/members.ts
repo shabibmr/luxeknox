@@ -41,6 +41,10 @@ export const members = mysqlTable(
     ),
     joined_date: date('joined_date', { mode: 'string' }).notNull(),
     notes: text('notes'),
+    next_review_date: date('next_review_date', { mode: 'string' }),
+    preferred_training_days_times: varchar('preferred_training_days_times', { length: 255 }),
+    exercise_preferences: text('exercise_preferences'),
+    coaching_notes: text('coaching_notes'),
     created_at: utcDatetime('created_at').notNull(),
     updated_at: utcDatetime('updated_at'),
   },
@@ -48,6 +52,7 @@ export const members = mysqlTable(
     uniqueIndex('members_user_id_unique').on(table.user_id),
     uniqueIndex('members_membership_number_unique').on(table.membership_number),
     index('members_assigned_trainer_id_idx').on(table.assigned_trainer_id),
+    index('members_next_review_date_idx').on(table.next_review_date),
   ],
 );
 

@@ -26,7 +26,7 @@ import {
   type WorkoutSessionCreateDto,
   type WorkoutSetUpdateDto,
   type WorkoutSetWriteDto,
-} from './workout-plan.dto';
+} from './workout-session.dto';
 
 @ApiTags('WORK')
 @ApiBearerAuth('bearer')

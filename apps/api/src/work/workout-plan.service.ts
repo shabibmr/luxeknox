@@ -27,8 +27,101 @@ import type {
   WorkoutPlanFilterQueryDto,
   WorkoutPlanUpdateDto,
 } from './workout-plan.dto';
-import type { WorkoutPlan, WorkoutPlanVersion, WorkoutPlanExercise } from '../platform/db/schema/workout';
+import type {
+  NewWorkoutPlan,
+  WorkoutPlan,
+  WorkoutPlanVersion,
+  WorkoutPlanExercise,
+} from '../platform/db/schema/workout';
 import type { Exercise } from '../platform/db/schema/exercises';
+
+const BLUEPRINT_KEYS = [
+  'primary_objective_12w',
+  'milestone_4w',
+  'sessions_per_week',
+  'target_session_duration_minutes',
+  'split_type',
+  'cardio_protocol',
+  'mobility_protocol',
+  'progression_methods',
+  'main_success_measure',
+  'trainer_programming_notes',
+] as const;
+
+type BlueprintKey = (typeof BLUEPRINT_KEYS)[number];
+
+function nullableTrimmed(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
+function blueprintFromCreate(dto: WorkoutPlanCreateDto): Pick<NewWorkoutPlan, BlueprintKey> {
+  return {
+    primary_objective_12w: nullableTrimmed(dto.primary_objective_12w),
+    milestone_4w: nullableTrimmed(dto.milestone_4w),
+    sessions_per_week: dto.sessions_per_week ?? null,
+    target_session_duration_minutes: dto.target_session_duration_minutes ?? null,
+    split_type: nullableTrimmed(dto.split_type),
+    cardio_protocol: nullableTrimmed(dto.cardio_protocol),
+    mobility_protocol: nullableTrimmed(dto.mobility_protocol),
+    progression_methods: dto.progression_methods ?? null,
+    main_success_measure: nullableTrimmed(dto.main_success_measure),
+    trainer_programming_notes: nullableTrimmed(dto.trainer_programming_notes),
+  };
+}
+
+function blueprintPatchFromUpdate(dto: WorkoutPlanUpdateDto): Partial<Pick<NewWorkoutPlan, BlueprintKey>> {
+  const patch: Partial<Pick<NewWorkoutPlan, BlueprintKey>> = {};
+
+  if ('primary_objective_12w' in dto) {
+    patch.primary_objective_12w = nullableTrimmed(dto.primary_objective_12w);
+  }
+  if ('milestone_4w' in dto) {
+    patch.milestone_4w = nullableTrimmed(dto.milestone_4w);
+  }
+  if ('sessions_per_week' in dto) {
+    patch.sessions_per_week = dto.sessions_per_week ?? null;
+  }
+  if ('target_session_duration_minutes' in dto) {
+    patch.target_session_duration_minutes = dto.target_session_duration_minutes ?? null;
+  }
+  if ('split_type' in dto) {
+    patch.split_type = nullableTrimmed(dto.split_type);
+  }
+  if ('cardio_protocol' in dto) {
+    patch.cardio_protocol = nullableTrimmed(dto.cardio_protocol);
+  }
+  if ('mobility_protocol' in dto) {
+    patch.mobility_protocol = nullableTrimmed(dto.mobility_protocol);
+  }
+  if ('progression_methods' in dto) {
+    patch.progression_methods = dto.progression_methods ?? null;
+  }
+  if ('main_success_measure' in dto) {
+    patch.main_success_measure = nullableTrimmed(dto.main_success_measure);
+  }
+  if ('trainer_programming_notes' in dto) {
+    patch.trainer_programming_notes = nullableTrimmed(dto.trainer_programming_notes);
+  }
+
+  return patch;
+}
+
+function blueprintFromTemplate(template: WorkoutPlan): Pick<NewWorkoutPlan, BlueprintKey> {
+  return {
+    primary_objective_12w: template.primary_objective_12w ?? null,
+    milestone_4w: template.milestone_4w ?? null,
+    sessions_per_week: template.sessions_per_week ?? null,
+    target_session_duration_minutes: template.target_session_duration_minutes ?? null,
+    split_type: template.split_type ?? null,
+    cardio_protocol: template.cardio_protocol ?? null,
+    mobility_protocol: template.mobility_protocol ?? null,
+    progression_methods: template.progression_methods ?? null,
+    main_success_measure: template.main_success_measure ?? null,
+    trainer_programming_notes: template.trainer_programming_notes ?? null,
+  };
+}
 
 @Injectable()
 export class WorkoutPlanService {
@@ -153,6 +246,7 @@ export class WorkoutPlanService {
         target_goal: dto.target_goal ?? null,
         difficulty: dto.difficulty ?? null,
         duration_weeks: dto.duration_weeks ?? null,
+        ...blueprintFromCreate(dto),
         is_template: isTemplate,
         status: 'draft',
         row_version: 1,
@@ -219,6 +313,7 @@ export class WorkoutPlanService {
         difficulty: dto.difficulty,
         duration_weeks: dto.duration_weeks,
         is_template: dto.is_template,
+        ...blueprintPatchFromUpdate(dto),
       },
       dto.row_version,
     );
@@ -328,6 +423,7 @@ export class WorkoutPlanService {
         target_goal: template.target_goal,
         difficulty: template.difficulty,
         duration_weeks: template.duration_weeks,
+        ...blueprintFromTemplate(template),
         is_template: false,
         status: 'active',
         row_version: 1,

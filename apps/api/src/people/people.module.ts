@@ -21,6 +21,9 @@ import { MemberHealthService } from './member-health.service';
 import { MedicalHistoryController } from './medical-history.controller';
 import { MedicalHistoryRepository } from './medical-history.repository';
 import { MedicalHistoryService } from './medical-history.service';
+import { LifestyleIntakeController } from './lifestyle-intake.controller';
+import { LifestyleIntakeRepository } from './lifestyle-intake.repository';
+import { LifestyleIntakeService } from './lifestyle-intake.service';
 import { MemberPhotoController } from './member-photo.controller';
 import { MemberPhotoRepository } from './member-photo.repository';
 import { MemberPhotoService } from './member-photo.service';
@@ -38,6 +41,7 @@ import { TrainerService } from './trainer.service';
     EmergencyContactController,
     MemberHealthController,
     MedicalHistoryController,
+    LifestyleIntakeController,
     MemberDocumentController,
     MemberPhotoController,
   ],
@@ -55,6 +59,8 @@ import { TrainerService } from './trainer.service';
     MemberHealthService,
     MedicalHistoryRepository,
     MedicalHistoryService,
+    LifestyleIntakeRepository,
+    LifestyleIntakeService,
     MemberDocumentRepository,
     MemberDocumentService,
     MemberPhotoRepository,
@@ -74,6 +80,8 @@ import { TrainerService } from './trainer.service';
     MemberHealthService,
     MedicalHistoryRepository,
     MedicalHistoryService,
+    LifestyleIntakeRepository,
+    LifestyleIntakeService,
     MemberDocumentRepository,
     MemberDocumentService,
     MemberPhotoRepository,

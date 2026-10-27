@@ -10,6 +10,7 @@ import { seedNotificationTypes } from './notification-types';
 import { seedExercises } from './exercises';
 import { seedMembershipProducts } from './membership-products';
 import { seedPtProducts } from './pt-products';
+import { seedPtClientFile } from './pt-client-file';
 
 export async function runSeeds(): Promise<void> {
   console.log('[Seed] Starting database seed process...');
@@ -49,6 +50,10 @@ export async function runSeeds(): Promise<void> {
     console.log('[Seed] Seeding PT products...');
     const pt = await seedPtProducts(db);
     console.log(`[Seed] PT products: ${pt.inserted} inserted, ${pt.skipped} already present.`);
+
+    console.log('[Seed] Seeding PT client file sample records...');
+    const ptf = await seedPtClientFile(db);
+    console.log(`[Seed] PT client file: par-q=${ptf.parQSeeded}, lifestyle=${ptf.lifestyleSeeded}, review=${ptf.reviewSeeded}`);
 
     console.log('[Seed] Seed completed successfully.');
   } finally {
