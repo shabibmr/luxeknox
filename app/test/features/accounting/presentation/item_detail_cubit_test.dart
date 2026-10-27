@@ -50,7 +50,7 @@ void main() {
   blocTest<ItemDetailCubit, ItemDetailState>(
     'emits the initial item before the fetch resolves, then the fresh item',
     build: () {
-      when(() => mockGetItem(1)).thenAnswer((_) async => Right(tFresh));
+      when(() => mockGetItem(1)).thenAnswer((_) async => const Right(tFresh));
       return ItemDetailCubit(mockGetItem);
     },
     act: (cubit) => cubit.load(1, initialItem: tCached),
@@ -82,7 +82,7 @@ void main() {
   blocTest<ItemDetailCubit, ItemDetailState>(
     'without an initial item emits loading then success',
     build: () {
-      when(() => mockGetItem(1)).thenAnswer((_) async => Right(tFresh));
+      when(() => mockGetItem(1)).thenAnswer((_) async => const Right(tFresh));
       return ItemDetailCubit(mockGetItem);
     },
     act: (cubit) => cubit.load(1),
