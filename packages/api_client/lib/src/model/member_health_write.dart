@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:api_client/src/model/date.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -18,6 +19,7 @@ part 'member_health_write.g.dart';
 /// * [dietaryPreferences] 
 /// * [physicianName] 
 /// * [physicianPhone] 
+/// * [recordedDate] - Day the record applies to (gym timezone); defaults to now, may be in the past, never the future.
 @BuiltValue()
 abstract class MemberHealthWrite implements Built<MemberHealthWrite, MemberHealthWriteBuilder> {
   @BuiltValueField(wireName: r'blood_group')
@@ -40,6 +42,10 @@ abstract class MemberHealthWrite implements Built<MemberHealthWrite, MemberHealt
 
   @BuiltValueField(wireName: r'physician_phone')
   String? get physicianPhone;
+
+  /// Day the record applies to (gym timezone); defaults to now, may be in the past, never the future.
+  @BuiltValueField(wireName: r'recorded_date')
+  Date? get recordedDate;
 
   MemberHealthWrite._();
 
@@ -111,6 +117,13 @@ class _$MemberHealthWriteSerializer implements PrimitiveSerializer<MemberHealthW
       yield serializers.serialize(
         object.physicianPhone,
         specifiedType: const FullType(String),
+      );
+    }
+    if (object.recordedDate != null) {
+      yield r'recorded_date';
+      yield serializers.serialize(
+        object.recordedDate,
+        specifiedType: const FullType(Date),
       );
     }
   }
@@ -191,6 +204,14 @@ class _$MemberHealthWriteSerializer implements PrimitiveSerializer<MemberHealthW
           ) as String?;
           if (valueDes == null) continue;
           result.physicianPhone = valueDes;
+          break;
+        case r'recorded_date':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.recordedDate = valueDes;
           break;
         default:
           unhandled.add(key);

@@ -27,6 +27,7 @@ const tenderLine = z
 /** Payment fields shared by purchase and renew — same shape as POST /payments. */
 const paymentFields = {
   discount_amount: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+  payment_date: isoDate.optional(),
   payment_method_id: z.number().int().positive().optional(),
   tenders: z.array(tenderLine).min(1).optional(),
   transaction_reference: z.string().max(150).optional(),
@@ -71,6 +72,12 @@ export const ptScheduleGridQuerySchema = z.object({
   exclude_subscription_id: z.coerce.number().int().positive().optional(),
 });
 export type PtScheduleGridQueryDto = z.infer<typeof ptScheduleGridQuerySchema>;
+
+export const ptPaymentPreviewQuerySchema = z.object({
+  pt_product_id: z.coerce.number().int().positive(),
+  discount_amount: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+});
+export type PtPaymentPreviewQueryDto = z.infer<typeof ptPaymentPreviewQuerySchema>;
 
 export const ptPurchaseSchema = z
   .object({

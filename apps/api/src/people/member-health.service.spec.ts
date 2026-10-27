@@ -84,6 +84,7 @@ describe('MemberHealthService', () => {
       memberRepository as any,
       auditService as any,
       paginationHelper as any,
+      { getTimezone: vi.fn().mockResolvedValue('UTC') } as any,
     );
   });
 
@@ -102,6 +103,26 @@ describe('MemberHealthService', () => {
   });
 
   describe('create', () => {
+    it('stores an earlier recorded_date at noon gym time and rejects a future one', async () => {
+      const write = {
+        blood_group: 'O+',
+        height_cm: 180,
+        baseline_weight_kg: 75,
+        allergies: null,
+        dietary_preferences: null,
+        physician_name: null,
+        physician_phone: null,
+      };
+      repository.findByIdAndMemberId.mockResolvedValue({ id: 9, member_id: 100, recorded_at: new Date() });
+      await service.create(100, { ...write, recorded_date: '2020-01-02' }, ADMIN_USER);
+      expect(repository.insertRecord).toHaveBeenCalledWith(
+        expect.objectContaining({ recorded_at: new Date('2020-01-02T12:00:00.000Z') }),
+      );
+      await expect(
+        service.create(100, { ...write, recorded_date: '2999-01-01' }, ADMIN_USER),
+      ).rejects.toThrow(/future/);
+    });
+
     it('always inserts a new record with current recorded_at and records audit', async () => {
       const result = await service.create(
         100,

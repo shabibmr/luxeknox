@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../entities/pt_payment_preview.dart';
 import '../entities/pt_product.dart';
 import '../entities/pt_schedule_grid.dart';
 import '../entities/pt_subscription.dart';
@@ -74,6 +75,33 @@ class GetPtScheduleGridUseCase
         weekdays: p.weekdays,
         partnerMemberId: p.partnerMemberId,
         excludeSubscriptionId: p.excludeSubscriptionId,
+      );
+}
+
+class GetPtPaymentPreviewParams extends Equatable {
+  const GetPtPaymentPreviewParams({
+    required this.ptProductId,
+    this.discountAmount,
+  });
+
+  final int ptProductId;
+  final String? discountAmount;
+
+  @override
+  List<Object?> get props => [ptProductId, discountAmount];
+}
+
+@lazySingleton
+class GetPtPaymentPreviewUseCase
+    implements UseCase<PtPaymentPreview, GetPtPaymentPreviewParams> {
+  const GetPtPaymentPreviewUseCase(this._repository);
+  final PtRepository _repository;
+
+  @override
+  Future<Either<Failure, PtPaymentPreview>> call(GetPtPaymentPreviewParams p) =>
+      _repository.getPaymentPreview(
+        ptProductId: p.ptProductId,
+        discountAmount: p.discountAmount,
       );
 }
 

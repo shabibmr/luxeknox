@@ -18,6 +18,8 @@ class _$PaymentCreate extends PaymentCreate {
   @override
   final String? discountAmount;
   @override
+  final Date? paymentDate;
+  @override
   final int? paymentMethodId;
   @override
   final BuiltList<TenderLine>? tenders;
@@ -33,6 +35,7 @@ class _$PaymentCreate extends PaymentCreate {
       this.productId,
       required this.subtotal,
       this.discountAmount,
+      this.paymentDate,
       this.paymentMethodId,
       this.tenders,
       this.transactionReference})
@@ -53,6 +56,7 @@ class _$PaymentCreate extends PaymentCreate {
         productId == other.productId &&
         subtotal == other.subtotal &&
         discountAmount == other.discountAmount &&
+        paymentDate == other.paymentDate &&
         paymentMethodId == other.paymentMethodId &&
         tenders == other.tenders &&
         transactionReference == other.transactionReference;
@@ -66,6 +70,7 @@ class _$PaymentCreate extends PaymentCreate {
     _$hash = $jc(_$hash, productId.hashCode);
     _$hash = $jc(_$hash, subtotal.hashCode);
     _$hash = $jc(_$hash, discountAmount.hashCode);
+    _$hash = $jc(_$hash, paymentDate.hashCode);
     _$hash = $jc(_$hash, paymentMethodId.hashCode);
     _$hash = $jc(_$hash, tenders.hashCode);
     _$hash = $jc(_$hash, transactionReference.hashCode);
@@ -81,6 +86,7 @@ class _$PaymentCreate extends PaymentCreate {
           ..add('productId', productId)
           ..add('subtotal', subtotal)
           ..add('discountAmount', discountAmount)
+          ..add('paymentDate', paymentDate)
           ..add('paymentMethodId', paymentMethodId)
           ..add('tenders', tenders)
           ..add('transactionReference', transactionReference))
@@ -113,6 +119,10 @@ class PaymentCreateBuilder
   set discountAmount(String? discountAmount) =>
       _$this._discountAmount = discountAmount;
 
+  Date? _paymentDate;
+  Date? get paymentDate => _$this._paymentDate;
+  set paymentDate(Date? paymentDate) => _$this._paymentDate = paymentDate;
+
   int? _paymentMethodId;
   int? get paymentMethodId => _$this._paymentMethodId;
   set paymentMethodId(int? paymentMethodId) =>
@@ -140,6 +150,7 @@ class PaymentCreateBuilder
       _productId = $v.productId;
       _subtotal = $v.subtotal;
       _discountAmount = $v.discountAmount;
+      _paymentDate = $v.paymentDate;
       _paymentMethodId = $v.paymentMethodId;
       _tenders = $v.tenders?.toBuilder();
       _transactionReference = $v.transactionReference;
@@ -173,6 +184,7 @@ class PaymentCreateBuilder
             subtotal: BuiltValueNullFieldError.checkNotNull(
                 subtotal, r'PaymentCreate', 'subtotal'),
             discountAmount: discountAmount,
+            paymentDate: paymentDate,
             paymentMethodId: paymentMethodId,
             tenders: _tenders?.build(),
             transactionReference: transactionReference,

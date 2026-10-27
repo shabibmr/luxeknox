@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/failures.dart';
+import '../entities/pt_payment_preview.dart';
 import '../entities/pt_product.dart';
 import '../entities/pt_schedule_grid.dart';
 import '../entities/pt_subscription.dart';
@@ -11,17 +12,22 @@ class PtPayment extends Equatable {
   const PtPayment({
     required this.paymentMethodId,
     this.discountAmount,
+    this.paymentDate,
     this.transactionReference,
   });
 
   final int paymentMethodId;
   final String? discountAmount;
+
+  /// Day the money was received; null lets the server use now.
+  final DateTime? paymentDate;
   final String? transactionReference;
 
   @override
   List<Object?> get props => [
     paymentMethodId,
     discountAmount,
+    paymentDate,
     transactionReference,
   ];
 }
@@ -40,6 +46,11 @@ abstract class PtRepository {
     required List<int> weekdays,
     int? partnerMemberId,
     int? excludeSubscriptionId,
+  });
+
+  Future<Either<Failure, PtPaymentPreview>> getPaymentPreview({
+    required int ptProductId,
+    String? discountAmount,
   });
 
   Future<Either<Failure, PtSubscription>> purchase({

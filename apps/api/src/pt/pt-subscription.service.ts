@@ -1,6 +1,7 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { RevenueRecognitionPortService } from '../acct/revenue-recognition-port.service';
 import type { AuthenticatedUser } from '../auth/auth.guard';
+import { assertPartnerForPackage } from '../memb/membership-partner';
 import { MembershipService } from '../memb/membership.service';
 import { PaymentService } from '../pay/payment.service';
 import type { PaymentDto } from '../pay/payment.dto';
@@ -29,6 +30,7 @@ import { ScheduleTypeRepository } from '../sched/schedule-type.repository';
 import { SettingsService } from '../sys/settings.service';
 import type {
   PtChangeSlotDto,
+  PtPaymentPreviewQueryDto,
   PtPurchaseDto,
   PtReassignTrainerDto,
   PtRenewDto,
@@ -62,8 +64,16 @@ export type MemberPtSummary = {
 
 type PaymentFields = Pick<
   PtPurchaseDto,
-  'discount_amount' | 'payment_method_id' | 'tenders' | 'transaction_reference'
+  'discount_amount' | 'payment_date' | 'payment_method_id' | 'tenders' | 'transaction_reference'
 >;
+
+function requireBundledMembershipId(membershipIds: Map<number, number>, memberId: number): number {
+  const id = membershipIds.get(memberId);
+  if (id == null) {
+    throw new BusinessRuleError(`PT bundle did not produce a membership for member ${memberId}`);
+  }
+  return id;
+}
 
 @Injectable()
 export class PtSubscriptionService {
@@ -124,16 +134,7 @@ export class PtSubscriptionService {
     await this.scheduleService.requireMember(dto.member_id);
     await this.scheduleService.requireEligibleTrainer(dto.trainer_id);
 
-    const isCouple = product.package_type === 'couple';
-    if (isCouple && dto.partner_member_id == null) {
-      throw new BadRequestError('partner_member_id is required for a couple package');
-    }
-    if (!isCouple && dto.partner_member_id != null) {
-      throw new BadRequestError('partner_member_id is only valid for a couple package');
-    }
-    if (dto.partner_member_id != null && dto.partner_member_id === dto.member_id) {
-      throw new BadRequestError('partner_member_id must differ from member_id');
-    }
+    assertPartnerForPackage(product.package_type, dto.member_id, dto.partner_member_id);
 
     let partnerMember: { id: number; first_name: string; last_name: string } | null = null;
     if (dto.partner_member_id != null) {
@@ -143,9 +144,6 @@ export class PtSubscriptionService {
     }
 
     const today = await this.today();
-    if (dto.start_date < today) {
-      throw new BadRequestError('start_date cannot be in the past');
-    }
 
     const primaryMember = await this.memberRepository.findById(dto.member_id);
     const primaryLabel = primaryMember
@@ -378,9 +376,11 @@ export class PtSubscriptionService {
         actor: p.actor,
         now,
       });
-      const membershipId = bundle.membershipIds.get(p.memberId)!;
+      const membershipId = requireBundledMembershipId(bundle.membershipIds, p.memberId);
       const partnerMembershipId =
-        p.partnerMemberId != null ? bundle.membershipIds.get(p.partnerMemberId)! : null;
+        p.partnerMemberId != null
+          ? requireBundledMembershipId(bundle.membershipIds, p.partnerMemberId)
+          : null;
 
       const weekdays = [...p.weekdays].sort((a, b) => a - b);
       const status = p.startDate <= p.today ? 'active' : 'scheduled';
@@ -424,6 +424,7 @@ export class PtSubscriptionService {
           member_id: p.memberId,
           subtotal: p.product.base_price,
           discount_amount: p.payment.discount_amount,
+          payment_date: p.payment.payment_date,
           payment_method_id: p.payment.payment_method_id,
           tenders: p.payment.tenders,
           transaction_reference: p.payment.transaction_reference,
@@ -723,6 +724,12 @@ export class PtSubscriptionService {
         (conflicts.length > 1 ? ` (+${conflicts.length - 1} more date(s))` : ''),
       conflicts,
     );
+  }
+
+  /** What a sale of this package would charge: the same totals `purchase` hands to PaymentService. */
+  async previewPayment(dto: PtPaymentPreviewQueryDto) {
+    const product = await this.requireActiveProduct(dto.pt_product_id);
+    return this.paymentService.computeTotals(product.base_price, dto.discount_amount);
   }
 
   private async requireActiveProduct(id: number): Promise<PtProduct> {

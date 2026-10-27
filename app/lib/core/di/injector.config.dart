@@ -402,8 +402,8 @@ import '../../features/membership/domain/usecases/update_membership_product_usec
     as _i30;
 import '../../features/membership/domain/usecases/upgrade_membership_usecase.dart'
     as _i617;
-import '../../features/membership/presentation/bloc/create_membership_bloc.dart'
-    as _i632;
+import '../../features/membership/presentation/cubit/create_membership_cubit.dart'
+    as _i138;
 import '../../features/membership/presentation/cubit/membership_card_cubit.dart'
     as _i309;
 import '../../features/membership/presentation/cubit/membership_detail_cubit.dart'
@@ -1038,6 +1038,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i929.GetPtScheduleGridUseCase>(
       () => _i929.GetPtScheduleGridUseCase(gh<_i709.PtRepository>()),
+    );
+    gh.lazySingleton<_i929.GetPtPaymentPreviewUseCase>(
+      () => _i929.GetPtPaymentPreviewUseCase(gh<_i709.PtRepository>()),
     );
     gh.lazySingleton<_i929.PurchasePtUseCase>(
       () => _i929.PurchasePtUseCase(gh<_i709.PtRepository>()),
@@ -2278,6 +2281,18 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i255.RestTimerCubit>(),
       ),
     );
+    gh.factory<_i122.SellPtCubit>(
+      () => _i122.SellPtCubit(
+        gh<_i929.GetPtProductsUseCase>(),
+        gh<_i789.GetPaymentMethodsUseCase>(),
+        gh<_i929.GetPtScheduleGridUseCase>(),
+        gh<_i929.PurchasePtUseCase>(),
+        gh<_i929.ReplanPtUseCase>(),
+        gh<_i562.GetMemberUseCase>(),
+        gh<_i929.GetMemberPtSummaryUseCase>(),
+        gh<_i929.GetPtPaymentPreviewUseCase>(),
+      ),
+    );
     gh.factory<_i888.EmployeeFormCubit>(
       () => _i888.EmployeeFormCubit(
         gh<_i641.CreateEmployeeUseCase>(),
@@ -2301,8 +2316,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i359.GetMembershipProductsUseCase>(),
       ),
     );
-    gh.factory<_i632.CreateMembershipBloc>(
-      () => _i632.CreateMembershipBloc(
+    gh.factory<_i138.CreateMembershipCubit>(
+      () => _i138.CreateMembershipCubit(
         gh<_i65.CreateMembershipUseCase>(),
         gh<_i359.GetMembershipProductsUseCase>(),
         gh<_i789.GetPaymentMethodsUseCase>(),
@@ -2329,17 +2344,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i756.ExerciseDetailCubit>(
       () => _i756.ExerciseDetailCubit(gh<_i1035.GetExerciseUseCase>()),
-    );
-    gh.factory<_i122.SellPtCubit>(
-      () => _i122.SellPtCubit(
-        gh<_i929.GetPtProductsUseCase>(),
-        gh<_i789.GetPaymentMethodsUseCase>(),
-        gh<_i929.GetPtScheduleGridUseCase>(),
-        gh<_i929.PurchasePtUseCase>(),
-        gh<_i929.ReplanPtUseCase>(),
-        gh<_i562.GetMemberUseCase>(),
-        gh<_i929.GetMemberPtSummaryUseCase>(),
-      ),
     );
     gh.factory<_i203.MembershipFreezeFormCubit>(
       () => _i203.MembershipFreezeFormCubit(

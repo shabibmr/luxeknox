@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { PlatformModule } from '../platform/platform.module';
 import { RbacModule } from '../rbac/rbac.module';
+import { SysModule } from '../sys/sys.module';
 import { EmergencyContactController } from './emergency-contact.controller';
 import { EmergencyContactRepository } from './emergency-contact.repository';
 import { EmergencyContactService } from './emergency-contact.service';
@@ -29,7 +30,7 @@ import { TrainerRepository } from './trainer.repository';
 import { TrainerService } from './trainer.service';
 
 @Module({
-  imports: [PlatformModule, RbacModule, forwardRef(() => AuthModule)],
+  imports: [PlatformModule, RbacModule, SysModule, forwardRef(() => AuthModule)],
   controllers: [
     MemberController,
     TrainerController,

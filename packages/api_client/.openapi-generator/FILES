@@ -71,6 +71,7 @@ doc/ErrorBody.md
 doc/ErrorCode.md
 doc/ErrorDetail.md
 doc/Exercise.md
+doc/ExerciseHistorySession.md
 doc/ExercisePage.md
 doc/ExerciseWrite.md
 doc/ExpenseCreate.md
@@ -233,6 +234,7 @@ doc/PtGridCell.md
 doc/PtGridTrainer.md
 doc/PtPackageType.md
 doc/PtPaymentFields.md
+doc/PtPaymentPreview.md
 doc/PtProduct.md
 doc/PtProductPage.md
 doc/PtProductWrite.md
@@ -418,6 +420,7 @@ lib/src/model/error_body.dart
 lib/src/model/error_code.dart
 lib/src/model/error_detail.dart
 lib/src/model/exercise.dart
+lib/src/model/exercise_history_session.dart
 lib/src/model/exercise_page.dart
 lib/src/model/exercise_write.dart
 lib/src/model/expense_create.dart
@@ -571,6 +574,7 @@ lib/src/model/pt_grid_cell.dart
 lib/src/model/pt_grid_trainer.dart
 lib/src/model/pt_package_type.dart
 lib/src/model/pt_payment_fields.dart
+lib/src/model/pt_payment_preview.dart
 lib/src/model/pt_product.dart
 lib/src/model/pt_product_page.dart
 lib/src/model/pt_product_write.dart

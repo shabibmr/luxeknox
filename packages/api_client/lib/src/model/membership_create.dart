@@ -20,7 +20,8 @@ part 'membership_create.g.dart';
 /// * [autoRenew] 
 /// * [partnerMemberId] - Required for a couple product; rejected for a single product.
 /// * [replacePartnerMembership] - Must be true when the partner has an active or frozen single membership; it is cancelled.
-/// * [discountAmount] - Between 0 and the product base price.
+/// * [discountAmount] - Optional unsigned discount. Payment totals still reject amounts over the subtotal.
+/// * [paymentDate] - Gym-local day the money was received; not in the future. Defaults to now.
 @BuiltValue()
 abstract class MembershipCreate implements Built<MembershipCreate, MembershipCreateBuilder> {
   @BuiltValueField(wireName: r'member_id')
@@ -49,9 +50,13 @@ abstract class MembershipCreate implements Built<MembershipCreate, MembershipCre
   @BuiltValueField(wireName: r'replace_partner_membership')
   bool? get replacePartnerMembership;
 
-  /// Between 0 and the product base price.
+  /// Optional unsigned discount. Payment totals still reject amounts over the subtotal.
   @BuiltValueField(wireName: r'discount_amount')
   String? get discountAmount;
+
+  /// Gym-local day the money was received; not in the future. Defaults to now.
+  @BuiltValueField(wireName: r'payment_date')
+  Date? get paymentDate;
 
   MembershipCreate._();
 
@@ -129,6 +134,13 @@ class _$MembershipCreateSerializer implements PrimitiveSerializer<MembershipCrea
       yield serializers.serialize(
         object.discountAmount,
         specifiedType: const FullType(String),
+      );
+    }
+    if (object.paymentDate != null) {
+      yield r'payment_date';
+      yield serializers.serialize(
+        object.paymentDate,
+        specifiedType: const FullType(Date),
       );
     }
   }
@@ -221,6 +233,14 @@ class _$MembershipCreateSerializer implements PrimitiveSerializer<MembershipCrea
           ) as String?;
           if (valueDes == null) continue;
           result.discountAmount = valueDes;
+          break;
+        case r'payment_date':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.paymentDate = valueDes;
           break;
         default:
           unhandled.add(key);

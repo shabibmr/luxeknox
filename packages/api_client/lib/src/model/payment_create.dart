@@ -5,6 +5,7 @@
 // ignore_for_file: unused_element
 import 'package:api_client/src/model/tender_line.dart';
 import 'package:built_collection/built_collection.dart';
+import 'package:api_client/src/model/date.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -18,6 +19,7 @@ part 'payment_create.g.dart';
 /// * [productId] - If set, assign/renew membership in the same transaction when paid.
 /// * [subtotal] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
 /// * [discountAmount] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
+/// * [paymentDate] - Gym-local day the money was received; not in the future. Defaults to now.
 /// * [paymentMethodId] 
 /// * [tenders] - Split tender. Sum becomes amount_paid. payment_method_id on header is null when present.
 /// * [transactionReference] 
@@ -40,6 +42,10 @@ abstract class PaymentCreate implements Built<PaymentCreate, PaymentCreateBuilde
   /// DECIMAL(12,2) as a two-decimal string. Never a JSON number.
   @BuiltValueField(wireName: r'discount_amount')
   String? get discountAmount;
+
+  /// Gym-local day the money was received; not in the future. Defaults to now.
+  @BuiltValueField(wireName: r'payment_date')
+  Date? get paymentDate;
 
   @BuiltValueField(wireName: r'payment_method_id')
   int? get paymentMethodId;
@@ -103,6 +109,13 @@ class _$PaymentCreateSerializer implements PrimitiveSerializer<PaymentCreate> {
       yield serializers.serialize(
         object.discountAmount,
         specifiedType: const FullType(String),
+      );
+    }
+    if (object.paymentDate != null) {
+      yield r'payment_date';
+      yield serializers.serialize(
+        object.paymentDate,
+        specifiedType: const FullType(Date),
       );
     }
     if (object.paymentMethodId != null) {
@@ -186,6 +199,14 @@ class _$PaymentCreateSerializer implements PrimitiveSerializer<PaymentCreate> {
           ) as String?;
           if (valueDes == null) continue;
           result.discountAmount = valueDes;
+          break;
+        case r'payment_date':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.paymentDate = valueDes;
           break;
         case r'payment_method_id':
           final valueDes = serializers.deserialize(

@@ -232,6 +232,7 @@ import 'package:api_client/src/model/pt_grid_cell.dart';
 import 'package:api_client/src/model/pt_grid_trainer.dart';
 import 'package:api_client/src/model/pt_package_type.dart';
 import 'package:api_client/src/model/pt_payment_fields.dart';
+import 'package:api_client/src/model/pt_payment_preview.dart';
 import 'package:api_client/src/model/pt_product.dart';
 import 'package:api_client/src/model/pt_product_page.dart';
 import 'package:api_client/src/model/pt_product_write.dart';
@@ -540,6 +541,7 @@ part 'serializers.g.dart';
   PtGridTrainer,
   PtPackageType,
   PtPaymentFields,$PtPaymentFields,
+  PtPaymentPreview,
   PtProduct,
   PtProductPage,
   PtProductWrite,

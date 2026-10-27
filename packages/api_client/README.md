@@ -266,6 +266,7 @@ Class | Method | HTTP request | Description
 [*PTApi*](doc/PTApi.md) | [**changePtSlot**](doc/PTApi.md#changeptslot) | **POST** /pt-subscriptions/{id}/change-slot | Move remaining PT sessions to other weekdays/hour
 [*PTApi*](doc/PTApi.md) | [**createPtProduct**](doc/PTApi.md#createptproduct) | **POST** /pt-products | Create a PT package
 [*PTApi*](doc/PTApi.md) | [**getMemberPtSummary**](doc/PTApi.md#getmemberptsummary) | **GET** /members/{id}/pt-subscriptions | Member&#39;s current PT, PT history, and the calling trainer&#39;s access level
+[*PTApi*](doc/PTApi.md) | [**getPtPaymentPreview**](doc/PTApi.md#getptpaymentpreview) | **GET** /pt/payment-preview | Subtotal, discount, tax and total a PT sale would charge
 [*PTApi*](doc/PTApi.md) | [**getPtProduct**](doc/PTApi.md#getptproduct) | **GET** /pt-products/{id} | PT package detail
 [*PTApi*](doc/PTApi.md) | [**getPtScheduleGrid**](doc/PTApi.md#getptschedulegrid) | **GET** /pt/schedule-grid | Hours × active trainers occupancy for a PT package, start date and weekdays
 [*PTApi*](doc/PTApi.md) | [**getPtSubscription**](doc/PTApi.md#getptsubscription) | **GET** /pt-subscriptions/{id} | PT subscription detail
@@ -312,6 +313,7 @@ Class | Method | HTTP request | Description
 [*WORKApi*](doc/WORKApi.md) | [**deleteWorkoutSet**](doc/WORKApi.md#deleteworkoutset) | **DELETE** /workout-sessions/{id}/sets/{setId} | Delete a logged set
 [*WORKApi*](doc/WORKApi.md) | [**getActiveWorkoutSession**](doc/WORKApi.md#getactiveworkoutsession) | **GET** /workout-sessions/active | Get the member&#39;s active (in-progress) workout session
 [*WORKApi*](doc/WORKApi.md) | [**getExercise**](doc/WORKApi.md#getexercise) | **GET** /exercises/{id} | Exercise detail
+[*WORKApi*](doc/WORKApi.md) | [**getExerciseHistory**](doc/WORKApi.md#getexercisehistory) | **GET** /workout-sessions/exercise-history | Recent session performance for an exercise
 [*WORKApi*](doc/WORKApi.md) | [**getPersonalRecords**](doc/WORKApi.md#getpersonalrecords) | **GET** /workout-sessions/personal-records | Member personal records across completed sessions
 [*WORKApi*](doc/WORKApi.md) | [**getWorkoutPlan**](doc/WORKApi.md#getworkoutplan) | **GET** /workout-plans/{id} | Plan with current version line items
 [*WORKApi*](doc/WORKApi.md) | [**getWorkoutSession**](doc/WORKApi.md#getworkoutsession) | **GET** /workout-sessions/{id} | Get workout session details
@@ -394,6 +396,7 @@ Class | Method | HTTP request | Description
  - [ErrorCode](doc/ErrorCode.md)
  - [ErrorDetail](doc/ErrorDetail.md)
  - [Exercise](doc/Exercise.md)
+ - [ExerciseHistorySession](doc/ExerciseHistorySession.md)
  - [ExercisePage](doc/ExercisePage.md)
  - [ExerciseWrite](doc/ExerciseWrite.md)
  - [ExpenseCreate](doc/ExpenseCreate.md)
@@ -547,6 +550,7 @@ Class | Method | HTTP request | Description
  - [PtGridTrainer](doc/PtGridTrainer.md)
  - [PtPackageType](doc/PtPackageType.md)
  - [PtPaymentFields](doc/PtPaymentFields.md)
+ - [PtPaymentPreview](doc/PtPaymentPreview.md)
  - [PtProduct](doc/PtProduct.md)
  - [PtProductPage](doc/PtProductPage.md)
  - [PtProductWrite](doc/PtProductWrite.md)

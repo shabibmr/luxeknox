@@ -2,6 +2,7 @@ import 'package:api_client/api_client.dart' as api;
 import 'package:built_collection/built_collection.dart';
 
 import '../../../../core/media/document_access.dart';
+import '../../../membership/data/models/membership_date.dart';
 import '../../domain/entities/emergency_contact.dart';
 import '../../domain/entities/employee_status.dart';
 import '../../domain/entities/employee_summary.dart';
@@ -383,7 +384,8 @@ api.MemberHealthWrite healthInfoToWrite(HealthInfo info) {
       ..allergies = info.allergies
       ..dietaryPreferences = info.dietaryPreferences
       ..physicianName = info.physicianName
-      ..physicianPhone = info.physicianPhone,
+      ..physicianPhone = info.physicianPhone
+      ..recordedDate = dateTimeToApiDate(info.recordedAt),
   );
 }
 

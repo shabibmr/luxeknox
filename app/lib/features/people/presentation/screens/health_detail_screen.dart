@@ -112,6 +112,9 @@ class _HealthFormState extends State<_HealthForm> {
     text: widget.info.physicianPhone,
   );
 
+  /// Day the new record is saved against; today unless the user backdates it.
+  DateTime _recordDate = DateTime.now();
+
   @override
   void dispose() {
     _blood.dispose();
@@ -202,6 +205,22 @@ class _HealthFormState extends State<_HealthForm> {
             labelText: PeopleStrings.physicianPhone,
           ),
         ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text(PeopleStrings.recordDate),
+          subtitle: Text(DateFormat.yMMMd().format(_recordDate)),
+          trailing: const Icon(Icons.calendar_today),
+          onTap: () async {
+            final now = DateTime.now();
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: _recordDate,
+              firstDate: DateTime(now.year - 5),
+              lastDate: now,
+            );
+            if (picked != null) setState(() => _recordDate = picked);
+          },
+        ),
         const SizedBox(height: 16),
         FilledButton(
           onPressed: () {
@@ -209,7 +228,7 @@ class _HealthFormState extends State<_HealthForm> {
               HealthInfo(
                 id: widget.info.id,
                 memberId: widget.info.memberId,
-                recordedAt: widget.info.recordedAt,
+                recordedAt: _recordDate,
                 bloodGroup: _optional(_blood.text),
                 heightCm: double.tryParse(_height.text.trim()),
                 baselineWeightKg: double.tryParse(_weight.text.trim()),

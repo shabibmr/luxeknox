@@ -103,6 +103,8 @@ class MembershipStrings {
   static const String filterCancelled = 'Cancelled';
 
   static const String startDateLabel = 'Start date';
+  static const String paymentDateLabel = 'Payment date';
+  static const String expiresLabel = 'Expires';
   static const String endDateLabel = 'End date';
   static const String remainingPtSessions = 'Remaining PT sessions';
   static const String remainingDays = 'Remaining days';

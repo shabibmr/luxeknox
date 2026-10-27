@@ -12,6 +12,7 @@ Method | HTTP request | Description
 [**changePtSlot**](PTApi.md#changeptslot) | **POST** /pt-subscriptions/{id}/change-slot | Move remaining PT sessions to other weekdays/hour
 [**createPtProduct**](PTApi.md#createptproduct) | **POST** /pt-products | Create a PT package
 [**getMemberPtSummary**](PTApi.md#getmemberptsummary) | **GET** /members/{id}/pt-subscriptions | Member&#39;s current PT, PT history, and the calling trainer&#39;s access level
+[**getPtPaymentPreview**](PTApi.md#getptpaymentpreview) | **GET** /pt/payment-preview | Subtotal, discount, tax and total a PT sale would charge
 [**getPtProduct**](PTApi.md#getptproduct) | **GET** /pt-products/{id} | PT package detail
 [**getPtScheduleGrid**](PTApi.md#getptschedulegrid) | **GET** /pt/schedule-grid | Hours × active trainers occupancy for a PT package, start date and weekdays
 [**getPtSubscription**](PTApi.md#getptsubscription) | **GET** /pt-subscriptions/{id} | PT subscription detail
@@ -135,6 +136,51 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**MemberPtSummary**](MemberPtSummary.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getPtPaymentPreview**
+> PtPaymentPreview getPtPaymentPreview(ptProductId, discountAmount)
+
+Subtotal, discount, tax and total a PT sale would charge
+
+Same server-side computation as the payment taken by `purchasePtSubscription` (taxable = subtotal − discount, plus the configured tax rate). 
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getPTApi();
+final int ptProductId = 789; // int | 
+final String discountAmount = discountAmount_example; // String | 
+
+try {
+    final response = api.getPtPaymentPreview(ptProductId, discountAmount);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling PTApi->getPtPaymentPreview: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **ptProductId** | **int**|  | 
+ **discountAmount** | **String**|  | [optional] 
+
+### Return type
+
+[**PtPaymentPreview**](PtPaymentPreview.md)
 
 ### Authorization
 

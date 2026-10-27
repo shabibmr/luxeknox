@@ -12,6 +12,8 @@ class _$PtRenewRequest extends PtRenewRequest {
   @override
   final String? discountAmount;
   @override
+  final Date? paymentDate;
+  @override
   final int? paymentMethodId;
   @override
   final BuiltList<TenderLine>? tenders;
@@ -24,6 +26,7 @@ class _$PtRenewRequest extends PtRenewRequest {
   _$PtRenewRequest._(
       {this.ptProductId,
       this.discountAmount,
+      this.paymentDate,
       this.paymentMethodId,
       this.tenders,
       this.transactionReference})
@@ -41,6 +44,7 @@ class _$PtRenewRequest extends PtRenewRequest {
     return other is PtRenewRequest &&
         ptProductId == other.ptProductId &&
         discountAmount == other.discountAmount &&
+        paymentDate == other.paymentDate &&
         paymentMethodId == other.paymentMethodId &&
         tenders == other.tenders &&
         transactionReference == other.transactionReference;
@@ -51,6 +55,7 @@ class _$PtRenewRequest extends PtRenewRequest {
     var _$hash = 0;
     _$hash = $jc(_$hash, ptProductId.hashCode);
     _$hash = $jc(_$hash, discountAmount.hashCode);
+    _$hash = $jc(_$hash, paymentDate.hashCode);
     _$hash = $jc(_$hash, paymentMethodId.hashCode);
     _$hash = $jc(_$hash, tenders.hashCode);
     _$hash = $jc(_$hash, transactionReference.hashCode);
@@ -63,6 +68,7 @@ class _$PtRenewRequest extends PtRenewRequest {
     return (newBuiltValueToStringHelper(r'PtRenewRequest')
           ..add('ptProductId', ptProductId)
           ..add('discountAmount', discountAmount)
+          ..add('paymentDate', paymentDate)
           ..add('paymentMethodId', paymentMethodId)
           ..add('tenders', tenders)
           ..add('transactionReference', transactionReference))
@@ -85,6 +91,11 @@ class PtRenewRequestBuilder
   String? get discountAmount => _$this._discountAmount;
   set discountAmount(covariant String? discountAmount) =>
       _$this._discountAmount = discountAmount;
+
+  Date? _paymentDate;
+  Date? get paymentDate => _$this._paymentDate;
+  set paymentDate(covariant Date? paymentDate) =>
+      _$this._paymentDate = paymentDate;
 
   int? _paymentMethodId;
   int? get paymentMethodId => _$this._paymentMethodId;
@@ -111,6 +122,7 @@ class PtRenewRequestBuilder
     if ($v != null) {
       _ptProductId = $v.ptProductId;
       _discountAmount = $v.discountAmount;
+      _paymentDate = $v.paymentDate;
       _paymentMethodId = $v.paymentMethodId;
       _tenders = $v.tenders?.toBuilder();
       _transactionReference = $v.transactionReference;
@@ -139,6 +151,7 @@ class PtRenewRequestBuilder
           _$PtRenewRequest._(
             ptProductId: ptProductId,
             discountAmount: discountAmount,
+            paymentDate: paymentDate,
             paymentMethodId: paymentMethodId,
             tenders: _tenders?.build(),
             transactionReference: transactionReference,

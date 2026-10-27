@@ -15,6 +15,7 @@ Name | Type | Description | Notes
 **dietaryPreferences** | **String** |  | [optional] 
 **physicianName** | **String** |  | [optional] 
 **physicianPhone** | **String** |  | [optional] 
+**recordedDate** | [**Date**](Date.md) | Day the record applies to (gym timezone); defaults to now, may be in the past, never the future. | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

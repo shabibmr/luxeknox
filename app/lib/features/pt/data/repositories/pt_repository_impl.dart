@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/map_thrown.dart';
 import '../../../membership/data/models/membership_date.dart';
+import '../../domain/entities/pt_payment_preview.dart';
 import '../../domain/entities/pt_product.dart';
 import '../../domain/entities/pt_schedule_grid.dart';
 import '../../domain/entities/pt_subscription.dart';
@@ -71,6 +72,23 @@ class PtRepositoryImpl implements PtRepository {
   });
 
   @override
+  Future<Either<Failure, PtPaymentPreview>> getPaymentPreview({
+    required int ptProductId,
+    String? discountAmount,
+  }) => _guard(() async {
+    final p = await _remote.paymentPreview(
+      ptProductId: ptProductId,
+      discountAmount: discountAmount,
+    );
+    return PtPaymentPreview(
+      subtotal: p.subtotal,
+      discount: p.discount,
+      tax: p.tax,
+      total: p.total,
+    );
+  });
+
+  @override
   Future<Either<Failure, PtSubscription>> purchase({
     required int memberId,
     required int ptProductId,
@@ -94,6 +112,9 @@ class PtRepositoryImpl implements PtRepository {
           ..slotStart = _hour(slotStart)
           ..paymentMethodId = payment.paymentMethodId
           ..discountAmount = payment.discountAmount
+          ..paymentDate = payment.paymentDate == null
+              ? null
+              : dateTimeToApiDate(payment.paymentDate!)
           ..transactionReference = payment.transactionReference
           ..partnerMemberId = partnerMemberId,
       ),
@@ -112,6 +133,9 @@ class PtRepositoryImpl implements PtRepository {
         (b) => b
           ..paymentMethodId = payment.paymentMethodId
           ..discountAmount = payment.discountAmount
+          ..paymentDate = payment.paymentDate == null
+              ? null
+              : dateTimeToApiDate(payment.paymentDate!)
           ..transactionReference = payment.transactionReference,
       ),
     );

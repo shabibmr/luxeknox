@@ -93,6 +93,18 @@ export function formatDateInTimezone(date: Date, timeZone: string): string {
 }
 
 /**
+ * Instant to store for a user-entered calendar day (YYYY-MM-DD) in the gym timezone.
+ * Today keeps the real time; an earlier day is noon gym time so it lands in that day for any
+ * report; a later day returns null so the caller can reject it.
+ */
+export function backdatedInstant(dateRaw: string, now: Date, timeZone: string): Date | null {
+  const today = formatDateInTimezone(now, timeZone);
+  if (dateRaw > today) return null;
+  if (dateRaw === today) return now;
+  return wallClockToUtcDate(dateRaw, '12:00:00', 0, timeZone);
+}
+
+/**
  * Resolves standard date boundaries for a report in the gym's canonical timezone.
  * Defaults:
  * - If `to` is omitted, defaults to today in gym timezone.

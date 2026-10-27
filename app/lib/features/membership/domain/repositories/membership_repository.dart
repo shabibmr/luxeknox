@@ -48,6 +48,7 @@ abstract class MembershipRepository {
     String? partnerMemberId,
     bool? replacePartnerMembership,
     String? discountAmount,
+    DateTime? paymentDate,
   });
 
   /// FR-MEMB-005 - what selling a couple package with [memberId] as partner

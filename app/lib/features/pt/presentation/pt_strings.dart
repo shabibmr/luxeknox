@@ -32,6 +32,7 @@ abstract final class PtStrings {
   static const next = 'Next';
   static const back = 'Back';
   static const startDate = 'Start date';
+  static const paymentDate = 'Payment date';
   static const effectiveFrom = 'Effective from';
   static const pickDaysHint = 'Choose which days this member will train.';
   static String daysChosen(int chosen) =>
@@ -58,6 +59,9 @@ abstract final class PtStrings {
   static const summaryHour = 'Hour';
   static const summaryTrainer = 'Trainer';
   static const summaryAmount = 'Amount';
+  static const summaryDiscount = 'Discount';
+  static const summaryTax = 'Tax';
+  static const summaryTotal = 'Total';
   static const sold = 'Personal Training assigned';
   static const replanned = 'Personal Training updated';
 

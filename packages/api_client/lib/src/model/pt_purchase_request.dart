@@ -15,7 +15,8 @@ part 'pt_purchase_request.g.dart';
 /// PtPurchaseRequest
 ///
 /// Properties:
-/// * [discountAmount] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
+/// * [discountAmount] - Unsigned money with at most two decimals. Used for sale discount inputs.
+/// * [paymentDate] - Gym-local day the money was received; not in the future. Defaults to now.
 /// * [paymentMethodId] 
 /// * [tenders] 
 /// * [transactionReference] 
@@ -118,6 +119,13 @@ class _$PtPurchaseRequestSerializer implements PrimitiveSerializer<PtPurchaseReq
         specifiedType: const FullType(String),
       );
     }
+    if (object.paymentDate != null) {
+      yield r'payment_date';
+      yield serializers.serialize(
+        object.paymentDate,
+        specifiedType: const FullType(Date),
+      );
+    }
     yield r'start_date';
     yield serializers.serialize(
       object.startDate,
@@ -214,6 +222,14 @@ class _$PtPurchaseRequestSerializer implements PrimitiveSerializer<PtPurchaseReq
           ) as String?;
           if (valueDes == null) continue;
           result.discountAmount = valueDes;
+          break;
+        case r'payment_date':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.paymentDate = valueDes;
           break;
         case r'start_date':
           final valueDes = serializers.deserialize(

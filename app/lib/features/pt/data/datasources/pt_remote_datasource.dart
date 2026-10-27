@@ -14,6 +14,10 @@ abstract class PtRemoteDataSource {
     int? partnerMemberId,
     int? excludeSubscriptionId,
   });
+  Future<api.PtPaymentPreview> paymentPreview({
+    required int ptProductId,
+    String? discountAmount,
+  });
   Future<api.PtPurchaseResult> purchase({
     required api.PtPurchaseRequest request,
     String? idempotencyKey,
@@ -76,6 +80,17 @@ class PtRemoteDataSourceImpl implements PtRemoteDataSource {
       weekdays: weekdays,
       partnerMemberId: partnerMemberId,
       excludeSubscriptionId: excludeSubscriptionId,
+    ),
+  );
+
+  @override
+  Future<api.PtPaymentPreview> paymentPreview({
+    required int ptProductId,
+    String? discountAmount,
+  }) async => _unwrap(
+    await _api.getPtPaymentPreview(
+      ptProductId: ptProductId,
+      discountAmount: discountAmount,
     ),
   );
 

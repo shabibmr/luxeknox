@@ -8,6 +8,7 @@ import 'package:luxeknox/core/usecase/usecase.dart';
 import 'package:luxeknox/features/payments/domain/entities/payment_method.dart';
 import 'package:luxeknox/features/payments/domain/usecases/get_payment_methods_usecase.dart';
 import 'package:luxeknox/features/people/domain/entities/person.dart';
+import 'package:luxeknox/features/pt/domain/entities/pt_payment_preview.dart';
 import 'package:luxeknox/features/pt/domain/entities/pt_product.dart';
 import 'package:luxeknox/features/pt/domain/entities/pt_schedule_grid.dart';
 import 'package:luxeknox/features/pt/domain/entities/pt_subscription.dart';
@@ -27,8 +28,10 @@ class MockPurchase extends Mock implements PurchasePtUseCase {}
 
 class MockReplan extends Mock implements ReplanPtUseCase {}
 
-class MockGetPtSummary extends Mock implements GetMemberPtSummaryUseCase {}
+class MockGetPaymentPreview extends Mock
+    implements GetPtPaymentPreviewUseCase {}
 
+class MockGetPtSummary extends Mock implements GetMemberPtSummaryUseCase {}
 
 void main() {
   late MockGetPtProducts getProducts;
@@ -161,9 +164,9 @@ void main() {
     ).thenAnswer((_) async => const Right([cash]));
     when(() => getGrid(any())).thenAnswer((_) async => Right(grid));
     when(() => purchase(any())).thenAnswer((_) async => Right(sold));
-    when(() => getPtSummary(any())).thenAnswer(
-      (_) async => const Right(MemberPtSummary()),
-    );
+    when(
+      () => getPtSummary(any()),
+    ).thenAnswer((_) async => const Right(MemberPtSummary()));
   });
 
   SellPtCubit build() => SellPtCubit(
@@ -232,6 +235,87 @@ void main() {
   });
 
   test(
+    'a discount fetches the server totals; an invalid one clears them',
+    () async {
+      final getPreview = MockGetPaymentPreview();
+      registerFallbackValue(const GetPtPaymentPreviewParams(ptProductId: 0));
+      when(() => getPreview(any())).thenAnswer(
+        (_) async => const Right(
+          PtPaymentPreview(
+            subtotal: '3000.00',
+            discount: '100.00',
+            tax: '522.00',
+            total: '3422.00',
+          ),
+        ),
+      );
+      final cubit = SellPtCubit(
+        getProducts,
+        getPaymentMethods,
+        getGrid,
+        purchase,
+        replan,
+        null,
+        getPtSummary,
+        getPreview,
+      );
+      addTearDown(cubit.close);
+      await cubit.init(42);
+      cubit.selectProduct(product);
+      await Future<void>.delayed(Duration.zero);
+      verify(
+        () => getPreview(GetPtPaymentPreviewParams(ptProductId: product.id)),
+      ).called(1);
+
+      cubit.setDiscount('100.00');
+      expect(cubit.state.preview, isNull);
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      expect(cubit.state.preview?.total, '3422.00');
+      verify(
+        () => getPreview(
+          GetPtPaymentPreviewParams(
+            ptProductId: product.id,
+            discountAmount: '100.00',
+          ),
+        ),
+      ).called(1);
+
+      cubit.setDiscount('3000.01');
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      expect(cubit.state.preview, isNull);
+    },
+  );
+
+  test('canSubmit refuses an out-of-range discount on a sale', () async {
+    final cubit = build();
+    await cubit.init(42);
+    cubit
+      ..selectProduct(product) // 3000.00
+      ..setStartDate(DateTime(2026, 10, 5))
+      ..toggleWeekday(1)
+      ..toggleWeekday(3)
+      ..toggleWeekday(5);
+    await Future<void>.delayed(Duration.zero);
+    cubit.selectSlot(7, '17:00:00');
+    expect(cubit.state.canSubmit, isTrue);
+
+    cubit.setDiscount('3000.01');
+    expect(cubit.state.canSubmit, isFalse);
+
+    cubit.setDiscount('-1');
+    expect(cubit.state.canSubmit, isFalse);
+
+    cubit.setDiscount('10.123');
+    expect(cubit.state.canSubmit, isFalse);
+
+    cubit.setDiscount('100.00');
+    expect(cubit.state.canSubmit, isTrue);
+
+    cubit.setDiscount('3000.00');
+    expect(cubit.state.canSubmit, isTrue);
+  });
+
+  test(
     'submit sends the purchase with payment and exposes the result',
     () async {
       final cubit = build();
@@ -245,7 +329,8 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       cubit
         ..selectSlot(7, '17:00:00')
-        ..setDiscount('100.00');
+        ..setDiscount('100.00')
+        ..setPaymentDate(DateTime(2026, 10, 1, 15, 30));
 
       await cubit.submit();
 
@@ -256,9 +341,21 @@ void main() {
       expect(p.slotStart, '17:00:00');
       expect(p.payment.paymentMethodId, 1);
       expect(p.payment.discountAmount, '100.00');
+      expect(p.payment.paymentDate, DateTime(2026, 10, 1));
       expect(cubit.state.result, sold);
     },
   );
+
+  test('a backdated payment date moves the start date with it', () async {
+    final cubit = build();
+    await cubit.init(42);
+    cubit.selectProduct(product);
+
+    cubit.setPaymentDate(DateTime(2026, 9, 6, 15, 30));
+
+    expect(cubit.state.paymentDate, DateTime(2026, 9, 6));
+    expect(cubit.state.startDate, DateTime(2026, 9, 6));
+  });
 
   test('changing the package clears a chosen slot', () async {
     final cubit = build();
@@ -569,10 +666,13 @@ void main() {
       expect(cubit.state.canSubmit, isFalse);
     });
 
-    test('a partner with no membership is not blocked (PT bundles one)', () async {
-      final cubit = await readyCouple(withPartner: partner);
-      expect(cubit.state.partnerCheck, isA<SellPtPartnerCheckOk>());
-    });
+    test(
+      'a partner with no membership is not blocked (PT bundles one)',
+      () async {
+        final cubit = await readyCouple(withPartner: partner);
+        expect(cubit.state.partnerCheck, isA<SellPtPartnerCheckOk>());
+      },
+    );
 
     test('selecting a single package clears the partner', () async {
       final cubit = await readyCouple(withPartner: partner);
@@ -604,10 +704,9 @@ void main() {
       cubit.selectSlot(7, '17:00:00');
       await cubit.submit();
 
-      final keys = verify(() => purchase(captureAny())).captured
-          .cast<PurchasePtParams>()
-          .map((p) => p.idempotencyKey)
-          .toList();
+      final keys = verify(
+        () => purchase(captureAny()),
+      ).captured.cast<PurchasePtParams>().map((p) => p.idempotencyKey).toList();
       expect(keys, hasLength(2));
       expect(keys.first, isNot(keys.last));
     });

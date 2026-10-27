@@ -104,6 +104,8 @@ describe('MembershipService', () => {
       findById: vi.fn(),
       findActiveOrFrozenForMember: vi.fn().mockResolvedValue(null),
       findByLockerNumberActiveOrFrozen: vi.fn().mockResolvedValue(null),
+      lockMembers: vi.fn().mockResolvedValue(undefined),
+      lockLocker: vi.fn().mockResolvedValue(undefined),
       insertMembership: vi.fn(),
       updateMembership: vi.fn().mockResolvedValue(undefined),
       insertHistory: vi.fn().mockResolvedValue(undefined),
@@ -155,6 +157,25 @@ describe('MembershipService', () => {
       expect(repository.insertMembership).not.toHaveBeenCalled();
     });
 
+    it('rejects when the open-membership re-check inside the transaction finds a row', async () => {
+      // Concurrent assign commits between the pre-check and the transaction.
+      memberRepository.findById.mockResolvedValue({ id: 100 });
+      productRepository.findById.mockResolvedValue(makeProduct());
+      repository.findActiveOrFrozenForMember
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(makeMembership());
+
+      await expect(
+        service.create(
+          { member_id: 100, product_id: 1, start_date: '2026-02-01', payment_method_id: 1 },
+          ADMIN_USER,
+        ),
+      ).rejects.toThrow(BusinessRuleError);
+      expect(repository.lockMembers).toHaveBeenCalledWith([100]);
+      expect(repository.insertMembership).not.toHaveBeenCalled();
+      expect(paymentService.create).not.toHaveBeenCalled();
+    });
+
     it('rejects a locker already held by an active/frozen membership (BR-MEMB-004)', async () => {
       memberRepository.findById.mockResolvedValue({ id: 100 });
       productRepository.findById.mockResolvedValue(makeProduct());
@@ -172,6 +193,31 @@ describe('MembershipService', () => {
           ADMIN_USER,
         ),
       ).rejects.toThrow(ConflictError);
+    });
+
+    it('rejects when the locker re-check inside the transaction finds a conflict', async () => {
+      memberRepository.findById.mockResolvedValue({ id: 100 });
+      productRepository.findById.mockResolvedValue(makeProduct());
+      repository.findByLockerNumberActiveOrFrozen
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(makeMembership({ id: 2 }));
+
+      await expect(
+        service.create(
+          {
+            member_id: 100,
+            product_id: 1,
+            start_date: '2026-02-01',
+            payment_method_id: 1,
+            locker_number: 'L1',
+          },
+          ADMIN_USER,
+        ),
+      ).rejects.toThrow(ConflictError);
+      expect(repository.lockMembers).toHaveBeenCalledWith([100]);
+      expect(repository.lockLocker).toHaveBeenCalledWith('L1');
+      expect(repository.insertMembership).not.toHaveBeenCalled();
+      expect(paymentService.create).not.toHaveBeenCalled();
     });
 
     it('computes end_date = start_date + duration_days and writes a created history row', async () => {
@@ -300,9 +346,15 @@ describe('MembershipService', () => {
         expect(repository.insertMembership).not.toHaveBeenCalled();
       });
 
-      it('rejects a discount outside 0..base_price', async () => {
-        memberRepository.findById.mockResolvedValue({ id: 100 });
-        productRepository.findById.mockResolvedValue(makeProduct({ base_price: '100.00' }));
+      it('rejects when the partner-replacement re-check inside the transaction is no longer valid', async () => {
+        memberRepository.findById.mockImplementation(async (id: number) => ({ id }));
+        productRepository.findById.mockResolvedValue(makeProduct({ package_type: 'couple' }));
+        // Outer: buyer free, partner free. Inner: buyer free, partner now has a membership.
+        repository.findActiveOrFrozenForMember
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(makeMembership({ id: 9, member_id: 200 }));
 
         await expect(
           service.create(
@@ -311,11 +363,42 @@ describe('MembershipService', () => {
               product_id: 1,
               start_date: '2026-02-01',
               payment_method_id: 1,
-              discount_amount: '150.00',
+              partner_member_id: 200,
             },
             ADMIN_USER,
           ),
-        ).rejects.toThrow(BadRequestError);
+        ).rejects.toThrow(BusinessRuleError);
+        expect(repository.lockMembers).toHaveBeenCalledWith([100, 200]);
+        expect(repository.insertMembership).not.toHaveBeenCalled();
+        expect(paymentService.create).not.toHaveBeenCalled();
+      });
+
+      it('passes a discount above base_price through to payment (no assign-time range check)', async () => {
+        memberRepository.findById.mockResolvedValue({ id: 100 });
+        productRepository.findById.mockResolvedValue(makeProduct({ base_price: '100.00' }));
+        repository.insertMembership.mockResolvedValue(5);
+        repository.findByIdWithProduct.mockResolvedValue(
+          makeMembershipWithProduct({ id: 5 }, { id: 1, base_price: '100.00' }),
+        );
+
+        await service.create(
+          {
+            member_id: 100,
+            product_id: 1,
+            start_date: '2026-02-01',
+            payment_method_id: 1,
+            discount_amount: '150.00',
+          },
+          ADMIN_USER,
+        );
+
+        expect(paymentService.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            subtotal: '100.00',
+            discount_amount: '150.00',
+          }),
+          ADMIN_USER,
+        );
       });
 
       it('creates two cross-linked rows, cancels the replaced partner row, and pays with the discount', async () => {
@@ -373,6 +456,25 @@ describe('MembershipService', () => {
             action: 'membership.cancelled',
             entityId: 9,
             afterState: expect.objectContaining({ reason: 'replaced_by_couple' }),
+          }),
+        );
+        expect(repository.lockMembers).toHaveBeenCalledWith([100, 200]);
+        expect(domainEventBus.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            eventName: 'membership.created',
+            payload: { membershipId: 5, memberId: 100 },
+          }),
+        );
+        expect(domainEventBus.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            eventName: 'membership.created',
+            payload: { membershipId: 6, memberId: 200 },
+          }),
+        );
+        expect(domainEventBus.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            eventName: 'membership.cancelled',
+            payload: { membershipId: 9 },
           }),
         );
       });
