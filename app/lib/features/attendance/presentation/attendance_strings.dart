@@ -5,6 +5,8 @@ abstract final class AttendanceStrings {
   static const adminTitle = 'Attendance';
   static const liveFeed = 'Live feed';
   static const manualOverride = 'Manual check-in';
+  static const membersTab = 'Members';
+  static const trainersTab = 'Trainers';
   static const scanQr = 'Scan QR';
   static const refreshPass = 'Refresh pass';
   static const passExpired = 'Pass expired — refresh to get a new code';

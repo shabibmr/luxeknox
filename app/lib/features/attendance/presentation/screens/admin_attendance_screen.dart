@@ -15,7 +15,9 @@ import '../../domain/entities/attendance_enums.dart';
 import '../attendance_strings.dart';
 import '../bloc/check_in_bloc.dart';
 import '../cubit/attendance_history_cubit.dart';
+import '../../../people/domain/entities/trainer_summary.dart';
 import '../../../people/presentation/widgets/member_picker_sheet.dart';
+import '../../../scheduling/presentation/widgets/trainer_picker_field.dart';
 
 class AdminAttendanceScreen extends StatelessWidget {
   const AdminAttendanceScreen({super.key});
@@ -154,15 +156,33 @@ class ManualCheckInScreen extends StatefulWidget {
 }
 
 class _ManualCheckInScreenState extends State<ManualCheckInScreen> {
-  final _userIdController = TextEditingController();
-  final _gateController = TextEditingController();
+  final _memberGateController = TextEditingController();
+  final _trainerGateController = TextEditingController();
   String? _selectedMemberId;
+  TrainerSummary? _selectedTrainer;
 
   @override
   void dispose() {
-    _userIdController.dispose();
-    _gateController.dispose();
+    _memberGateController.dispose();
+    _trainerGateController.dispose();
     super.dispose();
+  }
+
+  void _submit(
+    BuildContext context, {
+    required String? userId,
+    required TextEditingController gate,
+  }) {
+    final id = userId?.trim() ?? '';
+    if (id.isEmpty) return;
+    final gateText = gate.text.trim();
+    context.read<CheckInBloc>().add(
+      CheckInSubmitted(
+        userId: id,
+        method: AttendanceCheckInMethod.manualOverride,
+        gateIdentifier: gateText.isEmpty ? null : gateText,
+      ),
+    );
   }
 
   @override
@@ -186,58 +206,105 @@ class _ManualCheckInScreenState extends State<ManualCheckInScreen> {
         },
         builder: (context, state) {
           final busy = state.status == LoadStatus.loading;
-          return Scaffold(
-            appBar: AppBar(title: const Text(AttendanceStrings.manualOverride)),
-            body: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                MemberPickerField(
-                  selectedMemberId: _selectedMemberId,
-                  labelText: AttendanceStrings.userIdLabel,
-                  hintText: 'Select member for check-in',
-                  onChanged: (member) {
-                    setState(() {
-                      _selectedMemberId = member?.id.toString();
-                      _userIdController.text = _selectedMemberId ?? '';
-                    });
-                  },
+          return DefaultTabController(
+            length: 2,
+            child: Scaffold(
+              appBar: AppBar(
+                title: const Text(AttendanceStrings.manualOverride),
+                bottom: const TabBar(
+                  tabs: [
+                    Tab(text: AttendanceStrings.membersTab),
+                    Tab(text: AttendanceStrings.trainersTab),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _gateController,
-                  decoration: const InputDecoration(
-                    labelText: AttendanceStrings.gateLabel,
+              ),
+              body: TabBarView(
+                children: [
+                  _ManualCheckInPane(
+                    busy: busy,
+                    gateController: _memberGateController,
+                    buttonKey: const Key('manual_check_in_member'),
+                    onSubmit: () => _submit(
+                      context,
+                      userId: _selectedMemberId,
+                      gate: _memberGateController,
+                    ),
+                    picker: MemberPickerField(
+                      selectedMemberId: _selectedMemberId,
+                      labelText: AttendanceStrings.userIdLabel,
+                      hintText: 'Select member for check-in',
+                      onChanged: (member) {
+                        setState(() {
+                          _selectedMemberId = member?.id.toString();
+                        });
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: busy
-                      ? null
-                      : () {
-                          final id = _userIdController.text.trim();
-                          if (id.isEmpty) return;
-                          context.read<CheckInBloc>().add(
-                            CheckInSubmitted(
-                              userId: id,
-                              method: AttendanceCheckInMethod.manualOverride,
-                              gateIdentifier:
-                                  _gateController.text.trim().isEmpty
-                                  ? null
-                                  : _gateController.text.trim(),
-                            ),
-                          );
-                        },
-                  child: Text(
-                    busy
-                        ? AttendanceStrings.submitting
-                        : AttendanceStrings.manualOverride,
+                  _ManualCheckInPane(
+                    busy: busy,
+                    gateController: _trainerGateController,
+                    buttonKey: const Key('manual_check_in_trainer'),
+                    onSubmit: () => _submit(
+                      context,
+                      userId: _selectedTrainer?.userId.toString(),
+                      gate: _trainerGateController,
+                    ),
+                    picker: TrainerPickerField(
+                      value: _selectedTrainer,
+                      onChanged: (trainer) {
+                        setState(() => _selectedTrainer = trainer);
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
       ),
+    );
+  }
+}
+
+class _ManualCheckInPane extends StatelessWidget {
+  const _ManualCheckInPane({
+    required this.picker,
+    required this.gateController,
+    required this.busy,
+    required this.onSubmit,
+    required this.buttonKey,
+  });
+
+  final Widget picker;
+  final TextEditingController gateController;
+  final bool busy;
+  final VoidCallback onSubmit;
+  final Key buttonKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        picker,
+        const SizedBox(height: 12),
+        TextField(
+          controller: gateController,
+          decoration: const InputDecoration(
+            labelText: AttendanceStrings.gateLabel,
+          ),
+        ),
+        const SizedBox(height: 24),
+        FilledButton(
+          key: buttonKey,
+          onPressed: busy ? null : onSubmit,
+          child: Text(
+            busy
+                ? AttendanceStrings.submitting
+                : AttendanceStrings.manualOverride,
+          ),
+        ),
+      ],
     );
   }
 }
