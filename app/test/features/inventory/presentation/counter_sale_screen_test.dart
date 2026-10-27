@@ -560,6 +560,27 @@ void main() {
     expect(find.text(InventoryStrings.buyerMemberHint), findsOneWidget);
   });
 
+  testWidgets('clearing the Member leaves the buyer slot blank', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildSubject());
+    await tester.pumpAndSettle();
+    await openBuyer(tester);
+
+    await tester.tap(find.byKey(const Key('counter_sale_buyer_member')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Alice Walker'));
+    await tester.pumpAndSettle();
+    expect(find.text('Alice Walker (M-1001)'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Clear selection'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Alice Walker (M-1001)'), findsNothing);
+    expect(find.text(InventoryStrings.buyerMemberHint), findsOneWidget);
+    expect(buyerNameOf(tester), isEmpty);
+  });
+
   testWidgets('a blank buyer can be continued', (tester) async {
     await tester.pumpWidget(buildSubject());
     await tester.pumpAndSettle();
@@ -819,7 +840,10 @@ void main() {
 
     expect(find.byKey(const Key('counter_sale_over_on_hand')), findsOneWidget);
     expect(find.byKey(const Key('counter_sale_tender_lines')), findsOneWidget);
-    expect(find.byKey(const Key('counter_sale_line_on_hand_1')), findsOneWidget);
+    expect(
+      find.byKey(const Key('counter_sale_line_on_hand_1')),
+      findsOneWidget,
+    );
     expect(find.textContaining('5.000'), findsWidgets);
     expect(
       tester

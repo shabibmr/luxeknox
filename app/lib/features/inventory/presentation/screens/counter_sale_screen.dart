@@ -257,11 +257,12 @@ class _BuyerStepState extends State<_BuyerStep> {
               labelText: InventoryStrings.buyerMemberLabel,
               hintText: InventoryStrings.buyerMemberHint,
               onChanged: (member) {
-                if (member == null) return;
-                context.read<CounterSaleCubit>().setMember(
-                  member.id,
-                  member: member,
-                );
+                final cubit = context.read<CounterSaleCubit>();
+                if (member == null) {
+                  cubit.setMember(null);
+                  return;
+                }
+                cubit.setMember(member.id, member: member);
               },
             ),
             const SizedBox(height: 16),
@@ -604,10 +605,7 @@ class _TenderBody extends StatelessWidget {
               itemCount: state.lines.length,
               separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, index) {
-                return _TrayLine(
-                  line: state.lines[index],
-                  showRemove: false,
-                );
+                return _TrayLine(line: state.lines[index], showRemove: false);
               },
             ),
           ),
