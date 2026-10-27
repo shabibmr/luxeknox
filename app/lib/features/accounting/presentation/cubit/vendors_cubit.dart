@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
@@ -71,9 +73,16 @@ class VendorsState extends Equatable {
 
 @injectable
 class VendorsCubit extends Cubit<VendorsState> {
-  VendorsCubit(this._getVendors) : super(const VendorsState());
+  VendorsCubit(
+    this._getVendors, {
+    this.debounceDuration = const Duration(milliseconds: 300),
+  }) : super(const VendorsState());
 
   final GetVendorsUseCase _getVendors;
+  final Duration debounceDuration;
+
+  Timer? _debounceTimer;
+  int _loadEpoch = 0;
 
   Future<void> load({
     bool refresh = true,
@@ -82,6 +91,9 @@ class VendorsCubit extends Cubit<VendorsState> {
     bool clearSearch = false,
     bool clearActiveFilter = false,
   }) async {
+    _debounceTimer?.cancel();
+    final epoch = refresh ? ++_loadEpoch : _loadEpoch;
+
     final nextSearch = clearSearch ? null : (search ?? state.search);
     final nextIsActive =
         clearActiveFilter ? null : (isActive ?? state.isActive);
@@ -109,6 +121,8 @@ class VendorsCubit extends Cubit<VendorsState> {
         isActive: nextIsActive,
       ),
     );
+
+    if (isClosed || epoch != _loadEpoch) return;
 
     result.fold(
       (failure) => emit(
@@ -138,12 +152,15 @@ class VendorsCubit extends Cubit<VendorsState> {
     await load(refresh: false);
   }
 
-  Future<void> searchVendors(String? query) {
-    return load(
-      refresh: true,
-      search: query,
-      clearSearch: query == null || query.isEmpty,
-    );
+  /// Updates [VendorsState.search] immediately and reloads after [debounceDuration].
+  void searchVendors(String? query) {
+    _debounceTimer?.cancel();
+    final next = (query == null || query.trim().isEmpty) ? null : query.trim();
+    emit(state.copyWith(search: next));
+
+    _debounceTimer = Timer(debounceDuration, () {
+      load(search: next, clearSearch: next == null);
+    });
   }
 
   Future<void> filterByActive(bool? isActive) {
@@ -160,5 +177,11 @@ class VendorsCubit extends Cubit<VendorsState> {
       clearSearch: true,
       clearActiveFilter: true,
     );
+  }
+
+  @override
+  Future<void> close() {
+    _debounceTimer?.cancel();
+    return super.close();
   }
 }

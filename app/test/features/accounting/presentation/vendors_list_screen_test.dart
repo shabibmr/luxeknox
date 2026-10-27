@@ -2,9 +2,11 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luxeknox/core/di/injector.dart';
 import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
+import 'package:luxeknox/core/router/routes.dart';
 import 'package:luxeknox/core/widgets/app_empty_view.dart';
 import 'package:luxeknox/core/widgets/app_error_view.dart';
 import 'package:luxeknox/core/widgets/app_loading.dart';
@@ -74,8 +76,7 @@ void main() {
           clearSearch: any(named: 'clearSearch'),
           clearActiveFilter: any(named: 'clearActiveFilter'),
         )).thenAnswer((_) async {});
-    when(() => mockVendorsCubit.searchVendors(any()))
-        .thenAnswer((_) async {});
+    when(() => mockVendorsCubit.searchVendors(any())).thenReturn(null);
     when(() => mockVendorsCubit.filterByActive(any()))
         .thenAnswer((_) async {});
 
@@ -110,14 +111,33 @@ void main() {
       initialState: state,
     );
 
-    return MaterialApp(
-      home: BlocProvider<SessionCubit>.value(
-        value: mockSessionCubit,
-        child: VendorsListScreen(
-          cubit: mockVendorsCubit,
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, routerState) => BlocProvider<SessionCubit>.value(
+            value: mockSessionCubit,
+            child: VendorsListScreen(cubit: mockVendorsCubit),
+          ),
         ),
-      ),
+        GoRoute(
+          path: Routes.adminAccountingVendorsCreate,
+          builder: (context, routerState) =>
+              const Scaffold(body: Text('Create Vendor Destination')),
+        ),
+        GoRoute(
+          path: Routes.adminAccountingVendorsEdit,
+          builder: (context, routerState) => Scaffold(
+            body: Text(
+              'Edit Vendor Destination ${routerState.pathParameters['id']}',
+            ),
+          ),
+        ),
+      ],
     );
+
+    return MaterialApp.router(routerConfig: router);
   }
 
   group('Permission check', () {
@@ -266,6 +286,38 @@ void main() {
       );
 
       expect(find.byKey(const Key('create_vendor_fab')), findsNothing);
+    });
+
+    testWidgets('FAB opens create vendor destination', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          state: const VendorsState(
+            status: LoadStatus.success,
+            vendors: [tVendor1],
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('create_vendor_fab')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Create Vendor Destination'), findsOneWidget);
+    });
+
+    testWidgets('row tap opens edit vendor destination', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          state: const VendorsState(
+            status: LoadStatus.success,
+            vendors: [tVendor1],
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Acme Fitness Equipments'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit Vendor Destination v-1'), findsOneWidget);
     });
   });
 }

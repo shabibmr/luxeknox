@@ -51,7 +51,10 @@ void main() {
 
   setUp(() {
     mockGetVendors = MockGetVendorsUseCase();
-    cubit = VendorsCubit(mockGetVendors);
+    cubit = VendorsCubit(
+      mockGetVendors,
+      debounceDuration: const Duration(milliseconds: 50),
+    );
   });
 
   tearDown(() {
@@ -187,19 +190,36 @@ void main() {
 
   group('filters and search', () {
     blocTest<VendorsCubit, VendorsState>(
-      'searchVendors triggers reload with search string',
+      'searchVendors re-queries from offset 0 after debounce',
       build: () {
         when(() => mockGetVendors(any()))
             .thenAnswer((_) async => const Right(tPage));
         return cubit;
       },
-      act: (cubit) => cubit.searchVendors('Acme'),
+      seed: () => const VendorsState(
+        status: LoadStatus.success,
+        vendors: [tVendor1],
+        offset: 1,
+        hasReachedMax: false,
+      ),
+      act: (cubit) async {
+        cubit.searchVendors('Acme');
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+      },
       expect: () => [
+        const VendorsState(
+          status: LoadStatus.success,
+          vendors: [tVendor1],
+          offset: 1,
+          hasReachedMax: false,
+          search: 'Acme',
+        ),
         const VendorsState(
           status: LoadStatus.loading,
           search: 'Acme',
           vendors: [],
           offset: 0,
+          hasReachedMax: false,
         ),
         const VendorsState(
           status: LoadStatus.success,
@@ -220,6 +240,29 @@ void main() {
             )).called(1);
       },
     );
+
+    test('rapid searchVendors only fires one query after debounce', () async {
+      when(() => mockGetVendors(any()))
+          .thenAnswer((_) async => const Right(tLastPage));
+
+      cubit.searchVendors('A');
+      cubit.searchVendors('Ac');
+      cubit.searchVendors('Acme');
+
+      expect(cubit.state.search, 'Acme');
+      verifyNever(() => mockGetVendors(any()));
+
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+
+      verify(() => mockGetVendors(
+            const GetVendorsParams(
+              limit: 50,
+              offset: 0,
+              search: 'Acme',
+              isActive: null,
+            ),
+          )).called(1);
+    });
 
     blocTest<VendorsCubit, VendorsState>(
       'filterByActive triggers reload with isActive true',
