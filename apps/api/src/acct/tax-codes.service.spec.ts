@@ -178,8 +178,7 @@ describe('TaxCodesService', () => {
       });
       repository.insertComponents.mockResolvedValue(SAMPLE_TAX_CODE.components);
 
-      const result = await service.create(
-        {
+      const result = await service.create({
           name: 'GST 18%',
           code: 'gst_18',
           rate_percent: '18.00',
@@ -239,13 +238,13 @@ describe('TaxCodesService', () => {
         is_active: true,
       });
 
-      const result = await service.create(
-        {
+      const result = await service.create({
           name: 'Exempt',
           code: 'exempt',
           rate_percent: '0.00',
           components: [],
-        },
+          is_active: true,
+      },
         ADMIN_USER,
       );
 
@@ -258,13 +257,13 @@ describe('TaxCodesService', () => {
       repository.findByCode.mockResolvedValue(SAMPLE_TAX_CODE);
 
       await expect(
-        service.create(
-          {
+        service.create({
             name: 'Duplicate',
             code: 'gst_18',
             rate_percent: '18.00',
             components: [],
-          },
+            is_active: true,
+      },
           ADMIN_USER,
         ),
       ).rejects.toBeInstanceOf(ConflictError);
@@ -274,8 +273,7 @@ describe('TaxCodesService', () => {
       repository.findByCode.mockResolvedValue(null);
 
       await expect(
-        service.create(
-          {
+        service.create({
             name: 'Bad Sum',
             code: 'bad_sum',
             rate_percent: '18.00',
@@ -293,7 +291,8 @@ describe('TaxCodesService', () => {
                 input_account_id: 1300,
               },
             ],
-          },
+            is_active: true,
+      },
           ADMIN_USER,
         ),
       ).rejects.toMatchObject({
@@ -312,8 +311,7 @@ describe('TaxCodesService', () => {
       ]);
 
       await expect(
-        service.create(
-          {
+        service.create({
             name: 'GST 18%',
             code: 'gst_18',
             rate_percent: '18.00',
@@ -331,7 +329,8 @@ describe('TaxCodesService', () => {
                 input_account_id: 1300,
               },
             ],
-          },
+            is_active: true,
+      },
           ADMIN_USER,
         ),
       ).rejects.toMatchObject({
@@ -346,8 +345,7 @@ describe('TaxCodesService', () => {
       accountsRepository.findByIds.mockResolvedValue([CGST_ACCOUNT, INPUT_TAX_ACCOUNT]); // missing 2110
 
       await expect(
-        service.create(
-          {
+        service.create({
             name: 'GST 18%',
             code: 'gst_18',
             rate_percent: '18.00',
@@ -365,7 +363,8 @@ describe('TaxCodesService', () => {
                 input_account_id: 1300,
               },
             ],
-          },
+            is_active: true,
+      },
           ADMIN_USER,
         ),
       ).rejects.toMatchObject({

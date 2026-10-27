@@ -318,6 +318,9 @@ describe('PurchaseBillsService', () => {
             tax_code_id: TAX_CODE_GST18.id,
             net_amount: '200.00',
             tax_amount: '36.00',
+            item_name: null,
+            uom_code: null,
+            inventory_tracked: false,
           },
         ],
       };
@@ -331,6 +334,7 @@ describe('PurchaseBillsService', () => {
         {
           vendor_id: VENDOR_ACTIVE.id,
           bill_date: '2026-04-15',
+          supplier_invoice_no: null,
           due_date: '2026-05-15',
           lines: [
             {
@@ -409,6 +413,9 @@ describe('PurchaseBillsService', () => {
             tax_code_id: null,
             net_amount: '100.00',
             tax_amount: '0.00',
+            item_name: null,
+            uom_code: null,
+            inventory_tracked: false,
           },
         ],
       };
@@ -420,6 +427,7 @@ describe('PurchaseBillsService', () => {
         {
           vendor_id: VENDOR_ACTIVE.id,
           bill_date: '2026-04-15',
+          supplier_invoice_no: null,
           draft: true,
           lines: [{ account_id: EXPENSE_ACCOUNT.id, quantity: '1', rate: '100.00' }],
         },
@@ -444,6 +452,7 @@ describe('PurchaseBillsService', () => {
           {
             vendor_id: VENDOR_ACTIVE.id,
             bill_date: '2026-04-15',
+            supplier_invoice_no: null,
             lines: [{ account_id: EXPENSE_ACCOUNT.id, quantity: '1.00', rate: '10.00' }],
           },
           CURRENT_USER,
@@ -457,6 +466,7 @@ describe('PurchaseBillsService', () => {
           {
             vendor_id: VENDOR_INACTIVE.id,
             bill_date: '2026-04-15',
+            supplier_invoice_no: null,
             lines: [
               {
                 account_id: EXPENSE_ACCOUNT.id,
@@ -476,6 +486,7 @@ describe('PurchaseBillsService', () => {
           {
             vendor_id: 9999,
             bill_date: '2026-04-15',
+            supplier_invoice_no: null,
             lines: [
               {
                 account_id: EXPENSE_ACCOUNT.id,
@@ -495,6 +506,7 @@ describe('PurchaseBillsService', () => {
           {
             vendor_id: VENDOR_ACTIVE.id,
             bill_date: '2026-04-15',
+            supplier_invoice_no: null,
             lines: [
               {
                 item_id: ITEM_INACTIVE.id,
@@ -515,6 +527,7 @@ describe('PurchaseBillsService', () => {
           {
             vendor_id: VENDOR_ACTIVE.id,
             bill_date: '2026-04-15',
+            supplier_invoice_no: null,
             lines: [
               {
                 account_id: INACTIVE_ACCOUNT.id,
@@ -534,6 +547,7 @@ describe('PurchaseBillsService', () => {
           {
             vendor_id: VENDOR_ACTIVE.id,
             bill_date: '2026-04-15',
+            supplier_invoice_no: null,
             lines: [
               {
                 account_id: CONTROL_ACCOUNT.id,
@@ -553,6 +567,7 @@ describe('PurchaseBillsService', () => {
           {
             vendor_id: VENDOR_ACTIVE.id,
             bill_date: '2026-04-15',
+            supplier_invoice_no: null,
             lines: [
               {
                 account_id: EXPENSE_ACCOUNT.id,
@@ -597,6 +612,9 @@ describe('PurchaseBillsService', () => {
             tax_code_id: TAX_CODE_GST18.id,
             net_amount: '100.00',
             tax_amount: '18.00',
+            item_name: null,
+            uom_code: null,
+            inventory_tracked: false,
           },
         ],
       };
@@ -820,6 +838,7 @@ describe('PurchaseBillsService', () => {
         {
           vendor_id: VENDOR_ACTIVE.id,
           bill_date: '2026-04-15',
+          supplier_invoice_no: null,
           lines: [
             {
               item_id: ITEM_TRACKED.id,
@@ -853,6 +872,7 @@ describe('PurchaseBillsService', () => {
           {
             vendor_id: VENDOR_ACTIVE.id,
             bill_date: '2026-04-15',
+            supplier_invoice_no: null,
             lines: [
               {
                 item_id: ITEM_ACTIVE.id,
@@ -889,6 +909,7 @@ describe('PurchaseBillsService', () => {
         {
           vendor_id: VENDOR_ACTIVE.id,
           bill_date: '2026-04-15',
+          supplier_invoice_no: null,
           lines: [
             {
               item_id: ITEM_TRACKED.id,
@@ -923,6 +944,7 @@ describe('PurchaseBillsService', () => {
         {
           vendor_id: VENDOR_ACTIVE.id,
           bill_date: '2026-04-15',
+          supplier_invoice_no: null,
           lines: [{ item_id: ITEM_ACTIVE.id, quantity: '2' }],
         },
         CURRENT_USER,

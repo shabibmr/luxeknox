@@ -21,6 +21,7 @@ const SAMPLE_BILL_DTO: PurchaseBillDto = {
   vendor_id: 1,
   bill_date: '2026-04-15',
   due_date: '2026-04-30',
+  supplier_invoice_no: null,
   status: 'posted',
   subtotal: '100.00',
   tax_amount: '18.00',
@@ -41,6 +42,10 @@ const SAMPLE_BILL_DTO: PurchaseBillDto = {
       tax_code_id: 5,
       net_amount: '100.00',
       tax_amount: '18.00',
+      item_name: null,
+      uom_code: null,
+      inventory_tracked: false,
+      returned_quantity: '0.000',
     },
   ],
 };
@@ -93,6 +98,7 @@ describe('PurchaseBillsController', () => {
     const dto: PurchaseBillCreateDto = {
       vendor_id: 1,
       bill_date: '2026-04-15',
+      supplier_invoice_no: null,
       lines: [
         {
           account_id: 50,

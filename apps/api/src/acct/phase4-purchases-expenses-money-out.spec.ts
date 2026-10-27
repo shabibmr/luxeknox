@@ -95,6 +95,11 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
       const db = {} as any;
       const paginationHelper = {} as any;
 
+      const stockService = {
+        receive: vi.fn(),
+        issue: vi.fn(),
+      } as any;
+
       const service = new PurchaseBillsService(
         billsRepo,
         postingService,
@@ -102,6 +107,7 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
         vendorsRepo,
         itemsRepo,
         taxCodesRepo,
+        stockService,
         db,
         paginationHelper,
       );
@@ -111,6 +117,7 @@ describe('Phase 4 — Purchases, expenses, money out (ACC-044)', () => {
         {
           vendor_id: 2,
           bill_date: '2026-05-01',
+          supplier_invoice_no: null,
           due_date: '2026-05-15',
           lines: [
             {

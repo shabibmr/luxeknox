@@ -125,7 +125,7 @@ describe('VendorsController', () => {
         email: 'acme@test.com',
         gstin: '29ABCDE1234F1Z5',
       };
-      const result = writePipe.transform(payload);
+      const result = writePipe.transform(payload, {} as any);
       expect(result.name).toBe('Acme Fitness');
       expect(result.is_active).toBe(true);
     });
@@ -134,7 +134,7 @@ describe('VendorsController', () => {
       const payload = {
         phone: '9876543210',
       };
-      expect(() => writePipe.transform(payload)).toThrow();
+      expect(() => writePipe.transform(payload, {} as any)).toThrow();
     });
 
     it('rejects vendor write with invalid email', () => {
@@ -142,7 +142,7 @@ describe('VendorsController', () => {
         name: 'Acme Fitness',
         email: 'not-an-email',
       };
-      expect(() => writePipe.transform(payload)).toThrow();
+      expect(() => writePipe.transform(payload, {} as any)).toThrow();
     });
 
     it('validates partial vendor update payload', () => {
@@ -150,7 +150,7 @@ describe('VendorsController', () => {
         name: 'New Name',
         is_active: false,
       };
-      const result = updatePipe.transform(payload);
+      const result = updatePipe.transform(payload, {} as any);
       expect(result.name).toBe('New Name');
       expect(result.is_active).toBe(false);
     });

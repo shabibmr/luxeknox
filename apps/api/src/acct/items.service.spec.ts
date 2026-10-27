@@ -210,6 +210,7 @@ describe('ItemsService', () => {
         expense_account_id: 5000,
         tax_code_id: 1,
         is_active: true,
+        inventory_tracked: false,
       };
 
       const result = await service.create(dto, ADMIN_USER);
@@ -250,6 +251,7 @@ describe('ItemsService', () => {
         sku: 'SHAKE',
         sale_rate: '120.00',
         reorder_level: '2.500',
+        is_active: true,
       };
 
       await service.create(dto, ADMIN_USER);
@@ -279,6 +281,8 @@ describe('ItemsService', () => {
         income_account_id: 4000,
         expense_account_id: 5000,
         sku: 'SHAKE',
+        inventory_tracked: false,
+        is_active: true,
       };
 
       await expect(service.create(dto, ADMIN_USER)).rejects.toBeInstanceOf(BusinessRuleError);
@@ -293,6 +297,7 @@ describe('ItemsService', () => {
         income_account_id: 4000,
         expense_account_id: 5000,
         inventory_tracked: true,
+        is_active: true,
       };
 
       await expect(service.create(dto, ADMIN_USER)).rejects.toThrow(BusinessRuleError);
@@ -313,6 +318,8 @@ describe('ItemsService', () => {
         uom_id: 1,
         income_account_id: 9999,
         expense_account_id: 5000,
+        inventory_tracked: false,
+        is_active: true,
       };
 
       await expect(service.create(dto, ADMIN_USER)).rejects.toThrow(BusinessRuleError);
@@ -332,6 +339,8 @@ describe('ItemsService', () => {
         uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
+        inventory_tracked: false,
+        is_active: true,
       };
 
       await expect(service.create(dto, ADMIN_USER)).rejects.toThrow(BusinessRuleError);
@@ -351,6 +360,8 @@ describe('ItemsService', () => {
         uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
+        inventory_tracked: false,
+        is_active: true,
       };
 
       await expect(service.create(dto, ADMIN_USER)).rejects.toThrow(BusinessRuleError);
@@ -371,6 +382,8 @@ describe('ItemsService', () => {
         uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 9999,
+        inventory_tracked: false,
+        is_active: true,
       };
 
       await expect(service.create(dto, ADMIN_USER)).rejects.toThrow(BusinessRuleError);
@@ -390,6 +403,8 @@ describe('ItemsService', () => {
         uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
+        inventory_tracked: false,
+        is_active: true,
       };
 
       await expect(service.create(dto, ADMIN_USER)).rejects.toThrow(BusinessRuleError);
@@ -409,6 +424,8 @@ describe('ItemsService', () => {
         uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
+        inventory_tracked: false,
+        is_active: true,
       };
 
       await expect(service.create(dto, ADMIN_USER)).rejects.toThrow(BusinessRuleError);
@@ -427,6 +444,8 @@ describe('ItemsService', () => {
         income_account_id: 4000,
         expense_account_id: 5000,
         tax_code_id: 999,
+        inventory_tracked: false,
+        is_active: true,
       };
 
       await expect(service.create(dto, ADMIN_USER)).rejects.toThrow(BusinessRuleError);
@@ -443,6 +462,8 @@ describe('ItemsService', () => {
         income_account_id: 4000,
         expense_account_id: 5000,
         tax_code_id: 1,
+        inventory_tracked: false,
+        is_active: true,
       };
 
       await expect(service.create(dto, ADMIN_USER)).rejects.toThrow(BusinessRuleError);

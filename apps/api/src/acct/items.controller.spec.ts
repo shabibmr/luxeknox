@@ -104,6 +104,7 @@ describe('ItemsController', () => {
         expense_account_id: 5000,
         tax_code_id: 1,
         is_active: true,
+        inventory_tracked: false,
       };
       const result = await controller.create(dto, ADMIN_USER);
 
@@ -141,8 +142,10 @@ describe('ItemsController', () => {
         sale_rate: '10.5',
         purchase_rate: '10.005',
         reorder_level: '1.250',
+        inventory_tracked: false,
+        is_active: true,
       };
-      const result = createPipe.transform(payload);
+      const result = createPipe.transform(payload, {} as any);
       expect(result.name).toBe('Gym Towel');
       expect(result.item_kind).toBe('goods');
       expect(result.uom_id).toBe(1);
@@ -160,11 +163,13 @@ describe('ItemsController', () => {
         uom_id: 1,
         income_account_id: 4000,
         expense_account_id: 5000,
+        inventory_tracked: false,
+        is_active: true,
       };
-      expect(() => createPipe.transform({ ...base, sale_rate: 10.5 })).toThrow();
-      expect(() => createPipe.transform({ ...base, purchase_rate: 5 })).toThrow();
-      expect(() => updatePipe.transform({ sale_rate: 10.5 })).toThrow();
-      expect(() => updatePipe.transform({ purchase_rate: 5 })).toThrow();
+      expect(() => createPipe.transform({ ...base, sale_rate: 10.5 }, {} as any)).toThrow();
+      expect(() => createPipe.transform({ ...base, purchase_rate: 5 }, {} as any)).toThrow();
+      expect(() => updatePipe.transform({ sale_rate: 10.5 }, {} as any)).toThrow();
+      expect(() => updatePipe.transform({ purchase_rate: 5 }, {} as any)).toThrow();
     });
 
     it('rejects create payload missing required fields', () => {
@@ -172,7 +177,7 @@ describe('ItemsController', () => {
         name: 'Gym Towel',
         item_kind: 'goods',
       };
-      expect(() => createPipe.transform(payload)).toThrow();
+      expect(() => createPipe.transform(payload, {} as any)).toThrow();
     });
 
     it('rejects create payload with invalid item_kind', () => {
@@ -181,8 +186,10 @@ describe('ItemsController', () => {
         item_kind: 'other',
         income_account_id: 4000,
         expense_account_id: 5000,
+        inventory_tracked: false,
+        is_active: true,
       };
-      expect(() => createPipe.transform(payload)).toThrow();
+      expect(() => createPipe.transform(payload, {} as any)).toThrow();
     });
 
     it('accepts a tracked goods payload', () => {
@@ -193,8 +200,9 @@ describe('ItemsController', () => {
         income_account_id: 4000,
         expense_account_id: 5000,
         inventory_tracked: true,
+        is_active: true,
       };
-      const result = createPipe.transform(payload);
+      const result = createPipe.transform(payload, {} as any);
       expect(result.inventory_tracked).toBe(true);
     });
 
@@ -203,13 +211,13 @@ describe('ItemsController', () => {
         name: 'New Name',
         income_account_id: 4100,
       };
-      const result = updatePipe.transform(payload);
+      const result = updatePipe.transform(payload, {} as any);
       expect(result.name).toBe('New Name');
       expect(result.income_account_id).toBe(4100);
     });
 
     it('accepts an update that turns tracking on', () => {
-      const result = updatePipe.transform({ inventory_tracked: true, reorder_level: '0.5' });
+      const result = updatePipe.transform({ inventory_tracked: true, reorder_level: '0.5' }, {} as any);
       expect(result.inventory_tracked).toBe(true);
       expect(result.reorder_level).toBe('0.500');
     });

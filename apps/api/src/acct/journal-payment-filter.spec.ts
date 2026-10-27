@@ -38,6 +38,8 @@ describe('ACC-076: Journal list filter by payment_id', () => {
     posted_by_user_id: 42,
     reverses_journal_id: null,
     row_version: 1,
+    created_at: new Date('2026-04-10T10:00:00Z'),
+    updated_at: null,
   };
 
   const mockReceiptJournal: JournalEntry = {
@@ -52,6 +54,8 @@ describe('ACC-076: Journal list filter by payment_id', () => {
     posted_by_user_id: 42,
     reverses_journal_id: null,
     row_version: 1,
+    created_at: new Date('2026-04-10T10:00:00Z'),
+    updated_at: null,
   };
 
   const mockCreditNoteJournal: JournalEntry = {
@@ -66,6 +70,8 @@ describe('ACC-076: Journal list filter by payment_id', () => {
     posted_by_user_id: 42,
     reverses_journal_id: null,
     row_version: 1,
+    created_at: new Date('2026-04-10T10:00:00Z'),
+    updated_at: null,
   };
 
   const mockAdjustmentJournal: JournalEntry = {
@@ -80,6 +86,8 @@ describe('ACC-076: Journal list filter by payment_id', () => {
     posted_by_user_id: 42,
     reverses_journal_id: null,
     row_version: 1,
+    created_at: new Date('2026-04-10T10:00:00Z'),
+    updated_at: null,
   };
 
   const mockRecognitionJournal: JournalEntry = {
@@ -94,6 +102,8 @@ describe('ACC-076: Journal list filter by payment_id', () => {
     posted_by_user_id: 42,
     reverses_journal_id: null,
     row_version: 1,
+    created_at: new Date('2026-04-10T10:00:00Z'),
+    updated_at: null,
   };
 
   beforeEach(() => {

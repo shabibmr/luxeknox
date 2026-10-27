@@ -136,6 +136,7 @@ describe('VendorsService', () => {
     it('handles nullable optional fields gracefully', async () => {
       const dto = {
         name: 'Minimal Vendor',
+        is_active: true,
       };
       repository.insertVendor.mockResolvedValue({
         ...VENDOR_ROW,
