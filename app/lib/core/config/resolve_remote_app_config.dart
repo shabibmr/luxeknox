@@ -14,17 +14,15 @@ import 'remote_api_base_url_store.dart';
 /// stores the result on [AppConfigBootstrap.resolved].
 Future<void> resolveRemoteAppConfig() async {
   final env = AppConfig.fromEnv();
-  // Dev and staging pin the dart-define URL. Firestore holds the production
-  // host, and a local dev run would otherwise call that API. Dev defaults to
-  // http://127.0.0.1:3000/v1. Staging also shares a prefs cache with prod.
+  // Production reads Firestore `API_BASE_URL`. Other builds read
+  // `API_BASE_URL_DEBUG` and a separate prefs key, so a shared web origin
+  // cannot reuse the production host. The dart-define URL is the fallback.
   AppConfigBootstrap.resolved = env.copyWith(
-    apiBaseUrl: env.isProduction
-        ? await _resolveApiBaseUrl(env.apiBaseUrl)
-        : ApiBaseUrlResolver.normalize(env.apiBaseUrl),
+    apiBaseUrl: await _resolveApiBaseUrl(env.apiBaseUrl, env.isProduction),
   );
 }
 
-Future<String> _resolveApiBaseUrl(String fallbackUrl) async {
+Future<String> _resolveApiBaseUrl(String fallbackUrl, bool isProduction) async {
   if (!DefaultFirebaseOptions.isConfigured) {
     return ApiBaseUrlResolver.normalize(fallbackUrl);
   }
@@ -44,8 +42,19 @@ Future<String> _resolveApiBaseUrl(String fallbackUrl) async {
     return ApiBaseUrlResolver.normalize(fallbackUrl);
   }
   return ApiBaseUrlResolver(
-    store: RemoteApiBaseUrlStore(prefs),
-    source: FirestoreAppConfigSource(),
+    // Non-production builds read `API_BASE_URL_DEBUG` (own cache key), so
+    // test/debug runs never pick up the production API URL.
+    store: RemoteApiBaseUrlStore(
+      prefs,
+      key: isProduction
+          ? RemoteApiBaseUrlStore.defaultKey
+          : RemoteApiBaseUrlStore.debugKey,
+    ),
+    source: FirestoreAppConfigSource(
+      apiBaseUrlField: isProduction
+          ? FirestoreAppConfigSource.defaultApiBaseUrlField
+          : FirestoreAppConfigSource.debugApiBaseUrlField,
+    ),
     fallbackUrl: fallbackUrl,
   ).resolve();
 }
