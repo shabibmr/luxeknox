@@ -38,6 +38,7 @@ import '../../features/auth/presentation/widgets/sign_out_tile.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/exercises/presentation/screens/exercise_library_screen.dart';
 import '../../features/foods/presentation/screens/food_library_screen.dart';
+import '../../features/inventory/presentation/screens/counter_sale_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../di/injector.dart';
 import '../../features/goals/presentation/cubit/admin_measurements_audit_cubit.dart';
@@ -662,8 +663,7 @@ StatefulShellRoute createAdminBranchRoute() {
           ),
           GoRoute(
             path: Routes.adminInventoryCounterSale,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.counterSale),
+            builder: (context, state) => const CounterSaleScreen(),
           ),
           GoRoute(
             path: Routes.adminPackages,

@@ -49,6 +49,10 @@ describe('InventoryItemsService', () => {
   };
   let stockRepository: {
     findItemIdsWithMovements: ReturnType<typeof vi.fn>;
+    findQtyOnHandByItemIds: ReturnType<typeof vi.fn>;
+  };
+  let taxCodesRepository: {
+    findRatePercentsByIds: ReturnType<typeof vi.fn>;
   };
   let paginationHelper: { normalizeParams: ReturnType<typeof vi.fn> };
   let service: InventoryItemsService;
@@ -60,6 +64,10 @@ describe('InventoryItemsService', () => {
     };
     stockRepository = {
       findItemIdsWithMovements: vi.fn().mockResolvedValue(new Set()),
+      findQtyOnHandByItemIds: vi.fn().mockResolvedValue(new Map([[10, '12.000']])),
+    };
+    taxCodesRepository = {
+      findRatePercentsByIds: vi.fn().mockResolvedValue(new Map([[1, '18.00']])),
     };
     paginationHelper = {
       normalizeParams: vi.fn().mockResolvedValue({ mode: 'offset', limit: 20, offset: 0 }),
@@ -67,11 +75,12 @@ describe('InventoryItemsService', () => {
     service = new InventoryItemsService(
       repository as unknown as InventoryItemsRepository,
       stockRepository as unknown as StockRepository,
+      taxCodesRepository as unknown as import('../acct/tax-codes.repository').TaxCodesRepository,
       paginationHelper as unknown as PaginationHelper,
     );
   });
 
-  it('lists items with uom and category names and omits stock', async () => {
+  it('lists items with tax rate, on-hand for tracked items, and omits stock object', async () => {
     const page = await service.list({ search: 'WHEY-1', category_id: '4' }, ADMIN_USER);
 
     expect(repository.findMany).toHaveBeenCalledWith(
@@ -83,6 +92,8 @@ describe('InventoryItemsService', () => {
       }),
     );
     expect(stockRepository.findItemIdsWithMovements).toHaveBeenCalledWith([10]);
+    expect(stockRepository.findQtyOnHandByItemIds).toHaveBeenCalledWith([10]);
+    expect(taxCodesRepository.findRatePercentsByIds).toHaveBeenCalledWith([1]);
     expect(page.data).toEqual([
       expect.objectContaining({
         id: 10,
@@ -91,10 +102,48 @@ describe('InventoryItemsService', () => {
         uom_decimal_places: 0,
         category_name: 'Supplements',
         has_movements: false,
+        tax_rate_percent: '18.00',
+        qty_on_hand: '12.000',
       }),
     ]);
     expect(page.data[0]).not.toHaveProperty('stock');
     expect(page.meta.total).toBe(1);
+  });
+
+  it('reports zero on hand when a tracked item has no stock row, and no on-hand for untracked', async () => {
+    const untracked = {
+      ...ROW,
+      id: 11,
+      name: 'PT Session',
+      sku: 'SVC-1',
+      item_kind: 'service' as const,
+      inventory_tracked: false,
+      tax_code_id: null,
+      inventory_account_id: null,
+      cogs_account_id: null,
+    };
+    repository.findMany.mockResolvedValue({ rows: [ROW, untracked], total: 2 });
+    stockRepository.findQtyOnHandByItemIds.mockResolvedValue(new Map());
+    taxCodesRepository.findRatePercentsByIds.mockResolvedValue(new Map([[1, '18.00']]));
+
+    const page = await service.list({}, ADMIN_USER);
+
+    expect(stockRepository.findQtyOnHandByItemIds).toHaveBeenCalledWith([10]);
+    expect(page.data).toEqual([
+      expect.objectContaining({ id: 10, tax_rate_percent: '18.00', qty_on_hand: '0.000' }),
+      expect.objectContaining({ id: 11, tax_rate_percent: null, qty_on_hand: null }),
+    ]);
+  });
+
+  it('includes tax rate and on-hand on getById', async () => {
+    const item = await service.getById(10, ADMIN_USER);
+    expect(item).toEqual(
+      expect.objectContaining({
+        id: 10,
+        tax_rate_percent: '18.00',
+        qty_on_hand: '12.000',
+      }),
+    );
   });
 
   it('lists the page after a cursor and returns next_cursor when more remain', async () => {
@@ -151,6 +200,7 @@ describe('InventoryItemsService', () => {
     service = new InventoryItemsService(
       repository as unknown as InventoryItemsRepository,
       stockRepository as unknown as StockRepository,
+      taxCodesRepository as unknown as import('../acct/tax-codes.repository').TaxCodesRepository,
       realHelper,
     );
 

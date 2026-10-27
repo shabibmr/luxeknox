@@ -362,6 +362,8 @@ import '../../features/goals/presentation/cubit/progress_photos_cubit.dart'
     as _i635;
 import '../../features/goals/presentation/cubit/progress_timeline_cubit.dart'
     as _i28;
+import '../../features/inventory/presentation/cubit/counter_sale_cubit.dart'
+    as _i734;
 import '../../features/membership/data/datasources/membership_remote_datasource.dart'
     as _i133;
 import '../../features/membership/data/repositories/membership_repository_impl.dart'
@@ -2029,6 +2031,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i676.GetAccountsUseCase>(),
         debounceDuration: gh<Duration>(),
       ),
+    );
+    gh.factory<_i734.CounterSaleCubit>(
+      () => _i734.CounterSaleCubit(gh<_i649.GetItemsUseCase>()),
     );
     gh.factory<_i779.DietHistoryCubit>(
       () => _i779.DietHistoryCubit(gh<_i1025.ListDietLogsUseCase>()),

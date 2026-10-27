@@ -90,6 +90,25 @@ export class TaxCodesRepository extends BaseRepository<
       .orderBy(asc(taxCodeComponents.tax_code_id), asc(taxCodeComponents.id));
   }
 
+  /** Total `rate_percent` for each tax code id. Missing ids are omitted. */
+  async findRatePercentsByIds(ids: number[]): Promise<Map<number, string>> {
+    if (ids.length === 0) return new Map();
+    const db = this.getDb() as any;
+    const rows = await db
+      .select({
+        id: taxCodes.id,
+        rate_percent: taxCodes.rate_percent,
+      })
+      .from(taxCodes)
+      .where(inArray(taxCodes.id, ids));
+    return new Map(
+      (rows as Array<{ id: number; rate_percent: string | number }>).map((row) => [
+        Number(row.id),
+        String(row.rate_percent),
+      ]),
+    );
+  }
+
   async findByIdWithComponents(id: number): Promise<TaxCodeWithComponents | null> {
     const taxCode = await this.findById(id);
     if (!taxCode) return null;

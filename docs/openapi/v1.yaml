@@ -13331,6 +13331,11 @@ components:
           type: integer
           format: int64
           nullable: true
+        tax_rate_percent:
+          allOf:
+            - $ref: "#/components/schemas/Money"
+          nullable: true
+          description: Total tax code rate when tax_code_id is set; otherwise null.
         income_account_id:
           $ref: "#/components/schemas/Id"
         expense_account_id:
@@ -13345,6 +13350,13 @@ components:
           nullable: true
         inventory_tracked:
           type: boolean
+        qty_on_hand:
+          allOf:
+            - $ref: "#/components/schemas/Quantity3"
+          nullable: true
+          description: >
+            On-hand quantity for a tracked item (`0.000` when no stock row).
+            Null for an untracked item.
         has_movements:
           type: boolean
         is_active:

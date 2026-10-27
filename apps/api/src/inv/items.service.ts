@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { TaxCodesRepository } from '../acct/tax-codes.repository';
 import { mapItemDto } from '../acct/items.mapper';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { NotFoundError } from '../platform/errors/app-error';
@@ -19,17 +20,52 @@ export class InventoryItemsService {
   constructor(
     private readonly repository: InventoryItemsRepository,
     private readonly stockRepository: StockRepository,
+    private readonly taxCodesRepository: TaxCodesRepository,
     private readonly paginationHelper: PaginationHelper,
   ) {}
 
-  toDto(row: InventoryItemRow, hasMovements: boolean): InventoryItemDto {
+  toDto(
+    row: InventoryItemRow,
+    hasMovements: boolean,
+    extras: { taxRatePercent: string | null; qtyOnHand: string | null },
+  ): InventoryItemDto {
     return {
       ...mapItemDto(row),
       category_name: row.category_name ?? null,
       uom_code: row.uom_code,
       uom_decimal_places: Number(row.uom_decimal_places),
       has_movements: hasMovements,
+      tax_rate_percent: extras.taxRatePercent,
+      qty_on_hand: extras.qtyOnHand,
     };
+  }
+
+  private async enrichRows(rows: InventoryItemRow[]): Promise<InventoryItemDto[]> {
+    const withMovements = await this.stockRepository.findItemIdsWithMovements(
+      rows.map((row) => row.id),
+    );
+    const trackedIds = rows.filter((row) => row.inventory_tracked).map((row) => row.id);
+    const taxIds = [
+      ...new Set(
+        rows
+          .map((row) => row.tax_code_id)
+          .filter((id): id is number => id != null),
+      ),
+    ];
+    const [qtys, rates] = await Promise.all([
+      this.stockRepository.findQtyOnHandByItemIds(trackedIds),
+      this.taxCodesRepository.findRatePercentsByIds(taxIds),
+    ]);
+
+    return rows.map((row) =>
+      this.toDto(row, withMovements.has(row.id), {
+        taxRatePercent:
+          row.tax_code_id != null ? (rates.get(row.tax_code_id) ?? null) : null,
+        qtyOnHand: row.inventory_tracked
+          ? (qtys.get(row.id) ?? '0.000')
+          : null,
+      }),
+    );
   }
 
   async list(
@@ -54,12 +90,10 @@ export class InventoryItemsService {
         cursor: pagination.cursor,
       });
 
-      const withMovements = await this.stockRepository.findItemIdsWithMovements(
-        rows.map((row) => row.id),
-      );
+      const items = await this.enrichRows(rows);
 
       return createPaginatedResponse({
-        items: rows.map((row) => this.toDto(row, withMovements.has(row.id))),
+        items,
         limit: pagination.limit,
         requestCursor,
         total,
@@ -80,12 +114,10 @@ export class InventoryItemsService {
       offset,
     });
 
-    const withMovements = await this.stockRepository.findItemIdsWithMovements(
-      rows.map((row) => row.id),
-    );
+    const items = await this.enrichRows(rows);
 
     return createPaginatedResponse({
-      items: rows.map((row) => this.toDto(row, withMovements.has(row.id))),
+      items,
       limit: pagination.limit,
       offset,
       total,
@@ -97,7 +129,7 @@ export class InventoryItemsService {
     if (!item) {
       throw new NotFoundError(`Item ${id} was not found`);
     }
-    const withMovements = await this.stockRepository.findItemIdsWithMovements([id]);
-    return this.toDto(item, withMovements.has(id));
+    const [dto] = await this.enrichRows([item]);
+    return dto!;
   }
 }

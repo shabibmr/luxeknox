@@ -29,7 +29,7 @@ export const inventoryItemFilterQuerySchema = z.object({
 
 export type InventoryItemFilterQuery = z.infer<typeof inventoryItemFilterQuerySchema>;
 
-/** Item read shape from the inventory contract. `stock` is omitted until the ledger exists. */
+/** Item read shape from the inventory contract. */
 export interface InventoryItemDto {
   id: number;
   name: string;
@@ -44,11 +44,18 @@ export interface InventoryItemDto {
   sale_rate: string | null;
   purchase_rate: string | null;
   tax_code_id: number | null;
+  /** Tax code total rate when `tax_code_id` is set; otherwise null. */
+  tax_rate_percent: string | null;
   income_account_id: number;
   expense_account_id: number;
   inventory_account_id: number | null;
   cogs_account_id: number | null;
   inventory_tracked: boolean;
+  /**
+   * On-hand quantity for a tracked item (`0.000` when no stock row).
+   * Null for an untracked item — the cashier sees no on-hand figure.
+   */
+  qty_on_hand: string | null;
   reorder_level: string | null;
   has_movements: boolean;
   is_active: boolean;

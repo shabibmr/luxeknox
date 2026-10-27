@@ -36,6 +36,8 @@ class _$InventoryItem extends InventoryItem {
   @override
   final int? taxCodeId;
   @override
+  final String? taxRatePercent;
+  @override
   final int incomeAccountId;
   @override
   final int expenseAccountId;
@@ -45,6 +47,8 @@ class _$InventoryItem extends InventoryItem {
   final int? cogsAccountId;
   @override
   final bool inventoryTracked;
+  @override
+  final String? qtyOnHand;
   @override
   final bool hasMovements;
   @override
@@ -74,11 +78,13 @@ class _$InventoryItem extends InventoryItem {
       this.purchaseRate,
       this.reorderLevel,
       this.taxCodeId,
+      this.taxRatePercent,
       required this.incomeAccountId,
       required this.expenseAccountId,
       this.inventoryAccountId,
       this.cogsAccountId,
       required this.inventoryTracked,
+      this.qtyOnHand,
       required this.hasMovements,
       required this.isActive,
       required this.rowVersion,
@@ -110,11 +116,13 @@ class _$InventoryItem extends InventoryItem {
         purchaseRate == other.purchaseRate &&
         reorderLevel == other.reorderLevel &&
         taxCodeId == other.taxCodeId &&
+        taxRatePercent == other.taxRatePercent &&
         incomeAccountId == other.incomeAccountId &&
         expenseAccountId == other.expenseAccountId &&
         inventoryAccountId == other.inventoryAccountId &&
         cogsAccountId == other.cogsAccountId &&
         inventoryTracked == other.inventoryTracked &&
+        qtyOnHand == other.qtyOnHand &&
         hasMovements == other.hasMovements &&
         isActive == other.isActive &&
         rowVersion == other.rowVersion &&
@@ -139,11 +147,13 @@ class _$InventoryItem extends InventoryItem {
     _$hash = $jc(_$hash, purchaseRate.hashCode);
     _$hash = $jc(_$hash, reorderLevel.hashCode);
     _$hash = $jc(_$hash, taxCodeId.hashCode);
+    _$hash = $jc(_$hash, taxRatePercent.hashCode);
     _$hash = $jc(_$hash, incomeAccountId.hashCode);
     _$hash = $jc(_$hash, expenseAccountId.hashCode);
     _$hash = $jc(_$hash, inventoryAccountId.hashCode);
     _$hash = $jc(_$hash, cogsAccountId.hashCode);
     _$hash = $jc(_$hash, inventoryTracked.hashCode);
+    _$hash = $jc(_$hash, qtyOnHand.hashCode);
     _$hash = $jc(_$hash, hasMovements.hashCode);
     _$hash = $jc(_$hash, isActive.hashCode);
     _$hash = $jc(_$hash, rowVersion.hashCode);
@@ -170,11 +180,13 @@ class _$InventoryItem extends InventoryItem {
           ..add('purchaseRate', purchaseRate)
           ..add('reorderLevel', reorderLevel)
           ..add('taxCodeId', taxCodeId)
+          ..add('taxRatePercent', taxRatePercent)
           ..add('incomeAccountId', incomeAccountId)
           ..add('expenseAccountId', expenseAccountId)
           ..add('inventoryAccountId', inventoryAccountId)
           ..add('cogsAccountId', cogsAccountId)
           ..add('inventoryTracked', inventoryTracked)
+          ..add('qtyOnHand', qtyOnHand)
           ..add('hasMovements', hasMovements)
           ..add('isActive', isActive)
           ..add('rowVersion', rowVersion)
@@ -245,6 +257,11 @@ class InventoryItemBuilder
   int? get taxCodeId => _$this._taxCodeId;
   set taxCodeId(int? taxCodeId) => _$this._taxCodeId = taxCodeId;
 
+  String? _taxRatePercent;
+  String? get taxRatePercent => _$this._taxRatePercent;
+  set taxRatePercent(String? taxRatePercent) =>
+      _$this._taxRatePercent = taxRatePercent;
+
   int? _incomeAccountId;
   int? get incomeAccountId => _$this._incomeAccountId;
   set incomeAccountId(int? incomeAccountId) =>
@@ -269,6 +286,10 @@ class InventoryItemBuilder
   bool? get inventoryTracked => _$this._inventoryTracked;
   set inventoryTracked(bool? inventoryTracked) =>
       _$this._inventoryTracked = inventoryTracked;
+
+  String? _qtyOnHand;
+  String? get qtyOnHand => _$this._qtyOnHand;
+  set qtyOnHand(String? qtyOnHand) => _$this._qtyOnHand = qtyOnHand;
 
   bool? _hasMovements;
   bool? get hasMovements => _$this._hasMovements;
@@ -311,11 +332,13 @@ class InventoryItemBuilder
       _purchaseRate = $v.purchaseRate;
       _reorderLevel = $v.reorderLevel;
       _taxCodeId = $v.taxCodeId;
+      _taxRatePercent = $v.taxRatePercent;
       _incomeAccountId = $v.incomeAccountId;
       _expenseAccountId = $v.expenseAccountId;
       _inventoryAccountId = $v.inventoryAccountId;
       _cogsAccountId = $v.cogsAccountId;
       _inventoryTracked = $v.inventoryTracked;
+      _qtyOnHand = $v.qtyOnHand;
       _hasMovements = $v.hasMovements;
       _isActive = $v.isActive;
       _rowVersion = $v.rowVersion;
@@ -361,6 +384,7 @@ class InventoryItemBuilder
           purchaseRate: purchaseRate,
           reorderLevel: reorderLevel,
           taxCodeId: taxCodeId,
+          taxRatePercent: taxRatePercent,
           incomeAccountId: BuiltValueNullFieldError.checkNotNull(
               incomeAccountId, r'InventoryItem', 'incomeAccountId'),
           expenseAccountId: BuiltValueNullFieldError.checkNotNull(
@@ -369,6 +393,7 @@ class InventoryItemBuilder
           cogsAccountId: cogsAccountId,
           inventoryTracked: BuiltValueNullFieldError.checkNotNull(
               inventoryTracked, r'InventoryItem', 'inventoryTracked'),
+          qtyOnHand: qtyOnHand,
           hasMovements: BuiltValueNullFieldError.checkNotNull(
               hasMovements, r'InventoryItem', 'hasMovements'),
           isActive: BuiltValueNullFieldError.checkNotNull(

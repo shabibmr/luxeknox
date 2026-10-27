@@ -26,11 +26,13 @@ part 'inventory_item.g.dart';
 /// * [purchaseRate] - DECIMAL(12,2) as a two-decimal string. Never a JSON number.
 /// * [reorderLevel] - DECIMAL(14,3) quantity as a three-decimal string. Never a JSON number.
 /// * [taxCodeId] 
+/// * [taxRatePercent] - Total tax code rate when tax_code_id is set; otherwise null.
 /// * [incomeAccountId] 
 /// * [expenseAccountId] 
 /// * [inventoryAccountId] 
 /// * [cogsAccountId] 
 /// * [inventoryTracked] 
+/// * [qtyOnHand] - On-hand quantity for a tracked item (`0.000` when no stock row). Null for an untracked item.
 /// * [hasMovements] 
 /// * [isActive] 
 /// * [rowVersion] 
@@ -84,6 +86,10 @@ abstract class InventoryItem implements Built<InventoryItem, InventoryItemBuilde
   @BuiltValueField(wireName: r'tax_code_id')
   int? get taxCodeId;
 
+  /// Total tax code rate when tax_code_id is set; otherwise null.
+  @BuiltValueField(wireName: r'tax_rate_percent')
+  String? get taxRatePercent;
+
   @BuiltValueField(wireName: r'income_account_id')
   int get incomeAccountId;
 
@@ -98,6 +104,10 @@ abstract class InventoryItem implements Built<InventoryItem, InventoryItemBuilde
 
   @BuiltValueField(wireName: r'inventory_tracked')
   bool get inventoryTracked;
+
+  /// On-hand quantity for a tracked item (`0.000` when no stock row). Null for an untracked item.
+  @BuiltValueField(wireName: r'qty_on_hand')
+  String? get qtyOnHand;
 
   @BuiltValueField(wireName: r'has_movements')
   bool get hasMovements;
@@ -224,6 +234,13 @@ class _$InventoryItemSerializer implements PrimitiveSerializer<InventoryItem> {
         specifiedType: const FullType(int),
       );
     }
+    if (object.taxRatePercent != null) {
+      yield r'tax_rate_percent';
+      yield serializers.serialize(
+        object.taxRatePercent,
+        specifiedType: const FullType(String),
+      );
+    }
     yield r'income_account_id';
     yield serializers.serialize(
       object.incomeAccountId,
@@ -253,6 +270,13 @@ class _$InventoryItemSerializer implements PrimitiveSerializer<InventoryItem> {
       object.inventoryTracked,
       specifiedType: const FullType(bool),
     );
+    if (object.qtyOnHand != null) {
+      yield r'qty_on_hand';
+      yield serializers.serialize(
+        object.qtyOnHand,
+        specifiedType: const FullType(String),
+      );
+    }
     yield r'has_movements';
     yield serializers.serialize(
       object.hasMovements,
@@ -409,6 +433,14 @@ class _$InventoryItemSerializer implements PrimitiveSerializer<InventoryItem> {
           if (valueDes == null) continue;
           result.taxCodeId = valueDes;
           break;
+        case r'tax_rate_percent':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.taxRatePercent = valueDes;
+          break;
         case r'income_account_id':
           final valueDes = serializers.deserialize(
             value,
@@ -445,6 +477,14 @@ class _$InventoryItemSerializer implements PrimitiveSerializer<InventoryItem> {
             specifiedType: const FullType(bool),
           ) as bool;
           result.inventoryTracked = valueDes;
+          break;
+        case r'qty_on_hand':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.qtyOnHand = valueDes;
           break;
         case r'has_movements':
           final valueDes = serializers.deserialize(

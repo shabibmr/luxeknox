@@ -93,4 +93,23 @@ export class StockRepository extends BaseRepository<typeof itemStock, ItemStock,
       .where(inArray(stockMovements.item_id, itemIds));
     return new Set((rows as Array<{ item_id: number }>).map((row) => Number(row.item_id)));
   }
+
+  /** Current `qty_on_hand` for the given items. Missing rows are omitted from the map. */
+  async findQtyOnHandByItemIds(itemIds: number[]): Promise<Map<number, string>> {
+    if (itemIds.length === 0) return new Map();
+    const db = this.getDb() as any;
+    const rows = await db
+      .select({
+        item_id: itemStock.item_id,
+        qty_on_hand: itemStock.qty_on_hand,
+      })
+      .from(itemStock)
+      .where(inArray(itemStock.item_id, itemIds));
+    return new Map(
+      (rows as Array<{ item_id: number; qty_on_hand: string | number }>).map((row) => [
+        Number(row.item_id),
+        String(row.qty_on_hand),
+      ]),
+    );
+  }
 }
