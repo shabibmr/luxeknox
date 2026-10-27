@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
@@ -71,9 +73,21 @@ class VendorsState extends Equatable {
 
 @injectable
 class VendorsCubit extends Cubit<VendorsState> {
-  VendorsCubit(this._getVendors) : super(const VendorsState());
+  VendorsCubit(
+    this._getVendors, {
+    this.debounceDuration = const Duration(milliseconds: 300),
+  }) : super(const VendorsState());
 
   final GetVendorsUseCase _getVendors;
+  final Duration debounceDuration;
+  Timer? _debounceTimer;
+  int _loadEpoch = 0;
+
+  @override
+  Future<void> close() {
+    _debounceTimer?.cancel();
+    return super.close();
+  }
 
   Future<void> load({
     bool refresh = true,
@@ -82,6 +96,8 @@ class VendorsCubit extends Cubit<VendorsState> {
     bool clearSearch = false,
     bool clearActiveFilter = false,
   }) async {
+    _debounceTimer?.cancel();
+    final epoch = ++_loadEpoch;
     final nextSearch = clearSearch ? null : (search ?? state.search);
     final nextIsActive =
         clearActiveFilter ? null : (isActive ?? state.isActive);
@@ -109,6 +125,8 @@ class VendorsCubit extends Cubit<VendorsState> {
         isActive: nextIsActive,
       ),
     );
+
+    if (isClosed || epoch != _loadEpoch) return;
 
     result.fold(
       (failure) => emit(
@@ -138,13 +156,35 @@ class VendorsCubit extends Cubit<VendorsState> {
     await load(refresh: false);
   }
 
-  Future<void> searchVendors(String? query) {
-    return load(
-      refresh: true,
-      search: query,
-      clearSearch: query == null || query.isEmpty,
+  void searchVendors(String? query) {
+    _debounceTimer?.cancel();
+    final trimmed = query?.trim();
+    final isClearing = trimmed == null || trimmed.isEmpty;
+
+    emit(
+      state.copyWith(
+        search: isClearing ? null : trimmed,
+      ),
     );
+
+    if (debounceDuration == Duration.zero) {
+      load(
+        refresh: true,
+        search: isClearing ? null : trimmed,
+        clearSearch: isClearing,
+      );
+    } else {
+      _debounceTimer = Timer(debounceDuration, () {
+        load(
+          refresh: true,
+          search: isClearing ? null : trimmed,
+          clearSearch: isClearing,
+        );
+      });
+    }
   }
+
+  void setSearch(String? query) => searchVendors(query);
 
   Future<void> filterByActive(bool? isActive) {
     return load(
@@ -155,6 +195,7 @@ class VendorsCubit extends Cubit<VendorsState> {
   }
 
   Future<void> clearFilters() {
+    _debounceTimer?.cancel();
     return load(
       refresh: true,
       clearSearch: true,

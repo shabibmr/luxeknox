@@ -133,30 +133,31 @@ class _ItemsListViewState extends State<_ItemsListView> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Column(
         children: [
-          TextField(
-            key: const Key('item_list_search_field'),
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: AccountingStrings.searchItems,
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
-                        cubit.searchItems('');
-                        setState(() {});
-                      },
-                    )
-                  : null,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onChanged: (query) {
-              setState(() {});
-              cubit.searchItems(query);
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _searchController,
+            builder: (context, searchVal, _) {
+              return TextField(
+                key: const Key('item_list_search_field'),
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: AccountingStrings.searchItems,
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: searchVal.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            cubit.searchItems('');
+                          },
+                        )
+                      : null,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onChanged: cubit.searchItems,
+              );
             },
           ),
           const SizedBox(height: 8),

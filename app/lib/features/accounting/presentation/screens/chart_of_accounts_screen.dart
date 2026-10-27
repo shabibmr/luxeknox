@@ -110,25 +110,31 @@ class _ChartOfAccountsBodyState extends State<_ChartOfAccountsBody> {
               // Search bar
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: TextField(
-                  key: const Key('search_accounts_field'),
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: AccountingStrings.searchAccounts,
-                    prefixIcon: const Icon(Icons.search),
-                    isDense: true,
-                    border: const OutlineInputBorder(),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 20),
-                            onPressed: () {
-                              _searchController.clear();
-                              context.read<AccountsCubit>().setSearch(null);
-                            },
-                          )
-                        : null,
-                  ),
-                  onChanged: _onSearchChanged,
+                child: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _searchController,
+                  builder: (context, value, _) {
+                    return TextField(
+                      key: const Key('search_accounts_field'),
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: AccountingStrings.searchAccounts,
+                        prefixIcon: const Icon(Icons.search),
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                        suffixIcon: value.text.isNotEmpty
+                            ? IconButton(
+                                key: const Key('clear_search_button'),
+                                icon: const Icon(Icons.clear, size: 20),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  context.read<AccountsCubit>().setSearch(null);
+                                },
+                              )
+                            : null,
+                      ),
+                      onChanged: _onSearchChanged,
+                    );
+                  },
                 ),
               ),
               // Account Type Filter Chips

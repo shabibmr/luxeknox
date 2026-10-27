@@ -148,6 +148,19 @@ void main() {
       );
     });
 
+    test('non-numeric account ID is rejected by validation and does not throw on buildDraft', () async {
+      fillValid();
+      cubit.incomeAccountChanged(
+        const Account(id: 'invalid-non-numeric', name: 'Bad Account', type: 'income'),
+      );
+      expect(await cubit.submit(), isFalse);
+      expect(cubit.state.errors['incomeAccount'], AccountingStrings.itemAccountRequired);
+
+      // Verify buildDraft handles it safely without throwing FormatException
+      expect(() => cubit.buildDraft(), returnsNormally);
+      expect(cubit.buildDraft().incomeAccountId, 0);
+    });
+
     test('tracking defaults to the 1400 and 5050 accounts', () async {
       await cubit.trackingChanged(true);
       expect(cubit.state.inventoryAccount?.id, '1400');

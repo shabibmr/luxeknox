@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -12,7 +14,6 @@ import '../../../../core/widgets/app_status_chip.dart';
 import '../../domain/entities/vendor.dart';
 import '../accounting_strings.dart';
 import '../cubit/vendors_cubit.dart';
-import 'vendor_form_screen.dart';
 
 class VendorsListScreen extends StatelessWidget {
   const VendorsListScreen({
@@ -73,14 +74,10 @@ class _VendorsListViewState extends State<_VendorsListView> {
   }
 
   void _openVendorForm(BuildContext context, [Vendor? vendor]) async {
-    final result = await Navigator.of(context).push<Vendor?>(
-      MaterialPageRoute(
-        builder: (_) => VendorFormScreen(
-          vendorId: vendor?.id,
-          initialVendor: vendor,
-        ),
-      ),
-    );
+    final route = vendor != null
+        ? Routes.adminAccountingVendorEditById(vendor.id)
+        : Routes.adminAccountingVendorsCreate;
+    final result = await context.push<dynamic>(route, extra: vendor);
 
     if (result != null && context.mounted) {
       context.read<VendorsCubit>().load();

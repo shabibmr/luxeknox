@@ -16,6 +16,7 @@ import '../accounting_strings.dart';
 import '../cubit/purchase_bill_form_cubit.dart';
 import '../widgets/account_picker_sheet.dart';
 import '../widgets/item_search_field.dart';
+import '../widgets/vendor_picker_sheet.dart';
 
 class PurchaseBillFormScreen extends StatelessWidget {
   const PurchaseBillFormScreen({
@@ -107,64 +108,23 @@ class _PurchaseBillFormView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Vendor Picker
-                if (state.availableVendors.isNotEmpty)
-                  DropdownButtonFormField<String>(
-                    key: const Key('vendor_picker_field'),
-                    initialValue: state.vendorId,
-                    decoration: const InputDecoration(
-                      labelText: AccountingStrings.vendorLabel,
-                      prefixIcon: Icon(Icons.business),
-                      border: OutlineInputBorder(),
-                    ),
-                    hint: const Text('Select Vendor'),
-                    items: [
-                      if (state.vendorId != null &&
-                          !state.availableVendors
-                              .any((v) => v.id == state.vendorId))
-                        DropdownMenuItem<String>(
-                          value: state.vendorId,
-                          child: Text(state.vendorName ?? state.vendorId!),
+                VendorPickerField(
+                  fieldKey: const Key('vendor_picker_field'),
+                  value: (state.vendorId == null || state.vendorId!.isEmpty)
+                      ? null
+                      : Vendor(
+                          id: state.vendorId!,
+                          name: state.vendorName ?? state.vendorId!,
                         ),
-                      for (final vendor in state.availableVendors)
-                        DropdownMenuItem<String>(
-                          value: vendor.id,
-                          child: Text(vendor.name),
-                        ),
-                    ],
-                    onChanged: (val) {
-                      if (val != null) {
-                        final matched = state.availableVendors
-                            .cast<Vendor?>()
-                            .firstWhere(
-                              (v) => v?.id == val,
-                              orElse: () => null,
-                            );
-                        context.read<PurchaseBillFormCubit>().setVendor(
-                              val,
-                              matched?.name,
-                            );
-                      }
-                    },
-                  )
-                else
-                  TextFormField(
-                    key: const Key('vendor_picker_field'),
-                    initialValue: state.vendorId,
-                    decoration: const InputDecoration(
-                      labelText: AccountingStrings.vendorLabel,
-                      prefixIcon: Icon(Icons.business),
-                      border: OutlineInputBorder(),
-                      hintText: 'Enter Vendor ID or Name',
-                    ),
-                    onChanged: (val) {
-                      final trimmed = val.trim();
-                      context.read<PurchaseBillFormCubit>().setVendor(
-                            trimmed,
-                            trimmed,
-                          );
-                    },
-                  ),
+                  onChanged: (vendor) {
+                    final cubit = context.read<PurchaseBillFormCubit>();
+                    if (vendor == null) {
+                      cubit.setVendor('', null);
+                    } else {
+                      cubit.setVendor(vendor.id, vendor.name);
+                    }
+                  },
+                ),
                 const SizedBox(height: 16),
 
                 TextFormField(

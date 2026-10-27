@@ -134,6 +134,7 @@ class AccountFormCubit extends Cubit<AccountFormState> {
     String? parentId,
     bool? isActive,
     bool? isBank,
+    bool clearParentId = false,
   }) async {
     emit(state.copyWith(isSubmitting: true, failure: null));
 
@@ -144,6 +145,7 @@ class AccountFormCubit extends Cubit<AccountFormState> {
         parentId: parentId,
         isActive: isActive,
         isBank: isBank,
+        clearParentId: clearParentId,
       ),
     );
 

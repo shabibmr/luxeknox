@@ -242,6 +242,30 @@ void main() {
     await tester.enterText(searchField, 'Operating');
     await tester.pump();
     verify(() => mockAccountsCubit.setSearch('Operating')).called(1);
+
+    // Clear button should be visible when search is not empty
+    final clearButton = find.byKey(const Key('clear_search_button'));
+    expect(clearButton, findsOneWidget);
+
+    // Tapping clear button clears text and triggers cubit.setSearch(null)
+    await tester.tap(clearButton);
+    await tester.pump();
+    verify(() => mockAccountsCubit.setSearch(null)).called(1);
+    expect(tester.widget<TextField>(searchField).controller?.text, isEmpty);
+  });
+
+  testWidgets('clearing search text triggers cubit.setSearch(null)', (tester) async {
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.pumpAndSettle();
+
+    final searchField = find.byKey(const Key('search_accounts_field'));
+    await tester.enterText(searchField, 'Operating');
+    await tester.pump();
+    verify(() => mockAccountsCubit.setSearch('Operating')).called(1);
+
+    await tester.enterText(searchField, '');
+    await tester.pump();
+    verify(() => mockAccountsCubit.setSearch(null)).called(1);
   });
 
   testWidgets(

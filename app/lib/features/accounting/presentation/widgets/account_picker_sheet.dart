@@ -21,6 +21,7 @@ Future<Account?> showAccountPickerSheet(
   BuildContext context, {
   bool activeOnly = true,
   String? accountType,
+  String? excludeAccountId,
   AccountsCubit? cubit,
 }) {
   return showModalBottomSheet<Account>(
@@ -30,6 +31,7 @@ Future<Account?> showAccountPickerSheet(
     builder: (context) => AccountPickerSheet(
       activeOnly: activeOnly,
       accountType: accountType,
+      excludeAccountId: excludeAccountId,
       cubit: cubit,
     ),
   );
@@ -41,11 +43,13 @@ class AccountPickerSheet extends StatelessWidget {
     super.key,
     this.activeOnly = true,
     this.accountType,
+    this.excludeAccountId,
     this.cubit,
   });
 
   final bool activeOnly;
   final String? accountType;
+  final String? excludeAccountId;
   final AccountsCubit? cubit;
 
   @override
@@ -62,6 +66,7 @@ class AccountPickerSheet extends StatelessWidget {
         child: _AccountPickerView(
           activeOnly: activeOnly,
           accountType: accountType,
+          excludeAccountId: excludeAccountId,
         ),
       );
     }
@@ -74,6 +79,7 @@ class AccountPickerSheet extends StatelessWidget {
       child: _AccountPickerView(
         activeOnly: activeOnly,
         accountType: accountType,
+        excludeAccountId: excludeAccountId,
       ),
     );
   }
@@ -83,10 +89,12 @@ class _AccountPickerView extends StatefulWidget {
   const _AccountPickerView({
     required this.activeOnly,
     this.accountType,
+    this.excludeAccountId,
   });
 
   final bool activeOnly;
   final String? accountType;
+  final String? excludeAccountId;
 
   @override
   State<_AccountPickerView> createState() => _AccountPickerViewState();
@@ -118,10 +126,14 @@ class _AccountPickerViewState extends State<_AccountPickerView> {
   }
 
   List<Account> _visibleAccounts(List<Account> accounts) {
-    if (widget.activeOnly) {
-      return accounts.where((a) => a.isActive).toList();
+    var result = accounts;
+    if (widget.excludeAccountId != null) {
+      result = result.where((a) => a.id != widget.excludeAccountId).toList();
     }
-    return accounts;
+    if (widget.activeOnly) {
+      return result.where((a) => a.isActive).toList();
+    }
+    return result;
   }
 
   static Color _typeColor(String type) {
@@ -171,68 +183,59 @@ class _AccountPickerViewState extends State<_AccountPickerView> {
           itemBuilder: (context, account) {
             final isSelectable = account.isActive;
 
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
+            return ListTile(
+              title: Text(
+                account.name,
+                overflow: TextOverflow.ellipsis,
+                style: isSelectable
+                    ? null
+                    : TextStyle(
+                        color: Theme.of(context).disabledColor,
+                      ),
+              ),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    AppStatusChip(
+                      label: _formatType(account.type),
+                      color: _typeColor(account.type),
+                    ),
+                    if (account.isBank)
+                      const AppStatusChip(
+                        icon: Icons.account_balance,
+                        label: 'Bank',
+                        color: Colors.teal,
+                      ),
+                    if (account.isControl)
+                      const AppStatusChip(
+                        icon: Icons.lock_outline,
+                        label: 'Control',
+                        color: Colors.deepPurple,
+                      ),
+                    AppStatusChip(
+                      label: account.isActive
+                          ? AccountingStrings.activeBadge
+                          : AccountingStrings.inactiveBadge,
+                      color: account.isActive ? Colors.green : Colors.grey,
+                    ),
+                  ],
+                ),
+              ),
               onTap: isSelectable
-                  ? null
+                  ? () => Navigator.of(context).pop(account)
                   : () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content:
-                              Text(AccountingStrings.cannotPickDeactivated),
+                          content: Text(
+                            AccountingStrings.cannotPickDeactivated,
+                          ),
                         ),
                       );
                     },
-              child: ListTile(
-                enabled: isSelectable,
-                title: Text(
-                  account.name,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      AppStatusChip(
-                        label: _formatType(account.type),
-                        color: _typeColor(account.type),
-                      ),
-                      if (account.isBank)
-                        const AppStatusChip(
-                          icon: Icons.account_balance,
-                          label: 'Bank',
-                          color: Colors.teal,
-                        ),
-                      if (account.isControl)
-                        const AppStatusChip(
-                          icon: Icons.lock_outline,
-                          label: 'Control',
-                          color: Colors.deepPurple,
-                        ),
-                      AppStatusChip(
-                        label: account.isActive
-                            ? AccountingStrings.activeBadge
-                            : AccountingStrings.inactiveBadge,
-                        color: account.isActive ? Colors.green : Colors.grey,
-                      ),
-                    ],
-                  ),
-                ),
-                onTap: isSelectable
-                    ? () => Navigator.of(context).pop(account)
-                    : () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              AccountingStrings.cannotPickDeactivated,
-                            ),
-                          ),
-                        );
-                      },
-              ),
             );
           },
         );
@@ -249,6 +252,7 @@ class AccountPickerField extends StatelessWidget {
     this.onChanged,
     this.activeOnly = true,
     this.accountType,
+    this.excludeAccountId,
     this.labelText = AccountingStrings.selectAccount,
     this.hintText = AccountingStrings.selectAccount,
     this.errorText,
@@ -262,6 +266,7 @@ class AccountPickerField extends StatelessWidget {
   final ValueChanged<Account?>? onChanged;
   final bool activeOnly;
   final String? accountType;
+  final String? excludeAccountId;
   final String labelText;
   final String hintText;
   final String? errorText;
@@ -285,6 +290,7 @@ class AccountPickerField extends StatelessWidget {
         ctx,
         activeOnly: activeOnly,
         accountType: accountType,
+        excludeAccountId: excludeAccountId,
         cubit: cubit,
       ),
       onChanged: onChanged ?? (_) {},

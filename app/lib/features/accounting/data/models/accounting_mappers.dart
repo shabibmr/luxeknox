@@ -22,6 +22,7 @@ extension AccountModelMapper on api.Account {
       id: id.toString(),
       name: name,
       type: accountType.name,
+      parentId: parentId?.toString(),
       isControl: isControl,
       isBank: isBank,
       isActive: isActive,
@@ -57,11 +58,13 @@ api.AccountUpdate toAccountUpdate({
   String? parentId,
   bool? isActive,
   bool? isBank,
+  bool clearParentId = false,
 }) {
   return api.AccountUpdate(
     (b) => b
       ..name = name
       ..parentId = parentId == null ? null : int.tryParse(parentId)
+      ..clearParentId = clearParentId
       ..isActive = isActive
       ..isBank = isBank,
   );

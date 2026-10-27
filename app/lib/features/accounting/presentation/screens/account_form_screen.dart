@@ -8,8 +8,10 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/account.dart';
+import '../../domain/usecases/get_account_usecase.dart';
 import '../accounting_strings.dart';
 import '../cubit/account_form_cubit.dart';
+import '../widgets/account_picker_sheet.dart';
 
 class AccountFormScreen extends StatelessWidget {
   const AccountFormScreen({
@@ -90,9 +92,10 @@ class _AccountFormViewState extends State<_AccountFormView> {
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _nameController;
-  late final TextEditingController _parentIdController;
   late final TextEditingController _controlRoleController;
 
+  String? _parentId;
+  Account? _parentAccount;
   String? _accountType;
   bool _isBank = false;
   bool _isControl = false;
@@ -115,7 +118,6 @@ class _AccountFormViewState extends State<_AccountFormView> {
   void initState() {
     super.initState();
     _nameController = TextEditingController();
-    _parentIdController = TextEditingController();
     _controlRoleController = TextEditingController();
 
     if (widget.initialAccount != null) {
@@ -130,14 +132,42 @@ class _AccountFormViewState extends State<_AccountFormView> {
     _isBank = account.isBank;
     _isControl = account.isControl;
     _isActive = account.isActive;
+    _parentId = account.parentId;
     _controlRoleController.text = account.description ?? '';
     _initializedFromAccount = true;
+
+    if (account.parentId != null) {
+      _parentAccount = Account(
+        id: account.parentId!,
+        name: 'Account #${account.parentId}',
+        type: '',
+        isBank: false,
+        isControl: false,
+        isActive: true,
+      );
+      _loadParentAccount(account.parentId!);
+    }
+  }
+
+  Future<void> _loadParentAccount(String parentId) async {
+    if (!getIt.isRegistered<GetAccountUseCase>()) return;
+    final useCase = getIt<GetAccountUseCase>();
+    final result = await useCase(GetAccountParams(id: parentId));
+    result.fold(
+      (_) {},
+      (acc) {
+        if (mounted && _parentId == parentId) {
+          setState(() {
+            _parentAccount = acc;
+          });
+        }
+      },
+    );
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _parentIdController.dispose();
     _controlRoleController.dispose();
     super.dispose();
   }
@@ -184,8 +214,7 @@ class _AccountFormViewState extends State<_AccountFormView> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final cubit = context.read<AccountFormCubit>();
-    final parentIdText = _parentIdController.text.trim();
-    final parentId = parentIdText.isEmpty ? null : parentIdText;
+    final parentId = _parentId;
 
     bool success;
     if (widget.isEditing) {
@@ -196,6 +225,7 @@ class _AccountFormViewState extends State<_AccountFormView> {
         id: id,
         name: _nameController.text.trim(),
         parentId: parentId,
+        clearParentId: parentId == null,
         isActive: _isActive,
         isBank: _isBank,
       );
@@ -355,11 +385,19 @@ class _AccountFormViewState extends State<_AccountFormView> {
                   },
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _parentIdController,
-                  decoration: const InputDecoration(
-                    labelText: AccountingStrings.parentAccountLabel,
-                  ),
+                AccountPickerField(
+                  fieldKey: const Key('account_form_parent_id_field'),
+                  value: _parentAccount,
+                  labelText: AccountingStrings.parentAccountLabel,
+                  hintText: AccountingStrings.selectAccount,
+                  excludeAccountId: widget.accountId ?? _currentAccount?.id,
+                  allowClear: true,
+                  onChanged: (account) {
+                    setState(() {
+                      _parentAccount = account;
+                      _parentId = account?.id;
+                    });
+                  },
                 ),
                 const SizedBox(height: 16),
                 SwitchListTile(

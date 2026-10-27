@@ -356,15 +356,23 @@ class ItemFormCubit extends Cubit<ItemFormState> {
     if (state.uom == null) e['uom'] = AccountingStrings.itemUomRequired;
     if (state.incomeAccount == null) {
       e['incomeAccount'] = AccountingStrings.itemAccountRequired;
+    } else if (int.tryParse(state.incomeAccount!.id) == null) {
+      e['incomeAccount'] = AccountingStrings.itemAccountRequired;
     }
     if (state.expenseAccount == null) {
+      e['expenseAccount'] = AccountingStrings.itemAccountRequired;
+    } else if (int.tryParse(state.expenseAccount!.id) == null) {
       e['expenseAccount'] = AccountingStrings.itemAccountRequired;
     }
     if (state.inventoryTracked) {
       if (state.inventoryAccount == null) {
         e['inventoryAccount'] = AccountingStrings.itemAccountRequired;
+      } else if (int.tryParse(state.inventoryAccount!.id) == null) {
+        e['inventoryAccount'] = AccountingStrings.itemAccountRequired;
       }
       if (state.cogsAccount == null) {
+        e['cogsAccount'] = AccountingStrings.itemAccountRequired;
+      } else if (int.tryParse(state.cogsAccount!.id) == null) {
         e['cogsAccount'] = AccountingStrings.itemAccountRequired;
       }
     }
@@ -379,17 +387,17 @@ class ItemFormCubit extends Cubit<ItemFormState> {
       sku: state.sku,
       hsnSac: state.hsnSac,
       categoryId: state.categoryId,
-      uomId: state.uom!.id,
+      uomId: state.uom?.id ?? 0,
       saleRate: state.saleRate,
       purchaseRate: state.purchaseRate,
       taxCodeId: state.taxCodeId,
-      incomeAccountId: int.parse(state.incomeAccount!.id),
-      expenseAccountId: int.parse(state.expenseAccount!.id),
+      incomeAccountId: int.tryParse(state.incomeAccount?.id ?? '') ?? 0,
+      expenseAccountId: int.tryParse(state.expenseAccount?.id ?? '') ?? 0,
       inventoryTracked: tracked,
       inventoryAccountId: tracked
-          ? int.tryParse(state.inventoryAccount!.id)
+          ? int.tryParse(state.inventoryAccount?.id ?? '')
           : null,
-      cogsAccountId: tracked ? int.tryParse(state.cogsAccount!.id) : null,
+      cogsAccountId: tracked ? int.tryParse(state.cogsAccount?.id ?? '') : null,
       reorderLevel: tracked ? state.reorderLevel : null,
       isActive: state.isActive,
     );
