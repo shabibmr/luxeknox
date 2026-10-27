@@ -35,7 +35,7 @@ void main() {
 
   setUp(() {
     mockGetAccounts = MockGetAccountsUseCase();
-    cubit = AccountsCubit(mockGetAccounts);
+    cubit = AccountsCubit(mockGetAccounts, debounceDuration: Duration.zero);
   });
 
   tearDown(() {
@@ -168,6 +168,39 @@ void main() {
   );
 
   blocTest<AccountsCubit, AccountsState>(
+    'setSearch with null clears search query and triggers load with null search',
+    seed: () => const AccountsState(
+      status: LoadStatus.success,
+      search: 'cash',
+      accounts: [tAccount],
+    ),
+    build: () {
+      when(() => mockGetAccounts(any())).thenAnswer((_) async => const Right(tPage));
+      return cubit;
+    },
+    act: (cubit) => cubit.setSearch(null),
+    expect: () => [
+      const AccountsState(
+        status: LoadStatus.loading,
+        search: null,
+        accounts: [tAccount],
+      ),
+      const AccountsState(
+        status: LoadStatus.success,
+        search: null,
+        accounts: [tAccount],
+      ),
+    ],
+    verify: (_) {
+      verify(
+        () => mockGetAccounts(
+          const GetAccountsParams(search: null, limit: 100),
+        ),
+      ).called(1);
+    },
+  );
+
+  blocTest<AccountsCubit, AccountsState>(
     'clearFilters clears type, active, and search',
     seed: () => const AccountsState(
       status: LoadStatus.success,
@@ -185,13 +218,13 @@ void main() {
         status: LoadStatus.loading,
         accountType: null,
         isActive: null,
-        search: '',
+        search: null,
       ),
       const AccountsState(
         status: LoadStatus.success,
         accountType: null,
         isActive: null,
-        search: '',
+        search: null,
         accounts: [tAccount],
       ),
     ],

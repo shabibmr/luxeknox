@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
@@ -23,9 +25,16 @@ abstract class AccountsState with _$AccountsState {
 
 @injectable
 class AccountsCubit extends Cubit<AccountsState> {
-  AccountsCubit(this._getAccounts) : super(const AccountsState());
+  AccountsCubit(
+    this._getAccounts, {
+    this.debounceDuration = const Duration(milliseconds: 300),
+  }) : super(const AccountsState());
 
   final GetAccountsUseCase _getAccounts;
+  final Duration debounceDuration;
+
+  Timer? _debounceTimer;
+  int _loadEpoch = 0;
 
   Future<void> load({
     String? accountType,
@@ -33,10 +42,14 @@ class AccountsCubit extends Cubit<AccountsState> {
     String? search,
     bool clearType = false,
     bool clearActive = false,
+    bool clearSearch = false,
   }) async {
+    _debounceTimer?.cancel();
+    final epoch = ++_loadEpoch;
+
     final nextType = clearType ? null : (accountType ?? state.accountType);
     final nextActive = clearActive ? null : (isActive ?? state.isActive);
-    final nextSearch = search ?? state.search;
+    final nextSearch = clearSearch ? null : (search ?? state.search);
 
     emit(
       state.copyWith(
@@ -56,6 +69,8 @@ class AccountsCubit extends Cubit<AccountsState> {
         limit: 100,
       ),
     );
+
+    if (isClosed || epoch != _loadEpoch) return;
 
     result.fold(
       (failure) => emit(
@@ -82,11 +97,28 @@ class AccountsCubit extends Cubit<AccountsState> {
     return load(isActive: isActive, clearActive: isActive == null);
   }
 
-  Future<void> setSearch(String? search) {
-    return load(search: search);
+  void setSearch(String? search) {
+    _debounceTimer?.cancel();
+    final next =
+        (search == null || search.trim().isEmpty) ? null : search.trim();
+
+    if (debounceDuration == Duration.zero) {
+      load(search: next, clearSearch: next == null);
+    } else {
+      emit(state.copyWith(search: next));
+      _debounceTimer = Timer(debounceDuration, () {
+        load(search: next, clearSearch: next == null);
+      });
+    }
   }
 
   Future<void> clearFilters() {
-    return load(clearType: true, clearActive: true, search: '');
+    return load(clearType: true, clearActive: true, clearSearch: true);
+  }
+
+  @override
+  Future<void> close() {
+    _debounceTimer?.cancel();
+    return super.close();
   }
 }

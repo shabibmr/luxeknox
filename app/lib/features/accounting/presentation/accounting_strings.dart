@@ -167,6 +167,7 @@ class AccountingStrings {
   static const String paymentDateLabel = 'Payment Date';
   static const String debitNoteDateLabel = 'Debit Note Date';
   static const String vendorLabel = 'Vendor';
+  static const String selectVendor = 'Select Vendor';
   static const String amountLabel = 'Amount';
   static const String totalAmountLabel = 'Total Amount';
   static const String statusLabel = 'Status';
@@ -209,6 +210,8 @@ class AccountingStrings {
   static const String selectAccount = 'Select Account';
   static const String cannotPickDeactivated =
       'Deactivated accounts cannot be picked on a new document.';
+  static const String cannotPickInactiveVendor =
+      'Inactive vendors cannot be selected on a new document.';
   static const String deactivateAccount = 'Deactivate Account';
   static const String deactivateAccountConfirm =
       'Are you sure you want to deactivate this account? Deactivated accounts stay visible on reports and lists, but cannot be picked on new documents.';

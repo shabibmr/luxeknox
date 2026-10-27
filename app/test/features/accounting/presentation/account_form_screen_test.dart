@@ -11,6 +11,7 @@ import 'package:luxeknox/features/accounting/domain/entities/account.dart';
 import 'package:luxeknox/features/accounting/presentation/accounting_strings.dart';
 import 'package:luxeknox/features/accounting/presentation/cubit/account_form_cubit.dart';
 import 'package:luxeknox/features/accounting/presentation/screens/account_form_screen.dart';
+import 'package:luxeknox/features/accounting/presentation/widgets/account_picker_sheet.dart';
 import 'package:luxeknox/session/domain/entities/capabilities.dart';
 import 'package:luxeknox/session/domain/entities/principal.dart';
 import 'package:luxeknox/session/domain/entities/user_type.dart';
@@ -195,13 +196,8 @@ void main() {
       expect(find.widgetWithText(TextFormField, AccountingStrings.nameLabel),
           findsOneWidget);
       expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
-      expect(
-        find.widgetWithText(
-          TextFormField,
-          AccountingStrings.parentAccountLabel,
-        ),
-        findsOneWidget,
-      );
+      expect(find.byType(AccountPickerField), findsOneWidget);
+      expect(find.text(AccountingStrings.parentAccountLabel), findsOneWidget);
       expect(
         find.widgetWithText(SwitchListTile, AccountingStrings.isBankLabel),
         findsOneWidget,
@@ -416,6 +412,43 @@ void main() {
         find.text(AccountingStrings.accountSavedSuccess),
         findsOneWidget,
       );
+    });
+
+    testWidgets('editing an account with parentId preserves parentId on save',
+        (tester) async {
+      const tAccountWithParent = Account(
+        id: 'acc-child',
+        name: 'Petty Cash',
+        type: 'asset',
+        parentId: 'acc-parent-99',
+        isActive: true,
+        isBank: false,
+        isControl: false,
+      );
+
+      await tester.pumpWidget(
+        wrap(
+          AccountFormScreen(
+            account: tAccountWithParent,
+            cubit: mockAccountFormCubit,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Submit via AppBar save button
+      await tester.tap(find.widgetWithText(TextButton, AccountingStrings.save));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => mockAccountFormCubit.update(
+          id: 'acc-child',
+          name: 'Petty Cash',
+          parentId: 'acc-parent-99',
+          isActive: true,
+          isBank: false,
+        ),
+      ).called(1);
     });
 
     testWidgets('toggling isActive to false prompts confirmation dialog',

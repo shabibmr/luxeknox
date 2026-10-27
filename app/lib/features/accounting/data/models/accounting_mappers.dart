@@ -22,6 +22,7 @@ extension AccountModelMapper on api.Account {
       id: id.toString(),
       name: name,
       type: accountType.name,
+      parentId: parentId?.toString(),
       isControl: isControl,
       isBank: isBank,
       isActive: isActive,

@@ -5,6 +5,7 @@ class Account extends Equatable {
     required this.id,
     required this.name,
     required this.type,
+    this.parentId,
     this.isControl = false,
     this.isBank = false,
     this.isActive = true,
@@ -15,6 +16,7 @@ class Account extends Equatable {
   final String id;
   final String name;
   final String type;
+  final String? parentId;
   final bool isControl;
   final bool isBank;
   final bool isActive;
@@ -26,6 +28,7 @@ class Account extends Equatable {
     id,
     name,
     type,
+    parentId,
     isControl,
     isBank,
     isActive,
