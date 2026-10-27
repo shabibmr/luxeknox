@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/widgets/app_currency_field.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/package_grid_picker_field.dart';
 import '../../../people/domain/entities/person.dart';
 import '../../../people/domain/entities/profile_summary.dart';
@@ -43,7 +45,8 @@ class SellPtSaleForm extends StatelessWidget {
               PackageGridOption(
                 value: p.id,
                 title: p.name,
-                subtitle: '${p.durationDays} days · ${p.basePrice}',
+                subtitle: '${p.durationDays} days',
+                price: p.basePrice,
                 isCouple: p.isCouple,
               ),
           ],
@@ -155,9 +158,9 @@ class SellPtSaleForm extends StatelessWidget {
             if (picked != null) cubit.setPaymentDate(picked);
           },
         ),
-        TextFormField(
-          decoration: const InputDecoration(labelText: PtStrings.discount),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        _DiscountCurrencyField(
+          initialValue: state.discount,
+          enabled: !state.submitting,
           onChanged: cubit.setDiscount,
         ),
         const SizedBox(height: 16),
@@ -323,6 +326,18 @@ class _Summary extends StatelessWidget {
         state.member?.fullName ??
         'Member #${state.memberId}';
 
+    Widget currencyRow(String k, String amount) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 96,
+            child: Text(k, style: Theme.of(context).textTheme.bodySmall),
+          ),
+          Expanded(child: AppCurrencyText(amount)),
+        ],
+      ),
+    );
     Widget row(String k, String v) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -364,12 +379,12 @@ class _Summary extends StatelessWidget {
             row(PtStrings.summaryDays, ptWeekdaysLabel(state.weekdays)),
             row(PtStrings.summaryHour, ptHourLabel(state.slotStart!)),
             row(PtStrings.summaryTrainer, trainer?.name ?? '—'),
-            row(PtStrings.summaryAmount, state.product!.basePrice),
+            currencyRow(PtStrings.summaryAmount, state.product!.basePrice),
             if (!state.isReplan && state.preview != null) ...[
               if (state.preview!.discount != '0.00')
-                row(PtStrings.summaryDiscount, state.preview!.discount),
-              row(PtStrings.summaryTax, state.preview!.tax),
-              row(PtStrings.summaryTotal, state.preview!.total),
+                currencyRow(PtStrings.summaryDiscount, state.preview!.discount),
+              currencyRow(PtStrings.summaryTax, state.preview!.tax),
+              currencyRow(PtStrings.summaryTotal, state.preview!.total),
             ],
             if (state.product!.isCouple) note(PtStrings.coupleTotalNote),
             note(
@@ -382,6 +397,57 @@ class _Summary extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DiscountCurrencyField extends StatefulWidget {
+  const _DiscountCurrencyField({
+    required this.initialValue,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final String? initialValue;
+  final bool enabled;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  State<_DiscountCurrencyField> createState() => _DiscountCurrencyFieldState();
+}
+
+class _DiscountCurrencyFieldState extends State<_DiscountCurrencyField> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.initialValue ?? '',
+  );
+
+  @override
+  void didUpdateWidget(covariant _DiscountCurrencyField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = widget.initialValue ?? '';
+    if (oldWidget.initialValue != widget.initialValue &&
+        _controller.text != next) {
+      _controller.value = TextEditingValue(
+        text: next,
+        selection: TextSelection.collapsed(offset: next.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AppCurrencyField(
+    controller: _controller,
+    label: PtStrings.discount,
+    enabled: widget.enabled,
+    required: false,
+    minValue: 0,
+    helperText: 'Optional discount amount',
+    onChanged: (value) => widget.onChanged(value.isEmpty ? null : value),
+  );
 }
 
 Person? _personFromSummary(ProfileSummary? summary) {

@@ -8,6 +8,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -368,7 +369,7 @@ class _MembershipDetailView extends StatelessWidget {
               membership.lockerNumber!,
             ),
           if (membership.product != null && !hidePricing)
-            _infoRow(
+            _currencyInfoRow(
               MembershipStrings.basePriceLabel,
               membership.product!.basePrice,
             ),
@@ -467,6 +468,26 @@ class _MembershipDetailView extends StatelessWidget {
     final own = int.tryParse(membership.id);
     final other = int.tryParse(membership.partnerMembershipId ?? '');
     return own != null && other != null && own > other;
+  }
+
+  Widget _currencyInfoRow(String label, String amount) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(child: Text(label, overflow: TextOverflow.ellipsis)),
+          const SizedBox(width: 8),
+          Flexible(
+            child: AppCurrencyText(
+              amount,
+              textAlign: TextAlign.end,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _infoRow(String label, String value) {

@@ -5,6 +5,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_currency_field.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -86,9 +87,14 @@ class _PtPackagesView extends StatelessWidget {
                       ],
                     ],
                   ),
-                  subtitle: Text(
-                    '${p.durationDays} days · ${p.basePrice}'
-                    '${p.isActive ? '' : ' · ${PtStrings.archived}'}',
+                  subtitle: Wrap(
+                    spacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text('${p.durationDays} days ·'),
+                      AppCurrencyText(p.basePrice),
+                      if (!p.isActive) const Text('· ${PtStrings.archived}'),
+                    ],
                   ),
                   trailing: Switch(
                     value: p.isActive,

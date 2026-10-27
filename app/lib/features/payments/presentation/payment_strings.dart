@@ -1,3 +1,4 @@
+import '../../../core/currency/gym_currency_provider.dart';
 import '../domain/entities/payment_status.dart';
 
 class PaymentStrings {
@@ -60,7 +61,8 @@ class PaymentStrings {
   static const String createMethodTitle = 'Add payment method';
   static const String noPermission = 'You do not have permission to do this.';
 
-  static String formatMoney(String amount) => '\$$amount';
+  static String formatMoney(String amount, {String? currencyCode}) =>
+      formatCurrencyAmount(amount, currencyCode: currencyCode);
 
   static String invoiceSubtitle(String invoiceNumber) => '#$invoiceNumber';
 

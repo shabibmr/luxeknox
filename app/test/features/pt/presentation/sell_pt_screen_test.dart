@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:luxeknox/core/di/injector.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
+import 'package:luxeknox/core/widgets/app_currency_text.dart';
 import 'package:luxeknox/features/payments/domain/entities/payment_method.dart';
 import 'package:luxeknox/features/people/domain/entities/person.dart';
 import 'package:luxeknox/features/pt/domain/entities/pt_product.dart';
@@ -253,7 +254,12 @@ void main() {
       await tester.pump();
 
       expect(find.text(PtStrings.coupleTotalNote), findsOneWidget);
-      expect(find.text('6999.00'), findsWidgets);
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is AppCurrencyText && w.amount == '6999.00',
+        ),
+        findsWidgets,
+      );
     });
   });
 

@@ -240,7 +240,8 @@ class _CreateMembershipForm extends StatelessWidget {
               PackageGridOption(
                 value: p.id,
                 title: p.name,
-                subtitle: p.basePrice,
+                subtitle: '',
+                price: p.basePrice,
                 isCouple: p.isCouple,
               ),
           ],

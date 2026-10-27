@@ -7,6 +7,7 @@ import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -147,13 +148,13 @@ class _PaymentDetailContent extends StatelessWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(PaymentStrings.historyActionLabel(entry.action)),
-              subtitle: Text(
-                [
-                  PaymentStrings.formatMoney(entry.amount),
-                  entry.timestamp.toUtc().toIso8601String(),
-                  if (entry.notes != null && entry.notes!.isNotEmpty)
-                    entry.notes!,
-                ].join(' · '),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppCurrencyText(entry.amount),
+                  Text(entry.timestamp.toUtc().toIso8601String()),
+                  if (entry.notes != null && entry.notes!.isNotEmpty) Text(entry.notes!),
+                ],
               ),
             ),
       ],
@@ -182,7 +183,7 @@ class _AmountRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(label, style: style)),
-          Text(PaymentStrings.formatMoney(amount), style: style),
+          AppCurrencyText(amount, style: style, textAlign: TextAlign.end),
         ],
       ),
     );

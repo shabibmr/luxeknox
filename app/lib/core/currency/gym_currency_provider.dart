@@ -55,3 +55,20 @@ String currencySymbol(String? currencyCode) {
     return currencyCode;
   }
 }
+
+/// Formats a numeric amount with currency-specific decimal precision.
+/// Invalid or missing values return an em dash rather than a misleading zero.
+String formatCurrencyAmount(String? raw, {String? currencyCode}) {
+  final amount = num.tryParse(raw?.trim() ?? '');
+  if (amount == null || !amount.isFinite) return '—';
+  final code = (currencyCode == null || currencyCode.trim().isEmpty)
+      ? 'INR'
+      : currencyCode;
+  final digits = currencyDecimalDigits(code);
+  try {
+    return NumberFormat.currency(name: code, decimalDigits: digits)
+        .format(amount);
+  } catch (_) {
+    return '$code ${amount.toStringAsFixed(digits)}';
+  }
+}

@@ -1,17 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../currency/gym_currency_provider.dart';
+import '../di/injector.dart';
 import 'decimal_text_input.dart';
 
-/// Reusable money-amount input: shows the gym's currency symbol as a prefix
-/// and pads entered amounts to exactly [decimalDigits] decimal places on blur
-/// and before validate (e.g. `49` → `49.00`), matching how the currency is
-/// quoted (`decimalDigits` from [currencyDecimalDigits]).
+/// Reusable input for a monetary amount.
 ///
-/// Used for any monetary amount field (base price, etc.) so validation and
-/// formatting stay consistent across forms instead of being re-implemented
-/// per screen.
+/// Currency and decimal precision default to the gym's public settings. The
+/// widget keeps validation side-effect-free: values are normalized when focus
+/// is lost, while callers may explicitly normalize immediately before submit.
 class AppCurrencyField extends StatefulWidget {
   const AppCurrencyField({
     super.key,
@@ -20,30 +20,36 @@ class AppCurrencyField extends StatefulWidget {
     this.currencyCode,
     this.decimalDigits,
     this.enabled = true,
+    this.readOnly = false,
     this.required = true,
+    this.minValue,
+    this.maxValue,
     this.helperText,
     this.requiredMessage,
     this.invalidMessage,
-  });
+    this.minValueMessage,
+    this.maxValueMessage,
+    this.validator,
+    this.onChanged,
+  }) : assert(minValue == null || maxValue == null || minValue <= maxValue),
+       assert(decimalDigits == null || decimalDigits >= 0);
 
   final TextEditingController controller;
   final String label;
-
-  /// ISO 4217 currency code (e.g. `USD`). When null, falls back to a `$`
-  /// prefix and 2 decimal places.
   final String? currencyCode;
-
-  /// Overrides the decimal places derived from [currencyCode].
   final int? decimalDigits;
-
   final bool enabled;
-
-  /// Whether an empty value fails validation.
+  final bool readOnly;
   final bool required;
-
+  final num? minValue;
+  final num? maxValue;
   final String? helperText;
   final String? requiredMessage;
   final String? invalidMessage;
+  final String? minValueMessage;
+  final String? maxValueMessage;
+  final FormFieldValidator<String>? validator;
+  final ValueChanged<String>? onChanged;
 
   @override
   State<AppCurrencyField> createState() => _AppCurrencyFieldState();
@@ -51,9 +57,42 @@ class AppCurrencyField extends StatefulWidget {
 
 class _AppCurrencyFieldState extends State<AppCurrencyField> {
   late final FocusNode _focusNode = FocusNode()..addListener(_onFocusChange);
+  String? _resolvedCurrencyCode;
+
+  String? get _currencyCode => widget.currencyCode ?? _resolvedCurrencyCode;
 
   int get _digits =>
-      widget.decimalDigits ?? currencyDecimalDigits(widget.currencyCode);
+      widget.decimalDigits ?? currencyDecimalDigits(_currencyCode);
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadCurrencyCode());
+  }
+
+  @override
+  void didUpdateWidget(covariant AppCurrencyField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currencyCode != widget.currencyCode &&
+        widget.currencyCode == null) {
+      unawaited(_loadCurrencyCode());
+    }
+  }
+
+  Future<void> _loadCurrencyCode() async {
+    if (widget.currencyCode != null ||
+        !getIt.isRegistered<GymCurrencyProvider>()) {
+      return;
+    }
+    try {
+      final code = await getIt<GymCurrencyProvider>().currencyCode();
+      if (!mounted || code == _resolvedCurrencyCode) return;
+      setState(() => _resolvedCurrencyCode = code);
+    } catch (_) {
+      // Currency settings are optional for rendering; helper functions use
+      // their documented INR/2-decimal fallback when no code is available.
+    }
+  }
 
   @override
   void dispose() {
@@ -69,12 +108,47 @@ class _AppCurrencyFieldState extends State<AppCurrencyField> {
     }
   }
 
-  String _example(int digits) => '49.${'9' * digits}';
+  String _example(int digits) =>
+      digits > 0 ? '49.' + List.filled(digits, '9').join() : '50';
+
+  String? _commonValidator(String? raw) {
+    final value = raw?.trim() ?? '';
+    if (value.isEmpty) {
+      if (widget.required) {
+        return widget.requiredMessage ?? '${widget.label} is required';
+      }
+      return widget.validator?.call(raw);
+    }
+
+    final number = num.tryParse(value);
+    if (number == null || !number.isFinite || number < 0) {
+      return widget.invalidMessage ?? 'Enter a valid amount';
+    }
+
+    final validPattern = _digits > 0
+        ? RegExp(r'^\d+(\.\d{0,' + _digits.toString() + r'})?$')
+        : RegExp(r'^\d+$');
+    if (!validPattern.hasMatch(value)) {
+      return widget.invalidMessage ??
+          (_digits == 0
+              ? 'Enter a whole number'
+              : 'Enter an amount with up to $_digits decimal places');
+    }
+    if (widget.minValue != null && number < widget.minValue!) {
+      return widget.minValueMessage ??
+          '${widget.label} must be at least ${widget.minValue}';
+    }
+    if (widget.maxValue != null && number > widget.maxValue!) {
+      return widget.maxValueMessage ??
+          '${widget.label} must be at most ${widget.maxValue}';
+    }
+    return widget.validator?.call(raw);
+  }
 
   @override
   Widget build(BuildContext context) {
     final digits = _digits;
-    final symbol = currencySymbol(widget.currencyCode);
+    final symbol = currencySymbol(_currencyCode);
     final pattern = digits > 0
         ? RegExp(r'^\d+(\.\d{0,' + digits.toString() + r'})?$')
         : RegExp(r'^\d+$');
@@ -83,6 +157,7 @@ class _AppCurrencyFieldState extends State<AppCurrencyField> {
       controller: widget.controller,
       focusNode: _focusNode,
       enabled: widget.enabled,
+      readOnly: widget.readOnly,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
         TextInputFormatter.withFunction((oldValue, newValue) {
@@ -90,34 +165,17 @@ class _AppCurrencyFieldState extends State<AppCurrencyField> {
           return pattern.hasMatch(newValue.text) ? newValue : oldValue;
         }),
       ],
+      onChanged: widget.onChanged,
       decoration: InputDecoration(
         labelText: widget.label,
         prefixText: '$symbol ',
         helperText:
             widget.helperText ??
             (digits > 0
-                ? 'Amount with $digits decimal places, e.g. ${_example(digits)}'
+                ? 'Amount with up to $digits decimal places, e.g. ${_example(digits)}'
                 : 'Whole amount, e.g. 50'),
       ),
-      validator: (v) {
-        final value = v?.trim() ?? '';
-        if (value.isEmpty) {
-          return widget.required
-              ? (widget.requiredMessage ?? '${widget.label} is required')
-              : null;
-        }
-        final normalized = applyNormalizedDecimal(
-          widget.controller,
-          decimalDigits: digits,
-        );
-        if (normalized == null) {
-          return widget.invalidMessage ??
-              (digits > 0
-                  ? 'Enter an amount with exactly $digits decimal places'
-                  : 'Enter a whole number');
-        }
-        return null;
-      },
+      validator: _commonValidator,
     );
   }
 }

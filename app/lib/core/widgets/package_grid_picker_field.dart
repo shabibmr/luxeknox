@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_currency_text.dart';
+
 /// One selectable package in [PackageGridPickerField].
 class PackageGridOption<T> {
   const PackageGridOption({
@@ -7,12 +9,16 @@ class PackageGridOption<T> {
     required this.title,
     required this.subtitle,
     required this.isCouple,
+    this.price,
   });
 
   final T value;
   final String title;
   final String subtitle;
   final bool isCouple;
+
+  /// Raw monetary amount rendered with [AppCurrencyText].
+  final String? price;
 }
 
 /// Dropdown-looking field that opens a sheet showing packages in a grid:
@@ -68,9 +74,25 @@ class PackageGridPickerField<T> extends StatelessWidget {
         isEmpty: selected == null,
         child: selected == null
             ? null
-            : Text(
-                '${selected.title} · ${selected.subtitle}',
-                overflow: TextOverflow.ellipsis,
+            : Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      selected.subtitle.isEmpty
+                          ? selected.title
+                          : '${selected.title} · ${selected.subtitle}',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (selected.price != null) ...[
+                    const SizedBox(width: 8),
+                    AppCurrencyText(
+                      selected.price,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
               ),
       ),
     );
@@ -165,8 +187,17 @@ class _Column<T> extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(o.title, style: theme.textTheme.titleSmall),
-                        const SizedBox(height: 4),
-                        Text(o.subtitle, style: theme.textTheme.bodySmall),
+                        if (o.subtitle.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(o.subtitle, style: theme.textTheme.bodySmall),
+                        ],
+                        if (o.price != null) ...[
+                          const SizedBox(height: 4),
+                          AppCurrencyText(
+                            o.price,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
                       ],
                     ),
                   ),
