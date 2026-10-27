@@ -541,6 +541,69 @@ class _TrayLineState extends State<_TrayLine> {
   }
 }
 
+class _SplitAmountField extends StatefulWidget {
+  const _SplitAmountField({
+    required this.methodId,
+    required this.methodName,
+    required this.amount,
+  });
+
+  final String methodId;
+  final String methodName;
+  final String amount;
+
+  @override
+  State<_SplitAmountField> createState() => _SplitAmountFieldState();
+}
+
+class _SplitAmountFieldState extends State<_SplitAmountField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.amount);
+  }
+
+  @override
+  void didUpdateWidget(covariant _SplitAmountField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.amount != widget.amount &&
+        _controller.text != widget.amount) {
+      _controller.text = widget.amount;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextField(
+        key: Key('counter_sale_split_amount_${widget.methodId}'),
+        controller: _controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+        ],
+        decoration: InputDecoration(
+          labelText: widget.methodName,
+          border: const OutlineInputBorder(),
+          isDense: true,
+        ),
+        onChanged: (value) => context
+            .read<CounterSaleCubit>()
+            .setSplitAmount(widget.methodId, value),
+      ),
+    );
+  }
+}
+
 class _TenderBody extends StatelessWidget {
   const _TenderBody({required this.state});
 
@@ -620,37 +683,115 @@ class _TenderBody extends StatelessWidget {
               ),
             ),
           ),
-        Expanded(
-          child: state.paymentMethods.isEmpty
-              ? const AppEmptyView(
-                  key: Key('counter_sale_no_payment_methods'),
-                  message: InventoryStrings.noPaymentMethods,
-                )
-              : ListView(
-                  key: const Key('counter_sale_payment_methods'),
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    for (final method in state.paymentMethods)
+        if (state.splitMode) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Row(
+              children: [
+                Text(
+                  InventoryStrings.splitTotalLabel,
+                  style: theme.textTheme.titleSmall,
+                ),
+                const Spacer(),
+                AppCurrencyText(
+                  state.splitEnteredTotal,
+                  key: const Key('counter_sale_split_total'),
+                  style: theme.textTheme.titleSmall,
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            child: Row(
+              children: [
+                Text(
+                  InventoryStrings.remainderLabel,
+                  style: theme.textTheme.titleMedium,
+                ),
+                const Spacer(),
+                AppCurrencyText(
+                  state.splitRemainder,
+                  key: const Key('counter_sale_split_remainder'),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: compareMoney(state.splitRemainder, '0.00') == 0
+                        ? null
+                        : theme.colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                key: const Key('counter_sale_leave_split'),
+                onPressed: () => context.read<CounterSaleCubit>().leaveSplit(),
+                child: const Text(InventoryStrings.leaveSplitLabel),
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              key: const Key('counter_sale_split_amounts'),
+              padding: const EdgeInsets.all(16),
+              children: [
+                for (final method in state.paymentMethods)
+                  _SplitAmountField(
+                    methodId: method.id,
+                    methodName: method.methodName,
+                    amount: state.splitAmounts[method.id] ?? '',
+                  ),
+              ],
+            ),
+          ),
+        ] else
+          Expanded(
+            child: state.paymentMethods.isEmpty
+                ? const AppEmptyView(
+                    key: Key('counter_sale_no_payment_methods'),
+                    message: InventoryStrings.noPaymentMethods,
+                  )
+                : ListView(
+                    key: const Key('counter_sale_payment_methods'),
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      for (final method in state.paymentMethods)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: OutlinedButton(
+                            key: Key('counter_sale_method_${method.id}'),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor:
+                                  state.selectedPaymentMethodId == method.id
+                                  ? theme.colorScheme.primaryContainer
+                                  : null,
+                              minimumSize: const Size.fromHeight(48),
+                            ),
+                            onPressed: () => context
+                                .read<CounterSaleCubit>()
+                                .selectPaymentMethod(method.id),
+                            child: Text(method.methodName),
+                          ),
+                        ),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: OutlinedButton(
-                          key: Key('counter_sale_method_${method.id}'),
+                          key: const Key('counter_sale_split'),
                           style: OutlinedButton.styleFrom(
-                            backgroundColor:
-                                state.selectedPaymentMethodId == method.id
-                                ? theme.colorScheme.primaryContainer
-                                : null,
                             minimumSize: const Size.fromHeight(48),
                           ),
-                          onPressed: () => context
-                              .read<CounterSaleCubit>()
-                              .selectPaymentMethod(method.id),
-                          child: Text(method.methodName),
+                          onPressed: () =>
+                              context.read<CounterSaleCubit>().openSplit(),
+                          child: const Text(InventoryStrings.splitLabel),
                         ),
                       ),
-                  ],
-                ),
-        ),
+                    ],
+                  ),
+          ),
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),

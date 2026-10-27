@@ -37,6 +37,8 @@ class CounterSaleState extends Equatable {
     this.paymentMethods = const [],
     this.paymentMethodsStatus = LoadStatus.initial,
     this.selectedPaymentMethodId,
+    this.splitMode = false,
+    this.splitAmounts = const {},
     this.memberId,
     this.member,
     this.buyerName,
@@ -54,6 +56,13 @@ class CounterSaleState extends Equatable {
   final List<PaymentMethod> paymentMethods;
   final LoadStatus paymentMethodsStatus;
   final String? selectedPaymentMethodId;
+
+  /// When true, the cashier is settling with Split (not a payment method).
+  final bool splitMode;
+
+  /// Typed Split amounts keyed by payment method id. Blank/zero are omitted
+  /// on confirm. Values are raw field text until confirm.
+  final Map<String, String> splitAmounts;
   final int? memberId;
 
   /// Member chosen on the buyer step. Never set together with [buyerName].
@@ -69,13 +78,37 @@ class CounterSaleState extends Equatable {
 
   bool get hasOverOnHandLine => lines.any(_lineExceedsOnHand);
 
+  /// Positive Split amounts only (blank/zero omitted).
+  List<({String methodId, String amount})> get positiveSplitTenders {
+    final out = <({String methodId, String amount})>[];
+    for (final method in paymentMethods) {
+      final raw = splitAmounts[method.id] ?? '';
+      if (isBlankOrZeroMoney(raw)) continue;
+      final parsed = parseMoneyInput(raw);
+      if (parsed == null) continue;
+      if (compareMoney(parsed, '0.00') <= 0) continue;
+      out.add((methodId: method.id, amount: parsed));
+    }
+    return out;
+  }
+
+  String get splitEnteredTotal =>
+      sumCharges(positiveSplitTenders.map((t) => t.amount));
+
+  /// Unpaid remainder of the amount due after typed Split amounts.
+  String get splitRemainder => subMoney(amountDue, splitEnteredTotal);
+
+  bool get splitAmountsMatchDue =>
+      positiveSplitTenders.length >= 2 &&
+      compareMoney(splitEnteredTotal, amountDue) == 0;
+
   bool get canConfirm {
     if (step != CounterSaleStep.tender) return false;
     if (confirming) return false;
-    if (selectedPaymentMethodId == null) return false;
     if (hasOverOnHandLine) return false;
     if (paymentMethods.isEmpty) return false;
-    return true;
+    if (splitMode) return splitAmountsMatchDue;
+    return selectedPaymentMethodId != null;
   }
 
   PaymentMethod? get selectedPaymentMethod {
@@ -97,6 +130,8 @@ class CounterSaleState extends Equatable {
     List<PaymentMethod>? paymentMethods,
     LoadStatus? paymentMethodsStatus,
     Object? selectedPaymentMethodId = _sentinel,
+    bool? splitMode,
+    Map<String, String>? splitAmounts,
     Object? memberId = _sentinel,
     Object? member = _sentinel,
     Object? buyerName = _sentinel,
@@ -118,6 +153,8 @@ class CounterSaleState extends Equatable {
       selectedPaymentMethodId: identical(selectedPaymentMethodId, _sentinel)
           ? this.selectedPaymentMethodId
           : selectedPaymentMethodId as String?,
+      splitMode: splitMode ?? this.splitMode,
+      splitAmounts: splitAmounts ?? this.splitAmounts,
       memberId: identical(memberId, _sentinel)
           ? this.memberId
           : memberId as int?,
@@ -148,6 +185,8 @@ class CounterSaleState extends Equatable {
     paymentMethods,
     paymentMethodsStatus,
     selectedPaymentMethodId,
+    splitMode,
+    splitAmounts,
     memberId,
     member,
     buyerName,
@@ -337,7 +376,10 @@ class CounterSaleCubit extends Cubit<CounterSaleState> {
       state.copyWith(
         step: CounterSaleStep.tender,
         paymentMethodsStatus: LoadStatus.loading,
-        selectedPaymentMethodId: null,
+        // Keep splitMode / splitAmounts when returning from buyer.
+        selectedPaymentMethodId: state.splitMode
+            ? null
+            : state.selectedPaymentMethodId,
         confirmError: null,
       ),
     );
@@ -349,7 +391,7 @@ class CounterSaleCubit extends Cubit<CounterSaleState> {
       emit(
         state.copyWith(
           step: CounterSaleStep.buyer,
-          selectedPaymentMethodId: null,
+          // Keep Split amounts and mode across back.
           confirmError: null,
         ),
       );
@@ -364,19 +406,79 @@ class CounterSaleCubit extends Cubit<CounterSaleState> {
     emit(
       state.copyWith(
         selectedPaymentMethodId: paymentMethodId,
+        splitMode: false,
         confirmError: null,
       ),
     );
   }
 
+  /// Opens Split. Not a payment method. Amounts start empty (nothing filled).
+  void openSplit() {
+    if (state.step != CounterSaleStep.tender) return;
+    if (state.paymentMethods.isEmpty) return;
+    emit(
+      state.copyWith(
+        splitMode: true,
+        selectedPaymentMethodId: null,
+        splitAmounts: const {},
+        confirmError: null,
+      ),
+    );
+  }
+
+  /// Leaves Split and returns to single-method buttons. Keeps typed amounts.
+  void leaveSplit() {
+    if (state.step != CounterSaleStep.tender || !state.splitMode) return;
+    emit(
+      state.copyWith(
+        splitMode: false,
+        selectedPaymentMethodId: null,
+        confirmError: null,
+      ),
+    );
+  }
+
+  void setSplitAmount(String paymentMethodId, String raw) {
+    if (state.step != CounterSaleStep.tender || !state.splitMode) return;
+    final next = Map<String, String>.of(state.splitAmounts);
+    next[paymentMethodId] = raw;
+    emit(state.copyWith(splitAmounts: next, confirmError: null));
+  }
+
   Future<void> confirm() async {
     if (!state.canConfirm) return;
-    final method = state.selectedPaymentMethod;
-    if (method == null) return;
-    final methodId = int.tryParse(method.id);
-    if (methodId == null) {
-      emit(state.copyWith(confirmError: 'Invalid payment method'));
-      return;
+
+    final List<CreateCounterSaleTenderInput> tenders;
+    if (state.splitMode) {
+      final built = <CreateCounterSaleTenderInput>[];
+      for (final row in state.positiveSplitTenders) {
+        final id = int.tryParse(row.methodId);
+        if (id == null) {
+          emit(state.copyWith(confirmError: 'Invalid payment method'));
+          return;
+        }
+        built.add(
+          CreateCounterSaleTenderInput(
+            paymentMethodId: id,
+            amount: row.amount,
+          ),
+        );
+      }
+      tenders = built;
+    } else {
+      final method = state.selectedPaymentMethod;
+      if (method == null) return;
+      final methodId = int.tryParse(method.id);
+      if (methodId == null) {
+        emit(state.copyWith(confirmError: 'Invalid payment method'));
+        return;
+      }
+      tenders = [
+        CreateCounterSaleTenderInput(
+          paymentMethodId: methodId,
+          amount: state.amountDue,
+        ),
+      ];
     }
 
     _confirmIdempotencyKey ??= newIdempotencyKey();
@@ -393,12 +495,7 @@ class CounterSaleCubit extends Cubit<CounterSaleState> {
             quantity: line.quantity,
           ),
       ],
-      tenders: [
-        CreateCounterSaleTenderInput(
-          paymentMethodId: methodId,
-          amount: state.amountDue,
-        ),
-      ],
+      tenders: tenders,
       idempotencyKey: _confirmIdempotencyKey,
     );
 

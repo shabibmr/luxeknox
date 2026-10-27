@@ -27,6 +27,10 @@ abstract final class InventoryStrings {
   static const buyerNameLabel = 'Buyer name';
   static const buyerNameHint = 'Name, if not a Member';
   static const tenderStepTitle = 'Tender';
+  static const splitLabel = 'Split';
+  static const leaveSplitLabel = 'Single method';
+  static const remainderLabel = 'Remaining';
+  static const splitTotalLabel = 'Entered';
   static const successTitle = 'Sale posted';
   static const saleNumberLabel = 'Sale number';
   static const overOnHandHint = 'Quantity is above on hand';

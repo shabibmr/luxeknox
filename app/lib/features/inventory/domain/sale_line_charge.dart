@@ -23,6 +23,31 @@ String sumCharges(Iterable<String> charges) {
   return total;
 }
 
+/// Public money helpers for tender remainder / split totals.
+String subMoney(String a, String b) => _fromCents(_toCents(a) - _toCents(b));
+
+int compareMoney(String a, String b) =>
+    _toCents(a).compareTo(_toCents(b));
+
+/// Parses a typed money field. Blank → null. Invalid → null.
+String? parseMoneyInput(String raw) {
+  final value = raw.trim();
+  if (value.isEmpty) return null;
+  if (!RegExp(r'^\d+(\.\d{0,2})?$').hasMatch(value)) return null;
+  try {
+    return _roundMoney(value);
+  } on FormatException {
+    return null;
+  }
+}
+
+/// True when [raw] is blank or parses to 0.00.
+bool isBlankOrZeroMoney(String raw) {
+  final parsed = parseMoneyInput(raw);
+  if (parsed == null) return raw.trim().isEmpty;
+  return compareMoney(parsed, '0.00') == 0;
+}
+
 String unitCharge({
   required String saleRate,
   String? taxRatePercent,

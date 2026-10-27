@@ -85,9 +85,10 @@ class FakeListMembersUseCase extends Fake implements ListMembersUseCase {
 
 class FakeCreateCounterSaleUseCase extends Fake
     implements CreateCounterSaleUseCase {
-  FakeCreateCounterSaleUseCase({this.result});
+  FakeCreateCounterSaleUseCase({this.result, this.methodNames = const {}});
 
   Either<Failure, CounterSale>? result;
+  final Map<int, String> methodNames;
   final List<CreateCounterSaleInput> calls = [];
 
   @override
@@ -95,17 +96,22 @@ class FakeCreateCounterSaleUseCase extends Fake
     CreateCounterSaleInput params,
   ) async {
     calls.add(params);
+    var summed = 0.0;
+    for (final t in params.tenders) {
+      summed += double.parse(t.amount);
+    }
     return result ??
         Right(
           CounterSale(
             id: 99,
             saleNumber: 'CS-0001',
-            totalAmount: params.tenders.first.amount,
+            totalAmount: summed.toStringAsFixed(2),
             tenders: [
               for (final t in params.tenders)
                 CounterSaleTender(
                   paymentMethodId: t.paymentMethodId,
-                  paymentMethodName: 'Cash',
+                  paymentMethodName: methodNames[t.paymentMethodId] ??
+                      'Method ${t.paymentMethodId}',
                   amount: t.amount,
                 ),
             ],
@@ -285,7 +291,9 @@ void main() {
       inactiveUpi,
     ]);
     fakeListMembers = FakeListMembersUseCase(const [alice]);
-    fakeCreate = FakeCreateCounterSaleUseCase();
+    fakeCreate = FakeCreateCounterSaleUseCase(
+      methodNames: const {1: 'Cash', 2: 'Card'},
+    );
     cubit = CounterSaleCubit(
       fakeGetItems,
       fakePaymentMethods,
@@ -942,5 +950,243 @@ void main() {
     expect(cubit.state.step, CounterSaleStep.catalog);
     expect(cubit.state.selectedPaymentMethodId, isNull);
     expect(cubit.confirmIdempotencyKeyForTest, isNull);
+  });
+
+  // --- #25 Settle with Split ---
+
+  testWidgets('Split is an extra button and opens amount lines with remainder', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(buildSubject());
+    await tester.pumpAndSettle();
+    await openTender(tester);
+
+    expect(find.byKey(const Key('counter_sale_split')), findsOneWidget);
+    expect(find.text(InventoryStrings.splitLabel), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('counter_sale_split')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('counter_sale_split_amounts')), findsOneWidget);
+    expect(find.byKey(const Key('counter_sale_split_amount_1')), findsOneWidget);
+    expect(find.byKey(const Key('counter_sale_split_amount_2')), findsOneWidget);
+    expect(find.byKey(const Key('counter_sale_method_1')), findsNothing);
+    expect(
+      (find.byKey(const Key('counter_sale_split_remainder')).evaluate().first.widget
+              as AppCurrencyText)
+          .amount,
+      '118.00',
+    );
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('counter_sale_split_amount_1')))
+          .controller
+          ?.text,
+      isEmpty,
+    );
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('counter_sale_confirm')))
+          .onPressed,
+      isNull,
+    );
+  });
+
+  testWidgets('Split confirm needs two positive amounts equal to amount due', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(buildSubject());
+    await tester.pumpAndSettle();
+    await openTender(tester);
+    await tester.tap(find.byKey(const Key('counter_sale_split')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('counter_sale_split_amount_1')),
+      '118.00',
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('counter_sale_confirm')))
+          .onPressed,
+      isNull,
+    );
+    expect(
+      (find.byKey(const Key('counter_sale_split_remainder')).evaluate().first.widget
+              as AppCurrencyText)
+          .amount,
+      '0.00',
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('counter_sale_split_amount_1')),
+      '50.00',
+    );
+    await tester.enterText(
+      find.byKey(const Key('counter_sale_split_amount_2')),
+      '68.00',
+    );
+    await tester.pumpAndSettle();
+    expect(
+      (find.byKey(const Key('counter_sale_split_remainder')).evaluate().first.widget
+              as AppCurrencyText)
+          .amount,
+      '0.00',
+    );
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('counter_sale_confirm')))
+          .onPressed,
+      isNotNull,
+    );
+
+    await tester.tap(find.byKey(const Key('counter_sale_confirm')));
+    await tester.pumpAndSettle();
+
+    expect(fakeCreate.calls, hasLength(1));
+    final input = fakeCreate.calls.single;
+    expect(input.memberId, isNull);
+    expect(input.buyerName, isNull);
+    expect(input.lines, [
+      const CreateCounterSaleLineInput(itemId: 1, quantity: '1'),
+    ]);
+    expect(input.tenders, [
+      const CreateCounterSaleTenderInput(paymentMethodId: 1, amount: '50.00'),
+      const CreateCounterSaleTenderInput(paymentMethodId: 2, amount: '68.00'),
+    ]);
+    expect(input.idempotencyKey, isNotEmpty);
+    expect(find.byKey(const Key('counter_sale_posted_number')), findsOneWidget);
+    expect(find.byKey(const Key('counter_sale_posted_tender_1')), findsOneWidget);
+    expect(find.byKey(const Key('counter_sale_posted_tender_2')), findsOneWidget);
+  });
+
+  testWidgets('blank or zero Split lines are omitted; can leave Split', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(buildSubject());
+    await tester.pumpAndSettle();
+    await openTender(tester);
+    await tester.tap(find.byKey(const Key('counter_sale_split')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('counter_sale_split_amount_1')),
+      '0',
+    );
+    await tester.enterText(
+      find.byKey(const Key('counter_sale_split_amount_2')),
+      '118.00',
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('counter_sale_confirm')))
+          .onPressed,
+      isNull,
+    );
+
+    await tester.tap(find.byKey(const Key('counter_sale_back')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('counter_sale_buyer')), findsOneWidget);
+    expect(cubit.state.lines, isNotEmpty);
+    await tester.tap(find.byKey(const Key('counter_sale_buyer_continue')));
+    await tester.pumpAndSettle();
+    // Still in split with amounts kept (did not call openSplit again)
+    expect(find.byKey(const Key('counter_sale_split_amounts')), findsOneWidget);
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('counter_sale_split_amount_2')))
+          .controller
+          ?.text,
+      '118.00',
+    );
+
+    await tester.tap(find.byKey(const Key('counter_sale_leave_split')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('counter_sale_payment_methods')), findsOneWidget);
+    expect(find.byKey(const Key('counter_sale_split_amounts')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('counter_sale_method_1')));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('counter_sale_confirm')))
+          .onPressed,
+      isNotNull,
+    );
+
+    // Choosing Split again starts empty
+    await tester.tap(find.byKey(const Key('counter_sale_split')));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('counter_sale_split_amount_1')))
+          .controller
+          ?.text,
+      isEmpty,
+    );
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('counter_sale_split_amount_2')))
+          .controller
+          ?.text,
+      isEmpty,
+    );
+  });
+
+  testWidgets('line qty change updates Split remainder and blocks confirm', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(buildSubject());
+    await tester.pumpAndSettle();
+    await openTender(tester);
+    await tester.tap(find.byKey(const Key('counter_sale_split')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('counter_sale_split_amount_1')),
+      '50.00',
+    );
+    await tester.enterText(
+      find.byKey(const Key('counter_sale_split_amount_2')),
+      '68.00',
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('counter_sale_confirm')))
+          .onPressed,
+      isNotNull,
+    );
+
+    // Raise qty via cubit (tender lines UI only when over on-hand)
+    cubit.setLineQuantity(1, '2');
+    await tester.pumpAndSettle();
+    // amount due now 236.00; remainder 236-118=118
+    expect(
+      (find.byKey(const Key('counter_sale_split_remainder')).evaluate().first.widget
+              as AppCurrencyText)
+          .amount,
+      '118.00',
+    );
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('counter_sale_confirm')))
+          .onPressed,
+      isNull,
+    );
   });
 }
