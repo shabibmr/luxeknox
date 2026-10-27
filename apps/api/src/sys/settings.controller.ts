@@ -4,9 +4,11 @@ import { SettingsService } from './settings.service';
 import { Public } from '../auth/public.decorator';
 import { RequirePermission } from '../rbac/require-permission.decorator';
 import { ZodValidationPipe } from '../platform/http/zod-validation.pipe';
+import { BadRequestError } from '../platform/errors/app-error';
 import {
   type SettingsListDto,
   type SettingsWriteDto,
+  parseSettingCategory,
   settingsWriteSchema,
 } from './settings.dto';
 
@@ -68,6 +70,9 @@ export class SettingsController {
     description: 'Forbidden: missing settings.read permission',
   })
   async getAllSettings(@Query('category') category?: string): Promise<SettingsListDto> {
+    if (category && !parseSettingCategory(category)) {
+      throw new BadRequestError(`Unsupported settings category "${category}".`);
+    }
     const data = await this.settingsService.listSettings(category);
     return { data };
   }

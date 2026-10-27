@@ -152,6 +152,7 @@ export const workoutSessionExercises = mysqlTable(
     weight_lifted_kg: decimal('weight_lifted_kg', { precision: 6, scale: 2 }).notNull().default('0.00'),
     rpe_score: decimal('rpe_score', { precision: 3, scale: 1 }),
     is_completed: boolean('is_completed').notNull().default(true),
+    notes: text('notes'),
     created_at: utcDatetime('created_at').notNull(),
   },
   (table) => [

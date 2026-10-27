@@ -26,6 +26,7 @@ describe('WorkoutSessionController', () => {
       logSet: vi.fn().mockResolvedValue({ id: 501, set_number: 1 }),
       complete: vi.fn().mockResolvedValue({ id: 50, completed_at: new Date() }),
       getPersonalRecords: vi.fn().mockResolvedValue([]),
+      getExerciseHistory: vi.fn().mockResolvedValue([]),
       getActive: vi.fn().mockResolvedValue({ id: 50, member_id: 30 }),
       updateSet: vi.fn().mockResolvedValue({ id: 501, set_number: 1 }),
       deleteSet: vi.fn().mockResolvedValue(undefined),
@@ -89,6 +90,17 @@ describe('WorkoutSessionController', () => {
     const result = await controller.getPersonalRecords('30', '1', ADMIN_USER);
 
     expect(service.getPersonalRecords).toHaveBeenCalledWith(30, 1, ADMIN_USER);
+    expect(result).toEqual([]);
+  });
+
+  it('requires workouts.read on GET /workout-sessions/exercise-history and delegates to service', async () => {
+    expect(
+      Reflect.getMetadata(REQUIRE_PERMISSIONS_KEY, WorkoutSessionController.prototype.getExerciseHistory),
+    ).toEqual(['workouts.read']);
+
+    const result = await controller.getExerciseHistory('30', 1, ADMIN_USER);
+
+    expect(service.getExerciseHistory).toHaveBeenCalledWith(30, 1, ADMIN_USER);
     expect(result).toEqual([]);
   });
 

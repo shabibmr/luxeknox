@@ -15,6 +15,8 @@ class _$WorkoutSetUpdate extends WorkoutSetUpdate {
   final num? rpeScore;
   @override
   final bool? isCompleted;
+  @override
+  final String? notes;
 
   factory _$WorkoutSetUpdate(
           [void Function(WorkoutSetUpdateBuilder)? updates]) =>
@@ -24,7 +26,8 @@ class _$WorkoutSetUpdate extends WorkoutSetUpdate {
       {this.repsCompleted,
       this.weightLiftedKg,
       this.rpeScore,
-      this.isCompleted})
+      this.isCompleted,
+      this.notes})
       : super._();
   @override
   WorkoutSetUpdate rebuild(void Function(WorkoutSetUpdateBuilder) updates) =>
@@ -41,7 +44,8 @@ class _$WorkoutSetUpdate extends WorkoutSetUpdate {
         repsCompleted == other.repsCompleted &&
         weightLiftedKg == other.weightLiftedKg &&
         rpeScore == other.rpeScore &&
-        isCompleted == other.isCompleted;
+        isCompleted == other.isCompleted &&
+        notes == other.notes;
   }
 
   @override
@@ -51,6 +55,7 @@ class _$WorkoutSetUpdate extends WorkoutSetUpdate {
     _$hash = $jc(_$hash, weightLiftedKg.hashCode);
     _$hash = $jc(_$hash, rpeScore.hashCode);
     _$hash = $jc(_$hash, isCompleted.hashCode);
+    _$hash = $jc(_$hash, notes.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -61,7 +66,8 @@ class _$WorkoutSetUpdate extends WorkoutSetUpdate {
           ..add('repsCompleted', repsCompleted)
           ..add('weightLiftedKg', weightLiftedKg)
           ..add('rpeScore', rpeScore)
-          ..add('isCompleted', isCompleted))
+          ..add('isCompleted', isCompleted)
+          ..add('notes', notes))
         .toString();
   }
 }
@@ -88,6 +94,10 @@ class WorkoutSetUpdateBuilder
   bool? get isCompleted => _$this._isCompleted;
   set isCompleted(bool? isCompleted) => _$this._isCompleted = isCompleted;
 
+  String? _notes;
+  String? get notes => _$this._notes;
+  set notes(String? notes) => _$this._notes = notes;
+
   WorkoutSetUpdateBuilder() {
     WorkoutSetUpdate._defaults(this);
   }
@@ -99,6 +109,7 @@ class WorkoutSetUpdateBuilder
       _weightLiftedKg = $v.weightLiftedKg;
       _rpeScore = $v.rpeScore;
       _isCompleted = $v.isCompleted;
+      _notes = $v.notes;
       _$v = null;
     }
     return this;
@@ -124,6 +135,7 @@ class WorkoutSetUpdateBuilder
           weightLiftedKg: weightLiftedKg,
           rpeScore: rpeScore,
           isCompleted: isCompleted,
+          notes: notes,
         );
     replace(_$result);
     return _$result;

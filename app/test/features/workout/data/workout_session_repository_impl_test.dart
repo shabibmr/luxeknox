@@ -133,4 +133,51 @@ void main() {
       }, (_) => fail('expected Left'));
     });
   });
+
+  group('getExerciseHistory', () {
+    test('calls remote.getExerciseHistory and maps items', () async {
+      when(
+        () => remote.getExerciseHistory(
+          memberId: any(named: 'memberId'),
+          exerciseId: any(named: 'exerciseId'),
+        ),
+      ).thenAnswer(
+        (_) async => [
+          api.ExerciseHistorySession(
+            (b) => b
+              ..sessionId = 1
+              ..startedAt = DateTime(2026, 1, 1)
+              ..sets.replace([
+                api.WorkoutSessionExercise(
+                  (b) => b
+                    ..id = 1
+                    ..workoutSessionId = 1
+                    ..exerciseId = 2
+                    ..setNumber = 1
+                    ..repsCompleted = 10
+                    ..weightLiftedKg = 60
+                    ..isCompleted = true
+                    ..notes = 'Solid reps',
+                ),
+              ]),
+          ),
+        ],
+      );
+
+      final result = await repository.getExerciseHistory(
+        memberId: '42',
+        exerciseId: '2',
+      );
+
+      result.fold(
+        (f) => fail('expected Right, got Left($f)'),
+        (sessions) {
+          expect(sessions.length, 1);
+          expect(sessions.first.sessionId, '1');
+          expect(sessions.first.sets.length, 1);
+          expect(sessions.first.sets.first.notes, 'Solid reps');
+        },
+      );
+    });
+  });
 }

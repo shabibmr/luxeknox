@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/core/pagination/cursor_page.dart';
-import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/features/goals/domain/entities/photo_pose.dart';
 import 'package:luxeknox/features/goals/domain/entities/progress_photo.dart';
 import 'package:luxeknox/features/goals/domain/entities/progress_photo_comparison.dart';

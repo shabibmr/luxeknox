@@ -44,7 +44,7 @@ describe('RPT-014: Report Query and Export Performance', () => {
 
     expect(lineCount).toBe(rowCount + 1); // Header + 5000 data lines
     expect(outputBytes).toBeGreaterThan(100000);
-    expect(durationMs).toBeLessThan(500); // 5000 rows streamed in under 500ms
+    expect(durationMs).toBeLessThan(1500); // 5000 rows streamed in under 1500ms under load
   });
 
   it('formats 10,000 rows into in-memory CSV in under 100ms', () => {

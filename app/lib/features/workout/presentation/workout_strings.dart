@@ -109,6 +109,27 @@ abstract final class WorkoutStrings {
   static const setsLoggedLabel = 'Sets logged';
   static const startedAtLabel = 'Started';
   static const completedAtLabel = 'Completed';
+  static const done = 'Done';
+  static const skipSet = 'Skip Set';
+  static const skipExercise = 'Skip Exercise';
+  static const skipDialogTitle = 'Skip Set';
+  static const skipReasonLabel = 'Reason';
+  static const skipCommentLabel = 'Comment / Reason (mandatory)';
+  static const skipCommentHint =
+      'Explain why this set is being skipped (min 5 chars)...';
+  static const skipConfirm = 'Skip';
+  static const skipCancel = 'Cancel';
+  static const exerciseHistoryTitle = 'Exercise History';
+  static const noExerciseHistory = 'No past logs found for this exercise.';
+  static const restCompleteTitle = 'Rest Complete!';
+  static const exerciseCompleteTitle = 'Exercise Complete! 🎉';
+  static const allExercisesCompleteTitle = 'All Exercises Complete! 🏆';
+  static const add30sRest = '+30s Rest';
+  static const setNotesLabel = 'Set notes / form cues (optional)';
+  static const sessionAlertTitle = 'Session Time Alert';
+  static const sessionAlertDesc =
+      'Member attendance marked present. Ready for workout!';
+  static const startWorkoutCTA = 'Start Workout';
   static const startAnother = 'Start another';
   static const viewHistory = 'View workout history';
 

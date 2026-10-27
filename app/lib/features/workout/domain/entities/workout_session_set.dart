@@ -10,6 +10,7 @@ class WorkoutSessionSet extends Equatable {
     this.weightLiftedKg,
     this.rpeScore,
     this.isCompleted,
+    this.notes,
   });
 
   final String id;
@@ -20,6 +21,7 @@ class WorkoutSessionSet extends Equatable {
   final num? weightLiftedKg;
   final num? rpeScore;
   final bool? isCompleted;
+  final String? notes;
 
   @override
   List<Object?> get props => [
@@ -31,5 +33,6 @@ class WorkoutSessionSet extends Equatable {
     weightLiftedKg,
     rpeScore,
     isCompleted,
+    notes,
   ];
 }

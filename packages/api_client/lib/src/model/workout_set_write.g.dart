@@ -19,6 +19,8 @@ class _$WorkoutSetWrite extends WorkoutSetWrite {
   final num? rpeScore;
   @override
   final bool? isCompleted;
+  @override
+  final String? notes;
 
   factory _$WorkoutSetWrite([void Function(WorkoutSetWriteBuilder)? updates]) =>
       (WorkoutSetWriteBuilder()..update(updates))._build();
@@ -29,7 +31,8 @@ class _$WorkoutSetWrite extends WorkoutSetWrite {
       this.repsCompleted,
       this.weightLiftedKg,
       this.rpeScore,
-      this.isCompleted})
+      this.isCompleted,
+      this.notes})
       : super._();
   @override
   WorkoutSetWrite rebuild(void Function(WorkoutSetWriteBuilder) updates) =>
@@ -47,7 +50,8 @@ class _$WorkoutSetWrite extends WorkoutSetWrite {
         repsCompleted == other.repsCompleted &&
         weightLiftedKg == other.weightLiftedKg &&
         rpeScore == other.rpeScore &&
-        isCompleted == other.isCompleted;
+        isCompleted == other.isCompleted &&
+        notes == other.notes;
   }
 
   @override
@@ -59,6 +63,7 @@ class _$WorkoutSetWrite extends WorkoutSetWrite {
     _$hash = $jc(_$hash, weightLiftedKg.hashCode);
     _$hash = $jc(_$hash, rpeScore.hashCode);
     _$hash = $jc(_$hash, isCompleted.hashCode);
+    _$hash = $jc(_$hash, notes.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -71,7 +76,8 @@ class _$WorkoutSetWrite extends WorkoutSetWrite {
           ..add('repsCompleted', repsCompleted)
           ..add('weightLiftedKg', weightLiftedKg)
           ..add('rpeScore', rpeScore)
-          ..add('isCompleted', isCompleted))
+          ..add('isCompleted', isCompleted)
+          ..add('notes', notes))
         .toString();
   }
 }
@@ -106,6 +112,10 @@ class WorkoutSetWriteBuilder
   bool? get isCompleted => _$this._isCompleted;
   set isCompleted(bool? isCompleted) => _$this._isCompleted = isCompleted;
 
+  String? _notes;
+  String? get notes => _$this._notes;
+  set notes(String? notes) => _$this._notes = notes;
+
   WorkoutSetWriteBuilder() {
     WorkoutSetWrite._defaults(this);
   }
@@ -119,6 +129,7 @@ class WorkoutSetWriteBuilder
       _weightLiftedKg = $v.weightLiftedKg;
       _rpeScore = $v.rpeScore;
       _isCompleted = $v.isCompleted;
+      _notes = $v.notes;
       _$v = null;
     }
     return this;
@@ -148,6 +159,7 @@ class WorkoutSetWriteBuilder
           weightLiftedKg: weightLiftedKg,
           rpeScore: rpeScore,
           isCompleted: isCompleted,
+          notes: notes,
         );
     replace(_$result);
     return _$result;
