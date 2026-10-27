@@ -10,8 +10,8 @@ import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/item.dart';
-import '../../domain/usecases/get_accounts_usecase.dart';
-import '../../domain/usecases/get_tax_codes_usecase.dart';
+import '../../domain/usecases/get_account_usecase.dart';
+import '../../domain/usecases/get_tax_code_usecase.dart';
 import '../accounting_strings.dart';
 import '../cubit/item_detail_cubit.dart';
 
@@ -21,8 +21,8 @@ class ItemDetailScreen extends StatelessWidget {
     required this.itemId,
     this.initialItem,
     this.cubit,
-    this.getAccounts,
-    this.getTaxCodes,
+    this.getAccount,
+    this.getTaxCode,
   });
 
   final int itemId;
@@ -30,8 +30,8 @@ class ItemDetailScreen extends StatelessWidget {
 
   /// Injectable for tests; defaults to the DI container.
   final ItemDetailCubit? cubit;
-  final GetAccountsUseCase? getAccounts;
-  final GetTaxCodesUseCase? getTaxCodes;
+  final GetAccountUseCase? getAccount;
+  final GetTaxCodeUseCase? getTaxCode;
 
   @override
   Widget build(BuildContext context) {
@@ -44,8 +44,9 @@ class ItemDetailScreen extends StatelessWidget {
 
     final view = _ItemDetailView(
       itemId: itemId,
-      getAccounts: getAccounts ?? getIt<GetAccountsUseCase>(),
-      getTaxCodes: getTaxCodes ?? getIt<GetTaxCodesUseCase>(),
+      initialItem: initialItem,
+      getAccount: getAccount ?? getIt<GetAccountUseCase>(),
+      getTaxCode: getTaxCode ?? getIt<GetTaxCodeUseCase>(),
     );
 
     if (cubit != null) {
@@ -62,13 +63,15 @@ class ItemDetailScreen extends StatelessWidget {
 class _ItemDetailView extends StatefulWidget {
   const _ItemDetailView({
     required this.itemId,
-    required this.getAccounts,
-    required this.getTaxCodes,
+    this.initialItem,
+    required this.getAccount,
+    required this.getTaxCode,
   });
 
   final int itemId;
-  final GetAccountsUseCase getAccounts;
-  final GetTaxCodesUseCase getTaxCodes;
+  final Item? initialItem;
+  final GetAccountUseCase getAccount;
+  final GetTaxCodeUseCase getTaxCode;
 
   @override
   State<_ItemDetailView> createState() => _ItemDetailViewState();
@@ -77,29 +80,56 @@ class _ItemDetailView extends StatefulWidget {
 class _ItemDetailViewState extends State<_ItemDetailView> {
   Map<String, String> _accountNames = const {};
   Map<String, String> _taxCodeNames = const {};
+  Item? _lastLoadedItem;
 
   @override
   void initState() {
     super.initState();
-    _loadNames();
+    final item = widget.initialItem ?? context.read<ItemDetailCubit>().state.item;
+    if (item != null) {
+      _loadNames(item);
+    }
   }
 
   /// Best effort: on failure the screen falls back to a dash for names.
-  Future<void> _loadNames() async {
-    final accounts = await widget.getAccounts(
-      const GetAccountsParams(limit: 500),
-    );
-    final taxCodes = await widget.getTaxCodes(
-      const GetTaxCodesParams(limit: 500),
-    );
+  Future<void> _loadNames(Item item) async {
+    _lastLoadedItem = item;
+    final accountIds = <int>{
+      item.incomeAccountId,
+      item.expenseAccountId,
+      if (item.inventoryAccountId != null) item.inventoryAccountId!,
+      if (item.cogsAccountId != null) item.cogsAccountId!,
+    };
+    final taxCodeId = item.taxCodeId;
+
+    final futures = <Future<void>>[];
+    final newAccountNames = Map<String, String>.from(_accountNames);
+    final newTaxCodeNames = Map<String, String>.from(_taxCodeNames);
+
+    for (final id in accountIds) {
+      futures.add(
+        widget.getAccount(GetAccountParams(id: '$id')).then((res) {
+          res.fold((_) {}, (acc) => newAccountNames['$id'] = acc.name);
+        }),
+      );
+    }
+
+    if (taxCodeId != null) {
+      futures.add(
+        widget.getTaxCode(GetTaxCodeParams(id: '$taxCodeId')).then((res) {
+          res.fold((_) {}, (tc) => newTaxCodeNames['$taxCodeId'] = tc.name);
+        }),
+      );
+    }
+
+    if (futures.isNotEmpty) {
+      await Future.wait(futures);
+    }
+
     if (!mounted) return;
     setState(() {
-      accounts.fold((_) {}, (page) {
-        _accountNames = {for (final a in page.items) a.id: a.name};
-      });
-      taxCodes.fold((_) {}, (page) {
-        _taxCodeNames = {for (final t in page.items) t.id: t.name};
-      });
+      _accountNames = newAccountNames;
+      _taxCodeNames = newTaxCodeNames;
     });
   }
 
@@ -132,7 +162,14 @@ class _ItemDetailViewState extends State<_ItemDetailView> {
   Widget build(BuildContext context) {
     final canEdit = context.can('accounting.accounts_write');
 
-    return BlocBuilder<ItemDetailCubit, ItemDetailState>(
+    return BlocConsumer<ItemDetailCubit, ItemDetailState>(
+      listenWhen: (previous, current) =>
+          current.item != null && current.item != _lastLoadedItem,
+      listener: (context, state) {
+        if (state.item != null) {
+          _loadNames(state.item!);
+        }
+      },
       builder: (context, state) {
         final item = state.item;
         return Scaffold(
@@ -168,8 +205,12 @@ class _ItemDetailViewState extends State<_ItemDetailView> {
     }
 
     return RefreshIndicator(
-      onRefresh: () =>
-          context.read<ItemDetailCubit>().load(widget.itemId, initialItem: item),
+      onRefresh: () async {
+        final cubit = context.read<ItemDetailCubit>();
+        await cubit.load(widget.itemId, initialItem: item);
+        final currentItem = cubit.state.item ?? item;
+        await _loadNames(currentItem);
+      },
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [

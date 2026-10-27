@@ -83,7 +83,7 @@
 
 ## Slice E: Items Hardening & Optimization
 
-- [ ] **Task MQ-06: Safe ID parsing in `ItemFormCubit` and clear-icon optimization in `ItemsListScreen`**
+- [x] **Task MQ-06: Safe ID parsing in `ItemFormCubit` and clear-icon optimization in `ItemsListScreen`**
   - **Acceptance:**
     - `ItemFormCubit.buildDraft()` safely parses `incomeAccountId` and `expenseAccountId` with `int.tryParse`, emitting a validation error if malformed rather than throwing `FormatException`.
     - `ItemsListScreen` replaces whole-screen `setState` on keystroke with `ValueListenableBuilder<TextEditingValue>` on `_searchController` for the clear icon.
@@ -96,7 +96,7 @@
     - `app/test/features/accounting/presentation/item_form_test.dart`
     - `app/test/features/accounting/presentation/items_list_screen_test.dart`
 
-- [ ] **Task MQ-07: Replace 500-item bulk queries in `ItemDetailScreen` with targeted parallel ID lookups**
+- [x] **Task MQ-07: Replace 500-item bulk queries in `ItemDetailScreen` with targeted parallel ID lookups**
   - **Acceptance:**
     - `ItemDetailScreen._loadNames()` fetches only the specific 4 account IDs and 1 tax code ID present on the item using `Future.wait` on `getAccount` and `getTaxCode`.
     - Eliminates the `GetAccountsParams(limit: 500)` and `GetTaxCodesParams(limit: 500)` bulk downloads.
@@ -109,7 +109,7 @@
 
 ## Slice F: Verification & Quality Gate
 
-- [ ] **Task MQ-08: Full test suite verification and static analysis check**
+- [x] **Task MQ-08: Full test suite verification and static analysis check**
   - **Acceptance:**
     - `dart analyze lib/features/accounting` passes with 0 errors and 0 warnings.
     - All accounting presentation tests pass.

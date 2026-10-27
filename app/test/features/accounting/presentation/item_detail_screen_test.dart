@@ -4,14 +4,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:go_router/go_router.dart';
-import 'package:luxeknox/core/pagination/cursor_page.dart';
+import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/core/router/routes.dart';
 import 'package:luxeknox/features/accounting/domain/entities/account.dart';
 import 'package:luxeknox/features/accounting/domain/entities/item.dart';
 import 'package:luxeknox/features/accounting/domain/entities/tax_code.dart';
-import 'package:luxeknox/features/accounting/domain/usecases/get_accounts_usecase.dart';
-import 'package:luxeknox/features/accounting/domain/usecases/get_tax_codes_usecase.dart';
+import 'package:luxeknox/features/accounting/domain/usecases/get_account_usecase.dart';
+import 'package:luxeknox/features/accounting/domain/usecases/get_tax_code_usecase.dart';
 import 'package:luxeknox/features/accounting/presentation/accounting_strings.dart';
 import 'package:luxeknox/features/accounting/presentation/cubit/item_detail_cubit.dart';
 import 'package:luxeknox/features/accounting/presentation/screens/item_detail_screen.dart';
@@ -27,14 +27,14 @@ class MockItemDetailCubit extends MockCubit<ItemDetailState>
 class MockSessionCubit extends MockCubit<SessionState>
     implements SessionCubit {}
 
-class MockGetAccountsUseCase extends Mock implements GetAccountsUseCase {}
+class MockGetAccountUseCase extends Mock implements GetAccountUseCase {}
 
-class MockGetTaxCodesUseCase extends Mock implements GetTaxCodesUseCase {}
+class MockGetTaxCodeUseCase extends Mock implements GetTaxCodeUseCase {}
 
 void main() {
   late MockItemDetailCubit cubit;
-  late MockGetAccountsUseCase getAccounts;
-  late MockGetTaxCodesUseCase getTaxCodes;
+  late MockGetAccountUseCase getAccount;
+  late MockGetTaxCodeUseCase getTaxCode;
 
   const tTracked = Item(
     id: 1,
@@ -93,8 +93,8 @@ void main() {
           builder: (_, _) => ItemDetailScreen(
             itemId: item.id,
             cubit: cubit,
-            getAccounts: getAccounts,
-            getTaxCodes: getTaxCodes,
+            getAccount: getAccount,
+            getTaxCode: getTaxCode,
           ),
         ),
         GoRoute(
@@ -111,33 +111,33 @@ void main() {
 
   setUp(() {
     cubit = MockItemDetailCubit();
-    getAccounts = MockGetAccountsUseCase();
-    getTaxCodes = MockGetTaxCodesUseCase();
-    registerFallbackValue(const GetAccountsParams());
-    registerFallbackValue(const GetTaxCodesParams());
-    when(() => getAccounts(any())).thenAnswer(
+    getAccount = MockGetAccountUseCase();
+    getTaxCode = MockGetTaxCodeUseCase();
+    registerFallbackValue(const GetAccountParams(id: ''));
+    registerFallbackValue(const GetTaxCodeParams(id: ''));
+    when(() => getAccount(const GetAccountParams(id: '100'))).thenAnswer(
       (_) async => const Right(
-        CursorPage<Account>(
-          items: [
-            Account(id: '100', name: 'Sales Income', type: 'income'),
-            Account(id: '200', name: 'Cost of Sales', type: 'expense'),
-            Account(id: '300', name: 'Inventory Asset', type: 'asset'),
-            Account(id: '400', name: 'COGS', type: 'expense'),
-          ],
-          nextCursor: null,
-          hasMore: false,
-        ),
+        Account(id: '100', name: 'Sales Income', type: 'income'),
       ),
     );
-    when(() => getTaxCodes(any())).thenAnswer(
+    when(() => getAccount(const GetAccountParams(id: '200'))).thenAnswer(
       (_) async => const Right(
-        CursorPage<TaxCode>(
-          items: [
-            TaxCode(id: '7', code: 'GST18', name: 'GST 18%', ratePercent: '18'),
-          ],
-          nextCursor: null,
-          hasMore: false,
-        ),
+        Account(id: '200', name: 'Cost of Sales', type: 'expense'),
+      ),
+    );
+    when(() => getAccount(const GetAccountParams(id: '300'))).thenAnswer(
+      (_) async => const Right(
+        Account(id: '300', name: 'Inventory Asset', type: 'asset'),
+      ),
+    );
+    when(() => getAccount(const GetAccountParams(id: '400'))).thenAnswer(
+      (_) async => const Right(
+        Account(id: '400', name: 'COGS', type: 'expense'),
+      ),
+    );
+    when(() => getTaxCode(const GetTaxCodeParams(id: '7'))).thenAnswer(
+      (_) async => const Right(
+        TaxCode(id: '7', code: 'GST18', name: 'GST 18%', ratePercent: '18'),
       ),
     );
   });
@@ -160,6 +160,12 @@ void main() {
     expect(find.text('5.000'), findsOneWidget);
     expect(find.text(AccountingStrings.itemInventoryAccountLabel),
         findsOneWidget);
+
+    verify(() => getAccount(const GetAccountParams(id: '100'))).called(1);
+    verify(() => getAccount(const GetAccountParams(id: '200'))).called(1);
+    verify(() => getAccount(const GetAccountParams(id: '300'))).called(1);
+    verify(() => getAccount(const GetAccountParams(id: '400'))).called(1);
+    verify(() => getTaxCode(const GetTaxCodeParams(id: '7'))).called(1);
   });
 
   testWidgets('untracked item shows em dashes and no inventory accounts', (
@@ -175,6 +181,33 @@ void main() {
     expect(find.text(AccountingStrings.itemInventoryAccountLabel),
         findsNothing);
     expect(find.text(AccountingStrings.itemCogsAccountLabel), findsNothing);
+
+    verify(() => getAccount(const GetAccountParams(id: '100'))).called(1);
+    verify(() => getAccount(const GetAccountParams(id: '200'))).called(1);
+    verifyNever(() => getAccount(const GetAccountParams(id: '300')));
+    verifyNever(() => getAccount(const GetAccountParams(id: '400')));
+    verifyZeroInteractions(getTaxCode);
+  });
+
+  testWidgets('falls back to em dash when account lookup fails', (tester) async {
+    when(() => getAccount(const GetAccountParams(id: '100'))).thenAnswer(
+      (_) async => const Left(NotFoundFailure()),
+    );
+
+    tester.view.physicalSize = const Size(800, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(wrap(tTracked));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Protein Bar'), findsOneWidget);
+    // Income account fell back to em dash
+    expect(find.text('Sales Income'), findsNothing);
+    // Other accounts and tax code still resolved
+    expect(find.text('Inventory Asset'), findsOneWidget);
+    expect(find.text('COGS'), findsOneWidget);
+    expect(find.text('GST 18%'), findsOneWidget);
   });
 
   testWidgets('Edit is hidden without accounting.accounts_write', (
