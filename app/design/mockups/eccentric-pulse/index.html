@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eccentric Pulse mock</title>
+  <meta name="description" content="LuxeKnox redesign mock for review: member dossier and workout plan builder on a phone.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Outfit:wght@300..700&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='10' fill='none' stroke='%235A0000' stroke-width='4'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#stage">Skip to the mock</a>
+
+  <div class="review">
+    <header class="review-head">
+      <div>
+        <h1>Eccentric Pulse</h1>
+        <p>Phone mock of the member dossier and the workout plan builder, redrawn in the LuxeKnox system from <code>app-redesign.md</code>. Everything is tappable. Use the controls to check roles, states, dark mode, and the 320dp width.</p>
+      </div>
+
+      <div class="controls" role="group" aria-label="Mock controls">
+        <div class="ctl"><span id="c-theme">Theme</span>
+          <div class="seg" role="group" aria-labelledby="c-theme" data-pref="theme">
+            <button type="button" data-val="system">System</button><button type="button" data-val="light">Light</button><button type="button" data-val="dark">Dark</button>
+          </div>
+        </div>
+        <div class="ctl ctl-width"><span id="c-width">Screen width</span>
+          <div class="seg" role="group" aria-labelledby="c-width" data-pref="width">
+            <button type="button" data-val="360">360dp</button><button type="button" data-val="320">320dp</button>
+          </div>
+        </div>
+        <div class="ctl"><span id="c-long">Names</span>
+          <div class="seg" role="group" aria-labelledby="c-long" data-pref="long">
+            <button type="button" data-val="off">Typical</button><button type="button" data-val="on">Very long</button>
+          </div>
+        </div>
+        <div class="ctl"><span id="c-motion">Motion</span>
+          <div class="seg" role="group" aria-labelledby="c-motion" data-pref="motion">
+            <button type="button" data-val="on">On</button><button type="button" data-val="off">Off</button>
+          </div>
+        </div>
+        <div class="ctl"><span id="c-role">Dossier viewer</span>
+          <div class="seg" role="group" aria-labelledby="c-role" data-pref="role">
+            <button type="button" data-val="trainer">Trainer</button><button type="button" data-val="admin">Admin</button>
+          </div>
+        </div>
+        <div class="ctl"><span id="c-load">Dossier state</span>
+          <div class="seg" role="group" aria-labelledby="c-load" data-pref="load">
+            <button type="button" data-val="loaded">Loaded</button><button type="button" data-val="loading">Loading</button><button type="button" data-val="error">Error</button>
+          </div>
+        </div>
+        <div class="ctl"><span id="c-pt">Personal training</span>
+          <div class="seg" role="group" aria-labelledby="c-pt" data-pref="pt">
+            <button type="button" data-val="active">Active</button><button type="button" data-val="none">None</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="view-tabs seg" role="tablist" aria-label="Screen">
+      <button type="button" role="tab" data-view="dossier">Member dossier</button>
+      <button type="button" role="tab" data-view="builder">Workout builder</button>
+    </div>
+
+    <main class="stage" id="stage">
+      <section class="panel" data-panel="dossier" aria-labelledby="p-dossier">
+        <div class="panel-cap">
+          <h2 id="p-dossier">Member dossier</h2>
+          <p>Trainer and admin view of one member. <span class="route">/trainer/members/:id</span></p>
+        </div>
+        <div class="phone">
+          <div class="screen" data-screen="dossier">
+            <div class="status" aria-hidden="true"><span>6:52</span><span class="status-r"><i class="sig"></i><i class="bat"></i></span></div>
+            <div class="appbar"></div>
+            <div class="body"></div>
+            <nav class="nav" aria-label="Main"></nav>
+            <div class="toast-host" aria-live="polite"></div>
+            <div class="sheet-layer"></div>
+          </div>
+        </div>
+        <ul class="notes">
+          <li>One hero: membership days left in Fraunces, with the plan and end date tucked under it. Balance and visits are the under-count, in two equal columns.</li>
+          <li>Nia sits 8dp over the hero's top-left edge. She breathes on a 4s cycle and holds still when motion is off.</li>
+          <li>For trainers, starting a session is the only filled button. Admins get sell, renew, and change instead.</li>
+          <li>The knee note from Notes moves above the fold, because it changes what a trainer programmes.</li>
+          <li>Edit turns the contact list into fields in place. Renew uses a bottom sheet instead of an alert dialog.</li>
+        </ul>
+      </section>
+
+      <section class="panel" data-panel="builder" aria-labelledby="p-builder">
+        <div class="panel-cap">
+          <h2 id="p-builder">Workout plan builder</h2>
+          <p>Editing a member's draft plan. <span class="route">/trainer/plans/workout/:id/edit</span></p>
+        </div>
+        <div class="phone">
+          <div class="screen" data-screen="builder">
+            <div class="status" aria-hidden="true"><span>6:52</span><span class="status-r"><i class="sig"></i><i class="bat"></i></span></div>
+            <div class="appbar"></div>
+            <div class="body"></div>
+            <nav class="nav" aria-label="Main"></nav>
+            <div class="toast-host" aria-live="polite"></div>
+            <div class="sheet-layer"></div>
+          </div>
+        </div>
+        <ul class="notes">
+          <li>Days become tabs instead of one long scroll. The selected day's set count is the hero, with estimated time under it.</li>
+          <li>Each exercise collapses to one line: sets × reps at load, then rest. Tap it to edit with steppers and rest chips.</li>
+          <li>Plan details fold into a summary row. Only the title stays open, because it's required.</li>
+          <li>Labels stay "Day N". The API has no day name, so the mock doesn't invent one.</li>
+          <li>Try Save with an empty title, Back with unsaved changes, Remove then Undo, and "+ Day" then closing the picker.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="review-foot">
+      <p>Here the fonts load from Google Fonts. The app bundles Fraunces and Outfit under <code>assets/fonts/</code>. Routes, cubits, and API fields match the current screens.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
