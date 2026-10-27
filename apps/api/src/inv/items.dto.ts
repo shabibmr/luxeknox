@@ -44,12 +44,14 @@ export interface InventoryItemDto {
   sale_rate: string | null;
   purchase_rate: string | null;
   tax_code_id: number | null;
+  tax_rate_percent: string | null;
   income_account_id: number;
   expense_account_id: number;
   inventory_account_id: number | null;
   cogs_account_id: number | null;
   inventory_tracked: boolean;
   reorder_level: string | null;
+  qty_on_hand: string | null;
   has_movements: boolean;
   is_active: boolean;
   row_version: number;

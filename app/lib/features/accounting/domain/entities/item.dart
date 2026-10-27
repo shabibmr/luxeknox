@@ -19,9 +19,11 @@ class Item extends Equatable {
     this.saleRate,
     this.purchaseRate,
     this.taxCodeId,
+    this.taxRatePercent,
     this.inventoryAccountId,
     this.cogsAccountId,
     this.inventoryTracked = false,
+    this.qtyOnHand,
     this.reorderLevel,
     this.hasMovements = false,
     this.isActive = true,
@@ -43,11 +45,17 @@ class Item extends Equatable {
   final String? saleRate;
   final String? purchaseRate;
   final int? taxCodeId;
+
+  /// Tax code rate percent (2 decimals), null when the item has no tax code.
+  final String? taxRatePercent;
   final int incomeAccountId;
   final int expenseAccountId;
   final int? inventoryAccountId;
   final int? cogsAccountId;
   final bool inventoryTracked;
+
+  /// On-hand qty for tracked items (including `"0.000"`); null when untracked.
+  final String? qtyOnHand;
   final String? reorderLevel;
   final bool hasMovements;
   final bool isActive;
@@ -68,11 +76,13 @@ class Item extends Equatable {
     saleRate,
     purchaseRate,
     taxCodeId,
+    taxRatePercent,
     incomeAccountId,
     expenseAccountId,
     inventoryAccountId,
     cogsAccountId,
     inventoryTracked,
+    qtyOnHand,
     reorderLevel,
     hasMovements,
     isActive,

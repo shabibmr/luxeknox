@@ -154,6 +154,8 @@ import '../../features/accounting/presentation/cubit/item_detail_cubit.dart'
 import '../../features/accounting/presentation/cubit/item_form_cubit.dart'
     as _i521;
 import '../../features/accounting/presentation/cubit/items_cubit.dart' as _i149;
+import '../../features/inventory/presentation/cubit/counter_sale_cubit.dart'
+    as _iCounterSale;
 import '../../features/accounting/presentation/cubit/journal_detail_cubit.dart'
     as _i494;
 import '../../features/accounting/presentation/cubit/journal_entry_form_cubit.dart'
@@ -1507,6 +1509,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i149.ItemsCubit>(
       () => _i149.ItemsCubit(
+        gh<_i649.GetItemsUseCase>(),
+        debounceDuration: gh<Duration>(),
+      ),
+    );
+    gh.factory<_iCounterSale.CounterSaleCubit>(
+      () => _iCounterSale.CounterSaleCubit(
         gh<_i649.GetItemsUseCase>(),
         debounceDuration: gh<Duration>(),
       ),

@@ -803,10 +803,6 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<WorkoutPlanExercisesWriteExercisesInner>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(ExerciseHistorySession)]),
-        () => ListBuilder<ExerciseHistorySession>(),
-      )
-      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(Notification)]),
         () => ListBuilder<Notification>(),
       )
@@ -985,6 +981,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(Membership)]),
         () => ListBuilder<Membership>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ExerciseHistorySession)]),
+        () => ListBuilder<ExerciseHistorySession>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(JournalLineWrite)]),

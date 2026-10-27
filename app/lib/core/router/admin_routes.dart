@@ -33,6 +33,7 @@ import '../../features/accounting/presentation/screens/items_list_screen.dart';
 import '../../features/accounting/presentation/screens/vendor_form_screen.dart';
 import '../../features/accounting/presentation/screens/vendors_list_screen.dart';
 import '../../features/alerts/presentation/screens/system_alerts_screen.dart';
+import '../../features/inventory/presentation/screens/counter_sale_screen.dart';
 import '../../features/attendance/presentation/screens/admin_attendance_screen.dart';
 import '../../features/auth/presentation/widgets/sign_out_tile.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -662,8 +663,7 @@ StatefulShellRoute createAdminBranchRoute() {
           ),
           GoRoute(
             path: Routes.adminInventoryCounterSale,
-            builder: (context, state) =>
-                const PlaceholderScreen(title: ShellStrings.counterSale),
+            builder: (context, state) => const CounterSaleScreen(),
           ),
           GoRoute(
             path: Routes.adminPackages,

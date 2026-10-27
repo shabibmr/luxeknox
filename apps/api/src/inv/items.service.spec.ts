@@ -30,12 +30,14 @@ const ROW: InventoryItemRow = {
   sale_rate: '1499.00',
   purchase_rate: '900.00',
   tax_code_id: 1,
+  tax_rate_percent: '18.00',
   income_account_id: 4250,
   expense_account_id: 5000,
   inventory_account_id: 1400,
   cogs_account_id: 5050,
   inventory_tracked: true,
   reorder_level: '5.000',
+  stock_qty_on_hand: '12.500',
   is_active: true,
   row_version: 1,
   created_at: new Date('2026-10-16T00:00:00.000Z'),
@@ -90,6 +92,8 @@ describe('InventoryItemsService', () => {
         uom_code: 'PCS',
         uom_decimal_places: 0,
         category_name: 'Supplements',
+        tax_rate_percent: '18.00',
+        qty_on_hand: '12.500',
         has_movements: false,
       }),
     ]);
@@ -186,9 +190,43 @@ describe('InventoryItemsService', () => {
     const item = await service.getById(10, ADMIN_USER);
     expect(item.uom_code).toBe('PCS');
     expect(item.category_name).toBe('Supplements');
+    expect(item.tax_rate_percent).toBe('18.00');
+    expect(item.qty_on_hand).toBe('12.500');
     expect(item.has_movements).toBe(false);
     expect(stockRepository.findItemIdsWithMovements).toHaveBeenCalledWith([10]);
     expect(item).not.toHaveProperty('stock');
+  });
+
+  it('maps qty_on_hand to 0.000 when tracked with no stock row', async () => {
+    repository.findReadById.mockResolvedValue({
+      ...ROW,
+      stock_qty_on_hand: null,
+    });
+
+    const item = await service.getById(10, ADMIN_USER);
+    expect(item.qty_on_hand).toBe('0.000');
+  });
+
+  it('maps qty_on_hand to null when inventory is not tracked', async () => {
+    repository.findReadById.mockResolvedValue({
+      ...ROW,
+      inventory_tracked: false,
+      stock_qty_on_hand: '5.000',
+    });
+
+    const item = await service.getById(10, ADMIN_USER);
+    expect(item.qty_on_hand).toBeNull();
+  });
+
+  it('maps tax_rate_percent to null when no tax code is joined', async () => {
+    repository.findReadById.mockResolvedValue({
+      ...ROW,
+      tax_code_id: null,
+      tax_rate_percent: null,
+    });
+
+    const item = await service.getById(10, ADMIN_USER);
+    expect(item.tax_rate_percent).toBeNull();
   });
 
   it('throws when the item does not exist', async () => {

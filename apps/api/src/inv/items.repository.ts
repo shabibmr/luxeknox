@@ -7,10 +7,12 @@ import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import {
   itemCategories,
   items,
+  taxCodes,
   uoms,
   type Item,
   type NewItem,
 } from '../platform/db/schema/accounting';
+import { itemStock } from '../platform/db/schema/inventory';
 
 export interface ItemListFilter {
   itemKind?: ItemKind;
@@ -34,12 +36,14 @@ export interface InventoryItemRow {
   sale_rate: string | null;
   purchase_rate: string | null;
   tax_code_id: number | null;
+  tax_rate_percent: string | null;
   income_account_id: number;
   expense_account_id: number;
   inventory_account_id: number | null;
   cogs_account_id: number | null;
   inventory_tracked: boolean;
   reorder_level: string | null;
+  stock_qty_on_hand: string | null;
   is_active: boolean;
   row_version: number;
   created_at: Date;
@@ -60,12 +64,14 @@ const itemReadColumns = {
   sale_rate: items.sale_rate,
   purchase_rate: items.purchase_rate,
   tax_code_id: items.tax_code_id,
+  tax_rate_percent: taxCodes.rate_percent,
   income_account_id: items.income_account_id,
   expense_account_id: items.expense_account_id,
   inventory_account_id: items.inventory_account_id,
   cogs_account_id: items.cogs_account_id,
   inventory_tracked: items.inventory_tracked,
   reorder_level: items.reorder_level,
+  stock_qty_on_hand: itemStock.qty_on_hand,
   is_active: items.is_active,
   row_version: items.row_version,
   created_at: items.created_at,
@@ -125,7 +131,9 @@ export class InventoryItemsRepository extends BaseRepository<typeof items, Item,
       .select(itemReadColumns)
       .from(items)
       .innerJoin(uoms, eq(items.uom_id, uoms.id))
-      .leftJoin(itemCategories, eq(items.category_id, itemCategories.id));
+      .leftJoin(itemCategories, eq(items.category_id, itemCategories.id))
+      .leftJoin(taxCodes, eq(items.tax_code_id, taxCodes.id))
+      .leftJoin(itemStock, eq(items.id, itemStock.item_id));
     let countQ = db.select({ value: count() }).from(items);
     if (listWhere) {
       listQ = listQ.where(listWhere);
@@ -150,6 +158,8 @@ export class InventoryItemsRepository extends BaseRepository<typeof items, Item,
       .from(items)
       .innerJoin(uoms, eq(items.uom_id, uoms.id))
       .leftJoin(itemCategories, eq(items.category_id, itemCategories.id))
+      .leftJoin(taxCodes, eq(items.tax_code_id, taxCodes.id))
+      .leftJoin(itemStock, eq(items.id, itemStock.item_id))
       .where(eq(items.id, id))
       .limit(1);
     return (rows[0] as InventoryItemRow | undefined) ?? null;

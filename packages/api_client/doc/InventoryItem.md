@@ -22,11 +22,13 @@ Name | Type | Description | Notes
 **purchaseRate** | **String** | DECIMAL(12,2) as a two-decimal string. Never a JSON number. | [optional] 
 **reorderLevel** | **String** | DECIMAL(14,3) quantity as a three-decimal string. Never a JSON number. | [optional] 
 **taxCodeId** | **int** |  | [optional] 
+**taxRatePercent** | **String** | Tax code rate_percent for the item; null when tax_code_id is null. | [optional] 
 **incomeAccountId** | **int** |  | 
 **expenseAccountId** | **int** |  | 
 **inventoryAccountId** | **int** |  | [optional] 
 **cogsAccountId** | **int** |  | [optional] 
 **inventoryTracked** | **bool** |  | 
+**qtyOnHand** | **String** | On-hand qty for inventory_tracked items (0.000 if no stock row); null when untracked. | [optional] 
 **hasMovements** | **bool** |  | 
 **isActive** | **bool** |  | 
 **rowVersion** | **int** |  | 

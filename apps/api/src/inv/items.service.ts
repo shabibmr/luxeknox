@@ -28,6 +28,8 @@ export class InventoryItemsService {
       category_name: row.category_name ?? null,
       uom_code: row.uom_code,
       uom_decimal_places: Number(row.uom_decimal_places),
+      tax_rate_percent: row.tax_rate_percent != null ? String(row.tax_rate_percent) : null,
+      qty_on_hand: row.inventory_tracked ? String(row.stock_qty_on_hand ?? '0.000') : null,
       has_movements: hasMovements,
     };
   }
