@@ -51,7 +51,7 @@
 
 ## Slice C: Vendors Logic & Navigation
 
-- [ ] **Task MQ-04: Add debouncing/epoch tracking to `VendorsCubit` and GoRouter to `VendorsListScreen`**
+- [x] **Task MQ-04: Add debouncing/epoch tracking to `VendorsCubit` and GoRouter to `VendorsListScreen`**
   - **Acceptance:**
     - `VendorsCubit` introduces `_debounceTimer` (300ms) and `_loadEpoch` counter, dropping responses from stale search requests.
     - `VendorsListScreen` replaces imperative `Navigator.push(MaterialPageRoute(...))` with `context.push(Routes.adminAccountingVendorsCreate)` and `context.push(Routes.adminAccountingVendorEditById(vendor.id))`.

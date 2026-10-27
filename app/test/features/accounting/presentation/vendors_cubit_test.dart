@@ -51,7 +51,7 @@ void main() {
 
   setUp(() {
     mockGetVendors = MockGetVendorsUseCase();
-    cubit = VendorsCubit(mockGetVendors);
+    cubit = VendorsCubit(mockGetVendors, debounceDuration: Duration.zero);
   });
 
   tearDown(() {
@@ -196,6 +196,9 @@ void main() {
       act: (cubit) => cubit.searchVendors('Acme'),
       expect: () => [
         const VendorsState(
+          search: 'Acme',
+        ),
+        const VendorsState(
           status: LoadStatus.loading,
           search: 'Acme',
           vendors: [],
@@ -220,6 +223,37 @@ void main() {
             )).called(1);
       },
     );
+
+    test('rapid searchVendors with real debounce only fires latest query', () async {
+      final debouncedCubit = VendorsCubit(
+        mockGetVendors,
+        debounceDuration: const Duration(milliseconds: 50),
+      );
+      when(() => mockGetVendors(any()))
+          .thenAnswer((_) async => const Right(tPage));
+
+      debouncedCubit.searchVendors('A');
+      debouncedCubit.searchVendors('Ac');
+      debouncedCubit.searchVendors('Acme');
+
+      expect(debouncedCubit.state.search, 'Acme');
+      verifyNever(() => mockGetVendors(any()));
+
+      await Future<void>.delayed(const Duration(milliseconds: 70));
+
+      verify(
+        () => mockGetVendors(
+          const GetVendorsParams(
+            limit: 50,
+            offset: 0,
+            search: 'Acme',
+            isActive: null,
+          ),
+        ),
+      ).called(1);
+
+      await debouncedCubit.close();
+    });
 
     blocTest<VendorsCubit, VendorsState>(
       'filterByActive triggers reload with isActive true',

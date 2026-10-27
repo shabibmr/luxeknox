@@ -2,9 +2,11 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luxeknox/core/di/injector.dart';
 import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
+import 'package:luxeknox/core/router/routes.dart';
 import 'package:luxeknox/core/widgets/app_empty_view.dart';
 import 'package:luxeknox/core/widgets/app_error_view.dart';
 import 'package:luxeknox/core/widgets/app_loading.dart';
@@ -110,13 +112,34 @@ void main() {
       initialState: state,
     );
 
-    return MaterialApp(
-      home: BlocProvider<SessionCubit>.value(
-        value: mockSessionCubit,
-        child: VendorsListScreen(
-          cubit: mockVendorsCubit,
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => BlocProvider<SessionCubit>.value(
+            value: mockSessionCubit,
+            child: VendorsListScreen(
+              cubit: mockVendorsCubit,
+            ),
+          ),
         ),
-      ),
+        GoRoute(
+          path: Routes.adminAccountingVendorsCreate,
+          builder: (context, state) =>
+              const Scaffold(body: Text('Create Vendor Destination')),
+        ),
+        GoRoute(
+          path: '/admin/accounting/vendors/:id/edit',
+          builder: (_, state) => Scaffold(
+            body: Text('Edit Vendor Destination ${state.pathParameters['id']}'),
+          ),
+        ),
+      ],
+    );
+
+    return MaterialApp.router(
+      routerConfig: router,
     );
   }
 
@@ -266,6 +289,43 @@ void main() {
       );
 
       expect(find.byKey(const Key('create_vendor_fab')), findsNothing);
+    });
+
+    testWidgets('tapping FAB navigates to vendor create route', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          capabilities: writeCapabilities,
+          state: const VendorsState(
+            status: LoadStatus.success,
+            vendors: [tVendor1],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('create_vendor_fab')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Create Vendor Destination'), findsOneWidget);
+    });
+
+    testWidgets('tapping vendor item navigates to vendor edit route',
+        (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          capabilities: writeCapabilities,
+          state: const VendorsState(
+            status: LoadStatus.success,
+            vendors: [tVendor1],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Acme Fitness Equipments'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit Vendor Destination v-1'), findsOneWidget);
     });
   });
 }
