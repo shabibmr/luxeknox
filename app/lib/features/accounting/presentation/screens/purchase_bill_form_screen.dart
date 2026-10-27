@@ -12,6 +12,8 @@ import '../../domain/entities/account.dart';
 import '../../domain/entities/item.dart';
 import '../../domain/entities/tax_code.dart';
 import '../../domain/entities/vendor.dart';
+import '../../../../core/widgets/app_currency_field.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../accounting_strings.dart';
 import '../cubit/purchase_bill_form_cubit.dart';
 import '../widgets/account_picker_sheet.dart';
@@ -274,8 +276,8 @@ class _PurchaseBillFormView extends StatelessWidget {
                               AccountingStrings.subtotalLabel,
                               style: TextStyle(fontSize: 14),
                             ),
-                            Text(
-                              AccountingStrings.formatAmount(state.subtotal),
+                            AppCurrencyText(
+                              state.subtotal.toString(),
                               key: const Key('subtotal_amount'),
                               style: const TextStyle(
                                 fontSize: 14,
@@ -292,8 +294,8 @@ class _PurchaseBillFormView extends StatelessWidget {
                               AccountingStrings.taxAmountLabel,
                               style: TextStyle(fontSize: 14),
                             ),
-                            Text(
-                              AccountingStrings.formatAmount(state.taxAmount),
+                            AppCurrencyText(
+                              state.taxAmount.toString(),
                               key: const Key('tax_amount'),
                               style: const TextStyle(
                                 fontSize: 14,
@@ -313,8 +315,8 @@ class _PurchaseBillFormView extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            Text(
-                              AccountingStrings.formatAmount(state.totalAmount),
+                            AppCurrencyText(
+                              state.totalAmount.toString(),
                               key: const Key('total_amount'),
                               style: TextStyle(
                                 fontSize: 18,
@@ -557,17 +559,11 @@ class _PurchaseBillLineItemState extends State<_PurchaseBillLineItem> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: TextFormField(
+                  child: AppCurrencyField(
                     key: Key('rate_field_$index'),
                     controller: _rateController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: AccountingStrings.rateLabel,
-                      helperText: AccountingStrings.rateExcludesTaxHint,
-                      prefixText: '\$',
-                      border: OutlineInputBorder(),
-                    ),
+                    label: AccountingStrings.rateLabel,
+                    helperText: AccountingStrings.rateExcludesTaxHint,
                     onChanged: widget.onRateChanged,
                   ),
                 ),
@@ -612,18 +608,30 @@ class _PurchaseBillLineItemState extends State<_PurchaseBillLineItem> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  'Net: ${AccountingStrings.formatAmount(line.netAmount)}',
+                const Text(
+                  'Net: ',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                AppCurrencyText(
+                  line.netAmount.toString(),
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Tax: ${AccountingStrings.formatAmount(line.taxAmount)}',
+                const Text(
+                  'Tax: ',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                AppCurrencyText(
+                  line.taxAmount.toString(),
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Total: ${AccountingStrings.formatAmount(line.totalAmount)}',
+                const Text(
+                  'Total: ',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                AppCurrencyText(
+                  line.totalAmount.toString(),
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,

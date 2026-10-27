@@ -10,6 +10,7 @@ import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/app_status_chip.dart';
 import '../../domain/entities/fund_transfer.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../accounting_strings.dart';
 import '../cubit/fund_transfers_cubit.dart';
 import 'fund_transfer_detail_screen.dart';
@@ -355,8 +356,8 @@ class _FundTransfersListViewState extends State<_FundTransfersListView> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    AccountingStrings.formatMoney(transfer.amount),
+                  AppCurrencyText(
+                    transfer.amount,
                     key: Key('transfer_amount_${transfer.id}'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -364,9 +365,21 @@ class _FundTransfersListViewState extends State<_FundTransfersListView> {
                     ),
                   ),
                   if (transfer.hasFee)
-                    Text(
-                      '${AccountingStrings.feeAmountLabel}: ${AccountingStrings.formatMoney(transfer.feeAmount)}',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          '${AccountingStrings.feeAmountLabel}: ',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                        AppCurrencyText(
+                          transfer.feeAmount,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
                     ),
                 ],
               ),

@@ -14,6 +14,7 @@ import '../../../../core/widgets/app_status_chip.dart';
 import '../../domain/entities/payment_voucher.dart';
 import '../../domain/usecases/get_payment_voucher_usecase.dart';
 import '../../domain/usecases/post_payment_voucher_usecase.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../accounting_strings.dart';
 import '../cubit/payment_voucher_detail_cubit.dart';
 
@@ -429,9 +430,9 @@ class _PaymentVoucherDetailView extends StatelessWidget {
                           Padding(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 8),
-                            child: Text(
-                              AccountingStrings.formatMoney(alloc.amount),
-                              textAlign: TextAlign.right,
+                            child: AppCurrencyText(
+                              alloc.amount,
+                              textAlign: TextAlign.end,
                               style: const TextStyle(fontFamily: 'monospace'),
                             ),
                           ),
@@ -457,8 +458,8 @@ class _PaymentVoucherDetailView extends StatelessWidget {
                     fontSize: 16,
                   ),
                 ),
-                Text(
-                  AccountingStrings.formatMoney(voucher.amount),
+                AppCurrencyText(
+                  voucher.amount,
                   key: const Key('voucher_total_amount'),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,

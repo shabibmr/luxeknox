@@ -8,6 +8,7 @@ import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -233,9 +234,7 @@ class _OpenItemsSummarySection extends StatelessWidget {
         Expanded(
           child: _MetricCard(
             title: AccountingStrings.openReceivables,
-            amount: ar != null
-                ? AccountingStrings.formatMoney(ar.totalOpenAmount)
-                : '\$0.00',
+            amount: ar?.totalOpenAmount ?? '0',
             subtitle: ar != null
                 ? AccountingStrings.openItemsCount(ar.items.length)
                 : '0 items',
@@ -247,9 +246,7 @@ class _OpenItemsSummarySection extends StatelessWidget {
         Expanded(
           child: _MetricCard(
             title: AccountingStrings.openPayables,
-            amount: ap != null
-                ? AccountingStrings.formatMoney(ap.totalOpenAmount)
-                : '\$0.00',
+            amount: ap?.totalOpenAmount ?? '0',
             subtitle: ap != null
                 ? AccountingStrings.openItemsCount(ap.items.length)
                 : '0 items',
@@ -308,7 +305,7 @@ class _MetricCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
+            AppCurrencyText(
               amount,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,

@@ -8,6 +8,8 @@ import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../domain/entities/account.dart';
+import '../../../../core/widgets/app_currency_field.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../accounting_strings.dart';
 import '../cubit/journal_entry_form_cubit.dart';
 import '../widgets/account_picker_sheet.dart';
@@ -227,8 +229,8 @@ class _JournalEntryFormView extends StatelessWidget {
                                 style:
                                     TextStyle(fontSize: 12, color: Colors.grey),
                               ),
-                              Text(
-                                AccountingStrings.formatAmount(state.totalDebit),
+                              AppCurrencyText(
+                                state.totalDebit.toString(),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
@@ -244,8 +246,8 @@ class _JournalEntryFormView extends StatelessWidget {
                                 style:
                                     TextStyle(fontSize: 12, color: Colors.grey),
                               ),
-                              Text(
-                                AccountingStrings.formatAmount(state.totalCredit),
+                              AppCurrencyText(
+                                state.totalCredit.toString(),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
@@ -261,8 +263,8 @@ class _JournalEntryFormView extends StatelessWidget {
                                 style:
                                     TextStyle(fontSize: 12, color: Colors.grey),
                               ),
-                              Text(
-                                AccountingStrings.formatAmount(state.difference),
+                              AppCurrencyText(
+                                state.difference.toString(),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
@@ -300,12 +302,23 @@ class _JournalEntryFormView extends StatelessWidget {
                                 const Icon(Icons.error_outline,
                                     color: Colors.red),
                                 const SizedBox(width: 8),
-                                Text(
-                                  'Unbalanced by ${AccountingStrings.formatAmount(state.difference)}',
-                                  style: const TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      'Unbalanced by ',
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    AppCurrencyText(
+                                      state.difference.toString(),
+                                      style: const TextStyle(
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -445,29 +458,21 @@ class _JournalLineItemState extends State<_JournalLineItem> {
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
+                  child: AppCurrencyField(
                     key: Key('debit_field_$index'),
                     controller: _debitController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: AccountingStrings.debitLabel,
-                      prefixText: '\$',
-                    ),
+                    label: AccountingStrings.debitLabel,
+                    required: false,
                     onChanged: widget.onDebitChanged,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: TextFormField(
+                  child: AppCurrencyField(
                     key: Key('credit_field_$index'),
                     controller: _creditController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: AccountingStrings.creditLabel,
-                      prefixText: '\$',
-                    ),
+                    label: AccountingStrings.creditLabel,
+                    required: false,
                     onChanged: widget.onCreditChanged,
                   ),
                 ),

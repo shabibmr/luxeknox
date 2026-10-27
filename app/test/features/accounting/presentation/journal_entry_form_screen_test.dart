@@ -225,7 +225,8 @@ void main() {
 
       // Should show unbalanced warning
       expect(find.text(AccountingStrings.unbalancedEntryError), findsOneWidget);
-      expect(find.text('Unbalanced by \$50.00'), findsOneWidget);
+      expect(find.text('Unbalanced by '), findsOneWidget);
+      expect(find.text(AccountingStrings.formatAmount(50)), findsWidgets);
       expect(find.text(AccountingStrings.balancedStatus), findsNothing);
 
       // Submit button MUST be disabled

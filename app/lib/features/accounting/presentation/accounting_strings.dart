@@ -1,3 +1,4 @@
+import '../../../core/currency/gym_currency_provider.dart';
 import '../domain/entities/accounting_period.dart';
 
 /// UI string constants for the Accounting module.
@@ -421,8 +422,9 @@ class AccountingStrings {
       'Requires accounting.posting_toggle capability to enable automatic posting.';
 
   // Formatters
-  static String formatMoney(String amount) => '\$$amount';
-  static String formatAmount(num amount) => '\$${amount.toStringAsFixed(2)}';
+  static String formatMoney(String amount) => formatCurrencyAmount(amount);
+  static String formatAmount(num amount) =>
+      formatCurrencyAmount(amount.toString());
 
   static String periodSummary(AccountingPeriod period) =>
       '${period.name} (${period.startDate.toIso8601String().substring(0, 10)} to ${period.endDate.toIso8601String().substring(0, 10)})';

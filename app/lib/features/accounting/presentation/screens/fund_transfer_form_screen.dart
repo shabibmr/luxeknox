@@ -5,6 +5,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_currency_field.dart';
 import '../accounting_strings.dart';
 import '../cubit/fund_transfer_form_cubit.dart';
 import '../widgets/account_picker_sheet.dart';
@@ -218,34 +219,23 @@ class _FundTransferFormViewState extends State<_FundTransferFormView> {
                 const SizedBox(height: 16),
 
                 // Transfer Amount Field
-                TextFormField(
+                AppCurrencyField(
                   key: const Key('transfer_amount_field'),
                   controller: _amountController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: '${AccountingStrings.amountLabel} *',
-                    prefixText: '\$ ',
-                    errorText: state.amountError,
-                    border: const OutlineInputBorder(),
-                  ),
+                  label: '${AccountingStrings.amountLabel} *',
+                  errorText: state.amountError,
                   onChanged: cubit.amountChanged,
                 ),
                 const SizedBox(height: 16),
 
                 // Fee Amount Field
-                TextFormField(
+                AppCurrencyField(
                   key: const Key('transfer_fee_amount_field'),
                   controller: _feeAmountController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: AccountingStrings.feeAmountLabel,
-                    prefixText: '\$ ',
-                    errorText: state.feeAmountError,
-                    border: const OutlineInputBorder(),
-                    helperText: 'Optional processing fee',
-                  ),
+                  label: AccountingStrings.feeAmountLabel,
+                  required: false,
+                  errorText: state.feeAmountError,
+                  helperText: 'Optional processing fee',
                   onChanged: cubit.feeAmountChanged,
                 ),
                 const SizedBox(height: 16),

@@ -5,6 +5,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -123,9 +124,7 @@ class _CatalogBody extends StatelessWidget {
         itemCount: state.items.length,
         itemBuilder: (context, index) {
           final product = state.items[index];
-          final subtitle = hidePricing
-              ? '${product.code} · ${product.durationDays}d'
-              : '${product.code} · ${product.durationDays}d · ${product.basePrice}';
+          final meta = '${product.code} · ${product.durationDays}d';
           return ListTile(
             title: Row(
               children: [
@@ -142,7 +141,16 @@ class _CatalogBody extends StatelessWidget {
                 ],
               ],
             ),
-            subtitle: Text(subtitle),
+            subtitle: hidePricing
+                ? Text(meta)
+                : Wrap(
+                    spacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text('$meta ·'),
+                      AppCurrencyText(product.basePrice),
+                    ],
+                  ),
             trailing: product.isActive
                 ? null
                 : const Icon(Icons.visibility_off_outlined, size: 18),

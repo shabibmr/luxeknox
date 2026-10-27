@@ -223,10 +223,10 @@ void main() {
 
       expect(find.text('EXP-2026-0001'), findsOneWidget);
       expect(find.text('Office Supplies'), findsOneWidget);
-      expect(find.text('\$150.00'), findsOneWidget);
+      expect(find.text(AccountingStrings.formatMoney('150.00')), findsOneWidget);
       expect(find.text('EXP-2026-0002'), findsOneWidget);
       expect(find.text('Software Subscriptions'), findsOneWidget);
-      expect(find.text('\$450.00'), findsOneWidget);
+      expect(find.text(AccountingStrings.formatMoney('450.00')), findsOneWidget);
       expect(find.byType(AppStatusChip), findsNWidgets(2));
     });
   });

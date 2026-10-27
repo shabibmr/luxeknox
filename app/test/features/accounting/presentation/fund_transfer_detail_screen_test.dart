@@ -220,7 +220,7 @@ void main() {
       expect(find.text(AccountingStrings.statusDraft), findsOneWidget);
       expect(find.text('#101'), findsOneWidget);
       expect(find.text('#102'), findsOneWidget);
-      expect(find.text('\$1000.00'), findsOneWidget);
+      expect(find.text(AccountingStrings.formatMoney('1000.00')), findsOneWidget);
       expect(find.textContaining('Transfer to operating account'), findsOneWidget);
     });
   });
@@ -239,12 +239,12 @@ void main() {
       // Fee line label and amount
       expect(find.text(AccountingStrings.feeLineLabel), findsOneWidget);
       expect(find.byKey(const Key('fee_amount_text')), findsOneWidget);
-      expect(find.text('-\$25.00'), findsOneWidget);
+      expect(find.text(AccountingStrings.formatAmount(-25)), findsOneWidget);
 
       // Net deposited label and amount (1000 - 25 = 975)
       expect(find.text(AccountingStrings.netTransferAmountLabel), findsOneWidget);
       expect(find.byKey(const Key('net_amount_text')), findsOneWidget);
-      expect(find.text('\$975.00'), findsOneWidget);
+      expect(find.text(AccountingStrings.formatMoney('975.00')), findsOneWidget);
     });
 
     testWidgets('assert fee line is NOT shown when fee == 0', (tester) async {

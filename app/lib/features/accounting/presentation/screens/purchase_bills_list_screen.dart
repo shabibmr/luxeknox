@@ -7,6 +7,7 @@ import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -395,20 +396,6 @@ class _PurchaseBillCard extends StatelessWidget {
     return '$y-$m-$d';
   }
 
-  static String _formatAmount(dynamic value) {
-    if (value is num) {
-      return AccountingStrings.formatAmount(value);
-    }
-    final s = value.toString();
-    if (s.isEmpty) return '\$0.00';
-    if (s.startsWith('\$')) return s;
-    final n = num.tryParse(s);
-    if (n != null) {
-      return AccountingStrings.formatAmount(n);
-    }
-    return AccountingStrings.formatMoney(s);
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -470,8 +457,8 @@ class _PurchaseBillCard extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        _formatAmount(bill.totalAmount),
+                      AppCurrencyText(
+                        bill.totalAmount,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),

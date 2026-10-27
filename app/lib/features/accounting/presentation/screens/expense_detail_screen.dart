@@ -14,6 +14,7 @@ import '../../../../core/widgets/app_status_chip.dart';
 import '../../domain/entities/expense_voucher.dart';
 import '../../domain/usecases/get_expense_usecase.dart';
 import '../../domain/usecases/post_expense_usecase.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../accounting_strings.dart';
 import '../cubit/expense_detail_cubit.dart';
 
@@ -433,9 +434,9 @@ class _ExpenseDetailView extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 8),
-                          child: Text(
-                            AccountingStrings.formatMoney(line.amount),
-                            textAlign: TextAlign.right,
+                          child: AppCurrencyText(
+                            line.amount,
+                            textAlign: TextAlign.end,
                             style: const TextStyle(fontFamily: 'monospace'),
                           ),
                         ),
@@ -460,8 +461,8 @@ class _ExpenseDetailView extends StatelessWidget {
                     fontSize: 16,
                   ),
                 ),
-                Text(
-                  AccountingStrings.formatMoney(expense.totalAmount),
+                AppCurrencyText(
+                  expense.totalAmount,
                   key: const Key('expense_total_amount'),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,

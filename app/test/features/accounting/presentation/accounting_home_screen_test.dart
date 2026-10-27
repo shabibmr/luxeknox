@@ -172,9 +172,9 @@ void main() {
 
       // Check AR / AP summary
       expect(find.text(AccountingStrings.openReceivables), findsOneWidget);
-      expect(find.text('\$2500.00'), findsOneWidget);
+      expect(find.text(AccountingStrings.formatMoney('2500.00')), findsOneWidget);
       expect(find.text(AccountingStrings.openPayables), findsOneWidget);
-      expect(find.text('\$1200.00'), findsOneWidget);
+      expect(find.text(AccountingStrings.formatMoney('1200.00')), findsOneWidget);
 
       // Check Bank accounts
       expect(find.text(AccountingStrings.cashAndBank), findsOneWidget);

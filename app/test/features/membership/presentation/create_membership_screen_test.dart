@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:luxeknox/core/di/injector.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/core/widgets/app_currency_field.dart';
+import 'package:luxeknox/core/widgets/app_currency_text.dart';
 import 'package:luxeknox/features/membership/domain/entities/membership_product.dart';
 import 'package:luxeknox/features/membership/domain/entities/membership_replacement_preview.dart';
 import 'package:luxeknox/features/membership/domain/entities/membership_status.dart';
@@ -475,6 +476,11 @@ void main() {
     await tester.pumpWidget(wrapScreen());
     await tester.pump();
 
-    expect(find.text('1800.00'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is AppCurrencyText && w.amount == '1800.00',
+      ),
+      findsOneWidget,
+    );
   });
 }

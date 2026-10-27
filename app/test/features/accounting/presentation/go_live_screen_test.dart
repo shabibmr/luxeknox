@@ -275,8 +275,8 @@ void main() {
     expect(find.text(AccountingStrings.unearnedMembershipAccountLabel),
         findsOneWidget);
     expect(find.text(AccountingStrings.unearnedPtAccountLabel), findsOneWidget);
-    expect(find.text('\$2200.00'), findsNWidgets(2)); // Expected and actual
-    expect(find.text('\$1500.00'), findsNWidgets(2));
+    expect(find.text(AccountingStrings.formatMoney('2200.00')), findsNWidgets(2));
+    expect(find.text(AccountingStrings.formatMoney('1500.00')), findsNWidgets(2));
     expect(find.text(AccountingStrings.matchedBadge), findsWidgets);
 
     // Readiness Card

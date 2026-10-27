@@ -191,7 +191,7 @@ void main() {
       expect(find.text('Office Supplies Inc'), findsOneWidget);
       expect(find.text('Copy paper and toner'), findsOneWidget);
       expect(find.byKey(const Key('expense_total_amount')), findsOneWidget);
-      expect(find.text('\$250.00'), findsWidgets);
+      expect(find.text(AccountingStrings.formatMoney('250.00')), findsWidgets);
     });
 
     testWidgets('renders journal entry number when expense is posted',

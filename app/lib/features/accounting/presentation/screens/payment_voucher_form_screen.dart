@@ -8,6 +8,8 @@ import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../domain/usecases/create_payment_voucher_usecase.dart';
+import '../../../../core/widgets/app_currency_field.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../accounting_strings.dart';
 import '../cubit/payment_voucher_form_cubit.dart';
 import '../widgets/account_picker_sheet.dart';
@@ -158,15 +160,10 @@ class _PaymentVoucherFormViewState extends State<_PaymentVoucherFormView> {
                 const SizedBox(height: 16),
 
                 // Total Amount
-                TextFormField(
+                AppCurrencyField(
                   key: const Key('total_amount_field'),
                   controller: _totalAmountController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: AccountingStrings.totalAmountLabel,
-                    prefixText: '\$ ',
-                  ),
+                  label: AccountingStrings.totalAmountLabel,
                   onChanged: (val) {
                     context
                         .read<PaymentVoucherFormCubit>()
@@ -264,9 +261,8 @@ class _PaymentVoucherFormViewState extends State<_PaymentVoucherFormView> {
                               AccountingStrings.allocationAmountLabel,
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
-                            Text(
-                              AccountingStrings.formatAmount(
-                                  state.allocationsSum),
+                            AppCurrencyText(
+                              state.allocationsSum.toString(),
                               key: const Key('allocations_sum_text'),
                               style: const TextStyle(
                                 fontFamily: 'monospace',
@@ -286,9 +282,8 @@ class _PaymentVoucherFormViewState extends State<_PaymentVoucherFormView> {
                                 fontSize: 16,
                               ),
                             ),
-                            Text(
-                              AccountingStrings.formatAmount(
-                                  state.parsedTotalAmount),
+                            AppCurrencyText(
+                              state.parsedTotalAmount.toString(),
                               key: const Key('total_amount_preview_text'),
                               style: const TextStyle(
                                 fontFamily: 'monospace',
@@ -416,15 +411,10 @@ class _AllocationCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            TextFormField(
+            AppCurrencyInput(
               key: Key('allocation_amount_field_$index'),
               initialValue: allocation.amount,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: AccountingStrings.amountLabel,
-                prefixText: '\$ ',
-              ),
+              label: AccountingStrings.amountLabel,
               onChanged: (amt) {
                 context
                     .read<PaymentVoucherFormCubit>()

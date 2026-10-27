@@ -186,7 +186,7 @@ void main() {
       expect(find.text('Supplier settlement for bills'), findsOneWidget);
       expect(find.text('Bill #bill-10'), findsOneWidget);
       expect(find.byKey(const Key('voucher_total_amount')), findsOneWidget);
-      expect(find.text('\$350.00'), findsWidgets);
+      expect(find.text(AccountingStrings.formatMoney('350.00')), findsWidgets);
     });
 
     testWidgets('renders journal entry number when voucher is posted',

@@ -223,9 +223,9 @@ void main() {
       );
 
       expect(find.text('PV-2026-0001'), findsOneWidget);
-      expect(find.text('\$350.00'), findsOneWidget);
+      expect(find.text(AccountingStrings.formatMoney('350.00')), findsOneWidget);
       expect(find.text('PV-2026-0002'), findsOneWidget);
-      expect(find.text('\$500.00'), findsOneWidget);
+      expect(find.text(AccountingStrings.formatMoney('500.00')), findsOneWidget);
       expect(find.byType(AppStatusChip), findsNWidgets(2));
     });
   });

@@ -8,6 +8,8 @@ import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../domain/usecases/create_expense_usecase.dart';
+import '../../../../core/widgets/app_currency_field.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../accounting_strings.dart';
 import '../cubit/expense_form_cubit.dart';
 import '../widgets/account_picker_sheet.dart';
@@ -212,8 +214,8 @@ class _ExpenseFormViewState extends State<_ExpenseFormView> {
                               AccountingStrings.subtotalLabel,
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
-                            Text(
-                              AccountingStrings.formatAmount(state.subtotal),
+                            AppCurrencyText(
+                              state.subtotal.toString(),
                               key: const Key('totals_subtotal'),
                               style: const TextStyle(
                                 fontFamily: 'monospace',
@@ -233,8 +235,8 @@ class _ExpenseFormViewState extends State<_ExpenseFormView> {
                                 fontSize: 16,
                               ),
                             ),
-                            Text(
-                              AccountingStrings.formatAmount(state.totalAmount),
+                            AppCurrencyText(
+                              state.totalAmount.toString(),
                               key: const Key('totals_total'),
                               style: const TextStyle(
                                 fontFamily: 'monospace',
@@ -334,15 +336,10 @@ class _ExpenseLineCard extends StatelessWidget {
               },
             ),
             const SizedBox(height: 8),
-            TextFormField(
+            AppCurrencyInput(
               key: Key('line_amount_field_$index'),
               initialValue: line.amount,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: AccountingStrings.amountLabel,
-                prefixText: '\$ ',
-              ),
+              label: AccountingStrings.amountLabel,
               onChanged: (amt) {
                 context
                     .read<ExpenseFormCubit>()

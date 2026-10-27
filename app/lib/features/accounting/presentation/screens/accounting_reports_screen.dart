@@ -6,6 +6,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -455,8 +456,8 @@ class _TotalRow extends StatelessWidget {
         Expanded(
           child: Text(label, style: theme.textTheme.bodyMedium),
         ),
-        Text(
-          AccountingStrings.formatMoney(value),
+        AppCurrencyText(
+          value,
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -475,8 +476,8 @@ class _MoneyText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.bodyMedium;
-    return Text(
-      AccountingStrings.formatMoney(value),
+    return AppCurrencyText(
+      value,
       textAlign: TextAlign.end,
       style: bold ? style?.copyWith(fontWeight: FontWeight.w700) : style,
     );

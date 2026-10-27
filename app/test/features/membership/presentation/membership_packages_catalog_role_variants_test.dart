@@ -1,4 +1,5 @@
 import 'package:luxeknox/core/di/injector.dart';
+import 'package:luxeknox/core/widgets/app_currency_text.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/features/membership/domain/entities/membership_product.dart';
 import 'package:luxeknox/features/membership/presentation/cubit/membership_packages_catalog_cubit.dart';
@@ -192,7 +193,13 @@ void main() {
 
     await tester.pumpWidget(wrap(memberPrincipal, readOnly));
     await tester.pumpAndSettle();
-    expect(find.text('GOLD · 30d · 99.00'), findsOneWidget);
+    expect(find.text('GOLD · 30d ·'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is AppCurrencyText && widget.amount == '99.00',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('couple package rows show a Couple chip', (tester) async {

@@ -9,7 +9,9 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
+import '../../../../core/currency/gym_currency_provider.dart';
 import '../../../../core/widgets/app_currency_field.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/package_grid_picker_field.dart';
@@ -634,7 +636,7 @@ class _PriceSummaryState extends State<_PriceSummary> {
                   MembershipStrings.packagePriceLabel,
                   style: theme.textTheme.titleSmall,
                 ),
-                Text(price, style: theme.textTheme.titleSmall),
+                AppCurrencyText(price, style: theme.textTheme.titleSmall),
               ],
             ),
             const SizedBox(height: 12),
@@ -667,7 +669,7 @@ class _PriceSummaryState extends State<_PriceSummary> {
                     required: false,
                     helperText:
                         _valueError ??
-                        'Max ${widget.state.selectedProduct?.basePrice ?? '—'}',
+                        'Max ${formatCurrencyAmount(widget.state.selectedProduct?.basePrice)}',
                   ),
                 ),
               ],
@@ -687,7 +689,10 @@ class _PriceSummaryState extends State<_PriceSummary> {
                   MembershipStrings.totalDueLabel,
                   style: theme.textTheme.titleMedium,
                 ),
-                Text(_totalLabel, style: theme.textTheme.titleMedium),
+                AppCurrencyText(
+                  _totalLabel,
+                  style: theme.textTheme.titleMedium,
+                ),
               ],
             ),
           ],

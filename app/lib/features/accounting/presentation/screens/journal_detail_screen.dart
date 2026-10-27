@@ -5,6 +5,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -77,20 +78,6 @@ class _JournalDetailView extends StatelessWidget {
     final month = date.month.toString().padLeft(2, '0');
     final day = date.day.toString().padLeft(2, '0');
     return '$year-$month-$day';
-  }
-
-  static String _formatAmount(dynamic value) {
-    if (value is num) {
-      return AccountingStrings.formatAmount(value);
-    }
-    final s = value.toString();
-    if (s.isEmpty) return '\$0.00';
-    if (s.startsWith('\$')) return s;
-    final n = num.tryParse(s);
-    if (n != null) {
-      return AccountingStrings.formatAmount(n);
-    }
-    return AccountingStrings.formatMoney(s);
   }
 
   static Color _statusColor(String status) {
@@ -466,9 +453,9 @@ class _JournalDetailView extends StatelessWidget {
                           horizontal: 8,
                           vertical: 10,
                         ),
-                        child: Text(
-                          _formatAmount(line.debit),
-                          textAlign: TextAlign.right,
+                        child: AppCurrencyText(
+                          line.debit,
+                          textAlign: TextAlign.end,
                           style: const TextStyle(fontFamily: 'monospace'),
                         ),
                       ),
@@ -477,9 +464,9 @@ class _JournalDetailView extends StatelessWidget {
                           horizontal: 8,
                           vertical: 10,
                         ),
-                        child: Text(
-                          _formatAmount(line.credit),
-                          textAlign: TextAlign.right,
+                        child: AppCurrencyText(
+                          line.credit,
+                          textAlign: TextAlign.end,
                           style: const TextStyle(fontFamily: 'monospace'),
                         ),
                       ),
@@ -511,8 +498,8 @@ class _JournalDetailView extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          AccountingStrings.formatAmount(totalDebit),
+                        AppCurrencyText(
+                          totalDebit.toString(),
                           key: const Key('total_debit_amount'),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
@@ -535,8 +522,8 @@ class _JournalDetailView extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          AccountingStrings.formatAmount(totalCredit),
+                        AppCurrencyText(
+                          totalCredit.toString(),
                           key: const Key('total_credit_amount'),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,

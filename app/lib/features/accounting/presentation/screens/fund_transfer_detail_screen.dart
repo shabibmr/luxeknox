@@ -12,6 +12,7 @@ import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/app_status_chip.dart';
 import '../../domain/entities/fund_transfer.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../accounting_strings.dart';
 import '../cubit/fund_transfer_detail_cubit.dart';
 
@@ -392,8 +393,8 @@ class _FundTransferDetailView extends StatelessWidget {
                           AccountingStrings.grossAmountLabel,
                           style: TextStyle(fontSize: 15),
                         ),
-                        Text(
-                          AccountingStrings.formatAmount(gross),
+                        AppCurrencyText(
+                          gross.toString(),
                           key: const Key('gross_amount_text'),
                           style: const TextStyle(
                             fontSize: 15,
@@ -432,8 +433,8 @@ class _FundTransferDetailView extends StatelessWidget {
                                 ),
                             ],
                           ),
-                          Text(
-                            '-${AccountingStrings.formatAmount(fee)}',
+                          AppCurrencyText(
+                            '-$fee',
                             key: const Key('fee_amount_text'),
                             style: const TextStyle(
                               fontSize: 15,
@@ -454,8 +455,8 @@ class _FundTransferDetailView extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Text(
-                            AccountingStrings.formatAmount(net),
+                          AppCurrencyText(
+                            net.toString(),
                             key: const Key('net_amount_text'),
                             style: TextStyle(
                               fontSize: 16,

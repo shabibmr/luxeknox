@@ -9,6 +9,7 @@ import { ScheduleRepository } from '../sched/schedule.repository';
 import { MemberRepository } from '../people/member.repository';
 import { PaymentRepository } from '../pay/payment.repository';
 import { IdempotencyRepository } from '../platform/idempotency/idempotency.repository';
+import { SettingsService } from '../sys/settings.service';
 import { memberships } from '../platform/db/schema/memberships';
 import { schedules, scheduleParticipants } from '../platform/db/schema/scheduling';
 import { members } from '../platform/db/schema/members';
@@ -32,6 +33,7 @@ export class NotificationJobsService implements OnModuleInit {
     private readonly notificationRepository: NotificationRepository,
     private readonly paymentRepository: PaymentRepository,
     private readonly idempotencyRepository: IdempotencyRepository,
+    private readonly settingsService: SettingsService,
   ) {}
 
   private utcDay(date = new Date()): string {
@@ -237,15 +239,21 @@ export class NotificationJobsService implements OnModuleInit {
         Number(row.totalAmount) - Number(row.amountPaid ?? 0),
       );
       const amount = outstanding.toFixed(2);
+      const currency = await this.settingsService.getCurrency();
+      const formatted = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency,
+      }).format(outstanding);
 
       await this.notificationService.dispatch({
         recipientUserIds: [row.userId],
         title: 'Payment Due',
-        message: `You have an outstanding payment of ${amount}.`,
+        message: `You have an outstanding payment of ${formatted}.`,
         typeCode: 'payment_due',
         dataPayload: {
           payment_id: row.paymentId,
           amount,
+          currency,
         },
       });
       processedEntries.push({ key, path: NOTIFICATION_PAYMENT_REMINDERS_JOB, expiresAt });

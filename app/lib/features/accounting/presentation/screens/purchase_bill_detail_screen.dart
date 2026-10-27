@@ -5,6 +5,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/extensions/capability_extension.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/widgets/app_currency_text.dart';
 import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -77,20 +78,6 @@ class _PurchaseBillDetailView extends StatelessWidget {
     final month = date.month.toString().padLeft(2, '0');
     final day = date.day.toString().padLeft(2, '0');
     return '$year-$month-$day';
-  }
-
-  static String _formatAmount(dynamic value) {
-    if (value is num) {
-      return AccountingStrings.formatAmount(value);
-    }
-    final s = value.toString();
-    if (s.isEmpty) return '\$0.00';
-    if (s.startsWith('\$')) return s;
-    final n = num.tryParse(s);
-    if (n != null) {
-      return AccountingStrings.formatAmount(n);
-    }
-    return AccountingStrings.formatMoney(s);
   }
 
   static Color _statusColor(String status) {
@@ -443,9 +430,9 @@ class _PurchaseBillDetailView extends StatelessWidget {
             key: Key('line_qty_$index'),
           ),
         ),
-        DataCell(Text(_formatAmount(line.unitPrice))),
-        DataCell(Text(_formatAmount(line.amount))),
-        DataCell(Text(_formatAmount(line.taxAmount ?? '0.00'))),
+        DataCell(AppCurrencyText(line.unitPrice)),
+        DataCell(AppCurrencyText(line.amount)),
+        DataCell(AppCurrencyText(line.taxAmount ?? '0.00')),
       ],
     );
   }
@@ -466,8 +453,8 @@ class _PurchaseBillDetailView extends StatelessWidget {
                   AccountingStrings.subtotalLabel,
                   style: TextStyle(fontSize: 14),
                 ),
-                Text(
-                  _formatAmount(bill.subtotal),
+                AppCurrencyText(
+                  bill.subtotal,
                   key: const Key('subtotal_amount'),
                   style: const TextStyle(
                     fontSize: 14,
@@ -484,8 +471,8 @@ class _PurchaseBillDetailView extends StatelessWidget {
                   AccountingStrings.taxAmountLabel,
                   style: TextStyle(fontSize: 14),
                 ),
-                Text(
-                  _formatAmount(bill.taxAmount),
+                AppCurrencyText(
+                  bill.taxAmount,
                   key: const Key('tax_amount'),
                   style: const TextStyle(
                     fontSize: 14,
@@ -505,8 +492,8 @@ class _PurchaseBillDetailView extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  _formatAmount(bill.totalAmount),
+                AppCurrencyText(
+                  bill.totalAmount,
                   key: const Key('total_amount'),
                   style: TextStyle(
                     fontSize: 18,

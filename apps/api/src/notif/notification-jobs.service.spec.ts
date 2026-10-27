@@ -48,6 +48,9 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
       recordJobKeys: vi.fn().mockResolvedValue(undefined),
     };
 
+    const settingsService = {
+      getCurrency: vi.fn().mockResolvedValue('USD'),
+    };
     jobsService = new NotificationJobsService(
       jobRunner,
       notificationService,
@@ -57,6 +60,7 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
       notificationRepo as any,
       paymentRepo as any,
       idempotencyRepo as any,
+      settingsService as any,
     );
   });
 
@@ -159,10 +163,11 @@ describe('NotificationJobsService (NOT-013, NOT-014)', () => {
       expect.objectContaining({
         recipientUserIds: [100],
         typeCode: 'payment_due',
-        message: 'You have an outstanding payment of 50.00.',
+        message: `You have an outstanding payment of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(50)}.`,
         dataPayload: expect.objectContaining({
           payment_id: 44,
           amount: '50.00',
+          currency: 'USD',
         }),
       }),
     );

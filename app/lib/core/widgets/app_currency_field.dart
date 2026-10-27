@@ -25,6 +25,7 @@ class AppCurrencyField extends StatefulWidget {
     this.minValue,
     this.maxValue,
     this.helperText,
+    this.errorText,
     this.requiredMessage,
     this.invalidMessage,
     this.minValueMessage,
@@ -44,6 +45,7 @@ class AppCurrencyField extends StatefulWidget {
   final num? minValue;
   final num? maxValue;
   final String? helperText;
+  final String? errorText;
   final String? requiredMessage;
   final String? invalidMessage;
   final String? minValueMessage;
@@ -169,6 +171,7 @@ class _AppCurrencyFieldState extends State<AppCurrencyField> {
       decoration: InputDecoration(
         labelText: widget.label,
         prefixText: '$symbol ',
+        errorText: widget.errorText,
         helperText:
             widget.helperText ??
             (digits > 0
@@ -178,4 +181,46 @@ class _AppCurrencyFieldState extends State<AppCurrencyField> {
       validator: _commonValidator,
     );
   }
+}
+
+/// Money input that owns its controller, for rows that only have an initial value.
+class AppCurrencyInput extends StatefulWidget {
+  const AppCurrencyInput({
+    super.key,
+    required this.initialValue,
+    required this.label,
+    required this.onChanged,
+    this.required = true,
+    this.helperText,
+  });
+
+  final String initialValue;
+  final String label;
+  final ValueChanged<String> onChanged;
+  final bool required;
+  final String? helperText;
+
+  @override
+  State<AppCurrencyInput> createState() => _AppCurrencyInputState();
+}
+
+class _AppCurrencyInputState extends State<AppCurrencyInput> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.initialValue,
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AppCurrencyField(
+    controller: _controller,
+    label: widget.label,
+    required: widget.required,
+    helperText: widget.helperText,
+    onChanged: widget.onChanged,
+  );
 }
