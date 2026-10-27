@@ -53,3 +53,5 @@ research_notes/
 # Python
 __pycache__/
 *.py[cod]
+
+.worktrees/
