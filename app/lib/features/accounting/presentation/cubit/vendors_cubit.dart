@@ -92,7 +92,7 @@ class VendorsCubit extends Cubit<VendorsState> {
     bool clearActiveFilter = false,
   }) async {
     _debounceTimer?.cancel();
-    final epoch = refresh ? ++_loadEpoch : _loadEpoch;
+    final epoch = ++_loadEpoch;
 
     final nextSearch = clearSearch ? null : (search ?? state.search);
     final nextIsActive =

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -262,6 +264,40 @@ void main() {
               isActive: null,
             ),
           )).called(1);
+    });
+
+    test('discards stale search response when a newer load completes first',
+        () async {
+      final slow =
+          Completer<Either<Failure, CursorPage<Vendor>>>();
+      const newerPage = CursorPage<Vendor>(
+        items: [tVendor1],
+        nextCursor: null,
+        hasMore: false,
+      );
+      var calls = 0;
+      when(() => mockGetVendors(any())).thenAnswer((_) {
+        calls++;
+        return calls == 1 ? slow.future : Future.value(const Right(newerPage));
+      });
+
+      cubit.searchVendors('Old');
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+
+      cubit.searchVendors('New');
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+
+      expect(cubit.state.search, 'New');
+      expect(cubit.state.status, LoadStatus.success);
+      expect(cubit.state.vendors, [tVendor1]);
+
+      slow.complete(const Right(tPage));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(cubit.state.search, 'New');
+      expect(cubit.state.status, LoadStatus.success);
+      expect(cubit.state.vendors, [tVendor1]);
+      expect(calls, 2);
     });
 
     blocTest<VendorsCubit, VendorsState>(
