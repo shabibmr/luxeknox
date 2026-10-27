@@ -4,14 +4,27 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/error/failure_messages.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/idempotency/idempotency_key.dart';
 import '../../../../core/presentation/load_status.dart';
+import '../../../../core/usecase/usecase.dart';
 import '../../../accounting/domain/entities/item.dart';
 import '../../../accounting/domain/usecases/get_items_usecase.dart';
+import '../../../payments/domain/entities/payment_method.dart';
+import '../../../payments/domain/usecases/get_payment_methods_usecase.dart';
+import '../../../people/domain/entities/profile_summary.dart';
+import '../../../people/domain/usecases/list_members_usecase.dart';
+import '../../domain/entities/counter_sale.dart';
+import '../../domain/entities/create_counter_sale_input.dart';
+import '../../domain/qty_compare.dart';
 import '../../domain/sale_line.dart';
 import '../../domain/sale_line_charge.dart';
+import '../../domain/usecases/create_counter_sale_usecase.dart';
 
 const Object _sentinel = Object();
+
+enum CounterSaleStep { catalog, buyer, tender, success }
 
 class CounterSaleState extends Equatable {
   const CounterSaleState({
@@ -20,6 +33,16 @@ class CounterSaleState extends Equatable {
     this.search,
     this.lines = const [],
     this.failure,
+    this.step = CounterSaleStep.catalog,
+    this.paymentMethods = const [],
+    this.paymentMethodsStatus = LoadStatus.initial,
+    this.selectedPaymentMethodId,
+    this.memberId,
+    this.member,
+    this.buyerName,
+    this.confirming = false,
+    this.confirmError,
+    this.postedSale,
   });
 
   final LoadStatus status;
@@ -27,10 +50,42 @@ class CounterSaleState extends Equatable {
   final String? search;
   final List<SaleLine> lines;
   final Failure? failure;
+  final CounterSaleStep step;
+  final List<PaymentMethod> paymentMethods;
+  final LoadStatus paymentMethodsStatus;
+  final String? selectedPaymentMethodId;
+  final int? memberId;
+
+  /// Member chosen on the buyer step. Never set together with [buyerName].
+  final ProfileSummary? member;
+  final String? buyerName;
+  final bool confirming;
+  final String? confirmError;
+  final CounterSale? postedSale;
 
   String get amountDue => sumCharges(lines.map((l) => l.charge));
 
-  bool get canContinue => lines.isNotEmpty;
+  bool get canContinue => lines.isNotEmpty && step == CounterSaleStep.catalog;
+
+  bool get hasOverOnHandLine => lines.any(_lineExceedsOnHand);
+
+  bool get canConfirm {
+    if (step != CounterSaleStep.tender) return false;
+    if (confirming) return false;
+    if (selectedPaymentMethodId == null) return false;
+    if (hasOverOnHandLine) return false;
+    if (paymentMethods.isEmpty) return false;
+    return true;
+  }
+
+  PaymentMethod? get selectedPaymentMethod {
+    final id = selectedPaymentMethodId;
+    if (id == null) return null;
+    for (final method in paymentMethods) {
+      if (method.id == id) return method;
+    }
+    return null;
+  }
 
   CounterSaleState copyWith({
     LoadStatus? status,
@@ -38,33 +93,102 @@ class CounterSaleState extends Equatable {
     Object? search = _sentinel,
     List<SaleLine>? lines,
     Object? failure = _sentinel,
+    CounterSaleStep? step,
+    List<PaymentMethod>? paymentMethods,
+    LoadStatus? paymentMethodsStatus,
+    Object? selectedPaymentMethodId = _sentinel,
+    Object? memberId = _sentinel,
+    Object? member = _sentinel,
+    Object? buyerName = _sentinel,
+    bool? confirming,
+    Object? confirmError = _sentinel,
+    Object? postedSale = _sentinel,
   }) {
     return CounterSaleState(
       status: status ?? this.status,
       catalog: catalog ?? this.catalog,
       search: identical(search, _sentinel) ? this.search : search as String?,
       lines: lines ?? this.lines,
-      failure:
-          identical(failure, _sentinel) ? this.failure : failure as Failure?,
+      failure: identical(failure, _sentinel)
+          ? this.failure
+          : failure as Failure?,
+      step: step ?? this.step,
+      paymentMethods: paymentMethods ?? this.paymentMethods,
+      paymentMethodsStatus: paymentMethodsStatus ?? this.paymentMethodsStatus,
+      selectedPaymentMethodId: identical(selectedPaymentMethodId, _sentinel)
+          ? this.selectedPaymentMethodId
+          : selectedPaymentMethodId as String?,
+      memberId: identical(memberId, _sentinel)
+          ? this.memberId
+          : memberId as int?,
+      member: identical(member, _sentinel)
+          ? this.member
+          : member as ProfileSummary?,
+      buyerName: identical(buyerName, _sentinel)
+          ? this.buyerName
+          : buyerName as String?,
+      confirming: confirming ?? this.confirming,
+      confirmError: identical(confirmError, _sentinel)
+          ? this.confirmError
+          : confirmError as String?,
+      postedSale: identical(postedSale, _sentinel)
+          ? this.postedSale
+          : postedSale as CounterSale?,
     );
   }
 
   @override
-  List<Object?> get props => [status, catalog, search, lines, failure];
+  List<Object?> get props => [
+    status,
+    catalog,
+    search,
+    lines,
+    failure,
+    step,
+    paymentMethods,
+    paymentMethodsStatus,
+    selectedPaymentMethodId,
+    memberId,
+    member,
+    buyerName,
+    confirming,
+    confirmError,
+    postedSale,
+  ];
+}
+
+bool _lineExceedsOnHand(SaleLine line) {
+  final item = line.item;
+  if (!item.inventoryTracked) return false;
+  final onHand = item.qtyOnHand;
+  if (onHand == null || onHand.trim().isEmpty) return false;
+  return quantityExceeds(line.quantity, onHand);
 }
 
 @injectable
 class CounterSaleCubit extends Cubit<CounterSaleState> {
   CounterSaleCubit(
-    this._getItems, {
+    this._getItems,
+    this._getPaymentMethods,
+    this._listMembers,
+    this._createCounterSale, {
     this.debounceDuration = const Duration(milliseconds: 300),
   }) : super(const CounterSaleState());
 
   final GetItemsUseCase _getItems;
+  final GetPaymentMethodsUseCase _getPaymentMethods;
+  /// Member-pick seam; UI uses [ListMembersUseCase] via the picker.
+  // ignore: unused_field
+  final ListMembersUseCase _listMembers;
+  final CreateCounterSaleUseCase _createCounterSale;
   final Duration debounceDuration;
 
   Timer? _debounceTimer;
   int _loadEpoch = 0;
+  String? _confirmIdempotencyKey;
+
+  /// Exposed for tests that assert idempotency reuse.
+  String? get confirmIdempotencyKeyForTest => _confirmIdempotencyKey;
 
   Future<void> load({String? search, bool clearSearch = false}) async {
     _debounceTimer?.cancel();
@@ -80,12 +204,7 @@ class CounterSaleCubit extends Cubit<CounterSaleState> {
     );
 
     final result = await _getItems(
-      GetItemsParams(
-        isActive: true,
-        search: nextSearch,
-        limit: 50,
-        offset: 0,
-      ),
+      GetItemsParams(isActive: true, search: nextSearch, limit: 50, offset: 0),
     );
 
     if (epoch != _loadEpoch) return;
@@ -122,18 +241,22 @@ class CounterSaleCubit extends Cubit<CounterSaleState> {
     _debounceTimer?.cancel();
     final trimmed = query.trim();
     _debounceTimer = Timer(debounceDuration, () {
-      load(search: trimmed.isEmpty ? null : trimmed, clearSearch: trimmed.isEmpty);
+      load(
+        search: trimmed.isEmpty ? null : trimmed,
+        clearSearch: trimmed.isEmpty,
+      );
     });
   }
 
   void tapItem(Item item) {
+    if (state.step != CounterSaleStep.catalog) return;
     final existingIndex = state.lines.indexWhere((l) => l.item.id == item.id);
     if (existingIndex >= 0) {
       final existing = state.lines[existingIndex];
       final nextQty = _addOne(existing.quantity, item.uomDecimalPlaces);
       final next = List<SaleLine>.of(state.lines);
       next[existingIndex] = existing.copyWithQuantity(nextQty);
-      emit(state.copyWith(lines: next));
+      emit(state.copyWith(lines: next, confirmError: null));
       return;
     }
     emit(
@@ -142,14 +265,16 @@ class CounterSaleCubit extends Cubit<CounterSaleState> {
           ...state.lines,
           SaleLine(item: item, quantity: _oneUnit(item.uomDecimalPlaces)),
         ],
+        confirmError: null,
       ),
     );
   }
 
-  /// Sets a line quantity. Piece items (0 places) keep whole numbers.
-  /// Weighed items accept up to [Item.uomDecimalPlaces] decimals.
-  /// Invalid input is ignored. Empty / zero removes nothing — use [removeLine].
   void setLineQuantity(int itemId, String rawQuantity) {
+    if (state.step != CounterSaleStep.catalog &&
+        state.step != CounterSaleStep.tender) {
+      return;
+    }
     final index = state.lines.indexWhere((l) => l.item.id == itemId);
     if (index < 0) return;
     final line = state.lines[index];
@@ -158,14 +283,192 @@ class CounterSaleCubit extends Cubit<CounterSaleState> {
     if (normalized == null) return;
     final next = List<SaleLine>.of(state.lines);
     next[index] = line.copyWithQuantity(normalized);
-    emit(state.copyWith(lines: next));
+    emit(state.copyWith(lines: next, confirmError: null));
   }
 
   void removeLine(int itemId) {
+    if (state.step != CounterSaleStep.catalog) return;
     emit(
       state.copyWith(
         lines: state.lines.where((l) => l.item.id != itemId).toList(),
+        confirmError: null,
       ),
+    );
+  }
+
+  void openBuyer() {
+    if (!state.canContinue) return;
+    emit(state.copyWith(step: CounterSaleStep.buyer, confirmError: null));
+  }
+
+  /// Picking a Member clears a typed buyer name. The sale never carries both.
+  void setMember(int? memberId, {ProfileSummary? member}) {
+    emit(
+      state.copyWith(
+        memberId: memberId,
+        member: memberId == null ? null : member,
+        buyerName: memberId == null ? state.buyerName : null,
+        confirmError: null,
+      ),
+    );
+  }
+
+  /// Typing a buyer name clears the selected Member. Blank text does not.
+  void setBuyerName(String? name) {
+    final raw = name ?? '';
+    final hasName = raw.trim().isNotEmpty;
+    emit(
+      state.copyWith(
+        buyerName: hasName ? raw : null,
+        memberId: hasName ? null : state.memberId,
+        member: hasName ? null : state.member,
+        confirmError: null,
+      ),
+    );
+  }
+
+  Future<void> goToTender() async {
+    final fromBuyer =
+        state.step == CounterSaleStep.buyer && state.lines.isNotEmpty;
+    final retry =
+        state.step == CounterSaleStep.tender && state.lines.isNotEmpty;
+    if (!fromBuyer && !retry && !state.canContinue) return;
+    emit(
+      state.copyWith(
+        step: CounterSaleStep.tender,
+        paymentMethodsStatus: LoadStatus.loading,
+        selectedPaymentMethodId: null,
+        confirmError: null,
+      ),
+    );
+    await _loadPaymentMethods();
+  }
+
+  void backToCatalog() {
+    if (state.step == CounterSaleStep.tender) {
+      emit(
+        state.copyWith(
+          step: CounterSaleStep.buyer,
+          selectedPaymentMethodId: null,
+          confirmError: null,
+        ),
+      );
+      return;
+    }
+    if (state.step != CounterSaleStep.buyer) return;
+    emit(state.copyWith(step: CounterSaleStep.catalog, confirmError: null));
+  }
+
+  void selectPaymentMethod(String paymentMethodId) {
+    if (state.step != CounterSaleStep.tender) return;
+    emit(
+      state.copyWith(
+        selectedPaymentMethodId: paymentMethodId,
+        confirmError: null,
+      ),
+    );
+  }
+
+  Future<void> confirm() async {
+    if (!state.canConfirm) return;
+    final method = state.selectedPaymentMethod;
+    if (method == null) return;
+    final methodId = int.tryParse(method.id);
+    if (methodId == null) {
+      emit(state.copyWith(confirmError: 'Invalid payment method'));
+      return;
+    }
+
+    _confirmIdempotencyKey ??= newIdempotencyKey();
+    emit(state.copyWith(confirming: true, confirmError: null));
+
+    final buyer = state.buyerName?.trim();
+    final input = CreateCounterSaleInput(
+      memberId: state.memberId,
+      buyerName: (buyer == null || buyer.isEmpty) ? null : buyer,
+      lines: [
+        for (final line in state.lines)
+          CreateCounterSaleLineInput(
+            itemId: line.item.id,
+            quantity: line.quantity,
+          ),
+      ],
+      tenders: [
+        CreateCounterSaleTenderInput(
+          paymentMethodId: methodId,
+          amount: state.amountDue,
+        ),
+      ],
+      idempotencyKey: _confirmIdempotencyKey,
+    );
+
+    final result = await _createCounterSale(input);
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          confirming: false,
+          confirmError: failureMessage(failure),
+        ),
+      ),
+      (sale) {
+        _confirmIdempotencyKey = null;
+        emit(
+          state.copyWith(
+            confirming: false,
+            confirmError: null,
+            postedSale: sale,
+            step: CounterSaleStep.success,
+          ),
+        );
+      },
+    );
+  }
+
+  /// Clears the open sale back to an empty catalog grid.
+  void startNewSale() {
+    _confirmIdempotencyKey = null;
+    emit(
+      CounterSaleState(
+        status: state.status,
+        catalog: state.catalog,
+        search: state.search,
+      ),
+    );
+  }
+
+  /// Drops the in-memory sale when leaving the screen before confirm.
+  void discardOpenSale() {
+    if (state.step == CounterSaleStep.success) return;
+    _confirmIdempotencyKey = null;
+    emit(
+      CounterSaleState(
+        status: state.status,
+        catalog: state.catalog,
+        search: state.search,
+      ),
+    );
+  }
+
+  Future<void> _loadPaymentMethods() async {
+    final result = await _getPaymentMethods(const NoParams());
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          paymentMethodsStatus: LoadStatus.failure,
+          paymentMethods: const [],
+          confirmError: failureMessage(failure),
+        ),
+      ),
+      (methods) {
+        final active = methods.where((m) => m.isActive).toList();
+        emit(
+          state.copyWith(
+            paymentMethodsStatus: LoadStatus.success,
+            paymentMethods: active,
+            confirmError: null,
+          ),
+        );
+      },
     );
   }
 
@@ -181,7 +484,8 @@ class CounterSaleCubit extends Cubit<CounterSaleState> {
   }
 
   static String _addOne(String quantity, int decimalPlaces) {
-    final current = _normalizeQuantity(quantity, decimalPlaces) ?? _oneUnit(decimalPlaces);
+    final current =
+        _normalizeQuantity(quantity, decimalPlaces) ?? _oneUnit(decimalPlaces);
     if (decimalPlaces <= 0) {
       final n = int.tryParse(current) ?? 1;
       return (n + 1).toString();
@@ -219,7 +523,9 @@ class CounterSaleCubit extends Cubit<CounterSaleState> {
   static int _toScaled(String value, int scale) {
     final parts = value.split('.');
     final whole = int.parse(parts[0]);
-    final frac = parts.length > 1 ? parts[1].padRight(scale, '0').substring(0, scale) : ''.padRight(scale, '0');
+    final frac = parts.length > 1
+        ? parts[1].padRight(scale, '0').substring(0, scale)
+        : ''.padRight(scale, '0');
     return whole * _pow10(scale) + (int.tryParse(frac) ?? 0);
   }
 

@@ -154,8 +154,6 @@ import '../../features/accounting/presentation/cubit/item_detail_cubit.dart'
 import '../../features/accounting/presentation/cubit/item_form_cubit.dart'
     as _i521;
 import '../../features/accounting/presentation/cubit/items_cubit.dart' as _i149;
-import '../../features/inventory/presentation/cubit/counter_sale_cubit.dart'
-    as _iCounterSale;
 import '../../features/accounting/presentation/cubit/journal_detail_cubit.dart'
     as _i494;
 import '../../features/accounting/presentation/cubit/journal_entry_form_cubit.dart'
@@ -364,6 +362,16 @@ import '../../features/goals/presentation/cubit/progress_photos_cubit.dart'
     as _i635;
 import '../../features/goals/presentation/cubit/progress_timeline_cubit.dart'
     as _i28;
+import '../../features/inventory/data/datasources/inventory_remote_datasource.dart'
+    as _i103;
+import '../../features/inventory/data/repositories/inventory_repository_impl.dart'
+    as _i572;
+import '../../features/inventory/domain/repositories/inventory_repository.dart'
+    as _i422;
+import '../../features/inventory/domain/usecases/create_counter_sale_usecase.dart'
+    as _i303;
+import '../../features/inventory/presentation/cubit/counter_sale_cubit.dart'
+    as _i734;
 import '../../features/membership/data/datasources/membership_remote_datasource.dart'
     as _i133;
 import '../../features/membership/data/repositories/membership_repository_impl.dart'
@@ -393,7 +401,7 @@ import '../../features/membership/domain/usecases/get_membership_usecase.dart'
 import '../../features/membership/domain/usecases/get_memberships_usecase.dart'
     as _i370;
 import '../../features/membership/domain/usecases/get_replacement_preview_usecase.dart'
-    as _i422;
+    as _i423;
 import '../../features/membership/domain/usecases/reject_freeze_usecase.dart'
     as _i223;
 import '../../features/membership/domain/usecases/renew_membership_usecase.dart'
@@ -817,6 +825,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i633.RBACApi>(
       () => registerModule.rbacApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i103.InventoryRemoteDataSource>(
+      () => _i103.InventoryRemoteDataSourceImpl(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i817.DashboardRemoteDataSource>(
       () => _i817.DashboardRemoteDataSourceImpl(gh<_i633.DASHApi>()),
     );
@@ -866,6 +877,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i937.NotificationsRemoteDataSource>(
       () => _i937.NotificationsRemoteDataSourceImpl(gh<_i633.NOTIFApi>()),
+    );
+    gh.lazySingleton<_i422.InventoryRepository>(
+      () =>
+          _i572.InventoryRepositoryImpl(gh<_i103.InventoryRemoteDataSource>()),
     );
     gh.lazySingleton<_i210.ProgressNotesRepository>(
       () =>
@@ -1121,6 +1136,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i728.FoodRepository>(
       () => _i64.FoodRepositoryImpl(gh<_i822.FoodRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i303.CreateCounterSaleUseCase>(
+      () => _i303.CreateCounterSaleUseCase(gh<_i422.InventoryRepository>()),
     );
     gh.lazySingleton<_i121.ProfileRepository>(
       () => _i887.ProfileRepositoryImpl(gh<_i327.ProfileRemoteDataSource>()),
@@ -1513,12 +1531,6 @@ extension GetItInjectableX on _i174.GetIt {
         debounceDuration: gh<Duration>(),
       ),
     );
-    gh.factory<_iCounterSale.CounterSaleCubit>(
-      () => _iCounterSale.CounterSaleCubit(
-        gh<_i649.GetItemsUseCase>(),
-        debounceDuration: gh<Duration>(),
-      ),
-    );
     gh.factory<_i69.LoginCubit>(
       () => _i69.LoginCubit(gh<_i893.SessionCubit>()),
     );
@@ -1810,9 +1822,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i370.GetMembershipsUseCase>(
       () => _i370.GetMembershipsUseCase(gh<_i325.MembershipRepository>()),
     );
-    gh.lazySingleton<_i422.GetReplacementPreviewUseCase>(
+    gh.lazySingleton<_i423.GetReplacementPreviewUseCase>(
       () =>
-          _i422.GetReplacementPreviewUseCase(gh<_i325.MembershipRepository>()),
+          _i423.GetReplacementPreviewUseCase(gh<_i325.MembershipRepository>()),
     );
     gh.lazySingleton<_i223.RejectFreezeUseCase>(
       () => _i223.RejectFreezeUseCase(gh<_i325.MembershipRepository>()),
@@ -2048,6 +2060,15 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i87.AttendanceLiveFeedCubit(
         gh<_i841.ListAttendancesUseCase>(),
         gh<_i841.ListAttendanceHistoriesUseCase>(),
+      ),
+    );
+    gh.factory<_i734.CounterSaleCubit>(
+      () => _i734.CounterSaleCubit(
+        gh<_i649.GetItemsUseCase>(),
+        gh<_i789.GetPaymentMethodsUseCase>(),
+        gh<_i436.ListMembersUseCase>(),
+        gh<_i303.CreateCounterSaleUseCase>(),
+        debounceDuration: gh<Duration>(),
       ),
     );
     gh.lazySingleton<_i1063.CreateExerciseUseCase>(
@@ -2329,7 +2350,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i65.CreateMembershipUseCase>(),
         gh<_i359.GetMembershipProductsUseCase>(),
         gh<_i789.GetPaymentMethodsUseCase>(),
-        gh<_i422.GetReplacementPreviewUseCase>(),
+        gh<_i423.GetReplacementPreviewUseCase>(),
       ),
     );
     gh.factory<_i598.WorkoutPlanBuilderCubit>(

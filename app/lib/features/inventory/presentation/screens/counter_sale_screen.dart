@@ -10,15 +10,21 @@ import '../../../../core/widgets/app_empty_view.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../accounting/domain/entities/item.dart';
+import '../../../people/domain/usecases/list_members_usecase.dart';
+import '../../../people/presentation/widgets/member_picker_sheet.dart';
+import '../../domain/qty_compare.dart';
 import '../../domain/sale_line.dart';
 import '../../domain/sale_line_charge.dart';
 import '../cubit/counter_sale_cubit.dart';
 import '../inventory_strings.dart';
 
 class CounterSaleScreen extends StatelessWidget {
-  const CounterSaleScreen({super.key, this.cubit});
+  const CounterSaleScreen({super.key, this.cubit, this.listMembers});
 
   final CounterSaleCubit? cubit;
+
+  /// Member picker use case. Production falls back to getIt inside the picker.
+  final ListMembersUseCase? listMembers;
 
   @override
   Widget build(BuildContext context) {
@@ -35,19 +41,21 @@ class CounterSaleScreen extends StatelessWidget {
       }
       return BlocProvider<CounterSaleCubit>.value(
         value: cubit!,
-        child: const _CounterSaleView(),
+        child: _CounterSaleView(listMembers: listMembers),
       );
     }
 
     return BlocProvider<CounterSaleCubit>(
       create: (_) => getIt<CounterSaleCubit>()..load(),
-      child: const _CounterSaleView(),
+      child: _CounterSaleView(listMembers: listMembers),
     );
   }
 }
 
 class _CounterSaleView extends StatefulWidget {
-  const _CounterSaleView();
+  const _CounterSaleView({this.listMembers});
+
+  final ListMembersUseCase? listMembers;
 
   @override
   State<_CounterSaleView> createState() => _CounterSaleViewState();
@@ -64,55 +72,91 @@ class _CounterSaleViewState extends State<_CounterSaleView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(InventoryStrings.counterSaleTitle),
-        actions: [
-          IconButton(
-            tooltip: 'Refresh',
-            icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<CounterSaleCubit>().load(),
-          ),
-        ],
-      ),
-      body: BlocBuilder<CounterSaleCubit, CounterSaleState>(
-        builder: (context, state) {
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: TextField(
-                  key: const Key('counter_sale_search'),
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: InventoryStrings.searchHint,
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                              context.read<CounterSaleCubit>().searchCatalog('');
-                              setState(() {});
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+    return BlocBuilder<CounterSaleCubit, CounterSaleState>(
+      builder: (context, state) {
+        return PopScope(
+          canPop: true,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) return;
+            context.read<CounterSaleCubit>().discardOpenSale();
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(switch (state.step) {
+                CounterSaleStep.buyer => InventoryStrings.buyerStepTitle,
+                CounterSaleStep.tender => InventoryStrings.tenderStepTitle,
+                CounterSaleStep.success => InventoryStrings.successTitle,
+                CounterSaleStep.catalog => InventoryStrings.counterSaleTitle,
+              }),
+              leading:
+                  state.step == CounterSaleStep.buyer ||
+                      state.step == CounterSaleStep.tender
+                  ? IconButton(
+                      key: const Key('counter_sale_back'),
+                      tooltip: InventoryStrings.backLabel,
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () =>
+                          context.read<CounterSaleCubit>().backToCatalog(),
+                    )
+                  : null,
+              actions: [
+                if (state.step == CounterSaleStep.catalog)
+                  IconButton(
+                    tooltip: 'Refresh',
+                    icon: const Icon(Icons.refresh),
+                    onPressed: () => context.read<CounterSaleCubit>().load(),
                   ),
-                  onChanged: (value) {
-                    context.read<CounterSaleCubit>().searchCatalog(value);
-                    setState(() {});
-                  },
-                ),
+              ],
+            ),
+            body: switch (state.step) {
+              CounterSaleStep.catalog => _buildCatalogStep(context, state),
+              CounterSaleStep.buyer => _BuyerStep(
+                state: state,
+                listMembers: widget.listMembers,
               ),
-              Expanded(child: _buildCatalog(context, state)),
-              _SaleTray(state: state),
-            ],
-          );
-        },
-      ),
+              CounterSaleStep.tender => _TenderBody(state: state),
+              CounterSaleStep.success => _SuccessBody(state: state),
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCatalogStep(BuildContext context, CounterSaleState state) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: TextField(
+            key: const Key('counter_sale_search'),
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: InventoryStrings.searchHint,
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        context.read<CounterSaleCubit>().searchCatalog('');
+                        setState(() {});
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onChanged: (value) {
+              context.read<CounterSaleCubit>().searchCatalog(value);
+              setState(() {});
+            },
+          ),
+        ),
+        Expanded(child: _buildCatalog(context, state)),
+        _SaleTray(state: state),
+      ],
     );
   }
 
@@ -153,6 +197,94 @@ class _CounterSaleViewState extends State<_CounterSaleView> {
           onTap: () => context.read<CounterSaleCubit>().tapItem(item),
         );
       },
+    );
+  }
+}
+
+class _BuyerStep extends StatefulWidget {
+  const _BuyerStep({required this.state, this.listMembers});
+
+  final CounterSaleState state;
+  final ListMembersUseCase? listMembers;
+
+  @override
+  State<_BuyerStep> createState() => _BuyerStepState();
+}
+
+class _BuyerStepState extends State<_BuyerStep> {
+  late final TextEditingController _nameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.state.buyerName ?? '');
+  }
+
+  @override
+  void didUpdateWidget(covariant _BuyerStep oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = widget.state.buyerName ?? '';
+    if (_nameController.text != next) {
+      _nameController.text = next;
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = widget.state;
+    final width = MediaQuery.sizeOf(context).width;
+
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: width >= 600 ? 560 : width),
+        child: ListView(
+          key: const Key('counter_sale_buyer'),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          children: [
+            MemberPickerField(
+              key: const Key('counter_sale_buyer_member'),
+              selectedMember: state.member,
+              selectedMemberId: state.memberId?.toString(),
+              selectedMemberName: state.member?.fullName,
+              listMembers: widget.listMembers,
+              labelText: InventoryStrings.buyerMemberLabel,
+              hintText: InventoryStrings.buyerMemberHint,
+              onChanged: (member) {
+                if (member == null) return;
+                context.read<CounterSaleCubit>().setMember(
+                  member.id,
+                  member: member,
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              key: const Key('counter_sale_buyer_name'),
+              controller: _nameController,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                labelText: InventoryStrings.buyerNameLabel,
+                hintText: InventoryStrings.buyerNameHint,
+                border: OutlineInputBorder(),
+              ),
+              onChanged: context.read<CounterSaleCubit>().setBuyerName,
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              key: const Key('counter_sale_buyer_continue'),
+              onPressed: () => context.read<CounterSaleCubit>().goToTender(),
+              child: const Text(InventoryStrings.continueLabel),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -275,7 +407,9 @@ class _SaleTray extends StatelessWidget {
               const SizedBox(height: 12),
               FilledButton(
                 key: const Key('counter_sale_continue'),
-                onPressed: state.canContinue ? () {} : null,
+                onPressed: state.canContinue
+                    ? () => context.read<CounterSaleCubit>().openBuyer()
+                    : null,
                 child: const Text(InventoryStrings.continueLabel),
               ),
             ],
@@ -287,9 +421,10 @@ class _SaleTray extends StatelessWidget {
 }
 
 class _TrayLine extends StatefulWidget {
-  const _TrayLine({required this.line});
+  const _TrayLine({required this.line, this.showRemove = true});
 
   final SaleLine line;
+  final bool showRemove;
 
   @override
   State<_TrayLine> createState() => _TrayLineState();
@@ -325,6 +460,10 @@ class _TrayLineState extends State<_TrayLine> {
     final item = line.item;
     final places = item.uomDecimalPlaces;
     final theme = Theme.of(context);
+    final over =
+        item.inventoryTracked &&
+        item.qtyOnHand != null &&
+        quantityExceeds(line.quantity, item.qtyOnHand!);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -340,7 +479,17 @@ class _TrayLineState extends State<_TrayLine> {
                   Text(
                     InventoryStrings.onHand(item.qtyOnHand!),
                     key: Key('counter_sale_line_on_hand_${item.id}'),
-                    style: theme.textTheme.bodySmall,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: over ? theme.colorScheme.error : null,
+                    ),
+                  ),
+                if (over)
+                  Text(
+                    InventoryStrings.overOnHandHint,
+                    key: Key('counter_sale_line_over_${item.id}'),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
                   ),
                 AppCurrencyText(
                   line.charge,
@@ -370,16 +519,220 @@ class _TrayLineState extends State<_TrayLine> {
                 isDense: true,
               ),
               onChanged: (value) {
-                context.read<CounterSaleCubit>().setLineQuantity(item.id, value);
+                context.read<CounterSaleCubit>().setLineQuantity(
+                  item.id,
+                  value,
+                );
               },
             ),
           ),
-          IconButton(
-            key: Key('counter_sale_line_remove_${item.id}'),
-            tooltip: InventoryStrings.removeLine,
-            onPressed: () =>
-                context.read<CounterSaleCubit>().removeLine(item.id),
-            icon: const Icon(Icons.close),
+          if (widget.showRemove)
+            IconButton(
+              key: Key('counter_sale_line_remove_${item.id}'),
+              tooltip: InventoryStrings.removeLine,
+              onPressed: () =>
+                  context.read<CounterSaleCubit>().removeLine(item.id),
+              icon: const Icon(Icons.close),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TenderBody extends StatelessWidget {
+  const _TenderBody({required this.state});
+
+  final CounterSaleState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (state.paymentMethodsStatus == LoadStatus.loading ||
+        state.paymentMethodsStatus == LoadStatus.initial) {
+      return const AppLoading();
+    }
+
+    if (state.paymentMethodsStatus == LoadStatus.failure) {
+      return AppErrorView(
+        message: InventoryStrings.paymentMethodsLoadFailed,
+        onRetry: () => context.read<CounterSaleCubit>().goToTender(),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Row(
+            children: [
+              Text(
+                InventoryStrings.amountDueLabel,
+                style: theme.textTheme.titleMedium,
+              ),
+              const Spacer(),
+              AppCurrencyText(
+                state.amountDue,
+                key: const Key('counter_sale_tender_amount_due'),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (state.hasOverOnHandLine)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              InventoryStrings.overOnHandHint,
+              key: const Key('counter_sale_over_on_hand'),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ),
+        if (state.hasOverOnHandLine)
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 180),
+            child: ListView.separated(
+              key: const Key('counter_sale_tender_lines'),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              shrinkWrap: true,
+              itemCount: state.lines.length,
+              separatorBuilder: (_, _) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                return _TrayLine(
+                  line: state.lines[index],
+                  showRemove: false,
+                );
+              },
+            ),
+          ),
+        if (state.confirmError != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text(
+              state.confirmError!,
+              key: const Key('counter_sale_confirm_error'),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ),
+        Expanded(
+          child: state.paymentMethods.isEmpty
+              ? const AppEmptyView(
+                  key: Key('counter_sale_no_payment_methods'),
+                  message: InventoryStrings.noPaymentMethods,
+                )
+              : ListView(
+                  key: const Key('counter_sale_payment_methods'),
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    for (final method in state.paymentMethods)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: OutlinedButton(
+                          key: Key('counter_sale_method_${method.id}'),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor:
+                                state.selectedPaymentMethodId == method.id
+                                ? theme.colorScheme.primaryContainer
+                                : null,
+                            minimumSize: const Size.fromHeight(48),
+                          ),
+                          onPressed: () => context
+                              .read<CounterSaleCubit>()
+                              .selectPaymentMethod(method.id),
+                          child: Text(method.methodName),
+                        ),
+                      ),
+                  ],
+                ),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: FilledButton(
+              key: const Key('counter_sale_confirm'),
+              onPressed: state.canConfirm && !state.confirming
+                  ? () => context.read<CounterSaleCubit>().confirm()
+                  : null,
+              child: state.confirming
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text(InventoryStrings.confirmLabel),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SuccessBody extends StatelessWidget {
+  const _SuccessBody({required this.state});
+
+  final CounterSaleState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final sale = state.postedSale;
+    final theme = Theme.of(context);
+    if (sale == null) {
+      return const AppEmptyView(message: InventoryStrings.successTitle);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            InventoryStrings.saleNumberLabel,
+            style: theme.textTheme.labelLarge,
+          ),
+          Text(
+            sale.saleNumber,
+            key: const Key('counter_sale_posted_number'),
+            style: theme.textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Text(
+                InventoryStrings.amountDueLabel,
+                style: theme.textTheme.titleMedium,
+              ),
+              const Spacer(),
+              AppCurrencyText(
+                sale.totalAmount,
+                key: const Key('counter_sale_posted_amount'),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          for (final tender in sale.tenders)
+            ListTile(
+              key: Key('counter_sale_posted_tender_${tender.paymentMethodId}'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(tender.paymentMethodName),
+              trailing: AppCurrencyText(tender.amount),
+            ),
+          const Spacer(),
+          FilledButton(
+            key: const Key('counter_sale_new_sale'),
+            onPressed: () => context.read<CounterSaleCubit>().startNewSale(),
+            child: const Text(InventoryStrings.newSaleLabel),
           ),
         ],
       ),
