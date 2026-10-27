@@ -73,17 +73,6 @@ class _VendorsListViewState extends State<_VendorsListView> {
     context.read<VendorsCubit>().searchVendors(query);
   }
 
-  void _openVendorForm(BuildContext context, [Vendor? vendor]) async {
-    final route = vendor != null
-        ? Routes.adminAccountingVendorEditById(vendor.id)
-        : Routes.adminAccountingVendorsCreate;
-    final result = await context.push<dynamic>(route, extra: vendor);
-
-    if (result != null && context.mounted) {
-      context.read<VendorsCubit>().load();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final canWrite = context.can('accounting.vendors_write');
@@ -103,7 +92,8 @@ class _VendorsListViewState extends State<_VendorsListView> {
           ? FloatingActionButton(
               key: const Key('create_vendor_fab'),
               tooltip: AccountingStrings.createVendorTitle,
-              onPressed: () => _openVendorForm(context),
+              onPressed: () =>
+                  context.push(Routes.adminAccountingVendorsCreate),
               child: const Icon(Icons.add),
             )
           : null,
@@ -325,7 +315,11 @@ class _VendorsListViewState extends State<_VendorsListView> {
               : AccountingStrings.inactiveBadge,
           color: vendor.isActive ? Colors.green : Colors.grey,
         ),
-        onTap: canWrite ? () => _openVendorForm(context, vendor) : null,
+        onTap: canWrite
+            ? () => context.push(
+                  Routes.adminAccountingVendorEditById(vendor.id),
+                )
+            : null,
       ),
     );
   }

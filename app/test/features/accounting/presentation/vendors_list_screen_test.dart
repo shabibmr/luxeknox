@@ -76,8 +76,7 @@ void main() {
           clearSearch: any(named: 'clearSearch'),
           clearActiveFilter: any(named: 'clearActiveFilter'),
         )).thenAnswer((_) async {});
-    when(() => mockVendorsCubit.searchVendors(any()))
-        .thenAnswer((_) async {});
+    when(() => mockVendorsCubit.searchVendors(any())).thenReturn(null);
     when(() => mockVendorsCubit.filterByActive(any()))
         .thenAnswer((_) async {});
 
@@ -120,30 +119,28 @@ void main() {
       routes: [
         GoRoute(
           path: '/',
-          builder: (context, state) => BlocProvider<SessionCubit>.value(
+          builder: (context, routerState) => BlocProvider<SessionCubit>.value(
             value: mockSessionCubit,
-            child: VendorsListScreen(
-              cubit: mockVendorsCubit,
-            ),
+            child: VendorsListScreen(cubit: mockVendorsCubit),
           ),
         ),
         GoRoute(
           path: Routes.adminAccountingVendorsCreate,
-          builder: (context, state) =>
+          builder: (context, routerState) =>
               const Scaffold(body: Text('Create Vendor Destination')),
         ),
         GoRoute(
-          path: '/admin/accounting/vendors/:id/edit',
-          builder: (_, state) => Scaffold(
-            body: Text('Edit Vendor Destination ${state.pathParameters['id']}'),
+          path: Routes.adminAccountingVendorsEdit,
+          builder: (context, routerState) => Scaffold(
+            body: Text(
+              'Edit Vendor Destination ${routerState.pathParameters['id']}',
+            ),
           ),
         ),
       ],
     );
 
-    return MaterialApp.router(
-      routerConfig: router,
-    );
+    return MaterialApp.router(routerConfig: router);
   }
 
   group('Permission check', () {
@@ -294,7 +291,7 @@ void main() {
       expect(find.byKey(const Key('create_vendor_fab')), findsNothing);
     });
 
-    testWidgets('tapping FAB navigates to vendor create route', (tester) async {
+    testWidgets('FAB opens create vendor destination', (tester) async {
       await tester.pumpWidget(
         buildTestableWidget(
           capabilities: writeCapabilities,
@@ -313,8 +310,7 @@ void main() {
       expect(find.text('Create Vendor Destination'), findsOneWidget);
     });
 
-    testWidgets('tapping vendor item navigates to vendor edit route',
-        (tester) async {
+    testWidgets('row tap opens edit vendor destination', (tester) async {
       await tester.pumpWidget(
         buildTestableWidget(
           capabilities: writeCapabilities,

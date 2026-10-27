@@ -83,12 +83,6 @@ class VendorsCubit extends Cubit<VendorsState> {
   Timer? _debounceTimer;
   int _loadEpoch = 0;
 
-  @override
-  Future<void> close() {
-    _debounceTimer?.cancel();
-    return super.close();
-  }
-
   Future<void> load({
     bool refresh = true,
     String? search,
@@ -156,6 +150,10 @@ class VendorsCubit extends Cubit<VendorsState> {
     await load(refresh: false);
   }
 
+  /// Updates [VendorsState.search] immediately and reloads after [debounceDuration].
+  ///
+  /// A zero duration reloads in the same turn so tests can observe the load
+  /// without waiting on a timer.
   void searchVendors(String? query) {
     _debounceTimer?.cancel();
     final trimmed = query?.trim();
@@ -201,5 +199,11 @@ class VendorsCubit extends Cubit<VendorsState> {
       clearSearch: true,
       clearActiveFilter: true,
     );
+  }
+
+  @override
+  Future<void> close() {
+    _debounceTimer?.cancel();
+    return super.close();
   }
 }

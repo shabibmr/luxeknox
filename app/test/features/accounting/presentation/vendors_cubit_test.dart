@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -187,15 +189,28 @@ void main() {
 
   group('filters and search', () {
     blocTest<VendorsCubit, VendorsState>(
-      'searchVendors triggers reload with search string',
+      'searchVendors re-queries from offset 0 after debounce',
       build: () {
         when(() => mockGetVendors(any()))
             .thenAnswer((_) async => const Right(tPage));
         return cubit;
       },
-      act: (cubit) => cubit.searchVendors('Acme'),
+      seed: () => const VendorsState(
+        status: LoadStatus.success,
+        vendors: [tVendor1],
+        offset: 1,
+        hasReachedMax: false,
+      ),
+      act: (cubit) async {
+        cubit.searchVendors('Acme');
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+      },
       expect: () => [
         const VendorsState(
+          status: LoadStatus.success,
+          vendors: [tVendor1],
+          offset: 1,
+          hasReachedMax: false,
           search: 'Acme',
         ),
         const VendorsState(
@@ -203,6 +218,7 @@ void main() {
           search: 'Acme',
           vendors: [],
           offset: 0,
+          hasReachedMax: false,
         ),
         const VendorsState(
           status: LoadStatus.success,
@@ -223,6 +239,68 @@ void main() {
             )).called(1);
       },
     );
+
+    test('rapid searchVendors only fires one query after debounce', () async {
+      final debounced = VendorsCubit(
+        mockGetVendors,
+        debounceDuration: const Duration(milliseconds: 50),
+      );
+      when(() => mockGetVendors(any()))
+          .thenAnswer((_) async => const Right(tLastPage));
+
+      debounced.searchVendors('A');
+      debounced.searchVendors('Ac');
+      debounced.searchVendors('Acme');
+
+      expect(debounced.state.search, 'Acme');
+      verifyNever(() => mockGetVendors(any()));
+
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+
+      verify(() => mockGetVendors(
+            const GetVendorsParams(
+              limit: 50,
+              offset: 0,
+              search: 'Acme',
+              isActive: null,
+            ),
+          )).called(1);
+      await debounced.close();
+    });
+
+    test('discards stale search response when a newer load completes first',
+        () async {
+      final slow =
+          Completer<Either<Failure, CursorPage<Vendor>>>();
+      const newerPage = CursorPage<Vendor>(
+        items: [tVendor1],
+        nextCursor: null,
+        hasMore: false,
+      );
+      var calls = 0;
+      when(() => mockGetVendors(any())).thenAnswer((_) {
+        calls++;
+        return calls == 1 ? slow.future : Future.value(const Right(newerPage));
+      });
+
+      cubit.searchVendors('Old');
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+
+      cubit.searchVendors('New');
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+
+      expect(cubit.state.search, 'New');
+      expect(cubit.state.status, LoadStatus.success);
+      expect(cubit.state.vendors, [tVendor1]);
+
+      slow.complete(const Right(tPage));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(cubit.state.search, 'New');
+      expect(cubit.state.status, LoadStatus.success);
+      expect(cubit.state.vendors, [tVendor1]);
+      expect(calls, 2);
+    });
 
     blocTest<VendorsCubit, VendorsState>(
       'setSearch alias triggers reload with search string',
