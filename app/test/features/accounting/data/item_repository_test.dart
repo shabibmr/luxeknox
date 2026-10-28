@@ -25,11 +25,14 @@ api.InventoryItem _invItem({
     ..uomCode = 'KG'
     ..uomDecimalPlaces = 3
     ..saleRate = '100.00'
+    ..taxCodeId = 1
+    ..taxRatePercent = '18.00'
     ..incomeAccountId = 10
     ..expenseAccountId = 11
     ..inventoryAccountId = tracked ? 12 : null
     ..cogsAccountId = tracked ? 13 : null
     ..inventoryTracked = tracked
+    ..qtyOnHand = tracked ? '12.000' : null
     ..hasMovements = tracked
     ..isActive = true
     ..rowVersion = 3
@@ -152,6 +155,9 @@ void main() {
       expect(item.inventoryAccountId, 12);
       expect(item.hasMovements, isTrue);
       expect(item.rowVersion, 3);
+      expect(item.taxRatePercent, '18.00');
+      expect(item.qtyOnHand, '12.000');
+      expect(_invItem(tracked: false).toDomain().qtyOnHand, isNull);
     });
 
     test('root category with null parent maps', () {
