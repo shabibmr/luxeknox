@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:luxeknox/core/di/injector.dart';
 import 'package:luxeknox/core/error/failures.dart';
+import 'package:luxeknox/features/workout/domain/entities/workout_plan.dart';
+import 'package:luxeknox/features/workout/domain/entities/workout_plan_exercise.dart';
+import 'package:luxeknox/features/workout/domain/entities/workout_plan_status.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_session.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_session_set.dart';
 import 'package:luxeknox/features/workout/presentation/bloc/active_workout_bloc.dart';
@@ -43,10 +46,9 @@ void main() {
   );
 
   setUpAll(() {
-    registerFallbackValue(
-      const ActiveWorkoutSetEdited(setId: 'fallback'),
-    );
+    registerFallbackValue(const ActiveWorkoutSetEdited(setId: 'fallback'));
     registerFallbackValue(const ActiveWorkoutSetDeleted('fallback'));
+    registerFallbackValue(const ActiveWorkoutSetLogged(exerciseId: 'fallback'));
   });
 
   setUp(() {
@@ -61,12 +63,14 @@ void main() {
     WidgetTester tester, {
     required ActiveWorkoutState initialState,
     Stream<ActiveWorkoutState>? stream,
+    Size size = const Size(800, 1200),
   }) async {
-    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
+      tester.view.resetViewInsets();
     });
     whenListen(
       bloc,
@@ -79,6 +83,16 @@ void main() {
       ),
     );
     await tester.pump();
+  }
+
+  Future<void> scrollColumnTo(WidgetTester tester, Finder target) async {
+    final column = find.byKey(const ValueKey('active-workout-column'));
+    for (var i = 0; i < 8 && target.hitTestable().evaluate().isEmpty; i++) {
+      await tester.drag(column, const Offset(0, -300));
+      await tester.pump();
+    }
+    await tester.ensureVisible(target);
+    expect(target.hitTestable(), findsOneWidget);
   }
 
   final inProgressState = ActiveWorkoutState(
@@ -141,7 +155,9 @@ void main() {
         await tester.tap(find.text(WorkoutStrings.deleteSet));
         await tester.pumpAndSettle();
 
-        await tester.tap(find.widgetWithText(FilledButton, WorkoutStrings.deleteSet));
+        await tester.tap(
+          find.widgetWithText(FilledButton, WorkoutStrings.deleteSet),
+        );
         await tester.pumpAndSettle();
 
         verify(() => bloc.add(const ActiveWorkoutSetDeleted('s1'))).called(1);
@@ -201,7 +217,11 @@ void main() {
         expect(find.text(WorkoutStrings.resumedSession), findsNothing);
 
         controller.add(
-          ActiveWorkoutState(session: session, loggedSets: const [], resumed: true),
+          ActiveWorkoutState(
+            session: session,
+            loggedSets: const [],
+            resumed: true,
+          ),
         );
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));
@@ -258,6 +278,306 @@ void main() {
           ),
           findsOneWidget,
         );
+      },
+    );
+  });
+
+  group('phone logging surface', () {
+    const exerciseName =
+        'Back Squat with a very long prescribed name for a narrow phone';
+
+    final squat = WorkoutPlanExercise(
+      exerciseId: 'ex1',
+      exerciseName: exerciseName,
+      dayNumber: 1,
+      orderIndex: 0,
+      targetSets: 3,
+      targetReps: '8-12',
+      targetWeightKg: 50,
+    );
+
+    final row = const WorkoutPlanExercise(
+      exerciseId: 'ex2',
+      exerciseName: 'Barbell Row',
+      dayNumber: 1,
+      orderIndex: 1,
+      targetSets: 3,
+      targetReps: '10',
+      targetWeightKg: 40,
+    );
+
+    final plan = WorkoutPlan(
+      id: 'p1',
+      title: 'Strength',
+      isTemplate: false,
+      status: WorkoutPlanStatus.active,
+      rowVersion: 1,
+      exercises: [squat, row],
+    );
+
+    final phoneState = ActiveWorkoutState(
+      session: session,
+      loggedSets: [loggedSet],
+      plan: plan,
+      selectedExerciseId: 'ex1',
+    );
+
+    const disabledComplete =
+        'Complete Workout (Complete all planned exercises first)';
+
+    for (final width in [360.0, 599.0]) {
+      testWidgets(
+        'at ${width.toInt()}dp shows the current set and hides dense controls',
+        (tester) async {
+          await pumpScreen(
+            tester,
+            initialState: phoneState,
+            size: Size(width, 900),
+          );
+
+          expect(find.text(exerciseName), findsOneWidget);
+          expect(
+            find.text(
+              WorkoutStrings.exerciseTargetLine(
+                sets: 3,
+                reps: '8-12',
+                weightKg: 50,
+              ),
+            ),
+            findsOneWidget,
+          );
+          expect(find.text(WorkoutStrings.weightLabel), findsOneWidget);
+          expect(find.text(WorkoutStrings.repsLabel), findsOneWidget);
+          expect(find.textContaining(WorkoutStrings.done), findsOneWidget);
+          expect(find.byTooltip('-2.5 kg'), findsOneWidget);
+          expect(find.byTooltip('+2.5 kg'), findsOneWidget);
+          expect(find.byTooltip('-1 rep'), findsOneWidget);
+          expect(find.byTooltip('+1 rep'), findsOneWidget);
+
+          expect(find.text(WorkoutStrings.rpeLabel), findsNothing);
+          expect(find.text(WorkoutStrings.setNotesLabel), findsNothing);
+          expect(find.text(WorkoutStrings.exerciseHistoryTitle), findsNothing);
+          expect(find.text(WorkoutStrings.skipSet), findsNothing);
+          expect(find.byTooltip('Set Comments'), findsNothing);
+
+          await tester.tap(find.byTooltip(WorkoutStrings.moreExerciseActions));
+          await tester.pumpAndSettle();
+          expect(
+            find.text(WorkoutStrings.exerciseHistoryTitle),
+            findsOneWidget,
+          );
+          expect(find.text(WorkoutStrings.exerciseComments), findsOneWidget);
+          expect(find.text(WorkoutStrings.skipSet), findsOneWidget);
+
+          await tester.binding.handlePopRoute();
+          await tester.pumpAndSettle();
+
+          await tester.ensureVisible(find.text(WorkoutStrings.setDetails));
+          await tester.tap(find.text(WorkoutStrings.setDetails));
+          await tester.pumpAndSettle();
+          expect(find.text(WorkoutStrings.rpeLabel), findsOneWidget);
+          expect(find.text(WorkoutStrings.setNotesLabel), findsOneWidget);
+
+          await scrollColumnTo(tester, find.text(disabledComplete));
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+
+    testWidgets(
+      'from 600dp up to 840dp keeps the dense column without overflow',
+      (tester) async {
+        final denseExercise = WorkoutPlanExercise(
+          exerciseId: 'ex1',
+          exerciseName: exerciseName,
+          dayNumber: 1,
+          orderIndex: 0,
+          targetSets: 4,
+          targetReps:
+              '8-12 explosive reps with a pause held at the bottom '
+              'of every repetition before standing',
+          targetWeightKg: 102.5,
+        );
+        await pumpScreen(
+          tester,
+          initialState: ActiveWorkoutState(
+            session: session,
+            loggedSets: [loggedSet],
+            plan: WorkoutPlan(
+              id: 'p1',
+              title: 'Strength',
+              isTemplate: false,
+              status: WorkoutPlanStatus.active,
+              rowVersion: 1,
+              exercises: [denseExercise],
+            ),
+            selectedExerciseId: 'ex1',
+          ),
+          size: const Size(640, 1800),
+        );
+
+        expect(find.text(WorkoutStrings.rpeLabel), findsOneWidget);
+        expect(find.text(WorkoutStrings.setNotesLabel), findsOneWidget);
+        expect(find.text(WorkoutStrings.skipSet), findsOneWidget);
+        expect(find.textContaining(WorkoutStrings.done), findsOneWidget);
+        expect(
+          find.byTooltip(WorkoutStrings.exerciseHistoryTitle),
+          findsOneWidget,
+        );
+        expect(find.byTooltip('Set Comments'), findsOneWidget);
+        expect(
+          find.byTooltip(WorkoutStrings.moreExerciseActions),
+          findsNothing,
+        );
+        expect(find.text(WorkoutStrings.setDetails), findsNothing);
+        await scrollColumnTo(tester, find.text(disabledComplete));
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('a future exercise is one short locked line', (tester) async {
+      await pumpScreen(
+        tester,
+        initialState: phoneState.copyWith(selectedExerciseId: 'ex2'),
+        size: const Size(360, 900),
+      );
+
+      expect(find.text(WorkoutStrings.futureExerciseLocked), findsOneWidget);
+      expect(find.text(WorkoutStrings.weightLabel), findsNothing);
+      expect(
+        find.textContaining('cannot log sets until preceding'),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+      'finished prescribed sets are one short line and complete stays available',
+      (tester) async {
+        final donePlan = WorkoutPlan(
+          id: 'p1',
+          title: 'Strength',
+          isTemplate: false,
+          status: WorkoutPlanStatus.active,
+          rowVersion: 1,
+          exercises: [
+            const WorkoutPlanExercise(
+              exerciseId: 'ex1',
+              exerciseName: 'Back Squat',
+              dayNumber: 1,
+              orderIndex: 0,
+              targetSets: 1,
+              targetReps: '8',
+              targetWeightKg: 50,
+            ),
+          ],
+        );
+        await pumpScreen(
+          tester,
+          initialState: ActiveWorkoutState(
+            session: session,
+            loggedSets: [loggedSet],
+            plan: donePlan,
+            selectedExerciseId: 'ex1',
+          ),
+          size: const Size(360, 900),
+        );
+
+        expect(find.text(WorkoutStrings.allPrescribedSetsDone), findsOneWidget);
+        expect(find.text(WorkoutStrings.weightLabel), findsNothing);
+        expect(find.text(WorkoutStrings.completeSession), findsOneWidget);
+        expect(find.text(disabledComplete), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('logging stays disabled while rest is running', (tester) async {
+      final timer = RestTimerCubit(ticker: () => const Stream.empty());
+      addTearDown(timer.close);
+      when(() => bloc.restTimer).thenReturn(timer);
+      timer.start(30);
+
+      await pumpScreen(
+        tester,
+        initialState: phoneState,
+        size: const Size(360, 900),
+      );
+
+      expect(find.text(WorkoutStrings.restTimer), findsOneWidget);
+      expect(find.textContaining('before logging'), findsNothing);
+      await tester.tap(find.textContaining('${WorkoutStrings.done} ·'));
+      await tester.pump();
+      verifyNever(() => bloc.add(any(that: isA<ActiveWorkoutSetLogged>())));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('set editor keeps Save reachable when the keyboard is open', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        initialState: phoneState,
+        size: const Size(360, 640),
+      );
+
+      await scrollColumnTo(tester, find.byTooltip(WorkoutStrings.setActions));
+      await tester.tap(find.byTooltip(WorkoutStrings.setActions));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(WorkoutStrings.editSet));
+      await tester.pumpAndSettle();
+
+      tester.view.viewInsets = const FakeViewPadding(bottom: 400);
+      await tester.pumpAndSettle();
+
+      final save = find.widgetWithText(FilledButton, WorkoutStrings.save);
+      final sheet = find.byKey(const ValueKey('set-editor-scroll'));
+      for (var i = 0; i < 8 && save.evaluate().isEmpty; i++) {
+        await tester.drag(sheet, const Offset(0, -220));
+        await tester.pump();
+      }
+      await tester.ensureVisible(save);
+      final visibleBottom =
+          tester.view.physicalSize.height / tester.view.devicePixelRatio -
+          tester.view.viewInsets.bottom;
+      expect(tester.getRect(save).bottom, lessThanOrEqualTo(visibleBottom + 1));
+      expect(save, findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+      'comments sheet keeps Post reachable when the keyboard is open',
+      (tester) async {
+        await pumpScreen(
+          tester,
+          initialState: phoneState,
+          size: const Size(360, 640),
+        );
+
+        await scrollColumnTo(tester, find.byTooltip(WorkoutStrings.setActions));
+        await tester.tap(find.byTooltip(WorkoutStrings.setActions));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(WorkoutStrings.setComments));
+        await tester.pumpAndSettle();
+
+        tester.view.viewInsets = const FakeViewPadding(bottom: 400);
+        await tester.pumpAndSettle();
+
+        final post = find.widgetWithText(FilledButton, 'Post');
+        final sheet = find.byKey(const ValueKey('comments-sheet-scroll'));
+        for (var i = 0; i < 8 && post.evaluate().isEmpty; i++) {
+          await tester.drag(sheet, const Offset(0, -220));
+          await tester.pump();
+        }
+        await tester.ensureVisible(post);
+        final visibleBottom =
+            tester.view.physicalSize.height / tester.view.devicePixelRatio -
+            tester.view.viewInsets.bottom;
+        expect(
+          tester.getRect(post).bottom,
+          lessThanOrEqualTo(visibleBottom + 1),
+        );
+        expect(post, findsOneWidget);
+        expect(tester.takeException(), isNull);
       },
     );
   });

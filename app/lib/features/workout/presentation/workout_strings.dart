@@ -126,6 +126,13 @@ abstract final class WorkoutStrings {
   static const allExercisesCompleteTitle = 'All Exercises Complete! 🏆';
   static const add30sRest = '+30s Rest';
   static const setNotesLabel = 'Set notes / form cues (optional)';
+  static const setDetails = 'Set details';
+  static const exerciseComments = 'Exercise comments';
+  static const setComments = 'Set comments';
+  static const moreExerciseActions = 'Exercise actions';
+  static const setActions = 'Set actions';
+  static const futureExerciseLocked = 'Locked until earlier exercises are done';
+  static const allPrescribedSetsDone = 'All prescribed sets are logged';
   static const sessionAlertTitle = 'Session Time Alert';
   static const sessionAlertDesc =
       'Member attendance marked present. Ready for workout!';
@@ -165,6 +172,16 @@ abstract final class WorkoutStrings {
     if (reps != null && reps.isNotEmpty) parts.add('$reps reps');
     return parts.isEmpty ? '' : parts.join(' · ');
   }
+
+  static String exerciseTargetLine({int? sets, String? reps, num? weightKg}) {
+    final parts = <String>[];
+    if (sets != null) parts.add('$sets sets');
+    if (reps != null && reps.isNotEmpty) parts.add('$reps reps');
+    if (weightKg != null) parts.add('$weightKg kg');
+    return parts.join(' · ');
+  }
+
+  static String skippedSetLine(int setNumber) => 'Set $setNumber · Skipped';
 
   static String versionTitle(int number) => 'Version $number';
 

@@ -7,6 +7,7 @@ import '../../../../core/error/failure_messages.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/router/session_route_ids.dart';
+import '../../../../core/widgets/adaptive_shell.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/workout_plan.dart';
 import '../../domain/entities/workout_plan_exercise.dart';
@@ -24,6 +25,9 @@ import '../widgets/skip_reason_dialog.dart';
 import '../widgets/workout_plan_picker_sheet.dart';
 import '../workout_strings.dart';
 
+const _wideSessionWidth = 840.0;
+const _sessionColumnKey = ValueKey<String>('active-workout-column');
+
 String? _errorText(ActiveWorkoutState state) {
   if (state.message != null && state.message!.isNotEmpty) return state.message;
   final failure = state.failure;
@@ -39,12 +43,7 @@ class _CompleteFeedback {
 }
 
 class _SetFieldsResult {
-  const _SetFieldsResult({
-    this.reps,
-    this.weightKg,
-    this.rpe,
-    this.notes,
-  });
+  const _SetFieldsResult({this.reps, this.weightKg, this.rpe, this.notes});
 
   final int? reps;
   final num? weightKg;
@@ -203,216 +202,234 @@ class _StartPanelState extends State<_StartPanel> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-          if (_errorText(widget.state) != null) ...[
-            Text(
-              _errorText(widget.state)!,
-              style: TextStyle(color: theme.colorScheme.error),
-            ),
-            const SizedBox(height: 12),
-          ],
-          if (memberId == null)
-            const Text(WorkoutStrings.missingMember)
-          else ...[
-            Card(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: theme.colorScheme.primaryContainer,
-                      child: Icon(
-                        Icons.person,
-                        color: theme.colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Member Session',
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          Text(
-                            'Member ID: $memberId',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              if (_errorText(widget.state) != null) ...[
+                Text(
+                  _errorText(widget.state)!,
+                  style: TextStyle(color: theme.colorScheme.error),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            WorkoutPlanPickerField(
-              selectedPlan: _selectedPlan,
-              memberId: memberId,
-              onChanged: (plan) {
-                setState(() {
-                  _selectedPlan = plan;
-                  _selectedPlanId = plan?.id;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            if (_selectedPlan != null) ...[
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.fitness_center,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _selectedPlan!.title,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.comment_outlined, size: 20),
-                            tooltip: 'Plan Comments',
-                            onPressed: () => SessionCommentsSheet.show(
-                              context,
-                              entityType: 'plan',
-                              entityId: _selectedPlan!.id,
-                              title: _selectedPlan!.title,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (_selectedPlan!.description != null &&
-                          _selectedPlan!.description!.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          _selectedPlan!.description!,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                const SizedBox(height: 12),
+              ],
+              if (memberId == null)
+                const Text(WorkoutStrings.missingMember)
+              else ...[
+                Card(
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: theme.colorScheme.primaryContainer,
+                          child: Icon(
+                            Icons.person,
+                            color: theme.colorScheme.onPrimaryContainer,
                           ),
                         ),
-                      ],
-                      const SizedBox(height: 12),
-                      const Divider(),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Exercises in Plan (${_selectedPlan!.exercises.length}):',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      for (var i = 0; i < _selectedPlan!.exercises.length; i++)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Row(
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              CircleAvatar(
-                                radius: 10,
-                                backgroundColor:
-                                    theme.colorScheme.primaryContainer,
-                                child: Text(
-                                  '${i + 1}',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: theme.colorScheme.onPrimaryContainer,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _selectedPlan!.exercises[i].exerciseName ??
-                                      'Exercise #${_selectedPlan!.exercises[i].exerciseId}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                              Text(
+                                'Member Session',
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
                               Text(
-                                [
-                                  if (_selectedPlan!.exercises[i].targetSets !=
-                                      null)
-                                    '${_selectedPlan!.exercises[i].targetSets} sets',
-                                  if (_selectedPlan!.exercises[i].targetReps !=
-                                      null)
-                                    '${_selectedPlan!.exercises[i].targetReps} reps',
-                                  if (_selectedPlan!
-                                          .exercises[i].targetWeightKg !=
-                                      null)
-                                    '${_selectedPlan!.exercises[i].targetWeightKg}kg',
-                                ].join(' · '),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
+                                'Member ID: $memberId',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-            ],
-            FilledButton.icon(
-              icon: const Icon(Icons.play_arrow),
-              label: Text(
-                (_selectedPlan != null ||
-                        (_selectedPlanId != null &&
-                            _selectedPlanId!.isNotEmpty))
-                    ? WorkoutStrings.startSession
-                    : 'Choose a Workout Plan to Start',
-              ),
-              onPressed: () async {
-                final planId = _selectedPlan?.id ?? _selectedPlanId;
-                if (planId != null && planId.isNotEmpty) {
-                  context.read<ActiveWorkoutBloc>().add(
-                    ActiveWorkoutStarted(workoutPlanId: planId),
-                  );
-                } else {
-                  final plan = await showWorkoutPlanPickerSheet(
-                    context,
-                    memberId: memberId,
-                  );
-                  if (plan != null && context.mounted) {
+                const SizedBox(height: 16),
+                WorkoutPlanPickerField(
+                  selectedPlan: _selectedPlan,
+                  memberId: memberId,
+                  onChanged: (plan) {
                     setState(() {
                       _selectedPlan = plan;
-                      _selectedPlanId = plan.id;
+                      _selectedPlanId = plan?.id;
                     });
-                    context.read<ActiveWorkoutBloc>().add(
-                      ActiveWorkoutStarted(workoutPlanId: plan.id),
-                    );
-                  }
-                }
-              },
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: () => context.read<ActiveWorkoutBloc>().add(
-                const ActiveWorkoutStarted(workoutPlanId: null),
-              ),
-              child: const Text(WorkoutStrings.startEmptySession),
-            ),
-          ],
-        ],
+                  },
+                ),
+                const SizedBox(height: 16),
+                if (_selectedPlan != null) ...[
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.fitness_center,
+                                color: theme.colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _selectedPlan!.title,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.comment_outlined,
+                                  size: 20,
+                                ),
+                                tooltip: 'Plan Comments',
+                                onPressed: () => SessionCommentsSheet.show(
+                                  context,
+                                  entityType: 'plan',
+                                  entityId: _selectedPlan!.id,
+                                  title: _selectedPlan!.title,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (_selectedPlan!.description != null &&
+                              _selectedPlan!.description!.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              _selectedPlan!.description!,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 12),
+                          const Divider(),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Exercises in Plan (${_selectedPlan!.exercises.length}):',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          for (
+                            var i = 0;
+                            i < _selectedPlan!.exercises.length;
+                            i++
+                          )
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 10,
+                                    backgroundColor:
+                                        theme.colorScheme.primaryContainer,
+                                    child: Text(
+                                      '${i + 1}',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: theme
+                                            .colorScheme
+                                            .onPrimaryContainer,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _selectedPlan!
+                                              .exercises[i]
+                                              .exerciseName ??
+                                          'Exercise #${_selectedPlan!.exercises[i].exerciseId}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    [
+                                      if (_selectedPlan!
+                                              .exercises[i]
+                                              .targetSets !=
+                                          null)
+                                        '${_selectedPlan!.exercises[i].targetSets} sets',
+                                      if (_selectedPlan!
+                                              .exercises[i]
+                                              .targetReps !=
+                                          null)
+                                        '${_selectedPlan!.exercises[i].targetReps} reps',
+                                      if (_selectedPlan!
+                                              .exercises[i]
+                                              .targetWeightKg !=
+                                          null)
+                                        '${_selectedPlan!.exercises[i].targetWeightKg}kg',
+                                    ].join(' · '),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                FilledButton.icon(
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text(
+                    (_selectedPlan != null ||
+                            (_selectedPlanId != null &&
+                                _selectedPlanId!.isNotEmpty))
+                        ? WorkoutStrings.startSession
+                        : 'Choose a Workout Plan to Start',
+                  ),
+                  onPressed: () async {
+                    final planId = _selectedPlan?.id ?? _selectedPlanId;
+                    if (planId != null && planId.isNotEmpty) {
+                      context.read<ActiveWorkoutBloc>().add(
+                        ActiveWorkoutStarted(workoutPlanId: planId),
+                      );
+                    } else {
+                      final plan = await showWorkoutPlanPickerSheet(
+                        context,
+                        memberId: memberId,
+                      );
+                      if (plan != null && context.mounted) {
+                        setState(() {
+                          _selectedPlan = plan;
+                          _selectedPlanId = plan.id;
+                        });
+                        context.read<ActiveWorkoutBloc>().add(
+                          ActiveWorkoutStarted(workoutPlanId: plan.id),
+                        );
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: () => context.read<ActiveWorkoutBloc>().add(
+                    const ActiveWorkoutStarted(workoutPlanId: null),
+                  ),
+                  child: const Text(WorkoutStrings.startEmptySession),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
-    ),
-    ),
     );
   }
 }
@@ -462,10 +479,14 @@ class _InProgressPanelState extends State<_InProgressPanel> {
 
       if (pastSets.isNotEmpty && pastSets.last.weightLiftedKg != null) {
         final w = pastSets.last.weightLiftedKg!;
-        _weightController.text = w % 1 == 0 ? w.toInt().toString() : w.toString();
+        _weightController.text = w % 1 == 0
+            ? w.toInt().toString()
+            : w.toString();
       } else if (planEx.targetWeightKg != null) {
         final w = planEx.targetWeightKg!;
-        _weightController.text = w % 1 == 0 ? w.toInt().toString() : w.toString();
+        _weightController.text = w % 1 == 0
+            ? w.toInt().toString()
+            : w.toString();
       } else {
         _weightController.text = '';
       }
@@ -499,8 +520,9 @@ class _InProgressPanelState extends State<_InProgressPanel> {
     final current = double.tryParse(_weightController.text.trim()) ?? 0.0;
     final updated = current + delta;
     if (updated < 0) return;
-    _weightController.text =
-        updated % 1 == 0 ? updated.toInt().toString() : updated.toStringAsFixed(1);
+    _weightController.text = updated % 1 == 0
+        ? updated.toInt().toString()
+        : updated.toStringAsFixed(1);
   }
 
   void _adjustReps(int delta) {
@@ -602,21 +624,27 @@ class _InProgressPanelState extends State<_InProgressPanel> {
     final isFuture = state.isFutureExercise(currentExerciseId);
     final currentExerciseLoggedCount = currentExerciseId == null
         ? 0
-        : state.loggedSets.where((s) => s.exerciseId == currentExerciseId).length;
+        : state.loggedSets
+              .where((s) => s.exerciseId == currentExerciseId)
+              .length;
     final targetSets = currentExercise?.targetSets;
-    final isExerciseCompleted = targetSets != null && currentExerciseLoggedCount >= targetSets;
+    final isExerciseCompleted =
+        targetSets != null && currentExerciseLoggedCount >= targetSets;
     final canCompleteWorkout = state.areAllPlannedExercisesCompleted;
 
     return BlocListener<RestTimerCubit, RestTimerState>(
       listenWhen: (previous, current) =>
-          !previous.isFinished && current.isFinished && current.totalSeconds > 0,
+          !previous.isFinished &&
+          current.isFinished &&
+          current.totalSeconds > 0,
       listener: (context, timerState) async {
         final exId = _selectedExerciseId;
         if (exId == null) return;
         final currentSetNum = state.nextSetNumberFor(exId);
         final totalSets = currentExercise?.targetSets;
         final nextExercise = state.nextPlanExercise;
-        final isLastExercise = currentExercise != null &&
+        final isLastExercise =
+            currentExercise != null &&
             exercises.isNotEmpty &&
             exercises.last.exerciseId == currentExercise.exerciseId;
 
@@ -654,7 +682,9 @@ class _InProgressPanelState extends State<_InProgressPanel> {
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isWide = constraints.maxWidth >= 840;
+          final isWide = constraints.maxWidth >= _wideSessionWidth;
+          final isPhone =
+              constraints.maxWidth < AdaptiveShellBreakpoints.compact;
 
           // Widget: Exercise Navigation / Selector List
           final exerciseNavSection = Column(
@@ -668,7 +698,8 @@ class _InProgressPanelState extends State<_InProgressPanel> {
               ),
               const SizedBox(height: 8),
               if (exercises.isNotEmpty)
-                for (final e in exercises) _ExerciseChoice(exercise: e, state: state)
+                for (final e in exercises)
+                  _ExerciseChoice(exercise: e, state: state)
               else
                 ExercisePickerField(
                   selectedExercise: _selectedFreeExercise,
@@ -681,7 +712,8 @@ class _InProgressPanelState extends State<_InProgressPanel> {
 
           // Widget: Session Actions (Complete Session button)
           final sessionActionSection = FilledButton.tonal(
-            onPressed: canCompleteWorkout &&
+            onPressed:
+                canCompleteWorkout &&
                     !state.logging &&
                     state.status != LoadStatus.loading
                 ? () => _confirmComplete(context)
@@ -690,6 +722,7 @@ class _InProgressPanelState extends State<_InProgressPanel> {
               canCompleteWorkout
                   ? WorkoutStrings.completeSession
                   : 'Complete Workout (Complete all planned exercises first)',
+              textAlign: TextAlign.center,
             ),
           );
 
@@ -734,7 +767,8 @@ class _InProgressPanelState extends State<_InProgressPanel> {
                                 context,
                                 entityType: 'exercise',
                                 entityId: currentExercise.exerciseId,
-                                title: currentExercise.exerciseName ??
+                                title:
+                                    currentExercise.exerciseName ??
                                     'Exercise #${currentExercise.exerciseId}',
                               ),
                             ),
@@ -756,31 +790,19 @@ class _InProgressPanelState extends State<_InProgressPanel> {
                           runSpacing: 4,
                           children: [
                             if (currentExercise.targetSets != null)
-                              Chip(
-                                label: Text(
-                                  'Target: ${currentExercise.targetSets} sets',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                padding: EdgeInsets.zero,
-                                visualDensity: VisualDensity.compact,
+                              _metricChip(
+                                'Target: ${currentExercise.targetSets} sets',
+                                constraints.maxWidth,
                               ),
                             if (currentExercise.targetReps != null)
-                              Chip(
-                                label: Text(
-                                  '${currentExercise.targetReps} reps',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                padding: EdgeInsets.zero,
-                                visualDensity: VisualDensity.compact,
+                              _metricChip(
+                                '${currentExercise.targetReps} reps',
+                                constraints.maxWidth,
                               ),
                             if (currentExercise.targetWeightKg != null)
-                              Chip(
-                                label: Text(
-                                  '${currentExercise.targetWeightKg} kg',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                padding: EdgeInsets.zero,
-                                visualDensity: VisualDensity.compact,
+                              _metricChip(
+                                '${currentExercise.targetWeightKg} kg',
+                                constraints.maxWidth,
                               ),
                           ],
                         ),
@@ -793,7 +815,9 @@ class _InProgressPanelState extends State<_InProgressPanel> {
           // Widget: Set Form or Locked / Completed Cards
           final setFormSection = isFuture
               ? Card(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(
@@ -823,206 +847,241 @@ class _InProgressPanelState extends State<_InProgressPanel> {
                   ),
                 )
               : isExerciseCompleted
-                  ? Card(
-                      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.check_circle_outline,
-                              size: 36,
-                              color: theme.colorScheme.primary,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'All Prescribed Sets Completed',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'All $targetSets prescribed sets have been logged or skipped. Proceed to the next exercise or complete your session.',
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
+              ? Card(
+                  color: theme.colorScheme.primaryContainer.withValues(
+                    alpha: 0.3,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          size: 36,
+                          color: theme.colorScheme.primary,
                         ),
-                      ),
-                    )
-                  : Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              'Set Details (Set #$nextSetNumber${targetSets != null ? ' of $targetSets' : ''})',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
+                        const SizedBox(height: 8),
+                        Text(
+                          'All Prescribed Sets Completed',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'All $targetSets prescribed sets have been logged or skipped. Proceed to the next exercise or complete your session.',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Set Details (Set #$nextSetNumber${targetSets != null ? ' of $targetSets' : ''})',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
 
-                            // Weight Stepper Row
-                            Row(
-                              children: [
-                                IconButton.filledTonal(
-                                  onPressed: isTimerActive ? null : () => _adjustWeight(-2.5),
-                                  icon: const Icon(Icons.remove),
-                                  tooltip: '-2.5 kg',
+                        // Weight Stepper Row
+                        Row(
+                          children: [
+                            IconButton.filledTonal(
+                              onPressed: isTimerActive
+                                  ? null
+                                  : () => _adjustWeight(-2.5),
+                              icon: const Icon(Icons.remove),
+                              tooltip: '-2.5 kg',
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextField(
+                                controller: _weightController,
+                                enabled: !isTimerActive,
+                                decoration: const InputDecoration(
+                                  labelText: WorkoutStrings.weightLabel,
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
+                                  ),
                                 ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: TextField(
-                                    controller: _weightController,
-                                    enabled: !isTimerActive,
-                                    decoration: const InputDecoration(
-                                      labelText: WorkoutStrings.weightLabel,
-                                      border: OutlineInputBorder(),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 12,
-                                      ),
-                                    ),
-                                    keyboardType: const TextInputType.numberWithOptions(
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
                                       decimal: true,
                                     ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                IconButton.filledTonal(
-                                  onPressed: isTimerActive ? null : () => _adjustWeight(2.5),
-                                  icon: const Icon(Icons.add),
-                                  tooltip: '+2.5 kg',
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-
-                            // Reps Stepper Row
-                            Row(
-                              children: [
-                                IconButton.filledTonal(
-                                  onPressed: isTimerActive ? null : () => _adjustReps(-1),
-                                  icon: const Icon(Icons.remove),
-                                  tooltip: '-1 rep',
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: TextField(
-                                    controller: _repsController,
-                                    enabled: !isTimerActive,
-                                    decoration: const InputDecoration(
-                                      labelText: WorkoutStrings.repsLabel,
-                                      border: OutlineInputBorder(),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 12,
-                                      ),
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                IconButton.filledTonal(
-                                  onPressed: isTimerActive ? null : () => _adjustReps(1),
-                                  icon: const Icon(Icons.add),
-                                  tooltip: '+1 rep',
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-
-                            // RPE Row
-                            TextField(
-                              controller: _rpeController,
-                              enabled: !isTimerActive,
-                              decoration: const InputDecoration(
-                                labelText: WorkoutStrings.rpeLabel,
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                              ),
-                              keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true,
                               ),
                             ),
-                            const SizedBox(height: 12),
-
-                            // Notes Row
-                            TextField(
-                              controller: _notesController,
-                              enabled: !isTimerActive,
-                              decoration: const InputDecoration(
-                                labelText: WorkoutStrings.setNotesLabel,
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            if (isTimerActive)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
-                                child: Text(
-                                  'Rest timer in progress — tap "Skip" or wait for timer to finish before logging the next set.',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.error,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-
-                            // Actions: Done & Skip
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    icon: const Icon(Icons.skip_next_outlined),
-                                    label: const Text(WorkoutStrings.skipSet),
-                                    onPressed: isTimerActive ||
-                                            state.logging ||
-                                            state.status == LoadStatus.loading ||
-                                            _selectedExerciseId == null
-                                        ? null
-                                        : _skip,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  flex: 2,
-                                  child: FilledButton.icon(
-                                    icon: const Icon(Icons.check_circle_outline),
-                                    label: Text(
-                                      state.logging
-                                          ? '…'
-                                          : '${WorkoutStrings.done} · Set #$nextSetNumber',
-                                    ),
-                                    onPressed: isTimerActive ||
-                                            state.logging ||
-                                            state.status == LoadStatus.loading ||
-                                            _selectedExerciseId == null
-                                        ? null
-                                        : _submit,
-                                  ),
-                                ),
-                              ],
+                            const SizedBox(width: 8),
+                            IconButton.filledTonal(
+                              onPressed: isTimerActive
+                                  ? null
+                                  : () => _adjustWeight(2.5),
+                              icon: const Icon(Icons.add),
+                              tooltip: '+2.5 kg',
                             ),
                           ],
                         ),
-                      ),
-                    );
+                        const SizedBox(height: 12),
+
+                        // Reps Stepper Row
+                        Row(
+                          children: [
+                            IconButton.filledTonal(
+                              onPressed: isTimerActive
+                                  ? null
+                                  : () => _adjustReps(-1),
+                              icon: const Icon(Icons.remove),
+                              tooltip: '-1 rep',
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextField(
+                                controller: _repsController,
+                                enabled: !isTimerActive,
+                                decoration: const InputDecoration(
+                                  labelText: WorkoutStrings.repsLabel,
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton.filledTonal(
+                              onPressed: isTimerActive
+                                  ? null
+                                  : () => _adjustReps(1),
+                              icon: const Icon(Icons.add),
+                              tooltip: '+1 rep',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // RPE Row
+                        TextField(
+                          controller: _rpeController,
+                          enabled: !isTimerActive,
+                          decoration: const InputDecoration(
+                            labelText: WorkoutStrings.rpeLabel,
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Notes Row
+                        TextField(
+                          controller: _notesController,
+                          enabled: !isTimerActive,
+                          decoration: const InputDecoration(
+                            labelText: WorkoutStrings.setNotesLabel,
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        if (isTimerActive)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Text(
+                              'Rest timer in progress — tap "Skip" or wait for timer to finish before logging the next set.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.error,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+
+                        // Actions: Done & Skip
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed:
+                                    isTimerActive ||
+                                        state.logging ||
+                                        state.status == LoadStatus.loading ||
+                                        _selectedExerciseId == null
+                                    ? null
+                                    : _skip,
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.skip_next_outlined),
+                                    SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        WorkoutStrings.skipSet,
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 2,
+                              child: FilledButton(
+                                onPressed:
+                                    isTimerActive ||
+                                        state.logging ||
+                                        state.status == LoadStatus.loading ||
+                                        _selectedExerciseId == null
+                                    ? null
+                                    : _submit,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.check_circle_outline),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        state.logging
+                                            ? '…'
+                                            : '${WorkoutStrings.done} · Set #$nextSetNumber',
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
 
           // Widget: Logged Sets List
           final loggedSetsSection = Column(
@@ -1045,120 +1104,386 @@ class _InProgressPanelState extends State<_InProgressPanel> {
                   Card(
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: s.isCompleted == false
-                            ? theme.colorScheme.errorContainer
-                            : theme.colorScheme.primaryContainer,
-                        child: Text(
-                          '#${s.setNumber}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: s.isCompleted == false
-                                ? theme.colorScheme.onErrorContainer
-                                : theme.colorScheme.onPrimaryContainer,
-                          ),
-                        ),
-                      ),
+                      leading: isPhone
+                          ? null
+                          : CircleAvatar(
+                              backgroundColor: s.isCompleted == false
+                                  ? theme.colorScheme.errorContainer
+                                  : theme.colorScheme.primaryContainer,
+                              child: Text(
+                                '#${s.setNumber}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: s.isCompleted == false
+                                      ? theme.colorScheme.onErrorContainer
+                                      : theme.colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
                       title: Text(
-                        _exerciseNameFor(s.exerciseId, exercises),
+                        isPhone
+                            ? (s.isCompleted == false
+                                  ? WorkoutStrings.skippedSetLine(s.setNumber)
+                                  : WorkoutStrings.setLoggedLine(
+                                      setNumber: s.setNumber,
+                                      reps: s.repsCompleted,
+                                      weight: s.weightLiftedKg,
+                                    ))
+                            : _exerciseNameFor(s.exerciseId, exercises),
                         style: const TextStyle(fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (s.isCompleted == false) ...[
-                            Row(
+                      subtitle: isPhone
+                          ? _phoneLoggedDetail(s, theme)
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
+                                if (s.isCompleted == false) ...[
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              theme.colorScheme.errorContainer,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'Skipped',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: theme
+                                                .colorScheme
+                                                .onErrorContainer,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.errorContainer,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    'Skipped',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: theme.colorScheme.onErrorContainer,
-                                      fontWeight: FontWeight.bold,
+                                  if (s.notes != null && s.notes!.isNotEmpty)
+                                    Text(
+                                      s.notes!,
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme.colorScheme.error,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                    ),
+                                ] else ...[
+                                  Text(
+                                    WorkoutStrings.setLoggedLine(
+                                      setNumber: s.setNumber,
+                                      reps: s.repsCompleted,
+                                      weight: s.weightLiftedKg,
                                     ),
                                   ),
+                                  if (s.rpeScore != null)
+                                    Text(
+                                      'RPE: ${s.rpeScore}',
+                                      style: theme.textTheme.bodySmall,
+                                    ),
+                                  if (s.notes != null && s.notes!.isNotEmpty)
+                                    Text(
+                                      'Note: ${s.notes}',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                    ),
+                                ],
+                              ],
+                            ),
+                      trailing: isPhone
+                          ? PopupMenuButton<String>(
+                              tooltip: WorkoutStrings.setActions,
+                              onSelected: (value) {
+                                if (value == 'comments') {
+                                  _showSetComments(context, s, exercises);
+                                } else if (value == 'edit') {
+                                  _editSet(context, s);
+                                } else if (value == 'delete') {
+                                  _deleteSet(context, s);
+                                }
+                              },
+                              itemBuilder: (menuContext) => const [
+                                PopupMenuItem(
+                                  value: 'comments',
+                                  child: Text(WorkoutStrings.setComments),
+                                ),
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text(WorkoutStrings.editSet),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text(WorkoutStrings.deleteSet),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.comment_outlined,
+                                    size: 18,
+                                  ),
+                                  tooltip: 'Set Comments',
+                                  onPressed: () =>
+                                      _showSetComments(context, s, exercises),
+                                ),
+                                PopupMenuButton<String>(
+                                  onSelected: (value) {
+                                    if (value == 'edit') {
+                                      _editSet(context, s);
+                                    } else if (value == 'delete') {
+                                      _deleteSet(context, s);
+                                    }
+                                  },
+                                  itemBuilder: (menuContext) => const [
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: Text(WorkoutStrings.editSet),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text(WorkoutStrings.deleteSet),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                            if (s.notes != null && s.notes!.isNotEmpty)
-                              Text(
-                                s.notes!,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.error,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                          ] else ...[
-                            Text(
-                              WorkoutStrings.setLoggedLine(
-                                setNumber: s.setNumber,
-                                reps: s.repsCompleted,
-                                weight: s.weightLiftedKg,
-                              ),
-                            ),
-                            if (s.rpeScore != null)
-                              Text(
-                                'RPE: ${s.rpeScore}',
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            if (s.notes != null && s.notes!.isNotEmpty)
-                              Text(
-                                'Note: ${s.notes}',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                          ],
-                        ],
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.comment_outlined, size: 18),
-                            tooltip: 'Set Comments',
-                            onPressed: () => SessionCommentsSheet.show(
-                              context,
-                              entityType: 'set',
-                              entityId: s.id,
-                              title: 'Set #${s.setNumber} (${_exerciseNameFor(s.exerciseId, exercises)})',
-                            ),
-                          ),
-                          PopupMenuButton<String>(
-                            onSelected: (value) {
-                              if (value == 'edit') {
-                                _editSet(context, s);
-                              } else if (value == 'delete') {
-                                _deleteSet(context, s);
-                              }
-                            },
-                            itemBuilder: (menuContext) => const [
-                              PopupMenuItem(
-                                value: 'edit',
-                                child: Text(WorkoutStrings.editSet),
-                              ),
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Text(WorkoutStrings.deleteSet),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
                     ),
                   ),
             ],
           );
+
+          final canLog =
+              !isTimerActive &&
+              !state.logging &&
+              state.status != LoadStatus.loading &&
+              _selectedExerciseId != null;
+          final targetLine = currentExercise == null
+              ? ''
+              : WorkoutStrings.exerciseTargetLine(
+                  sets: currentExercise.targetSets,
+                  reps: currentExercise.targetReps,
+                  weightKg: currentExercise.targetWeightKg,
+                );
+
+          if (isPhone) {
+            return ListView(
+              key: _sessionColumnKey,
+              padding: const EdgeInsets.all(16),
+              children: [
+                if (_errorText(state) != null) ...[
+                  Text(
+                    _errorText(state)!,
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                if (isTimerActive) ...[
+                  const RestTimerWidget(),
+                  const SizedBox(height: 12),
+                ],
+                if (currentExercise != null) ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              currentExercise.exerciseName ??
+                                  'Exercise #${currentExercise.exerciseId}',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (targetLine.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                targetLine,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      PopupMenuButton<String>(
+                        tooltip: WorkoutStrings.moreExerciseActions,
+                        onSelected: (value) {
+                          switch (value) {
+                            case 'comments':
+                              SessionCommentsSheet.show(
+                                context,
+                                entityType: 'exercise',
+                                entityId: currentExercise.exerciseId,
+                                title:
+                                    currentExercise.exerciseName ??
+                                    'Exercise #${currentExercise.exerciseId}',
+                              );
+                            case 'history':
+                              ExerciseHistorySheet.show(
+                                context,
+                                memberId: widget.memberId,
+                                exerciseId: currentExercise.exerciseId,
+                                exerciseName: currentExercise.exerciseName,
+                              );
+                            case 'skip':
+                              _skip();
+                          }
+                        },
+                        itemBuilder: (menuContext) => [
+                          const PopupMenuItem(
+                            value: 'comments',
+                            child: Text(WorkoutStrings.exerciseComments),
+                          ),
+                          const PopupMenuItem(
+                            value: 'history',
+                            child: Text(WorkoutStrings.exerciseHistoryTitle),
+                          ),
+                          PopupMenuItem(
+                            value: 'skip',
+                            enabled:
+                                canLog && !isFuture && !isExerciseCompleted,
+                            child: const Text(WorkoutStrings.skipSet),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ] else if (exercises.isEmpty) ...[
+                  ExercisePickerField(
+                    selectedExercise: _selectedFreeExercise,
+                    onChanged: (picked) {
+                      setState(() => _selectedFreeExercise = picked);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (isFuture)
+                  const Text(WorkoutStrings.futureExerciseLocked)
+                else if (isExerciseCompleted)
+                  const Text(WorkoutStrings.allPrescribedSetsDone)
+                else ...[
+                  _stepperRow(
+                    onDecrement: isTimerActive
+                        ? null
+                        : () => _adjustWeight(-2.5),
+                    onIncrement: isTimerActive
+                        ? null
+                        : () => _adjustWeight(2.5),
+                    decrementTooltip: '-2.5 kg',
+                    incrementTooltip: '+2.5 kg',
+                    field: TextField(
+                      controller: _weightController,
+                      enabled: !isTimerActive,
+                      decoration: const InputDecoration(
+                        labelText: WorkoutStrings.weightLabel,
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _stepperRow(
+                    onDecrement: isTimerActive ? null : () => _adjustReps(-1),
+                    onIncrement: isTimerActive ? null : () => _adjustReps(1),
+                    decrementTooltip: '-1 rep',
+                    incrementTooltip: '+1 rep',
+                    field: TextField(
+                      controller: _repsController,
+                      enabled: !isTimerActive,
+                      decoration: const InputDecoration(
+                        labelText: WorkoutStrings.repsLabel,
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  ExpansionTile(
+                    title: const Text(WorkoutStrings.setDetails),
+                    children: [
+                      TextField(
+                        controller: _rpeController,
+                        enabled: !isTimerActive,
+                        decoration: const InputDecoration(
+                          labelText: WorkoutStrings.rpeLabel,
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _notesController,
+                        enabled: !isTimerActive,
+                        decoration: const InputDecoration(
+                          labelText: WorkoutStrings.setNotesLabel,
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: canLog ? _submit : null,
+                    child: Text(
+                      state.logging
+                          ? '…'
+                          : '${WorkoutStrings.done} · Set #$nextSetNumber',
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                loggedSetsSection,
+                if (exercises.isNotEmpty)
+                  ExpansionTile(
+                    title: const Text(WorkoutStrings.exercisesSection),
+                    children: [
+                      for (final e in exercises)
+                        _ExerciseChoice(exercise: e, state: state, phone: true),
+                    ],
+                  ),
+                const SizedBox(height: 16),
+                sessionActionSection,
+              ],
+            );
+          }
 
           if (isWide) {
             // Adaptive Two-Column Layout for Desktop & Tablet Cockpit
@@ -1213,8 +1538,9 @@ class _InProgressPanelState extends State<_InProgressPanel> {
             );
           }
 
-          // Compact Single-Column Layout (Mobile & small foldables)
+          // Single column from the phone breakpoint up to the wide session.
           return ListView(
+            key: _sessionColumnKey,
             padding: const EdgeInsets.all(16),
             children: [
               Center(
@@ -1252,7 +1578,57 @@ class _InProgressPanelState extends State<_InProgressPanel> {
     );
   }
 
-  String _exerciseNameFor(String exerciseId, List<WorkoutPlanExercise> planExs) {
+  void _showSetComments(
+    BuildContext context,
+    WorkoutSessionSet set,
+    List<WorkoutPlanExercise> exercises,
+  ) {
+    SessionCommentsSheet.show(
+      context,
+      entityType: 'set',
+      entityId: set.id,
+      title:
+          'Set #${set.setNumber} (${_exerciseNameFor(set.exerciseId, exercises)})',
+    );
+  }
+
+  Widget? _phoneLoggedDetail(WorkoutSessionSet set, ThemeData theme) {
+    final lines = <Widget>[];
+    if (set.rpeScore != null) {
+      lines.add(
+        Text(
+          'RPE: ${set.rpeScore}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall,
+        ),
+      );
+    }
+    if (set.notes != null && set.notes!.isNotEmpty) {
+      lines.add(
+        Text(
+          set.isCompleted == false ? set.notes! : 'Note: ${set.notes}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontStyle: FontStyle.italic,
+            color: set.isCompleted == false ? theme.colorScheme.error : null,
+          ),
+        ),
+      );
+    }
+    if (lines.isEmpty) return null;
+    if (lines.length == 1) return lines.first;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: lines,
+    );
+  }
+
+  String _exerciseNameFor(
+    String exerciseId,
+    List<WorkoutPlanExercise> planExs,
+  ) {
     for (final e in planExs) {
       if (e.exerciseId == exerciseId && e.exerciseName != null) {
         return e.exerciseName!;
@@ -1356,24 +1732,19 @@ Future<_SetFieldsResult?> _showSetFieldsSheet(
   final rpeController = TextEditingController(
     text: initialRpe?.toString() ?? '',
   );
-  final notesController = TextEditingController(
-    text: initialNotes ?? '',
-  );
+  final notesController = TextEditingController(text: initialNotes ?? '');
 
   return showModalBottomSheet<_SetFieldsResult>(
     context: context,
     isScrollControlled: true,
     builder: (sheetContext) {
+      final inset = MediaQuery.viewInsetsOf(sheetContext).bottom;
       return Padding(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 16,
-          bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        padding: EdgeInsets.only(bottom: inset),
+        child: ListView(
+          key: const ValueKey('set-editor-scroll'),
+          shrinkWrap: true,
+          padding: const EdgeInsets.all(16),
           children: [
             Text(title, style: Theme.of(sheetContext).textTheme.titleMedium),
             const SizedBox(height: 16),
@@ -1437,11 +1808,59 @@ Future<_SetFieldsResult?> _showSetFieldsSheet(
   );
 }
 
+Widget _metricChip(String label, double maxWidth) {
+  final width = maxWidth > 64 ? maxWidth - 64 : maxWidth;
+  return ConstrainedBox(
+    constraints: BoxConstraints(maxWidth: width),
+    child: Chip(
+      label: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 12),
+      ),
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+    ),
+  );
+}
+
+Widget _stepperRow({
+  required VoidCallback? onDecrement,
+  required VoidCallback? onIncrement,
+  required String decrementTooltip,
+  required String incrementTooltip,
+  required Widget field,
+}) {
+  return Row(
+    children: [
+      IconButton.filledTonal(
+        onPressed: onDecrement,
+        icon: const Icon(Icons.remove),
+        tooltip: decrementTooltip,
+      ),
+      const SizedBox(width: 8),
+      Expanded(child: field),
+      const SizedBox(width: 8),
+      IconButton.filledTonal(
+        onPressed: onIncrement,
+        icon: const Icon(Icons.add),
+        tooltip: incrementTooltip,
+      ),
+    ],
+  );
+}
+
 class _ExerciseChoice extends StatelessWidget {
-  const _ExerciseChoice({required this.exercise, required this.state});
+  const _ExerciseChoice({
+    required this.exercise,
+    required this.state,
+    this.phone = false,
+  });
 
   final WorkoutPlanExercise exercise;
   final ActiveWorkoutState state;
+  final bool phone;
 
   @override
   Widget build(BuildContext context) {
@@ -1462,22 +1881,39 @@ class _ExerciseChoice extends StatelessWidget {
       trailing = const Icon(Icons.lock_outline, size: 20, color: Colors.grey);
     }
 
+    final title = exercise.exerciseName ?? 'Exercise #${exercise.exerciseId}';
+    final subtitle = phone
+        ? WorkoutStrings.exerciseTargetLine(
+            sets: exercise.targetSets,
+            reps: exercise.targetReps,
+            weightKg: exercise.targetWeightKg,
+          )
+        : [
+            WorkoutStrings.exerciseSubtitle(
+              sets: exercise.targetSets,
+              reps: exercise.targetReps,
+            ),
+            if (target != null) '$logged/$target logged',
+            if (isFuture) 'Locked (Upcoming)',
+          ].where((s) => s.isNotEmpty).join(' · ');
+
     return ListTile(
       selected: selected,
       onTap: () => context.read<ActiveWorkoutBloc>().add(
         ActiveWorkoutExerciseSelected(exercise.exerciseId),
       ),
-      title: Text(exercise.exerciseName ?? 'Exercise #${exercise.exerciseId}'),
-      subtitle: Text(
-        [
-          WorkoutStrings.exerciseSubtitle(
-            sets: exercise.targetSets,
-            reps: exercise.targetReps,
-          ),
-          if (target != null) '$logged/$target logged',
-          if (isFuture) 'Locked (Upcoming)',
-        ].where((s) => s.isNotEmpty).join(' · '),
+      title: Text(
+        title,
+        maxLines: phone ? 2 : 1,
+        overflow: TextOverflow.ellipsis,
       ),
+      subtitle: subtitle.isEmpty
+          ? null
+          : Text(
+              subtitle,
+              maxLines: phone ? 2 : 1,
+              overflow: TextOverflow.ellipsis,
+            ),
       trailing: trailing,
     );
   }
@@ -1521,7 +1957,9 @@ class _CompletedPanel extends StatelessWidget {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text(WorkoutStrings.volumeLabel),
-                  subtitle: Text(WorkoutStrings.volumeKg(session.totalVolumeKg!)),
+                  subtitle: Text(
+                    WorkoutStrings.volumeKg(session.totalVolumeKg!),
+                  ),
                 ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -1537,7 +1975,9 @@ class _CompletedPanel extends StatelessWidget {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text(WorkoutStrings.completedAtLabel),
-                  subtitle: Text(WorkoutStrings.sessionTime(session.completedAt!)),
+                  subtitle: Text(
+                    WorkoutStrings.sessionTime(session.completedAt!),
+                  ),
                 ),
               const Spacer(),
               FilledButton(
