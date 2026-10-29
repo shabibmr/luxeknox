@@ -1,4 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { ParQModule } from '../health/par-q.module';
 import { PlatformModule } from '../platform/platform.module';
 import { RbacModule } from '../rbac/rbac.module';
 import { PeopleModule } from '../people/people.module';
@@ -20,7 +21,7 @@ import { TrainerAvailabilityRepository } from './trainer-availability.repository
 import { TrainerAvailabilityService } from './trainer-availability.service';
 
 @Module({
-  imports: [PlatformModule, RbacModule, SysModule, forwardRef(() => PeopleModule)],
+  imports: [PlatformModule, RbacModule, SysModule, ParQModule, forwardRef(() => PeopleModule)],
   controllers: [
     ScheduleTypeController,
     FacilityController,

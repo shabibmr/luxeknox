@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { RbacModule } from './rbac/rbac.module';
 import { WorkModule } from './work/work.module';
 import { DietModule } from './diet/diet.module';
+import { ParQModule } from './health/par-q.module';
 import { PeopleModule } from './people/people.module';
 import { MediaModule } from './media/media.module';
 import { MembModule } from './memb/memb.module';
@@ -33,6 +34,7 @@ import { InvModule } from './inv/inv.module';
     WorkModule,
     DietModule,
     PeopleModule,
+    ParQModule,
     MediaModule,
     MembModule,
     SchedModule,

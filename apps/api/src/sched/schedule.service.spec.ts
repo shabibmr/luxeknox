@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { AuthenticatedUser } from '../auth/auth.guard';
-import { ConflictError } from '../platform/errors/app-error';
+import { BusinessRuleError, ConflictError } from '../platform/errors/app-error';
 import { ScheduleService } from './schedule.service';
 
 const adminActor: AuthenticatedUser = {
@@ -62,6 +62,8 @@ function buildService(overrides: Partial<Record<string, unknown>> = {}) {
     }),
   };
 
+  const parQService = { assertMayTrain: vi.fn().mockResolvedValue(undefined) };
+
   const auditService = {
     recordAudit: vi.fn(),
   };
@@ -82,6 +84,7 @@ function buildService(overrides: Partial<Record<string, unknown>> = {}) {
     scheduleTypeRepository as any,
     facilityRepository as any,
     trainerRepository as any,
+    parQService as any,
     paginationHelper as any,
     auditService as any,
     domainEventBus as any,
@@ -94,6 +97,7 @@ function buildService(overrides: Partial<Record<string, unknown>> = {}) {
     scheduleTypeRepository,
     facilityRepository,
     trainerRepository,
+    parQService,
     domainEventBus,
     paginationHelper,
   };
@@ -287,6 +291,22 @@ describe('ScheduleService', () => {
       expect(domainEventBus.emit).toHaveBeenCalledWith(
         expect.objectContaining({ eventName: 'schedule.started' }),
       );
+    });
+
+    it('blocks starting a PT schedule when a booked member lacks medical clearance', async () => {
+      const { service, repository, parQService } = buildService({
+        findById: vi.fn().mockResolvedValue({ ...scheduledRow, pt_subscription_id: 7 }),
+        listParticipants: vi.fn().mockResolvedValue([
+          { id: 1, schedule_id: 40, member_id: 61, booking_status: 'cancelled' },
+          { id: 2, schedule_id: 40, member_id: 62, booking_status: 'booked' },
+        ]),
+      });
+      parQService.assertMayTrain.mockRejectedValue(new BusinessRuleError('MEDICAL_CLEARANCE_REQUIRED'));
+
+      await expect(service.start(40, {}, adminActor)).rejects.toThrow('MEDICAL_CLEARANCE_REQUIRED');
+      expect(parQService.assertMayTrain).toHaveBeenCalledTimes(1);
+      expect(parQService.assertMayTrain).toHaveBeenCalledWith(62);
+      expect(repository.updateSchedule).not.toHaveBeenCalled();
     });
 
     it('rejects starting a schedule that is not scheduled', async () => {

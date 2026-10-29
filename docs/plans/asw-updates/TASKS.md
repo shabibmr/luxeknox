@@ -21,9 +21,9 @@ Source Document: [Luxe knox pt client  file.pdf](./Luxe%20knox%20pt%20client%20%
 - [x] PTF-06 Seed sample PAR-Q+, lifestyle intake, and progress review records <!-- id: 6 -->
 
 **Phase 2: Backend PAR-Q+ & Safety Gate**
-- [ ] PTF-07 `ParQService`: submit questionnaire, compute positive flag, handle doctor referral <!-- id: 7 -->
-- [ ] PTF-08 `ParQController` endpoints & DTO validation <!-- id: 8 -->
-- [ ] PTF-09 Scheduling gate interceptor: block PT booking when `pending_clearance` <!-- id: 9 -->
+- [x] PTF-07 `ParQService`: submit questionnaire, compute positive flag, handle doctor referral <!-- id: 7 -->
+- [x] PTF-08 `ParQController` endpoints & DTO validation <!-- id: 8 -->
+- [x] PTF-09 Scheduling gate interceptor: block PT booking when `pending_clearance` <!-- id: 9 -->
 
 **Phase 3: Backend Lifestyle Intake & Macrocycle Program Design**
 - [x] PTF-10 `LifestyleIntakeService`: upsert habits, stress (1–10), and 4 lifestyle priorities <!-- id: 10 -->

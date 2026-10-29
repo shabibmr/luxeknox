@@ -12,6 +12,7 @@ import {
   ForbiddenError,
   NotFoundError,
 } from '../platform/errors/app-error';
+import { ParQService } from '../health/par-q.service';
 import { MemberRepository } from '../people/member.repository';
 import { SettingsService } from '../sys/settings.service';
 import type { BookRequestDto, CancelBookingRequestDto } from './booking.dto';
@@ -25,6 +26,7 @@ export class BookingService {
   constructor(
     private readonly repository: ScheduleRepository,
     private readonly memberRepository: MemberRepository,
+    private readonly parQService: ParQService,
     private readonly settingsService: SettingsService,
     private readonly auditService: AuditService,
     private readonly domainEventBus: DomainEventBus,
@@ -76,6 +78,10 @@ export class BookingService {
     const member = await this.memberRepository.findById(memberId);
     if (!member) {
       throw new NotFoundError('Member not found');
+    }
+
+    if (schedule.pt_subscription_id != null) {
+      await this.parQService.assertMayTrain(memberId);
     }
 
     const now = new Date();

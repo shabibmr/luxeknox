@@ -40,9 +40,10 @@ export const parQScreenings = mysqlTable(
     q6_details: text('q6_details'),
     q7_other_reason: boolean('q7_other_reason').notNull().default(false),
     q7_details: text('q7_details'),
-    has_positive_answer: boolean('has_positive_answer').notNull().default(false),
+    // No defaults on the derived columns: ParQService computes them, so a raw insert must state them.
+    has_positive_answer: boolean('has_positive_answer').notNull(),
     trainer_screening_notes: text('trainer_screening_notes'),
-    referral_required: boolean('referral_required').notNull().default(false),
+    referral_required: boolean('referral_required').notNull(),
     referral_reason: text('referral_reason'),
     declaration_accepted: boolean('declaration_accepted').notNull().default(false),
     client_signed_at: utcDatetime('client_signed_at'),
@@ -52,7 +53,6 @@ export const parQScreenings = mysqlTable(
     ),
     clearance_status: varchar('clearance_status', { length: 32 })
       .notNull()
-      .default('passed')
       .$type<ParQClearanceStatus>(),
     cleared_at: utcDatetime('cleared_at'),
     cleared_by_user_id: bigint('cleared_by_user_id', { mode: 'number', unsigned: true }).references(

@@ -15,6 +15,7 @@ import {
 } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
+import { ParQService } from '../health/par-q.service';
 import { TrainerRepository } from '../people/trainer.repository';
 import type { CancelRequestDto, ScheduleCreateDto, ScheduleTransitionDto, ScheduleUpdateDto } from './schedule.dto';
 import { scheduleFilterQuerySchema } from './schedule.dto';
@@ -39,6 +40,7 @@ export class ScheduleService {
     private readonly scheduleTypeRepository: ScheduleTypeRepository,
     private readonly facilityRepository: FacilityRepository,
     private readonly trainerRepository: TrainerRepository,
+    private readonly parQService: ParQService,
     private readonly paginationHelper: PaginationHelper,
     private readonly auditService: AuditService,
     private readonly domainEventBus: DomainEventBus,
@@ -526,6 +528,15 @@ export class ScheduleService {
       throw new BadRequestError(
         `Cannot start a schedule in status '${schedule.status}'; it must be 'scheduled'`,
       );
+    }
+
+    if (schedule.pt_subscription_id != null) {
+      const participants = await this.repository.listParticipants(id);
+      for (const participant of participants) {
+        if (participant.booking_status !== 'cancelled') {
+          await this.parQService.assertMayTrain(participant.member_id);
+        }
+      }
     }
 
     const now = new Date();
