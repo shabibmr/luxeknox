@@ -488,18 +488,24 @@ import '../../features/payments/presentation/cubit/payment_methods_cubit.dart'
     as _i792;
 import '../../features/payments/presentation/cubit/payments_ledger_cubit.dart'
     as _i853;
+import '../../features/people/data/datasources/par_q_remote_datasource.dart'
+    as _i914;
 import '../../features/people/data/datasources/people_remote_datasource.dart'
     as _i1029;
 import '../../features/people/data/datasources/profile_remote_datasource.dart'
     as _i327;
 import '../../features/people/data/repositories/document_repository_impl.dart'
     as _i869;
+import '../../features/people/data/repositories/par_q_repository_impl.dart'
+    as _i624;
 import '../../features/people/data/repositories/people_repository_impl.dart'
     as _i1030;
 import '../../features/people/data/repositories/profile_repository_impl.dart'
     as _i887;
 import '../../features/people/domain/repositories/document_repository.dart'
     as _i211;
+import '../../features/people/domain/repositories/par_q_repository.dart'
+    as _i714;
 import '../../features/people/domain/repositories/people_repository.dart'
     as _i646;
 import '../../features/people/domain/repositories/profile_repository.dart'
@@ -508,6 +514,8 @@ import '../../features/people/domain/usecases/assign_employee_role_usecase.dart'
     as _i725;
 import '../../features/people/domain/usecases/assign_trainer_usecase.dart'
     as _i829;
+import '../../features/people/domain/usecases/clear_par_q_usecase.dart'
+    as _i947;
 import '../../features/people/domain/usecases/create_emergency_contact_usecase.dart'
     as _i580;
 import '../../features/people/domain/usecases/create_employee_usecase.dart'
@@ -550,10 +558,14 @@ import '../../features/people/domain/usecases/list_photos_usecase.dart'
 import '../../features/people/domain/usecases/list_roles_usecase.dart' as _i884;
 import '../../features/people/domain/usecases/list_trainers_usecase.dart'
     as _i383;
+import '../../features/people/domain/usecases/review_par_q_usecase.dart'
+    as _i736;
 import '../../features/people/domain/usecases/set_avatar_usecase.dart'
     as _i1012;
 import '../../features/people/domain/usecases/set_employee_status_usecase.dart'
     as _i392;
+import '../../features/people/domain/usecases/submit_par_q_usecase.dart'
+    as _i49;
 import '../../features/people/domain/usecases/update_emergency_contact_usecase.dart'
     as _i735;
 import '../../features/people/domain/usecases/update_employee_usecase.dart'
@@ -681,7 +693,7 @@ import '../../features/workout/domain/usecases/list_workout_plan_versions_usecas
 import '../../features/workout/domain/usecases/list_workout_plans_usecase.dart'
     as _i111;
 import '../../features/workout/domain/usecases/list_workout_sessions_usecase.dart'
-    as _i736;
+    as _i737;
 import '../../features/workout/domain/usecases/log_workout_set_usecase.dart'
     as _i88;
 import '../../features/workout/domain/usecases/publish_workout_plan_usecase.dart'
@@ -828,6 +840,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i103.InventoryRemoteDataSource>(
       () => _i103.InventoryRemoteDataSourceImpl(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i914.ParQRemoteDataSource>(
+      () => _i914.ParQRemoteDataSourceImpl(gh<_i633.HEALTHApi>()),
+    );
     gh.lazySingleton<_i817.DashboardRemoteDataSource>(
       () => _i817.DashboardRemoteDataSourceImpl(gh<_i633.DASHApi>()),
     );
@@ -971,6 +986,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i104.ForgotPasswordCubit>(
       () => _i104.ForgotPasswordCubit(gh<_i586.ForgotPasswordUseCase>()),
+    );
+    gh.lazySingleton<_i714.ParQRepository>(
+      () => _i624.ParQRepositoryImpl(gh<_i914.ParQRemoteDataSource>()),
     );
     gh.lazySingleton<_i140.SettingsRemoteDataSource>(
       () => _i140.SettingsRemoteDataSourceImpl(gh<_i633.SYSApi>()),
@@ -1209,6 +1227,15 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i196.UpdateMedicalRecordUseCase>(
       () => _i196.UpdateMedicalRecordUseCase(gh<_i121.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i947.ClearParQUseCase>(
+      () => _i947.ClearParQUseCase(gh<_i714.ParQRepository>()),
+    );
+    gh.lazySingleton<_i736.ReviewParQUseCase>(
+      () => _i736.ReviewParQUseCase(gh<_i714.ParQRepository>()),
+    );
+    gh.lazySingleton<_i49.SubmitParQUseCase>(
+      () => _i49.SubmitParQUseCase(gh<_i714.ParQRepository>()),
     );
     gh.lazySingleton<_i646.PeopleRepository>(
       () => _i1030.PeopleRepositoryImpl(gh<_i1029.PeopleRemoteDataSource>()),
@@ -1580,9 +1607,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i34.GetExerciseHistoryUseCase>(
       () => _i34.GetExerciseHistoryUseCase(gh<_i14.WorkoutSessionRepository>()),
     );
-    gh.lazySingleton<_i736.ListWorkoutSessionsUseCase>(
+    gh.lazySingleton<_i737.ListWorkoutSessionsUseCase>(
       () =>
-          _i736.ListWorkoutSessionsUseCase(gh<_i14.WorkoutSessionRepository>()),
+          _i737.ListWorkoutSessionsUseCase(gh<_i14.WorkoutSessionRepository>()),
     );
     gh.lazySingleton<_i88.LogWorkoutSetUseCase>(
       () => _i88.LogWorkoutSetUseCase(gh<_i14.WorkoutSessionRepository>()),
@@ -2054,7 +2081,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i779.DietHistoryCubit(gh<_i1025.ListDietLogsUseCase>()),
     );
     gh.factory<_i251.WorkoutHistoryCubit>(
-      () => _i251.WorkoutHistoryCubit(gh<_i736.ListWorkoutSessionsUseCase>()),
+      () => _i251.WorkoutHistoryCubit(gh<_i737.ListWorkoutSessionsUseCase>()),
     );
     gh.factory<_i87.AttendanceLiveFeedCubit>(
       () => _i87.AttendanceLiveFeedCubit(
