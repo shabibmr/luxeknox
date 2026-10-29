@@ -20,11 +20,11 @@ It lists tables, purpose, screen links, and key attributes. It is **not** a phys
 ## Entity Count by Domain
 
 ```mermaid
-pie title Database Entities Distribution (86 Tables)
+pie title Database Entities Distribution (89 Tables)
     "Users, Roles & Profiles (8)" : 8
-    "Health & Medical (6)" : 6
+    "Health & Medical (8)" : 8
     "Membership & Products (5)" : 5
-    "Personal Training (3)" : 3
+    "Personal Training (4)" : 4
     "Scheduling & Availability (6)" : 6
     "Attendance Tracking (2)" : 2
     "Billing & Payments (4)" : 4
@@ -39,9 +39,9 @@ pie title Database Entities Distribution (86 Tables)
 | Domain | Tables |
 | :--- | ---: |
 | Users, Roles & Profiles | 8 |
-| Health & Medical | 6 |
+| Health & Medical | 8 |
 | Membership & Products | 5 |
-| Personal Training | 3 |
+| Personal Training | 4 |
 | Scheduling & Availability | 6 |
 | Attendance | 2 |
 | Billing & Payments | 4 |
@@ -51,7 +51,7 @@ pie title Database Entities Distribution (86 Tables)
 | Notifications | 4 |
 | Settings & Audit | 2 |
 | Accounting | 27 |
-| **Total** | **86** |
+| **Total** | **89** |
 
 ---
 
@@ -93,7 +93,8 @@ pie title Database Entities Distribution (86 Tables)
 
 * **Purpose**: Member-specific profile details.
 * **Supporting Screens**: Profile Screen, Edit Profile, Members Directory, Member Dossier.
-* **Key Attributes**: `id`, `user_id` (FK), `membership_number`, `first_name`, `last_name`, `gender` (required on create and update), `date_of_birth`, `address`, `assigned_trainer_id` (FK to trainers), `joined_date`, `notes`.
+* **Key Attributes**: `id`, `user_id` (FK), `membership_number`, `first_name`, `last_name`, `gender` (required on create and update), `date_of_birth`, `address`, `assigned_trainer_id` (FK to trainers), `joined_date`, `notes`, `next_review_date` (date, nullable, indexed), `preferred_training_days_times` (varchar 255), `exercise_preferences`, `coaching_notes`.
+* **PT client file fields**: `next_review_date`, `preferred_training_days_times`, `exercise_preferences` and `coaching_notes` are schema-only for now; no endpoint reads or writes them yet.
 * **`membership_number`**: format `M` + 8 zero-padded digits (`M00000001`, …); unique and immutable after insert. Allocated via single-row `membership_number_counters` (`SELECT … FOR UPDATE` inside the person-create transaction).
 
 ### `membership_number_counters`
@@ -134,6 +135,20 @@ pie title Database Entities Distribution (86 Tables)
 * **Purpose**: Historical injuries, surgeries, and physical limitations.
 * **Supporting Screens**: Medical History Screen, Member Dossier.
 * **Key Attributes**: `id`, `member_id` (FK), `condition_id` (FK nullable), `title`, `description`, `diagnosed_date`, `clearance_status`, `document_url`.
+
+### `par_q_screenings`
+
+* **Purpose**: PAR-Q+ readiness questionnaires. Append-only: each submission is a new row and the **latest** row per member is current. Gates PT booking and PT session start.
+* **Supporting Screens**: Member Onboarding (`ParQScreeningForm`), Member Dossier health clearance badge.
+* **Key Attributes**: `id`, `member_id` (FK), `version` (varchar 32, default `2024.1`), `q1_heart_condition`, `q2_chest_pain_activity`, `q3_chest_pain_rest`, `q4_dizziness_consciousness`, `q5_bone_joint_problem`, `q6_medication_condition`, `q7_other_reason` (booleans, default false) each with a `qN_details` text, `has_positive_answer`, `trainer_screening_notes`, `referral_required`, `referral_reason`, `declaration_accepted`, `client_signed_at`, `trainer_signed_at`, `trainer_user_id` (FK to users, nullable), `clearance_status`, `cleared_at`, `cleared_by_user_id` (FK to users, nullable), `created_at`, `updated_at`.
+* **`clearance_status`**: `passed` | `pending_clearance` | `cleared` | `rejected`. Indexed, as is `member_id`.
+* **Derived columns**: `has_positive_answer`, `referral_required` and `clearance_status` have **no** column defaults; `ParQService` computes them, so a raw insert must state them.
+
+### `member_lifestyle_intakes`
+
+* **Purpose**: One current lifestyle and habits intake per member, written by the trainer during consultation.
+* **Supporting Screens**: Member Dossier "Lifestyle & Habits" tab.
+* **Key Attributes**: `id`, `member_id` (FK, **unique**), `activity_level` (`sedentary` | `light` | `moderate` | `high`), `training_history`, `current_pain_discomfort`, `sleep_hours_typical` (decimal 3,1), `stress_level` (int), `work_activity_demands`, `typical_daily_steps` (int), `nutrition_approach`, `hydration_habits`, `recovery_habits`, `other_notes`, `lifestyle_priorities` (JSON array of `{priority: sleep | nutrition | activity | recovery, current_status, first_action}`), `conducted_by_trainer_id` (FK to trainers, nullable), `created_at`, `updated_at`.
 
 ### `emergency_contacts`
 
@@ -207,7 +222,15 @@ pie title Database Entities Distribution (86 Tables)
 
 * **Purpose**: Append-only log of mid-PT trainer reassignments and slot changes.
 * **Supporting Screens**: PT change history on the dossier.
-* **Key Attributes**: `id`, `pt_subscription_id` (FK), `change_type`, `effective_date`, `old_trainer_id`, `new_trainer_id`, `old_weekdays`, `new_weekdays`, `old_slot_start`, `new_slot_start`, `reason`, `changed_by_user_id` (FK), `created_at`.
+* **Key Attributes**: `id`, `pt_subscription_id` (FK), `change_type`, `effective_date`, `old_trainer_id`, `new_trainer_id`, `old_weekdays`, `new_weekdays`, `old_slot_start`, `new_slot_start`, `reason`, `handover_continuity_notes`, `changed_by_user_id` (FK), `created_at`.
+* **`handover_continuity_notes`**: schema-only for now; no endpoint writes it yet.
+
+### `pt_progress_reviews`
+
+* **Purpose**: Periodic PT progress review with a snapshot of the member's metrics, and a three-party sign-off (trainer, client, manager).
+* **Supporting Screens**: PT Progress Review (Screen 45), PT review presentation card (PDF).
+* **Key Attributes**: `id`, `member_id` (FK), `trainer_id` (FK), `review_period_start`, `review_period_end` (dates), `body_metrics_snapshot` (JSON array of `{metric, start_val, current_val, change_val, target_val}` numbers), `performance_markers_snapshot` (JSON array of `{marker, start_val, current_val, change_val, target_val}` strings), `progress_highlights` (JSON string array), `highlights_other_text`, `trainer_summary`, `client_feedback`, `next_phase_goal`, `next_phase_training_focus`, `next_review_date`, `review_checklist` (JSON of booleans: `goals_reviewed`, `measurements_reviewed`, `performance_reviewed`, `attendance_reviewed`, `program_updated`, `next_goals_agreed`), `final_review_notes`, `client_signed_at`, `trainer_signed_at`, `manager_user_id` (FK to users, nullable), `manager_signed_at`, `status`, `created_at`, `updated_at`.
+* **`status`**: `draft` | `pending_client_sign` | `pending_manager_approval` | `approved` | `archived`. Indexed on `member_id`, `trainer_id` and `status`.
 
 ---
 
@@ -235,7 +258,7 @@ pie title Database Entities Distribution (86 Tables)
 
 * **Purpose**: Junction tracking members booked for a session.
 * **Supporting Screens**: Schedule Details Screen, Session Attendance.
-* **Key Attributes**: `id`, `schedule_id` (FK), `member_id` (FK), `booking_status` (booked, waitlisted, cancelled), `attended` (boolean), `booked_at`, `marked_at`.
+* **Key Attributes**: `id`, `schedule_id` (FK), `member_id` (FK), `booking_status` (booked, waitlisted, cancelled), `attended` (boolean), `booked_at`, `marked_at`, `client_verified_at` (nullable; schema-only for now, no endpoint sets it).
 
 ### `trainer_availabilities`
 
@@ -310,6 +333,7 @@ Plan body is stored on a **version**. Creating a plan also creates version `1`. 
 * **Purpose**: Routines created for a member or saved as gym templates.
 * **Supporting Screens**: Workout Plans Catalog, Workout Plan Details, Workout Plan Builder.
 * **Key Attributes**: `id`, `title`, `description`, `member_id` (FK nullable — null means master template), `trainer_id` (FK), `target_goal`, `difficulty`, `duration_weeks`, `is_template`, `status` (active, archived, draft), `created_at`.
+* **Macrocycle blueprint** (all nullable): `primary_objective_12w`, `milestone_4w`, `sessions_per_week`, `target_session_duration_minutes`, `split_type` (varchar 64), `cardio_protocol`, `mobility_protocol`, `progression_methods` (JSON array of `load` | `reps` | `volume` | `density` | `technique`), `main_success_measure` (varchar 255), `trainer_programming_notes`.
 
 ### `workout_plan_versions`
 
@@ -321,19 +345,20 @@ Plan body is stored on a **version**. Creating a plan also creates version `1`. 
 
 * **Purpose**: Ordered list of exercises in a plan split **for one version**.
 * **Supporting Screens**: Workout Plan Details, Workout Plan Builder.
-* **Key Attributes**: `id`, `workout_plan_version_id` (FK), `day_number` (e.g. Day 1 = Chest/Triceps), `exercise_id` (FK), `order_index`, `target_sets`, `target_reps`, `target_weight_kg`, `rest_seconds`, `rest_between_exercises_seconds`, `notes`.
+* **Key Attributes**: `id`, `workout_plan_version_id` (FK), `day_number` (e.g. Day 1 = Chest/Triceps), `exercise_id` (FK), `order_index`, `target_sets`, `target_reps`, `target_weight_kg`, `target_rir` (decimal 3,1, nullable), `target_duration_seconds` (nullable, for timed sets), `rest_seconds`, `rest_between_exercises_seconds`, `notes`.
 
 ### `workout_sessions`
 
 * **Purpose**: Live or logged workout instance performed by a member. This table **is** workout history.
 * **Supporting Screens**: Live Workout Session Tracker, Workout History Screen.
 * **Key Attributes**: `id`, `member_id` (FK), `workout_plan_id` (FK nullable), `workout_plan_version_id` (FK nullable), `trainer_id` (FK nullable), `started_at`, `completed_at`, `total_volume_kg`, `duration_minutes`, `client_feedback_rating`, `notes`.
+* **Session plan and feedback** (all nullable): `session_focus` (varchar 120), `warmup_protocol`, `cooldown_protocol`, `effort_rating`, `satisfaction_rating`, `pain_discomfort_score`, `pain_notes`, `trainer_notes`, `next_session_plan`, `client_signed_at`, `trainer_signed_at`.
 
 ### `workout_session_exercises`
 
 * **Purpose**: Set-by-set execution logs.
 * **Supporting Screens**: Live Workout Session Tracker.
-* **Key Attributes**: `id`, `workout_session_id` (FK), `exercise_id` (FK), `set_number`, `reps_completed`, `weight_lifted_kg`, `rpe_score`, `is_completed`.
+* **Key Attributes**: `id`, `workout_session_id` (FK), `exercise_id` (FK), `set_number`, `reps_completed`, `weight_lifted_kg`, `rpe_score`, `actual_rir` (decimal 3,1, nullable), `actual_duration_seconds` (nullable), `is_completed`, `notes`.
 
 ---
 

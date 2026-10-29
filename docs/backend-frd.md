@@ -49,12 +49,13 @@ These are the backend modules this FRD covers. They follow the entity domains, p
 | **1** | Identity & session | `AUTH` | Login, logout, password, session, account status | `users` |
 | **2** | RBAC | `RBAC` | Roles, permissions, staff role assignment | `roles`, `permissions`, `role_permissions` |
 | **3** | People & profiles | `PEOPLE` | Member / trainer / employee records and directories | `members`, `trainers`, `employees` |
-| **4** | Health & medical | `HEALTH` | Vitals, conditions, history, emergency contacts, member files & ID photos | `member_health`, `health_conditions`, `medical_histories`, `emergency_contacts`, `member_documents`, `member_photos` |
+| **4** | Health & medical | `HEALTH` | Vitals, conditions, history, emergency contacts, member files & ID photos | `member_health`, `health_conditions`, `medical_histories`, `emergency_contacts`, `member_documents`, `member_photos`, `par_q_screenings`, `member_lifestyle_intakes` |
 | **5** | Memberships & products | `MEMB` | Package catalog, contracts, freeze, extend, renew, history | `membership_products`, `memberships`, `membership_freezes`, `membership_extensions`, `membership_histories` |
 | **6** | Scheduling & availability | `SCHED` | Types, rooms, bookings, waitlist, trainer hours | `schedule_types`, `facilities`, `schedules`, `schedule_participants`, `trainer_availabilities`, `schedule_histories` |
 | **7** | Attendance | `ATTN` | Gate check-in/out, session mark, daily aggregates | `attendances`, `attendance_histories` |
 | **8** | Billing & payments | `PAY` | Methods, invoices, POS, receipts, dues, refunds | `payment_methods`, `payments`, `payment_receipts`, `payment_histories` |
 | **9** | Workout management | `WORK` | Exercise library, plans, versions, live sessions | `exercises`, `workout_plans`, `workout_plan_versions`, `workout_plan_exercises`, `workout_sessions`, `workout_session_exercises` |
+| **9a** | PT progress reviews | `PT` | Periodic PT progress review, metric snapshot, trainer / client / manager sign-off, PDF card | `pt_progress_reviews` |
 | **10** | Diet & nutrition | `DIET` | Food library, plans, meals, intake logs, versions | `foods`, `diet_plans`, `diet_plan_versions`, `diet_plan_meals`, `diet_plan_foods`, `diet_histories` |
 | **11** | Goals, progress & measurements | `GOAL` | Metrics, goals, measurements, photos, notes | `goal_metrics`, `goals`, `goal_histories`, `measurements`, `measurement_values`, `progress_photos`, `progress_notes` |
 | **12** | Notifications & devices | `NOTIF` | Types, inbox, broadcast, push tokens, delivery | `notification_types`, `notifications`, `user_devices`, `notification_deliveries` |
@@ -249,6 +250,7 @@ Canonical actions: `create`, `read`, `update`, `delete`, `approve`, `export`, `b
 | FR-PEOPLE-014 | Admin CRUD employees: `gender` (required, Male/Female), job_title, department, hire_date, emergency_contact, status (`active`, `on_probation`, `suspended`, `terminated`). |
 | FR-PEOPLE-015 | Assign role (FR-RBAC-004) from employee profile. |
 | FR-PEOPLE-016 | Terminated / suspended employees cannot authenticate. |
+| FR-PEOPLE-017 | The member row carries PT client-file fields: `next_review_date`, `preferred_training_days_times`, `exercise_preferences`, `coaching_notes`. **Schema only for now**: no endpoint reads or writes them yet. |
 
 ### 8.4 Business rules
 
@@ -263,7 +265,7 @@ Canonical actions: `create`, `read`, `update`, `delete`, `approve`, `export`, `b
 
 ## 9. Health & medical (`HEALTH`)
 
-**Entities:** `member_health`, `health_conditions`, `medical_histories`, `emergency_contacts`, `member_documents`, `member_photos`
+**Entities:** `member_health`, `health_conditions`, `medical_histories`, `emergency_contacts`, `member_documents`, `member_photos`, `par_q_screenings`, `member_lifestyle_intakes`
 
 Health data is **sensitive**. Extra audit on Admin reads of medical rows is required (FR-HEALTH-010).
 
@@ -279,6 +281,12 @@ Health data is **sensitive**. Extra audit on Admin reads of medical rows is requ
 | FR-HEALTH-008 | Dossier health summary includes: allergies, high-risk conditions, uncleared medical items, primary emergency contact. |
 | FR-HEALTH-009 | Admin CRUD on `health_conditions`. |
 | FR-HEALTH-010 | Every Admin read/write of `member_health` and `medical_histories` writes `audit_logs`. |
+| FR-HEALTH-011 | PAR-Q+ submit (`POST /members/{id}/par-q`, `health.lifestyle`): seven YES/NO questions, each YES requires its `qN_details` text, and `declaration_accepted` must be true. Every submit inserts a new `par_q_screenings` row; the latest row is current. `client_signed_at` is stamped by the server. |
+| FR-HEALTH-012 | Any YES answer sets `has_positive_answer` and `referral_required` and parks the screening in `pending_clearance`; all-NO sets `clearance_status = passed`. |
+| FR-HEALTH-013 | Trainer review (`PATCH /members/{id}/par-q/trainer-review`, `health.lifestyle`) records `trainer_screening_notes` (required), `referral_required` and `referral_reason` (required when a referral is required) on the latest screening, and stamps `trainer_signed_at` and `trainer_user_id`. Members cannot review their own questionnaire. |
+| FR-HEALTH-014 | Clearance decision (`POST /members/{id}/par-q/clearance`, `health.approve`) takes `decision` `cleared` \| `rejected` and is valid only while the latest screening is `pending_clearance` (otherwise 422). It stamps `cleared_at` and `cleared_by_user_id`. |
+| FR-HEALTH-015 | Lifestyle intake is one row per member (unique `member_id`). `GET /members/{id}/lifestyle-intake` needs `health.read`; `PUT` (create or replace, `health.lifestyle`) needs `stress_level` 1–10 and exactly four `lifestyle_priorities`, one each for sleep, nutrition, activity and recovery. `sleep_hours_typical` is 0–24 with one decimal. |
+| FR-HEALTH-016 | PAR-Q+ audit rows carry status fields only (`has_positive_answer`, `referral_required`, `clearance_status`), never the answers or notes. |
 
 ### 9.1 Business rules
 
@@ -286,6 +294,7 @@ Health data is **sensitive**. Extra audit on Admin reads of medical rows is requ
 | :--- | :--- |
 | BR-HEALTH-001 | Trainer must not receive identity-proof files in API responses. |
 | BR-HEALTH-002 | Unverified medical_cert does not block check-in in MVP unless `gym_settings.attendance.require_medical_clearance` is true. |
+| BR-HEALTH-003 | PAR-Q+ gate: while a member's latest screening is `pending_clearance` or `rejected`, PT booking and PT session start return 422 `MEDICAL_CLEARANCE_REQUIRED`. `passed` and `cleared` allow training. A member with no screening on file is **not** blocked. A PT schedule is one with `pt_subscription_id` set. |
 
 ---
 
@@ -413,6 +422,7 @@ Health data is **sensitive**. Extra audit on Admin reads of medical rows is requ
 | FR-SCHED-019 | Booking lead time: cannot book closer than `min_lead_minutes` or further than `max_lead_days`. |
 | FR-SCHED-020 | Trainer marks session start (`ongoing`) and complete (`completed`). History `attendance` / `completed`. |
 | FR-SCHED-021 | Schedule history is append-only: created, updated, rescheduled, cancelled, attendance marked. |
+| FR-SCHED-022 | `schedule_participants.client_verified_at` records when a client confirmed a session. **Schema only for now**: no endpoint sets it yet. |
 
 ### 11.5 Business rules
 
@@ -422,6 +432,7 @@ Health data is **sensitive**. Extra audit on Admin reads of medical rows is requ
 | BR-SCHED-002 | Inactive trainers cannot be assigned to new schedules. |
 | BR-SCHED-003 | Retired (ADR-0009): marking PT attendance only records attendance; `remaining_pt_sessions` is no longer read or written. |
 | BR-SCHED-004 | Waitlist order is FIFO by `booked_at`. |
+| BR-SCHED-005 | PT booking and PT session start are blocked by the PAR-Q+ gate (BR-HEALTH-003). On start, every non-cancelled participant is checked before the schedule changes. |
 
 ---
 
@@ -523,7 +534,7 @@ Session attendance also updates `schedule_participants.attended` (SCHED). Keep g
 | ID | Requirement |
 | :--- | :--- |
 | FR-WORK-003 | Trainer creates a plan for an assigned member, or a personal draft. Admin creates templates and any member plan. |
-| FR-WORK-004 | Plan fields: title, description, target_goal, difficulty, duration_weeks, status `draft` \| `active` \| `archived`. |
+| FR-WORK-004 | Plan fields: title, description, target_goal, difficulty, duration_weeks, status `draft` \| `active` \| `archived`, plus the optional macrocycle blueprint: `primary_objective_12w`, `milestone_4w`, `sessions_per_week` (1–14), `target_session_duration_minutes` (15–180), `split_type`, `cardio_protocol`, `mobility_protocol`, `progression_methods` (unique values of `load` \| `reps` \| `volume` \| `density` \| `technique`), `main_success_measure`, `trainer_programming_notes`. |
 | FR-WORK-005 | Plan exercises attach to **`workout_plan_version_id`** (not the plan root): day_number, exercise_id, order_index, target_sets, target_reps, target_weight_kg, rest_seconds, notes. |
 | FR-WORK-006 | Publishing draft → `active`. A member may have multiple archived plans but **one** `active` assigned plan (MVP). Activating another archives the previous. |
 | FR-WORK-007 | Editing an `active` plan writes `workout_plan_versions` (version_number++, changelog) **before** mutating exercises. Member-facing reads use current version. |
@@ -536,8 +547,8 @@ Session attendance also updates `schedule_participants.attended` (SCHED). Keep g
 | ID | Requirement |
 | :--- | :--- |
 | FR-WORK-011 | Member (or trainer coaching) starts a session: optional workout_plan_id, trainer_id, started_at. Status implicit via completed_at null. |
-| FR-WORK-012 | Log sets: exercise_id, set_number, reps_completed, weight_lifted_kg, rpe_score, is_completed. |
-| FR-WORK-013 | Complete session: completed_at, duration_minutes, total_volume_kg (server-computed Σ reps×weight), client_feedback_rating, notes. |
+| FR-WORK-012 | Log sets: exercise_id, set_number, reps_completed, weight_lifted_kg, rpe_score, is_completed, plus optional `target_rir` / `actual_rir` (0–10) and `target_duration_seconds` / `actual_duration_seconds` for timed sets. `actual_*` defaults to the matching `target_*` when omitted. |
+| FR-WORK-013 | Complete session: completed_at, duration_minutes, total_volume_kg (server-computed Σ reps×weight), client_feedback_rating, notes, plus optional post-workout feedback: `effort_rating` (1–10), `satisfaction_rating` (1–10), `pain_discomfort_score` (0–10), `pain_notes`, `trainer_notes`, `next_session_plan`, `session_focus`, `warmup_protocol`, `cooldown_protocol`, and client / trainer sign-off (`client_signed_at`, `trainer_signed_at`). |
 | FR-WORK-014 | Only one in-progress session per member. |
 | FR-WORK-015 | Workout history: sessions for member (self / assigned / all). Include volume and PRs (max weight per exercise). |
 | FR-WORK-016 | Admin has **no** live tracker endpoint requirement (screen “—”); Admin still reads history. |
@@ -549,6 +560,31 @@ Session attendance also updates `schedule_participants.attended` (SCHED). Keep g
 | BR-WORK-001 | Trainer may only mutate plans where `member_id` is assigned to them, or drafts they created. |
 | BR-WORK-002 | Templates are Admin-owned; trainers may **copy** templates to clients, not edit the master (unless permission `workout_templates.update`). |
 | BR-WORK-003 | `Entities-List.md` “Workout History” is **not** a separate table; it is `workout_sessions` + version log. |
+
+---
+
+## 14a. PT progress reviews (`PT`)
+
+**Entities:** `pt_progress_reviews`
+
+A review captures a period of PT, a snapshot of the member's goal metrics, and three sign-offs. Its `status` moves `draft` → `pending_client_sign` → `pending_manager_approval` → `approved`.
+
+| ID | Requirement |
+| :--- | :--- |
+| FR-PTREV-001 | Draft (`POST /members/{id}/pt-reviews`, `pt_reviews.write`): `review_period_start` and `review_period_end` (YYYY-MM-DD, end not before start) plus optional trainer summary, client feedback, next-phase goal / focus and `next_review_date`. The trainer is the caller (a trainer) or the member's assigned trainer; 422 when no trainer is assigned. |
+| FR-PTREV-002 | On draft, `body_metrics_snapshot` is built from the member's goals in `in_progress` or `achieved` status. `change_val` is always `current_val − start_val`. |
+| FR-PTREV-003 | Read (`GET /reviews/{id}`, `pt_reviews.read`) is row-scoped to the member. |
+| FR-PTREV-004 | Trainer sign (`PATCH …/trainer-sign`, `pt_reviews.write`): only the review's own trainer (or an admin), only from `draft`; stamps `trainer_signed_at`. |
+| FR-PTREV-005 | Client sign (`PATCH …/client-sign`, `pt_reviews.client_sign`): only the reviewed member, only from `pending_client_sign`; stamps `client_signed_at`. |
+| FR-PTREV-006 | Manager approve (`PATCH …/manager-approve`, `pt_reviews.approve`): staff other than trainers and members, only from `pending_manager_approval`; stamps `manager_user_id` and `manager_signed_at`. |
+| FR-PTREV-007 | Export (`GET /reviews/{id}/export-pdf`, `pt_reviews.read`) returns the presentation card as `application/pdf`. |
+
+### 14a.1 Business rules
+
+| ID | Rule |
+| :--- | :--- |
+| BR-PTREV-001 | A transition from the wrong status returns 422 and changes nothing. |
+| BR-PTREV-002 | Every draft and transition writes `audit_logs` (`pt_progress_review.*`). |
 
 ---
 
@@ -733,7 +769,7 @@ Key/value with `category`: `general`, `membership`, `attendance_gate`, `booking_
 
 ## 22. Entity reconciliation
 
-Canonical **physical** tables: [`database-entities.md`](./database-entities.md) (**55 tables**). Product checklist: [`Entities-List.md`](./Entities-List.md). Those two are aligned. Aliases:
+Canonical **physical** tables: [`database-entities.md`](./database-entities.md) (**89 tables**). Product checklist: [`Entities-List.md`](./Entities-List.md). Those two are aligned. Aliases:
 
 | Product name | Physical table |
 | :--- | :--- |
@@ -763,6 +799,10 @@ payments.status:       pending → partial → paid
                        pending|partial|paid → refunded (net)
 workout/diet plans:    draft → active → archived
 goals.status:          in_progress → achieved | abandoned
+par_q_screenings:      (submit) → passed
+                       (submit) → pending_clearance → cleared | rejected
+pt_progress_reviews:   draft → pending_client_sign → pending_manager_approval → approved
+                       (archived is a reserved terminal status)
 ```
 
 ---
@@ -792,6 +832,8 @@ Transport-agnostic. Grouped by module. All scoped as in the module text.
 - `GET/POST /users/{id}/emergency-contacts` `PATCH/DELETE .../{id}`
 - `GET/POST /members/{id}/documents` `POST .../{id}/verify` `DELETE .../{id}`
 - `GET/POST /members/{id}/photos` `POST .../{id}/avatar`
+- `POST /members/{id}/par-q` `PATCH /members/{id}/par-q/trainer-review` `POST /members/{id}/par-q/clearance`
+- `GET/PUT /members/{id}/lifestyle-intake`
 
 ### MEMB
 - `GET/POST /membership-products` `GET/PATCH /membership-products/{id}`
@@ -827,6 +869,10 @@ Transport-agnostic. Grouped by module. All scoped as in the module text.
 - `PUT /workout-plans/{id}/exercises`
 - `POST /workout-sessions` `POST /workout-sessions/{id}/sets` `POST /workout-sessions/{id}/complete`
 - `GET /workout-sessions`
+
+### PT
+- `POST /members/{id}/pt-reviews` `GET /reviews/{id}` `GET /reviews/{id}/export-pdf`
+- `PATCH /reviews/{id}/trainer-sign` `PATCH /reviews/{id}/client-sign` `PATCH /reviews/{id}/manager-approve`
 
 ### DIET
 - `GET/POST /foods` `GET/PATCH /foods/{id}`
@@ -891,13 +937,14 @@ These do not change the functional modules. Resolve in ADRs at implementation:
 | FR-API / NFR | Platform | 14 + 7 |
 | FR-AUTH | Identity | 10 |
 | FR-RBAC | RBAC | 6 |
-| FR-PEOPLE | People | 16 |
-| FR-HEALTH | Health | 10 |
+| FR-PEOPLE | People | 17 |
+| FR-HEALTH | Health | 16 |
 | FR-MEMB | Memberships | 20 |
-| FR-SCHED | Schedule | 21 |
+| FR-SCHED | Schedule | 22 |
 | FR-ATTN | Attendance | 12 |
 | FR-PAY | Payments | 14 |
 | FR-WORK | Workout | 16 |
+| FR-PTREV | PT progress reviews | 7 |
 | FR-DIET | Diet | 8 |
 | FR-GOAL | Goals | 12 |
 | FR-NOTIF | Notifications | 11 |
