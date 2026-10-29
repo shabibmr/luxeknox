@@ -1,6 +1,6 @@
 # Gym App — Consolidated MVP Screens (De-duplicated)
 
-By consolidating identical and overlapping screens across **Member**, **Trainer**, and **Admin / Office** apps and treating role-based differences as **conditional permissions, editable vs. read-only fields, or adaptive widgets**, the total screen count is reduced from **141 duplicate references down to 44 unified screens**.
+By consolidating identical and overlapping screens across **Member**, **Trainer**, and **Admin / Office** apps and treating role-based differences as **conditional permissions, editable vs. read-only fields, or adaptive widgets**, the total screen count is reduced from **141 duplicate references down to 47 unified screens**.
 
 ---
 
@@ -8,13 +8,13 @@ By consolidating identical and overlapping screens across **Member**, **Trainer*
 
 ```mermaid
 pie title Screen Consolidation Summary
-    "Unified Core Screens (Reusable)" : 44
-    "Eliminated Duplicate Screens" : 97
+    "Unified Core Screens (Reusable)" : 47
+    "Eliminated Duplicate Screens" : 94
 ```
 
 * **Gross Screen References Across 3 Apps:** 141
-* **Net Consolidated Screens:** 44
-* **Duplication Reduction:** ~68.8%
+* **Net Consolidated Screens:** 47
+* **Duplication Reduction:** ~66.7%
 
 ---
 
@@ -133,6 +133,7 @@ pie title Screen Consolidation Summary
 | **39** | **Measurements & History** | **E** (Self) | **E** (Client) | **F** (All) | Circumferences, body weight, BMI. Both Member and Trainer can record new readings. |
 | **40** | **Progress Photos Gallery** | **E** (Upload) | **R** (Client) | **F** (Moderate)| Side-by-side transformation comparison (Front, Side, Back) with privacy safeguards. |
 | **41** | **Progress Notes Screen** | **E** (Self) | **E** (Coach) | **F** (All) | Dual notes stream: Member subjective notes + Trainer coaching remarks. |
+| **47** | **PT Progress Review Screen** (`PtProgressReviewScreen`; "Screen 45" in the PT client file plan) | **C** (Self: sign own review) | **E** (Own clients) | **F** (All) | Periodic PT review card: review period + trainer header; measures comparison table (start, current, computed change, target); celebration badges (technique, strength, conditioning, consistency, mobility); next-phase roadmap (goal, training focus, next review date); 6-item discussed checklist; tri-party sign-off tracker; share/export presentation card (PDF).<br>**Member**: read-only, signs as client once the trainer has signed (`pending_client_sign`).<br>**Trainer**: creates the draft (deltas auto-calculated), edits summary, highlights, next-phase fields and checklist, signs first, exports PDF.<br>**Admin / Head Coach**: all clients; gives final manager approval (`pending_manager_approval` → `approved`).<br>Sign-off order: Trainer → Client → Manager. |
 
 ---
 
@@ -196,6 +197,8 @@ lib/
 │   │   ├── presentation/screens/goals_hub_screen.dart
 │   │   ├── presentation/screens/measurements_screen.dart
 │   │   └── presentation/screens/progress_photos_screen.dart
+│   ├── pt/
+│   │   └── presentation/screens/pt_progress_review_screen.dart
 │   └── notifications/
 │       └── presentation/screens/notifications_inbox_screen.dart
 ```

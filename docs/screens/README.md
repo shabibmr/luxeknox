@@ -8,7 +8,7 @@ This directory contains the comprehensive screen catalog and UI/UX navigation ar
 
 | Document | Role / Scope | Primary Navigation | Description |
 | :--- | :--- | :--- | :--- |
-| [**consolidated-screens.md**](file:///Users/admin/code/gym/docs/screens/consolidated-screens.md) | **Consolidated Screens (De-duplicated)** | Shared / Unified Matrix | Master de-duplicated catalog: reduces 141 role screens to 44 unified core screens with role-based UI variations. |
+| [**consolidated-screens.md**](file:///Users/admin/code/gym/docs/screens/consolidated-screens.md) | **Consolidated Screens (De-duplicated)** | Shared / Unified Matrix | Master de-duplicated catalog: reduces 141 role screens to 47 unified core screens with role-based UI variations. |
 | [**navigation-architecture.md**](file:///Users/admin/code/gym/docs/screens/navigation-architecture.md) | **Navigation Architecture** | 5 Root Tabs per role | Details the simplified Flutter navigation strategy, routing stacks, modal interactions, and screen nesting. |
 | [**member-app-screens.md**](file:///Users/admin/code/gym/docs/screens/member-app-screens.md) | **Member App** | `Home` · `Membership` · `Schedule` · `Progress` · `Profile` | 11 modules: Dashboard, Profile & Health, Membership, Schedule, Attendance, Payments, Personal Trainer, Workout, Diet, Goals & Progress, Notifications. |
 | [**trainer-app-screens.md**](file:///Users/admin/code/gym/docs/screens/trainer-app-screens.md) | **Trainer App** | `Home` · `Members` · `Schedule` · `Plans` · `Profile` | 9 modules: Dashboard, Profile, Members, Schedule, Attendance, Workout Plans, Diet Plans, Goals & Progress, Notifications. |

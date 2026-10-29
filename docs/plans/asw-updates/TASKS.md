@@ -43,7 +43,7 @@ Source Document: [Luxe knox pt client  file.pdf](./Luxe%20knox%20pt%20client%20%
 **Phase 6: Contract and Docs**
 - [x] PTF-19 Update `docs/openapi/v1.yaml` with all new schemas and paths <!-- id: 19 -->
 - [x] PTF-20 Update `docs/database-entities.md` and `docs/backend-frd.md` <!-- id: 20 -->
-- [ ] PTF-21 Update `docs/screens/consolidated-screens.md` with Screen 45 <!-- id: 21 -->
+- [x] PTF-21 Update `docs/screens/consolidated-screens.md` with Screen 45 <!-- id: 21 -->
 
 **Phase 7: Flutter Data & Domain**
 - [ ] PTF-22 Regenerate `packages/api_client` from updated OpenAPI spec <!-- id: 22 -->
