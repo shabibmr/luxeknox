@@ -67,7 +67,6 @@ export type ParQTrainerReviewDto = z.infer<typeof parQTrainerReviewSchema>;
 
 export const parQClearanceSchema = z.object({
   decision: z.enum(['cleared', 'rejected']),
-  notes: optionalText,
 });
 
 export type ParQClearanceDto = z.infer<typeof parQClearanceSchema>;

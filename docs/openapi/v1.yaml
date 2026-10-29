@@ -1560,6 +1560,188 @@ paths:
           $ref: "#/components/responses/Error422"
         "429":
           $ref: "#/components/responses/Error429"
+  /members/{id}/par-q:
+    post:
+      operationId: submitParQ
+      summary: Submit a PAR-Q+ questionnaire
+      description: >
+        Any YES answer parks the member in `pending_clearance` and flags a referral; all-NO passes outright. PT booking and session start are blocked while the latest screening is `pending_clearance` or `rejected` (`MEDICAL_CLEARANCE_REQUIRED`).
+      tags: [HEALTH]
+      x-status: mvp
+      x-parity: required
+      x-permission: health.lifestyle
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParQSubmit"
+      responses:
+        "201":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParQScreening"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /members/{id}/par-q/trainer-review:
+    patch:
+      operationId: reviewParQ
+      summary: Record trainer screening notes and referral decision
+      tags: [HEALTH]
+      x-status: mvp
+      x-parity: required
+      x-permission: health.lifestyle
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParQTrainerReview"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParQScreening"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /members/{id}/par-q/clearance:
+    post:
+      operationId: clearParQ
+      summary: Clear or reject a PAR-Q+ screening pending medical clearance
+      description: >
+        Only valid while the latest screening is `pending_clearance`.
+      tags: [HEALTH]
+      x-status: mvp
+      x-parity: required
+      x-permission: health.approve
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParQClearance"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParQScreening"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /members/{id}/lifestyle-intake:
+    get:
+      operationId: getLifestyleIntake
+      summary: Get member lifestyle intake
+      tags: [HEALTH]
+      x-status: mvp
+      x-parity: required
+      x-permission: health.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LifestyleIntake"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    put:
+      operationId: putLifestyleIntake
+      summary: Create or replace member lifestyle intake
+      tags: [HEALTH]
+      x-status: mvp
+      x-parity: required
+      x-permission: health.lifestyle
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LifestyleIntakeWrite"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LifestyleIntake"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
   /members/{id}/documents:
     get:
       operationId: listMemberDocuments
@@ -1993,6 +2175,207 @@ paths:
           $ref: "#/components/responses/Error400"
         "404":
           $ref: "#/components/responses/Error404"
+  /members/{id}/pt-reviews:
+    post:
+      operationId: createPtProgressReviewDraft
+      summary: Draft a PT progress review
+      description: >
+        Snapshots in-progress and achieved goals into `body_metrics_snapshot` (change = current − start).
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_reviews.write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PtProgressReviewDraft"
+      responses:
+        "201":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtProgressReview"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /reviews/{id}:
+    get:
+      operationId: getPtProgressReview
+      summary: Get a PT progress review
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_reviews.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtProgressReview"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /reviews/{id}/export-pdf:
+    get:
+      operationId: exportPtProgressReviewPdf
+      summary: Export the review presentation card as PDF
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_reviews.read
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /reviews/{id}/trainer-sign:
+    patch:
+      operationId: trainerSignPtProgressReview
+      summary: Trainer signs a draft review
+      description: >
+        `draft` → `pending_client_sign`.
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_reviews.write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtProgressReview"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /reviews/{id}/client-sign:
+    patch:
+      operationId: clientSignPtProgressReview
+      summary: Client signs a review
+      description: >
+        `pending_client_sign` → `pending_manager_approval`.
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_reviews.client_sign
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtProgressReview"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+  /reviews/{id}/manager-approve:
+    patch:
+      operationId: managerApprovePtProgressReview
+      summary: Manager approves a review
+      description: >
+        `pending_manager_approval` → `approved`.
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_reviews.approve
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtProgressReview"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
   /pt-subscriptions:
     post:
       operationId: purchasePtSubscription
@@ -4827,6 +5210,12 @@ paths:
         - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkoutSessionComplete"
       responses:
         "200":
           description: OK
@@ -11527,6 +11916,14 @@ components:
         rest_between_exercises_seconds:
           type: integer
           nullable: true
+        target_rir:
+          type: string
+          nullable: true
+          description: Reps in reserve, decimal string (0–10, one decimal).
+        target_duration_seconds:
+          type: integer
+          nullable: true
+          description: For timed sets.
         notes:
           type: string
           nullable: true
@@ -11588,6 +11985,46 @@ components:
           $ref: "#/components/schemas/DateTime"
         row_version:
           type: integer
+        primary_objective_12w:
+          type: string
+          nullable: true
+        milestone_4w:
+          type: string
+          nullable: true
+        sessions_per_week:
+          type: integer
+          minimum: 1
+          maximum: 14
+          nullable: true
+        target_session_duration_minutes:
+          type: integer
+          minimum: 15
+          maximum: 180
+          nullable: true
+        split_type:
+          type: string
+          maxLength: 64
+          nullable: true
+        cardio_protocol:
+          type: string
+          nullable: true
+        mobility_protocol:
+          type: string
+          nullable: true
+        progression_methods:
+          type: array
+          nullable: true
+          description: Unique values only.
+          items:
+            type: string
+            enum: [load, reps, volume, density, technique]
+        main_success_measure:
+          type: string
+          maxLength: 255
+          nullable: true
+        trainer_programming_notes:
+          type: string
+          nullable: true
         current_version:
           $ref: "#/components/schemas/WorkoutPlanVersion"
     WorkoutPlanWrite:
@@ -11611,6 +12048,46 @@ components:
           type: boolean
         row_version:
           type: integer
+        primary_objective_12w:
+          type: string
+          nullable: true
+        milestone_4w:
+          type: string
+          nullable: true
+        sessions_per_week:
+          type: integer
+          minimum: 1
+          maximum: 14
+          nullable: true
+        target_session_duration_minutes:
+          type: integer
+          minimum: 15
+          maximum: 180
+          nullable: true
+        split_type:
+          type: string
+          maxLength: 64
+          nullable: true
+        cardio_protocol:
+          type: string
+          nullable: true
+        mobility_protocol:
+          type: string
+          nullable: true
+        progression_methods:
+          type: array
+          nullable: true
+          description: Unique values only.
+          items:
+            type: string
+            enum: [load, reps, volume, density, technique]
+        main_success_measure:
+          type: string
+          maxLength: 255
+          nullable: true
+        trainer_programming_notes:
+          type: string
+          nullable: true
     WorkoutPlanPage:
       type: object
       required: [data, meta]
@@ -11704,6 +12181,41 @@ components:
         client_feedback_rating:
           type: integer
           nullable: true
+        effort_rating:
+          type: integer
+          nullable: true
+        satisfaction_rating:
+          type: integer
+          nullable: true
+        pain_discomfort_score:
+          type: integer
+          nullable: true
+        pain_notes:
+          type: string
+          nullable: true
+        session_focus:
+          type: string
+          nullable: true
+        warmup_protocol:
+          type: string
+          nullable: true
+        cooldown_protocol:
+          type: string
+          nullable: true
+        trainer_notes:
+          type: string
+          nullable: true
+        next_session_plan:
+          type: string
+          nullable: true
+        client_signed_at:
+          type: string
+          format: date-time
+          nullable: true
+        trainer_signed_at:
+          type: string
+          format: date-time
+          nullable: true
         notes:
           type: string
           nullable: true
@@ -11739,6 +12251,20 @@ components:
         rpe_score:
           type: number
           nullable: true
+        target_rir:
+          type: string
+          nullable: true
+          description: Decimal string.
+        actual_rir:
+          type: string
+          nullable: true
+          description: Decimal string.
+        target_duration_seconds:
+          type: integer
+          nullable: true
+        actual_duration_seconds:
+          type: integer
+          nullable: true
         is_completed:
           type: boolean
         notes:
@@ -11758,6 +12284,26 @@ components:
           type: number
         rpe_score:
           type: number
+        target_rir:
+          type: number
+          minimum: 0
+          maximum: 10
+          nullable: true
+        actual_rir:
+          type: number
+          minimum: 0
+          maximum: 10
+          nullable: true
+          description: Defaults to `target_rir` when omitted.
+        target_duration_seconds:
+          type: integer
+          minimum: 0
+          nullable: true
+        actual_duration_seconds:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Defaults to `target_duration_seconds` when omitted.
         is_completed:
           type: boolean
         notes:
@@ -11772,6 +12318,26 @@ components:
           type: number
         rpe_score:
           type: number
+        target_rir:
+          type: number
+          minimum: 0
+          maximum: 10
+          nullable: true
+        actual_rir:
+          type: number
+          minimum: 0
+          maximum: 10
+          nullable: true
+          description: Defaults to `target_rir` when omitted.
+        target_duration_seconds:
+          type: integer
+          minimum: 0
+          nullable: true
+        actual_duration_seconds:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Defaults to `target_duration_seconds` when omitted.
         is_completed:
           type: boolean
         notes:
@@ -14487,3 +15053,490 @@ components:
         posting_enabled:
           type: boolean
 
+
+    ParQSubmit:
+      type: object
+      required: [q1_heart_condition, q2_chest_pain_activity, q3_chest_pain_rest, q4_dizziness_consciousness, q5_bone_joint_problem, q6_medication_condition, q7_other_reason, declaration_accepted]
+      description: Every YES answer requires its `*_details` text.
+      properties:
+        q1_heart_condition:
+          type: boolean
+        q1_details:
+          type: string
+          nullable: true
+        q2_chest_pain_activity:
+          type: boolean
+        q2_details:
+          type: string
+          nullable: true
+        q3_chest_pain_rest:
+          type: boolean
+        q3_details:
+          type: string
+          nullable: true
+        q4_dizziness_consciousness:
+          type: boolean
+        q4_details:
+          type: string
+          nullable: true
+        q5_bone_joint_problem:
+          type: boolean
+        q5_details:
+          type: string
+          nullable: true
+        q6_medication_condition:
+          type: boolean
+        q6_details:
+          type: string
+          nullable: true
+        q7_other_reason:
+          type: boolean
+        q7_details:
+          type: string
+          nullable: true
+        declaration_accepted:
+          type: boolean
+          enum: [true]
+    ParQTrainerReview:
+      type: object
+      required: [trainer_screening_notes, referral_required]
+      properties:
+        trainer_screening_notes:
+          type: string
+          minLength: 1
+        referral_required:
+          type: boolean
+        referral_reason:
+          type: string
+          nullable: true
+          description: Required when `referral_required` is true.
+    ParQClearance:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [cleared, rejected]
+    ParQScreening:
+      type: object
+      required: [id, member_id, version, q1_heart_condition, q2_chest_pain_activity, q3_chest_pain_rest, q4_dizziness_consciousness, q5_bone_joint_problem, q6_medication_condition, q7_other_reason, has_positive_answer, referral_required, declaration_accepted, clearance_status, created_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        member_id:
+          $ref: "#/components/schemas/Id"
+        version:
+          type: string
+        q1_heart_condition:
+          type: boolean
+        q1_details:
+          type: string
+          nullable: true
+        q2_chest_pain_activity:
+          type: boolean
+        q2_details:
+          type: string
+          nullable: true
+        q3_chest_pain_rest:
+          type: boolean
+        q3_details:
+          type: string
+          nullable: true
+        q4_dizziness_consciousness:
+          type: boolean
+        q4_details:
+          type: string
+          nullable: true
+        q5_bone_joint_problem:
+          type: boolean
+        q5_details:
+          type: string
+          nullable: true
+        q6_medication_condition:
+          type: boolean
+        q6_details:
+          type: string
+          nullable: true
+        q7_other_reason:
+          type: boolean
+        q7_details:
+          type: string
+          nullable: true
+        has_positive_answer:
+          type: boolean
+        trainer_screening_notes:
+          type: string
+          nullable: true
+        referral_required:
+          type: boolean
+        referral_reason:
+          type: string
+          nullable: true
+        declaration_accepted:
+          type: boolean
+        client_signed_at:
+          type: string
+          format: date-time
+          nullable: true
+        trainer_signed_at:
+          type: string
+          format: date-time
+          nullable: true
+        clearance_status:
+          type: string
+          enum: [passed, pending_clearance, cleared, rejected]
+        cleared_at:
+          type: string
+          format: date-time
+          nullable: true
+        cleared_by_user_id:
+          type: integer
+          format: int64
+          nullable: true
+        created_at:
+          $ref: "#/components/schemas/DateTime"
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    LifestylePriority:
+      type: object
+      required: [priority, current_status, first_action]
+      properties:
+        priority:
+          type: string
+          enum: [sleep, nutrition, activity, recovery]
+        current_status:
+          type: string
+          minLength: 1
+        first_action:
+          type: string
+          minLength: 1
+    LifestyleIntakeWrite:
+      type: object
+      required: [stress_level, lifestyle_priorities]
+      properties:
+        activity_level:
+          type: string
+          nullable: true
+        training_history:
+          type: string
+          nullable: true
+        current_pain_discomfort:
+          type: string
+          nullable: true
+        sleep_hours_typical:
+          type: number
+          minimum: 0
+          maximum: 24
+          nullable: true
+          description: At most one decimal place.
+        stress_level:
+          type: integer
+          minimum: 1
+          maximum: 10
+        work_activity_demands:
+          type: string
+          nullable: true
+        typical_daily_steps:
+          type: integer
+          minimum: 0
+          maximum: 200000
+          nullable: true
+        nutrition_approach:
+          type: string
+          nullable: true
+        hydration_habits:
+          type: string
+          nullable: true
+        recovery_habits:
+          type: string
+          nullable: true
+        other_notes:
+          type: string
+          nullable: true
+        lifestyle_priorities:
+          type: array
+          minItems: 4
+          maxItems: 4
+          description: Exactly one entry for each of sleep, nutrition, activity, recovery.
+          items:
+            $ref: "#/components/schemas/LifestylePriority"
+        conducted_by_trainer_id:
+          type: integer
+          format: int64
+          nullable: true
+    LifestyleIntake:
+      type: object
+      required: [id, member_id, stress_level, created_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        member_id:
+          $ref: "#/components/schemas/Id"
+        activity_level:
+          type: string
+          nullable: true
+        training_history:
+          type: string
+          nullable: true
+        current_pain_discomfort:
+          type: string
+          nullable: true
+        sleep_hours_typical:
+          type: string
+          nullable: true
+          description: Decimal string.
+        stress_level:
+          type: integer
+          nullable: true
+        work_activity_demands:
+          type: string
+          nullable: true
+        typical_daily_steps:
+          type: integer
+          nullable: true
+        nutrition_approach:
+          type: string
+          nullable: true
+        hydration_habits:
+          type: string
+          nullable: true
+        recovery_habits:
+          type: string
+          nullable: true
+        other_notes:
+          type: string
+          nullable: true
+        lifestyle_priorities:
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/LifestylePriority"
+        conducted_by_trainer_id:
+          type: integer
+          format: int64
+          nullable: true
+        created_at:
+          $ref: "#/components/schemas/DateTime"
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    PtProgressReviewDraft:
+      type: object
+      required: [review_period_start, review_period_end]
+      properties:
+        review_period_start:
+          $ref: "#/components/schemas/Date"
+        review_period_end:
+          $ref: "#/components/schemas/Date"
+          description: Must not be before `review_period_start`.
+        trainer_summary:
+          type: string
+          nullable: true
+        client_feedback:
+          type: string
+          nullable: true
+        next_phase_goal:
+          type: string
+          nullable: true
+        next_phase_training_focus:
+          type: string
+          nullable: true
+        next_review_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+    BodyMetricSnapshot:
+      type: object
+      required: [metric]
+      properties:
+        metric:
+          type: string
+        start_val:
+          type: number
+          nullable: true
+        current_val:
+          type: number
+          nullable: true
+        change_val:
+          type: number
+          nullable: true
+          description: Always `current_val − start_val`.
+        target_val:
+          type: number
+          nullable: true
+    PerformanceMarkerSnapshot:
+      type: object
+      required: [marker]
+      properties:
+        marker:
+          type: string
+        start_val:
+          type: string
+          nullable: true
+        current_val:
+          type: string
+          nullable: true
+        change_val:
+          type: string
+          nullable: true
+        target_val:
+          type: string
+          nullable: true
+    PtReviewChecklist:
+      type: object
+      properties:
+        goals_reviewed:
+          type: boolean
+        measurements_reviewed:
+          type: boolean
+        performance_reviewed:
+          type: boolean
+        attendance_reviewed:
+          type: boolean
+        program_updated:
+          type: boolean
+        next_goals_agreed:
+          type: boolean
+    PtProgressReview:
+      type: object
+      required: [id, member_id, trainer_id, review_period_start, review_period_end, status, created_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        member_id:
+          $ref: "#/components/schemas/Id"
+        trainer_id:
+          $ref: "#/components/schemas/Id"
+        review_period_start:
+          $ref: "#/components/schemas/Date"
+        review_period_end:
+          $ref: "#/components/schemas/Date"
+        body_metrics_snapshot:
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/BodyMetricSnapshot"
+        performance_markers_snapshot:
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/PerformanceMarkerSnapshot"
+        progress_highlights:
+          type: array
+          nullable: true
+          items:
+            type: string
+        highlights_other_text:
+          type: string
+          nullable: true
+        trainer_summary:
+          type: string
+          nullable: true
+        client_feedback:
+          type: string
+          nullable: true
+        next_phase_goal:
+          type: string
+          nullable: true
+        next_phase_training_focus:
+          type: string
+          nullable: true
+        next_review_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        review_checklist:
+          $ref: "#/components/schemas/PtReviewChecklist"
+          nullable: true
+        final_review_notes:
+          type: string
+          nullable: true
+        client_signed_at:
+          type: string
+          format: date-time
+          nullable: true
+        trainer_signed_at:
+          type: string
+          format: date-time
+          nullable: true
+        manager_user_id:
+          type: integer
+          format: int64
+          nullable: true
+        manager_signed_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [draft, pending_client_sign, pending_manager_approval, approved, archived]
+        created_at:
+          $ref: "#/components/schemas/DateTime"
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    WorkoutSessionComplete:
+      type: object
+      description: >
+        Post-workout feedback. an explicit `*_signed_at` wins; otherwise `client_signed: true`
+        (or a member caller) stamps now and `false` clears it.
+      properties:
+        client_feedback_rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          nullable: true
+        effort_rating:
+          type: integer
+          minimum: 1
+          maximum: 10
+          nullable: true
+        satisfaction_rating:
+          type: integer
+          minimum: 1
+          maximum: 10
+          nullable: true
+        pain_discomfort_score:
+          type: integer
+          minimum: 0
+          maximum: 10
+          nullable: true
+        pain_notes:
+          type: string
+          maxLength: 1000
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        trainer_notes:
+          type: string
+          maxLength: 1000
+          nullable: true
+        next_session_plan:
+          type: string
+          maxLength: 1000
+          nullable: true
+        session_focus:
+          type: string
+          maxLength: 120
+          nullable: true
+        warmup_protocol:
+          type: string
+          nullable: true
+        cooldown_protocol:
+          type: string
+          nullable: true
+        client_signed:
+          type: boolean
+        trainer_signed:
+          type: boolean
+        client_signed_at:
+          type: string
+          format: date-time
+          nullable: true
+        trainer_signed_at:
+          type: string
+          format: date-time
+          nullable: true
