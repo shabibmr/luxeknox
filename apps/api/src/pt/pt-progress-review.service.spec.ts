@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { BusinessRuleError, ForbiddenError, NotFoundError } from '../platform/errors/app-error';
-import { buildBodyMetricSnapshot, PtProgressReviewService } from './pt-progress-review.service';
+import {
+  buildBodyMetricSnapshot,
+  buildPerformanceMarkerSnapshot,
+  PtProgressReviewService,
+} from './pt-progress-review.service';
 
 const ADMIN: AuthenticatedUser = {
   id: 1,
@@ -18,29 +22,64 @@ const goal = (
   baseline: number,
   current: number,
   target: number,
-  status = 'in_progress',
+  opts: { status?: string; category?: string; unit?: string } = {},
 ) => ({
-  status,
+  status: opts.status ?? 'in_progress',
   baseline_value: baseline,
   current_value: current,
   target_value: target,
-  metric: { name },
+  metric: {
+    name,
+    category: opts.category ?? 'body_composition',
+    unit_of_measure: opts.unit ?? 'kg',
+  },
 });
 
 describe('buildBodyMetricSnapshot', () => {
-  it('computes change as current minus start', () => {
+  it('computes change as current minus start for body metrics only', () => {
     const snap = buildBodyMetricSnapshot([
-      goal('Weight', 82.5, 78.1, 75),
-      goal('Squat 1RM', 60, 85, 100),
+      goal('Weight', 82.5, 78.1, 75, { category: 'body_composition', unit: 'kg' }),
+      goal('Waist', 90, 88, 80, { category: 'circumference', unit: 'cm' }),
+      goal('Squat 1RM', 60, 85, 100, { category: 'strength', unit: 'kg' }),
     ]);
     expect(snap).toEqual([
       { metric: 'Weight', start_val: 82.5, current_val: 78.1, change_val: -4.4, target_val: 75 },
-      { metric: 'Squat 1RM', start_val: 60, current_val: 85, change_val: 25, target_val: 100 },
+      { metric: 'Waist', start_val: 90, current_val: 88, change_val: -2, target_val: 80 },
     ]);
   });
 
   it('skips abandoned goals', () => {
-    expect(buildBodyMetricSnapshot([goal('Waist', 90, 88, 80, 'abandoned')])).toEqual([]);
+    expect(
+      buildBodyMetricSnapshot([
+        goal('Waist', 90, 88, 80, { status: 'abandoned', category: 'circumference', unit: 'cm' }),
+      ]),
+    ).toEqual([]);
+  });
+});
+
+describe('buildPerformanceMarkerSnapshot', () => {
+  it('formats strength deltas as signed unit strings', () => {
+    const snap = buildPerformanceMarkerSnapshot([
+      goal('Squat 1RM', 60, 85, 100, { category: 'strength', unit: 'kg' }),
+      goal('Weight', 82.5, 78.1, 75, { category: 'body_composition', unit: 'kg' }),
+    ]);
+    expect(snap).toEqual([
+      {
+        marker: 'Squat 1RM',
+        start_val: '60 kg',
+        current_val: '85 kg',
+        change_val: '+25 kg',
+        target_val: '100 kg',
+      },
+    ]);
+  });
+
+  it('skips abandoned strength goals', () => {
+    expect(
+      buildPerformanceMarkerSnapshot([
+        goal('Push-ups', 12, 22, 30, { status: 'abandoned', category: 'strength', unit: 'reps' }),
+      ]),
+    ).toEqual([]);
   });
 });
 
@@ -64,8 +103,11 @@ describe('PtProgressReviewService.createDraft', () => {
     };
     goalRepository = {
       findManyByMemberId: vi.fn().mockResolvedValue({
-        rows: [goal('Weight', 82.5, 78.1, 75)],
-        total: 1,
+        rows: [
+          goal('Weight', 82.5, 78.1, 75, { category: 'body_composition', unit: 'kg' }),
+          goal('Squat 1RM', 60, 85, 100, { category: 'strength', unit: 'kg' }),
+        ],
+        total: 2,
       }),
     };
     ptAccess = { assertTrainerCanWrite: vi.fn().mockResolvedValue(undefined) };
@@ -79,7 +121,7 @@ describe('PtProgressReviewService.createDraft', () => {
     );
   });
 
-  it('snapshots deltas, assigns the member trainer and starts in draft', async () => {
+  it('snapshots body and performance deltas, assigns trainer, starts in draft', async () => {
     await service.createDraft(100, dto, ADMIN);
     expect(repository.insertReview).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -88,6 +130,15 @@ describe('PtProgressReviewService.createDraft', () => {
         status: 'draft',
         body_metrics_snapshot: [
           { metric: 'Weight', start_val: 82.5, current_val: 78.1, change_val: -4.4, target_val: 75 },
+        ],
+        performance_markers_snapshot: [
+          {
+            marker: 'Squat 1RM',
+            start_val: '60 kg',
+            current_val: '85 kg',
+            change_val: '+25 kg',
+            target_val: '100 kg',
+          },
         ],
       }),
     );

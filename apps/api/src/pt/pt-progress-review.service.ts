@@ -8,6 +8,7 @@ import { AuditService } from '../platform/audit/audit.service';
 import type {
   BodyMetricSnapshot,
   NewPtProgressReview,
+  PerformanceMarkerSnapshot,
   PtProgressReview,
 } from '../platform/db/schema/personal-training';
 import { BusinessRuleError, ForbiddenError, NotFoundError } from '../platform/errors/app-error';
@@ -29,30 +30,63 @@ export type PtProgressReviewDraftDto = z.infer<typeof ptProgressReviewDraftSchem
 
 /** Goal statuses whose progress is reported on a review card. */
 const REPORTED_GOAL_STATUSES = new Set(['in_progress', 'achieved']);
+/** Mirrors `GOAL_METRIC_CATEGORIES` minus strength (body card columns). */
+const BODY_METRIC_CATEGORIES = new Set(['body_composition', 'circumference']);
+const PERFORMANCE_METRIC_CATEGORIES = new Set(['strength']);
+
+type SnapshotGoal = {
+  status: string;
+  baseline_value: number;
+  current_value: number;
+  target_value: number;
+  metric: { name: string; category: string; unit_of_measure: string };
+};
 
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-/** `change_val` is always `current - start`, matching the Page 8 measures table. */
-export function buildBodyMetricSnapshot(
-  goals: Array<{
-    status: string;
-    baseline_value: number;
-    current_value: number;
-    target_value: number;
-    metric: { name: string };
-  }>,
-): BodyMetricSnapshot[] {
-  return goals
-    .filter((g) => REPORTED_GOAL_STATUSES.has(g.status))
-    .map((g) => ({
-      metric: g.metric.name,
-      start_val: g.baseline_value,
-      current_val: g.current_value,
-      change_val: round2(g.current_value - g.baseline_value),
-      target_val: g.target_value,
-    }));
+function withUnit(value: number, unit: string): string {
+  return `${round2(value)} ${unit}`;
+}
+
+function signedWithUnit(value: number, unit: string): string {
+  const rounded = round2(value);
+  const sign = rounded > 0 ? '+' : '';
+  return `${sign}${rounded} ${unit}`;
+}
+
+function reportedGoalsIn(goals: SnapshotGoal[], categories: Set<string>): SnapshotGoal[] {
+  return goals.filter(
+    (g) => REPORTED_GOAL_STATUSES.has(g.status) && categories.has(g.metric.category),
+  );
+}
+
+/** Numeric Page 8 body measures: `change_val` is always `current - start`. */
+export function buildBodyMetricSnapshot(goals: SnapshotGoal[]): BodyMetricSnapshot[] {
+  return reportedGoalsIn(goals, BODY_METRIC_CATEGORIES).map((g) => ({
+    metric: g.metric.name,
+    start_val: g.baseline_value,
+    current_val: g.current_value,
+    change_val: round2(g.current_value - g.baseline_value),
+    target_val: g.target_value,
+  }));
+}
+
+/** Strength markers as unit-bearing strings for `performance_markers_snapshot`. */
+export function buildPerformanceMarkerSnapshot(
+  goals: SnapshotGoal[],
+): PerformanceMarkerSnapshot[] {
+  return reportedGoalsIn(goals, PERFORMANCE_METRIC_CATEGORIES).map((g) => {
+    const unit = g.metric.unit_of_measure;
+    return {
+      marker: g.metric.name,
+      start_val: withUnit(g.baseline_value, unit),
+      current_val: withUnit(g.current_value, unit),
+      change_val: signedWithUnit(g.current_value - g.baseline_value, unit),
+      target_val: withUnit(g.target_value, unit),
+    };
+  });
 }
 
 function nullableTrimmed(value: string | null | undefined): string | null {
@@ -96,6 +130,7 @@ export class PtProgressReviewService {
       review_period_start: dto.review_period_start,
       review_period_end: dto.review_period_end,
       body_metrics_snapshot: buildBodyMetricSnapshot(goals),
+      performance_markers_snapshot: buildPerformanceMarkerSnapshot(goals),
       trainer_summary: nullableTrimmed(dto.trainer_summary),
       client_feedback: nullableTrimmed(dto.client_feedback),
       next_phase_goal: nullableTrimmed(dto.next_phase_goal),
