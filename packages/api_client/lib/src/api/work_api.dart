@@ -22,6 +22,7 @@ import 'package:api_client/src/model/workout_plan_page.dart';
 import 'package:api_client/src/model/workout_plan_version_page.dart';
 import 'package:api_client/src/model/workout_plan_write.dart';
 import 'package:api_client/src/model/workout_session.dart';
+import 'package:api_client/src/model/workout_session_complete.dart';
 import 'package:api_client/src/model/workout_session_create.dart';
 import 'package:api_client/src/model/workout_session_exercise.dart';
 import 'package:api_client/src/model/workout_session_page.dart';
@@ -226,6 +227,7 @@ class WORKApi {
   ///
   /// Parameters:
   /// * [id] 
+  /// * [workoutSessionComplete] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -237,6 +239,7 @@ class WORKApi {
   /// Throws [DioException] if API call or serialization fails
   Future<Response<WorkoutSession>> completeWorkoutSession({ 
     required int id,
+    WorkoutSessionComplete? workoutSessionComplete,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -260,11 +263,31 @@ class WORKApi {
         ],
         ...?extra,
       },
+      contentType: 'application/json',
       validateStatus: validateStatus,
     );
 
+    dynamic _bodyData;
+
+    try {
+      const _type = FullType(WorkoutSessionComplete);
+      _bodyData = workoutSessionComplete == null ? null : _serializers.serialize(workoutSessionComplete, specifiedType: _type);
+
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
     final _response = await _dio.request<Object>(
       _path,
+      data: _bodyData,
       options: _options,
       cancelToken: cancelToken,
       onSendProgress: onSendProgress,

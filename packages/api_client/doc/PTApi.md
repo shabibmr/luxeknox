@@ -10,16 +10,22 @@ All URIs are relative to *http://localhost:3000/v1*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**changePtSlot**](PTApi.md#changeptslot) | **POST** /pt-subscriptions/{id}/change-slot | Move remaining PT sessions to other weekdays/hour
+[**clientSignPtProgressReview**](PTApi.md#clientsignptprogressreview) | **PATCH** /reviews/{id}/client-sign | Client signs a review
 [**createPtProduct**](PTApi.md#createptproduct) | **POST** /pt-products | Create a PT package
+[**createPtProgressReviewDraft**](PTApi.md#createptprogressreviewdraft) | **POST** /members/{id}/pt-reviews | Draft a PT progress review
+[**exportPtProgressReviewPdf**](PTApi.md#exportptprogressreviewpdf) | **GET** /reviews/{id}/export-pdf | Export the review presentation card as PDF
 [**getMemberPtSummary**](PTApi.md#getmemberptsummary) | **GET** /members/{id}/pt-subscriptions | Member&#39;s current PT, PT history, and the calling trainer&#39;s access level
 [**getPtPaymentPreview**](PTApi.md#getptpaymentpreview) | **GET** /pt/payment-preview | Subtotal, discount, tax and total a PT sale would charge
 [**getPtProduct**](PTApi.md#getptproduct) | **GET** /pt-products/{id} | PT package detail
+[**getPtProgressReview**](PTApi.md#getptprogressreview) | **GET** /reviews/{id} | Get a PT progress review
 [**getPtScheduleGrid**](PTApi.md#getptschedulegrid) | **GET** /pt/schedule-grid | Hours × active trainers occupancy for a PT package, start date and weekdays
 [**getPtSubscription**](PTApi.md#getptsubscription) | **GET** /pt-subscriptions/{id} | PT subscription detail
 [**listPtProducts**](PTApi.md#listptproducts) | **GET** /pt-products | Personal Training package catalog
+[**managerApprovePtProgressReview**](PTApi.md#managerapproveptprogressreview) | **PATCH** /reviews/{id}/manager-approve | Manager approves a review
 [**purchasePtSubscription**](PTApi.md#purchaseptsubscription) | **POST** /pt-subscriptions | Sell PT — assign trainer + fixed weekly slot, take payment, generate sessions
 [**reassignPtTrainer**](PTApi.md#reassignpttrainer) | **POST** /pt-subscriptions/{id}/reassign-trainer | Move remaining PT sessions to another active trainer
 [**renewPtSubscription**](PTApi.md#renewptsubscription) | **POST** /pt-subscriptions/{id}/renew | Renew PT with the same trainer and slot
+[**trainerSignPtProgressReview**](PTApi.md#trainersignptprogressreview) | **PATCH** /reviews/{id}/trainer-sign | Trainer signs a draft review
 [**updatePtProduct**](PTApi.md#updateptproduct) | **PATCH** /pt-products/{id} | Update or archive a PT package
 
 
@@ -66,6 +72,49 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **clientSignPtProgressReview**
+> PtProgressReview clientSignPtProgressReview(id)
+
+Client signs a review
+
+`pending_client_sign` → `pending_manager_approval`. 
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getPTApi();
+final int id = 789; // int | 
+
+try {
+    final response = api.clientSignPtProgressReview(id);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling PTApi->clientSignPtProgressReview: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+
+### Return type
+
+[**PtProgressReview**](PtProgressReview.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **createPtProduct**
 > PtProduct createPtProduct(ptProductWrite)
 
@@ -104,6 +153,92 @@ Name | Type | Description  | Notes
 
  - **Content-Type**: application/json
  - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **createPtProgressReviewDraft**
+> PtProgressReview createPtProgressReviewDraft(id, ptProgressReviewDraft)
+
+Draft a PT progress review
+
+Snapshots in-progress and achieved goals into `body_metrics_snapshot` (change = current − start). 
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getPTApi();
+final int id = 789; // int | 
+final PtProgressReviewDraft ptProgressReviewDraft = ; // PtProgressReviewDraft | 
+
+try {
+    final response = api.createPtProgressReviewDraft(id, ptProgressReviewDraft);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling PTApi->createPtProgressReviewDraft: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **ptProgressReviewDraft** | [**PtProgressReviewDraft**](PtProgressReviewDraft.md)|  | 
+
+### Return type
+
+[**PtProgressReview**](PtProgressReview.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **exportPtProgressReviewPdf**
+> Uint8List exportPtProgressReviewPdf(id)
+
+Export the review presentation card as PDF
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getPTApi();
+final int id = 789; // int | 
+
+try {
+    final response = api.exportPtProgressReviewPdf(id);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling PTApi->exportPtProgressReviewPdf: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+
+### Return type
+
+[**Uint8List**](Uint8List.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/pdf, application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -222,6 +357,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**PtProduct**](PtProduct.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getPtProgressReview**
+> PtProgressReview getPtProgressReview(id)
+
+Get a PT progress review
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getPTApi();
+final int id = 789; // int | 
+
+try {
+    final response = api.getPtProgressReview(id);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling PTApi->getPtProgressReview: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+
+### Return type
+
+[**PtProgressReview**](PtProgressReview.md)
 
 ### Authorization
 
@@ -375,6 +551,49 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **managerApprovePtProgressReview**
+> PtProgressReview managerApprovePtProgressReview(id)
+
+Manager approves a review
+
+`pending_manager_approval` → `approved`. 
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getPTApi();
+final int id = 789; // int | 
+
+try {
+    final response = api.managerApprovePtProgressReview(id);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling PTApi->managerApprovePtProgressReview: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+
+### Return type
+
+[**PtProgressReview**](PtProgressReview.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **purchasePtSubscription**
 > PtPurchaseResult purchasePtSubscription(ptPurchaseRequest, idempotencyKey)
 
@@ -500,6 +719,49 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **trainerSignPtProgressReview**
+> PtProgressReview trainerSignPtProgressReview(id)
+
+Trainer signs a draft review
+
+`draft` → `pending_client_sign`. 
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getPTApi();
+final int id = 789; // int | 
+
+try {
+    final response = api.trainerSignPtProgressReview(id);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling PTApi->trainerSignPtProgressReview: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+
+### Return type
+
+[**PtProgressReview**](PtProgressReview.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

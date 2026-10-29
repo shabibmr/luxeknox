@@ -18,6 +18,8 @@ Name | Type | Description | Notes
 **targetWeightKg** | **num** |  | [optional] 
 **restSeconds** | **int** |  | [optional] 
 **restBetweenExercisesSeconds** | **int** |  | [optional] 
+**targetRir** | **String** | Reps in reserve, decimal string (0–10, one decimal). | [optional] 
+**targetDurationSeconds** | **int** | For timed sets. | [optional] 
 **notes** | **String** |  | [optional] 
 **exercise** | [**Exercise**](Exercise.md) |  | [optional] 
 

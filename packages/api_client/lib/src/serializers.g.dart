@@ -30,6 +30,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(AuditLogPage.serializer)
       ..add(BalanceSheetAccount.serializer)
       ..add(BalanceSheetReport.serializer)
+      ..add(BodyMetricSnapshot.serializer)
       ..add(BookRequest.serializer)
       ..add(BroadcastRequest.serializer)
       ..add(BroadcastRequestAudienceEnum.serializer)
@@ -143,6 +144,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(JournalLineWrite.serializer)
       ..add(JournalPage.serializer)
       ..add(JournalReverse.serializer)
+      ..add(LifestyleIntake.serializer)
+      ..add(LifestyleIntakeWrite.serializer)
+      ..add(LifestylePriority.serializer)
+      ..add(LifestylePriorityPriorityEnum.serializer)
       ..add(LoginRequest.serializer)
       ..add(LogoutRequest.serializer)
       ..add(LongitudinalDataPoint.serializer)
@@ -207,6 +212,13 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(OpenItemsReport.serializer)
       ..add(OpenItemsReportKindEnum.serializer)
       ..add(PageMeta.serializer)
+      ..add(ParQClearance.serializer)
+      ..add(ParQClearanceDecisionEnum.serializer)
+      ..add(ParQScreening.serializer)
+      ..add(ParQScreeningClearanceStatusEnum.serializer)
+      ..add(ParQSubmit.serializer)
+      ..add(ParQSubmitDeclarationAcceptedEnum.serializer)
+      ..add(ParQTrainerReview.serializer)
       ..add(Payment.serializer)
       ..add(PaymentAdjustRequest.serializer)
       ..add(PaymentAllocation.serializer)
@@ -225,6 +237,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PaymentVoucherPage.serializer)
       ..add(PaymentVoucherStatusEnum.serializer)
       ..add(PaymentVoucherUpdate.serializer)
+      ..add(PerformanceMarkerSnapshot.serializer)
       ..add(Permission.serializer)
       ..add(PermissionAction.serializer)
       ..add(PermissionPage.serializer)
@@ -255,10 +268,14 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PtProduct.serializer)
       ..add(PtProductPage.serializer)
       ..add(PtProductWrite.serializer)
+      ..add(PtProgressReview.serializer)
+      ..add(PtProgressReviewDraft.serializer)
+      ..add(PtProgressReviewStatusEnum.serializer)
       ..add(PtPurchaseRequest.serializer)
       ..add(PtPurchaseResult.serializer)
       ..add(PtReassignTrainerRequest.serializer)
       ..add(PtRenewRequest.serializer)
+      ..add(PtReviewChecklist.serializer)
       ..add(PtScheduleGrid.serializer)
       ..add(PtSubscription.serializer)
       ..add(PtSubscriptionStatus.serializer)
@@ -333,11 +350,14 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(WorkoutPlanExercisesWrite.serializer)
       ..add(WorkoutPlanExercisesWriteExercisesInner.serializer)
       ..add(WorkoutPlanPage.serializer)
+      ..add(WorkoutPlanProgressionMethodsEnum.serializer)
       ..add(WorkoutPlanStatusEnum.serializer)
       ..add(WorkoutPlanVersion.serializer)
       ..add(WorkoutPlanVersionPage.serializer)
       ..add(WorkoutPlanWrite.serializer)
+      ..add(WorkoutPlanWriteProgressionMethodsEnum.serializer)
       ..add(WorkoutSession.serializer)
+      ..add(WorkoutSessionComplete.serializer)
       ..add(WorkoutSessionCreate.serializer)
       ..add(WorkoutSessionExercise.serializer)
       ..add(WorkoutSessionPage.serializer)
@@ -367,6 +387,16 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(
               BuiltList, const [const FullType(BalanceSheetAccount)]),
           () => ListBuilder<BalanceSheetAccount>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(BodyMetricSnapshot)]),
+          () => ListBuilder<BodyMetricSnapshot>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(PerformanceMarkerSnapshot)]),
+          () => ListBuilder<PerformanceMarkerSnapshot>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [
             const FullType(BuiltMap, const [
@@ -479,6 +509,12 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(JournalLineWrite)]),
           () => ListBuilder<JournalLineWrite>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(LifestylePriority)]),
+          () => ListBuilder<LifestylePriority>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(LifestylePriority)]),
+          () => ListBuilder<LifestylePriority>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(LongitudinalDataPoint)]),
@@ -717,8 +753,16 @@ Serializers _$serializers = (Serializers().toBuilder()
               const [const FullType(WorkoutPlanExercisesWriteExercisesInner)]),
           () => ListBuilder<WorkoutPlanExercisesWriteExercisesInner>())
       ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(WorkoutPlanProgressionMethodsEnum)]),
+          () => ListBuilder<WorkoutPlanProgressionMethodsEnum>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(WorkoutPlanVersion)]),
           () => ListBuilder<WorkoutPlanVersion>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(WorkoutPlanWriteProgressionMethodsEnum)]),
+          () => ListBuilder<WorkoutPlanWriteProgressionMethodsEnum>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(WorkoutSession)]),
           () => ListBuilder<WorkoutSession>())

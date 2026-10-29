@@ -46,7 +46,7 @@ Source Document: [Luxe knox pt client  file.pdf](./Luxe%20knox%20pt%20client%20%
 - [x] PTF-21 Update `docs/screens/consolidated-screens.md` with Screen 45 <!-- id: 21 -->
 
 **Phase 7: Flutter Data & Domain**
-- [ ] PTF-22 Regenerate `packages/api_client` from updated OpenAPI spec <!-- id: 22 -->
+- [x] PTF-22 Regenerate `packages/api_client` from updated OpenAPI spec <!-- id: 22 -->
 - [ ] PTF-23 Health domain: PAR-Q+ entities, repositories, and use cases <!-- id: 23 -->
 - [ ] PTF-24 Lifestyle domain: lifestyle intake entities, repositories, and use cases <!-- id: 24 -->
 - [ ] PTF-25 Workout domain: update workout plan, session, and set entities for RIR/Pain/Blueprint <!-- id: 25 -->

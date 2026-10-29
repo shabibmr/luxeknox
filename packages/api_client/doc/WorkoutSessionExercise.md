@@ -15,6 +15,10 @@ Name | Type | Description | Notes
 **repsCompleted** | **int** |  | [optional] 
 **weightLiftedKg** | **num** |  | [optional] 
 **rpeScore** | **num** |  | [optional] 
+**targetRir** | **String** | Decimal string. | [optional] 
+**actualRir** | **String** | Decimal string. | [optional] 
+**targetDurationSeconds** | **int** |  | [optional] 
+**actualDurationSeconds** | **int** |  | [optional] 
 **isCompleted** | **bool** |  | [optional] 
 **notes** | **String** |  | [optional] 
 

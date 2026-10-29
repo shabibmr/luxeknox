@@ -9,6 +9,7 @@ All URIs are relative to *http://localhost:3000/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**clearParQ**](HEALTHApi.md#clearparq) | **POST** /members/{id}/par-q/clearance | Clear or reject a PAR-Q+ screening pending medical clearance
 [**createEmergencyContact**](HEALTHApi.md#createemergencycontact) | **POST** /users/{id}/emergency-contacts | Add an emergency contact
 [**createHealthCondition**](HEALTHApi.md#createhealthcondition) | **POST** /health-conditions | Create a condition
 [**createMedicalHistory**](HEALTHApi.md#createmedicalhistory) | **POST** /members/{id}/medical-histories | Add a medical history row
@@ -18,18 +19,67 @@ Method | HTTP request | Description
 [**deleteEmergencyContact**](HEALTHApi.md#deleteemergencycontact) | **DELETE** /users/{id}/emergency-contacts/{contactId} | Remove an emergency contact
 [**deleteMedicalHistory**](HEALTHApi.md#deletemedicalhistory) | **DELETE** /members/{id}/medical-histories/{historyId} | Soft-remove a medical history row
 [**deleteMemberDocument**](HEALTHApi.md#deletememberdocument) | **DELETE** /members/{id}/documents/{documentId} | Delete a document row
+[**getLifestyleIntake**](HEALTHApi.md#getlifestyleintake) | **GET** /members/{id}/lifestyle-intake | Get member lifestyle intake
 [**listEmergencyContacts**](HEALTHApi.md#listemergencycontacts) | **GET** /users/{id}/emergency-contacts | Emergency contacts for a user
 [**listHealthConditions**](HEALTHApi.md#listhealthconditions) | **GET** /health-conditions | Condition catalog
 [**listMedicalHistories**](HEALTHApi.md#listmedicalhistories) | **GET** /members/{id}/medical-histories | Medical history list
 [**listMemberDocuments**](HEALTHApi.md#listmemberdocuments) | **GET** /members/{id}/documents | Member documents
 [**listMemberHealthHistory**](HEALTHApi.md#listmemberhealthhistory) | **GET** /members/{id}/health/history | Member health history list
 [**listMemberPhotos**](HEALTHApi.md#listmemberphotos) | **GET** /members/{id}/photos | Member gallery
+[**putLifestyleIntake**](HEALTHApi.md#putlifestyleintake) | **PUT** /members/{id}/lifestyle-intake | Create or replace member lifestyle intake
+[**reviewParQ**](HEALTHApi.md#reviewparq) | **PATCH** /members/{id}/par-q/trainer-review | Record trainer screening notes and referral decision
 [**setMemberAvatar**](HEALTHApi.md#setmemberavatar) | **POST** /members/{id}/photos/{photoId}/avatar | Set current avatar from a gallery shot
+[**submitParQ**](HEALTHApi.md#submitparq) | **POST** /members/{id}/par-q | Submit a PAR-Q+ questionnaire
 [**updateEmergencyContact**](HEALTHApi.md#updateemergencycontact) | **PATCH** /users/{id}/emergency-contacts/{contactId} | Update an emergency contact
 [**updateHealthCondition**](HEALTHApi.md#updatehealthcondition) | **PATCH** /health-conditions/{id} | Update a condition
 [**updateMedicalHistory**](HEALTHApi.md#updatemedicalhistory) | **PATCH** /members/{id}/medical-histories/{historyId} | Update a medical history row
 [**verifyMemberDocument**](HEALTHApi.md#verifymemberdocument) | **POST** /members/{id}/documents/{documentId}/verify | Verify a document
 
+
+# **clearParQ**
+> ParQScreening clearParQ(id, parQClearance)
+
+Clear or reject a PAR-Q+ screening pending medical clearance
+
+Only valid while the latest screening is `pending_clearance`. 
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getHEALTHApi();
+final int id = 789; // int | 
+final ParQClearance parQClearance = ; // ParQClearance | 
+
+try {
+    final response = api.clearParQ(id, parQClearance);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling HEALTHApi->clearParQ: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **parQClearance** | [**ParQClearance**](ParQClearance.md)|  | 
+
+### Return type
+
+[**ParQScreening**](ParQScreening.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **createEmergencyContact**
 > EmergencyContact createEmergencyContact(id, emergencyContactWrite)
@@ -413,6 +463,47 @@ void (empty response body)
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getLifestyleIntake**
+> LifestyleIntake getLifestyleIntake(id)
+
+Get member lifestyle intake
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getHEALTHApi();
+final int id = 789; // int | 
+
+try {
+    final response = api.getLifestyleIntake(id);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling HEALTHApi->getLifestyleIntake: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+
+### Return type
+
+[**LifestyleIntake**](LifestyleIntake.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listEmergencyContacts**
 > EmergencyContactPage listEmergencyContacts(id)
 
@@ -669,6 +760,92 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **putLifestyleIntake**
+> LifestyleIntake putLifestyleIntake(id, lifestyleIntakeWrite)
+
+Create or replace member lifestyle intake
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getHEALTHApi();
+final int id = 789; // int | 
+final LifestyleIntakeWrite lifestyleIntakeWrite = ; // LifestyleIntakeWrite | 
+
+try {
+    final response = api.putLifestyleIntake(id, lifestyleIntakeWrite);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling HEALTHApi->putLifestyleIntake: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **lifestyleIntakeWrite** | [**LifestyleIntakeWrite**](LifestyleIntakeWrite.md)|  | 
+
+### Return type
+
+[**LifestyleIntake**](LifestyleIntake.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **reviewParQ**
+> ParQScreening reviewParQ(id, parQTrainerReview)
+
+Record trainer screening notes and referral decision
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getHEALTHApi();
+final int id = 789; // int | 
+final ParQTrainerReview parQTrainerReview = ; // ParQTrainerReview | 
+
+try {
+    final response = api.reviewParQ(id, parQTrainerReview);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling HEALTHApi->reviewParQ: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **parQTrainerReview** | [**ParQTrainerReview**](ParQTrainerReview.md)|  | 
+
+### Return type
+
+[**ParQScreening**](ParQScreening.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **setMemberAvatar**
 > MemberPhoto setMemberAvatar(id, photoId)
 
@@ -708,6 +885,51 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **submitParQ**
+> ParQScreening submitParQ(id, parQSubmit)
+
+Submit a PAR-Q+ questionnaire
+
+Any YES answer parks the member in `pending_clearance` and flags a referral; all-NO passes outright. PT booking and session start are blocked while the latest screening is `pending_clearance` or `rejected` (`MEDICAL_CLEARANCE_REQUIRED`). 
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getHEALTHApi();
+final int id = 789; // int | 
+final ParQSubmit parQSubmit = ; // ParQSubmit | 
+
+try {
+    final response = api.submitParQ(id, parQSubmit);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling HEALTHApi->submitParQ: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **parQSubmit** | [**ParQSubmit**](ParQSubmit.md)|  | 
+
+### Return type
+
+[**ParQScreening**](ParQScreening.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

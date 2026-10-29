@@ -16,6 +16,10 @@ part 'workout_set_write.g.dart';
 /// * [repsCompleted] 
 /// * [weightLiftedKg] 
 /// * [rpeScore] 
+/// * [targetRir] 
+/// * [actualRir] - Defaults to `target_rir` when omitted.
+/// * [targetDurationSeconds] 
+/// * [actualDurationSeconds] - Defaults to `target_duration_seconds` when omitted.
 /// * [isCompleted] 
 /// * [notes] 
 @BuiltValue()
@@ -34,6 +38,20 @@ abstract class WorkoutSetWrite implements Built<WorkoutSetWrite, WorkoutSetWrite
 
   @BuiltValueField(wireName: r'rpe_score')
   num? get rpeScore;
+
+  @BuiltValueField(wireName: r'target_rir')
+  num? get targetRir;
+
+  /// Defaults to `target_rir` when omitted.
+  @BuiltValueField(wireName: r'actual_rir')
+  num? get actualRir;
+
+  @BuiltValueField(wireName: r'target_duration_seconds')
+  int? get targetDurationSeconds;
+
+  /// Defaults to `target_duration_seconds` when omitted.
+  @BuiltValueField(wireName: r'actual_duration_seconds')
+  int? get actualDurationSeconds;
 
   @BuiltValueField(wireName: r'is_completed')
   bool? get isCompleted;
@@ -93,6 +111,34 @@ class _$WorkoutSetWriteSerializer implements PrimitiveSerializer<WorkoutSetWrite
       yield serializers.serialize(
         object.rpeScore,
         specifiedType: const FullType(num),
+      );
+    }
+    if (object.targetRir != null) {
+      yield r'target_rir';
+      yield serializers.serialize(
+        object.targetRir,
+        specifiedType: const FullType(num),
+      );
+    }
+    if (object.actualRir != null) {
+      yield r'actual_rir';
+      yield serializers.serialize(
+        object.actualRir,
+        specifiedType: const FullType(num),
+      );
+    }
+    if (object.targetDurationSeconds != null) {
+      yield r'target_duration_seconds';
+      yield serializers.serialize(
+        object.targetDurationSeconds,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.actualDurationSeconds != null) {
+      yield r'actual_duration_seconds';
+      yield serializers.serialize(
+        object.actualDurationSeconds,
+        specifiedType: const FullType(int),
       );
     }
     if (object.isCompleted != null) {
@@ -169,6 +215,38 @@ class _$WorkoutSetWriteSerializer implements PrimitiveSerializer<WorkoutSetWrite
           ) as num?;
           if (valueDes == null) continue;
           result.rpeScore = valueDes;
+          break;
+        case r'target_rir':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
+          if (valueDes == null) continue;
+          result.targetRir = valueDes;
+          break;
+        case r'actual_rir':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
+          if (valueDes == null) continue;
+          result.actualRir = valueDes;
+          break;
+        case r'target_duration_seconds':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.targetDurationSeconds = valueDes;
+          break;
+        case r'actual_duration_seconds':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.actualDurationSeconds = valueDes;
           break;
         case r'is_completed':
           final valueDes = serializers.deserialize(

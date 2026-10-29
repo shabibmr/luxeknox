@@ -18,6 +18,14 @@ class _$WorkoutSetWrite extends WorkoutSetWrite {
   @override
   final num? rpeScore;
   @override
+  final num? targetRir;
+  @override
+  final num? actualRir;
+  @override
+  final int? targetDurationSeconds;
+  @override
+  final int? actualDurationSeconds;
+  @override
   final bool? isCompleted;
   @override
   final String? notes;
@@ -31,6 +39,10 @@ class _$WorkoutSetWrite extends WorkoutSetWrite {
       this.repsCompleted,
       this.weightLiftedKg,
       this.rpeScore,
+      this.targetRir,
+      this.actualRir,
+      this.targetDurationSeconds,
+      this.actualDurationSeconds,
       this.isCompleted,
       this.notes})
       : super._();
@@ -50,6 +62,10 @@ class _$WorkoutSetWrite extends WorkoutSetWrite {
         repsCompleted == other.repsCompleted &&
         weightLiftedKg == other.weightLiftedKg &&
         rpeScore == other.rpeScore &&
+        targetRir == other.targetRir &&
+        actualRir == other.actualRir &&
+        targetDurationSeconds == other.targetDurationSeconds &&
+        actualDurationSeconds == other.actualDurationSeconds &&
         isCompleted == other.isCompleted &&
         notes == other.notes;
   }
@@ -62,6 +78,10 @@ class _$WorkoutSetWrite extends WorkoutSetWrite {
     _$hash = $jc(_$hash, repsCompleted.hashCode);
     _$hash = $jc(_$hash, weightLiftedKg.hashCode);
     _$hash = $jc(_$hash, rpeScore.hashCode);
+    _$hash = $jc(_$hash, targetRir.hashCode);
+    _$hash = $jc(_$hash, actualRir.hashCode);
+    _$hash = $jc(_$hash, targetDurationSeconds.hashCode);
+    _$hash = $jc(_$hash, actualDurationSeconds.hashCode);
     _$hash = $jc(_$hash, isCompleted.hashCode);
     _$hash = $jc(_$hash, notes.hashCode);
     _$hash = $jf(_$hash);
@@ -76,6 +96,10 @@ class _$WorkoutSetWrite extends WorkoutSetWrite {
           ..add('repsCompleted', repsCompleted)
           ..add('weightLiftedKg', weightLiftedKg)
           ..add('rpeScore', rpeScore)
+          ..add('targetRir', targetRir)
+          ..add('actualRir', actualRir)
+          ..add('targetDurationSeconds', targetDurationSeconds)
+          ..add('actualDurationSeconds', actualDurationSeconds)
           ..add('isCompleted', isCompleted)
           ..add('notes', notes))
         .toString();
@@ -108,6 +132,24 @@ class WorkoutSetWriteBuilder
   num? get rpeScore => _$this._rpeScore;
   set rpeScore(num? rpeScore) => _$this._rpeScore = rpeScore;
 
+  num? _targetRir;
+  num? get targetRir => _$this._targetRir;
+  set targetRir(num? targetRir) => _$this._targetRir = targetRir;
+
+  num? _actualRir;
+  num? get actualRir => _$this._actualRir;
+  set actualRir(num? actualRir) => _$this._actualRir = actualRir;
+
+  int? _targetDurationSeconds;
+  int? get targetDurationSeconds => _$this._targetDurationSeconds;
+  set targetDurationSeconds(int? targetDurationSeconds) =>
+      _$this._targetDurationSeconds = targetDurationSeconds;
+
+  int? _actualDurationSeconds;
+  int? get actualDurationSeconds => _$this._actualDurationSeconds;
+  set actualDurationSeconds(int? actualDurationSeconds) =>
+      _$this._actualDurationSeconds = actualDurationSeconds;
+
   bool? _isCompleted;
   bool? get isCompleted => _$this._isCompleted;
   set isCompleted(bool? isCompleted) => _$this._isCompleted = isCompleted;
@@ -128,6 +170,10 @@ class WorkoutSetWriteBuilder
       _repsCompleted = $v.repsCompleted;
       _weightLiftedKg = $v.weightLiftedKg;
       _rpeScore = $v.rpeScore;
+      _targetRir = $v.targetRir;
+      _actualRir = $v.actualRir;
+      _targetDurationSeconds = $v.targetDurationSeconds;
+      _actualDurationSeconds = $v.actualDurationSeconds;
       _isCompleted = $v.isCompleted;
       _notes = $v.notes;
       _$v = null;
@@ -158,6 +204,10 @@ class WorkoutSetWriteBuilder
           repsCompleted: repsCompleted,
           weightLiftedKg: weightLiftedKg,
           rpeScore: rpeScore,
+          targetRir: targetRir,
+          actualRir: actualRir,
+          targetDurationSeconds: targetDurationSeconds,
+          actualDurationSeconds: actualDurationSeconds,
           isCompleted: isCompleted,
           notes: notes,
         );

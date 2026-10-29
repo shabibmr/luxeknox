@@ -25,6 +25,16 @@ part 'workout_plan.g.dart';
 /// * [status] 
 /// * [createdAt] - UTC ISO-8601
 /// * [rowVersion] 
+/// * [primaryObjective12w] 
+/// * [milestone4w] 
+/// * [sessionsPerWeek] 
+/// * [targetSessionDurationMinutes] 
+/// * [splitType] 
+/// * [cardioProtocol] 
+/// * [mobilityProtocol] 
+/// * [progressionMethods] - Unique values only.
+/// * [mainSuccessMeasure] 
+/// * [trainerProgrammingNotes] 
 /// * [currentVersion] 
 @BuiltValue()
 abstract class WorkoutPlan implements Built<WorkoutPlan, WorkoutPlanBuilder> {
@@ -65,6 +75,38 @@ abstract class WorkoutPlan implements Built<WorkoutPlan, WorkoutPlanBuilder> {
 
   @BuiltValueField(wireName: r'row_version')
   int get rowVersion;
+
+  @BuiltValueField(wireName: r'primary_objective_12w')
+  String? get primaryObjective12w;
+
+  @BuiltValueField(wireName: r'milestone_4w')
+  String? get milestone4w;
+
+  @BuiltValueField(wireName: r'sessions_per_week')
+  int? get sessionsPerWeek;
+
+  @BuiltValueField(wireName: r'target_session_duration_minutes')
+  int? get targetSessionDurationMinutes;
+
+  @BuiltValueField(wireName: r'split_type')
+  String? get splitType;
+
+  @BuiltValueField(wireName: r'cardio_protocol')
+  String? get cardioProtocol;
+
+  @BuiltValueField(wireName: r'mobility_protocol')
+  String? get mobilityProtocol;
+
+  /// Unique values only.
+  @BuiltValueField(wireName: r'progression_methods')
+  BuiltList<WorkoutPlanProgressionMethodsEnum>? get progressionMethods;
+  // enum progressionMethodsEnum {  load,  reps,  volume,  density,  technique,  };
+
+  @BuiltValueField(wireName: r'main_success_measure')
+  String? get mainSuccessMeasure;
+
+  @BuiltValueField(wireName: r'trainer_programming_notes')
+  String? get trainerProgrammingNotes;
 
   @BuiltValueField(wireName: r'current_version')
   WorkoutPlanVersion? get currentVersion;
@@ -166,6 +208,76 @@ class _$WorkoutPlanSerializer implements PrimitiveSerializer<WorkoutPlan> {
       object.rowVersion,
       specifiedType: const FullType(int),
     );
+    if (object.primaryObjective12w != null) {
+      yield r'primary_objective_12w';
+      yield serializers.serialize(
+        object.primaryObjective12w,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.milestone4w != null) {
+      yield r'milestone_4w';
+      yield serializers.serialize(
+        object.milestone4w,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.sessionsPerWeek != null) {
+      yield r'sessions_per_week';
+      yield serializers.serialize(
+        object.sessionsPerWeek,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.targetSessionDurationMinutes != null) {
+      yield r'target_session_duration_minutes';
+      yield serializers.serialize(
+        object.targetSessionDurationMinutes,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.splitType != null) {
+      yield r'split_type';
+      yield serializers.serialize(
+        object.splitType,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.cardioProtocol != null) {
+      yield r'cardio_protocol';
+      yield serializers.serialize(
+        object.cardioProtocol,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.mobilityProtocol != null) {
+      yield r'mobility_protocol';
+      yield serializers.serialize(
+        object.mobilityProtocol,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.progressionMethods != null) {
+      yield r'progression_methods';
+      yield serializers.serialize(
+        object.progressionMethods,
+        specifiedType: const FullType(BuiltList, [FullType(WorkoutPlanProgressionMethodsEnum)]),
+      );
+    }
+    if (object.mainSuccessMeasure != null) {
+      yield r'main_success_measure';
+      yield serializers.serialize(
+        object.mainSuccessMeasure,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.trainerProgrammingNotes != null) {
+      yield r'trainer_programming_notes';
+      yield serializers.serialize(
+        object.trainerProgrammingNotes,
+        specifiedType: const FullType(String),
+      );
+    }
     if (object.currentVersion != null) {
       yield r'current_version';
       yield serializers.serialize(
@@ -287,6 +399,86 @@ class _$WorkoutPlanSerializer implements PrimitiveSerializer<WorkoutPlan> {
           ) as int;
           result.rowVersion = valueDes;
           break;
+        case r'primary_objective_12w':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.primaryObjective12w = valueDes;
+          break;
+        case r'milestone_4w':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.milestone4w = valueDes;
+          break;
+        case r'sessions_per_week':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.sessionsPerWeek = valueDes;
+          break;
+        case r'target_session_duration_minutes':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.targetSessionDurationMinutes = valueDes;
+          break;
+        case r'split_type':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.splitType = valueDes;
+          break;
+        case r'cardio_protocol':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.cardioProtocol = valueDes;
+          break;
+        case r'mobility_protocol':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.mobilityProtocol = valueDes;
+          break;
+        case r'progression_methods':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(WorkoutPlanProgressionMethodsEnum)]),
+          ) as BuiltList<WorkoutPlanProgressionMethodsEnum>?;
+          if (valueDes == null) continue;
+          result.progressionMethods.replace(valueDes);
+          break;
+        case r'main_success_measure':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.mainSuccessMeasure = valueDes;
+          break;
+        case r'trainer_programming_notes':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.trainerProgrammingNotes = valueDes;
+          break;
         case r'current_version':
           final valueDes = serializers.deserialize(
             value,
@@ -340,5 +532,26 @@ class WorkoutPlanStatusEnum extends EnumClass {
 
   static BuiltSet<WorkoutPlanStatusEnum> get values => _$workoutPlanStatusEnumValues;
   static WorkoutPlanStatusEnum valueOf(String name) => _$workoutPlanStatusEnumValueOf(name);
+}
+
+class WorkoutPlanProgressionMethodsEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'load')
+  static const WorkoutPlanProgressionMethodsEnum load = _$workoutPlanProgressionMethodsEnum_load;
+  @BuiltValueEnumConst(wireName: r'reps')
+  static const WorkoutPlanProgressionMethodsEnum reps = _$workoutPlanProgressionMethodsEnum_reps;
+  @BuiltValueEnumConst(wireName: r'volume')
+  static const WorkoutPlanProgressionMethodsEnum volume = _$workoutPlanProgressionMethodsEnum_volume;
+  @BuiltValueEnumConst(wireName: r'density')
+  static const WorkoutPlanProgressionMethodsEnum density = _$workoutPlanProgressionMethodsEnum_density;
+  @BuiltValueEnumConst(wireName: r'technique')
+  static const WorkoutPlanProgressionMethodsEnum technique = _$workoutPlanProgressionMethodsEnum_technique;
+
+  static Serializer<WorkoutPlanProgressionMethodsEnum> get serializer => _$workoutPlanProgressionMethodsEnumSerializer;
+
+  const WorkoutPlanProgressionMethodsEnum._(String name): super(name);
+
+  static BuiltSet<WorkoutPlanProgressionMethodsEnum> get values => _$workoutPlanProgressionMethodsEnumValues;
+  static WorkoutPlanProgressionMethodsEnum valueOf(String name) => _$workoutPlanProgressionMethodsEnumValueOf(name);
 }
 

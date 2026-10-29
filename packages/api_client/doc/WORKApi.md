@@ -119,7 +119,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **completeWorkoutSession**
-> WorkoutSession completeWorkoutSession(id)
+> WorkoutSession completeWorkoutSession(id, workoutSessionComplete)
 
 Complete a session
 
@@ -129,9 +129,10 @@ import 'package:api_client/api.dart';
 
 final api = ApiClient().getWORKApi();
 final int id = 789; // int | 
+final WorkoutSessionComplete workoutSessionComplete = ; // WorkoutSessionComplete | 
 
 try {
-    final response = api.completeWorkoutSession(id);
+    final response = api.completeWorkoutSession(id, workoutSessionComplete);
     print(response);
 } on DioException catch (e) {
     print('Exception when calling WORKApi->completeWorkoutSession: $e\n');
@@ -143,6 +144,7 @@ try {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **int**|  | 
+ **workoutSessionComplete** | [**WorkoutSessionComplete**](WorkoutSessionComplete.md)|  | [optional] 
 
 ### Return type
 
@@ -154,7 +156,7 @@ Name | Type | Description  | Notes
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

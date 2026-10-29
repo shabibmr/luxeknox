@@ -25,6 +25,7 @@ doc/AuditLog.md
 doc/AuditLogPage.md
 doc/BalanceSheetAccount.md
 doc/BalanceSheetReport.md
+doc/BodyMetricSnapshot.md
 doc/BookRequest.md
 doc/BroadcastRequest.md
 doc/CancelBookingRequest.md
@@ -132,6 +133,9 @@ doc/JournalLine.md
 doc/JournalLineWrite.md
 doc/JournalPage.md
 doc/JournalReverse.md
+doc/LifestyleIntake.md
+doc/LifestyleIntakeWrite.md
+doc/LifestylePriority.md
 doc/LoginRequest.md
 doc/LogoutRequest.md
 doc/LongitudinalDataPoint.md
@@ -196,6 +200,10 @@ doc/PAYApi.md
 doc/PEOPLEApi.md
 doc/PTApi.md
 doc/PageMeta.md
+doc/ParQClearance.md
+doc/ParQScreening.md
+doc/ParQSubmit.md
+doc/ParQTrainerReview.md
 doc/Payment.md
 doc/PaymentAdjustRequest.md
 doc/PaymentAllocation.md
@@ -212,6 +220,7 @@ doc/PaymentVoucher.md
 doc/PaymentVoucherCreate.md
 doc/PaymentVoucherPage.md
 doc/PaymentVoucherUpdate.md
+doc/PerformanceMarkerSnapshot.md
 doc/Permission.md
 doc/PermissionAction.md
 doc/PermissionPage.md
@@ -238,10 +247,13 @@ doc/PtPaymentPreview.md
 doc/PtProduct.md
 doc/PtProductPage.md
 doc/PtProductWrite.md
+doc/PtProgressReview.md
+doc/PtProgressReviewDraft.md
 doc/PtPurchaseRequest.md
 doc/PtPurchaseResult.md
 doc/PtReassignTrainerRequest.md
 doc/PtRenewRequest.md
+doc/PtReviewChecklist.md
 doc/PtScheduleGrid.md
 doc/PtSubscription.md
 doc/PtSubscriptionStatus.md
@@ -321,6 +333,7 @@ doc/WorkoutPlanVersion.md
 doc/WorkoutPlanVersionPage.md
 doc/WorkoutPlanWrite.md
 doc/WorkoutSession.md
+doc/WorkoutSessionComplete.md
 doc/WorkoutSessionCreate.md
 doc/WorkoutSessionExercise.md
 doc/WorkoutSessionPage.md
@@ -375,6 +388,7 @@ lib/src/model/audit_log.dart
 lib/src/model/audit_log_page.dart
 lib/src/model/balance_sheet_account.dart
 lib/src/model/balance_sheet_report.dart
+lib/src/model/body_metric_snapshot.dart
 lib/src/model/book_request.dart
 lib/src/model/broadcast_request.dart
 lib/src/model/cancel_booking_request.dart
@@ -478,6 +492,9 @@ lib/src/model/journal_line.dart
 lib/src/model/journal_line_write.dart
 lib/src/model/journal_page.dart
 lib/src/model/journal_reverse.dart
+lib/src/model/lifestyle_intake.dart
+lib/src/model/lifestyle_intake_write.dart
+lib/src/model/lifestyle_priority.dart
 lib/src/model/login_request.dart
 lib/src/model/logout_request.dart
 lib/src/model/longitudinal_data_point.dart
@@ -536,6 +553,10 @@ lib/src/model/open_ap_item.dart
 lib/src/model/open_ar_item.dart
 lib/src/model/open_items_report.dart
 lib/src/model/page_meta.dart
+lib/src/model/par_q_clearance.dart
+lib/src/model/par_q_screening.dart
+lib/src/model/par_q_submit.dart
+lib/src/model/par_q_trainer_review.dart
 lib/src/model/payment.dart
 lib/src/model/payment_adjust_request.dart
 lib/src/model/payment_allocation.dart
@@ -552,6 +573,7 @@ lib/src/model/payment_voucher.dart
 lib/src/model/payment_voucher_create.dart
 lib/src/model/payment_voucher_page.dart
 lib/src/model/payment_voucher_update.dart
+lib/src/model/performance_marker_snapshot.dart
 lib/src/model/permission.dart
 lib/src/model/permission_action.dart
 lib/src/model/permission_page.dart
@@ -578,10 +600,13 @@ lib/src/model/pt_payment_preview.dart
 lib/src/model/pt_product.dart
 lib/src/model/pt_product_page.dart
 lib/src/model/pt_product_write.dart
+lib/src/model/pt_progress_review.dart
+lib/src/model/pt_progress_review_draft.dart
 lib/src/model/pt_purchase_request.dart
 lib/src/model/pt_purchase_result.dart
 lib/src/model/pt_reassign_trainer_request.dart
 lib/src/model/pt_renew_request.dart
+lib/src/model/pt_review_checklist.dart
 lib/src/model/pt_schedule_grid.dart
 lib/src/model/pt_subscription.dart
 lib/src/model/pt_subscription_status.dart
@@ -656,6 +681,7 @@ lib/src/model/workout_plan_version.dart
 lib/src/model/workout_plan_version_page.dart
 lib/src/model/workout_plan_write.dart
 lib/src/model/workout_session.dart
+lib/src/model/workout_session_complete.dart
 lib/src/model/workout_session_create.dart
 lib/src/model/workout_session_exercise.dart
 lib/src/model/workout_session_page.dart
@@ -663,3 +689,16 @@ lib/src/model/workout_set_update.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
+test/body_metric_snapshot_test.dart
+test/lifestyle_intake_test.dart
+test/lifestyle_intake_write_test.dart
+test/lifestyle_priority_test.dart
+test/par_q_clearance_test.dart
+test/par_q_screening_test.dart
+test/par_q_submit_test.dart
+test/par_q_trainer_review_test.dart
+test/performance_marker_snapshot_test.dart
+test/pt_progress_review_draft_test.dart
+test/pt_progress_review_test.dart
+test/pt_review_checklist_test.dart
+test/workout_session_complete_test.dart

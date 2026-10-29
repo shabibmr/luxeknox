@@ -185,6 +185,7 @@ Class | Method | HTTP request | Description
 [*GOALApi*](doc/GOALApi.md) | [**listProgressPhotos**](doc/GOALApi.md#listprogressphotos) | **GET** /members/{id}/progress-photos | Progress photos
 [*GOALApi*](doc/GOALApi.md) | [**updateGoal**](doc/GOALApi.md#updategoal) | **PATCH** /goals/{id} | Update a goal
 [*GOALApi*](doc/GOALApi.md) | [**updateGoalMetric**](doc/GOALApi.md#updategoalmetric) | **PATCH** /goal-metrics/{id} | Update a metric
+[*HEALTHApi*](doc/HEALTHApi.md) | [**clearParQ**](doc/HEALTHApi.md#clearparq) | **POST** /members/{id}/par-q/clearance | Clear or reject a PAR-Q+ screening pending medical clearance
 [*HEALTHApi*](doc/HEALTHApi.md) | [**createEmergencyContact**](doc/HEALTHApi.md#createemergencycontact) | **POST** /users/{id}/emergency-contacts | Add an emergency contact
 [*HEALTHApi*](doc/HEALTHApi.md) | [**createHealthCondition**](doc/HEALTHApi.md#createhealthcondition) | **POST** /health-conditions | Create a condition
 [*HEALTHApi*](doc/HEALTHApi.md) | [**createMedicalHistory**](doc/HEALTHApi.md#createmedicalhistory) | **POST** /members/{id}/medical-histories | Add a medical history row
@@ -194,13 +195,17 @@ Class | Method | HTTP request | Description
 [*HEALTHApi*](doc/HEALTHApi.md) | [**deleteEmergencyContact**](doc/HEALTHApi.md#deleteemergencycontact) | **DELETE** /users/{id}/emergency-contacts/{contactId} | Remove an emergency contact
 [*HEALTHApi*](doc/HEALTHApi.md) | [**deleteMedicalHistory**](doc/HEALTHApi.md#deletemedicalhistory) | **DELETE** /members/{id}/medical-histories/{historyId} | Soft-remove a medical history row
 [*HEALTHApi*](doc/HEALTHApi.md) | [**deleteMemberDocument**](doc/HEALTHApi.md#deletememberdocument) | **DELETE** /members/{id}/documents/{documentId} | Delete a document row
+[*HEALTHApi*](doc/HEALTHApi.md) | [**getLifestyleIntake**](doc/HEALTHApi.md#getlifestyleintake) | **GET** /members/{id}/lifestyle-intake | Get member lifestyle intake
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listEmergencyContacts**](doc/HEALTHApi.md#listemergencycontacts) | **GET** /users/{id}/emergency-contacts | Emergency contacts for a user
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listHealthConditions**](doc/HEALTHApi.md#listhealthconditions) | **GET** /health-conditions | Condition catalog
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listMedicalHistories**](doc/HEALTHApi.md#listmedicalhistories) | **GET** /members/{id}/medical-histories | Medical history list
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listMemberDocuments**](doc/HEALTHApi.md#listmemberdocuments) | **GET** /members/{id}/documents | Member documents
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listMemberHealthHistory**](doc/HEALTHApi.md#listmemberhealthhistory) | **GET** /members/{id}/health/history | Member health history list
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listMemberPhotos**](doc/HEALTHApi.md#listmemberphotos) | **GET** /members/{id}/photos | Member gallery
+[*HEALTHApi*](doc/HEALTHApi.md) | [**putLifestyleIntake**](doc/HEALTHApi.md#putlifestyleintake) | **PUT** /members/{id}/lifestyle-intake | Create or replace member lifestyle intake
+[*HEALTHApi*](doc/HEALTHApi.md) | [**reviewParQ**](doc/HEALTHApi.md#reviewparq) | **PATCH** /members/{id}/par-q/trainer-review | Record trainer screening notes and referral decision
 [*HEALTHApi*](doc/HEALTHApi.md) | [**setMemberAvatar**](doc/HEALTHApi.md#setmemberavatar) | **POST** /members/{id}/photos/{photoId}/avatar | Set current avatar from a gallery shot
+[*HEALTHApi*](doc/HEALTHApi.md) | [**submitParQ**](doc/HEALTHApi.md#submitparq) | **POST** /members/{id}/par-q | Submit a PAR-Q+ questionnaire
 [*HEALTHApi*](doc/HEALTHApi.md) | [**updateEmergencyContact**](doc/HEALTHApi.md#updateemergencycontact) | **PATCH** /users/{id}/emergency-contacts/{contactId} | Update an emergency contact
 [*HEALTHApi*](doc/HEALTHApi.md) | [**updateHealthCondition**](doc/HEALTHApi.md#updatehealthcondition) | **PATCH** /health-conditions/{id} | Update a condition
 [*HEALTHApi*](doc/HEALTHApi.md) | [**updateMedicalHistory**](doc/HEALTHApi.md#updatemedicalhistory) | **PATCH** /members/{id}/medical-histories/{historyId} | Update a medical history row
@@ -264,16 +269,22 @@ Class | Method | HTTP request | Description
 [*PEOPLEApi*](doc/PEOPLEApi.md) | [**updateMember**](doc/PEOPLEApi.md#updatemember) | **PATCH** /members/{id} | Update member profile
 [*PEOPLEApi*](doc/PEOPLEApi.md) | [**updateTrainer**](doc/PEOPLEApi.md#updatetrainer) | **PATCH** /trainers/{id} | Update trainer
 [*PTApi*](doc/PTApi.md) | [**changePtSlot**](doc/PTApi.md#changeptslot) | **POST** /pt-subscriptions/{id}/change-slot | Move remaining PT sessions to other weekdays/hour
+[*PTApi*](doc/PTApi.md) | [**clientSignPtProgressReview**](doc/PTApi.md#clientsignptprogressreview) | **PATCH** /reviews/{id}/client-sign | Client signs a review
 [*PTApi*](doc/PTApi.md) | [**createPtProduct**](doc/PTApi.md#createptproduct) | **POST** /pt-products | Create a PT package
+[*PTApi*](doc/PTApi.md) | [**createPtProgressReviewDraft**](doc/PTApi.md#createptprogressreviewdraft) | **POST** /members/{id}/pt-reviews | Draft a PT progress review
+[*PTApi*](doc/PTApi.md) | [**exportPtProgressReviewPdf**](doc/PTApi.md#exportptprogressreviewpdf) | **GET** /reviews/{id}/export-pdf | Export the review presentation card as PDF
 [*PTApi*](doc/PTApi.md) | [**getMemberPtSummary**](doc/PTApi.md#getmemberptsummary) | **GET** /members/{id}/pt-subscriptions | Member&#39;s current PT, PT history, and the calling trainer&#39;s access level
 [*PTApi*](doc/PTApi.md) | [**getPtPaymentPreview**](doc/PTApi.md#getptpaymentpreview) | **GET** /pt/payment-preview | Subtotal, discount, tax and total a PT sale would charge
 [*PTApi*](doc/PTApi.md) | [**getPtProduct**](doc/PTApi.md#getptproduct) | **GET** /pt-products/{id} | PT package detail
+[*PTApi*](doc/PTApi.md) | [**getPtProgressReview**](doc/PTApi.md#getptprogressreview) | **GET** /reviews/{id} | Get a PT progress review
 [*PTApi*](doc/PTApi.md) | [**getPtScheduleGrid**](doc/PTApi.md#getptschedulegrid) | **GET** /pt/schedule-grid | Hours × active trainers occupancy for a PT package, start date and weekdays
 [*PTApi*](doc/PTApi.md) | [**getPtSubscription**](doc/PTApi.md#getptsubscription) | **GET** /pt-subscriptions/{id} | PT subscription detail
 [*PTApi*](doc/PTApi.md) | [**listPtProducts**](doc/PTApi.md#listptproducts) | **GET** /pt-products | Personal Training package catalog
+[*PTApi*](doc/PTApi.md) | [**managerApprovePtProgressReview**](doc/PTApi.md#managerapproveptprogressreview) | **PATCH** /reviews/{id}/manager-approve | Manager approves a review
 [*PTApi*](doc/PTApi.md) | [**purchasePtSubscription**](doc/PTApi.md#purchaseptsubscription) | **POST** /pt-subscriptions | Sell PT — assign trainer + fixed weekly slot, take payment, generate sessions
 [*PTApi*](doc/PTApi.md) | [**reassignPtTrainer**](doc/PTApi.md#reassignpttrainer) | **POST** /pt-subscriptions/{id}/reassign-trainer | Move remaining PT sessions to another active trainer
 [*PTApi*](doc/PTApi.md) | [**renewPtSubscription**](doc/PTApi.md#renewptsubscription) | **POST** /pt-subscriptions/{id}/renew | Renew PT with the same trainer and slot
+[*PTApi*](doc/PTApi.md) | [**trainerSignPtProgressReview**](doc/PTApi.md#trainersignptprogressreview) | **PATCH** /reviews/{id}/trainer-sign | Trainer signs a draft review
 [*PTApi*](doc/PTApi.md) | [**updatePtProduct**](doc/PTApi.md#updateptproduct) | **PATCH** /pt-products/{id} | Update or archive a PT package
 [*RBACApi*](doc/RBACApi.md) | [**assignEmployeeRole**](doc/RBACApi.md#assignemployeerole) | **PUT** /employees/{id}/role | Assign exactly one role
 [*RBACApi*](doc/RBACApi.md) | [**createRole**](doc/RBACApi.md#createrole) | **POST** /roles | Create a custom role
@@ -352,6 +363,7 @@ Class | Method | HTTP request | Description
  - [AuditLogPage](doc/AuditLogPage.md)
  - [BalanceSheetAccount](doc/BalanceSheetAccount.md)
  - [BalanceSheetReport](doc/BalanceSheetReport.md)
+ - [BodyMetricSnapshot](doc/BodyMetricSnapshot.md)
  - [BookRequest](doc/BookRequest.md)
  - [BroadcastRequest](doc/BroadcastRequest.md)
  - [CancelBookingRequest](doc/CancelBookingRequest.md)
@@ -454,6 +466,9 @@ Class | Method | HTTP request | Description
  - [JournalLineWrite](doc/JournalLineWrite.md)
  - [JournalPage](doc/JournalPage.md)
  - [JournalReverse](doc/JournalReverse.md)
+ - [LifestyleIntake](doc/LifestyleIntake.md)
+ - [LifestyleIntakeWrite](doc/LifestyleIntakeWrite.md)
+ - [LifestylePriority](doc/LifestylePriority.md)
  - [LoginRequest](doc/LoginRequest.md)
  - [LogoutRequest](doc/LogoutRequest.md)
  - [LongitudinalDataPoint](doc/LongitudinalDataPoint.md)
@@ -512,6 +527,10 @@ Class | Method | HTTP request | Description
  - [OpenArItem](doc/OpenArItem.md)
  - [OpenItemsReport](doc/OpenItemsReport.md)
  - [PageMeta](doc/PageMeta.md)
+ - [ParQClearance](doc/ParQClearance.md)
+ - [ParQScreening](doc/ParQScreening.md)
+ - [ParQSubmit](doc/ParQSubmit.md)
+ - [ParQTrainerReview](doc/ParQTrainerReview.md)
  - [Payment](doc/Payment.md)
  - [PaymentAdjustRequest](doc/PaymentAdjustRequest.md)
  - [PaymentAllocation](doc/PaymentAllocation.md)
@@ -528,6 +547,7 @@ Class | Method | HTTP request | Description
  - [PaymentVoucherCreate](doc/PaymentVoucherCreate.md)
  - [PaymentVoucherPage](doc/PaymentVoucherPage.md)
  - [PaymentVoucherUpdate](doc/PaymentVoucherUpdate.md)
+ - [PerformanceMarkerSnapshot](doc/PerformanceMarkerSnapshot.md)
  - [Permission](doc/Permission.md)
  - [PermissionAction](doc/PermissionAction.md)
  - [PermissionPage](doc/PermissionPage.md)
@@ -554,10 +574,13 @@ Class | Method | HTTP request | Description
  - [PtProduct](doc/PtProduct.md)
  - [PtProductPage](doc/PtProductPage.md)
  - [PtProductWrite](doc/PtProductWrite.md)
+ - [PtProgressReview](doc/PtProgressReview.md)
+ - [PtProgressReviewDraft](doc/PtProgressReviewDraft.md)
  - [PtPurchaseRequest](doc/PtPurchaseRequest.md)
  - [PtPurchaseResult](doc/PtPurchaseResult.md)
  - [PtReassignTrainerRequest](doc/PtReassignTrainerRequest.md)
  - [PtRenewRequest](doc/PtRenewRequest.md)
+ - [PtReviewChecklist](doc/PtReviewChecklist.md)
  - [PtScheduleGrid](doc/PtScheduleGrid.md)
  - [PtSubscription](doc/PtSubscription.md)
  - [PtSubscriptionStatus](doc/PtSubscriptionStatus.md)
@@ -632,6 +655,7 @@ Class | Method | HTTP request | Description
  - [WorkoutPlanVersionPage](doc/WorkoutPlanVersionPage.md)
  - [WorkoutPlanWrite](doc/WorkoutPlanWrite.md)
  - [WorkoutSession](doc/WorkoutSession.md)
+ - [WorkoutSessionComplete](doc/WorkoutSessionComplete.md)
  - [WorkoutSessionCreate](doc/WorkoutSessionCreate.md)
  - [WorkoutSessionExercise](doc/WorkoutSessionExercise.md)
  - [WorkoutSessionPage](doc/WorkoutSessionPage.md)

@@ -33,8 +33,55 @@ final BuiltSet<WorkoutPlanStatusEnum> _$workoutPlanStatusEnumValues =
   _$workoutPlanStatusEnum_draft,
 ]);
 
+const WorkoutPlanProgressionMethodsEnum
+    _$workoutPlanProgressionMethodsEnum_load =
+    const WorkoutPlanProgressionMethodsEnum._('load');
+const WorkoutPlanProgressionMethodsEnum
+    _$workoutPlanProgressionMethodsEnum_reps =
+    const WorkoutPlanProgressionMethodsEnum._('reps');
+const WorkoutPlanProgressionMethodsEnum
+    _$workoutPlanProgressionMethodsEnum_volume =
+    const WorkoutPlanProgressionMethodsEnum._('volume');
+const WorkoutPlanProgressionMethodsEnum
+    _$workoutPlanProgressionMethodsEnum_density =
+    const WorkoutPlanProgressionMethodsEnum._('density');
+const WorkoutPlanProgressionMethodsEnum
+    _$workoutPlanProgressionMethodsEnum_technique =
+    const WorkoutPlanProgressionMethodsEnum._('technique');
+
+WorkoutPlanProgressionMethodsEnum _$workoutPlanProgressionMethodsEnumValueOf(
+    String name) {
+  switch (name) {
+    case 'load':
+      return _$workoutPlanProgressionMethodsEnum_load;
+    case 'reps':
+      return _$workoutPlanProgressionMethodsEnum_reps;
+    case 'volume':
+      return _$workoutPlanProgressionMethodsEnum_volume;
+    case 'density':
+      return _$workoutPlanProgressionMethodsEnum_density;
+    case 'technique':
+      return _$workoutPlanProgressionMethodsEnum_technique;
+    default:
+      throw ArgumentError(name);
+  }
+}
+
+final BuiltSet<WorkoutPlanProgressionMethodsEnum>
+    _$workoutPlanProgressionMethodsEnumValues = BuiltSet<
+        WorkoutPlanProgressionMethodsEnum>(const <WorkoutPlanProgressionMethodsEnum>[
+  _$workoutPlanProgressionMethodsEnum_load,
+  _$workoutPlanProgressionMethodsEnum_reps,
+  _$workoutPlanProgressionMethodsEnum_volume,
+  _$workoutPlanProgressionMethodsEnum_density,
+  _$workoutPlanProgressionMethodsEnum_technique,
+]);
+
 Serializer<WorkoutPlanStatusEnum> _$workoutPlanStatusEnumSerializer =
     _$WorkoutPlanStatusEnumSerializer();
+Serializer<WorkoutPlanProgressionMethodsEnum>
+    _$workoutPlanProgressionMethodsEnumSerializer =
+    _$WorkoutPlanProgressionMethodsEnumSerializer();
 
 class _$WorkoutPlanStatusEnumSerializer
     implements PrimitiveSerializer<WorkoutPlanStatusEnum> {
@@ -66,6 +113,42 @@ class _$WorkoutPlanStatusEnumSerializer
           _fromWire[serialized] ?? (serialized is String ? serialized : ''));
 }
 
+class _$WorkoutPlanProgressionMethodsEnumSerializer
+    implements PrimitiveSerializer<WorkoutPlanProgressionMethodsEnum> {
+  static const Map<String, Object> _toWire = const <String, Object>{
+    'load': 'load',
+    'reps': 'reps',
+    'volume': 'volume',
+    'density': 'density',
+    'technique': 'technique',
+  };
+  static const Map<Object, String> _fromWire = const <Object, String>{
+    'load': 'load',
+    'reps': 'reps',
+    'volume': 'volume',
+    'density': 'density',
+    'technique': 'technique',
+  };
+
+  @override
+  final Iterable<Type> types = const <Type>[WorkoutPlanProgressionMethodsEnum];
+  @override
+  final String wireName = 'WorkoutPlanProgressionMethodsEnum';
+
+  @override
+  Object serialize(
+          Serializers serializers, WorkoutPlanProgressionMethodsEnum object,
+          {FullType specifiedType = FullType.unspecified}) =>
+      _toWire[object.name] ?? object.name;
+
+  @override
+  WorkoutPlanProgressionMethodsEnum deserialize(
+          Serializers serializers, Object serialized,
+          {FullType specifiedType = FullType.unspecified}) =>
+      WorkoutPlanProgressionMethodsEnum.valueOf(
+          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
+}
+
 class _$WorkoutPlan extends WorkoutPlan {
   @override
   final int id;
@@ -92,6 +175,26 @@ class _$WorkoutPlan extends WorkoutPlan {
   @override
   final int rowVersion;
   @override
+  final String? primaryObjective12w;
+  @override
+  final String? milestone4w;
+  @override
+  final int? sessionsPerWeek;
+  @override
+  final int? targetSessionDurationMinutes;
+  @override
+  final String? splitType;
+  @override
+  final String? cardioProtocol;
+  @override
+  final String? mobilityProtocol;
+  @override
+  final BuiltList<WorkoutPlanProgressionMethodsEnum>? progressionMethods;
+  @override
+  final String? mainSuccessMeasure;
+  @override
+  final String? trainerProgrammingNotes;
+  @override
   final WorkoutPlanVersion? currentVersion;
 
   factory _$WorkoutPlan([void Function(WorkoutPlanBuilder)? updates]) =>
@@ -110,6 +213,16 @@ class _$WorkoutPlan extends WorkoutPlan {
       required this.status,
       this.createdAt,
       required this.rowVersion,
+      this.primaryObjective12w,
+      this.milestone4w,
+      this.sessionsPerWeek,
+      this.targetSessionDurationMinutes,
+      this.splitType,
+      this.cardioProtocol,
+      this.mobilityProtocol,
+      this.progressionMethods,
+      this.mainSuccessMeasure,
+      this.trainerProgrammingNotes,
       this.currentVersion})
       : super._();
   @override
@@ -135,6 +248,16 @@ class _$WorkoutPlan extends WorkoutPlan {
         status == other.status &&
         createdAt == other.createdAt &&
         rowVersion == other.rowVersion &&
+        primaryObjective12w == other.primaryObjective12w &&
+        milestone4w == other.milestone4w &&
+        sessionsPerWeek == other.sessionsPerWeek &&
+        targetSessionDurationMinutes == other.targetSessionDurationMinutes &&
+        splitType == other.splitType &&
+        cardioProtocol == other.cardioProtocol &&
+        mobilityProtocol == other.mobilityProtocol &&
+        progressionMethods == other.progressionMethods &&
+        mainSuccessMeasure == other.mainSuccessMeasure &&
+        trainerProgrammingNotes == other.trainerProgrammingNotes &&
         currentVersion == other.currentVersion;
   }
 
@@ -153,6 +276,16 @@ class _$WorkoutPlan extends WorkoutPlan {
     _$hash = $jc(_$hash, status.hashCode);
     _$hash = $jc(_$hash, createdAt.hashCode);
     _$hash = $jc(_$hash, rowVersion.hashCode);
+    _$hash = $jc(_$hash, primaryObjective12w.hashCode);
+    _$hash = $jc(_$hash, milestone4w.hashCode);
+    _$hash = $jc(_$hash, sessionsPerWeek.hashCode);
+    _$hash = $jc(_$hash, targetSessionDurationMinutes.hashCode);
+    _$hash = $jc(_$hash, splitType.hashCode);
+    _$hash = $jc(_$hash, cardioProtocol.hashCode);
+    _$hash = $jc(_$hash, mobilityProtocol.hashCode);
+    _$hash = $jc(_$hash, progressionMethods.hashCode);
+    _$hash = $jc(_$hash, mainSuccessMeasure.hashCode);
+    _$hash = $jc(_$hash, trainerProgrammingNotes.hashCode);
     _$hash = $jc(_$hash, currentVersion.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -173,6 +306,16 @@ class _$WorkoutPlan extends WorkoutPlan {
           ..add('status', status)
           ..add('createdAt', createdAt)
           ..add('rowVersion', rowVersion)
+          ..add('primaryObjective12w', primaryObjective12w)
+          ..add('milestone4w', milestone4w)
+          ..add('sessionsPerWeek', sessionsPerWeek)
+          ..add('targetSessionDurationMinutes', targetSessionDurationMinutes)
+          ..add('splitType', splitType)
+          ..add('cardioProtocol', cardioProtocol)
+          ..add('mobilityProtocol', mobilityProtocol)
+          ..add('progressionMethods', progressionMethods)
+          ..add('mainSuccessMeasure', mainSuccessMeasure)
+          ..add('trainerProgrammingNotes', trainerProgrammingNotes)
           ..add('currentVersion', currentVersion))
         .toString();
   }
@@ -230,6 +373,57 @@ class WorkoutPlanBuilder implements Builder<WorkoutPlan, WorkoutPlanBuilder> {
   int? get rowVersion => _$this._rowVersion;
   set rowVersion(int? rowVersion) => _$this._rowVersion = rowVersion;
 
+  String? _primaryObjective12w;
+  String? get primaryObjective12w => _$this._primaryObjective12w;
+  set primaryObjective12w(String? primaryObjective12w) =>
+      _$this._primaryObjective12w = primaryObjective12w;
+
+  String? _milestone4w;
+  String? get milestone4w => _$this._milestone4w;
+  set milestone4w(String? milestone4w) => _$this._milestone4w = milestone4w;
+
+  int? _sessionsPerWeek;
+  int? get sessionsPerWeek => _$this._sessionsPerWeek;
+  set sessionsPerWeek(int? sessionsPerWeek) =>
+      _$this._sessionsPerWeek = sessionsPerWeek;
+
+  int? _targetSessionDurationMinutes;
+  int? get targetSessionDurationMinutes => _$this._targetSessionDurationMinutes;
+  set targetSessionDurationMinutes(int? targetSessionDurationMinutes) =>
+      _$this._targetSessionDurationMinutes = targetSessionDurationMinutes;
+
+  String? _splitType;
+  String? get splitType => _$this._splitType;
+  set splitType(String? splitType) => _$this._splitType = splitType;
+
+  String? _cardioProtocol;
+  String? get cardioProtocol => _$this._cardioProtocol;
+  set cardioProtocol(String? cardioProtocol) =>
+      _$this._cardioProtocol = cardioProtocol;
+
+  String? _mobilityProtocol;
+  String? get mobilityProtocol => _$this._mobilityProtocol;
+  set mobilityProtocol(String? mobilityProtocol) =>
+      _$this._mobilityProtocol = mobilityProtocol;
+
+  ListBuilder<WorkoutPlanProgressionMethodsEnum>? _progressionMethods;
+  ListBuilder<WorkoutPlanProgressionMethodsEnum> get progressionMethods =>
+      _$this._progressionMethods ??=
+          ListBuilder<WorkoutPlanProgressionMethodsEnum>();
+  set progressionMethods(
+          ListBuilder<WorkoutPlanProgressionMethodsEnum>? progressionMethods) =>
+      _$this._progressionMethods = progressionMethods;
+
+  String? _mainSuccessMeasure;
+  String? get mainSuccessMeasure => _$this._mainSuccessMeasure;
+  set mainSuccessMeasure(String? mainSuccessMeasure) =>
+      _$this._mainSuccessMeasure = mainSuccessMeasure;
+
+  String? _trainerProgrammingNotes;
+  String? get trainerProgrammingNotes => _$this._trainerProgrammingNotes;
+  set trainerProgrammingNotes(String? trainerProgrammingNotes) =>
+      _$this._trainerProgrammingNotes = trainerProgrammingNotes;
+
   WorkoutPlanVersionBuilder? _currentVersion;
   WorkoutPlanVersionBuilder get currentVersion =>
       _$this._currentVersion ??= WorkoutPlanVersionBuilder();
@@ -255,6 +449,16 @@ class WorkoutPlanBuilder implements Builder<WorkoutPlan, WorkoutPlanBuilder> {
       _status = $v.status;
       _createdAt = $v.createdAt;
       _rowVersion = $v.rowVersion;
+      _primaryObjective12w = $v.primaryObjective12w;
+      _milestone4w = $v.milestone4w;
+      _sessionsPerWeek = $v.sessionsPerWeek;
+      _targetSessionDurationMinutes = $v.targetSessionDurationMinutes;
+      _splitType = $v.splitType;
+      _cardioProtocol = $v.cardioProtocol;
+      _mobilityProtocol = $v.mobilityProtocol;
+      _progressionMethods = $v.progressionMethods?.toBuilder();
+      _mainSuccessMeasure = $v.mainSuccessMeasure;
+      _trainerProgrammingNotes = $v.trainerProgrammingNotes;
       _currentVersion = $v.currentVersion?.toBuilder();
       _$v = null;
     }
@@ -295,11 +499,24 @@ class WorkoutPlanBuilder implements Builder<WorkoutPlan, WorkoutPlanBuilder> {
             createdAt: createdAt,
             rowVersion: BuiltValueNullFieldError.checkNotNull(
                 rowVersion, r'WorkoutPlan', 'rowVersion'),
+            primaryObjective12w: primaryObjective12w,
+            milestone4w: milestone4w,
+            sessionsPerWeek: sessionsPerWeek,
+            targetSessionDurationMinutes: targetSessionDurationMinutes,
+            splitType: splitType,
+            cardioProtocol: cardioProtocol,
+            mobilityProtocol: mobilityProtocol,
+            progressionMethods: _progressionMethods?.build(),
+            mainSuccessMeasure: mainSuccessMeasure,
+            trainerProgrammingNotes: trainerProgrammingNotes,
             currentVersion: _currentVersion?.build(),
           );
     } catch (_) {
       late String _$failedField;
       try {
+        _$failedField = 'progressionMethods';
+        _progressionMethods?.build();
+
         _$failedField = 'currentVersion';
         _currentVersion?.build();
       } catch (e) {

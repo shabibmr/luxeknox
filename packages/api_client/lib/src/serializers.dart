@@ -34,6 +34,7 @@ import 'package:api_client/src/model/audit_log.dart';
 import 'package:api_client/src/model/audit_log_page.dart';
 import 'package:api_client/src/model/balance_sheet_account.dart';
 import 'package:api_client/src/model/balance_sheet_report.dart';
+import 'package:api_client/src/model/body_metric_snapshot.dart';
 import 'package:api_client/src/model/book_request.dart';
 import 'package:api_client/src/model/broadcast_request.dart';
 import 'package:api_client/src/model/cancel_booking_request.dart';
@@ -136,6 +137,9 @@ import 'package:api_client/src/model/journal_line.dart';
 import 'package:api_client/src/model/journal_line_write.dart';
 import 'package:api_client/src/model/journal_page.dart';
 import 'package:api_client/src/model/journal_reverse.dart';
+import 'package:api_client/src/model/lifestyle_intake.dart';
+import 'package:api_client/src/model/lifestyle_intake_write.dart';
+import 'package:api_client/src/model/lifestyle_priority.dart';
 import 'package:api_client/src/model/login_request.dart';
 import 'package:api_client/src/model/logout_request.dart';
 import 'package:api_client/src/model/longitudinal_data_point.dart';
@@ -194,6 +198,10 @@ import 'package:api_client/src/model/open_ap_item.dart';
 import 'package:api_client/src/model/open_ar_item.dart';
 import 'package:api_client/src/model/open_items_report.dart';
 import 'package:api_client/src/model/page_meta.dart';
+import 'package:api_client/src/model/par_q_clearance.dart';
+import 'package:api_client/src/model/par_q_screening.dart';
+import 'package:api_client/src/model/par_q_submit.dart';
+import 'package:api_client/src/model/par_q_trainer_review.dart';
 import 'package:api_client/src/model/payment.dart';
 import 'package:api_client/src/model/payment_adjust_request.dart';
 import 'package:api_client/src/model/payment_allocation.dart';
@@ -210,6 +218,7 @@ import 'package:api_client/src/model/payment_voucher.dart';
 import 'package:api_client/src/model/payment_voucher_create.dart';
 import 'package:api_client/src/model/payment_voucher_page.dart';
 import 'package:api_client/src/model/payment_voucher_update.dart';
+import 'package:api_client/src/model/performance_marker_snapshot.dart';
 import 'package:api_client/src/model/permission.dart';
 import 'package:api_client/src/model/permission_action.dart';
 import 'package:api_client/src/model/permission_page.dart';
@@ -236,10 +245,13 @@ import 'package:api_client/src/model/pt_payment_preview.dart';
 import 'package:api_client/src/model/pt_product.dart';
 import 'package:api_client/src/model/pt_product_page.dart';
 import 'package:api_client/src/model/pt_product_write.dart';
+import 'package:api_client/src/model/pt_progress_review.dart';
+import 'package:api_client/src/model/pt_progress_review_draft.dart';
 import 'package:api_client/src/model/pt_purchase_request.dart';
 import 'package:api_client/src/model/pt_purchase_result.dart';
 import 'package:api_client/src/model/pt_reassign_trainer_request.dart';
 import 'package:api_client/src/model/pt_renew_request.dart';
+import 'package:api_client/src/model/pt_review_checklist.dart';
 import 'package:api_client/src/model/pt_schedule_grid.dart';
 import 'package:api_client/src/model/pt_subscription.dart';
 import 'package:api_client/src/model/pt_subscription_status.dart';
@@ -314,6 +326,7 @@ import 'package:api_client/src/model/workout_plan_version.dart';
 import 'package:api_client/src/model/workout_plan_version_page.dart';
 import 'package:api_client/src/model/workout_plan_write.dart';
 import 'package:api_client/src/model/workout_session.dart';
+import 'package:api_client/src/model/workout_session_complete.dart';
 import 'package:api_client/src/model/workout_session_create.dart';
 import 'package:api_client/src/model/workout_session_exercise.dart';
 import 'package:api_client/src/model/workout_session_page.dart';
@@ -343,6 +356,7 @@ part 'serializers.g.dart';
   AuditLogPage,
   BalanceSheetAccount,
   BalanceSheetReport,
+  BodyMetricSnapshot,
   BookRequest,
   BroadcastRequest,
   CancelBookingRequest,
@@ -445,6 +459,9 @@ part 'serializers.g.dart';
   JournalLineWrite,
   JournalPage,
   JournalReverse,
+  LifestyleIntake,
+  LifestyleIntakeWrite,
+  LifestylePriority,
   LoginRequest,
   LogoutRequest,
   LongitudinalDataPoint,
@@ -503,6 +520,10 @@ part 'serializers.g.dart';
   OpenArItem,
   OpenItemsReport,
   PageMeta,
+  ParQClearance,
+  ParQScreening,
+  ParQSubmit,
+  ParQTrainerReview,
   Payment,
   PaymentAdjustRequest,
   PaymentAllocation,
@@ -519,6 +540,7 @@ part 'serializers.g.dart';
   PaymentVoucherCreate,
   PaymentVoucherPage,
   PaymentVoucherUpdate,
+  PerformanceMarkerSnapshot,
   Permission,
   PermissionAction,
   PermissionPage,
@@ -545,10 +567,13 @@ part 'serializers.g.dart';
   PtProduct,
   PtProductPage,
   PtProductWrite,
+  PtProgressReview,
+  PtProgressReviewDraft,
   PtPurchaseRequest,
   PtPurchaseResult,
   PtReassignTrainerRequest,
   PtRenewRequest,
+  PtReviewChecklist,
   PtScheduleGrid,
   PtSubscription,
   PtSubscriptionStatus,
@@ -623,6 +648,7 @@ part 'serializers.g.dart';
   WorkoutPlanVersionPage,
   WorkoutPlanWrite,
   WorkoutSession,
+  WorkoutSessionComplete,
   WorkoutSessionCreate,
   WorkoutSessionExercise,
   WorkoutSessionPage,
@@ -875,6 +901,10 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<PurchaseBillLineWrite>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(LifestylePriority)]),
+        () => ListBuilder<LifestylePriority>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(WorkoutPlanExercise)]),
         () => ListBuilder<WorkoutPlanExercise>(),
       )
@@ -885,6 +915,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(PaymentVoucher)]),
         () => ListBuilder<PaymentVoucher>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(BodyMetricSnapshot)]),
+        () => ListBuilder<BodyMetricSnapshot>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(PaymentAllocationWrite)]),
@@ -1005,6 +1039,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(Uom)]),
         () => ListBuilder<Uom>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(PerformanceMarkerSnapshot)]),
+        () => ListBuilder<PerformanceMarkerSnapshot>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(DietPlanMeal)]),

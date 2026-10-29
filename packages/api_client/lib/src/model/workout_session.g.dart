@@ -28,6 +28,28 @@ class _$WorkoutSession extends WorkoutSession {
   @override
   final int? clientFeedbackRating;
   @override
+  final int? effortRating;
+  @override
+  final int? satisfactionRating;
+  @override
+  final int? painDiscomfortScore;
+  @override
+  final String? painNotes;
+  @override
+  final String? sessionFocus;
+  @override
+  final String? warmupProtocol;
+  @override
+  final String? cooldownProtocol;
+  @override
+  final String? trainerNotes;
+  @override
+  final String? nextSessionPlan;
+  @override
+  final DateTime? clientSignedAt;
+  @override
+  final DateTime? trainerSignedAt;
+  @override
   final String? notes;
   @override
   final BuiltList<WorkoutSessionExercise>? sets;
@@ -46,6 +68,17 @@ class _$WorkoutSession extends WorkoutSession {
       this.totalVolumeKg,
       this.durationMinutes,
       this.clientFeedbackRating,
+      this.effortRating,
+      this.satisfactionRating,
+      this.painDiscomfortScore,
+      this.painNotes,
+      this.sessionFocus,
+      this.warmupProtocol,
+      this.cooldownProtocol,
+      this.trainerNotes,
+      this.nextSessionPlan,
+      this.clientSignedAt,
+      this.trainerSignedAt,
       this.notes,
       this.sets})
       : super._();
@@ -70,6 +103,17 @@ class _$WorkoutSession extends WorkoutSession {
         totalVolumeKg == other.totalVolumeKg &&
         durationMinutes == other.durationMinutes &&
         clientFeedbackRating == other.clientFeedbackRating &&
+        effortRating == other.effortRating &&
+        satisfactionRating == other.satisfactionRating &&
+        painDiscomfortScore == other.painDiscomfortScore &&
+        painNotes == other.painNotes &&
+        sessionFocus == other.sessionFocus &&
+        warmupProtocol == other.warmupProtocol &&
+        cooldownProtocol == other.cooldownProtocol &&
+        trainerNotes == other.trainerNotes &&
+        nextSessionPlan == other.nextSessionPlan &&
+        clientSignedAt == other.clientSignedAt &&
+        trainerSignedAt == other.trainerSignedAt &&
         notes == other.notes &&
         sets == other.sets;
   }
@@ -87,6 +131,17 @@ class _$WorkoutSession extends WorkoutSession {
     _$hash = $jc(_$hash, totalVolumeKg.hashCode);
     _$hash = $jc(_$hash, durationMinutes.hashCode);
     _$hash = $jc(_$hash, clientFeedbackRating.hashCode);
+    _$hash = $jc(_$hash, effortRating.hashCode);
+    _$hash = $jc(_$hash, satisfactionRating.hashCode);
+    _$hash = $jc(_$hash, painDiscomfortScore.hashCode);
+    _$hash = $jc(_$hash, painNotes.hashCode);
+    _$hash = $jc(_$hash, sessionFocus.hashCode);
+    _$hash = $jc(_$hash, warmupProtocol.hashCode);
+    _$hash = $jc(_$hash, cooldownProtocol.hashCode);
+    _$hash = $jc(_$hash, trainerNotes.hashCode);
+    _$hash = $jc(_$hash, nextSessionPlan.hashCode);
+    _$hash = $jc(_$hash, clientSignedAt.hashCode);
+    _$hash = $jc(_$hash, trainerSignedAt.hashCode);
     _$hash = $jc(_$hash, notes.hashCode);
     _$hash = $jc(_$hash, sets.hashCode);
     _$hash = $jf(_$hash);
@@ -106,6 +161,17 @@ class _$WorkoutSession extends WorkoutSession {
           ..add('totalVolumeKg', totalVolumeKg)
           ..add('durationMinutes', durationMinutes)
           ..add('clientFeedbackRating', clientFeedbackRating)
+          ..add('effortRating', effortRating)
+          ..add('satisfactionRating', satisfactionRating)
+          ..add('painDiscomfortScore', painDiscomfortScore)
+          ..add('painNotes', painNotes)
+          ..add('sessionFocus', sessionFocus)
+          ..add('warmupProtocol', warmupProtocol)
+          ..add('cooldownProtocol', cooldownProtocol)
+          ..add('trainerNotes', trainerNotes)
+          ..add('nextSessionPlan', nextSessionPlan)
+          ..add('clientSignedAt', clientSignedAt)
+          ..add('trainerSignedAt', trainerSignedAt)
           ..add('notes', notes)
           ..add('sets', sets))
         .toString();
@@ -161,6 +227,57 @@ class WorkoutSessionBuilder
   set clientFeedbackRating(int? clientFeedbackRating) =>
       _$this._clientFeedbackRating = clientFeedbackRating;
 
+  int? _effortRating;
+  int? get effortRating => _$this._effortRating;
+  set effortRating(int? effortRating) => _$this._effortRating = effortRating;
+
+  int? _satisfactionRating;
+  int? get satisfactionRating => _$this._satisfactionRating;
+  set satisfactionRating(int? satisfactionRating) =>
+      _$this._satisfactionRating = satisfactionRating;
+
+  int? _painDiscomfortScore;
+  int? get painDiscomfortScore => _$this._painDiscomfortScore;
+  set painDiscomfortScore(int? painDiscomfortScore) =>
+      _$this._painDiscomfortScore = painDiscomfortScore;
+
+  String? _painNotes;
+  String? get painNotes => _$this._painNotes;
+  set painNotes(String? painNotes) => _$this._painNotes = painNotes;
+
+  String? _sessionFocus;
+  String? get sessionFocus => _$this._sessionFocus;
+  set sessionFocus(String? sessionFocus) => _$this._sessionFocus = sessionFocus;
+
+  String? _warmupProtocol;
+  String? get warmupProtocol => _$this._warmupProtocol;
+  set warmupProtocol(String? warmupProtocol) =>
+      _$this._warmupProtocol = warmupProtocol;
+
+  String? _cooldownProtocol;
+  String? get cooldownProtocol => _$this._cooldownProtocol;
+  set cooldownProtocol(String? cooldownProtocol) =>
+      _$this._cooldownProtocol = cooldownProtocol;
+
+  String? _trainerNotes;
+  String? get trainerNotes => _$this._trainerNotes;
+  set trainerNotes(String? trainerNotes) => _$this._trainerNotes = trainerNotes;
+
+  String? _nextSessionPlan;
+  String? get nextSessionPlan => _$this._nextSessionPlan;
+  set nextSessionPlan(String? nextSessionPlan) =>
+      _$this._nextSessionPlan = nextSessionPlan;
+
+  DateTime? _clientSignedAt;
+  DateTime? get clientSignedAt => _$this._clientSignedAt;
+  set clientSignedAt(DateTime? clientSignedAt) =>
+      _$this._clientSignedAt = clientSignedAt;
+
+  DateTime? _trainerSignedAt;
+  DateTime? get trainerSignedAt => _$this._trainerSignedAt;
+  set trainerSignedAt(DateTime? trainerSignedAt) =>
+      _$this._trainerSignedAt = trainerSignedAt;
+
   String? _notes;
   String? get notes => _$this._notes;
   set notes(String? notes) => _$this._notes = notes;
@@ -187,6 +304,17 @@ class WorkoutSessionBuilder
       _totalVolumeKg = $v.totalVolumeKg;
       _durationMinutes = $v.durationMinutes;
       _clientFeedbackRating = $v.clientFeedbackRating;
+      _effortRating = $v.effortRating;
+      _satisfactionRating = $v.satisfactionRating;
+      _painDiscomfortScore = $v.painDiscomfortScore;
+      _painNotes = $v.painNotes;
+      _sessionFocus = $v.sessionFocus;
+      _warmupProtocol = $v.warmupProtocol;
+      _cooldownProtocol = $v.cooldownProtocol;
+      _trainerNotes = $v.trainerNotes;
+      _nextSessionPlan = $v.nextSessionPlan;
+      _clientSignedAt = $v.clientSignedAt;
+      _trainerSignedAt = $v.trainerSignedAt;
       _notes = $v.notes;
       _sets = $v.sets?.toBuilder();
       _$v = null;
@@ -225,6 +353,17 @@ class WorkoutSessionBuilder
             totalVolumeKg: totalVolumeKg,
             durationMinutes: durationMinutes,
             clientFeedbackRating: clientFeedbackRating,
+            effortRating: effortRating,
+            satisfactionRating: satisfactionRating,
+            painDiscomfortScore: painDiscomfortScore,
+            painNotes: painNotes,
+            sessionFocus: sessionFocus,
+            warmupProtocol: warmupProtocol,
+            cooldownProtocol: cooldownProtocol,
+            trainerNotes: trainerNotes,
+            nextSessionPlan: nextSessionPlan,
+            clientSignedAt: clientSignedAt,
+            trainerSignedAt: trainerSignedAt,
             notes: notes,
             sets: _sets?.build(),
           );
