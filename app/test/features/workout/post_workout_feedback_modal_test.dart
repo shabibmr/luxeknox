@@ -82,8 +82,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(capturedResult, isNotNull);
-      expect(capturedResult!.effortRating, 7);
-      expect(capturedResult!.satisfactionRating, 8);
+      expect(capturedResult!.effortRating, 5);
+      expect(capturedResult!.satisfactionRating, 5);
       expect(capturedResult!.painDiscomfortScore, 4);
       expect(
         capturedResult!.painNotes,

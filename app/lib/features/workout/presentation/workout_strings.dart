@@ -164,6 +164,8 @@ abstract final class WorkoutStrings {
   static const painNotesLabel = 'Pain notes (required when score > 0)';
   static const painNotesHint =
       'Describe location, severity, and movement that caused discomfort...';
+  static const painNotesRequiredError =
+      'Please describe any pain or discomfort experienced';
   static const highDiscomfortAlert =
       'High discomfort score reported: safety alert flagged for coaching staff';
   static const exerciseComments = 'Exercise comments';

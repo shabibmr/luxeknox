@@ -21,8 +21,8 @@ class PostWorkoutFeedbackResult {
 class PostWorkoutFeedbackModal extends StatefulWidget {
   const PostWorkoutFeedbackModal({
     super.key,
-    this.initialEffort = 7,
-    this.initialSatisfaction = 8,
+    this.initialEffort = 5,
+    this.initialSatisfaction = 5,
     this.initialPain = 0,
     this.initialNotes,
   });
@@ -34,8 +34,8 @@ class PostWorkoutFeedbackModal extends StatefulWidget {
 
   static Future<PostWorkoutFeedbackResult?> show(
     BuildContext context, {
-    int initialEffort = 7,
-    int initialSatisfaction = 8,
+    int initialEffort = 5,
+    int initialSatisfaction = 5,
     int initialPain = 0,
     String? initialNotes,
   }) {
@@ -86,7 +86,7 @@ class _PostWorkoutFeedbackModalState extends State<PostWorkoutFeedbackModal> {
 
     if (painScore > 0 && painNotes.isEmpty) {
       setState(() {
-        _painNotesError = 'Please describe any pain or discomfort experienced';
+        _painNotesError = WorkoutStrings.painNotesRequiredError;
       });
       return;
     }

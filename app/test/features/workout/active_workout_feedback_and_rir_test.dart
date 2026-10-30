@@ -212,8 +212,8 @@ void main() {
               ).captured.first
               as ActiveWorkoutCompletionRequested;
 
-      expect(captured.effortRating, 7);
-      expect(captured.satisfactionRating, 8);
+      expect(captured.effortRating, 5);
+      expect(captured.satisfactionRating, 5);
       expect(captured.painDiscomfortScore, 0);
       expect(captured.painNotes, isNull);
     },

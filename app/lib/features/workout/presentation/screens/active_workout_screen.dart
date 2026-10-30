@@ -508,8 +508,17 @@ class _InProgressPanelState extends State<_InProgressPanel> {
       }
 
       _rpeController.text = '';
-      _rirController.text = '';
-      _durationController.text = '';
+      if (planEx.targetRir != null) {
+        _rirController.text = planEx.targetRir.toString();
+      } else {
+        _rirController.text = '';
+      }
+      if (planEx.targetDurationSeconds != null) {
+        _durationController.text = planEx.targetDurationSeconds.toString();
+        _isDurationMode = true;
+      } else {
+        _durationController.text = '';
+      }
       _stopwatchSeconds = 0;
       _stopwatchTimer?.cancel();
       _isStopwatchRunning = false;
@@ -596,16 +605,14 @@ class _InProgressPanelState extends State<_InProgressPanel> {
   void _submit() {
     final exerciseId = _selectedExerciseId;
     if (exerciseId == null) return;
-    final reps = _isDurationMode
-        ? null
-        : int.tryParse(_repsController.text.trim());
+    final reps = int.tryParse(_repsController.text.trim());
     final weight = num.tryParse(_weightController.text.trim());
     final rpe = num.tryParse(_rpeController.text.trim());
     final rir = num.tryParse(_rirController.text.trim());
     final duration = _isDurationMode
         ? (int.tryParse(_durationController.text.trim()) ??
               (_stopwatchSeconds > 0 ? _stopwatchSeconds : null))
-        : null;
+        : int.tryParse(_durationController.text.trim());
     final notes = _notesController.text.trim();
 
     context.read<ActiveWorkoutBloc>().add(
