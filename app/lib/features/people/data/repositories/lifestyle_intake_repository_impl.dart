@@ -53,8 +53,21 @@ class LifestyleIntakeRepositoryImpl implements LifestyleIntakeRepository {
       );
     }
     final sleep = input.sleepHoursTypical;
-    if (sleep != null && (sleep * 10).roundToDouble() != sleep * 10) {
+    // Tolerance: 1.1 * 10 is 11.000000000000002 in binary floating point.
+    if (sleep != null && ((sleep * 10) - (sleep * 10).round()).abs() > 1e-9) {
       problems.add('Sleep hours allow at most one decimal place');
+    }
+    if (sleep != null && (sleep < 0 || sleep > 24)) {
+      problems.add('Sleep hours must be between 0 and 24');
+    }
+    final steps = input.typicalDailySteps;
+    if (steps != null && (steps < 0 || steps > 200000)) {
+      problems.add('Daily steps must be between 0 and 200000');
+    }
+    if (input.priorities.any(
+      (p) => p.currentStatus.trim().isEmpty || p.firstAction.trim().isEmpty,
+    )) {
+      problems.add('Each priority needs a current status and a first action');
     }
     final domains = input.priorities.map((p) => p.domain).toSet();
     if (input.priorities.length != LifestylePriorityDomain.values.length ||

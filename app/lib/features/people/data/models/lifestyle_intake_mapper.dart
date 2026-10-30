@@ -28,11 +28,18 @@ api.LifestylePriorityPriorityEnum _domainToApi(LifestylePriorityDomain d) {
   };
 }
 
+ActivityLevel? _activityFromApi(String? s) {
+  for (final level in ActivityLevel.values) {
+    if (level.name == s) return level;
+  }
+  return null;
+}
+
 LifestyleIntake lifestyleIntakeFromApi(api.LifestyleIntake i) {
   return LifestyleIntake(
     id: i.id,
     memberId: i.memberId,
-    activityLevel: i.activityLevel,
+    activityLevel: _activityFromApi(i.activityLevel),
     trainingHistory: i.trainingHistory,
     currentPainDiscomfort: i.currentPainDiscomfort,
     // The server returns the decimal column as a string, e.g. "7.5".
@@ -63,7 +70,7 @@ LifestyleIntake lifestyleIntakeFromApi(api.LifestyleIntake i) {
 api.LifestyleIntakeWrite lifestyleIntakeToApi(LifestyleIntakeInput i) {
   return api.LifestyleIntakeWrite(
     (b) => b
-      ..activityLevel = i.activityLevel
+      ..activityLevel = i.activityLevel?.name
       ..trainingHistory = i.trainingHistory
       ..currentPainDiscomfort = i.currentPainDiscomfort
       ..sleepHoursTypical = i.sleepHoursTypical

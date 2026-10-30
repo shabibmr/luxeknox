@@ -1,5 +1,8 @@
 import 'package:equatable/equatable.dart';
 
+/// The server's closed set for `activity_level`; it rejects any other string.
+enum ActivityLevel { sedentary, light, moderate, high }
+
 /// Mirrors `LifestylePriorityPriorityEnum`. The server requires exactly one
 /// [LifestylePriority] per domain.
 enum LifestylePriorityDomain { sleep, nutrition, activity, recovery }
@@ -25,7 +28,7 @@ class LifestylePriority extends Equatable {
 class LifestyleIntake extends Equatable {
   final int id;
   final int memberId;
-  final String? activityLevel;
+  final ActivityLevel? activityLevel;
   final String? trainingHistory;
   final String? currentPainDiscomfort;
   final double? sleepHoursTypical;
@@ -93,7 +96,7 @@ class LifestyleIntakeInput extends Equatable {
   final int memberId;
   final int stressLevel;
   final List<LifestylePriority> priorities;
-  final String? activityLevel;
+  final ActivityLevel? activityLevel;
   final String? trainingHistory;
   final String? currentPainDiscomfort;
 

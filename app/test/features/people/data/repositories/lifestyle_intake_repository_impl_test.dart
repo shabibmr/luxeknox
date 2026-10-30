@@ -16,7 +16,7 @@ api.LifestyleIntake _apiIntake({String? sleep = '7.5'}) {
     (b) => b
       ..id = 3
       ..memberId = 10
-      ..activityLevel = 'Moderately active'
+      ..activityLevel = 'moderate'
       ..sleepHoursTypical = sleep
       ..stressLevel = 6
       ..typicalDailySteps = 8000
@@ -47,7 +47,7 @@ LifestyleIntakeInput _input({
     memberId: 10,
     stressLevel: stressLevel,
     sleepHoursTypical: sleepHours,
-    activityLevel: 'Moderately active',
+    activityLevel: ActivityLevel.moderate,
     typicalDailySteps: 8000,
     priorities: priorities ?? _priorities(),
   );
@@ -86,6 +86,7 @@ void main() {
       expect(intake.id, 3);
       expect(intake.memberId, 10);
       expect(intake.sleepHoursTypical, 7.5);
+      expect(intake.activityLevel, ActivityLevel.moderate);
       expect(intake.stressLevel, 6);
       expect(intake.typicalDailySteps, 8000);
       expect(intake.conductedByTrainerId, 4);
@@ -136,7 +137,7 @@ void main() {
               as api.LifestyleIntakeWrite;
       expect(body.stressLevel, 6);
       expect(body.sleepHoursTypical, 7.5);
-      expect(body.activityLevel, 'Moderately active');
+      expect(body.activityLevel, 'moderate');
       expect(body.lifestylePriorities.length, 4);
       expect(
         body.lifestylePriorities.first.priority,
@@ -162,6 +163,46 @@ void main() {
 
     test('refuses sleep hours with more than one decimal place', () async {
       final result = await repository.save(_input(sleepHours: 7.25));
+
+      expect(_leftOf(result), isA<ValidationFailure>());
+      verifyNever(() => remote.put(any(), any()));
+    });
+
+    test('accepts one-decimal sleep hours despite float rounding', () async {
+      when(
+        () => remote.put(any(), any()),
+      ).thenAnswer((_) async => _apiIntake());
+
+      final result = await repository.save(_input(sleepHours: 1.1));
+
+      expect(result.isRight(), isTrue);
+    });
+
+    test('refuses sleep hours and steps outside the server ranges', () async {
+      final sleep = await repository.save(_input(sleepHours: 25));
+      final steps = await repository.save(
+        LifestyleIntakeInput(
+          memberId: 10,
+          stressLevel: 5,
+          typicalDailySteps: 300000,
+          priorities: _priorities(),
+        ),
+      );
+
+      expect(_leftOf(sleep), isA<ValidationFailure>());
+      expect(_leftOf(steps), isA<ValidationFailure>());
+      verifyNever(() => remote.put(any(), any()));
+    });
+
+    test('refuses a blank priority status or action', () async {
+      final blank = _priorities()
+        ..[0] = const LifestylePriority(
+          domain: LifestylePriorityDomain.sleep,
+          currentStatus: ' ',
+          firstAction: 'act',
+        );
+
+      final result = await repository.save(_input(priorities: blank));
 
       expect(_leftOf(result), isA<ValidationFailure>());
       verifyNever(() => remote.put(any(), any()));
