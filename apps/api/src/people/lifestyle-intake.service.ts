@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { AuditService } from '../platform/audit/audit.service';
+import type { DrizzleDb } from '../platform/db/client';
+import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
+import { runInTransaction } from '../platform/db/transaction-context';
 import { NotFoundError } from '../platform/errors/app-error';
 import type {
   LifestylePriorityItem,
@@ -38,6 +41,8 @@ export class LifestyleIntakeService {
     private readonly repository: LifestyleIntakeRepository,
     private readonly memberRepository: MemberRepository,
     private readonly auditService: AuditService,
+    @Inject(DRIZZLE_DB_TOKEN)
+    private readonly db: DrizzleDb<any>,
   ) {}
 
   toDto(row: MemberLifestyleIntake): LifestyleIntakeDto {
@@ -105,33 +110,35 @@ export class LifestyleIntakeService {
       updated_at: now,
     };
 
-    const existing = await this.repository.findByMemberId(memberId);
-    let entityId: number;
+    return runInTransaction(this.db, async () => {
+      const existing = await this.repository.findByMemberId(memberId);
+      let entityId: number;
 
-    if (!existing) {
-      entityId = await this.repository.insert({
-        ...payload,
-        created_at: now,
+      if (!existing) {
+        entityId = await this.repository.insert({
+          ...payload,
+          created_at: now,
+        });
+      } else {
+        entityId = existing.id;
+        await this.repository.updateByMemberId(memberId, payload);
+      }
+
+      const saved = await this.repository.findByMemberId(memberId);
+      if (!saved) {
+        throw new NotFoundError('Lifestyle intake not found');
+      }
+
+      await this.auditService.recordAudit({
+        actorUserId: actor.id,
+        action: existing ? 'lifestyle_intake.updated' : 'lifestyle_intake.created',
+        entityName: 'member_lifestyle_intakes',
+        entityId,
+        beforeState: existing ?? undefined,
+        afterState: saved,
       });
-    } else {
-      entityId = existing.id;
-      await this.repository.updateByMemberId(memberId, payload);
-    }
 
-    const saved = await this.repository.findByMemberId(memberId);
-    if (!saved) {
-      throw new NotFoundError('Lifestyle intake not found');
-    }
-
-    await this.auditService.recordAudit({
-      actorUserId: actor.id,
-      action: existing ? 'lifestyle_intake.updated' : 'lifestyle_intake.created',
-      entityName: 'member_lifestyle_intakes',
-      entityId,
-      beforeState: existing ?? undefined,
-      afterState: saved,
+      return this.toDto(saved);
     });
-
-    return this.toDto(saved);
   }
 }
