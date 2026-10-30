@@ -8,27 +8,47 @@ import { requireScopedMember } from '../people/require-scoped-member';
 import { AuditService } from '../platform/audit/audit.service';
 import type { DrizzleDb } from '../platform/db/client';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
+import type { GoalMetricCategory } from '../platform/db/schema/goals';
 import type {
   BodyMetricSnapshot,
   NewPtProgressReview,
-  PerformanceMarkerSnapshot,
+  PresentationCardRow,
   PtProgressReview,
 } from '../platform/db/schema/personal-training';
 import { runInTransaction } from '../platform/db/transaction-context';
-import { BusinessRuleError, ForbiddenError, NotFoundError } from '../platform/errors/app-error';
+import {
+  BadRequestError,
+  BusinessRuleError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+} from '../platform/errors/app-error';
 import { PtAccessService } from './pt-access.service';
 import { PtProgressReviewRepository } from './pt-progress-review.repository';
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD');
 
 export const PAGE8_PROGRESS_HIGHLIGHTS = [
-  'Improved technique',
-  'Increased strength',
-  'Improved conditioning',
-  'Better consistency',
-  'Improved mobility',
-  'Goal milestone achieved',
+  'improved_technique',
+  'increased_strength',
+  'improved_conditioning',
+  'better_consistency',
+  'improved_mobility',
+  'goal_milestone',
+  'other',
 ] as const;
+export type Page8ProgressHighlight = (typeof PAGE8_PROGRESS_HIGHLIGHTS)[number];
+
+/** Printed labels for the highlight checkboxes on the presentation card. */
+export const PAGE8_PROGRESS_HIGHLIGHT_LABELS: Record<Page8ProgressHighlight, string> = {
+  improved_technique: 'Improved technique',
+  increased_strength: 'Increased strength',
+  improved_conditioning: 'Improved conditioning',
+  better_consistency: 'Better consistency',
+  improved_mobility: 'Improved mobility',
+  goal_milestone: 'Goal milestone achieved',
+  other: 'Other',
+};
 
 const progressHighlightsSchema = z
   .array(z.enum(PAGE8_PROGRESS_HIGHLIGHTS))
@@ -36,11 +56,14 @@ const progressHighlightsSchema = z
     message: 'progress_highlights must not contain duplicates',
   });
 
+const MAX_CARD_TEXT_LENGTH = 2000;
+const cardText = z.string().trim().max(MAX_CARD_TEXT_LENGTH);
+
 export const ptProgressReviewDraftSchema = z.object({
   review_period_start: isoDate,
   review_period_end: isoDate,
-  trainer_summary: z.string().optional().nullable(),
-  client_feedback: z.string().optional().nullable(),
+  trainer_summary: cardText.optional().nullable(),
+  client_feedback: cardText.optional().nullable(),
   next_phase_goal: z.string().optional().nullable(),
   next_phase_training_focus: z.string().optional().nullable(),
   next_review_date: isoDate.optional().nullable(),
@@ -49,11 +72,34 @@ export const ptProgressReviewDraftSchema = z.object({
 });
 export type PtProgressReviewDraftDto = z.infer<typeof ptProgressReviewDraftSchema>;
 
+/** Partial update of a draft's presentation card. The period and measure rows are not editable. */
+export const ptProgressReviewDraftEditSchema = z
+  .object({
+    progress_highlights: progressHighlightsSchema.nullable(),
+    highlights_other_text: z.string().nullable(),
+    trainer_summary: cardText.nullable(),
+    client_feedback: cardText.nullable(),
+    next_phase_goal: z.string().nullable(),
+    next_phase_training_focus: z.string().nullable(),
+    next_review_date: isoDate.nullable(),
+    review_checklist: z
+      .object({
+        goals_reviewed: z.boolean(),
+        measurements_reviewed: z.boolean(),
+        performance_reviewed: z.boolean(),
+        attendance_reviewed: z.boolean(),
+        program_updated: z.boolean(),
+        next_goals_agreed: z.boolean(),
+      })
+      .partial()
+      .strict(),
+  })
+  .partial()
+  .strict();
+export type PtProgressReviewDraftEditDto = z.infer<typeof ptProgressReviewDraftEditSchema>;
+
 /** Goal statuses that may supply a review target. Abandoned goals do not. */
 const REPORTED_GOAL_STATUSES = new Set(['in_progress', 'achieved']);
-/** Mirrors `GOAL_METRIC_CATEGORIES` minus strength (body card columns). */
-const BODY_METRIC_CATEGORIES = new Set(['body_composition', 'circumference']);
-const PERFORMANCE_METRIC_CATEGORIES = new Set(['strength']);
 
 type SnapshotMeasurementValue = {
   metric_id: number;
@@ -64,14 +110,19 @@ type SnapshotMeasurementValue = {
 };
 
 type SnapshotMeasurementSession = {
+  id?: number;
   recorded_at: Date;
   values: SnapshotMeasurementValue[];
 };
 
-type SnapshotMetricTarget = {
+type SnapshotMetric = { id: number; name: string; category: string };
+
+type SnapshotGoal = {
+  id: number;
   metric_id: number;
   status: string;
   target_value: number;
+  metric: { name: string; category: string };
 };
 
 type SnapshotPeriod = {
@@ -79,114 +130,147 @@ type SnapshotPeriod = {
   review_period_end: string;
 };
 
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
+const BODY_COMPOSITION: GoalMetricCategory = 'body_composition';
+const CIRCUMFERENCE: GoalMetricCategory = 'circumference';
+const STRENGTH: GoalMetricCategory = 'strength';
+
+/** Decimal places kept while subtracting, so doubles never reach the rounding step. */
+const SCALE = 10;
+
+/** `a - b` rounded half away from zero to two decimals, computed on decimal strings. */
+function roundedChange(current: number, start: number): number {
+  const scaled = (n: number) => BigInt(n.toFixed(SCALE).replace('.', ''));
+  const diff = scaled(current) - scaled(start);
+  const negative = diff < 0n;
+  const magnitude = negative ? -diff : diff;
+  const unit = 10n ** BigInt(SCALE - 2);
+  const hundredths = (magnitude + unit / 2n) / unit;
+  const value = Number(hundredths) / 100;
+  return negative && hundredths !== 0n ? -value : value;
 }
 
-function withUnit(value: number, unit: string): string {
-  return `${round2(value)} ${unit}`;
+function calendarDay(recordedAt: Date): string {
+  return recordedAt.toISOString().slice(0, 10);
 }
 
-function signedWithUnit(value: number, unit: string): string {
-  const rounded = round2(value);
-  const sign = rounded > 0 ? '+' : '';
-  return `${sign}${rounded} ${unit}`;
-}
-
-function inReviewPeriod(recordedAt: Date, period: SnapshotPeriod): boolean {
-  const day = recordedAt.toISOString().slice(0, 10);
-  return day >= period.review_period_start && day <= period.review_period_end;
-}
-
-type MetricSeries = {
-  metric_id: number;
-  name: string;
-  unit: string;
-  earliestAt: number;
-  earliest: number;
-  latestAt: number;
-  latest: number;
-};
-
-function seriesFor(
+/** Value of the latest session on or before `boundary` (a calendar date) that measured the metric. */
+function valueOnOrBefore(
   sessions: SnapshotMeasurementSession[],
-  period: SnapshotPeriod,
-  categories: Set<string>,
-): MetricSeries[] {
-  const byMetric = new Map<number, MetricSeries>();
+  metricId: number,
+  boundary: string,
+): number | null {
+  let best: { at: number; id: number; value: number } | null = null;
   for (const session of sessions) {
-    if (!inReviewPeriod(session.recorded_at, period)) continue;
+    if (calendarDay(session.recorded_at) > boundary) continue;
+    const point = session.values.find((v) => v.metric_id === metricId);
+    if (!point) continue;
     const at = session.recorded_at.getTime();
-    for (const point of session.values) {
-      if (!categories.has(point.category)) continue;
-      const existing = byMetric.get(point.metric_id);
-      if (!existing) {
-        byMetric.set(point.metric_id, {
-          metric_id: point.metric_id,
-          name: point.metric_name,
-          unit: point.unit_of_measure,
-          earliestAt: at,
-          earliest: point.value,
-          latestAt: at,
-          latest: point.value,
-        });
-        continue;
-      }
-      if (at < existing.earliestAt) {
-        existing.earliestAt = at;
-        existing.earliest = point.value;
-      }
-      if (at >= existing.latestAt) {
-        existing.latestAt = at;
-        existing.latest = point.value;
-      }
+    const id = session.id ?? 0;
+    if (!best || at > best.at || (at === best.at && id >= best.id)) {
+      best = { at, id, value: point.value };
     }
   }
-  return [...byMetric.values()].sort((a, b) => a.name.localeCompare(b.name));
+  return best ? best.value : null;
 }
 
-function targetFor(metricId: number, goals: SnapshotMetricTarget[]): number | null {
-  const match = goals.find(
-    (goal) => goal.metric_id === metricId && REPORTED_GOAL_STATUSES.has(goal.status),
-  );
-  return match ? match.target_value : null;
-}
-
-/** Numeric Page 8 body measures from in-window measurement sessions. */
-export function buildBodyMetricSnapshot(
+function cardRow(
+  row: PresentationCardRow,
+  metric: SnapshotMetric | null,
   sessions: SnapshotMeasurementSession[],
   period: SnapshotPeriod,
-  goals: SnapshotMetricTarget[],
-): BodyMetricSnapshot[] {
-  return seriesFor(sessions, period, BODY_METRIC_CATEGORIES).map((series) => ({
-    metric: series.name,
-    start_val: series.earliest,
-    current_val: series.latest,
-    change_val: round2(series.latest - series.earliest),
-    target_val: targetFor(series.metric_id, goals),
-  }));
+  goals: SnapshotGoal[],
+): BodyMetricSnapshot {
+  if (!metric) {
+    return { row, metric: null, start_val: null, current_val: null, change_val: null, target_val: null };
+  }
+  const start = valueOnOrBefore(sessions, metric.id, period.review_period_start);
+  const current = valueOnOrBefore(sessions, metric.id, period.review_period_end);
+  const target = goals
+    .filter((g) => g.metric_id === metric.id && REPORTED_GOAL_STATUSES.has(g.status))
+    .sort((a, b) => a.id - b.id)[0];
+  return {
+    row,
+    metric: metric.name,
+    start_val: start,
+    current_val: current,
+    change_val: start != null && current != null ? roundedChange(current, start) : null,
+    target_val: target ? target.target_value : null,
+  };
 }
 
-/** Strength markers as unit-bearing strings for `performance_markers_snapshot`. */
-export function buildPerformanceMarkerSnapshot(
+function knownMetrics(sessions: SnapshotMeasurementSession[], goals: SnapshotGoal[]): SnapshotMetric[] {
+  const byId = new Map<number, SnapshotMetric>();
+  for (const session of sessions) {
+    for (const v of session.values) {
+      byId.set(v.metric_id, { id: v.metric_id, name: v.metric_name, category: v.category });
+    }
+  }
+  for (const goal of goals) {
+    if (!byId.has(goal.metric_id)) {
+      byId.set(goal.metric_id, { id: goal.metric_id, ...goal.metric });
+    }
+  }
+  return [...byId.values()].sort((a, b) => a.id - b.id);
+}
+
+function isCardio(metric: SnapshotMetric): boolean {
+  return metric.name.toLowerCase().includes('cardio');
+}
+
+function measuredInPeriod(
   sessions: SnapshotMeasurementSession[],
+  metricId: number,
   period: SnapshotPeriod,
-  goals: SnapshotMetricTarget[],
-): PerformanceMarkerSnapshot[] {
-  return seriesFor(sessions, period, PERFORMANCE_METRIC_CATEGORIES).map((series) => {
-    const target = targetFor(series.metric_id, goals);
-    return {
-      marker: series.name,
-      start_val: withUnit(series.earliest, series.unit),
-      current_val: withUnit(series.latest, series.unit),
-      change_val: signedWithUnit(series.latest - series.earliest, series.unit),
-      target_val: target == null ? null : withUnit(target, series.unit),
-    };
+): boolean {
+  return sessions.some((session) => {
+    const day = calendarDay(session.recorded_at);
+    return (
+      day >= period.review_period_start &&
+      day <= period.review_period_end &&
+      session.values.some((v) => v.metric_id === metricId)
+    );
   });
+}
+
+/** The five Page 8 measure rows, from measurement sessions on or before the period boundaries. */
+export function buildPresentationCardRows(
+  sessions: SnapshotMeasurementSession[],
+  period: SnapshotPeriod,
+  goals: SnapshotGoal[],
+): BodyMetricSnapshot[] {
+  const metrics = knownMetrics(sessions, goals);
+  const named = (category: string, name: string) =>
+    metrics.find((m) => m.category === category && m.name.toLowerCase() === name) ?? null;
+
+  const weight = named(BODY_COMPOSITION, 'weight');
+  const waist = named(CIRCUMFERENCE, 'waist');
+  const strength =
+    named(STRENGTH, 'strength') ??
+    metrics.find(
+      (m) =>
+        m.category === STRENGTH &&
+        !isCardio(m) &&
+        measuredInPeriod(sessions, m.id, period),
+    ) ??
+    null;
+  const cardio = metrics.find(isCardio) ?? null;
+  const used = new Set([weight, waist, strength, cardio].flatMap((m) => (m ? [m.id] : [])));
+  const otherGoal = goals
+    .filter((g) => REPORTED_GOAL_STATUSES.has(g.status) && !used.has(g.metric_id))
+    .sort((a, b) => a.id - b.id)[0];
+  const other = otherGoal ? { id: otherGoal.metric_id, ...otherGoal.metric } : null;
+  return [
+    cardRow('weight', weight, sessions, period, goals),
+    cardRow('waist', waist, sessions, period, goals),
+    cardRow('strength', strength, sessions, period, goals),
+    cardRow('cardio', cardio, sessions, period, goals),
+    cardRow('other', other, sessions, period, goals),
+  ];
 }
 
 function toSnapshotSessions(
   rows: Array<{
+    id?: number;
     recorded_at: Date;
     values: Array<{
       metric_id: number;
@@ -198,6 +282,7 @@ function toSnapshotSessions(
   }>,
 ): SnapshotMeasurementSession[] {
   return rows.map((row) => ({
+    id: row.id,
     recorded_at: row.recorded_at,
     values: row.values.flatMap((value) =>
       value.metric_name && value.category && value.unit_of_measure
@@ -213,6 +298,15 @@ function toSnapshotSessions(
         : [],
     ),
   }));
+}
+
+function assertOtherTextAllowed(
+  otherText: string | null | undefined,
+  highlights: readonly string[] | null | undefined,
+): void {
+  if (nullableTrimmed(otherText) && !highlights?.includes('other')) {
+    throw new BadRequestError('highlights_other_text requires the other highlight to be selected');
+  }
 }
 
 function nullableTrimmed(value: string | null | undefined): string | null {
@@ -245,6 +339,8 @@ export class PtProgressReviewService {
       throw new BusinessRuleError('Review period end must not be before its start');
     }
 
+    assertOtherTextAllowed(dto.highlights_other_text, dto.progress_highlights);
+
     const trainerId = actor.userType === 'trainer' ? actor.profileId : member.assigned_trainer_id;
     if (trainerId == null) {
       throw new BusinessRuleError('A trainer must be assigned to the member to draft a review');
@@ -265,8 +361,8 @@ export class PtProgressReviewService {
         trainer_id: trainerId,
         review_period_start: dto.review_period_start,
         review_period_end: dto.review_period_end,
-        body_metrics_snapshot: buildBodyMetricSnapshot(measured, period, goals),
-        performance_markers_snapshot: buildPerformanceMarkerSnapshot(measured, period, goals),
+        body_metrics_snapshot: buildPresentationCardRows(measured, period, goals),
+        performance_markers_snapshot: null,
         progress_highlights: dto.progress_highlights ?? null,
         highlights_other_text: nullableTrimmed(dto.highlights_other_text),
         trainer_summary: nullableTrimmed(dto.trainer_summary),
@@ -301,15 +397,50 @@ export class PtProgressReviewService {
     return review;
   }
 
+  /** Saves the presentation card while the review is still a draft. Only the review's trainer may edit. */
+  async updateDraft(
+    id: number,
+    dto: PtProgressReviewDraftEditDto,
+    actor: AuthenticatedUser,
+  ): Promise<PtProgressReview> {
+    const review = await this.requireReview(id);
+    await this.assertReviewTrainer(review, actor, 'edit');
+    if (review.status !== 'draft') {
+      throw new ConflictError(`Cannot edit: review is ${review.status}, only a draft can be edited`);
+    }
+
+    const highlights =
+      dto.progress_highlights !== undefined ? dto.progress_highlights : review.progress_highlights;
+    const otherSelected = highlights?.includes('other') ?? false;
+    assertOtherTextAllowed(dto.highlights_other_text, highlights);
+    const providedOtherText = nullableTrimmed(dto.highlights_other_text);
+    if (dto.next_review_date && dto.next_review_date <= review.review_period_end) {
+      throw new BadRequestError('next_review_date must be after the review period end');
+    }
+
+    const patch: Partial<NewPtProgressReview> = { updated_at: new Date() };
+    if (dto.progress_highlights !== undefined) patch.progress_highlights = dto.progress_highlights;
+    if (dto.highlights_other_text !== undefined || (!otherSelected && review.highlights_other_text)) {
+      patch.highlights_other_text = otherSelected ? providedOtherText : null;
+    }
+    if (dto.trainer_summary !== undefined) patch.trainer_summary = nullableTrimmed(dto.trainer_summary);
+    if (dto.client_feedback !== undefined) patch.client_feedback = nullableTrimmed(dto.client_feedback);
+    if (dto.next_phase_goal !== undefined) patch.next_phase_goal = nullableTrimmed(dto.next_phase_goal);
+    if (dto.next_phase_training_focus !== undefined) {
+      patch.next_phase_training_focus = nullableTrimmed(dto.next_phase_training_focus);
+    }
+    if (dto.next_review_date !== undefined) patch.next_review_date = dto.next_review_date;
+    if (dto.review_checklist !== undefined) {
+      patch.review_checklist = { ...review.review_checklist, ...dto.review_checklist };
+    }
+
+    return this.transition(review, actor, 'pt_progress_review.draft_edited', patch);
+  }
+
   /** draft -> pending_client_sign. Only the review's trainer may sign. */
   async trainerSign(id: number, actor: AuthenticatedUser): Promise<PtProgressReview> {
     const review = await this.requireReview(id);
-    const isReviewTrainer = actor.userType === 'trainer' && actor.profileId === review.trainer_id;
-    if (!isReviewTrainer) {
-      await requireScopedMember(this.memberRepository, review.member_id, actor);
-      throw new ForbiddenError('Only the review trainer can sign this review');
-    }
-    await this.ptAccess.assertTrainerCanWrite(actor, review.member_id);
+    await this.assertReviewTrainer(review, actor, 'sign');
     this.assertStatus(review, 'draft', 'trainer-sign');
     const now = new Date();
     return this.transition(review, actor, 'pt_progress_review.trainer_signed', {
@@ -350,6 +481,20 @@ export class PtProgressReviewService {
       manager_signed_at: now,
       updated_at: now,
     });
+  }
+
+  /** The review's own trainer with write access. Other trainers in scope are forbidden; out of scope are not found. */
+  private async assertReviewTrainer(
+    review: PtProgressReview,
+    actor: AuthenticatedUser,
+    verb: 'sign' | 'edit',
+  ): Promise<void> {
+    const isReviewTrainer = actor.userType === 'trainer' && actor.profileId === review.trainer_id;
+    if (!isReviewTrainer) {
+      await requireScopedMember(this.memberRepository, review.member_id, actor);
+      throw new ForbiddenError(`Only the review trainer can ${verb} this review`);
+    }
+    await this.ptAccess.assertTrainerCanWrite(actor, review.member_id);
   }
 
   private async requireReview(id: number): Promise<PtProgressReview> {

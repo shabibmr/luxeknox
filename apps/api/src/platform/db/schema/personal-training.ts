@@ -132,8 +132,14 @@ export const PT_PROGRESS_REVIEW_STATUSES = [
 ] as const;
 export type PtProgressReviewStatus = (typeof PT_PROGRESS_REVIEW_STATUSES)[number];
 
+export const PRESENTATION_CARD_ROWS = ['weight', 'waist', 'strength', 'cardio', 'other'] as const;
+export type PresentationCardRow = (typeof PRESENTATION_CARD_ROWS)[number];
+
 export interface BodyMetricSnapshot {
-  metric: string;
+  /** Absent on reviews drafted before the five-row card. */
+  row?: PresentationCardRow;
+  /** Null when no metric matched the row. */
+  metric: string | null;
   start_val: number | null;
   current_val: number | null;
   change_val: number | null;

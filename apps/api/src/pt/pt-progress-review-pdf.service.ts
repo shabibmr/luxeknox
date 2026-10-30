@@ -3,9 +3,16 @@ import PDFDocument from 'pdfkit';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { MemberRepository } from '../people/member.repository';
 import { TrainerRepository } from '../people/trainer.repository';
-import type { PtProgressReview } from '../platform/db/schema/personal-training';
+import {
+  PRESENTATION_CARD_ROWS,
+  type PtProgressReview,
+} from '../platform/db/schema/personal-training';
 import { NotFoundError } from '../platform/errors/app-error';
-import { PAGE8_PROGRESS_HIGHLIGHTS, PtProgressReviewService } from './pt-progress-review.service';
+import {
+  PAGE8_PROGRESS_HIGHLIGHT_LABELS,
+  PAGE8_PROGRESS_HIGHLIGHTS,
+  PtProgressReviewService,
+} from './pt-progress-review.service';
 
 export interface PresentationCardContext {
   memberName: string;
@@ -85,29 +92,42 @@ export function renderPresentationCard(
     };
     drawRow(['Measure', 'Start', 'Current', 'Change', 'Target'], measureCols, true);
     const body = review.body_metrics_snapshot ?? [];
-    const perf = review.performance_markers_snapshot ?? [];
-    const weight = body.find((m) => m.metric.toLowerCase() === 'weight');
-    const waist = body.find((m) => m.metric.toLowerCase() === 'waist');
-    const other = body.find((m) => {
-      const name = m.metric.toLowerCase();
-      return name !== 'weight' && name !== 'waist';
-    });
-    const strength = perf.find((p) => !/cardio/i.test(p.marker));
-    const cardio = perf.find((p) => /cardio/i.test(p.marker));
-    drawRow(['Weight', ...fourCells(weight, fmtNum)], measureCols);
-    drawRow(['Waist', ...fourCells(waist, fmtNum)], measureCols);
-    drawRow(['Strength marker', ...fourCells(strength, fmtText)], measureCols);
-    drawRow(['Cardio marker', ...fourCells(cardio, fmtText)], measureCols);
-    drawRow(['Other agreed metric', ...fourCells(other, fmtNum)], measureCols);
+    if (body.some((m) => m.row)) {
+      const labels = {
+        weight: 'Weight',
+        waist: 'Waist',
+        strength: 'Strength marker',
+        cardio: 'Cardio marker',
+        other: 'Other agreed metric',
+      } as const;
+      for (const key of PRESENTATION_CARD_ROWS) {
+        drawRow([labels[key], ...fourCells(body.find((m) => m.row === key), fmtNum)], measureCols);
+      }
+    } else {
+      // Reviews drafted before the five-row card keep their original two snapshots.
+      const perf = review.performance_markers_snapshot ?? [];
+      const nameOf = (m: { metric: string | null }) => (m.metric ?? '').toLowerCase();
+      const weight = body.find((m) => nameOf(m) === 'weight');
+      const waist = body.find((m) => nameOf(m) === 'waist');
+      const other = body.find((m) => nameOf(m) !== 'weight' && nameOf(m) !== 'waist');
+      const strength = perf.find((p) => !/cardio/i.test(p.marker));
+      const cardio = perf.find((p) => /cardio/i.test(p.marker));
+      drawRow(['Weight', ...fourCells(weight, fmtNum)], measureCols);
+      drawRow(['Waist', ...fourCells(waist, fmtNum)], measureCols);
+      drawRow(['Strength marker', ...fourCells(strength, fmtText)], measureCols);
+      drawRow(['Cardio marker', ...fourCells(cardio, fmtText)], measureCols);
+      drawRow(['Other agreed metric', ...fourCells(other, fmtNum)], measureCols);
+    }
     doc.font('Helvetica');
 
     section('Progress Highlights');
     const selected = new Set(review.progress_highlights ?? []);
-    for (const label of PAGE8_PROGRESS_HIGHLIGHTS) {
-      doc.text(`${selected.has(label) ? '[x]' : '[ ]'} ${label}`, 40);
+    for (const key of PAGE8_PROGRESS_HIGHLIGHTS) {
+      if (key === 'other') continue;
+      doc.text(`${selected.has(key) ? '[x]' : '[ ]'} ${PAGE8_PROGRESS_HIGHLIGHT_LABELS[key]}`, 40);
     }
     const otherText = review.highlights_other_text?.trim();
-    doc.text(otherText ? `Other: ${otherText}` : 'Other:', 40);
+    doc.text(`${selected.has('other') ? '[x]' : '[ ]'} Other:${otherText ? ` ${otherText}` : ''}`, 40);
 
     section("Trainer's progress summary");
     if (review.trainer_summary) doc.text(review.trainer_summary, 40);

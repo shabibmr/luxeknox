@@ -29,7 +29,7 @@ const review = {
     { metric: 'Weight', start_val: 82.5, current_val: 78.1, change_val: -4.4, target_val: 75 },
   ],
   performance_markers_snapshot: null,
-  progress_highlights: ['Lost 4.4 kg'],
+  progress_highlights: [],
   highlights_other_text: null,
   trainer_summary: 'Great progress',
   client_feedback: null,
@@ -182,7 +182,7 @@ describe('renderPresentationCard', () => {
     const buf = await renderPresentationCard(
       {
         ...review,
-        progress_highlights: ['Increased strength', 'Improved mobility'],
+        progress_highlights: ['increased_strength', 'improved_mobility', 'other'],
         highlights_other_text: 'Slept better',
       },
       { memberName: 'Asha K', trainerName: 'Ravi T' },
@@ -195,7 +195,7 @@ describe('renderPresentationCard', () => {
       '[ ] Better consistency',
       '[x] Improved mobility',
       '[ ] Goal milestone achieved',
-      'Other: Slept better',
+      '[x] Other: Slept better',
     ];
     let from = 0;
     for (const line of lines) {
@@ -306,5 +306,30 @@ describe('renderPresentationCard', () => {
     expect(text).not.toContain('Manager only note');
     expect(text).not.toContain('2026-10-02');
     expect(text).not.toContain('Manager');
+  });
+
+  it('prints the five measure rows of a new draft in card order, blanks included', async () => {
+    const buf = await renderPresentationCard(
+      {
+        ...review,
+        body_metrics_snapshot: [
+          { row: 'weight', metric: 'Weight', start_val: 85, current_val: 83, change_val: -2, target_val: 75 },
+          { row: 'waist', metric: null, start_val: null, current_val: null, change_val: null, target_val: null },
+          { row: 'strength', metric: 'Bench Press', start_val: 40, current_val: 50, change_val: 10, target_val: null },
+          { row: 'cardio', metric: null, start_val: null, current_val: null, change_val: null, target_val: null },
+          { row: 'other', metric: null, start_val: null, current_val: null, change_val: null, target_val: null },
+        ],
+      },
+      { memberName: 'Asha K', trainerName: 'Ravi T' },
+    );
+    const text = presentationCardText(buf);
+    let from = 0;
+    for (const label of ['Weight', 'Waist', 'Strength marker', 'Cardio marker', 'Other agreed metric']) {
+      const at = text.indexOf(label, from);
+      expect(at, label).toBeGreaterThanOrEqual(0);
+      from = at + label.length;
+    }
+    expect(text).toContain('83');
+    expect(text).toContain('50');
   });
 });

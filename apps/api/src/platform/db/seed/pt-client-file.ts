@@ -186,7 +186,7 @@ export async function seedPtClientFile(db: DrizzleDb<any>): Promise<{
           { marker: 'pushups_unbroken', start_val: '12', current_val: '22', change_val: '+10 reps', target_val: '30' },
           { marker: 'plank_hold', start_val: '45s', current_val: '75s', change_val: '+30s', target_val: '120s' },
         ],
-        progress_highlights: ['strength_gains', 'body_comp', 'consistency_habit', 'improved_energy'],
+        progress_highlights: ['increased_strength', 'goal_milestone', 'better_consistency'],
         highlights_other_text: 'Squat depth, core brace, and thoracic posture improved significantly.',
         trainer_summary: 'Outstanding dedication and adherence over the first 4-week block. Completed 100% of planned sessions.',
         client_feedback: 'Feeling significantly stronger and experiencing zero lower back discomfort during long working days.',

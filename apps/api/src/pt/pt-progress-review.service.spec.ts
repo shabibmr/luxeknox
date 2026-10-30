@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthenticatedUser } from '../auth/auth.guard';
-import { BusinessRuleError, ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import {
-  buildBodyMetricSnapshot,
-  buildPerformanceMarkerSnapshot,
+  BadRequestError,
+  BusinessRuleError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+} from '../platform/errors/app-error';
+import {
   PAGE8_PROGRESS_HIGHLIGHTS,
+  ptProgressReviewDraftEditSchema,
   ptProgressReviewDraftSchema,
   PtProgressReviewService,
 } from './pt-progress-review.service';
@@ -93,185 +98,36 @@ const workedTargets = [
   { metric_id: 3, status: 'achieved', target_value: 60, baseline_value: 999, current_value: 1 },
 ];
 
-describe('measurement snapshot builders', () => {
-  it('snapshots earliest and latest in-window measurements, with goal targets only', () => {
-    expect(buildBodyMetricSnapshot(workedSessions, workedPeriod, workedTargets)).toEqual([
-      { metric: 'Waist', start_val: 90, current_val: 88, change_val: -2, target_val: null },
-      { metric: 'Weight', start_val: 80, current_val: 78, change_val: -2, target_val: 75 },
-    ]);
-    expect(buildPerformanceMarkerSnapshot(workedSessions, workedPeriod, workedTargets)).toEqual([
-      {
-        marker: 'Bench Press',
-        start_val: '40 kg',
-        current_val: '50 kg',
-        change_val: '+10 kg',
-        target_val: '60 kg',
-      },
-    ]);
-  });
-
-  it('ignores abandoned targets and categories other than body or strength', () => {
-    const sessions = [
-      {
-        recorded_at: new Date('2026-01-10T12:00:00.000Z'),
-        values: [
-          {
-            metric_id: 2,
-            metric_name: 'Waist',
-            category: 'circumference',
-            unit_of_measure: 'cm',
-            value: 90,
-          },
-          {
-            metric_id: 3,
-            metric_name: 'Bench Press',
-            category: 'strength',
-            unit_of_measure: 'kg',
-            value: 40,
-          },
-          {
-            metric_id: 9,
-            metric_name: 'Resting HR',
-            category: 'cardio',
-            unit_of_measure: 'bpm',
-            value: 70,
-          },
-        ],
-      },
-    ];
-    const goals = [
-      { metric_id: 2, status: 'abandoned', target_value: 70 },
-      { metric_id: 2, status: 'in_progress', target_value: 80 },
-      { metric_id: 3, status: 'abandoned', target_value: 100 },
-    ];
-
-    expect(buildBodyMetricSnapshot(sessions, workedPeriod, goals)).toEqual([
-      { metric: 'Waist', start_val: 90, current_val: 90, change_val: 0, target_val: 80 },
-    ]);
-    expect(buildPerformanceMarkerSnapshot(sessions, workedPeriod, goals)).toEqual([
-      {
-        marker: 'Bench Press',
-        start_val: '40 kg',
-        current_val: '40 kg',
-        change_val: '0 kg',
-        target_val: null,
-      },
-    ]);
-  });
-
-  it('uses the UTC calendar date, including the period end and excluding the next UTC day', () => {
-    const sessions = [
-      {
-        recorded_at: new Date('2026-01-01T00:00:00.000Z'),
-        values: [
-          {
-            metric_id: 1,
-            metric_name: 'Weight',
-            category: 'body_composition',
-            unit_of_measure: 'kg',
-            value: 80,
-          },
-        ],
-      },
-      {
-        recorded_at: new Date('2026-01-31T20:00:00.000Z'),
-        values: [
-          {
-            metric_id: 1,
-            metric_name: 'Weight',
-            category: 'body_composition',
-            unit_of_measure: 'kg',
-            value: 77,
-          },
-        ],
-      },
-      {
-        recorded_at: new Date('2026-02-01T00:30:00.000Z'),
-        values: [
-          {
-            metric_id: 1,
-            metric_name: 'Weight',
-            category: 'body_composition',
-            unit_of_measure: 'kg',
-            value: 70,
-          },
-        ],
-      },
-    ];
-
-    expect(buildBodyMetricSnapshot(sessions, workedPeriod, [])).toEqual([
-      { metric: 'Weight', start_val: 80, current_val: 77, change_val: -3, target_val: null },
-    ]);
-  });
-
-  it('rounds change to two decimal places', () => {
-    const sessions = [
-      {
-        recorded_at: new Date('2026-01-01T00:00:00.000Z'),
-        values: [
-          {
-            metric_id: 1,
-            metric_name: 'Weight',
-            category: 'body_composition',
-            unit_of_measure: 'kg',
-            value: 82.55,
-          },
-        ],
-      },
-      {
-        recorded_at: new Date('2026-01-20T00:00:00.000Z'),
-        values: [
-          {
-            metric_id: 1,
-            metric_name: 'Weight',
-            category: 'body_composition',
-            unit_of_measure: 'kg',
-            value: 78.141,
-          },
-        ],
-      },
-    ];
-
-    expect(buildBodyMetricSnapshot(sessions, workedPeriod, [])).toEqual([
-      { metric: 'Weight', start_val: 82.55, current_val: 78.141, change_val: -4.41, target_val: null },
-    ]);
-  });
-});
-
 describe('ptProgressReviewDraftSchema progress highlights', () => {
   const period = { review_period_start: '2026-01-01', review_period_end: '2026-01-31' };
 
-  it('accepts only the Page 8 labels, without duplicates', () => {
+  it('accepts only the seven Page 8 highlight keys, without duplicates', () => {
     expect([...PAGE8_PROGRESS_HIGHLIGHTS]).toEqual([
-      'Improved technique',
-      'Increased strength',
-      'Improved conditioning',
-      'Better consistency',
-      'Improved mobility',
-      'Goal milestone achieved',
+      'improved_technique',
+      'increased_strength',
+      'improved_conditioning',
+      'better_consistency',
+      'improved_mobility',
+      'goal_milestone',
+      'other',
     ]);
     expect(
       ptProgressReviewDraftSchema.parse({
         ...period,
-        progress_highlights: ['Goal milestone achieved', 'Improved technique'],
+        progress_highlights: ['goal_milestone', 'improved_technique', 'other'],
         highlights_other_text: 'Noted in session',
       }),
     ).toMatchObject({
-      progress_highlights: ['Goal milestone achieved', 'Improved technique'],
+      progress_highlights: ['goal_milestone', 'improved_technique', 'other'],
       highlights_other_text: 'Noted in session',
     });
-    expect(
-      ptProgressReviewDraftSchema.safeParse({
-        ...period,
-        progress_highlights: ['Improved technique', 'Improved technique'],
-      }).success,
-    ).toBe(false);
-    expect(
-      ptProgressReviewDraftSchema.safeParse({
-        ...period,
-        progress_highlights: ['Lost 4.4 kg'],
-      }).success,
-    ).toBe(false);
+    for (const progress_highlights of [
+      ['improved_technique', 'improved_technique'],
+      ['Improved technique'],
+      ['lost_4_kg'],
+    ]) {
+      expect(ptProgressReviewDraftSchema.safeParse({ ...period, progress_highlights }).success).toBe(false);
+    }
   });
 });
 
@@ -342,7 +198,7 @@ describe('PtProgressReviewService.createDraft', () => {
     );
   });
 
-  it('persists in-window measurement deltas and audits inside the draft transaction', async () => {
+  it('persists the draft and audits inside the draft transaction', async () => {
     await service.createDraft(100, dto, ADMIN);
     expect(measurementRepository.findManyByMemberId).toHaveBeenCalledWith(100);
     expect(repository.insertReview).toHaveBeenCalledWith(
@@ -352,19 +208,8 @@ describe('PtProgressReviewService.createDraft', () => {
         status: 'draft',
         review_period_start: '2026-01-01',
         review_period_end: '2026-01-31',
-        body_metrics_snapshot: [
-          { metric: 'Waist', start_val: 90, current_val: 88, change_val: -2, target_val: null },
-          { metric: 'Weight', start_val: 80, current_val: 78, change_val: -2, target_val: 75 },
-        ],
-        performance_markers_snapshot: [
-          {
-            marker: 'Bench Press',
-            start_val: '40 kg',
-            current_val: '50 kg',
-            change_val: '+10 kg',
-            target_val: '60 kg',
-          },
-        ],
+        body_metrics_snapshot: expect.any(Array),
+        performance_markers_snapshot: null,
         progress_highlights: null,
         highlights_other_text: null,
       }),
@@ -386,17 +231,31 @@ describe('PtProgressReviewService.createDraft', () => {
       100,
       {
         ...dto,
-        progress_highlights: ['Goal milestone achieved', 'Improved technique'],
+        progress_highlights: ['goal_milestone', 'improved_technique', 'other'],
         highlights_other_text: 'Noted in session',
       },
       ADMIN,
     );
     expect(repository.insertReview).toHaveBeenCalledWith(
       expect.objectContaining({
-        progress_highlights: ['Goal milestone achieved', 'Improved technique'],
+        progress_highlights: ['goal_milestone', 'improved_technique', 'other'],
         highlights_other_text: 'Noted in session',
       }),
     );
+  });
+
+  it('rejects other text when the other highlight is not selected', async () => {
+    await expect(
+      service.createDraft(
+        100,
+        { ...dto, progress_highlights: ['improved_mobility'], highlights_other_text: 'Slept better' },
+        ADMIN,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestError);
+    await expect(
+      service.createDraft(100, { ...dto, highlights_other_text: 'Slept better' }, ADMIN),
+    ).rejects.toBeInstanceOf(BadRequestError);
+    expect(repository.insertReview).not.toHaveBeenCalled();
   });
 
   it('stores an empty highlight list instead of null', async () => {
@@ -555,5 +414,387 @@ describe('PtProgressReviewService sign-off state machine', () => {
     review.status = 'pending_manager_approval';
     await expect(service.managerApprove(7, TRAINER)).rejects.toBeInstanceOf(ForbiddenError);
     expect(repository.updateReview).not.toHaveBeenCalled();
+  });
+
+  describe('updateDraft', () => {
+    beforeEach(() => {
+      review.review_period_end = '2026-01-31';
+    });
+
+    it('saves the card fields and audits inside the same transaction', async () => {
+      await service.updateDraft(
+        7,
+        {
+          progress_highlights: ['increased_strength', 'other'],
+          highlights_other_text: ' Slept better ',
+          trainer_summary: 'Strong quarter',
+          client_feedback: 'Felt stronger',
+          next_phase_goal: 'Squat 80 kg',
+          next_phase_training_focus: 'Lower body',
+          next_review_date: '2026-04-30',
+          review_checklist: { goals_reviewed: true, next_goals_agreed: true },
+        },
+        TRAINER,
+      );
+      expect(events).toEqual(['reload', 'tx-start', 'update', 'reload', 'audit', 'tx-end']);
+      expect(repository.updateReview).toHaveBeenCalledWith(7, {
+        progress_highlights: ['increased_strength', 'other'],
+        highlights_other_text: 'Slept better',
+        trainer_summary: 'Strong quarter',
+        client_feedback: 'Felt stronger',
+        next_phase_goal: 'Squat 80 kg',
+        next_phase_training_focus: 'Lower body',
+        next_review_date: '2026-04-30',
+        review_checklist: { goals_reviewed: true, next_goals_agreed: true },
+        updated_at: expect.any(Date),
+      });
+      expect(audit.recordAudit).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'pt_progress_review.draft_edited', entityId: 7 }),
+      );
+    });
+
+    it('leaves omitted fields alone', async () => {
+      await service.updateDraft(7, { trainer_summary: 'Only this' }, TRAINER);
+      expect(repository.updateReview).toHaveBeenCalledWith(7, {
+        trainer_summary: 'Only this',
+        updated_at: expect.any(Date),
+      });
+    });
+
+    it('refuses every edit once the review is no longer a draft', async () => {
+      for (const status of ['pending_client_sign', 'pending_manager_approval', 'approved']) {
+        review.status = status;
+        await expect(service.updateDraft(7, { trainer_summary: 'x' }, TRAINER)).rejects.toBeInstanceOf(
+          ConflictError,
+        );
+      }
+      expect(repository.updateReview).not.toHaveBeenCalled();
+    });
+
+    it('allows other text only while other is selected, and clears it when other is deselected', async () => {
+      await expect(
+        service.updateDraft(7, { highlights_other_text: 'Slept better' }, TRAINER),
+      ).rejects.toBeInstanceOf(BadRequestError);
+      await expect(
+        service.updateDraft(
+          7,
+          { progress_highlights: ['improved_mobility'], highlights_other_text: 'Slept better' },
+          TRAINER,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestError);
+      expect(repository.updateReview).not.toHaveBeenCalled();
+
+      review.progress_highlights = ['other'];
+      review.highlights_other_text = 'Slept better';
+      await service.updateDraft(7, { progress_highlights: ['improved_mobility'] }, TRAINER);
+      expect(repository.updateReview).toHaveBeenCalledWith(7, {
+        progress_highlights: ['improved_mobility'],
+        highlights_other_text: null,
+        updated_at: expect.any(Date),
+      });
+    });
+
+    it('requires the next review date to fall after the review period end', async () => {
+      await expect(
+        service.updateDraft(7, { next_review_date: '2026-01-31' }, TRAINER),
+      ).rejects.toBeInstanceOf(BadRequestError);
+      expect(repository.updateReview).not.toHaveBeenCalled();
+    });
+
+    it('merges the discussed checks into the stored ones', async () => {
+      review.review_checklist = { goals_reviewed: true, attendance_reviewed: true };
+      await service.updateDraft(7, { review_checklist: { attendance_reviewed: false, program_updated: true } }, TRAINER);
+      expect(repository.updateReview).toHaveBeenCalledWith(7, {
+        review_checklist: { goals_reviewed: true, attendance_reviewed: false, program_updated: true },
+        updated_at: expect.any(Date),
+      });
+    });
+
+    it('does not re-check a stored next review date the edit did not touch', async () => {
+      review.next_review_date = '2026-01-15';
+      await service.updateDraft(7, { trainer_summary: 'Unrelated edit' }, TRAINER);
+      expect(repository.updateReview).toHaveBeenCalledWith(7, {
+        trainer_summary: 'Unrelated edit',
+        updated_at: expect.any(Date),
+      });
+    });
+
+    it('lets only the review trainer edit', async () => {
+      await expect(service.updateDraft(7, { trainer_summary: 'x' }, ADMIN)).rejects.toBeInstanceOf(
+        ForbiddenError,
+      );
+      await expect(service.updateDraft(7, { trainer_summary: 'x' }, MEMBER)).rejects.toBeInstanceOf(
+        ForbiddenError,
+      );
+      memberRepository.findById.mockResolvedValue({ id: 100, user_id: 10, assigned_trainer_id: 8 });
+      await expect(
+        service.updateDraft(7, { trainer_summary: 'x' }, { ...TRAINER, profileId: 8 }),
+      ).rejects.toBeInstanceOf(ForbiddenError);
+      await expect(
+        service.updateDraft(7, { trainer_summary: 'x' }, { ...TRAINER, profileId: 99 }),
+      ).rejects.toBeInstanceOf(NotFoundError);
+      expect(repository.updateReview).not.toHaveBeenCalled();
+    });
+  });
+});
+
+type RowSession = {
+  id?: number;
+  recorded_at: Date;
+  values: Array<{
+    metric_id: number;
+    metric_name: string;
+    category: string;
+    unit_of_measure: string;
+    value: number;
+  }>;
+};
+
+const metricValue = (
+  metric_id: number,
+  metric_name: string,
+  category: string,
+  value: number,
+  unit_of_measure = 'kg',
+) => ({ metric_id, metric_name, category, unit_of_measure, value });
+
+const goalFor = (
+  id: number,
+  metric: { id: number; name: string; category: string },
+  target_value: number,
+  status = 'in_progress',
+) => ({ id, metric_id: metric.id, status, target_value, metric });
+
+const WEIGHT = { id: 1, name: 'Weight', category: 'body_composition' };
+const WAIST = { id: 2, name: 'Waist', category: 'circumference' };
+const STRENGTH = { id: 3, name: 'Strength', category: 'strength' };
+const BENCH = { id: 4, name: 'Bench Press', category: 'strength' };
+const CARDIO = { id: 5, name: 'Cardio Index', category: 'strength' };
+const BODY_FAT = { id: 6, name: 'Body Fat', category: 'body_composition' };
+
+describe('PtProgressReviewService.createDraft presentation card rows', () => {
+  const period = { review_period_start: '2026-01-01', review_period_end: '2026-01-31' };
+
+  async function draftRows(sessions: RowSession[], goals: ReturnType<typeof goalFor>[] = []) {
+    const insertReview = vi.fn().mockResolvedValue(7);
+    const service = new PtProgressReviewService(
+      { insertReview, findReviewById: vi.fn().mockResolvedValue({ id: 7 }) } as any,
+      {
+        findById: vi.fn().mockResolvedValue({ id: 100, user_id: 10, assigned_trainer_id: 9 }),
+      } as any,
+      { findManyByMemberId: vi.fn().mockResolvedValue({ rows: goals, total: goals.length }) } as any,
+      { assertTrainerCanWrite: vi.fn().mockResolvedValue(undefined) } as any,
+      { recordAudit: vi.fn().mockResolvedValue(undefined) } as any,
+      {
+        findManyByMemberId: vi.fn().mockResolvedValue({ rows: sessions, total: sessions.length }),
+      } as any,
+      { transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn({})) } as any,
+    );
+    await service.createDraft(100, period, ADMIN);
+    return insertReview.mock.calls[0][0] as {
+      body_metrics_snapshot: Array<Record<string, unknown>>;
+      performance_markers_snapshot: unknown;
+    };
+  }
+
+  it('returns the five rows in order, taking start and current on or before the period boundaries', async () => {
+    const saved = await draftRows(
+      [
+        { recorded_at: new Date('2025-12-20T09:00:00Z'), values: [metricValue(1, 'Weight', 'body_composition', 85)] },
+        { recorded_at: new Date('2026-01-10T09:00:00Z'), values: [metricValue(1, 'Weight', 'body_composition', 83)] },
+        { recorded_at: new Date('2026-02-05T09:00:00Z'), values: [metricValue(1, 'Weight', 'body_composition', 70)] },
+      ],
+      [goalFor(11, WEIGHT, 75)],
+    );
+
+    expect(saved.body_metrics_snapshot).toEqual([
+      { row: 'weight', metric: 'Weight', start_val: 85, current_val: 83, change_val: -2, target_val: 75 },
+      { row: 'waist', metric: null, start_val: null, current_val: null, change_val: null, target_val: null },
+      { row: 'strength', metric: null, start_val: null, current_val: null, change_val: null, target_val: null },
+      { row: 'cardio', metric: null, start_val: null, current_val: null, change_val: null, target_val: null },
+      { row: 'other', metric: null, start_val: null, current_val: null, change_val: null, target_val: null },
+    ]);
+  });
+
+  it('prefers the strength metric named strength, else a strength metric measured in the period', async () => {
+    const named = await draftRows(
+      [
+        {
+          recorded_at: new Date('2026-01-05T09:00:00Z'),
+          values: [metricValue(4, 'Bench Press', 'strength', 40), metricValue(3, 'Strength', 'strength', 100)],
+        },
+      ],
+      [],
+    );
+    expect(named.body_metrics_snapshot[2]).toMatchObject({ row: 'strength', metric: 'Strength', current_val: 100 });
+
+    const fallback = await draftRows(
+      [
+        { recorded_at: new Date('2025-11-05T09:00:00Z'), values: [metricValue(1, 'Squat', 'strength', 60)] },
+        {
+          recorded_at: new Date('2026-01-05T09:00:00Z'),
+          values: [metricValue(5, 'Cardio Index', 'strength', 30), metricValue(4, 'Bench Press', 'strength', 40)],
+        },
+      ],
+      [],
+    );
+    expect(fallback.body_metrics_snapshot[2]).toMatchObject({
+      row: 'strength',
+      metric: 'Bench Press',
+      start_val: null,
+      current_val: 40,
+      change_val: null,
+    });
+  });
+
+  it('fills the cardio row only from a metric whose name contains cardio', async () => {
+    const saved = await draftRows(
+      [
+        {
+          recorded_at: new Date('2025-12-30T09:00:00Z'),
+          values: [metricValue(5, 'Cardio Index', 'strength', 30, 'pts')],
+        },
+        {
+          recorded_at: new Date('2026-01-20T09:00:00Z'),
+          values: [metricValue(5, 'Cardio Index', 'strength', 34, 'pts'), metricValue(4, 'Bench Press', 'strength', 40)],
+        },
+      ],
+      [],
+    );
+    expect(saved.body_metrics_snapshot[3]).toEqual({
+      row: 'cardio',
+      metric: 'Cardio Index',
+      start_val: 30,
+      current_val: 34,
+      change_val: 4,
+      target_val: null,
+    });
+    expect(saved.body_metrics_snapshot[2]).toMatchObject({ metric: 'Bench Press' });
+  });
+
+  it('fills the other row with the lowest-id reported goal whose metric is not already used', async () => {
+    const saved = await draftRows(
+      [
+        {
+          recorded_at: new Date('2025-12-30T09:00:00Z'),
+          values: [metricValue(1, 'Weight', 'body_composition', 85), metricValue(6, 'Body Fat', 'body_composition', 24, '%')],
+        },
+        {
+          recorded_at: new Date('2026-01-20T09:00:00Z'),
+          values: [metricValue(1, 'Weight', 'body_composition', 83), metricValue(6, 'Body Fat', 'body_composition', 22.5, '%')],
+        },
+      ],
+      [
+        goalFor(10, WEIGHT, 75),
+        goalFor(11, BODY_FAT, 18, 'abandoned'),
+        goalFor(12, BODY_FAT, 20, 'achieved'),
+        goalFor(13, BENCH, 60),
+      ],
+    );
+    expect(saved.body_metrics_snapshot[4]).toEqual({
+      row: 'other',
+      metric: 'Body Fat',
+      start_val: 24,
+      current_val: 22.5,
+      change_val: -1.5,
+      target_val: 20,
+    });
+  });
+
+  it('breaks same-day ties by later time, then higher session id, and picks the lowest goal id target', async () => {
+    const weight = (value: number) => [metricValue(1, 'Weight', 'body_composition', value)];
+    const saved = await draftRows(
+      [
+        { id: 2, recorded_at: new Date('2026-01-20T09:00:00Z'), values: weight(81) },
+        { id: 3, recorded_at: new Date('2026-01-20T09:00:00Z'), values: weight(82) },
+        { id: 1, recorded_at: new Date('2026-01-20T07:00:00Z'), values: weight(90) },
+      ],
+      [goalFor(20, WEIGHT, 70), goalFor(12, WEIGHT, 75)],
+    );
+    expect(saved.body_metrics_snapshot[0]).toMatchObject({ current_val: 82, target_val: 75 });
+  });
+
+  it('uses the lowest metric id when several metrics contain cardio', async () => {
+    const saved = await draftRows([
+      {
+        recorded_at: new Date('2026-01-20T09:00:00Z'),
+        values: [metricValue(9, 'Cardio Test B', 'strength', 5), metricValue(8, 'Cardio Test A', 'strength', 4)],
+      },
+    ]);
+    expect(saved.body_metrics_snapshot[3]).toMatchObject({ metric: 'Cardio Test A' });
+  });
+
+  it('leaves start and change empty when the first measurement falls mid-period', async () => {
+    const saved = await draftRows(
+      [{ recorded_at: new Date('2026-01-15T09:00:00Z'), values: [metricValue(1, 'Weight', 'body_composition', 83)] }],
+      [goalFor(10, WEIGHT, 75)],
+    );
+    expect(saved.body_metrics_snapshot[0]).toEqual({
+      row: 'weight',
+      metric: 'Weight',
+      start_val: null,
+      current_val: 83,
+      change_val: null,
+      target_val: 75,
+    });
+  });
+
+  it('rounds change half away from zero to two decimals', async () => {
+    const at = (day: string, weight: number, waist: number) => ({
+      recorded_at: new Date(`${day}T09:00:00Z`),
+      values: [
+        metricValue(1, 'Weight', 'body_composition', weight),
+        metricValue(2, 'Waist', 'circumference', waist, 'cm'),
+      ],
+    });
+    const saved = await draftRows([at('2026-01-01', 82.55, 10.005), at('2026-01-20', 78.141, 10)]);
+    expect(saved.body_metrics_snapshot[0]).toMatchObject({ change_val: -4.41 });
+    expect(saved.body_metrics_snapshot[1]).toMatchObject({ change_val: -0.01 });
+    const up = await draftRows([at('2026-01-01', 80, 10), at('2026-01-20', 80, 10.005)]);
+    expect(up.body_metrics_snapshot[1]).toMatchObject({ change_val: 0.01 });
+  });
+
+  it('does not write a performance-marker snapshot on a new draft', async () => {
+    const saved = await draftRows([]);
+    expect(saved.performance_markers_snapshot).toBeNull();
+    expect(saved.body_metrics_snapshot).toHaveLength(5);
+  });
+
+});
+
+describe('ptProgressReviewDraftEditSchema', () => {
+  it('accepts the card fields and the six discussed checks', () => {
+    expect(
+      ptProgressReviewDraftEditSchema.safeParse({
+        progress_highlights: ['other'],
+        highlights_other_text: 'x',
+        trainer_summary: 'x',
+        client_feedback: null,
+        next_phase_goal: 'x',
+        next_phase_training_focus: 'x',
+        next_review_date: '2026-04-30',
+        review_checklist: {
+          goals_reviewed: true,
+          measurements_reviewed: true,
+          performance_reviewed: true,
+          attendance_reviewed: true,
+          program_updated: true,
+          next_goals_agreed: true,
+        },
+      }).success,
+    ).toBe(true);
+  });
+
+  it('rejects unknown highlights, duplicates, the period and the measure rows', () => {
+    for (const bad of [
+      { progress_highlights: ['lost_4_kg'] },
+      { progress_highlights: ['other', 'other'] },
+      { review_period_start: '2026-01-01' },
+      { body_metrics_snapshot: [] },
+      { review_checklist: { unknown_check: true } },
+      { trainer_summary: 'x'.repeat(2001) },
+    ]) {
+      expect(ptProgressReviewDraftEditSchema.safeParse(bad).success, JSON.stringify(bad)).toBe(false);
+    }
   });
 });

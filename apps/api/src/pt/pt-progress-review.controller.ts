@@ -18,8 +18,10 @@ import { RequirePermission } from '../rbac/require-permission.decorator';
 import { PtProgressReviewPdfService } from './pt-progress-review-pdf.service';
 import {
   PtProgressReviewService,
+  ptProgressReviewDraftEditSchema,
   ptProgressReviewDraftSchema,
   type PtProgressReviewDraftDto,
+  type PtProgressReviewDraftEditDto,
 } from './pt-progress-review.service';
 
 @ApiTags('PT')
@@ -49,6 +51,21 @@ export class PtProgressReviewController {
   @ApiParam({ name: 'id', type: Number })
   get(@Param('id', ParseIntPipe) id: number, @CurrentUser() actor: AuthenticatedUser) {
     return this.service.get(id, actor);
+  }
+
+  @Patch('reviews/:id')
+  @RequirePermission('pt_reviews.write')
+  @ApiOperation({
+    operationId: 'updatePtProgressReviewDraft',
+    summary: 'Save the presentation card of a draft review',
+  })
+  @ApiParam({ name: 'id', type: Number })
+  updateDraft(
+    @Param('id', ParseIntPipe) id: number,
+    @Body(new ZodValidationPipe(ptProgressReviewDraftEditSchema)) dto: PtProgressReviewDraftEditDto,
+    @CurrentUser() actor: AuthenticatedUser,
+  ) {
+    return this.service.updateDraft(id, dto, actor);
   }
 
   @Get('reviews/:id/export-pdf')

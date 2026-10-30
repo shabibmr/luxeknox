@@ -2208,9 +2208,16 @@ paths:
       operationId: createPtProgressReviewDraft
       summary: Draft a PT progress review
       description: >
-        Snapshots in-window measurements into `body_metrics_snapshot` and
-        `performance_markers_snapshot` (change = current − start). Targets come
-        from in-progress or achieved goals, not from goal baseline or current values.
+        Snapshots the member's measurements into `body_metrics_snapshot` as the
+        five presentation-card rows (weight, waist, strength, cardio, other), in
+        that order. Start is the latest value on or before the period start and
+        current is the latest on or before the period end (calendar dates, end
+        day included). Change is current − start, rounded half away from zero to
+        two decimals, and is null unless both exist. Targets come from in-progress
+        or achieved goals, not from goal baseline or current values. A row with
+        no matching metric is still present with null values. New drafts leave
+        `performance_markers_snapshot` null. `highlights_other_text` is accepted
+        only when `progress_highlights` includes `other`.
       tags: [PT]
       x-status: mvp
       x-parity: required
@@ -2271,6 +2278,54 @@ paths:
           $ref: "#/components/responses/Error403"
         "404":
           $ref: "#/components/responses/Error404"
+        "422":
+          $ref: "#/components/responses/Error422"
+        "429":
+          $ref: "#/components/responses/Error429"
+    patch:
+      operationId: updatePtProgressReviewDraft
+      summary: Save the presentation card of a draft review
+      description: >
+        Partial update of a review that is still a `draft`: the highlight
+        checkboxes, the other-text line, the summary, the member's feedback, the
+        next phase, and the six discussed checks. Omitted fields are left alone,
+        an explicit null clears one, and `progress_highlights` replaces the whole
+        set. Only the review's trainer may edit. `highlights_other_text` is
+        accepted only when `other` is selected, and deselecting `other` clears
+        the stored text. `next_review_date` must be after `review_period_end`.
+        The period and the measure rows cannot be changed here. Once the review
+        is no longer a draft the edit is refused with 409.
+      tags: [PT]
+      x-status: mvp
+      x-parity: required
+      x-permission: pt_reviews.write
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PtProgressReviewDraftEdit"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PtProgressReview"
+        "400":
+          $ref: "#/components/responses/Error400"
+        "401":
+          $ref: "#/components/responses/Error401"
+        "403":
+          $ref: "#/components/responses/Error403"
+        "404":
+          $ref: "#/components/responses/Error404"
+        "409":
+          $ref: "#/components/responses/Error409"
         "422":
           $ref: "#/components/responses/Error422"
         "429":
@@ -15378,26 +15433,66 @@ components:
           $ref: "#/components/schemas/Date"
           nullable: true
         progress_highlights:
-          type: array
-          uniqueItems: true
-          items:
-            type: string
-            enum:
-              - Improved technique
-              - Increased strength
-              - Improved conditioning
-              - Better consistency
-              - Improved mobility
-              - Goal milestone achieved
+          $ref: "#/components/schemas/PtProgressHighlights"
         highlights_other_text:
           type: string
           nullable: true
+          description: Only accepted when `progress_highlights` includes `other`.
+    PtProgressHighlights:
+      type: array
+      uniqueItems: true
+      items:
+        type: string
+        enum:
+          - improved_technique
+          - increased_strength
+          - improved_conditioning
+          - better_consistency
+          - improved_mobility
+          - goal_milestone
+          - other
+    PtProgressReviewDraftEdit:
+      type: object
+      additionalProperties: false
+      properties:
+        progress_highlights:
+          allOf:
+            - $ref: "#/components/schemas/PtProgressHighlights"
+          nullable: true
+        highlights_other_text:
+          type: string
+          nullable: true
+        trainer_summary:
+          type: string
+          maxLength: 2000
+          nullable: true
+        client_feedback:
+          type: string
+          maxLength: 2000
+          nullable: true
+        next_phase_goal:
+          type: string
+          nullable: true
+        next_phase_training_focus:
+          type: string
+          nullable: true
+        next_review_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        review_checklist:
+          $ref: "#/components/schemas/PtReviewChecklist"
     BodyMetricSnapshot:
       type: object
       required: [metric]
       properties:
+        row:
+          type: string
+          enum: [weight, waist, strength, cardio, other]
+          description: Absent on reviews drafted before the five-row card.
         metric:
           type: string
+          nullable: true
+          description: Null when no metric matched the row.
         start_val:
           type: number
           nullable: true
@@ -15469,10 +15564,9 @@ components:
           items:
             $ref: "#/components/schemas/PerformanceMarkerSnapshot"
         progress_highlights:
-          type: array
+          allOf:
+            - $ref: "#/components/schemas/PtProgressHighlights"
           nullable: true
-          items:
-            type: string
         highlights_other_text:
           type: string
           nullable: true
