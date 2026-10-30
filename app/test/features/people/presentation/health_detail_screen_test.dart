@@ -1,3 +1,4 @@
+import 'package:luxeknox/features/people/domain/usecases/submit_par_q_usecase.dart';
 import 'package:luxeknox/core/di/injector.dart';
 import 'package:luxeknox/features/people/domain/entities/health_info.dart';
 import 'package:luxeknox/features/people/domain/usecases/create_health_record_usecase.dart';
@@ -11,6 +12,9 @@ import 'package:mocktail/mocktail.dart';
 
 class MockListHealthHistoryUseCase extends Mock
     implements ListHealthHistoryUseCase {}
+
+class MockSubmitParQUseCase extends Mock
+    implements SubmitParQUseCase {}
 
 class MockCreateHealthRecordUseCase extends Mock
     implements CreateHealthRecordUseCase {}
@@ -39,9 +43,11 @@ void main() {
   setUp(() {
     listHistory = MockListHealthHistoryUseCase();
     createRecord = MockCreateHealthRecordUseCase();
+    final submitParQ = MockSubmitParQUseCase();
 
     getIt.registerFactory<ListHealthHistoryUseCase>(() => listHistory);
     getIt.registerFactory<CreateHealthRecordUseCase>(() => createRecord);
+    getIt.registerFactory<SubmitParQUseCase>(() => submitParQ);
   });
 
   tearDown(() => getIt.reset());
@@ -61,8 +67,7 @@ void main() {
   });
 
   testWidgets('Previous is enabled with two records', (tester) async {
-    when(() => listHistory(5))
-        .thenAnswer((_) async => Right([tNewer, tOlder]));
+    when(() => listHistory(5)).thenAnswer((_) async => Right([tNewer, tOlder]));
 
     await tester.pumpWidget(wrap(const HealthDetailScreen(memberId: 5)));
     await tester.pumpAndSettle();
@@ -81,9 +86,7 @@ void main() {
     addTearDown(tester.view.reset);
 
     when(() => listHistory(5)).thenAnswer((_) async => Right([tOlder]));
-    when(
-      () => createRecord(any()),
-    ).thenAnswer((_) async => Right(tNewer));
+    when(() => createRecord(any())).thenAnswer((_) async => Right(tNewer));
 
     await tester.pumpWidget(wrap(const HealthDetailScreen(memberId: 5)));
     await tester.pumpAndSettle();
@@ -111,11 +114,10 @@ void main() {
         allergies: 'Peanuts',
         recordedAt: DateTime(2026, 1, 1),
       );
-      when(() => listHistory(5))
-          .thenAnswer((_) async => Right([tWithAllergies]));
       when(
-        () => createRecord(any()),
-      ).thenAnswer((_) async => Right(tNewer));
+        () => listHistory(5),
+      ).thenAnswer((_) async => Right([tWithAllergies]));
+      when(() => createRecord(any())).thenAnswer((_) async => Right(tNewer));
 
       await tester.pumpWidget(wrap(const HealthDetailScreen(memberId: 5)));
       await tester.pumpAndSettle();
@@ -134,11 +136,27 @@ void main() {
       await tester.tap(saveButton);
       await tester.pumpAndSettle();
 
-      final saved = verify(() => createRecord(captureAny()))
-          .captured
-          .single as HealthInfo;
+      final saved =
+          verify(() => createRecord(captureAny())).captured.single
+              as HealthInfo;
       expect(saved.allergies, isNull);
       expect(saved.heightCm, isNull);
     },
   );
+
+  testWidgets('switching to PAR-Q+ tab shows ParQScreeningForm', (tester) async {
+    when(() => listHistory(5)).thenAnswer((_) async => Right([tOlder]));
+
+    await tester.pumpWidget(wrap(const HealthDetailScreen(memberId: 5)));
+    await tester.pumpAndSettle();
+
+    expect(find.text(PeopleStrings.healthVitalsTab), findsOneWidget);
+    expect(find.text(PeopleStrings.parQTab), findsOneWidget);
+
+    await tester.tap(find.text(PeopleStrings.parQTab));
+    await tester.pumpAndSettle();
+
+    expect(find.text(PeopleStrings.parQTitle), findsOneWidget);
+    expect(find.text(PeopleStrings.parQQ1), findsOneWidget);
+  });
 }

@@ -189,4 +189,59 @@ abstract final class PeopleStrings {
   static const permissionsLabel = 'Permissions';
   static const systemRole = 'System role';
   static const emptyRoles = 'No roles configured yet.';
+
+  // Screen 04: PAR-Q+ Screening & Tabs
+  static const healthVitalsTab = 'Vitals & General';
+  static const parQTab = 'PAR-Q+ Screening';
+  static const parQTitle = 'Physical Activity Readiness Questionnaire (PAR-Q+)';
+  static const parQSubtitle =
+      'Please answer the following 7 screening questions honestly before engaging in personal training or high-intensity exercise.';
+  static const parQQ1 =
+      '1. Has a healthcare professional ever said you have a heart condition or that you should only do physical activity recommended by a professional?';
+  static const parQQ2 =
+      '2. Do you feel pain in your chest during physical activity?';
+  static const parQQ3 =
+      '3. In the past 30 days, have you had chest pain when not doing physical activity?';
+  static const parQQ4 =
+      '4. Do you lose balance because of dizziness or have you ever lost consciousness?';
+  static const parQQ5 =
+      '5. Do you have a bone, joint, or soft-tissue problem that could be made worse by physical activity?';
+  static const parQQ6 =
+      '6. Are you currently taking medication or have another health condition that may affect exercise participation?';
+  static const parQQ7 =
+      '7. Is there any other reason you believe you should not participate in physical activity?';
+  static const yes = 'Yes';
+  static const no = 'No';
+  static const parQDetailsLabel = 'Details / Action taken';
+  static const parQDetailsHint =
+      'Describe the condition, medical advice, or symptoms (required on YES)';
+  static const parQDetailsRequired = 'Details are required when answering YES.';
+  static const parQDeclaration =
+      'I have answered the screening questions honestly and understand that I should inform Luxe Knox of any relevant change in my health or ability to exercise. I understand the trainer is not providing medical diagnosis.';
+  static const parQDeclarationRequired =
+      'You must accept the declaration to submit.';
+  static const parQSignatureTitle = 'Client Signature';
+  static const parQSignaturePrompt =
+      'Sign below with touch or mouse to certify your declaration';
+  static const parQSignatureClear = 'Clear signature';
+  static const parQSignatureRequired =
+      'Client signature is required before submitting.';
+  static const parQSignatureDialogTitle = 'Sign PAR-Q+ Screening';
+  static const parQSignatureDone = 'Confirm signature';
+  static const parQSubmit = 'Submit PAR-Q+ Screening';
+  static const parQSubmitting = 'Submitting screening...';
+  static const parQSubmitted = 'PAR-Q+ screening submitted.';
+  static const parQPassedTitle = 'Medical Clearance: PASSED';
+  static const parQPassedBody =
+      'All answers negative. Member is cleared for unrestricted physical training.';
+  static const parQPendingTitle = 'Medical Clearance: PENDING CLEARANCE';
+  static const parQPendingBody =
+      'One or more positive answers recorded. Personal training bookings are gated until medical clearance is approved.';
+  static const parQClearedTitle = 'Medical Clearance: CLEARED';
+  static const parQClearedBody =
+      'Medical clearance has been reviewed and cleared.';
+  static const parQRejectedTitle = 'Medical Clearance: REJECTED';
+  static const parQRejectedBody =
+      'Medical clearance rejected. Member may not participate in PT sessions.';
+  static const parQRetake = 'Submit new screening';
 }

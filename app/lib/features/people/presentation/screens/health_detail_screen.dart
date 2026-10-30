@@ -12,6 +12,7 @@ import '../../domain/usecases/create_health_record_usecase.dart';
 import '../../domain/usecases/list_health_history_usecase.dart';
 import '../cubit/health_history_cubit.dart';
 import '../people_strings.dart';
+import '../widgets/par_q_screening_form.dart';
 
 class HealthDetailScreen extends StatelessWidget {
   const HealthDetailScreen({super.key, required this.memberId});
@@ -37,41 +38,63 @@ class _HealthDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text(PeopleStrings.health)),
-      body: BlocConsumer<HealthHistoryCubit, HealthHistoryState>(
-        listener: (context, state) {
-          if (state.message != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text(PeopleStrings.healthSaved)),
-            );
-          } else if (state.status == LoadStatus.failure &&
-              state.records.isNotEmpty &&
-              state.failure != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(failureMessage(state.failure!))),
-            );
-          }
-        },
-        builder: (context, state) {
-          final cubit = context.read<HealthHistoryCubit>();
-          if (cubit.current == null && state.status == LoadStatus.failure) {
-            return AppErrorView(
-              message: failureMessage(state.failure!),
-              onRetry: () => cubit.load(memberId),
-            );
-          }
-          final current = cubit.current;
-          if (current == null) {
-            return const AppLoading();
-          }
-          return _HealthForm(
-            key: ValueKey((current.id, current.recordedAt)),
-            info: current,
-            canGoPrevious: cubit.canGoPrevious,
-            canGoNext: cubit.canGoNext,
-          );
-        },
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(PeopleStrings.health),
+          bottom: const TabBar(
+            tabs: [
+              Tab(
+                icon: Icon(Icons.favorite_outline),
+                text: PeopleStrings.healthVitalsTab,
+              ),
+              Tab(
+                icon: Icon(Icons.assignment_turned_in_outlined),
+                text: PeopleStrings.parQTab,
+              ),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            BlocConsumer<HealthHistoryCubit, HealthHistoryState>(
+              listener: (context, state) {
+                if (state.message != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text(PeopleStrings.healthSaved)),
+                  );
+                } else if (state.status == LoadStatus.failure &&
+                    state.records.isNotEmpty &&
+                    state.failure != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(failureMessage(state.failure!))),
+                  );
+                }
+              },
+              builder: (context, state) {
+                final cubit = context.read<HealthHistoryCubit>();
+                if (cubit.current == null && state.status == LoadStatus.failure) {
+                  return AppErrorView(
+                    message: failureMessage(state.failure!),
+                    onRetry: () => cubit.load(memberId),
+                  );
+                }
+                final current = cubit.current;
+                if (current == null) {
+                  return const AppLoading();
+                }
+                return _HealthForm(
+                  key: ValueKey((current.id, current.recordedAt)),
+                  info: current,
+                  canGoPrevious: cubit.canGoPrevious,
+                  canGoNext: cubit.canGoNext,
+                );
+              },
+            ),
+            ParQScreeningForm(memberId: memberId),
+          ],
+        ),
       ),
     );
   }
