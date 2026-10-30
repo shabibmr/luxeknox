@@ -5,6 +5,22 @@ import type { MemberLifestyleIntake } from '../platform/db/schema/lifestyle-inta
 import { lifestyleIntakePutSchema } from './lifestyle-intake.dto';
 import { LifestyleIntakeService } from './lifestyle-intake.service';
 
+vi.mock('../platform/db/transaction-context', () => ({
+  runInTransaction: async (_db: unknown, fn: () => Promise<unknown>) => {
+    insideTransaction = true;
+    try {
+      const result = await fn();
+      intakeCommitted = true;
+      return result;
+    } finally {
+      insideTransaction = false;
+    }
+  },
+}));
+
+let insideTransaction = false;
+let intakeCommitted = false;
+
 const ADMIN_USER: AuthenticatedUser = {
   id: 1,
   email: 'admin@luxeknox.test',
@@ -23,6 +39,16 @@ const TRAINER_USER: AuthenticatedUser = {
   roleId: 3,
   profileId: 9,
   sessionId: 3,
+};
+
+const OTHER_MEMBER: AuthenticatedUser = {
+  id: 77,
+  email: 'other@luxeknox.test',
+  phoneNumber: null,
+  userType: 'member',
+  roleId: 4,
+  profileId: 404,
+  sessionId: 8,
 };
 
 const PRIORITIES = [
@@ -68,27 +94,50 @@ describe('LifestyleIntakeService', () => {
   let memberRepository: Record<string, ReturnType<typeof vi.fn>>;
   let auditService: { recordAudit: ReturnType<typeof vi.fn> };
 
+  const putBody = {
+    stress_level: 4,
+    activity_level: 'moderate' as const,
+    sleep_hours_typical: 7.5,
+    lifestyle_priorities: PRIORITIES,
+  };
+
   beforeEach(() => {
+    insideTransaction = false;
+    intakeCommitted = false;
+
     repository = {
       findByMemberId: vi.fn().mockResolvedValue(null),
-      insert: vi.fn().mockResolvedValue(1),
-      updateByMemberId: vi.fn().mockResolvedValue(undefined),
+      insert: vi.fn().mockImplementation(async () => {
+        expect(insideTransaction).toBe(true);
+        return 1;
+      }),
+      updateByMemberId: vi.fn().mockImplementation(async () => {
+        expect(insideTransaction).toBe(true);
+      }),
     };
 
     memberRepository = {
-      findById: vi.fn().mockImplementation(async (id: number) => ({
-        id,
-        user_id: 10,
-        assigned_trainer_id: null,
-      })),
+      findById: vi.fn().mockImplementation(async (id: number) => {
+        expect(insideTransaction).toBe(false);
+        return {
+          id,
+          user_id: 10,
+          assigned_trainer_id: null,
+        };
+      }),
     };
 
-    auditService = { recordAudit: vi.fn().mockResolvedValue(undefined) };
+    auditService = {
+      recordAudit: vi.fn().mockImplementation(async () => {
+        expect(insideTransaction).toBe(true);
+      }),
+    };
 
     service = new LifestyleIntakeService(
       repository as any,
       memberRepository as any,
       auditService as any,
+      {} as any,
     );
   });
 
@@ -125,21 +174,30 @@ describe('LifestyleIntakeService', () => {
       }),
     );
     expect(repository.updateByMemberId).not.toHaveBeenCalled();
-    expect(auditService.recordAudit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: 'lifestyle_intake.created',
-        entityName: 'member_lifestyle_intakes',
-      }),
-    );
+    const saved = existingRow({
+      stress_level: 4,
+      activity_level: 'moderate',
+      sleep_hours_typical: '7.5',
+      lifestyle_priorities: ORDERED_PRIORITIES,
+    });
+    expect(auditService.recordAudit).toHaveBeenCalledWith({
+      actorUserId: ADMIN_USER.id,
+      action: 'lifestyle_intake.created',
+      entityName: 'member_lifestyle_intakes',
+      entityId: 1,
+      beforeState: undefined,
+      afterState: saved,
+    });
+    expect(intakeCommitted).toBe(true);
+    expect(insideTransaction).toBe(false);
     expect(result.stress_level).toBe(4);
     expect(result.sleep_hours_typical).toBe('7.5');
   });
 
   it('put_updates_when_row_exists', async () => {
     const before = existingRow();
-    repository.findByMemberId
-      .mockResolvedValueOnce(before)
-      .mockResolvedValueOnce(existingRow({ stress_level: 5 }));
+    const saved = existingRow({ stress_level: 5 });
+    repository.findByMemberId.mockResolvedValueOnce(before).mockResolvedValueOnce(saved);
 
     await service.put(
       100,
@@ -155,12 +213,16 @@ describe('LifestyleIntakeService', () => {
       100,
       expect.objectContaining({ stress_level: 5 }),
     );
-    expect(auditService.recordAudit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: 'lifestyle_intake.updated',
-        entityName: 'member_lifestyle_intakes',
-      }),
-    );
+    expect(auditService.recordAudit).toHaveBeenCalledWith({
+      actorUserId: ADMIN_USER.id,
+      action: 'lifestyle_intake.updated',
+      entityName: 'member_lifestyle_intakes',
+      entityId: before.id,
+      beforeState: before,
+      afterState: saved,
+    });
+    expect(intakeCommitted).toBe(true);
+    expect(insideTransaction).toBe(false);
   });
 
   it('put_omitted_text_stores_null', async () => {
@@ -225,6 +287,80 @@ describe('LifestyleIntakeService', () => {
     expect(repository.insert).toHaveBeenCalledWith(
       expect.objectContaining({ conducted_by_trainer_id: null }),
     );
+  });
+
+  it('put_audit_failure_leaves_a_first_save_uncommitted', async () => {
+    auditService.recordAudit.mockRejectedValue(new Error('audit write failed'));
+    repository.findByMemberId
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(existingRow({ stress_level: 4 }));
+
+    await expect(service.put(100, putBody, ADMIN_USER)).rejects.toThrow('audit write failed');
+
+    expect(repository.insert).toHaveBeenCalledOnce();
+    expect(intakeCommitted).toBe(false);
+    expect(insideTransaction).toBe(false);
+  });
+
+  it('put_audit_failure_leaves_a_replacement_uncommitted', async () => {
+    const before = existingRow();
+    memberRepository.findById.mockResolvedValue({
+      id: 100,
+      user_id: 10,
+      assigned_trainer_id: 9,
+    });
+    auditService.recordAudit.mockRejectedValue(new Error('audit write failed'));
+    repository.findByMemberId
+      .mockResolvedValueOnce(before)
+      .mockResolvedValueOnce(existingRow({ stress_level: 4 }));
+
+    await expect(service.put(100, putBody, TRAINER_USER)).rejects.toThrow('audit write failed');
+
+    expect(repository.updateByMemberId).toHaveBeenCalledOnce();
+    expect(repository.insert).not.toHaveBeenCalled();
+    expect(intakeCommitted).toBe(false);
+  });
+
+  it('put_hidden_member_writes_nothing', async () => {
+    memberRepository.findById.mockResolvedValue({
+      id: 100,
+      user_id: 55,
+      assigned_trainer_id: 4,
+    });
+
+    await expect(service.put(100, putBody, TRAINER_USER)).rejects.toBeInstanceOf(NotFoundError);
+    await expect(service.put(100, putBody, OTHER_MEMBER)).rejects.toBeInstanceOf(NotFoundError);
+
+    expect(repository.findByMemberId).not.toHaveBeenCalled();
+    expect(repository.insert).not.toHaveBeenCalled();
+    expect(repository.updateByMemberId).not.toHaveBeenCalled();
+    expect(auditService.recordAudit).not.toHaveBeenCalled();
+    expect(intakeCommitted).toBe(false);
+  });
+
+  it('put_reload_miss_fails_with_not_found', async () => {
+    repository.findByMemberId.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+
+    await expect(service.put(100, putBody, ADMIN_USER)).rejects.toThrow('Lifestyle intake not found');
+
+    expect(repository.insert).toHaveBeenCalledOnce();
+    expect(auditService.recordAudit).not.toHaveBeenCalled();
+    expect(intakeCommitted).toBe(false);
+  });
+
+  it('get_writes_no_audit', async () => {
+    repository.findByMemberId.mockImplementation(async () => {
+      expect(insideTransaction).toBe(false);
+      return existingRow();
+    });
+
+    const result = await service.get(100, ADMIN_USER);
+
+    expect(result.id).toBe(1);
+    expect(auditService.recordAudit).not.toHaveBeenCalled();
+    expect(repository.insert).not.toHaveBeenCalled();
+    expect(repository.updateByMemberId).not.toHaveBeenCalled();
+    expect(intakeCommitted).toBe(false);
   });
 
   it('get_missing_throws', async () => {
