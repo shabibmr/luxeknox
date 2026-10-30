@@ -249,6 +249,7 @@ doc/PtProductPage.md
 doc/PtProductWrite.md
 doc/PtProgressReview.md
 doc/PtProgressReviewDraft.md
+doc/PtProgressReviewDraftEdit.md
 doc/PtPurchaseRequest.md
 doc/PtPurchaseResult.md
 doc/PtReassignTrainerRequest.md
@@ -602,6 +603,7 @@ lib/src/model/pt_product_page.dart
 lib/src/model/pt_product_write.dart
 lib/src/model/pt_progress_review.dart
 lib/src/model/pt_progress_review_draft.dart
+lib/src/model/pt_progress_review_draft_edit.dart
 lib/src/model/pt_purchase_request.dart
 lib/src/model/pt_purchase_result.dart
 lib/src/model/pt_reassign_trainer_request.dart
@@ -689,16 +691,4 @@ lib/src/model/workout_set_update.dart
 lib/src/model/workout_set_write.dart
 lib/src/serializers.dart
 pubspec.yaml
-test/body_metric_snapshot_test.dart
-test/lifestyle_intake_test.dart
-test/lifestyle_intake_write_test.dart
-test/lifestyle_priority_test.dart
-test/par_q_clearance_test.dart
-test/par_q_screening_test.dart
-test/par_q_submit_test.dart
-test/par_q_trainer_review_test.dart
-test/performance_marker_snapshot_test.dart
-test/pt_progress_review_draft_test.dart
-test/pt_progress_review_test.dart
-test/pt_review_checklist_test.dart
-test/workout_session_complete_test.dart
+test/pt_progress_review_draft_edit_test.dart

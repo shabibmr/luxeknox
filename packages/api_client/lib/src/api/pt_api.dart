@@ -21,6 +21,7 @@ import 'package:api_client/src/model/pt_product_page.dart';
 import 'package:api_client/src/model/pt_product_write.dart';
 import 'package:api_client/src/model/pt_progress_review.dart';
 import 'package:api_client/src/model/pt_progress_review_draft.dart';
+import 'package:api_client/src/model/pt_progress_review_draft_edit.dart';
 import 'package:api_client/src/model/pt_purchase_request.dart';
 import 'package:api_client/src/model/pt_purchase_result.dart';
 import 'package:api_client/src/model/pt_reassign_trainer_request.dart';
@@ -164,7 +165,7 @@ class PTApi {
   }) async {
     final _path = r'/reviews/{id}/client-sign'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
-      method: r'PATCH',
+      method: r'POST',
       headers: <String, dynamic>{
         ...?headers,
       },
@@ -322,7 +323,7 @@ class PTApi {
   }
 
   /// Draft a PT progress review
-  /// Snapshots in-progress and achieved goals into &#x60;body_metrics_snapshot&#x60; (change &#x3D; current − start). 
+  /// Snapshots the member&#39;s measurements into &#x60;body_metrics_snapshot&#x60; as the five presentation-card rows (weight, waist, strength, cardio, other), in that order. Start is the latest value on or before the period start and current is the latest on or before the period end (calendar dates, end day included). Change is current − start, rounded half away from zero to two decimals, and is null unless both exist. Targets come from in-progress or achieved goals, not from goal baseline or current values. A row with no matching metric is still present with null values. New drafts leave &#x60;performance_markers_snapshot&#x60; null. &#x60;highlights_other_text&#x60; is accepted only when &#x60;progress_highlights&#x60; includes &#x60;other&#x60;. 
   ///
   /// Parameters:
   /// * [id] 
@@ -1137,7 +1138,7 @@ class PTApi {
   }) async {
     final _path = r'/reviews/{id}/manager-approve'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
-      method: r'PATCH',
+      method: r'POST',
       headers: <String, dynamic>{
         ...?headers,
       },
@@ -1528,7 +1529,7 @@ class PTApi {
   }) async {
     final _path = r'/reviews/{id}/trainer-sign'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
-      method: r'PATCH',
+      method: r'POST',
       headers: <String, dynamic>{
         ...?headers,
       },
@@ -1676,6 +1677,109 @@ class PTApi {
     }
 
     return Response<PtProduct>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Save the presentation card of a draft review
+  /// Partial update of a review that is still a &#x60;draft&#x60;: the highlight checkboxes, the other-text line, the summary, the member&#39;s feedback, the next phase, and the six discussed checks. Omitted fields are left alone, an explicit null clears one, and &#x60;progress_highlights&#x60; replaces the whole set. Only the review&#39;s trainer may edit. &#x60;highlights_other_text&#x60; is accepted only when &#x60;other&#x60; is selected, and deselecting &#x60;other&#x60; clears the stored text. &#x60;next_review_date&#x60; must be after &#x60;review_period_end&#x60;. The period and the measure rows cannot be changed here. Once the review is no longer a draft the edit is refused with 409. 
+  ///
+  /// Parameters:
+  /// * [id] 
+  /// * [ptProgressReviewDraftEdit] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [PtProgressReview] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<PtProgressReview>> updatePtProgressReviewDraft({ 
+    required int id,
+    required PtProgressReviewDraftEdit ptProgressReviewDraftEdit,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/reviews/{id}'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _options = Options(
+      method: r'PATCH',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+      const _type = FullType(PtProgressReviewDraftEdit);
+      _bodyData = _serializers.serialize(ptProgressReviewDraftEdit, specifiedType: _type);
+
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    PtProgressReview? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(PtProgressReview),
+      ) as PtProgressReview;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<PtProgressReview>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

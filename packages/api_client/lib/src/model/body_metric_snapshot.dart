@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:built_collection/built_collection.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -11,13 +12,20 @@ part 'body_metric_snapshot.g.dart';
 /// BodyMetricSnapshot
 ///
 /// Properties:
-/// * [metric] 
+/// * [row] - Absent on reviews drafted before the five-row card.
+/// * [metric] - Null when no metric matched the row.
 /// * [startVal] 
 /// * [currentVal] 
 /// * [changeVal] - Always `current_val − start_val`.
 /// * [targetVal] 
 @BuiltValue()
 abstract class BodyMetricSnapshot implements Built<BodyMetricSnapshot, BodyMetricSnapshotBuilder> {
+  /// Absent on reviews drafted before the five-row card.
+  @BuiltValueField(wireName: r'row')
+  BodyMetricSnapshotRowEnum? get row;
+  // enum rowEnum {  weight,  waist,  strength,  cardio,  other,  };
+
+  /// Null when no metric matched the row.
   @BuiltValueField(wireName: r'metric')
   String get metric;
 
@@ -57,6 +65,13 @@ class _$BodyMetricSnapshotSerializer implements PrimitiveSerializer<BodyMetricSn
     BodyMetricSnapshot object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
+    if (object.row != null) {
+      yield r'row';
+      yield serializers.serialize(
+        object.row,
+        specifiedType: const FullType(BodyMetricSnapshotRowEnum),
+      );
+    }
     yield r'metric';
     yield serializers.serialize(
       object.metric,
@@ -113,6 +128,14 @@ class _$BodyMetricSnapshotSerializer implements PrimitiveSerializer<BodyMetricSn
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
+        case r'row':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BodyMetricSnapshotRowEnum),
+          ) as BodyMetricSnapshotRowEnum?;
+          if (valueDes == null) continue;
+          result.row = valueDes;
+          break;
         case r'metric':
           final valueDes = serializers.deserialize(
             value,
@@ -181,4 +204,26 @@ class _$BodyMetricSnapshotSerializer implements PrimitiveSerializer<BodyMetricSn
   }
 }
 
+
+/// Absent on reviews drafted before the five-row card.
+class BodyMetricSnapshotRowEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'weight')
+  static const BodyMetricSnapshotRowEnum weight = _$bodyMetricSnapshotRowEnum_weight;
+  @BuiltValueEnumConst(wireName: r'waist')
+  static const BodyMetricSnapshotRowEnum waist = _$bodyMetricSnapshotRowEnum_waist;
+  @BuiltValueEnumConst(wireName: r'strength')
+  static const BodyMetricSnapshotRowEnum strength = _$bodyMetricSnapshotRowEnum_strength;
+  @BuiltValueEnumConst(wireName: r'cardio')
+  static const BodyMetricSnapshotRowEnum cardio = _$bodyMetricSnapshotRowEnum_cardio;
+  @BuiltValueEnumConst(wireName: r'other')
+  static const BodyMetricSnapshotRowEnum other = _$bodyMetricSnapshotRowEnum_other;
+
+  static Serializer<BodyMetricSnapshotRowEnum> get serializer => _$bodyMetricSnapshotRowEnumSerializer;
+
+  const BodyMetricSnapshotRowEnum._(String name): super(name);
+
+  static BuiltSet<BodyMetricSnapshotRowEnum> get values => _$bodyMetricSnapshotRowEnumValues;
+  static BodyMetricSnapshotRowEnum valueOf(String name) => _$bodyMetricSnapshotRowEnumValueOf(name);
+}
 

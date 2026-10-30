@@ -8,7 +8,8 @@ import 'package:api_client/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**metric** | **String** |  | 
+**row** | **String** | Absent on reviews drafted before the five-row card. | [optional] 
+**metric** | **String** | Null when no metric matched the row. | 
 **startVal** | **num** |  | [optional] 
 **currentVal** | **num** |  | [optional] 
 **changeVal** | **num** | Always `current_val − start_val`. | [optional] 

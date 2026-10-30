@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 **reviewPeriodEnd** | [**Date**](Date.md) |  | 
 **bodyMetricsSnapshot** | [**BuiltList&lt;BodyMetricSnapshot&gt;**](BodyMetricSnapshot.md) |  | [optional] 
 **performanceMarkersSnapshot** | [**BuiltList&lt;PerformanceMarkerSnapshot&gt;**](PerformanceMarkerSnapshot.md) |  | [optional] 
-**progressHighlights** | **BuiltList&lt;String&gt;** |  | [optional] 
+**progressHighlights** | **BuiltSet&lt;String&gt;** |  | [optional] 
 **highlightsOtherText** | **String** |  | [optional] 
 **trainerSummary** | **String** |  | [optional] 
 **clientFeedback** | **String** |  | [optional] 

@@ -63,7 +63,8 @@ abstract class PtProgressReview implements Built<PtProgressReview, PtProgressRev
   BuiltList<PerformanceMarkerSnapshot>? get performanceMarkersSnapshot;
 
   @BuiltValueField(wireName: r'progress_highlights')
-  BuiltList<String>? get progressHighlights;
+  BuiltSet<PtProgressReviewProgressHighlightsEnum>? get progressHighlights;
+  // enum progressHighlightsEnum {  improved_technique,  increased_strength,  improved_conditioning,  better_consistency,  improved_mobility,  goal_milestone,  other,  };
 
   @BuiltValueField(wireName: r'highlights_other_text')
   String? get highlightsOtherText;
@@ -178,7 +179,7 @@ class _$PtProgressReviewSerializer implements PrimitiveSerializer<PtProgressRevi
       yield r'progress_highlights';
       yield serializers.serialize(
         object.progressHighlights,
-        specifiedType: const FullType(BuiltList, [FullType(String)]),
+        specifiedType: const FullType(BuiltSet, [FullType(PtProgressReviewProgressHighlightsEnum)]),
       );
     }
     if (object.highlightsOtherText != null) {
@@ -359,8 +360,8 @@ class _$PtProgressReviewSerializer implements PrimitiveSerializer<PtProgressRevi
         case r'progress_highlights':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(BuiltList, [FullType(String)]),
-          ) as BuiltList<String>?;
+            specifiedType: const FullType.nullable(BuiltSet, [FullType(PtProgressReviewProgressHighlightsEnum)]),
+          ) as BuiltSet<PtProgressReviewProgressHighlightsEnum>?;
           if (valueDes == null) continue;
           result.progressHighlights.replace(valueDes);
           break;
@@ -511,6 +512,31 @@ class _$PtProgressReviewSerializer implements PrimitiveSerializer<PtProgressRevi
   }
 }
 
+
+class PtProgressReviewProgressHighlightsEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'improved_technique')
+  static const PtProgressReviewProgressHighlightsEnum improvedTechnique = _$ptProgressReviewProgressHighlightsEnum_improvedTechnique;
+  @BuiltValueEnumConst(wireName: r'increased_strength')
+  static const PtProgressReviewProgressHighlightsEnum increasedStrength = _$ptProgressReviewProgressHighlightsEnum_increasedStrength;
+  @BuiltValueEnumConst(wireName: r'improved_conditioning')
+  static const PtProgressReviewProgressHighlightsEnum improvedConditioning = _$ptProgressReviewProgressHighlightsEnum_improvedConditioning;
+  @BuiltValueEnumConst(wireName: r'better_consistency')
+  static const PtProgressReviewProgressHighlightsEnum betterConsistency = _$ptProgressReviewProgressHighlightsEnum_betterConsistency;
+  @BuiltValueEnumConst(wireName: r'improved_mobility')
+  static const PtProgressReviewProgressHighlightsEnum improvedMobility = _$ptProgressReviewProgressHighlightsEnum_improvedMobility;
+  @BuiltValueEnumConst(wireName: r'goal_milestone')
+  static const PtProgressReviewProgressHighlightsEnum goalMilestone = _$ptProgressReviewProgressHighlightsEnum_goalMilestone;
+  @BuiltValueEnumConst(wireName: r'other')
+  static const PtProgressReviewProgressHighlightsEnum other = _$ptProgressReviewProgressHighlightsEnum_other;
+
+  static Serializer<PtProgressReviewProgressHighlightsEnum> get serializer => _$ptProgressReviewProgressHighlightsEnumSerializer;
+
+  const PtProgressReviewProgressHighlightsEnum._(String name): super(name);
+
+  static BuiltSet<PtProgressReviewProgressHighlightsEnum> get values => _$ptProgressReviewProgressHighlightsEnumValues;
+  static PtProgressReviewProgressHighlightsEnum valueOf(String name) => _$ptProgressReviewProgressHighlightsEnumValueOf(name);
+}
 
 class PtProgressReviewStatusEnum extends EnumClass {
 

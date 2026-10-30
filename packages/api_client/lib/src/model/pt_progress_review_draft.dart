@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:built_collection/built_collection.dart';
 import 'package:api_client/src/model/date.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
@@ -19,6 +20,8 @@ part 'pt_progress_review_draft.g.dart';
 /// * [nextPhaseGoal] 
 /// * [nextPhaseTrainingFocus] 
 /// * [nextReviewDate] 
+/// * [progressHighlights] 
+/// * [highlightsOtherText] - Only accepted when `progress_highlights` includes `other`.
 @BuiltValue()
 abstract class PtProgressReviewDraft implements Built<PtProgressReviewDraft, PtProgressReviewDraftBuilder> {
   @BuiltValueField(wireName: r'review_period_start')
@@ -42,6 +45,14 @@ abstract class PtProgressReviewDraft implements Built<PtProgressReviewDraft, PtP
 
   @BuiltValueField(wireName: r'next_review_date')
   Date? get nextReviewDate;
+
+  @BuiltValueField(wireName: r'progress_highlights')
+  BuiltSet<PtProgressReviewDraftProgressHighlightsEnum>? get progressHighlights;
+  // enum progressHighlightsEnum {  improved_technique,  increased_strength,  improved_conditioning,  better_consistency,  improved_mobility,  goal_milestone,  other,  };
+
+  /// Only accepted when `progress_highlights` includes `other`.
+  @BuiltValueField(wireName: r'highlights_other_text')
+  String? get highlightsOtherText;
 
   PtProgressReviewDraft._();
 
@@ -109,6 +120,20 @@ class _$PtProgressReviewDraftSerializer implements PrimitiveSerializer<PtProgres
       yield serializers.serialize(
         object.nextReviewDate,
         specifiedType: const FullType(Date),
+      );
+    }
+    if (object.progressHighlights != null) {
+      yield r'progress_highlights';
+      yield serializers.serialize(
+        object.progressHighlights,
+        specifiedType: const FullType(BuiltSet, [FullType(PtProgressReviewDraftProgressHighlightsEnum)]),
+      );
+    }
+    if (object.highlightsOtherText != null) {
+      yield r'highlights_other_text';
+      yield serializers.serialize(
+        object.highlightsOtherText,
+        specifiedType: const FullType(String),
       );
     }
   }
@@ -188,6 +213,22 @@ class _$PtProgressReviewDraftSerializer implements PrimitiveSerializer<PtProgres
           if (valueDes == null) continue;
           result.nextReviewDate = valueDes;
           break;
+        case r'progress_highlights':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltSet, [FullType(PtProgressReviewDraftProgressHighlightsEnum)]),
+          ) as BuiltSet<PtProgressReviewDraftProgressHighlightsEnum>?;
+          if (valueDes == null) continue;
+          result.progressHighlights.replace(valueDes);
+          break;
+        case r'highlights_other_text':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.highlightsOtherText = valueDes;
+          break;
         default:
           unhandled.add(key);
           unhandled.add(value);
@@ -217,4 +258,29 @@ class _$PtProgressReviewDraftSerializer implements PrimitiveSerializer<PtProgres
   }
 }
 
+
+class PtProgressReviewDraftProgressHighlightsEnum extends EnumClass {
+
+  @BuiltValueEnumConst(wireName: r'improved_technique')
+  static const PtProgressReviewDraftProgressHighlightsEnum improvedTechnique = _$ptProgressReviewDraftProgressHighlightsEnum_improvedTechnique;
+  @BuiltValueEnumConst(wireName: r'increased_strength')
+  static const PtProgressReviewDraftProgressHighlightsEnum increasedStrength = _$ptProgressReviewDraftProgressHighlightsEnum_increasedStrength;
+  @BuiltValueEnumConst(wireName: r'improved_conditioning')
+  static const PtProgressReviewDraftProgressHighlightsEnum improvedConditioning = _$ptProgressReviewDraftProgressHighlightsEnum_improvedConditioning;
+  @BuiltValueEnumConst(wireName: r'better_consistency')
+  static const PtProgressReviewDraftProgressHighlightsEnum betterConsistency = _$ptProgressReviewDraftProgressHighlightsEnum_betterConsistency;
+  @BuiltValueEnumConst(wireName: r'improved_mobility')
+  static const PtProgressReviewDraftProgressHighlightsEnum improvedMobility = _$ptProgressReviewDraftProgressHighlightsEnum_improvedMobility;
+  @BuiltValueEnumConst(wireName: r'goal_milestone')
+  static const PtProgressReviewDraftProgressHighlightsEnum goalMilestone = _$ptProgressReviewDraftProgressHighlightsEnum_goalMilestone;
+  @BuiltValueEnumConst(wireName: r'other')
+  static const PtProgressReviewDraftProgressHighlightsEnum other = _$ptProgressReviewDraftProgressHighlightsEnum_other;
+
+  static Serializer<PtProgressReviewDraftProgressHighlightsEnum> get serializer => _$ptProgressReviewDraftProgressHighlightsEnumSerializer;
+
+  const PtProgressReviewDraftProgressHighlightsEnum._(String name): super(name);
+
+  static BuiltSet<PtProgressReviewDraftProgressHighlightsEnum> get values => _$ptProgressReviewDraftProgressHighlightsEnumValues;
+  static PtProgressReviewDraftProgressHighlightsEnum valueOf(String name) => _$ptProgressReviewDraftProgressHighlightsEnumValueOf(name);
+}
 

@@ -87,7 +87,7 @@ export class PtProgressReviewController {
     return new StreamableFile(buffer);
   }
 
-  @Patch('reviews/:id/trainer-sign')
+  @Post('reviews/:id/trainer-sign')
   @RequirePermission('pt_reviews.write')
   @ApiOperation({ operationId: 'trainerSignPtProgressReview', summary: 'Trainer signs a draft review' })
   @ApiParam({ name: 'id', type: Number })
@@ -95,7 +95,7 @@ export class PtProgressReviewController {
     return this.service.trainerSign(id, actor);
   }
 
-  @Patch('reviews/:id/client-sign')
+  @Post('reviews/:id/client-sign')
   @RequirePermission('pt_reviews.client_sign')
   @ApiOperation({ operationId: 'clientSignPtProgressReview', summary: 'Client signs a review' })
   @ApiParam({ name: 'id', type: Number })
@@ -103,7 +103,7 @@ export class PtProgressReviewController {
     return this.service.clientSign(id, actor);
   }
 
-  @Patch('reviews/:id/manager-approve')
+  @Post('reviews/:id/manager-approve')
   @RequirePermission('pt_reviews.approve')
   @ApiOperation({ operationId: 'managerApprovePtProgressReview', summary: 'Manager approves a review' })
   @ApiParam({ name: 'id', type: Number })

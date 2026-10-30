@@ -574,9 +574,9 @@ A review captures a period of PT, a snapshot of the member's goal metrics, and t
 | FR-PTREV-001 | Draft (`POST /members/{id}/pt-reviews`, `pt_reviews.write`): `review_period_start` and `review_period_end` (YYYY-MM-DD, end not before start) plus optional trainer summary, client feedback, next-phase goal / focus and `next_review_date`. The trainer is the caller (a trainer) or the member's assigned trainer; 422 when no trainer is assigned. |
 | FR-PTREV-002 | On draft, `body_metrics_snapshot` is built from the member's goals in `in_progress` or `achieved` status. `change_val` is always `current_val − start_val`. |
 | FR-PTREV-003 | Read (`GET /reviews/{id}`, `pt_reviews.read`) is row-scoped to the member. |
-| FR-PTREV-004 | Trainer sign (`PATCH …/trainer-sign`, `pt_reviews.write`): only the review's own trainer (or an admin), only from `draft`; stamps `trainer_signed_at`. |
-| FR-PTREV-005 | Client sign (`PATCH …/client-sign`, `pt_reviews.client_sign`): only the reviewed member, only from `pending_client_sign`; stamps `client_signed_at`. |
-| FR-PTREV-006 | Manager approve (`PATCH …/manager-approve`, `pt_reviews.approve`): staff other than trainers and members, only from `pending_manager_approval`; stamps `manager_user_id` and `manager_signed_at`. |
+| FR-PTREV-004 | Trainer sign (`POST …/trainer-sign`, `pt_reviews.write`): only the review's own trainer (or an admin), only from `draft`; stamps `trainer_signed_at`. |
+| FR-PTREV-005 | Client sign (`POST …/client-sign`, `pt_reviews.client_sign`): only the reviewed member, only from `pending_client_sign`; stamps `client_signed_at`. |
+| FR-PTREV-006 | Manager approve (`POST …/manager-approve`, `pt_reviews.approve`): staff other than trainers and members, only from `pending_manager_approval`; stamps `manager_user_id` and `manager_signed_at`. |
 | FR-PTREV-007 | Export (`GET /reviews/{id}/export-pdf`, `pt_reviews.read`) returns the presentation card as `application/pdf`. |
 
 ### 14a.1 Business rules
@@ -872,7 +872,7 @@ Transport-agnostic. Grouped by module. All scoped as in the module text.
 
 ### PT
 - `POST /members/{id}/pt-reviews` `GET /reviews/{id}` `GET /reviews/{id}/export-pdf`
-- `PATCH /reviews/{id}/trainer-sign` `PATCH /reviews/{id}/client-sign` `PATCH /reviews/{id}/manager-approve`
+- `POST /reviews/{id}/trainer-sign` `POST /reviews/{id}/client-sign` `POST /reviews/{id}/manager-approve`
 
 ### DIET
 - `GET/POST /foods` `GET/PATCH /foods/{id}`

@@ -264,6 +264,7 @@ export 'package:api_client/src/model/pt_product_page.dart';
 export 'package:api_client/src/model/pt_product_write.dart';
 export 'package:api_client/src/model/pt_progress_review.dart';
 export 'package:api_client/src/model/pt_progress_review_draft.dart';
+export 'package:api_client/src/model/pt_progress_review_draft_edit.dart';
 export 'package:api_client/src/model/pt_purchase_request.dart';
 export 'package:api_client/src/model/pt_purchase_result.dart';
 export 'package:api_client/src/model/pt_reassign_trainer_request.dart';

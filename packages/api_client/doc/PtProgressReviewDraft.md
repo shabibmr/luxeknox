@@ -15,6 +15,8 @@ Name | Type | Description | Notes
 **nextPhaseGoal** | **String** |  | [optional] 
 **nextPhaseTrainingFocus** | **String** |  | [optional] 
 **nextReviewDate** | [**Date**](Date.md) |  | [optional] 
+**progressHighlights** | **BuiltSet&lt;String&gt;** |  | [optional] 
+**highlightsOtherText** | **String** | Only accepted when `progress_highlights` includes `other`. | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

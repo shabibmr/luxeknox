@@ -270,7 +270,7 @@ Class | Method | HTTP request | Description
 [*PEOPLEApi*](doc/PEOPLEApi.md) | [**updateMember**](doc/PEOPLEApi.md#updatemember) | **PATCH** /members/{id} | Update member profile
 [*PEOPLEApi*](doc/PEOPLEApi.md) | [**updateTrainer**](doc/PEOPLEApi.md#updatetrainer) | **PATCH** /trainers/{id} | Update trainer
 [*PTApi*](doc/PTApi.md) | [**changePtSlot**](doc/PTApi.md#changeptslot) | **POST** /pt-subscriptions/{id}/change-slot | Move remaining PT sessions to other weekdays/hour
-[*PTApi*](doc/PTApi.md) | [**clientSignPtProgressReview**](doc/PTApi.md#clientsignptprogressreview) | **PATCH** /reviews/{id}/client-sign | Client signs a review
+[*PTApi*](doc/PTApi.md) | [**clientSignPtProgressReview**](doc/PTApi.md#clientsignptprogressreview) | **POST** /reviews/{id}/client-sign | Client signs a review
 [*PTApi*](doc/PTApi.md) | [**createPtProduct**](doc/PTApi.md#createptproduct) | **POST** /pt-products | Create a PT package
 [*PTApi*](doc/PTApi.md) | [**createPtProgressReviewDraft**](doc/PTApi.md#createptprogressreviewdraft) | **POST** /members/{id}/pt-reviews | Draft a PT progress review
 [*PTApi*](doc/PTApi.md) | [**exportPtProgressReviewPdf**](doc/PTApi.md#exportptprogressreviewpdf) | **GET** /reviews/{id}/export-pdf | Export the review presentation card as PDF
@@ -281,12 +281,13 @@ Class | Method | HTTP request | Description
 [*PTApi*](doc/PTApi.md) | [**getPtScheduleGrid**](doc/PTApi.md#getptschedulegrid) | **GET** /pt/schedule-grid | Hours × active trainers occupancy for a PT package, start date and weekdays
 [*PTApi*](doc/PTApi.md) | [**getPtSubscription**](doc/PTApi.md#getptsubscription) | **GET** /pt-subscriptions/{id} | PT subscription detail
 [*PTApi*](doc/PTApi.md) | [**listPtProducts**](doc/PTApi.md#listptproducts) | **GET** /pt-products | Personal Training package catalog
-[*PTApi*](doc/PTApi.md) | [**managerApprovePtProgressReview**](doc/PTApi.md#managerapproveptprogressreview) | **PATCH** /reviews/{id}/manager-approve | Manager approves a review
+[*PTApi*](doc/PTApi.md) | [**managerApprovePtProgressReview**](doc/PTApi.md#managerapproveptprogressreview) | **POST** /reviews/{id}/manager-approve | Manager approves a review
 [*PTApi*](doc/PTApi.md) | [**purchasePtSubscription**](doc/PTApi.md#purchaseptsubscription) | **POST** /pt-subscriptions | Sell PT — assign trainer + fixed weekly slot, take payment, generate sessions
 [*PTApi*](doc/PTApi.md) | [**reassignPtTrainer**](doc/PTApi.md#reassignpttrainer) | **POST** /pt-subscriptions/{id}/reassign-trainer | Move remaining PT sessions to another active trainer
 [*PTApi*](doc/PTApi.md) | [**renewPtSubscription**](doc/PTApi.md#renewptsubscription) | **POST** /pt-subscriptions/{id}/renew | Renew PT with the same trainer and slot
-[*PTApi*](doc/PTApi.md) | [**trainerSignPtProgressReview**](doc/PTApi.md#trainersignptprogressreview) | **PATCH** /reviews/{id}/trainer-sign | Trainer signs a draft review
+[*PTApi*](doc/PTApi.md) | [**trainerSignPtProgressReview**](doc/PTApi.md#trainersignptprogressreview) | **POST** /reviews/{id}/trainer-sign | Trainer signs a draft review
 [*PTApi*](doc/PTApi.md) | [**updatePtProduct**](doc/PTApi.md#updateptproduct) | **PATCH** /pt-products/{id} | Update or archive a PT package
+[*PTApi*](doc/PTApi.md) | [**updatePtProgressReviewDraft**](doc/PTApi.md#updateptprogressreviewdraft) | **PATCH** /reviews/{id} | Save the presentation card of a draft review
 [*RBACApi*](doc/RBACApi.md) | [**assignEmployeeRole**](doc/RBACApi.md#assignemployeerole) | **PUT** /employees/{id}/role | Assign exactly one role
 [*RBACApi*](doc/RBACApi.md) | [**createRole**](doc/RBACApi.md#createrole) | **POST** /roles | Create a custom role
 [*RBACApi*](doc/RBACApi.md) | [**getRole**](doc/RBACApi.md#getrole) | **GET** /roles/{id} | Get a role and its permissions
@@ -577,6 +578,7 @@ Class | Method | HTTP request | Description
  - [PtProductWrite](doc/PtProductWrite.md)
  - [PtProgressReview](doc/PtProgressReview.md)
  - [PtProgressReviewDraft](doc/PtProgressReviewDraft.md)
+ - [PtProgressReviewDraftEdit](doc/PtProgressReviewDraftEdit.md)
  - [PtPurchaseRequest](doc/PtPurchaseRequest.md)
  - [PtPurchaseResult](doc/PtPurchaseResult.md)
  - [PtReassignTrainerRequest](doc/PtReassignTrainerRequest.md)

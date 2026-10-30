@@ -10,7 +10,7 @@ All URIs are relative to *http://localhost:3000/v1*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**changePtSlot**](PTApi.md#changeptslot) | **POST** /pt-subscriptions/{id}/change-slot | Move remaining PT sessions to other weekdays/hour
-[**clientSignPtProgressReview**](PTApi.md#clientsignptprogressreview) | **PATCH** /reviews/{id}/client-sign | Client signs a review
+[**clientSignPtProgressReview**](PTApi.md#clientsignptprogressreview) | **POST** /reviews/{id}/client-sign | Client signs a review
 [**createPtProduct**](PTApi.md#createptproduct) | **POST** /pt-products | Create a PT package
 [**createPtProgressReviewDraft**](PTApi.md#createptprogressreviewdraft) | **POST** /members/{id}/pt-reviews | Draft a PT progress review
 [**exportPtProgressReviewPdf**](PTApi.md#exportptprogressreviewpdf) | **GET** /reviews/{id}/export-pdf | Export the review presentation card as PDF
@@ -21,12 +21,13 @@ Method | HTTP request | Description
 [**getPtScheduleGrid**](PTApi.md#getptschedulegrid) | **GET** /pt/schedule-grid | Hours × active trainers occupancy for a PT package, start date and weekdays
 [**getPtSubscription**](PTApi.md#getptsubscription) | **GET** /pt-subscriptions/{id} | PT subscription detail
 [**listPtProducts**](PTApi.md#listptproducts) | **GET** /pt-products | Personal Training package catalog
-[**managerApprovePtProgressReview**](PTApi.md#managerapproveptprogressreview) | **PATCH** /reviews/{id}/manager-approve | Manager approves a review
+[**managerApprovePtProgressReview**](PTApi.md#managerapproveptprogressreview) | **POST** /reviews/{id}/manager-approve | Manager approves a review
 [**purchasePtSubscription**](PTApi.md#purchaseptsubscription) | **POST** /pt-subscriptions | Sell PT — assign trainer + fixed weekly slot, take payment, generate sessions
 [**reassignPtTrainer**](PTApi.md#reassignpttrainer) | **POST** /pt-subscriptions/{id}/reassign-trainer | Move remaining PT sessions to another active trainer
 [**renewPtSubscription**](PTApi.md#renewptsubscription) | **POST** /pt-subscriptions/{id}/renew | Renew PT with the same trainer and slot
-[**trainerSignPtProgressReview**](PTApi.md#trainersignptprogressreview) | **PATCH** /reviews/{id}/trainer-sign | Trainer signs a draft review
+[**trainerSignPtProgressReview**](PTApi.md#trainersignptprogressreview) | **POST** /reviews/{id}/trainer-sign | Trainer signs a draft review
 [**updatePtProduct**](PTApi.md#updateptproduct) | **PATCH** /pt-products/{id} | Update or archive a PT package
+[**updatePtProgressReviewDraft**](PTApi.md#updateptprogressreviewdraft) | **PATCH** /reviews/{id} | Save the presentation card of a draft review
 
 
 # **changePtSlot**
@@ -161,7 +162,7 @@ Name | Type | Description  | Notes
 
 Draft a PT progress review
 
-Snapshots in-progress and achieved goals into `body_metrics_snapshot` (change = current − start). 
+Snapshots the member's measurements into `body_metrics_snapshot` as the five presentation-card rows (weight, waist, strength, cardio, other), in that order. Start is the latest value on or before the period start and current is the latest on or before the period end (calendar dates, end day included). Change is current − start, rounded half away from zero to two decimals, and is null unless both exist. Targets come from in-progress or achieved goals, not from goal baseline or current values. A row with no matching metric is still present with null values. New drafts leave `performance_markers_snapshot` null. `highlights_other_text` is accepted only when `progress_highlights` includes `other`. 
 
 ### Example
 ```dart
@@ -797,6 +798,51 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**PtProduct**](PtProduct.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **updatePtProgressReviewDraft**
+> PtProgressReview updatePtProgressReviewDraft(id, ptProgressReviewDraftEdit)
+
+Save the presentation card of a draft review
+
+Partial update of a review that is still a `draft`: the highlight checkboxes, the other-text line, the summary, the member's feedback, the next phase, and the six discussed checks. Omitted fields are left alone, an explicit null clears one, and `progress_highlights` replaces the whole set. Only the review's trainer may edit. `highlights_other_text` is accepted only when `other` is selected, and deselecting `other` clears the stored text. `next_review_date` must be after `review_period_end`. The period and the measure rows cannot be changed here. Once the review is no longer a draft the edit is refused with 409. 
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getPTApi();
+final int id = 789; // int | 
+final PtProgressReviewDraftEdit ptProgressReviewDraftEdit = ; // PtProgressReviewDraftEdit | 
+
+try {
+    final response = api.updatePtProgressReviewDraft(id, ptProgressReviewDraftEdit);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling PTApi->updatePtProgressReviewDraft: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **ptProgressReviewDraftEdit** | [**PtProgressReviewDraftEdit**](PtProgressReviewDraftEdit.md)|  | 
+
+### Return type
+
+[**PtProgressReview**](PtProgressReview.md)
 
 ### Authorization
 

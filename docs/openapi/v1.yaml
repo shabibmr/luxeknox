@@ -2363,7 +2363,7 @@ paths:
         "429":
           $ref: "#/components/responses/Error429"
   /reviews/{id}/trainer-sign:
-    patch:
+    post:
       operationId: trainerSignPtProgressReview
       summary: Trainer signs a draft review
       description: >
@@ -2396,7 +2396,7 @@ paths:
         "429":
           $ref: "#/components/responses/Error429"
   /reviews/{id}/client-sign:
-    patch:
+    post:
       operationId: clientSignPtProgressReview
       summary: Client signs a review
       description: >
@@ -2429,7 +2429,7 @@ paths:
         "429":
           $ref: "#/components/responses/Error429"
   /reviews/{id}/manager-approve:
-    patch:
+    post:
       operationId: managerApprovePtProgressReview
       summary: Manager approves a review
       description: >

@@ -247,6 +247,7 @@ import 'package:api_client/src/model/pt_product_page.dart';
 import 'package:api_client/src/model/pt_product_write.dart';
 import 'package:api_client/src/model/pt_progress_review.dart';
 import 'package:api_client/src/model/pt_progress_review_draft.dart';
+import 'package:api_client/src/model/pt_progress_review_draft_edit.dart';
 import 'package:api_client/src/model/pt_purchase_request.dart';
 import 'package:api_client/src/model/pt_purchase_result.dart';
 import 'package:api_client/src/model/pt_reassign_trainer_request.dart';
@@ -569,6 +570,7 @@ part 'serializers.g.dart';
   PtProductWrite,
   PtProgressReview,
   PtProgressReviewDraft,
+  PtProgressReviewDraftEdit,
   PtPurchaseRequest,
   PtPurchaseResult,
   PtReassignTrainerRequest,
@@ -935,6 +937,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(InventoryItem)]),
         () => ListBuilder<InventoryItem>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltSet, [FullType(String)]),
+        () => SetBuilder<String>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(DietPlanMealsWriteMealsInnerFoodsInner)]),
