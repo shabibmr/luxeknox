@@ -35,6 +35,17 @@ extension WorkoutPlanModelMapper on api.WorkoutPlan {
       createdAt: createdAt,
       rowVersion: rowVersion,
       exercises: versionExercises.map((e) => e.toDomain()).toList(),
+      primaryObjective12w: primaryObjective12w,
+      milestone4w: milestone4w,
+      sessionsPerWeek: sessionsPerWeek,
+      targetSessionDurationMinutes: targetSessionDurationMinutes,
+      splitType: splitType,
+      cardioProtocol: cardioProtocol,
+      mobilityProtocol: mobilityProtocol,
+      progressionMethods:
+          progressionMethods?.map((e) => e.name).toList() ?? const [],
+      mainSuccessMeasure: mainSuccessMeasure,
+      trainerProgrammingNotes: trainerProgrammingNotes,
     );
   }
 }
@@ -53,6 +64,8 @@ extension WorkoutPlanExerciseModelMapper on api.WorkoutPlanExercise {
       restSeconds: restSeconds,
       restBetweenExercisesSeconds: restBetweenExercisesSeconds,
       notes: notes,
+      targetRir: targetRir,
+      targetDurationSeconds: targetDurationSeconds,
     );
   }
 }
@@ -67,18 +80,47 @@ api.WorkoutPlanWrite toWorkoutPlanWrite({
   int? durationWeeks,
   bool? isTemplate,
   int? rowVersion,
+  String? primaryObjective12w,
+  String? milestone4w,
+  int? sessionsPerWeek,
+  int? targetSessionDurationMinutes,
+  String? splitType,
+  String? cardioProtocol,
+  String? mobilityProtocol,
+  List<String>? progressionMethods,
+  String? mainSuccessMeasure,
+  String? trainerProgrammingNotes,
 }) {
   return api.WorkoutPlanWrite(
-    (b) => b
-      ..title = title
-      ..description = description
-      ..memberId = memberId == null ? null : int.tryParse(memberId)
-      ..trainerId = trainerId == null ? null : int.tryParse(trainerId)
-      ..targetGoal = targetGoal
-      ..difficulty = difficulty
-      ..durationWeeks = durationWeeks
-      ..isTemplate = isTemplate
-      ..rowVersion = rowVersion,
+    (b) {
+      b
+        ..title = title
+        ..description = description
+        ..memberId = memberId == null ? null : int.tryParse(memberId)
+        ..trainerId = trainerId == null ? null : int.tryParse(trainerId)
+        ..targetGoal = targetGoal
+        ..difficulty = difficulty
+        ..durationWeeks = durationWeeks
+        ..isTemplate = isTemplate
+        ..rowVersion = rowVersion
+        ..primaryObjective12w = primaryObjective12w
+        ..milestone4w = milestone4w
+        ..sessionsPerWeek = sessionsPerWeek
+        ..targetSessionDurationMinutes = targetSessionDurationMinutes
+        ..splitType = splitType
+        ..cardioProtocol = cardioProtocol
+        ..mobilityProtocol = mobilityProtocol
+        ..mainSuccessMeasure = mainSuccessMeasure
+        ..trainerProgrammingNotes = trainerProgrammingNotes;
+
+      if (progressionMethods != null) {
+        b.progressionMethods.replace(
+          progressionMethods.map(
+            (m) => api.WorkoutPlanWriteProgressionMethodsEnum.valueOf(m),
+          ),
+        );
+      }
+    },
   );
 }
 
@@ -136,6 +178,17 @@ extension WorkoutSessionModelMapper on api.WorkoutSession {
       totalVolumeKg: totalVolumeKg,
       durationMinutes: durationMinutes,
       clientFeedbackRating: clientFeedbackRating,
+      effortRating: effortRating,
+      satisfactionRating: satisfactionRating,
+      painDiscomfortScore: painDiscomfortScore,
+      painNotes: painNotes,
+      sessionFocus: sessionFocus,
+      warmupProtocol: warmupProtocol,
+      cooldownProtocol: cooldownProtocol,
+      trainerNotes: trainerNotes,
+      nextSessionPlan: nextSessionPlan,
+      clientSignedAt: clientSignedAt,
+      trainerSignedAt: trainerSignedAt,
       notes: notes,
       sets: (sets ?? BuiltList()).map((e) => e.toDomain()).toList(),
     );
@@ -152,6 +205,10 @@ extension WorkoutSessionExerciseModelMapper on api.WorkoutSessionExercise {
       repsCompleted: repsCompleted,
       weightLiftedKg: weightLiftedKg,
       rpeScore: rpeScore,
+      targetRir: targetRir,
+      actualRir: actualRir,
+      targetDurationSeconds: targetDurationSeconds,
+      actualDurationSeconds: actualDurationSeconds,
       isCompleted: isCompleted,
       notes: notes,
     );
@@ -185,6 +242,10 @@ api.WorkoutSetWrite toWorkoutSetWrite({
   int? repsCompleted,
   num? weightLiftedKg,
   num? rpeScore,
+  num? targetRir,
+  num? actualRir,
+  int? targetDurationSeconds,
+  int? actualDurationSeconds,
   bool? isCompleted,
   String? notes,
 }) {
@@ -195,6 +256,10 @@ api.WorkoutSetWrite toWorkoutSetWrite({
       ..repsCompleted = repsCompleted
       ..weightLiftedKg = weightLiftedKg
       ..rpeScore = rpeScore
+      ..targetRir = targetRir
+      ..actualRir = actualRir
+      ..targetDurationSeconds = targetDurationSeconds
+      ..actualDurationSeconds = actualDurationSeconds
       ..isCompleted = isCompleted
       ..notes = notes,
   );
@@ -204,6 +269,10 @@ api.WorkoutSetUpdate toWorkoutSetUpdate({
   int? repsCompleted,
   num? weightLiftedKg,
   num? rpeScore,
+  num? targetRir,
+  num? actualRir,
+  int? targetDurationSeconds,
+  int? actualDurationSeconds,
   bool? isCompleted,
   String? notes,
 }) {
@@ -212,7 +281,48 @@ api.WorkoutSetUpdate toWorkoutSetUpdate({
       ..repsCompleted = repsCompleted
       ..weightLiftedKg = weightLiftedKg
       ..rpeScore = rpeScore
+      ..targetRir = targetRir
+      ..actualRir = actualRir
+      ..targetDurationSeconds = targetDurationSeconds
+      ..actualDurationSeconds = actualDurationSeconds
       ..isCompleted = isCompleted
       ..notes = notes,
+  );
+}
+
+api.WorkoutSessionComplete toWorkoutSessionComplete({
+  int? clientFeedbackRating,
+  int? effortRating,
+  int? satisfactionRating,
+  int? painDiscomfortScore,
+  String? painNotes,
+  String? notes,
+  String? trainerNotes,
+  String? nextSessionPlan,
+  String? sessionFocus,
+  String? warmupProtocol,
+  String? cooldownProtocol,
+  bool? clientSigned,
+  bool? trainerSigned,
+  DateTime? clientSignedAt,
+  DateTime? trainerSignedAt,
+}) {
+  return api.WorkoutSessionComplete(
+    (b) => b
+      ..clientFeedbackRating = clientFeedbackRating
+      ..effortRating = effortRating
+      ..satisfactionRating = satisfactionRating
+      ..painDiscomfortScore = painDiscomfortScore
+      ..painNotes = painNotes
+      ..notes = notes
+      ..trainerNotes = trainerNotes
+      ..nextSessionPlan = nextSessionPlan
+      ..sessionFocus = sessionFocus
+      ..warmupProtocol = warmupProtocol
+      ..cooldownProtocol = cooldownProtocol
+      ..clientSigned = clientSigned
+      ..trainerSigned = trainerSigned
+      ..clientSignedAt = clientSignedAt
+      ..trainerSignedAt = trainerSignedAt,
   );
 }

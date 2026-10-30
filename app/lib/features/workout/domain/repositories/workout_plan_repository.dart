@@ -25,6 +25,16 @@ abstract class WorkoutPlanRepository {
     String? difficulty,
     int? durationWeeks,
     bool? isTemplate,
+    String? primaryObjective12w,
+    String? milestone4w,
+    int? sessionsPerWeek,
+    int? targetSessionDurationMinutes,
+    String? splitType,
+    String? cardioProtocol,
+    String? mobilityProtocol,
+    List<String>? progressionMethods,
+    String? mainSuccessMeasure,
+    String? trainerProgrammingNotes,
   });
 
   Future<Either<Failure, WorkoutPlan>> updatePlan(
@@ -38,6 +48,16 @@ abstract class WorkoutPlanRepository {
     int? durationWeeks,
     bool? isTemplate,
     required int rowVersion,
+    String? primaryObjective12w,
+    String? milestone4w,
+    int? sessionsPerWeek,
+    int? targetSessionDurationMinutes,
+    String? splitType,
+    String? cardioProtocol,
+    String? mobilityProtocol,
+    List<String>? progressionMethods,
+    String? mainSuccessMeasure,
+    String? trainerProgrammingNotes,
   });
 
   Future<Either<Failure, WorkoutPlan>> replaceExercises(

@@ -13,6 +13,8 @@ class WorkoutPlanExercise extends Equatable {
     this.restSeconds,
     this.restBetweenExercisesSeconds,
     this.notes,
+    this.targetRir,
+    this.targetDurationSeconds,
   });
 
   final String? id;
@@ -27,6 +29,46 @@ class WorkoutPlanExercise extends Equatable {
   final int? restBetweenExercisesSeconds;
   final String? notes;
 
+  // Micro-execution / Timed holds / RIR (PTF-13 / PTF-25)
+  final String? targetRir;
+  final int? targetDurationSeconds;
+
+  num? get targetRirNum => targetRir != null ? num.tryParse(targetRir!) : null;
+
+  WorkoutPlanExercise copyWith({
+    String? id,
+    String? exerciseId,
+    String? exerciseName,
+    int? dayNumber,
+    int? orderIndex,
+    int? targetSets,
+    String? targetReps,
+    num? targetWeightKg,
+    int? restSeconds,
+    int? restBetweenExercisesSeconds,
+    String? notes,
+    String? targetRir,
+    int? targetDurationSeconds,
+  }) {
+    return WorkoutPlanExercise(
+      id: id ?? this.id,
+      exerciseId: exerciseId ?? this.exerciseId,
+      exerciseName: exerciseName ?? this.exerciseName,
+      dayNumber: dayNumber ?? this.dayNumber,
+      orderIndex: orderIndex ?? this.orderIndex,
+      targetSets: targetSets ?? this.targetSets,
+      targetReps: targetReps ?? this.targetReps,
+      targetWeightKg: targetWeightKg ?? this.targetWeightKg,
+      restSeconds: restSeconds ?? this.restSeconds,
+      restBetweenExercisesSeconds:
+          restBetweenExercisesSeconds ?? this.restBetweenExercisesSeconds,
+      notes: notes ?? this.notes,
+      targetRir: targetRir ?? this.targetRir,
+      targetDurationSeconds:
+          targetDurationSeconds ?? this.targetDurationSeconds,
+    );
+  }
+
   @override
   List<Object?> get props => [
     id,
@@ -40,5 +82,7 @@ class WorkoutPlanExercise extends Equatable {
     restSeconds,
     restBetweenExercisesSeconds,
     notes,
+    targetRir,
+    targetDurationSeconds,
   ];
 }

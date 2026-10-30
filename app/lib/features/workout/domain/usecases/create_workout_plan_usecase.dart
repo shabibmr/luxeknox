@@ -17,6 +17,16 @@ class CreateWorkoutPlanParams extends Equatable {
     this.difficulty,
     this.durationWeeks,
     this.isTemplate,
+    this.primaryObjective12w,
+    this.milestone4w,
+    this.sessionsPerWeek,
+    this.targetSessionDurationMinutes,
+    this.splitType,
+    this.cardioProtocol,
+    this.mobilityProtocol,
+    this.progressionMethods,
+    this.mainSuccessMeasure,
+    this.trainerProgrammingNotes,
   });
 
   final String title;
@@ -28,6 +38,18 @@ class CreateWorkoutPlanParams extends Equatable {
   final int? durationWeeks;
   final bool? isTemplate;
 
+  // Macrocycle Blueprint fields (PTF-12 / PTF-25)
+  final String? primaryObjective12w;
+  final String? milestone4w;
+  final int? sessionsPerWeek;
+  final int? targetSessionDurationMinutes;
+  final String? splitType;
+  final String? cardioProtocol;
+  final String? mobilityProtocol;
+  final List<String>? progressionMethods;
+  final String? mainSuccessMeasure;
+  final String? trainerProgrammingNotes;
+
   @override
   List<Object?> get props => [
     title,
@@ -38,6 +60,16 @@ class CreateWorkoutPlanParams extends Equatable {
     difficulty,
     durationWeeks,
     isTemplate,
+    primaryObjective12w,
+    milestone4w,
+    sessionsPerWeek,
+    targetSessionDurationMinutes,
+    splitType,
+    cardioProtocol,
+    mobilityProtocol,
+    progressionMethods,
+    mainSuccessMeasure,
+    trainerProgrammingNotes,
   ];
 }
 
@@ -59,6 +91,16 @@ class CreateWorkoutPlanUseCase
       difficulty: params.difficulty,
       durationWeeks: params.durationWeeks,
       isTemplate: params.isTemplate,
+      primaryObjective12w: params.primaryObjective12w,
+      milestone4w: params.milestone4w,
+      sessionsPerWeek: params.sessionsPerWeek,
+      targetSessionDurationMinutes: params.targetSessionDurationMinutes,
+      splitType: params.splitType,
+      cardioProtocol: params.cardioProtocol,
+      mobilityProtocol: params.mobilityProtocol,
+      progressionMethods: params.progressionMethods,
+      mainSuccessMeasure: params.mainSuccessMeasure,
+      trainerProgrammingNotes: params.trainerProgrammingNotes,
     );
   }
 }

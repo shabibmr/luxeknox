@@ -15,6 +15,10 @@ class LogWorkoutSetParams extends Equatable {
     this.repsCompleted,
     this.weightLiftedKg,
     this.rpeScore,
+    this.targetRir,
+    this.actualRir,
+    this.targetDurationSeconds,
+    this.actualDurationSeconds,
     this.isCompleted = true,
     this.notes,
   });
@@ -25,6 +29,10 @@ class LogWorkoutSetParams extends Equatable {
   final int? repsCompleted;
   final num? weightLiftedKg;
   final num? rpeScore;
+  final num? targetRir;
+  final num? actualRir;
+  final int? targetDurationSeconds;
+  final int? actualDurationSeconds;
   final bool? isCompleted;
   final String? notes;
 
@@ -36,6 +44,10 @@ class LogWorkoutSetParams extends Equatable {
     repsCompleted,
     weightLiftedKg,
     rpeScore,
+    targetRir,
+    actualRir,
+    targetDurationSeconds,
+    actualDurationSeconds,
     isCompleted,
     notes,
   ];
@@ -57,6 +69,10 @@ class LogWorkoutSetUseCase
       repsCompleted: params.repsCompleted,
       weightLiftedKg: params.weightLiftedKg,
       rpeScore: params.rpeScore,
+      targetRir: params.targetRir,
+      actualRir: params.actualRir,
+      targetDurationSeconds: params.targetDurationSeconds,
+      actualDurationSeconds: params.actualDurationSeconds,
       isCompleted: params.isCompleted,
       notes: params.notes,
     );

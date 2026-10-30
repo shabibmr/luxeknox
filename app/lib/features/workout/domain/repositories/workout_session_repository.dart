@@ -26,6 +26,10 @@ abstract class WorkoutSessionRepository {
     int? repsCompleted,
     num? weightLiftedKg,
     num? rpeScore,
+    num? targetRir,
+    num? actualRir,
+    int? targetDurationSeconds,
+    int? actualDurationSeconds,
     bool? isCompleted,
     String? notes,
   });
@@ -34,6 +38,19 @@ abstract class WorkoutSessionRepository {
     String sessionId, {
     String? notes,
     int? clientFeedbackRating,
+    int? effortRating,
+    int? satisfactionRating,
+    int? painDiscomfortScore,
+    String? painNotes,
+    String? trainerNotes,
+    String? nextSessionPlan,
+    String? sessionFocus,
+    String? warmupProtocol,
+    String? cooldownProtocol,
+    bool? clientSigned,
+    bool? trainerSigned,
+    DateTime? clientSignedAt,
+    DateTime? trainerSignedAt,
   });
 
   Future<Either<Failure, WorkoutSession?>> getActiveSession(String memberId);
@@ -44,6 +61,10 @@ abstract class WorkoutSessionRepository {
     int? reps,
     num? weightKg,
     num? rpe,
+    num? targetRir,
+    num? actualRir,
+    int? targetDurationSeconds,
+    int? actualDurationSeconds,
     bool? isCompleted,
     String? notes,
   });

@@ -7,6 +7,7 @@ import '../../../../core/pagination/cursor_page.dart';
 import '../../domain/entities/workout_plan.dart';
 import '../../domain/entities/workout_plan_exercise_input.dart';
 import '../../domain/entities/workout_plan_version.dart';
+import '../../domain/entities/workout_validators.dart';
 import '../../domain/repositories/workout_plan_repository.dart';
 import '../datasources/workout_plan_remote_datasource.dart';
 import '../models/workout_plan_mappers.dart';
@@ -18,6 +19,21 @@ class WorkoutPlanRepositoryImpl implements WorkoutPlanRepository {
   final WorkoutPlanRemoteDataSource _remoteDataSource;
 
   int? _parseId(String id) => int.tryParse(id);
+
+  ValidationFailure? _validateBlueprint({
+    int? sessionsPerWeek,
+    int? targetSessionDurationMinutes,
+  }) {
+    final freqError = WorkoutValidators.validateSessionsPerWeek(sessionsPerWeek);
+    if (freqError != null) return ValidationFailure([freqError]);
+
+    final durError = WorkoutValidators.validateSessionDurationMinutes(
+      targetSessionDurationMinutes,
+    );
+    if (durError != null) return ValidationFailure([durError]);
+
+    return null;
+  }
 
   @override
   Future<Either<Failure, CursorPage<WorkoutPlan>>> listPlans({
@@ -67,7 +83,22 @@ class WorkoutPlanRepositoryImpl implements WorkoutPlanRepository {
     String? difficulty,
     int? durationWeeks,
     bool? isTemplate,
+    String? primaryObjective12w,
+    String? milestone4w,
+    int? sessionsPerWeek,
+    int? targetSessionDurationMinutes,
+    String? splitType,
+    String? cardioProtocol,
+    String? mobilityProtocol,
+    List<String>? progressionMethods,
+    String? mainSuccessMeasure,
+    String? trainerProgrammingNotes,
   }) async {
+    final validationError = _validateBlueprint(
+      sessionsPerWeek: sessionsPerWeek,
+      targetSessionDurationMinutes: targetSessionDurationMinutes,
+    );
+    if (validationError != null) return Left(validationError);
     try {
       final created = await _remoteDataSource.createPlan(
         toWorkoutPlanWrite(
@@ -79,6 +110,16 @@ class WorkoutPlanRepositoryImpl implements WorkoutPlanRepository {
           difficulty: difficulty,
           durationWeeks: durationWeeks,
           isTemplate: isTemplate,
+          primaryObjective12w: primaryObjective12w,
+          milestone4w: milestone4w,
+          sessionsPerWeek: sessionsPerWeek,
+          targetSessionDurationMinutes: targetSessionDurationMinutes,
+          splitType: splitType,
+          cardioProtocol: cardioProtocol,
+          mobilityProtocol: mobilityProtocol,
+          progressionMethods: progressionMethods,
+          mainSuccessMeasure: mainSuccessMeasure,
+          trainerProgrammingNotes: trainerProgrammingNotes,
         ),
       );
       return Right(created.toDomain());
@@ -99,9 +140,24 @@ class WorkoutPlanRepositoryImpl implements WorkoutPlanRepository {
     int? durationWeeks,
     bool? isTemplate,
     required int rowVersion,
+    String? primaryObjective12w,
+    String? milestone4w,
+    int? sessionsPerWeek,
+    int? targetSessionDurationMinutes,
+    String? splitType,
+    String? cardioProtocol,
+    String? mobilityProtocol,
+    List<String>? progressionMethods,
+    String? mainSuccessMeasure,
+    String? trainerProgrammingNotes,
   }) async {
     final intId = _parseId(id);
     if (intId == null) return const Left(NotFoundFailure());
+    final validationError = _validateBlueprint(
+      sessionsPerWeek: sessionsPerWeek,
+      targetSessionDurationMinutes: targetSessionDurationMinutes,
+    );
+    if (validationError != null) return Left(validationError);
     try {
       final updated = await _remoteDataSource.updatePlan(
         intId,
@@ -115,6 +171,16 @@ class WorkoutPlanRepositoryImpl implements WorkoutPlanRepository {
           durationWeeks: durationWeeks,
           isTemplate: isTemplate,
           rowVersion: rowVersion,
+          primaryObjective12w: primaryObjective12w,
+          milestone4w: milestone4w,
+          sessionsPerWeek: sessionsPerWeek,
+          targetSessionDurationMinutes: targetSessionDurationMinutes,
+          splitType: splitType,
+          cardioProtocol: cardioProtocol,
+          mobilityProtocol: mobilityProtocol,
+          progressionMethods: progressionMethods,
+          mainSuccessMeasure: mainSuccessMeasure,
+          trainerProgrammingNotes: trainerProgrammingNotes,
         ),
       );
       return Right(updated.toDomain());

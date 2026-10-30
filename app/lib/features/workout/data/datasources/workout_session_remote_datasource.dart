@@ -1,7 +1,8 @@
 import 'package:api_client/api_client.dart' as api;
-import 'package:built_value/serializer.dart';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+
+import '../models/workout_plan_mappers.dart';
 
 abstract class WorkoutSessionRemoteDataSource {
   Future<api.WorkoutSessionPage> listSessions({
@@ -21,6 +22,19 @@ abstract class WorkoutSessionRemoteDataSource {
     int sessionId, {
     String? notes,
     int? clientFeedbackRating,
+    int? effortRating,
+    int? satisfactionRating,
+    int? painDiscomfortScore,
+    String? painNotes,
+    String? trainerNotes,
+    String? nextSessionPlan,
+    String? sessionFocus,
+    String? warmupProtocol,
+    String? cooldownProtocol,
+    bool? clientSigned,
+    bool? trainerSigned,
+    DateTime? clientSignedAt,
+    DateTime? trainerSignedAt,
   });
 
   Future<api.WorkoutSession> getActiveSession({int? memberId});
@@ -42,10 +56,11 @@ abstract class WorkoutSessionRemoteDataSource {
 @LazySingleton(as: WorkoutSessionRemoteDataSource)
 class WorkoutSessionRemoteDataSourceImpl
     implements WorkoutSessionRemoteDataSource {
-  WorkoutSessionRemoteDataSourceImpl(this._workApi, this._dio);
+  WorkoutSessionRemoteDataSourceImpl(this._workApi, [Dio? dio]) : _dio = dio;
 
   final api.WORKApi _workApi;
-  final Dio _dio;
+  // ignore: unused_field
+  final Dio? _dio;
 
   T _unwrap<T>(Response<T> response) {
     final data = response.data;
@@ -98,50 +113,71 @@ class WorkoutSessionRemoteDataSourceImpl
     int sessionId, {
     String? notes,
     int? clientFeedbackRating,
+    int? effortRating,
+    int? satisfactionRating,
+    int? painDiscomfortScore,
+    String? painNotes,
+    String? trainerNotes,
+    String? nextSessionPlan,
+    String? sessionFocus,
+    String? warmupProtocol,
+    String? cooldownProtocol,
+    bool? clientSigned,
+    bool? trainerSigned,
+    DateTime? clientSignedAt,
+    DateTime? trainerSignedAt,
   }) async {
     final trimmedNotes = notes?.trim();
+    final trimmedPainNotes = painNotes?.trim();
+    final trimmedTrainerNotes = trainerNotes?.trim();
+    final trimmedNextPlan = nextSessionPlan?.trim();
+    final trimmedFocus = sessionFocus?.trim();
+    final trimmedWarmup = warmupProtocol?.trim();
+    final trimmedCooldown = cooldownProtocol?.trim();
+
     final hasBody =
         (trimmedNotes != null && trimmedNotes.isNotEmpty) ||
-        clientFeedbackRating != null;
+        clientFeedbackRating != null ||
+        effortRating != null ||
+        satisfactionRating != null ||
+        painDiscomfortScore != null ||
+        (trimmedPainNotes != null && trimmedPainNotes.isNotEmpty) ||
+        (trimmedTrainerNotes != null && trimmedTrainerNotes.isNotEmpty) ||
+        (trimmedNextPlan != null && trimmedNextPlan.isNotEmpty) ||
+        (trimmedFocus != null && trimmedFocus.isNotEmpty) ||
+        (trimmedWarmup != null && trimmedWarmup.isNotEmpty) ||
+        (trimmedCooldown != null && trimmedCooldown.isNotEmpty) ||
+        clientSigned != null ||
+        trainerSigned != null ||
+        clientSignedAt != null ||
+        trainerSignedAt != null;
 
-    // OpenAPI complete has no body; FR-WORK-013 notes/rating use forward-compat POST.
-    if (!hasBody) {
-      return _unwrap(await _workApi.completeWorkoutSession(id: sessionId));
-    }
-
-    final body = <String, dynamic>{
-      if (trimmedNotes != null && trimmedNotes.isNotEmpty)
-        'notes': trimmedNotes,
-      'client_feedback_rating': ?clientFeedbackRating,
-    };
-    final response = await _dio.post<Object>(
-      '/workout-sessions/$sessionId/complete',
-      data: body,
-    );
-    try {
-      final raw = response.data;
-      if (raw == null) {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          type: DioExceptionType.badResponse,
-          response: response,
-        );
-      }
-      return api.standardSerializers.deserialize(
-            raw,
-            specifiedType: const FullType(api.WorkoutSession),
+    final completeBody = hasBody
+        ? toWorkoutSessionComplete(
+            notes: trimmedNotes,
+            clientFeedbackRating: clientFeedbackRating,
+            effortRating: effortRating,
+            satisfactionRating: satisfactionRating,
+            painDiscomfortScore: painDiscomfortScore,
+            painNotes: trimmedPainNotes,
+            trainerNotes: trimmedTrainerNotes,
+            nextSessionPlan: trimmedNextPlan,
+            sessionFocus: trimmedFocus,
+            warmupProtocol: trimmedWarmup,
+            cooldownProtocol: trimmedCooldown,
+            clientSigned: clientSigned,
+            trainerSigned: trainerSigned,
+            clientSignedAt: clientSignedAt,
+            trainerSignedAt: trainerSignedAt,
           )
-          as api.WorkoutSession;
-    } catch (error, stackTrace) {
-      if (error is DioException) rethrow;
-      throw DioException(
-        requestOptions: response.requestOptions,
-        response: response,
-        type: DioExceptionType.unknown,
-        error: error,
-        stackTrace: stackTrace,
-      );
-    }
+        : null;
+
+    return _unwrap(
+      await _workApi.completeWorkoutSession(
+        id: sessionId,
+        workoutSessionComplete: completeBody,
+      ),
+    );
   }
 
   @override
