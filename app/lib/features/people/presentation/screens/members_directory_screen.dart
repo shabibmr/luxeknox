@@ -72,9 +72,21 @@ class _MembersDirectoryBodyState extends State<_MembersDirectoryBody> {
   Future<void> _openAddMember() async {
     final path = widget.addMemberPath;
     if (path == null) return;
-    await context.push(path);
+    final createdId = await context.push<int>(path);
     if (!mounted) return;
     context.read<MembersDirectoryBloc>().add(const MembersDirectoryStarted());
+    if (createdId != null) {
+      final pathBuilder = widget.memberDetailPathBuilder;
+      final detailPath = pathBuilder != null
+          ? pathBuilder(createdId)
+          : Routes.adminMembersDetail.replaceFirst(':id', '$createdId');
+      await context.push(detailPath);
+      if (mounted) {
+        context.read<MembersDirectoryBloc>().add(
+          const MembersDirectoryStarted(),
+        );
+      }
+    }
   }
 
   @override

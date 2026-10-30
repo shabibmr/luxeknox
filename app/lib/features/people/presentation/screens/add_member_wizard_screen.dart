@@ -110,7 +110,11 @@ class _AddMemberWizardBodyState extends State<_AddMemberWizardBody> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text(PeopleStrings.memberCreated)),
           );
-          context.go('/admin/members/${state.created!.id}');
+          if (Navigator.of(context).canPop()) {
+            context.pop(state.created!.id);
+          } else {
+            context.go('/admin/members/${state.created!.id}');
+          }
         } else if (state.error != null) {
           ScaffoldMessenger.of(
             context,
