@@ -1,4 +1,4 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { DomainEventBus } from '../platform/events/domain-events';
 import {
@@ -16,6 +16,10 @@ import { EmployeeRepository } from '../people/employee.repository';
 import { NotificationService } from '../notif/notification.service';
 import { assertMemberAccess } from '../people/row-scope';
 import { PtAccessService } from '../pt/pt-access.service';
+import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
+import type { DrizzleDb } from '../platform/db/client';
+import { runInTransaction } from '../platform/db/transaction-context';
+import { AuditService } from '../platform/audit/audit.service';
 import { WorkoutPlanRepository } from './workout-plan.repository';
 import {
   WorkoutSessionRepository,
@@ -44,6 +48,8 @@ export class WorkoutSessionService {
     @Optional() private readonly trainerRepo?: TrainerRepository,
     @Optional() private readonly employeeRepo?: EmployeeRepository,
     @Optional() private readonly notificationService?: NotificationService,
+    @Inject(DRIZZLE_DB_TOKEN) @Optional() private readonly db?: DrizzleDb<any>,
+    @Optional() private readonly auditService?: AuditService,
   ) {}
 
   async listSessions(
@@ -255,15 +261,56 @@ export class WorkoutSessionService {
     if (dto.warmup_protocol !== undefined) extra.warmup_protocol = dto.warmup_protocol;
     if (dto.cooldown_protocol !== undefined) extra.cooldown_protocol = dto.cooldown_protocol;
 
-    await this.sessionRepo.completeSession(
-      sessionId,
-      completedAt,
-      totalVolume.toFixed(2),
-      durationMinutes,
-      dto.client_feedback_rating ?? undefined,
-      dto.notes ?? undefined,
-      extra,
-    );
+    const isHighPain =
+      typeof dto.pain_discomfort_score === 'number' &&
+      dto.pain_discomfort_score >= 4;
+
+    const db = this.db ?? (this.sessionRepo as any).db;
+    await runInTransaction(db, async () => {
+      await this.sessionRepo.completeSession(
+        sessionId,
+        completedAt,
+        totalVolume.toFixed(2),
+        durationMinutes,
+        dto.client_feedback_rating ?? undefined,
+        dto.notes ?? undefined,
+        extra,
+      );
+
+      if (isHighPain) {
+        if (!this.medicalHistoryRepo || !this.auditService) {
+          throw new BusinessRuleError(
+            'Medical history and audit services are required for high pain safety trigger',
+          );
+        }
+
+        const notesSuffix = dto.pain_notes ? `: ${dto.pain_notes}` : '';
+        const historyId = await this.medicalHistoryRepo.insertHistory({
+          member_id: session.member_id,
+          title: `Active Discomfort Alert (Score: ${dto.pain_discomfort_score}/10)`,
+          description: `High pain or discomfort reported during workout session #${session.id}${notesSuffix}`,
+          diagnosed_date: completedAt.toISOString().slice(0, 10),
+          clearance_status: 'active',
+          created_at: completedAt,
+        });
+
+        await this.auditService.recordAudit({
+          actorUserId: actor.id,
+          action: 'medical_history.created',
+          entityName: 'medical_histories',
+          entityId: historyId,
+          afterState: {
+            id: historyId,
+            member_id: session.member_id,
+            title: `Active Discomfort Alert (Score: ${dto.pain_discomfort_score}/10)`,
+            description: `High pain or discomfort reported during workout session #${session.id}${notesSuffix}`,
+            diagnosed_date: completedAt.toISOString().slice(0, 10),
+            clearance_status: 'active',
+            created_at: completedAt,
+          },
+        });
+      }
+    });
 
     this.eventBus.emitSync({
       eventName: 'workout_session.completed',
@@ -280,108 +327,35 @@ export class WorkoutSessionService {
       },
     });
 
-    if (
-      dto.pain_discomfort_score !== undefined &&
-      dto.pain_discomfort_score !== null &&
-      dto.pain_discomfort_score >= 4
-    ) {
-      await this.handleHighPainSafetyTrigger(
-        session,
-        dto.pain_discomfort_score,
-        dto.pain_notes,
-        completedAt,
-        actor,
-      );
-    }
-
-    return (await this.sessionRepo.findSessionById(sessionId))!;
-  }
-
-  private async handleHighPainSafetyTrigger(
-    session: WorkoutSession,
-    painScore: number,
-    painNotes: string | null | undefined,
-    completedAt: Date,
-    actor: AuthenticatedUser,
-  ): Promise<void> {
-    const notesSuffix = painNotes ? `: ${painNotes}` : '';
-    await this.medicalHistoryRepo?.insertHistory({
-      member_id: session.member_id,
-      title: `Active Discomfort Alert (Score: ${painScore}/10)`,
-      description: `High pain or discomfort reported during workout session #${session.id}${notesSuffix}`,
-      diagnosed_date: completedAt.toISOString().slice(0, 10),
-      clearance_status: 'active',
-      created_at: completedAt,
-    });
-
-    const recipientUserIds: number[] = [];
-
-    // 1. Assigned trainer
-    let trainerId = session.trainer_id;
-    if (!trainerId) {
+    if (isHighPain) {
+      let assignedTrainerUserId: number | null = null;
       const member = await this.memberRepo.findById(session.member_id);
-      trainerId = member?.assigned_trainer_id ?? null;
-    }
-    if (trainerId && this.trainerRepo) {
-      const trainer = await this.trainerRepo.findById(trainerId);
-      if (trainer?.user_id) {
-        recipientUserIds.push(trainer.user_id);
+      if (member?.assigned_trainer_id && this.trainerRepo) {
+        const assignedTrainer = await this.trainerRepo.findById(member.assigned_trainer_id);
+        assignedTrainerUserId = assignedTrainer?.user_id ?? null;
       }
-    }
 
-    // 2. Head coach / management
-    if (this.employeeRepo) {
-      const headCoaches = await this.employeeRepo.findManyFiltered({
-        q: 'Head Coach',
-        status: 'active',
-        limit: 5,
-        offset: 0,
-      });
-      for (const hc of headCoaches.rows) {
-        if (hc.user_id) recipientUserIds.push(hc.user_id);
+      let sessionTrainerUserId: number | null = null;
+      if (session.trainer_id && this.trainerRepo) {
+        const sessionTrainer = await this.trainerRepo.findById(session.trainer_id);
+        sessionTrainerUserId = sessionTrainer?.user_id ?? null;
       }
-      if (headCoaches.rows.length === 0) {
-        const coaches = await this.employeeRepo.findManyFiltered({
-          q: 'Coach',
-          status: 'active',
-          limit: 5,
-          offset: 0,
-        });
-        for (const c of coaches.rows) {
-          if (c.user_id) recipientUserIds.push(c.user_id);
-        }
-      }
-    }
 
-    const uniqueRecipients = Array.from(new Set(recipientUserIds)).filter((id) => id > 0);
-    if (this.notificationService && uniqueRecipients.length > 0) {
-      await this.notificationService.dispatch({
-        recipientUserIds: uniqueRecipients,
-        title: 'High Pain/Discomfort Safety Alert',
-        message: `Member #${session.member_id} reported a high pain/discomfort score of ${painScore}/10 in workout session #${session.id}.${painNotes ? ` Notes: ${painNotes}` : ''}`,
-        typeCode: 'announcement',
-        dataPayload: {
-          session_id: session.id,
-          member_id: session.member_id,
-          pain_discomfort_score: painScore,
-          pain_notes: painNotes ?? null,
-          priority: 'high',
+      this.eventBus.emitSync({
+        eventName: 'workout_session.safety_alert',
+        occurredAt: completedAt,
+        payload: {
+          sessionId: session.id,
+          memberId: session.member_id,
+          painDiscomfortScore: dto.pain_discomfort_score!,
+          painNotes: dto.pain_notes ?? null,
+          assignedTrainerUserId,
+          sessionTrainerUserId,
         },
       });
     }
 
-    this.eventBus.emitSync({
-      eventName: 'workout_session.safety_alert',
-      occurredAt: completedAt,
-      payload: {
-        session_id: session.id,
-        member_id: session.member_id,
-        pain_discomfort_score: painScore,
-        pain_notes: painNotes ?? null,
-        recipient_user_ids: uniqueRecipients,
-        actor_id: actor.id,
-      },
-    });
+    return (await this.sessionRepo.findSessionById(sessionId))!;
   }
 
   async getActive(
