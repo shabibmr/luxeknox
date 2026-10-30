@@ -1229,5 +1229,58 @@ describe('WorkoutSessionService', () => {
       );
     });
   });
-});
 
+  describe('high pain safety trigger (PTF-15)', () => {
+    const startTime = new Date(Date.now() - 45 * 60 * 1000);
+    const arrangeSession = (sessionRepo: any) => {
+      sessionRepo.findSessionById.mockResolvedValue({
+        id: 50,
+        member_id: 30,
+        trainer_id: 20,
+        started_at: startTime,
+        completed_at: null,
+        sets: [],
+      });
+    };
+
+    it('inserts an active medical history row and alerts trainer and head coach when pain >= 4', async () => {
+      const { service, sessionRepo, medicalHistoryRepo, notificationService, eventBus } =
+        buildService();
+      arrangeSession(sessionRepo);
+
+      await service.complete(
+        50,
+        { pain_discomfort_score: 4, pain_notes: 'Sharp left knee pain' },
+        trainerActor,
+      );
+
+      expect(medicalHistoryRepo.insertHistory).toHaveBeenCalledWith(
+        expect.objectContaining({
+          member_id: 30,
+          clearance_status: 'active',
+          title: expect.stringContaining('4/10'),
+          description: expect.stringContaining('Sharp left knee pain'),
+        }),
+      );
+      expect(notificationService.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          recipientUserIds: expect.arrayContaining([2, 10]),
+          dataPayload: expect.objectContaining({ priority: 'high', session_id: 50 }),
+        }),
+      );
+      expect(eventBus.emitSync).toHaveBeenCalledWith(
+        expect.objectContaining({ eventName: 'workout_session.safety_alert' }),
+      );
+    });
+
+    it('does not trigger the safety alert when pain < 4', async () => {
+      const { service, sessionRepo, medicalHistoryRepo, notificationService } = buildService();
+      arrangeSession(sessionRepo);
+
+      await service.complete(50, { pain_discomfort_score: 3 }, trainerActor);
+
+      expect(medicalHistoryRepo.insertHistory).not.toHaveBeenCalled();
+      expect(notificationService.dispatch).not.toHaveBeenCalled();
+    });
+  });
+});

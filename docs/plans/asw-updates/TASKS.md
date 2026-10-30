@@ -33,7 +33,7 @@ Source Document: [Luxe knox pt client  file.pdf](./Luxe%20knox%20pt%20client%20%
 **Phase 4: Backend Workout Micro-Execution & Pain Hook**
 - [x] PTF-13 Workout set logging: RIR, timed duration seconds, exercise notes <!-- id: 13 -->
 - [x] PTF-14 Session completion: multi-metric ratings (effort, satisfaction, pain 0–10) & next-session plan <!-- id: 14 -->
-- [ ] PTF-15 Automated safety trigger: log medical alert if `pain_discomfort_score >= 4` <!-- id: 15 -->
+- [x] PTF-15 Automated safety trigger: log medical alert if `pain_discomfort_score >= 4` <!-- id: 15 -->
 
 **Phase 5: Backend PT Progress Reviews & Presentation Card**
 - [x] PTF-16 `PtProgressReviewService`: create draft, auto-calculate deltas (start vs current vs target) <!-- id: 16 -->
