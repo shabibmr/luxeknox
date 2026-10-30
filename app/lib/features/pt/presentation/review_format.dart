@@ -1,8 +1,7 @@
+import '../../../core/presentation/app_date_format.dart';
+
 /// Calendar date as `YYYY-MM-DD`, using the date's own year/month/day.
-String formatReviewDate(DateTime date) {
-  String two(int n) => n.toString().padLeft(2, '0');
-  return '${date.year}-${two(date.month)}-${two(date.day)}';
-}
+String formatReviewDate(DateTime date) => AppDateFormat.calendarDate(date);
 
 /// Body-measure number. Whole values drop the fraction. A positive [signed]
 /// change gains a leading `+`.

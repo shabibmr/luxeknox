@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/workout_pain.dart';
 import '../workout_strings.dart';
+import 'high_discomfort_alert.dart';
+import 'workout_rating_slider.dart';
 
 class PostWorkoutFeedbackResult {
   const PostWorkoutFeedbackResult({
@@ -84,7 +87,7 @@ class _PostWorkoutFeedbackModalState extends State<PostWorkoutFeedbackModal> {
     final painScore = _pain.round();
     final painNotes = _painNotesController.text.trim();
 
-    if (painScore > 0 && painNotes.isEmpty) {
+    if (WorkoutPain.requiresNotes(painScore) && painNotes.isEmpty) {
       setState(() {
         _painNotesError = WorkoutStrings.painNotesRequiredError;
       });
@@ -98,7 +101,9 @@ class _PostWorkoutFeedbackModalState extends State<PostWorkoutFeedbackModal> {
         effortRating: _effort.round(),
         satisfactionRating: _satisfaction.round(),
         painDiscomfortScore: painScore,
-        painNotes: painScore > 0 && painNotes.isNotEmpty ? painNotes : null,
+        painNotes: WorkoutPain.requiresNotes(painScore) && painNotes.isNotEmpty
+            ? painNotes
+            : null,
         notes: generalNotes.isNotEmpty ? generalNotes : null,
       ),
     );
@@ -108,7 +113,8 @@ class _PostWorkoutFeedbackModalState extends State<PostWorkoutFeedbackModal> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final painScore = _pain.round();
-    final isHighPain = painScore >= 4;
+    final isHighPain = WorkoutPain.isHighPain(painScore);
+    final needsNotes = WorkoutPain.requiresNotes(painScore);
 
     return AlertDialog(
       title: const Text(WorkoutStrings.completeConfirmTitle),
@@ -127,138 +133,54 @@ class _PostWorkoutFeedbackModalState extends State<PostWorkoutFeedbackModal> {
               ),
               const SizedBox(height: 20),
 
-              // Effort Slider (1–10)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    WorkoutStrings.effortRatingLabel,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${_effort.round()} / 10',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Slider(
-                key: const ValueKey('feedback-effort-slider'),
+              WorkoutRatingSlider(
+                sliderKey: const ValueKey('feedback-effort-slider'),
+                label: WorkoutStrings.effortRatingLabel,
                 value: _effort,
                 min: 1,
                 max: 10,
-                divisions: 9,
-                label: '${_effort.round()}',
+                badgeBackground: theme.colorScheme.primaryContainer,
+                badgeForeground: theme.colorScheme.onPrimaryContainer,
                 onChanged: (val) => setState(() => _effort = val),
               ),
               const SizedBox(height: 12),
 
-              // Satisfaction Slider (1–10)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    WorkoutStrings.satisfactionRatingLabel,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${_satisfaction.round()} / 10',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSecondaryContainer,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Slider(
-                key: const ValueKey('feedback-satisfaction-slider'),
+              WorkoutRatingSlider(
+                sliderKey: const ValueKey('feedback-satisfaction-slider'),
+                label: WorkoutStrings.satisfactionRatingLabel,
                 value: _satisfaction,
                 min: 1,
                 max: 10,
-                divisions: 9,
-                label: '${_satisfaction.round()}',
+                badgeBackground: theme.colorScheme.secondaryContainer,
+                badgeForeground: theme.colorScheme.onSecondaryContainer,
                 onChanged: (val) => setState(() => _satisfaction = val),
               ),
               const SizedBox(height: 12),
 
-              // Pain / Discomfort Slider (0–10)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    WorkoutStrings.painDiscomfortLabel,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isHighPain
-                          ? theme.colorScheme.error
-                          : painScore > 0
-                          ? Colors.orange.shade800
-                          : null,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isHighPain
-                          ? theme.colorScheme.errorContainer
-                          : painScore > 0
-                          ? Colors.orange.shade100
-                          : theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '$painScore / 10',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isHighPain
-                            ? theme.colorScheme.onErrorContainer
-                            : painScore > 0
-                            ? Colors.orange.shade900
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Slider(
-                key: const ValueKey('feedback-pain-slider'),
+              WorkoutRatingSlider(
+                sliderKey: const ValueKey('feedback-pain-slider'),
+                label: WorkoutStrings.painDiscomfortLabel,
                 value: _pain,
                 min: 0,
                 max: 10,
-                divisions: 10,
-                label: '$painScore',
+                labelColor: isHighPain
+                    ? theme.colorScheme.error
+                    : needsNotes
+                    ? Colors.orange.shade800
+                    : null,
+                badgeBackground: isHighPain
+                    ? theme.colorScheme.errorContainer
+                    : needsNotes
+                    ? Colors.orange.shade100
+                    : theme.colorScheme.surfaceContainerHighest,
+                badgeForeground: isHighPain
+                    ? theme.colorScheme.onErrorContainer
+                    : needsNotes
+                    ? Colors.orange.shade900
+                    : theme.colorScheme.onSurfaceVariant,
                 activeColor: isHighPain
                     ? theme.colorScheme.error
-                    : painScore > 0
+                    : needsNotes
                     ? Colors.orange
                     : theme.colorScheme.primary,
                 onChanged: (val) {
@@ -271,41 +193,9 @@ class _PostWorkoutFeedbackModalState extends State<PostWorkoutFeedbackModal> {
                 },
               ),
 
-              // High Discomfort Safety Banner
-              if (isHighPain) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.errorContainer.withValues(
-                      alpha: 0.7,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: theme.colorScheme.error),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.warning_amber_rounded,
-                        color: theme.colorScheme.error,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          WorkoutStrings.highDiscomfortAlert,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onErrorContainer,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              if (isHighPain) const HighDiscomfortAlert(),
 
-              // Mandatory Pain Notes when Pain > 0
-              if (painScore > 0) ...[
+              if (needsNotes) ...[
                 const SizedBox(height: 16),
                 TextField(
                   key: const ValueKey('feedback-pain-notes-field'),

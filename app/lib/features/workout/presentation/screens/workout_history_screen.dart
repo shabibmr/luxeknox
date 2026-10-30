@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/app_date_format.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_empty_view.dart';
@@ -163,9 +163,7 @@ class _SessionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final date = DateFormat.yMMMd().add_jm().format(
-      session.startedAt.toLocal(),
-    );
+    final date = AppDateFormat.mediumDateTime(session.startedAt);
     final duration = session.durationMinutes;
     final volume = session.totalVolumeKg;
     final subtitleParts = <String>[];

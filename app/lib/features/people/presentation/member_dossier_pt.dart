@@ -1,3 +1,4 @@
+import '../../../core/presentation/app_date_format.dart';
 import '../../../session/domain/entities/user_type.dart';
 import '../../membership/domain/entities/membership.dart';
 import '../../pt/domain/entities/pt_subscription.dart';
@@ -49,12 +50,7 @@ bool canManagePt({required UserType userType, required bool canManage}) =>
 bool trainerHubReadOnly(MemberPtSummary? pt) =>
     pt?.trainerAccess == TrainerAccess.readOnly;
 
-String formatCalendarDate(DateTime date) {
-  final y = date.year.toString().padLeft(4, '0');
-  final m = date.month.toString().padLeft(2, '0');
-  final d = date.day.toString().padLeft(2, '0');
-  return '$y-$m-$d';
-}
+String formatCalendarDate(DateTime date) => AppDateFormat.calendarDate(date);
 
 /// Human-readable days relative to [endDate] (date-only comparison).
 String formatDaysRelative(DateTime endDate, {DateTime? now}) {

@@ -412,7 +412,9 @@ flowchart TD
 * **Changes:**
   * Add RIR stepper and stopwatch duration mode toggle per set.
   * Add completion modal with Sliders for Effort (1–10), Satisfaction (1–10), and Pain / Discomfort (0–10).
-  * If pain score $> 0$, prompt for pain notes.
+  * If pain score $> 0$, prompt for pain notes (stricter than the server hook, which alerts only at `pain_discomfort_score >= 4`).
+  * High-pain warning uses one shared threshold of 4 (`WorkoutPain.highPainThreshold` / server `HIGH_PAIN_THRESHOLD`).
+  * Client feedback: satisfaction is sent as its own 1–10 `satisfaction_rating` field. The legacy 1–5 `client_feedback_rating` is not mapped from that slider (scale mismatch).
 * **Done criteria:** Completing workout submits multi-rating payload and triggers alerts when appropriate.
 
 #### PTF-31: Build Screen 47 (`PtProgressReviewScreen`)

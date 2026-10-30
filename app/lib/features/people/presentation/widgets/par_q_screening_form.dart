@@ -7,6 +7,7 @@ import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/par_q_inputs.dart';
 import '../../domain/entities/par_q_screening.dart';
 import '../../domain/usecases/submit_par_q_usecase.dart';
+import '../clearance_status_presentation.dart';
 import '../cubit/par_q_cubit.dart';
 import '../people_strings.dart';
 import 'par_q_signature_canvas.dart';
@@ -498,37 +499,14 @@ class _ClearanceStatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final (
-      Color color,
-      IconData icon,
-      String title,
-      String body,
-    ) = switch (screening.clearanceStatus) {
-      ParQClearanceStatus.passed => (
-        Colors.green.shade700,
-        Icons.check_circle_outline,
-        PeopleStrings.parQPassedTitle,
-        PeopleStrings.parQPassedBody,
-      ),
-      ParQClearanceStatus.pendingClearance => (
-        Colors.amber.shade800,
-        Icons.warning_amber_rounded,
-        PeopleStrings.parQPendingTitle,
-        PeopleStrings.parQPendingBody,
-      ),
-      ParQClearanceStatus.cleared => (
-        Colors.teal.shade700,
-        Icons.verified_outlined,
-        PeopleStrings.parQClearedTitle,
-        PeopleStrings.parQClearedBody,
-      ),
-      ParQClearanceStatus.rejected => (
-        theme.colorScheme.error,
-        Icons.block_outlined,
-        PeopleStrings.parQRejectedTitle,
-        PeopleStrings.parQRejectedBody,
-      ),
-    };
+    final look = ClearanceStatusPresentation.resolve(
+      scheme: theme.colorScheme,
+      status: screening.clearanceStatus,
+    );
+    final color = look.color;
+    final icon = look.icon;
+    final title = look.formTitle!;
+    final body = look.formBody!;
 
     return Card(
       elevation: 0,

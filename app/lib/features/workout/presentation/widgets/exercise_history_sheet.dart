@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-
 import '../../../../core/di/injector.dart';
+import '../../../../core/presentation/app_date_format.dart';
 import '../../../../core/error/failure_messages.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../domain/entities/exercise_history_session.dart';
@@ -45,8 +44,6 @@ class _ExerciseHistorySheetState extends State<ExerciseHistorySheet> {
   bool _loading = true;
   String? _error;
   List<ExerciseHistorySession> _history = const [];
-
-  static final _dateFormat = DateFormat('MMM d, yyyy · h:mm a');
 
   @override
   void initState() {
@@ -187,7 +184,7 @@ class _ExerciseHistorySheetState extends State<ExerciseHistorySheet> {
       itemCount: _history.length,
       itemBuilder: (context, index) {
         final session = _history[index];
-        final dateStr = _dateFormat.format(session.startedAt.toLocal());
+        final dateStr = AppDateFormat.historyDateTime(session.startedAt);
 
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 6),

@@ -10,6 +10,7 @@ import 'package:luxeknox/features/workout/domain/entities/workout_plan_exercise.
 import 'package:luxeknox/features/workout/domain/entities/workout_plan_status.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_session.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_session_set.dart';
+import 'package:luxeknox/features/workout/domain/workout_pain.dart';
 import 'package:luxeknox/features/workout/presentation/bloc/active_workout_bloc.dart';
 import 'package:luxeknox/features/workout/presentation/cubit/rest_timer_cubit.dart';
 import 'package:luxeknox/features/workout/presentation/screens/live_workout_session_screen.dart';
@@ -214,13 +215,16 @@ void main() {
 
       expect(captured.effortRating, 5);
       expect(captured.satisfactionRating, 5);
+      // Satisfaction is sent as its own 1–10 field; the legacy 1–5
+      // client_feedback_rating is not mapped from that slider.
+      expect(captured.clientFeedbackRating, isNull);
       expect(captured.painDiscomfortScore, 0);
       expect(captured.painNotes, isNull);
     },
   );
 
   testWidgets(
-    'completed panel renders effort, satisfaction, pain, notes, and high discomfort alert when pain >= 4',
+    'completed panel renders effort, satisfaction, pain, notes, and high discomfort alert when pain >= threshold',
     (tester) async {
       final highPainSession = WorkoutSession(
         id: 'sess1',
@@ -231,7 +235,7 @@ void main() {
         totalVolumeKg: 1200,
         effortRating: 9,
         satisfactionRating: 8,
-        painDiscomfortScore: 5,
+        painDiscomfortScore: WorkoutPain.highPainThreshold + 1,
         painNotes: 'Sharp pinch in anterior right shoulder',
       );
 

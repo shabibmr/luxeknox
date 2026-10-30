@@ -10,22 +10,24 @@ import '../../../../core/router/routes.dart';
 import '../../../../core/router/session_route_ids.dart';
 import '../../../../core/widgets/adaptive_shell.dart';
 import '../../../../core/widgets/app_loading.dart';
+import '../../../exercises/domain/entities/exercise.dart';
 import '../../domain/entities/workout_plan.dart';
 import '../../domain/entities/workout_plan_exercise.dart';
 import '../../domain/entities/workout_session.dart';
 import '../../domain/entities/workout_session_set.dart';
-import '../../../exercises/domain/entities/exercise.dart';
+import '../../domain/workout_pain.dart';
 import '../bloc/active_workout_bloc.dart';
 import '../cubit/rest_timer_cubit.dart';
 import '../widgets/exercise_history_sheet.dart';
 import '../widgets/exercise_picker_sheet.dart';
+import '../widgets/high_discomfort_alert.dart';
 import '../widgets/post_rest_prompt_sheet.dart';
+import '../widgets/post_workout_feedback_modal.dart';
 import '../widgets/rest_timer_widget.dart';
 import '../widgets/session_comments_sheet.dart';
 import '../widgets/skip_reason_dialog.dart';
 import '../widgets/workout_plan_picker_sheet.dart';
 import '../workout_strings.dart';
-import '../widgets/post_workout_feedback_modal.dart';
 
 const _wideSessionWidth = 840.0;
 const _sessionColumnKey = ValueKey<String>('active-workout-column');
@@ -2041,7 +2043,9 @@ class _InProgressPanelState extends State<_InProgressPanel> {
     context.read<ActiveWorkoutBloc>().add(
       ActiveWorkoutCompletionRequested(
         notes: result.notes,
-        clientFeedbackRating: result.satisfactionRating,
+        // Satisfaction is sent as its own 1–10 field (`satisfaction_rating`).
+        // The legacy 1–5 `client_feedback_rating` is left unset; mapping the
+        // 1–10 slider onto that field would fail server validation at 6–10.
         effortRating: result.effortRating,
         satisfactionRating: result.satisfactionRating,
         painDiscomfortScore: result.painDiscomfortScore,
@@ -2372,40 +2376,8 @@ class _CompletedPanel extends StatelessWidget {
                   subtitle: Text(session.painNotes!),
                 ),
               if (session.painDiscomfortScore != null &&
-                  session.painDiscomfortScore! >= 4)
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.errorContainer.withValues(alpha: 0.7),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.warning_amber_rounded,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          WorkoutStrings.highDiscomfortAlert,
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onErrorContainer,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                  WorkoutPain.isHighPain(session.painDiscomfortScore!))
+                const HighDiscomfortAlert(),
               const Spacer(),
               FilledButton(
                 onPressed: () => context.read<ActiveWorkoutBloc>().add(

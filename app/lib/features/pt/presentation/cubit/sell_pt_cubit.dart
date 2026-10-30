@@ -4,10 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/idempotency/idempotency_key.dart';
+import '../../../../core/presentation/app_date_format.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../payments/domain/entities/payment_method.dart';
@@ -403,7 +403,7 @@ class SellPtCubit extends Cubit<SellPtState> {
       (s) => s.current,
     );
     if (open == null) return null;
-    final until = DateFormat('dd MMM').format(open.endDate);
+    final until = AppDateFormat.shortDayMonth(open.endDate);
     return PtStrings.partnerHasOpenPt(partner.fullName, until);
   }
 

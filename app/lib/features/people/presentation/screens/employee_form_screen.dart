@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/extensions/capability_extension.dart';
+import '../../../../core/presentation/app_date_format.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/unsaved_changes_scope.dart';
@@ -560,7 +560,7 @@ class _EmployeeFormBodyState extends State<_EmployeeFormBody> {
                   title: Text(
                     hireDate == null
                         ? PeopleStrings.hireDate
-                        : '${PeopleStrings.hireDate}: ${DateFormat.yMMMd().format(hireDate)}',
+                        : '${PeopleStrings.hireDate}: ${AppDateFormat.mediumDate(hireDate)}',
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,

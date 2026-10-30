@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:luxeknox/features/workout/domain/workout_pain.dart';
 import 'package:luxeknox/features/workout/presentation/widgets/post_workout_feedback_modal.dart';
 import 'package:luxeknox/features/workout/presentation/workout_strings.dart';
 
@@ -44,11 +45,70 @@ void main() {
   });
 
   testWidgets(
+    'prompts for pain notes when pain is above 0 without the high-pain warning',
+    (tester) async {
+      PostWorkoutFeedbackResult? capturedResult;
+      await tester.pumpWidget(
+        buildTestHost(initialPain: 1, onResult: (res) => capturedResult = res),
+      );
+      await tester.tap(find.text('Open Modal'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(WorkoutStrings.painNotesLabel), findsOneWidget);
+      expect(find.text(WorkoutStrings.highDiscomfortAlert), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('feedback-modal-submit-btn')));
+      await tester.pumpAndSettle();
+
+      expect(capturedResult, isNull);
+      expect(find.text(WorkoutStrings.painNotesRequiredError), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('feedback-pain-notes-field')),
+        'Mild tightness',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('feedback-modal-submit-btn')));
+      await tester.pumpAndSettle();
+
+      expect(capturedResult, isNotNull);
+      expect(capturedResult!.painDiscomfortScore, 1);
+      expect(capturedResult!.painNotes, 'Mild tightness');
+    },
+  );
+
+  testWidgets('warns only when pain reaches the shared high-pain threshold', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildTestHost(initialPain: WorkoutPain.highPainThreshold - 1),
+    );
+    await tester.tap(find.text('Open Modal'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(WorkoutStrings.painNotesLabel), findsOneWidget);
+    expect(find.text(WorkoutStrings.highDiscomfortAlert), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpWidget(
+      buildTestHost(initialPain: WorkoutPain.highPainThreshold),
+    );
+    await tester.tap(find.text('Open Modal'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(WorkoutStrings.painNotesLabel), findsOneWidget);
+    expect(find.text(WorkoutStrings.highDiscomfortAlert), findsOneWidget);
+  });
+
+  testWidgets(
     'shows pain notes and high discomfort alert when pain is high, requires pain notes',
     (tester) async {
       PostWorkoutFeedbackResult? capturedResult;
       await tester.pumpWidget(
-        buildTestHost(initialPain: 4, onResult: (res) => capturedResult = res),
+        buildTestHost(
+          initialPain: WorkoutPain.highPainThreshold,
+          onResult: (res) => capturedResult = res,
+        ),
       );
       await tester.tap(find.text('Open Modal'));
       await tester.pumpAndSettle();
@@ -84,7 +144,10 @@ void main() {
       expect(capturedResult, isNotNull);
       expect(capturedResult!.effortRating, 5);
       expect(capturedResult!.satisfactionRating, 5);
-      expect(capturedResult!.painDiscomfortScore, 4);
+      expect(
+        capturedResult!.painDiscomfortScore,
+        WorkoutPain.highPainThreshold,
+      );
       expect(
         capturedResult!.painNotes,
         'Left knee tweak during heavy split squat',

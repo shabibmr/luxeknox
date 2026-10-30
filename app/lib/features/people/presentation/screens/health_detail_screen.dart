@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/di/injector.dart';
 import '../../../../core/error/failure_messages.dart';
+import '../../../../core/presentation/app_date_format.dart';
 import '../../../../core/presentation/load_status.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -74,7 +74,8 @@ class _HealthDetailBody extends StatelessWidget {
               },
               builder: (context, state) {
                 final cubit = context.read<HealthHistoryCubit>();
-                if (cubit.current == null && state.status == LoadStatus.failure) {
+                if (cubit.current == null &&
+                    state.status == LoadStatus.failure) {
                   return AppErrorView(
                     message: failureMessage(state.failure!),
                     onRetry: () => cubit.load(memberId),
@@ -177,7 +178,7 @@ class _HealthFormState extends State<_HealthForm> {
             ),
             Text(
               '${PeopleStrings.recordedOn} '
-              '${DateFormat.yMMMd().format(widget.info.recordedAt)}',
+              '${AppDateFormat.mediumDate(widget.info.recordedAt)}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             TextButton(
@@ -231,7 +232,7 @@ class _HealthFormState extends State<_HealthForm> {
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text(PeopleStrings.recordDate),
-          subtitle: Text(DateFormat.yMMMd().format(_recordDate)),
+          subtitle: Text(AppDateFormat.mediumDate(_recordDate)),
           trailing: const Icon(Icons.calendar_today),
           onTap: () async {
             final now = DateTime.now();

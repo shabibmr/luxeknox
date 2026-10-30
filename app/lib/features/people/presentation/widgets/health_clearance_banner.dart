@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/par_q_screening.dart';
-import '../people_strings.dart';
+import '../clearance_status_presentation.dart';
 
 /// Dossier banner for the member's PAR-Q+ clearance: green when they may
 /// train, red while PT booking is blocked, neutral when there is nothing to
@@ -19,42 +19,15 @@ class HealthClearanceBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final status = parQ?.clearanceStatus;
-
-    final (Key? key, Color color, IconData icon, String label) = unavailable
-        ? (
-            const ValueKey('clearance-neutral'),
-            scheme.outline,
-            Icons.help_outline,
-            PeopleStrings.clearanceUnavailable,
-          )
-        : switch (status) {
-            ParQClearanceStatus.passed || ParQClearanceStatus.cleared => (
-              const ValueKey('clearance-green'),
-              Colors.green,
-              Icons.verified_outlined,
-              PeopleStrings.clearanceCleared,
-            ),
-            ParQClearanceStatus.pendingClearance => (
-              const ValueKey('clearance-red'),
-              scheme.error,
-              Icons.warning_amber_rounded,
-              PeopleStrings.clearancePending,
-            ),
-            ParQClearanceStatus.rejected => (
-              const ValueKey('clearance-red'),
-              scheme.error,
-              Icons.block,
-              PeopleStrings.clearanceRejected,
-            ),
-            null => (
-              null,
-              scheme.outline,
-              Icons.help_outline,
-              PeopleStrings.clearanceNone,
-            ),
-          };
+    final look = ClearanceStatusPresentation.resolve(
+      scheme: Theme.of(context).colorScheme,
+      status: parQ?.clearanceStatus,
+      unavailable: unavailable,
+    );
+    final key = look.bannerKey;
+    final color = look.color;
+    final icon = look.icon;
+    final label = look.bannerLabel;
 
     return Container(
       key: key,

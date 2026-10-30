@@ -24,6 +24,7 @@ import {
   type WorkoutSessionWithSets,
   type PersonalRecordResult,
 } from './workout-session.repository';
+import { HIGH_PAIN_THRESHOLD } from './workout-pain';
 import type {
   WorkoutSessionCompleteDto,
   WorkoutSessionCreateDto,
@@ -259,7 +260,7 @@ export class WorkoutSessionService {
 
     const isHighPain =
       typeof dto.pain_discomfort_score === 'number' &&
-      dto.pain_discomfort_score >= 4;
+      dto.pain_discomfort_score >= HIGH_PAIN_THRESHOLD;
 
     await runInTransaction(this.db, async () => {
       await this.sessionRepo.completeSession(

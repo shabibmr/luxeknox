@@ -1,3 +1,4 @@
+import '../../../core/presentation/app_date_format.dart';
 import '../domain/entities/workout_plan_status.dart';
 
 abstract final class WorkoutStrings {
@@ -250,10 +251,6 @@ abstract final class WorkoutStrings {
 
   static String setsLoggedCount(int count) => '$count';
 
-  static String sessionTime(DateTime value) {
-    final local = value.toLocal();
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${local.year}-${two(local.month)}-${two(local.day)} '
-        '${two(local.hour)}:${two(local.minute)}';
-  }
+  static String sessionTime(DateTime value) =>
+      AppDateFormat.sessionStamp(value);
 }
