@@ -569,6 +569,7 @@ void main() {
           await tester.pump();
         }
         await tester.ensureVisible(post);
+        await tester.pumpAndSettle();
         final visibleBottom =
             tester.view.physicalSize.height / tester.view.devicePixelRatio -
             tester.view.viewInsets.bottom;
