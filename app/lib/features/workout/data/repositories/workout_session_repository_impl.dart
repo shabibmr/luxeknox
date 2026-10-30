@@ -32,12 +32,14 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
     final actualRirError = WorkoutValidators.validateRir(actualRir);
     if (actualRirError != null) return ValidationFailure([actualRirError]);
 
-    final targetDurError =
-        WorkoutValidators.validateDurationSeconds(targetDurationSeconds);
+    final targetDurError = WorkoutValidators.validateDurationSeconds(
+      targetDurationSeconds,
+    );
     if (targetDurError != null) return ValidationFailure([targetDurError]);
 
-    final actualDurError =
-        WorkoutValidators.validateDurationSeconds(actualDurationSeconds);
+    final actualDurError = WorkoutValidators.validateDurationSeconds(
+      actualDurationSeconds,
+    );
     if (actualDurError != null) return ValidationFailure([actualDurError]);
 
     return null;
@@ -49,21 +51,24 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
     int? satisfactionRating,
     int? painDiscomfortScore,
   }) {
-    final feedbackError =
-        WorkoutValidators.validateClientFeedbackRating(clientFeedbackRating);
+    final feedbackError = WorkoutValidators.validateClientFeedbackRating(
+      clientFeedbackRating,
+    );
     if (feedbackError != null) return ValidationFailure([feedbackError]);
 
     final effortError = WorkoutValidators.validateEffortRating(effortRating);
     if (effortError != null) return ValidationFailure([effortError]);
 
-    final satisfactionError =
-        WorkoutValidators.validateSatisfactionRating(satisfactionRating);
+    final satisfactionError = WorkoutValidators.validateSatisfactionRating(
+      satisfactionRating,
+    );
     if (satisfactionError != null) {
       return ValidationFailure([satisfactionError]);
     }
 
-    final painError =
-        WorkoutValidators.validatePainDiscomfortScore(painDiscomfortScore);
+    final painError = WorkoutValidators.validatePainDiscomfortScore(
+      painDiscomfortScore,
+    );
     if (painError != null) return ValidationFailure([painError]);
 
     return null;

@@ -24,7 +24,9 @@ class WorkoutPlanRepositoryImpl implements WorkoutPlanRepository {
     int? sessionsPerWeek,
     int? targetSessionDurationMinutes,
   }) {
-    final freqError = WorkoutValidators.validateSessionsPerWeek(sessionsPerWeek);
+    final freqError = WorkoutValidators.validateSessionsPerWeek(
+      sessionsPerWeek,
+    );
     if (freqError != null) return ValidationFailure([freqError]);
 
     final durError = WorkoutValidators.validateSessionDurationMinutes(

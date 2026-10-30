@@ -52,48 +52,46 @@ void main() {
     assignPlan = MockAssignWorkoutPlanUseCase();
 
     getIt.registerFactory<WorkoutPlanDetailCubit>(
-      () => WorkoutPlanDetailCubit(getPlan, publishPlan, archivePlan, assignPlan),
+      () =>
+          WorkoutPlanDetailCubit(getPlan, publishPlan, archivePlan, assignPlan),
     );
   });
 
   tearDown(() => getIt.reset());
 
-  testWidgets(
-    'shows "Start session with member" for a member-owned plan and '
-    'navigates to that member\'s active-session route',
-    (tester) async {
-      final plan = memberPlan();
-      when(() => getPlan(plan.id)).thenAnswer((_) async => Right(plan));
+  testWidgets('shows "Start session with member" for a member-owned plan and '
+      'navigates to that member\'s active-session route', (tester) async {
+    final plan = memberPlan();
+    when(() => getPlan(plan.id)).thenAnswer((_) async => Right(plan));
 
-      final router = GoRouter(
-        initialLocation: '/trainer/plans/workouts/${plan.id}',
-        routes: [
-          GoRoute(
-            path: '/trainer/plans/workouts/:id',
-            builder: (context, state) =>
-                WorkoutPlanDetailScreen(planId: state.pathParameters['id']!),
+    final router = GoRouter(
+      initialLocation: '/trainer/plans/workouts/${plan.id}',
+      routes: [
+        GoRoute(
+          path: '/trainer/plans/workouts/:id',
+          builder: (context, state) =>
+              WorkoutPlanDetailScreen(planId: state.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: '/trainer/members/:id/workout/active',
+          builder: (context, state) => Text(
+            'ACTIVE:${state.pathParameters['id']}:'
+            '${state.uri.queryParameters['workoutPlanId']}',
           ),
-          GoRoute(
-            path: '/trainer/members/:id/workout/active',
-            builder: (context, state) => Text(
-              'ACTIVE:${state.pathParameters['id']}:'
-              '${state.uri.queryParameters['workoutPlanId']}',
-            ),
-          ),
-        ],
-      );
+        ),
+      ],
+    );
 
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
 
-      expect(find.text(WorkoutStrings.startSessionWithMember), findsOneWidget);
+    expect(find.text(WorkoutStrings.startSessionWithMember), findsOneWidget);
 
-      await tester.tap(find.text(WorkoutStrings.startSessionWithMember));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text(WorkoutStrings.startSessionWithMember));
+    await tester.pumpAndSettle();
 
-      expect(find.text('ACTIVE:42:plan-1'), findsOneWidget);
-    },
-  );
+    expect(find.text('ACTIVE:42:plan-1'), findsOneWidget);
+  });
 
   testWidgets('hidden for a template plan (no memberId)', (tester) async {
     final plan = memberPlan(memberId: null);

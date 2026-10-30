@@ -63,7 +63,7 @@ class TodaysWorkoutState extends Equatable {
 @injectable
 class TodaysWorkoutCubit extends Cubit<TodaysWorkoutState> {
   TodaysWorkoutCubit(this._listPlans, this._getPlan)
-      : super(const TodaysWorkoutState());
+    : super(const TodaysWorkoutState());
 
   final ListWorkoutPlansUseCase _listPlans;
   final GetWorkoutPlanUseCase _getPlan;
@@ -110,14 +110,15 @@ class TodaysWorkoutCubit extends Cubit<TodaysWorkoutState> {
             state.copyWith(status: LoadStatus.failure, failure: failure),
           ),
           (fullPlan) {
-            final days = fullPlan.exercises
-                .map((e) => e.dayNumber)
-                .toSet()
-                .toList()
-              ..sort();
+            final days =
+                fullPlan.exercises.map((e) => e.dayNumber).toSet().toList()
+                  ..sort();
 
             final targetDay = days.isNotEmpty ? days.first : 1;
-            final dayExercises = _filterExercises(fullPlan.exercises, targetDay);
+            final dayExercises = _filterExercises(
+              fullPlan.exercises,
+              targetDay,
+            );
 
             emit(
               state.copyWith(
@@ -138,12 +139,7 @@ class TodaysWorkoutCubit extends Cubit<TodaysWorkoutState> {
     final plan = state.activePlan;
     if (plan == null) return;
     final dayExercises = _filterExercises(plan.exercises, dayNumber);
-    emit(
-      state.copyWith(
-        selectedDay: dayNumber,
-        exercisesForDay: dayExercises,
-      ),
-    );
+    emit(state.copyWith(selectedDay: dayNumber, exercisesForDay: dayExercises));
   }
 
   Future<void> refresh() async {

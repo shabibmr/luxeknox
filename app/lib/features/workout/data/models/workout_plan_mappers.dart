@@ -91,37 +91,35 @@ api.WorkoutPlanWrite toWorkoutPlanWrite({
   String? mainSuccessMeasure,
   String? trainerProgrammingNotes,
 }) {
-  return api.WorkoutPlanWrite(
-    (b) {
-      b
-        ..title = title
-        ..description = description
-        ..memberId = memberId == null ? null : int.tryParse(memberId)
-        ..trainerId = trainerId == null ? null : int.tryParse(trainerId)
-        ..targetGoal = targetGoal
-        ..difficulty = difficulty
-        ..durationWeeks = durationWeeks
-        ..isTemplate = isTemplate
-        ..rowVersion = rowVersion
-        ..primaryObjective12w = primaryObjective12w
-        ..milestone4w = milestone4w
-        ..sessionsPerWeek = sessionsPerWeek
-        ..targetSessionDurationMinutes = targetSessionDurationMinutes
-        ..splitType = splitType
-        ..cardioProtocol = cardioProtocol
-        ..mobilityProtocol = mobilityProtocol
-        ..mainSuccessMeasure = mainSuccessMeasure
-        ..trainerProgrammingNotes = trainerProgrammingNotes;
+  return api.WorkoutPlanWrite((b) {
+    b
+      ..title = title
+      ..description = description
+      ..memberId = memberId == null ? null : int.tryParse(memberId)
+      ..trainerId = trainerId == null ? null : int.tryParse(trainerId)
+      ..targetGoal = targetGoal
+      ..difficulty = difficulty
+      ..durationWeeks = durationWeeks
+      ..isTemplate = isTemplate
+      ..rowVersion = rowVersion
+      ..primaryObjective12w = primaryObjective12w
+      ..milestone4w = milestone4w
+      ..sessionsPerWeek = sessionsPerWeek
+      ..targetSessionDurationMinutes = targetSessionDurationMinutes
+      ..splitType = splitType
+      ..cardioProtocol = cardioProtocol
+      ..mobilityProtocol = mobilityProtocol
+      ..mainSuccessMeasure = mainSuccessMeasure
+      ..trainerProgrammingNotes = trainerProgrammingNotes;
 
-      if (progressionMethods != null) {
-        b.progressionMethods.replace(
-          progressionMethods.map(
-            (m) => api.WorkoutPlanWriteProgressionMethodsEnum.valueOf(m),
-          ),
-        );
-      }
-    },
-  );
+    if (progressionMethods != null) {
+      b.progressionMethods.replace(
+        progressionMethods.map(
+          (m) => api.WorkoutPlanWriteProgressionMethodsEnum.valueOf(m),
+        ),
+      );
+    }
+  });
 }
 
 api.WorkoutPlanExercisesWrite toWorkoutPlanExercisesWrite({

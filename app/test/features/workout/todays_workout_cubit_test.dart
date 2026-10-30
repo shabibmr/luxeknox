@@ -87,9 +87,7 @@ void main() {
     blocTest<TodaysWorkoutCubit, TodaysWorkoutState>(
       'loads active plan and defaults to Day 1',
       build: () {
-        when(
-          () => listPlans(any()),
-        ).thenAnswer(
+        when(() => listPlans(any())).thenAnswer(
           (_) async => const Right(
             CursorPage(items: [testPlan], hasMore: false, nextCursor: null),
           ),
@@ -113,9 +111,7 @@ void main() {
     blocTest<TodaysWorkoutCubit, TodaysWorkoutState>(
       'selects a different day and filters exercises correctly',
       build: () {
-        when(
-          () => listPlans(any()),
-        ).thenAnswer(
+        when(() => listPlans(any())).thenAnswer(
           (_) async => const Right(
             CursorPage(items: [testPlan], hasMore: false, nextCursor: null),
           ),
@@ -147,9 +143,7 @@ void main() {
     blocTest<TodaysWorkoutCubit, TodaysWorkoutState>(
       'emits success with no active plan when member has no plans',
       build: () {
-        when(
-          () => listPlans(any()),
-        ).thenAnswer(
+        when(() => listPlans(any())).thenAnswer(
           (_) async => const Right(
             CursorPage(items: [], hasMore: false, nextCursor: null),
           ),

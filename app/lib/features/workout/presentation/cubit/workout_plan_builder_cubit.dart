@@ -7,6 +7,7 @@ import '../../../../core/presentation/load_status.dart';
 import '../../../exercises/domain/entities/exercise.dart';
 import '../../domain/entities/workout_plan.dart';
 import '../../domain/entities/workout_plan_exercise_input.dart';
+import '../../domain/entities/workout_validators.dart';
 import '../../domain/usecases/create_workout_plan_usecase.dart';
 import '../../domain/usecases/get_workout_plan_usecase.dart';
 import '../../domain/usecases/publish_workout_plan_usecase.dart';
@@ -30,6 +31,16 @@ abstract class WorkoutPlanBuilderState with _$WorkoutPlanBuilderState {
     int? durationWeeks,
     @Default(false) bool isTemplate,
     @Default('') String memberId,
+    @Default('') String primaryObjective12w,
+    @Default('') String milestone4w,
+    int? sessionsPerWeek,
+    int? targetSessionDurationMinutes,
+    @Default('') String splitType,
+    @Default(<String>[]) List<String> progressionMethods,
+
+    /// Set once the user tries to leave the Blueprint step, so errors only
+    /// appear after a first attempt.
+    @Default(false) bool showBlueprintErrors,
     @Default(<WorkoutPlanExerciseInput>[])
     List<WorkoutPlanExerciseInput> exercises,
     @Default(false) bool dirty,
@@ -42,6 +53,36 @@ abstract class WorkoutPlanBuilderState with _$WorkoutPlanBuilderState {
   }) = _WorkoutPlanBuilderState;
 
   bool get isEditMode => planId != null;
+
+  /// Blueprint (Step 1) problems keyed by field; empty when the step is valid.
+  Map<String, String> get blueprintErrors {
+    final errors = <String, String>{};
+    if (primaryObjective12w.trim().isEmpty) {
+      errors['objective'] = '12-week objective is required';
+    }
+    if (milestone4w.trim().isEmpty) {
+      errors['milestone'] = '4-week milestone is required';
+    }
+    final freq = sessionsPerWeek == null
+        ? 'Sessions per week is required'
+        : WorkoutValidators.validateSessionsPerWeek(sessionsPerWeek);
+    if (freq != null) errors['frequency'] = freq;
+    final dur = targetSessionDurationMinutes == null
+        ? 'Session duration is required'
+        : WorkoutValidators.validateSessionDurationMinutes(
+            targetSessionDurationMinutes,
+          );
+    if (dur != null) errors['duration'] = dur;
+    final split = splitType.trim();
+    if (split.isEmpty) {
+      errors['split'] = 'Split is required';
+    } else if (split.length > 64) {
+      errors['split'] = 'Split must be 64 characters or fewer';
+    }
+    return errors;
+  }
+
+  bool get blueprintValid => blueprintErrors.isEmpty;
 
   Map<int, List<WorkoutPlanExerciseInput>> get exercisesByDay {
     final map = <int, List<WorkoutPlanExerciseInput>>{};
@@ -78,6 +119,47 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
               state.title.isNotEmpty ||
               state.exercises.isNotEmpty));
 
+  WorkoutPlanBuilderState _stateFromPlan(
+    WorkoutPlan plan, {
+    WorkoutPlan? savedPlan,
+  }) {
+    return WorkoutPlanBuilderState(
+      status: LoadStatus.success,
+      planId: plan.id,
+      rowVersion: plan.rowVersion,
+      title: plan.title,
+      description: plan.description ?? '',
+      targetGoal: plan.targetGoal ?? '',
+      difficulty: plan.difficulty ?? '',
+      durationWeeks: plan.durationWeeks,
+      isTemplate: plan.isTemplate,
+      memberId: plan.memberId ?? '',
+      primaryObjective12w: plan.primaryObjective12w ?? '',
+      milestone4w: plan.milestone4w ?? '',
+      sessionsPerWeek: plan.sessionsPerWeek,
+      targetSessionDurationMinutes: plan.targetSessionDurationMinutes,
+      splitType: plan.splitType ?? '',
+      progressionMethods: plan.progressionMethods,
+      exercises: plan.exercises
+          .map(
+            (e) => WorkoutPlanExerciseInput(
+              exerciseId: e.exerciseId,
+              dayNumber: e.dayNumber,
+              orderIndex: e.orderIndex,
+              targetSets: e.targetSets,
+              targetReps: e.targetReps,
+              targetWeightKg: e.targetWeightKg,
+              restSeconds: e.restSeconds,
+              restBetweenExercisesSeconds: e.restBetweenExercisesSeconds,
+              notes: e.notes,
+              exerciseName: e.exerciseName,
+            ),
+          )
+          .toList(),
+      savedPlan: savedPlan,
+    );
+  }
+
   Future<void> init({
     String? planId,
     bool? isTemplate,
@@ -104,36 +186,7 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
     result.fold(
       (failure) =>
           emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
-      (plan) => emit(
-        WorkoutPlanBuilderState(
-          status: LoadStatus.success,
-          planId: plan.id,
-          rowVersion: plan.rowVersion,
-          title: plan.title,
-          description: plan.description ?? '',
-          targetGoal: plan.targetGoal ?? '',
-          difficulty: plan.difficulty ?? '',
-          durationWeeks: plan.durationWeeks,
-          isTemplate: plan.isTemplate,
-          memberId: plan.memberId ?? '',
-          exercises: plan.exercises
-              .map(
-                (e) => WorkoutPlanExerciseInput(
-                  exerciseId: e.exerciseId,
-                  dayNumber: e.dayNumber,
-                  orderIndex: e.orderIndex,
-                  targetSets: e.targetSets,
-                  targetReps: e.targetReps,
-                  targetWeightKg: e.targetWeightKg,
-                  restSeconds: e.restSeconds,
-                  restBetweenExercisesSeconds: e.restBetweenExercisesSeconds,
-                  notes: e.notes,
-                  exerciseName: e.exerciseName,
-                ),
-              )
-              .toList(),
-        ),
-      ),
+      (plan) => emit(_stateFromPlan(plan)),
     );
   }
 
@@ -181,6 +234,50 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
   void setMemberId(String value) {
     if (!_canEdit) return;
     _touch(state.copyWith(memberId: value));
+  }
+
+  void setPrimaryObjective12w(String value) {
+    if (!_canEdit) return;
+    _touch(state.copyWith(primaryObjective12w: value));
+  }
+
+  void setMilestone4w(String value) {
+    if (!_canEdit) return;
+    _touch(state.copyWith(milestone4w: value));
+  }
+
+  void setSessionsPerWeek(int? value) {
+    if (!_canEdit) return;
+    _touch(state.copyWith(sessionsPerWeek: value));
+  }
+
+  void setTargetSessionDurationMinutes(int? value) {
+    if (!_canEdit) return;
+    _touch(state.copyWith(targetSessionDurationMinutes: value));
+  }
+
+  void setSplitType(String value) {
+    if (!_canEdit) return;
+    _touch(state.copyWith(splitType: value));
+  }
+
+  void toggleProgressionMethod(String method) {
+    if (!_canEdit) return;
+    final current = state.progressionMethods;
+    _touch(
+      state.copyWith(
+        progressionMethods: current.contains(method)
+            ? current.where((m) => m != method).toList()
+            : [...current, method],
+      ),
+    );
+  }
+
+  /// Gate for leaving the Blueprint step. Reveals field errors on failure.
+  bool validateBlueprint() {
+    if (state.blueprintValid) return true;
+    emit(state.copyWith(showBlueprintErrors: true));
+    return false;
   }
 
   /// Rest after each set of one exercise. Null keeps the server default (60s).
@@ -404,6 +501,12 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
               : draft.difficulty.trim(),
           durationWeeks: draft.durationWeeks,
           isTemplate: draft.isTemplate,
+          primaryObjective12w: draft.primaryObjective12w.trim(),
+          milestone4w: draft.milestone4w.trim(),
+          sessionsPerWeek: draft.sessionsPerWeek,
+          targetSessionDurationMinutes: draft.targetSessionDurationMinutes,
+          splitType: draft.splitType.trim(),
+          progressionMethods: draft.progressionMethods,
         ),
       );
       final failed = created.fold(
@@ -445,6 +548,12 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
               : draft.difficulty.trim(),
           durationWeeks: draft.durationWeeks,
           isTemplate: draft.isTemplate,
+          primaryObjective12w: draft.primaryObjective12w.trim(),
+          milestone4w: draft.milestone4w.trim(),
+          sessionsPerWeek: draft.sessionsPerWeek,
+          targetSessionDurationMinutes: draft.targetSessionDurationMinutes,
+          splitType: draft.splitType.trim(),
+          progressionMethods: draft.progressionMethods,
         ),
       );
       final failed = updated.fold(
@@ -493,37 +602,7 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
         return false;
       },
       (full) {
-        emit(
-          WorkoutPlanBuilderState(
-            status: LoadStatus.success,
-            planId: full.id,
-            rowVersion: full.rowVersion,
-            title: full.title,
-            description: full.description ?? '',
-            targetGoal: full.targetGoal ?? '',
-            difficulty: full.difficulty ?? '',
-            durationWeeks: full.durationWeeks,
-            isTemplate: full.isTemplate,
-            memberId: full.memberId ?? '',
-            exercises: full.exercises
-                .map(
-                  (e) => WorkoutPlanExerciseInput(
-                    exerciseId: e.exerciseId,
-                    dayNumber: e.dayNumber,
-                    orderIndex: e.orderIndex,
-                    targetSets: e.targetSets,
-                    targetReps: e.targetReps,
-                    targetWeightKg: e.targetWeightKg,
-                    restSeconds: e.restSeconds,
-                    restBetweenExercisesSeconds: e.restBetweenExercisesSeconds,
-                    notes: e.notes,
-                    exerciseName: e.exerciseName,
-                  ),
-                )
-                .toList(),
-            savedPlan: full,
-          ),
-        );
+        emit(_stateFromPlan(full, savedPlan: full));
         return true;
       },
     );

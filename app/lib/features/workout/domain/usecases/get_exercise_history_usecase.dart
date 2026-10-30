@@ -8,10 +8,7 @@ import '../entities/exercise_history_session.dart';
 import '../repositories/workout_session_repository.dart';
 
 class GetExerciseHistoryParams extends Equatable {
-  const GetExerciseHistoryParams({
-    this.memberId,
-    required this.exerciseId,
-  });
+  const GetExerciseHistoryParams({this.memberId, required this.exerciseId});
 
   final String? memberId;
   final String exerciseId;
