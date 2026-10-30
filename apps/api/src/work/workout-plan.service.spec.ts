@@ -1037,7 +1037,7 @@ describe('WorkoutPlanService', () => {
         order_index: 0,
         target_rir: '2.0',
         target_duration_seconds: 45,
-        notes: 'pause at the bottom',
+        notes: '  pause at the bottom  ',
       });
 
       const result = await service.replaceExercises(
@@ -1053,7 +1053,7 @@ describe('WorkoutPlanService', () => {
               rest_seconds: 60,
               target_rir: 2,
               target_duration_seconds: 45,
-              notes: 'pause at the bottom',
+              notes: '  pause at the bottom  ',
             },
             {
               exercise_id: 3,
@@ -1077,7 +1077,7 @@ describe('WorkoutPlanService', () => {
           exercise_id: 2,
           target_rir: '2.0',
           target_duration_seconds: 45,
-          notes: 'pause at the bottom',
+          notes: '  pause at the bottom  ',
         }),
         expect.objectContaining({
           exercise_id: 3,
@@ -1090,7 +1090,7 @@ describe('WorkoutPlanService', () => {
         expect.objectContaining({
           target_rir: '2.0',
           target_duration_seconds: 45,
-          notes: 'pause at the bottom',
+          notes: '  pause at the bottom  ',
         }),
       );
     });

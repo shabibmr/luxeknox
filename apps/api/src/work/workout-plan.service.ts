@@ -114,6 +114,11 @@ function formatTargetRir(value: number): string {
   return value.toFixed(1);
 }
 
+function blankNoteToNull(value: string | null): string | null {
+  if (value == null) return null;
+  return value.trim() === '' ? null : value;
+}
+
 function prescriptionForExerciseWrite(
   item: WorkoutPlanExerciseItemDto,
   previous?: Pick<WorkoutPlanExercise, 'target_rir' | 'target_duration_seconds' | 'notes'>,
@@ -129,7 +134,7 @@ function prescriptionForExerciseWrite(
       item.target_duration_seconds !== undefined
         ? item.target_duration_seconds
         : (previous?.target_duration_seconds ?? null),
-    notes: item.notes !== undefined ? nullableTrimmed(item.notes) : (previous?.notes ?? null),
+    notes: item.notes !== undefined ? blankNoteToNull(item.notes) : (previous?.notes ?? null),
   };
 }
 
