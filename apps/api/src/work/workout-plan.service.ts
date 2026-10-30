@@ -23,12 +23,14 @@ import {
 import type {
   AssignPlanDto,
   WorkoutPlanCreateDto,
+  WorkoutPlanExerciseItemDto,
   WorkoutPlanExercisesWriteDto,
   WorkoutPlanFilterQueryDto,
   WorkoutPlanUpdateDto,
 } from './workout-plan.dto';
 import type {
   NewWorkoutPlan,
+  NewWorkoutPlanExercise,
   WorkoutPlan,
   WorkoutPlanVersion,
   WorkoutPlanExercise,
@@ -106,6 +108,37 @@ function blueprintPatchFromUpdate(dto: WorkoutPlanUpdateDto): Partial<Pick<NewWo
   }
 
   return patch;
+}
+
+function formatTargetRir(value: number): string {
+  return value.toFixed(1);
+}
+
+function prescriptionForExerciseWrite(
+  item: WorkoutPlanExerciseItemDto,
+  previous?: Pick<WorkoutPlanExercise, 'target_rir' | 'target_duration_seconds' | 'notes'>,
+): Pick<NewWorkoutPlanExercise, 'target_rir' | 'target_duration_seconds' | 'notes'> {
+  return {
+    target_rir:
+      item.target_rir !== undefined
+        ? item.target_rir === null
+          ? null
+          : formatTargetRir(item.target_rir)
+        : (previous?.target_rir ?? null),
+    target_duration_seconds:
+      item.target_duration_seconds !== undefined
+        ? item.target_duration_seconds
+        : (previous?.target_duration_seconds ?? null),
+    notes: item.notes !== undefined ? nullableTrimmed(item.notes) : (previous?.notes ?? null),
+  };
+}
+
+function exerciseSlotKey(exercise: {
+  exercise_id: number;
+  day_number: number;
+  order_index: number;
+}): string {
+  return `${exercise.exercise_id}:${exercise.day_number}:${exercise.order_index}`;
 }
 
 function blueprintFromTemplate(template: WorkoutPlan): Pick<NewWorkoutPlan, BlueprintKey> {
@@ -448,9 +481,11 @@ export class WorkoutPlanService {
             target_sets: e.target_sets,
             target_reps: e.target_reps,
             target_weight_kg: e.target_weight_kg,
+            target_rir: e.target_rir ?? null,
+            target_duration_seconds: e.target_duration_seconds ?? null,
             rest_seconds: e.rest_seconds,
             rest_between_exercises_seconds: e.rest_between_exercises_seconds ?? null,
-            notes: e.notes,
+            notes: e.notes ?? null,
           })),
         );
       }
@@ -492,6 +527,12 @@ export class WorkoutPlanService {
       await this.planRepo.updatePlan(planId, {}, dto.row_version);
 
       const latestVersion = await this.planRepo.findLatestVersionByPlanId(planId);
+      const previousExercises = latestVersion
+        ? await this.planRepo.findExercisesByVersionId(latestVersion.id)
+        : [];
+      const previousBySlot = new Map(
+        previousExercises.map((row) => [exerciseSlotKey(row), row]),
+      );
       const nextVersionNumber = (latestVersion?.version_number ?? 0) + 1;
 
       const newVersion = await this.planRepo.insertVersion({
@@ -511,9 +552,9 @@ export class WorkoutPlanService {
             target_sets: e.target_sets ?? 3,
             target_reps: e.target_reps ?? '10',
             target_weight_kg: e.target_weight_kg ? String(e.target_weight_kg) : null,
+            ...prescriptionForExerciseWrite(e, previousBySlot.get(exerciseSlotKey(e))),
             rest_seconds: e.rest_seconds ?? 60,
             rest_between_exercises_seconds: e.rest_between_exercises_seconds ?? null,
-            notes: e.notes ?? null,
           })),
         );
       }

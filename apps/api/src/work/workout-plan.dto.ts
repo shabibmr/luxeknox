@@ -84,6 +84,30 @@ export const assignPlanSchema = z.object({
 
 export type AssignPlanDto = z.infer<typeof assignPlanSchema>;
 
+function hasOneDecimalPlaceOrLess(n: number): boolean {
+  return Number.isInteger(Math.round(n * 10)) && Math.abs(n * 10 - Math.round(n * 10)) < 1e-8;
+}
+
+function blankToNull(value: unknown): unknown {
+  if (typeof value === 'string' && value.trim() === '') return null;
+  return value;
+}
+
+const targetRirSchema = z.preprocess(
+  blankToNull,
+  z
+    .number()
+    .min(0)
+    .max(10)
+    .refine(hasOneDecimalPlaceOrLess, 'target_rir allows at most one decimal place')
+    .nullable(),
+);
+
+const targetDurationSecondsSchema = z.preprocess(
+  blankToNull,
+  z.number().int().min(0).nullable(),
+);
+
 export const workoutPlanExerciseItemSchema = z.object({
   exercise_id: z.number().int().positive('exercise_id is required'),
   day_number: z.number().int().min(1, 'day_number must be at least 1'),
@@ -91,9 +115,11 @@ export const workoutPlanExerciseItemSchema = z.object({
   target_sets: z.number().int().positive().optional().default(3),
   target_reps: z.string().trim().optional().default('10'),
   target_weight_kg: z.number().positive().optional(),
+  target_rir: targetRirSchema.optional(),
+  target_duration_seconds: targetDurationSecondsSchema.optional(),
   rest_seconds: z.number().int().nonnegative().optional().default(60),
   rest_between_exercises_seconds: z.number().int().nonnegative().optional(),
-  notes: z.string().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 export type WorkoutPlanExerciseItemDto = z.infer<typeof workoutPlanExerciseItemSchema>;

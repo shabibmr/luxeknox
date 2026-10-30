@@ -12168,8 +12168,21 @@ components:
                 type: integer
               rest_between_exercises_seconds:
                 type: integer
+              target_rir:
+                type: number
+                minimum: 0
+                maximum: 10
+                nullable: true
+                description: Reps in reserve. At most one decimal place. Null or blank stores empty.
+              target_duration_seconds:
+                type: integer
+                minimum: 0
+                nullable: true
+                description: Timed-set duration in seconds. Null or blank stores empty.
               notes:
                 type: string
+                nullable: true
+                description: Null or blank stores empty.
     AssignPlanRequest:
       type: object
       required: [member_id]
