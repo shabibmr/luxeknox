@@ -58,8 +58,6 @@ function buildService(overrides: {
   ptAccess?: Partial<Record<string, unknown>> | null;
   medicalHistoryRepo?: Partial<Record<string, unknown>> | null;
   trainerRepo?: Partial<Record<string, unknown>>;
-  employeeRepo?: Partial<Record<string, unknown>>;
-  notificationService?: Partial<Record<string, unknown>>;
   auditService?: Partial<Record<string, unknown>> | null;
   db?: unknown;
 } = {}) {
@@ -138,31 +136,16 @@ function buildService(overrides: {
     ...overrides.trainerRepo,
   };
 
-  const employeeRepo = {
-    findManyFiltered: vi.fn().mockResolvedValue({
-      rows: [{ id: 1, user_id: 10, job_title: 'Head Coach', status: 'active' }],
-      total: 1,
-    }),
-    ...overrides.employeeRepo,
-  };
-
-  const notificationService = {
-    dispatch: vi.fn().mockResolvedValue(1),
-    ...overrides.notificationService,
-  };
-
   const service = new WorkoutSessionService(
     sessionRepo as any,
     planRepo as any,
     memberRepo as any,
     eventBus as any,
     paginationHelper as any,
+    mockDb as any,
     ptAccess as any,
     medicalHistoryRepo as any,
     trainerRepo as any,
-    employeeRepo as any,
-    notificationService as any,
-    mockDb as any,
     auditService as any,
   );
 
@@ -175,8 +158,6 @@ function buildService(overrides: {
     ptAccess,
     medicalHistoryRepo: medicalHistoryRepo as NonNullable<typeof medicalHistoryRepo>,
     trainerRepo,
-    employeeRepo,
-    notificationService,
     auditService: auditService as NonNullable<typeof auditService>,
     mockDb,
     runInTransactionSpy,
@@ -1274,7 +1255,6 @@ describe('WorkoutSessionService', () => {
         medicalHistoryRepo,
         auditService,
         eventBus,
-        notificationService,
         runInTransactionSpy,
       } = buildService();
       arrangeSession(sessionRepo);
@@ -1320,8 +1300,6 @@ describe('WorkoutSessionService', () => {
         }),
       );
 
-      expect(notificationService.dispatch).not.toHaveBeenCalled();
-
       expect(eventBus.emitSync).toHaveBeenCalledWith(
         expect.objectContaining({
           eventName: 'workout_session.safety_alert',
@@ -1353,11 +1331,10 @@ describe('WorkoutSessionService', () => {
           }),
         }),
       );
-      expect(notificationService.dispatch).not.toHaveBeenCalled();
     });
 
     it('pain 3, 0, omitted, and empty do not insert history, record audit, or emit safety alert', async () => {
-      const { service, sessionRepo, medicalHistoryRepo, auditService, eventBus, notificationService } =
+      const { service, sessionRepo, medicalHistoryRepo, auditService, eventBus } =
         buildService();
 
       const cases = [
@@ -1375,7 +1352,6 @@ describe('WorkoutSessionService', () => {
 
         expect(medicalHistoryRepo.insertHistory).not.toHaveBeenCalled();
         expect(auditService.recordAudit).not.toHaveBeenCalled();
-        expect(notificationService.dispatch).not.toHaveBeenCalled();
         expect(eventBus.emitSync).not.toHaveBeenCalledWith(
           expect.objectContaining({ eventName: 'workout_session.safety_alert' }),
         );

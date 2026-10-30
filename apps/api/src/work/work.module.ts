@@ -3,7 +3,6 @@ import { PeopleModule } from '../people/people.module';
 import { PlatformModule } from '../platform/platform.module';
 import { PtAccessModule } from '../pt/pt-access.module';
 import { RbacModule } from '../rbac/rbac.module';
-import { NotifModule } from '../notif/notif.module';
 import { ExerciseController } from './exercise.controller';
 import { ExerciseRepository } from './exercise.repository';
 import { ExerciseService } from './exercise.service';
@@ -20,7 +19,6 @@ import { WorkoutSessionService } from './workout-session.service';
     RbacModule,
     forwardRef(() => PeopleModule),
     PtAccessModule,
-    forwardRef(() => NotifModule),
   ],
   controllers: [
     ExerciseController,

@@ -12,8 +12,6 @@ import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { MemberRepository } from '../people/member.repository';
 import { MedicalHistoryRepository } from '../people/medical-history.repository';
 import { TrainerRepository } from '../people/trainer.repository';
-import { EmployeeRepository } from '../people/employee.repository';
-import { NotificationService } from '../notif/notification.service';
 import { assertMemberAccess } from '../people/row-scope';
 import { PtAccessService } from '../pt/pt-access.service';
 import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
@@ -43,12 +41,10 @@ export class WorkoutSessionService {
     private readonly memberRepo: MemberRepository,
     private readonly eventBus: DomainEventBus,
     private readonly paginationHelper: PaginationHelper,
+    @Inject(DRIZZLE_DB_TOKEN) private readonly db: DrizzleDb<any>,
     @Optional() private readonly ptAccess?: PtAccessService,
     @Optional() private readonly medicalHistoryRepo?: MedicalHistoryRepository,
     @Optional() private readonly trainerRepo?: TrainerRepository,
-    @Optional() private readonly employeeRepo?: EmployeeRepository,
-    @Optional() private readonly notificationService?: NotificationService,
-    @Inject(DRIZZLE_DB_TOKEN) @Optional() private readonly db?: DrizzleDb<any>,
     @Optional() private readonly auditService?: AuditService,
   ) {}
 
@@ -265,8 +261,7 @@ export class WorkoutSessionService {
       typeof dto.pain_discomfort_score === 'number' &&
       dto.pain_discomfort_score >= 4;
 
-    const db = this.db ?? (this.sessionRepo as any).db;
-    await runInTransaction(db, async () => {
+    await runInTransaction(this.db, async () => {
       await this.sessionRepo.completeSession(
         sessionId,
         completedAt,
