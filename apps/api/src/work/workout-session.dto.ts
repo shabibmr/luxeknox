@@ -14,9 +14,7 @@ export const workoutSetWriteSchema = z.object({
   reps_completed: z.number().int().min(0).optional().default(0),
   weight_lifted_kg: z.number().min(0).optional().default(0),
   rpe_score: z.number().min(1).max(10).nullable().optional(),
-  target_rir: z.number().min(0).max(10).nullable().optional(),
   actual_rir: z.number().min(0).max(10).nullable().optional(),
-  target_duration_seconds: z.number().int().min(0).nullable().optional(),
   actual_duration_seconds: z.number().int().min(0).nullable().optional(),
   is_completed: z.boolean().optional().default(true),
   notes: z.string().trim().max(1000).nullable().optional(),
@@ -47,8 +45,6 @@ export const workoutSessionCompleteSchema = z.object({
   cooldown_protocol: z.string().trim().nullable().optional(),
   client_signed: z.boolean().optional(),
   trainer_signed: z.boolean().optional(),
-  client_signed_at: z.coerce.date().nullable().optional(),
-  trainer_signed_at: z.coerce.date().nullable().optional(),
 });
 
 export type WorkoutSessionCompleteDto = z.infer<typeof workoutSessionCompleteSchema>;

@@ -336,7 +336,7 @@ describe('WorkoutSessionService', () => {
       expect(set.id).toBe(502);
     });
 
-    it('falls back to target_rir and target_duration_seconds when actuals are omitted (PTF-13)', async () => {
+    it('ignores target_rir and target_duration_seconds and stores absent actuals empty', async () => {
       const { service, sessionRepo } = buildService();
 
       sessionRepo.findSessionById.mockResolvedValue({
@@ -344,17 +344,7 @@ describe('WorkoutSessionService', () => {
         member_id: 30,
         completed_at: null,
       });
-      sessionRepo.insertSessionExercise.mockResolvedValue({
-        id: 503,
-        workout_session_id: 50,
-        exercise_id: 3,
-        set_number: 1,
-        reps_completed: 10,
-        weight_lifted_kg: '40.00',
-        actual_rir: '1.5',
-        actual_duration_seconds: 45,
-        is_completed: true,
-      });
+      sessionRepo.insertSessionExercise.mockResolvedValue({ id: 503 });
 
       await service.logSet(
         50,
@@ -366,14 +356,14 @@ describe('WorkoutSessionService', () => {
           target_rir: 1.5,
           target_duration_seconds: 45,
           is_completed: true,
-        },
+        } as any,
         memberActor,
       );
 
       expect(sessionRepo.insertSessionExercise).toHaveBeenCalledWith(
         expect.objectContaining({
-          actual_rir: '1.5',
-          actual_duration_seconds: 45,
+          actual_rir: null,
+          actual_duration_seconds: null,
         }),
       );
     });
@@ -1178,12 +1168,12 @@ describe('WorkoutSessionService', () => {
       );
     });
 
-    it('preserves explicit client_signed_at and trainer_signed_at dates if passed', async () => {
+    it('ignores client_signed_at and trainer_signed_at sent in the body', async () => {
       const { service, sessionRepo } = buildService();
 
       const startTime = new Date(Date.now() - 40 * 60 * 1000);
-      const explicitClientSign = new Date('2026-10-16T10:30:00.000Z');
-      const explicitTrainerSign = new Date('2026-10-16T10:35:00.000Z');
+      const forgedClientSign = new Date('2026-10-16T10:30:00.000Z');
+      const forgedTrainerSign = new Date('2026-10-16T10:35:00.000Z');
 
       sessionRepo.findSessionById
         .mockResolvedValueOnce({
@@ -1193,40 +1183,30 @@ describe('WorkoutSessionService', () => {
           started_at: startTime,
           completed_at: null,
         })
-        .mockResolvedValueOnce({
-          id: 50,
-          member_id: 30,
-          trainer_id: 20,
-          started_at: startTime,
-          completed_at: new Date(),
-          client_signed_at: explicitClientSign,
-          trainer_signed_at: explicitTrainerSign,
-          sets: [],
-        });
+        .mockResolvedValueOnce({ id: 50, member_id: 30, sets: [] });
 
-      await service.complete(
-        50,
-        {
-          effort_rating: 8,
-          satisfaction_rating: 8,
-          client_signed_at: explicitClientSign,
-          trainer_signed_at: explicitTrainerSign,
-        },
-        memberActor,
-      );
+      const parsed = workoutSessionCompleteSchema.parse({
+        effort_rating: 8,
+        satisfaction_rating: 8,
+        client_signed: true,
+        trainer_signed: true,
+        client_signed_at: forgedClientSign,
+        trainer_signed_at: forgedTrainerSign,
+      });
+      await service.complete(50, parsed, trainerActor);
 
-      expect(sessionRepo.completeSession).toHaveBeenCalledWith(
-        50,
-        expect.any(Date),
-        '0.00',
-        expect.any(Number),
-        undefined,
-        undefined,
-        expect.objectContaining({
-          client_signed_at: explicitClientSign,
-          trainer_signed_at: explicitTrainerSign,
-        }),
-      );
+      const extra = sessionRepo.completeSession.mock.calls[0][6];
+      expect(extra.client_signed_at).toBeInstanceOf(Date);
+      expect(extra.trainer_signed_at).toBeInstanceOf(Date);
+      expect(extra.client_signed_at).not.toEqual(forgedClientSign);
+      expect(extra.trainer_signed_at).not.toEqual(forgedTrainerSign);
+    });
+
+    it('rejects out-of-range effort, satisfaction and pain ratings', () => {
+      expect(() => workoutSessionCompleteSchema.parse({ effort_rating: 11 })).toThrow();
+      expect(() => workoutSessionCompleteSchema.parse({ satisfaction_rating: 0 })).toThrow();
+      expect(() => workoutSessionCompleteSchema.parse({ pain_discomfort_score: 11 })).toThrow();
+      expect(() => workoutSessionCompleteSchema.parse({ pain_discomfort_score: -1 })).toThrow();
     });
   });
 

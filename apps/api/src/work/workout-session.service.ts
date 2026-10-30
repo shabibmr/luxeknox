@@ -166,9 +166,6 @@ export class WorkoutSessionService {
       throw new BusinessRuleError('Cannot log sets for a completed workout session');
     }
 
-    const actualRir = dto.actual_rir ?? dto.target_rir;
-    const actualDurationSeconds = dto.actual_duration_seconds ?? dto.target_duration_seconds;
-
     return this.sessionRepo.insertSessionExercise({
       workout_session_id: sessionId,
       exercise_id: dto.exercise_id,
@@ -176,8 +173,8 @@ export class WorkoutSessionService {
       reps_completed: dto.reps_completed ?? 0,
       weight_lifted_kg: String(dto.weight_lifted_kg ?? 0),
       rpe_score: dto.rpe_score !== undefined && dto.rpe_score !== null ? String(dto.rpe_score) : null,
-      actual_rir: actualRir !== undefined && actualRir !== null ? String(actualRir) : null,
-      actual_duration_seconds: actualDurationSeconds ?? null,
+      actual_rir: dto.actual_rir !== undefined && dto.actual_rir !== null ? String(dto.actual_rir) : null,
+      actual_duration_seconds: dto.actual_duration_seconds ?? null,
       is_completed: dto.is_completed ?? true,
       notes: dto.notes ?? null,
       created_at: new Date(),
@@ -219,17 +216,13 @@ export class WorkoutSessionService {
     let clientSignedAt: Date | null = session.client_signed_at ?? null;
     let trainerSignedAt: Date | null = session.trainer_signed_at ?? null;
 
-    if (dto.client_signed_at !== undefined) {
-      clientSignedAt = dto.client_signed_at ? new Date(dto.client_signed_at) : null;
-    } else if (dto.client_signed === true || (actor.userType === 'member' && dto.client_signed !== false)) {
+    if (dto.client_signed === true || (actor.userType === 'member' && dto.client_signed !== false)) {
       clientSignedAt = completedAt;
     } else if (dto.client_signed === false) {
       clientSignedAt = null;
     }
 
-    if (dto.trainer_signed_at !== undefined) {
-      trainerSignedAt = dto.trainer_signed_at ? new Date(dto.trainer_signed_at) : null;
-    } else if (dto.trainer_signed === true || (actor.userType === 'trainer' && dto.trainer_signed !== false)) {
+    if (dto.trainer_signed === true || (actor.userType === 'trainer' && dto.trainer_signed !== false)) {
       trainerSignedAt = completedAt;
     } else if (dto.trainer_signed === false) {
       trainerSignedAt = null;
@@ -458,16 +451,11 @@ export class WorkoutSessionService {
     if (dto.rpe_score !== undefined) {
       patch.rpe_score = dto.rpe_score !== null ? String(dto.rpe_score) : null;
     }
-    const rir = dto.actual_rir !== undefined ? dto.actual_rir : dto.target_rir;
-    if (rir !== undefined) {
-      patch.actual_rir = rir !== null ? String(rir) : null;
+    if (dto.actual_rir !== undefined) {
+      patch.actual_rir = dto.actual_rir !== null ? String(dto.actual_rir) : null;
     }
-    const duration =
-      dto.actual_duration_seconds !== undefined
-        ? dto.actual_duration_seconds
-        : dto.target_duration_seconds;
-    if (duration !== undefined) {
-      patch.actual_duration_seconds = duration;
+    if (dto.actual_duration_seconds !== undefined) {
+      patch.actual_duration_seconds = dto.actual_duration_seconds;
     }
     if (dto.is_completed !== undefined) {
       patch.is_completed = dto.is_completed;
