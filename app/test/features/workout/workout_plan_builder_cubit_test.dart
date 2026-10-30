@@ -289,4 +289,142 @@ void main() {
       expect(cubit.state.saving, isFalse);
     },
   );
+
+  group('program blueprint', () {
+    Future<WorkoutPlanBuilderCubit> filled() async {
+      final cubit = buildCubit();
+      await cubit.init();
+      cubit
+        ..setPrimaryObjective12w('Lose 6 kg')
+        ..setMilestone4w('Squat bodyweight')
+        ..setSessionsPerWeek(4)
+        ..setTargetSessionDurationMinutes(60)
+        ..setSplitType('Upper / Lower');
+      return cubit;
+    }
+
+    test('blueprintErrors flags every required field when empty', () async {
+      final cubit = buildCubit();
+      await cubit.init();
+      expect(
+        cubit.state.blueprintErrors.keys,
+        containsAll([
+          'objective',
+          'milestone',
+          'frequency',
+          'duration',
+          'split',
+        ]),
+      );
+      expect(cubit.state.blueprintValid, isFalse);
+    });
+
+    test(
+      'validateBlueprint fails and reveals errors when incomplete',
+      () async {
+        final cubit = buildCubit();
+        await cubit.init();
+        expect(cubit.validateBlueprint(), isFalse);
+        expect(cubit.state.showBlueprintErrors, isTrue);
+      },
+    );
+
+    test('validateBlueprint passes when complete', () async {
+      final cubit = await filled();
+      expect(cubit.state.blueprintErrors, isEmpty);
+      expect(cubit.validateBlueprint(), isTrue);
+    });
+
+    test(
+      'frequency outside 1-14 and duration outside 15-180 are errors',
+      () async {
+        final cubit = await filled();
+        cubit
+          ..setSessionsPerWeek(15)
+          ..setTargetSessionDurationMinutes(10);
+        expect(
+          cubit.state.blueprintErrors.keys,
+          containsAll(['frequency', 'duration']),
+        );
+      },
+    );
+
+    test('toggleProgressionMethod adds and removes tokens', () async {
+      final cubit = buildCubit();
+      await cubit.init();
+      cubit
+        ..toggleProgressionMethod('load')
+        ..toggleProgressionMethod('reps');
+      expect(cubit.state.progressionMethods, ['load', 'reps']);
+      cubit.toggleProgressionMethod('load');
+      expect(cubit.state.progressionMethods, ['reps']);
+      expect(cubit.state.dirty, isTrue);
+    });
+
+    test('init hydrates blueprint from an existing plan', () async {
+      when(() => getPlan('5')).thenAnswer(
+        (_) async => Right(
+          plan(id: '5').copyWith(
+            primaryObjective12w: 'Build muscle',
+            milestone4w: 'Add 5 kg',
+            sessionsPerWeek: 3,
+            targetSessionDurationMinutes: 45,
+            splitType: 'Full body',
+            progressionMethods: const ['volume'],
+          ),
+        ),
+      );
+      final cubit = buildCubit();
+      await cubit.init(planId: '5');
+      expect(cubit.state.primaryObjective12w, 'Build muscle');
+      expect(cubit.state.sessionsPerWeek, 3);
+      expect(cubit.state.targetSessionDurationMinutes, 45);
+      expect(cubit.state.splitType, 'Full body');
+      expect(cubit.state.progressionMethods, ['volume']);
+    });
+
+    test('save on create sends blueprint fields', () async {
+      when(
+        () => createPlan(any()),
+      ).thenAnswer((_) async => Right(plan(id: '9')));
+      when(
+        () => replaceExercises(any()),
+      ).thenAnswer((_) async => Right(plan(id: '9')));
+      final cubit = await filled();
+      cubit
+        ..setTitle('Plan')
+        ..toggleProgressionMethod('load');
+      expect(await cubit.save(), isTrue);
+      final params =
+          verify(() => createPlan(captureAny())).captured.single
+              as CreateWorkoutPlanParams;
+      expect(params.primaryObjective12w, 'Lose 6 kg');
+      expect(params.milestone4w, 'Squat bodyweight');
+      expect(params.sessionsPerWeek, 4);
+      expect(params.targetSessionDurationMinutes, 60);
+      expect(params.splitType, 'Upper / Lower');
+      expect(params.progressionMethods, ['load']);
+    });
+
+    test('save on update sends blueprint fields', () async {
+      when(() => getPlan('5')).thenAnswer((_) async => Right(plan(id: '5')));
+      when(
+        () => updatePlan(any()),
+      ).thenAnswer((_) async => Right(plan(id: '5')));
+      when(
+        () => replaceExercises(any()),
+      ).thenAnswer((_) async => Right(plan(id: '5')));
+      final cubit = buildCubit();
+      await cubit.init(planId: '5');
+      cubit
+        ..setPrimaryObjective12w('Lose 6 kg')
+        ..setSplitType('PPL');
+      expect(await cubit.save(), isTrue);
+      final params =
+          verify(() => updatePlan(captureAny())).captured.single
+              as UpdateWorkoutPlanParams;
+      expect(params.primaryObjective12w, 'Lose 6 kg');
+      expect(params.splitType, 'PPL');
+    });
+  });
 }

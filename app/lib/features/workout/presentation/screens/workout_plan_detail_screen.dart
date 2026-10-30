@@ -245,9 +245,9 @@ class _DetailContent extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               WorkoutStrings.exercisesSection,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             if (days.isEmpty)
@@ -267,7 +267,9 @@ class _DetailContent extends StatelessWidget {
                   exercises: byDay[day]!,
                   onExerciseTap: (e) {
                     if (isViewOnly) {
-                      context.push(Routes.memberHomeWorkoutExerciseById(e.exerciseId));
+                      context.push(
+                        Routes.memberHomeWorkoutExerciseById(e.exerciseId),
+                      );
                     }
                   },
                   onStartDay: isViewOnly

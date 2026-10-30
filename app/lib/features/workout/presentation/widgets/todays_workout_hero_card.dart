@@ -32,9 +32,7 @@ class TodaysWorkoutHeroCard extends StatelessWidget {
       color: colorScheme.primaryContainer.withValues(alpha: 0.4),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: colorScheme.primary.withValues(alpha: 0.3),
-        ),
+        side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),

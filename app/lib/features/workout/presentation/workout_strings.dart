@@ -30,6 +30,29 @@ abstract final class WorkoutStrings {
   static const isTemplateLabel = 'Template';
   static const memberIdLabel = 'Member ID';
   static const exercisesSection = 'Exercises';
+  static const stepBlueprint = 'Program Blueprint';
+  static const stepExercises = 'Exercises';
+  static const next = 'Next';
+  static const back = 'Back';
+  static const objective12wLabel = '12-week objective';
+  static const milestone4wLabel = '4-week milestone';
+  static const sessionsPerWeekLabel = 'Sessions per week';
+  static const sessionDurationLabel = 'Session duration (min)';
+  static const splitLabel = 'Split';
+  static const progressionLabel = 'Progression method';
+  static const splitOptions = [
+    'Full body',
+    'Upper / Lower',
+    'Push / Pull / Legs',
+    'Body-part split',
+  ];
+  static const progressionOptions = {
+    'load': 'Load',
+    'reps': 'Reps',
+    'volume': 'Volume',
+    'density': 'Density',
+    'technique': 'Technique',
+  };
   static const emptyDay = 'No exercises on this day.';
   static const saved = 'Plan saved';
   static const published = 'Plan published';

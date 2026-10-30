@@ -136,9 +136,7 @@ class _ExerciseHistorySheetState extends State<ExerciseHistorySheet> {
                     ],
                   ),
                   const Divider(),
-                  Expanded(
-                    child: _buildContent(scrollController, theme),
-                  ),
+                  Expanded(child: _buildContent(scrollController, theme)),
                 ],
               ),
             ),

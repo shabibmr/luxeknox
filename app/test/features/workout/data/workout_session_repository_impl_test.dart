@@ -101,35 +101,34 @@ void main() {
   });
 
   group('logSet', () {
-    test('forwards targetRir, actualRir, targetDurationSeconds, actualDurationSeconds', () async {
-      when(
-        () => remote.logSet(any(), any()),
-      ).thenAnswer((_) async => _set());
+    test(
+      'forwards targetRir, actualRir, targetDurationSeconds, actualDurationSeconds',
+      () async {
+        when(() => remote.logSet(any(), any())).thenAnswer((_) async => _set());
 
-      await repository.logSet(
-        '1',
-        exerciseId: '2',
-        setNumber: 1,
-        repsCompleted: 10,
-        weightLiftedKg: 80,
-        rpeScore: 8,
-        targetRir: 2,
-        actualRir: 1.5,
-        targetDurationSeconds: 30,
-        actualDurationSeconds: 35,
-        notes: 'Felt strong',
-      );
+        await repository.logSet(
+          '1',
+          exerciseId: '2',
+          setNumber: 1,
+          repsCompleted: 10,
+          weightLiftedKg: 80,
+          rpeScore: 8,
+          targetRir: 2,
+          actualRir: 1.5,
+          targetDurationSeconds: 30,
+          actualDurationSeconds: 35,
+          notes: 'Felt strong',
+        );
 
-      final captured = verify(
-        () => remote.logSet(1, captureAny()),
-      ).captured;
-      final write = captured[0] as api.WorkoutSetWrite;
-      expect(write.targetRir, 2);
-      expect(write.actualRir, 1.5);
-      expect(write.targetDurationSeconds, 30);
-      expect(write.actualDurationSeconds, 35);
-      expect(write.notes, 'Felt strong');
-    });
+        final captured = verify(() => remote.logSet(1, captureAny())).captured;
+        final write = captured[0] as api.WorkoutSetWrite;
+        expect(write.targetRir, 2);
+        expect(write.actualRir, 1.5);
+        expect(write.targetDurationSeconds, 30);
+        expect(write.actualDurationSeconds, 35);
+        expect(write.notes, 'Felt strong');
+      },
+    );
 
     test('validates RIR in range (0-10)', () async {
       final result = await repository.logSet(
@@ -139,13 +138,10 @@ void main() {
         targetRir: 12,
       );
 
-      result.fold(
-        (f) {
-          expect(f, isA<ValidationFailure>());
-          expect((f as ValidationFailure).details, contains('RIR must be 0–10'));
-        },
-        (_) => fail('expected Left'),
-      );
+      result.fold((f) {
+        expect(f, isA<ValidationFailure>());
+        expect((f as ValidationFailure).details, contains('RIR must be 0–10'));
+      }, (_) => fail('expected Left'));
     });
 
     test('validates duration seconds non-negative', () async {
@@ -156,16 +152,13 @@ void main() {
         targetDurationSeconds: -5,
       );
 
-      result.fold(
-        (f) {
-          expect(f, isA<ValidationFailure>());
-          expect(
-            (f as ValidationFailure).details,
-            contains('Duration seconds must be non-negative'),
-          );
-        },
-        (_) => fail('expected Left'),
-      );
+      result.fold((f) {
+        expect(f, isA<ValidationFailure>());
+        expect(
+          (f as ValidationFailure).details,
+          contains('Duration seconds must be non-negative'),
+        );
+      }, (_) => fail('expected Left'));
     });
   });
 
@@ -202,58 +195,43 @@ void main() {
       final result = await repository.updateSet('1', '1', actualRir: -1);
 
       result.fold(
-        (f) => expect((f as ValidationFailure).details, contains('RIR must be 0–10')),
+        (f) => expect(
+          (f as ValidationFailure).details,
+          contains('RIR must be 0–10'),
+        ),
         (_) => fail('expected Left'),
       );
     });
   });
 
   group('completeSession', () {
-    test('forwards multi-metric ratings, protocols, signatures, notes', () async {
-      final signedAt = DateTime(2026, 3, 1, 11, 0);
-      when(
-        () => remote.completeSession(
-          any(),
-          notes: any(named: 'notes'),
-          clientFeedbackRating: any(named: 'clientFeedbackRating'),
-          effortRating: any(named: 'effortRating'),
-          satisfactionRating: any(named: 'satisfactionRating'),
-          painDiscomfortScore: any(named: 'painDiscomfortScore'),
-          painNotes: any(named: 'painNotes'),
-          trainerNotes: any(named: 'trainerNotes'),
-          nextSessionPlan: any(named: 'nextSessionPlan'),
-          sessionFocus: any(named: 'sessionFocus'),
-          warmupProtocol: any(named: 'warmupProtocol'),
-          cooldownProtocol: any(named: 'cooldownProtocol'),
-          clientSigned: any(named: 'clientSigned'),
-          trainerSigned: any(named: 'trainerSigned'),
-          clientSignedAt: any(named: 'clientSignedAt'),
-          trainerSignedAt: any(named: 'trainerSignedAt'),
-        ),
-      ).thenAnswer((_) async => _session());
+    test(
+      'forwards multi-metric ratings, protocols, signatures, notes',
+      () async {
+        final signedAt = DateTime(2026, 3, 1, 11, 0);
+        when(
+          () => remote.completeSession(
+            any(),
+            notes: any(named: 'notes'),
+            clientFeedbackRating: any(named: 'clientFeedbackRating'),
+            effortRating: any(named: 'effortRating'),
+            satisfactionRating: any(named: 'satisfactionRating'),
+            painDiscomfortScore: any(named: 'painDiscomfortScore'),
+            painNotes: any(named: 'painNotes'),
+            trainerNotes: any(named: 'trainerNotes'),
+            nextSessionPlan: any(named: 'nextSessionPlan'),
+            sessionFocus: any(named: 'sessionFocus'),
+            warmupProtocol: any(named: 'warmupProtocol'),
+            cooldownProtocol: any(named: 'cooldownProtocol'),
+            clientSigned: any(named: 'clientSigned'),
+            trainerSigned: any(named: 'trainerSigned'),
+            clientSignedAt: any(named: 'clientSignedAt'),
+            trainerSignedAt: any(named: 'trainerSignedAt'),
+          ),
+        ).thenAnswer((_) async => _session());
 
-      final result = await repository.completeSession(
-        '1',
-        notes: 'Great workout',
-        clientFeedbackRating: 5,
-        effortRating: 9,
-        satisfactionRating: 8,
-        painDiscomfortScore: 2,
-        painNotes: 'Minor tightness',
-        trainerNotes: 'Increase load next week',
-        nextSessionPlan: 'Volume day',
-        sessionFocus: 'Lower Strength',
-        warmupProtocol: 'Dynamic mobility',
-        cooldownProtocol: 'Stretching',
-        clientSigned: true,
-        trainerSigned: true,
-        clientSignedAt: signedAt,
-        trainerSignedAt: signedAt,
-      );
-
-      verify(
-        () => remote.completeSession(
-          1,
+        final result = await repository.completeSession(
+          '1',
           notes: 'Great workout',
           clientFeedbackRating: 5,
           effortRating: 9,
@@ -269,11 +247,32 @@ void main() {
           trainerSigned: true,
           clientSignedAt: signedAt,
           trainerSignedAt: signedAt,
-        ),
-      ).called(1);
+        );
 
-      expect(result.isRight(), isTrue);
-    });
+        verify(
+          () => remote.completeSession(
+            1,
+            notes: 'Great workout',
+            clientFeedbackRating: 5,
+            effortRating: 9,
+            satisfactionRating: 8,
+            painDiscomfortScore: 2,
+            painNotes: 'Minor tightness',
+            trainerNotes: 'Increase load next week',
+            nextSessionPlan: 'Volume day',
+            sessionFocus: 'Lower Strength',
+            warmupProtocol: 'Dynamic mobility',
+            cooldownProtocol: 'Stretching',
+            clientSigned: true,
+            trainerSigned: true,
+            clientSignedAt: signedAt,
+            trainerSignedAt: signedAt,
+          ),
+        ).called(1);
+
+        expect(result.isRight(), isTrue);
+      },
+    );
 
     test('validates effortRating range (1-10)', () async {
       final result = await repository.completeSession('1', effortRating: 11);
@@ -287,7 +286,10 @@ void main() {
     });
 
     test('validates satisfactionRating range (1-10)', () async {
-      final result = await repository.completeSession('1', satisfactionRating: 0);
+      final result = await repository.completeSession(
+        '1',
+        satisfactionRating: 0,
+      );
       result.fold(
         (f) => expect(
           (f as ValidationFailure).details,
@@ -298,7 +300,10 @@ void main() {
     });
 
     test('validates painDiscomfortScore range (0-10)', () async {
-      final result = await repository.completeSession('1', painDiscomfortScore: 11);
+      final result = await repository.completeSession(
+        '1',
+        painDiscomfortScore: 11,
+      );
       result.fold(
         (f) => expect(
           (f as ValidationFailure).details,
@@ -366,15 +371,12 @@ void main() {
         exerciseId: '2',
       );
 
-      result.fold(
-        (f) => fail('expected Right, got Left($f)'),
-        (sessions) {
-          expect(sessions.length, 1);
-          expect(sessions.first.sessionId, '1');
-          expect(sessions.first.sets.length, 1);
-          expect(sessions.first.sets.first.notes, 'Solid reps');
-        },
-      );
+      result.fold((f) => fail('expected Right, got Left($f)'), (sessions) {
+        expect(sessions.length, 1);
+        expect(sessions.first.sessionId, '1');
+        expect(sessions.first.sets.length, 1);
+        expect(sessions.first.sets.first.notes, 'Solid reps');
+      });
     });
   });
 }

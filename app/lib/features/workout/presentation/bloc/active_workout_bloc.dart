@@ -175,7 +175,9 @@ abstract class ActiveWorkoutState with _$ActiveWorkoutState {
   WorkoutPlanExercise? get nextPlanExercise {
     if (selectedExerciseId == null) return null;
     final exercises = planExercises;
-    final index = exercises.indexWhere((e) => e.exerciseId == selectedExerciseId);
+    final index = exercises.indexWhere(
+      (e) => e.exerciseId == selectedExerciseId,
+    );
     if (index >= 0 && index < exercises.length - 1) {
       return exercises[index + 1];
     }
@@ -190,7 +192,9 @@ abstract class ActiveWorkoutState with _$ActiveWorkoutState {
     for (var i = 0; i < exercises.length; i++) {
       final ex = exercises[i];
       final target = ex.targetSets ?? 1;
-      final count = loggedSets.where((s) => s.exerciseId == ex.exerciseId).length;
+      final count = loggedSets
+          .where((s) => s.exerciseId == ex.exerciseId)
+          .length;
       if (count < target) {
         return i;
       }
@@ -214,7 +218,9 @@ abstract class ActiveWorkoutState with _$ActiveWorkoutState {
     if (exercises.isEmpty) return loggedSets.isNotEmpty;
     for (final ex in exercises) {
       final target = ex.targetSets ?? 1;
-      final count = loggedSets.where((s) => s.exerciseId == ex.exerciseId).length;
+      final count = loggedSets
+          .where((s) => s.exerciseId == ex.exerciseId)
+          .length;
       if (count < target) return false;
     }
     return true;

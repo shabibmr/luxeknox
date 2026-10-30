@@ -131,9 +131,7 @@ void main() {
     getActive = _MockGetActive();
     updateSet = _MockUpdateSet();
     deleteSet = _MockDeleteSet();
-    when(
-      () => getActive(any()),
-    ).thenAnswer((_) async => const Right(null));
+    when(() => getActive(any())).thenAnswer((_) async => const Right(null));
     tickController = StreamController<void>.broadcast();
     restTimer = RestTimerCubit(ticker: () => tickController.stream);
   });
@@ -356,7 +354,8 @@ void main() {
       ).thenAnswer((_) async => Right(activeSession));
       when(() => getPlan('3')).thenAnswer((_) async => Right(plan()));
       when(() => logSet(any())).thenAnswer(
-        (_) async => Right(loggedSet(id: 'set3', exerciseId: '100', setNumber: 3)),
+        (_) async =>
+            Right(loggedSet(id: 'set3', exerciseId: '100', setNumber: 3)),
       );
       return buildBloc();
     },
@@ -378,8 +377,11 @@ void main() {
       expect(captured.setNumber, 3);
     },
     expect: () => [
-      isA<ActiveWorkoutState>()
-          .having((s) => s.status, 'status', LoadStatus.initial),
+      isA<ActiveWorkoutState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.initial,
+      ),
       isA<ActiveWorkoutState>()
           .having((s) => s.status, 'status', LoadStatus.loading)
           .having((s) => s.session, 'session', isNull),
@@ -413,8 +415,11 @@ void main() {
       verifyNever(() => startSession(any()));
     },
     expect: () => [
-      isA<ActiveWorkoutState>()
-          .having((s) => s.status, 'status', LoadStatus.initial),
+      isA<ActiveWorkoutState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.initial,
+      ),
       isA<ActiveWorkoutState>()
           .having((s) => s.status, 'status', LoadStatus.loading)
           .having((s) => s.session, 'session', isNull),
@@ -446,7 +451,8 @@ void main() {
       when(() => getPlan('3')).thenAnswer((_) async => Right(plan()));
       when(() => deleteSet(any())).thenAnswer((_) async => const Right(unit));
       when(() => logSet(any())).thenAnswer(
-        (_) async => Right(loggedSet(id: 'set4', exerciseId: '100', setNumber: 4)),
+        (_) async =>
+            Right(loggedSet(id: 'set4', exerciseId: '100', setNumber: 4)),
       );
       return buildBloc();
     },
@@ -488,8 +494,11 @@ void main() {
       verify(() => startSession(any())).called(1);
     },
     expect: () => [
-      isA<ActiveWorkoutState>()
-          .having((s) => s.status, 'status', LoadStatus.initial),
+      isA<ActiveWorkoutState>().having(
+        (s) => s.status,
+        'status',
+        LoadStatus.initial,
+      ),
       isA<ActiveWorkoutState>()
           .having((s) => s.status, 'status', LoadStatus.loading)
           .having((s) => s.session, 'session', isNull),
@@ -610,9 +619,7 @@ void main() {
       when(() => startSession(any())).thenAnswer((_) async => Right(session()));
       when(() => getPlan('3')).thenAnswer((_) async => Right(plan()));
       when(() => completeSession(any())).thenAnswer(
-        (_) async => Right(
-          session(completedAt: DateTime.utc(2026, 1, 1, 1)),
-        ),
+        (_) async => Right(session(completedAt: DateTime.utc(2026, 1, 1, 1))),
       );
       return buildBloc();
     },

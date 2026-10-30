@@ -14,7 +14,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$WorkoutPlanBuilderState {
 
- LoadStatus get status; String? get planId; int? get rowVersion; String get title; String get description; String get targetGoal; String get difficulty; int? get durationWeeks; bool get isTemplate; String get memberId; List<WorkoutPlanExerciseInput> get exercises; bool get dirty; bool get saving;/// Local validation such as a missing title. API errors use [failure].
+ LoadStatus get status; String? get planId; int? get rowVersion; String get title; String get description; String get targetGoal; String get difficulty; int? get durationWeeks; bool get isTemplate; String get memberId; String get primaryObjective12w; String get milestone4w; int? get sessionsPerWeek; int? get targetSessionDurationMinutes; String get splitType; List<String> get progressionMethods;/// Set once the user tries to leave the Blueprint step, so errors only
+/// appear after a first attempt.
+ bool get showBlueprintErrors; List<WorkoutPlanExerciseInput> get exercises; bool get dirty; bool get saving;/// Local validation such as a missing title. API errors use [failure].
  String? get errorMessage; Failure? get failure; WorkoutPlan? get savedPlan;
 /// Create a copy of WorkoutPlanBuilderState
 /// with the given fields replaced by the non-null parameter values.
@@ -26,16 +28,16 @@ $WorkoutPlanBuilderStateCopyWith<WorkoutPlanBuilderState> get copyWith => _$Work
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutPlanBuilderState&&(identical(other.status, status) || other.status == status)&&(identical(other.planId, planId) || other.planId == planId)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.targetGoal, targetGoal) || other.targetGoal == targetGoal)&&(identical(other.difficulty, difficulty) || other.difficulty == difficulty)&&(identical(other.durationWeeks, durationWeeks) || other.durationWeeks == durationWeeks)&&(identical(other.isTemplate, isTemplate) || other.isTemplate == isTemplate)&&(identical(other.memberId, memberId) || other.memberId == memberId)&&const DeepCollectionEquality().equals(other.exercises, exercises)&&(identical(other.dirty, dirty) || other.dirty == dirty)&&(identical(other.saving, saving) || other.saving == saving)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.savedPlan, savedPlan) || other.savedPlan == savedPlan));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutPlanBuilderState&&(identical(other.status, status) || other.status == status)&&(identical(other.planId, planId) || other.planId == planId)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.targetGoal, targetGoal) || other.targetGoal == targetGoal)&&(identical(other.difficulty, difficulty) || other.difficulty == difficulty)&&(identical(other.durationWeeks, durationWeeks) || other.durationWeeks == durationWeeks)&&(identical(other.isTemplate, isTemplate) || other.isTemplate == isTemplate)&&(identical(other.memberId, memberId) || other.memberId == memberId)&&(identical(other.primaryObjective12w, primaryObjective12w) || other.primaryObjective12w == primaryObjective12w)&&(identical(other.milestone4w, milestone4w) || other.milestone4w == milestone4w)&&(identical(other.sessionsPerWeek, sessionsPerWeek) || other.sessionsPerWeek == sessionsPerWeek)&&(identical(other.targetSessionDurationMinutes, targetSessionDurationMinutes) || other.targetSessionDurationMinutes == targetSessionDurationMinutes)&&(identical(other.splitType, splitType) || other.splitType == splitType)&&const DeepCollectionEquality().equals(other.progressionMethods, progressionMethods)&&(identical(other.showBlueprintErrors, showBlueprintErrors) || other.showBlueprintErrors == showBlueprintErrors)&&const DeepCollectionEquality().equals(other.exercises, exercises)&&(identical(other.dirty, dirty) || other.dirty == dirty)&&(identical(other.saving, saving) || other.saving == saving)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.savedPlan, savedPlan) || other.savedPlan == savedPlan));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,planId,rowVersion,title,description,targetGoal,difficulty,durationWeeks,isTemplate,memberId,const DeepCollectionEquality().hash(exercises),dirty,saving,errorMessage,failure,savedPlan);
+int get hashCode => Object.hashAll([runtimeType,status,planId,rowVersion,title,description,targetGoal,difficulty,durationWeeks,isTemplate,memberId,primaryObjective12w,milestone4w,sessionsPerWeek,targetSessionDurationMinutes,splitType,const DeepCollectionEquality().hash(progressionMethods),showBlueprintErrors,const DeepCollectionEquality().hash(exercises),dirty,saving,errorMessage,failure,savedPlan]);
 
 @override
 String toString() {
-  return 'WorkoutPlanBuilderState(status: $status, planId: $planId, rowVersion: $rowVersion, title: $title, description: $description, targetGoal: $targetGoal, difficulty: $difficulty, durationWeeks: $durationWeeks, isTemplate: $isTemplate, memberId: $memberId, exercises: $exercises, dirty: $dirty, saving: $saving, errorMessage: $errorMessage, failure: $failure, savedPlan: $savedPlan)';
+  return 'WorkoutPlanBuilderState(status: $status, planId: $planId, rowVersion: $rowVersion, title: $title, description: $description, targetGoal: $targetGoal, difficulty: $difficulty, durationWeeks: $durationWeeks, isTemplate: $isTemplate, memberId: $memberId, primaryObjective12w: $primaryObjective12w, milestone4w: $milestone4w, sessionsPerWeek: $sessionsPerWeek, targetSessionDurationMinutes: $targetSessionDurationMinutes, splitType: $splitType, progressionMethods: $progressionMethods, showBlueprintErrors: $showBlueprintErrors, exercises: $exercises, dirty: $dirty, saving: $saving, errorMessage: $errorMessage, failure: $failure, savedPlan: $savedPlan)';
 }
 
 
@@ -46,7 +48,7 @@ abstract mixin class $WorkoutPlanBuilderStateCopyWith<$Res>  {
   factory $WorkoutPlanBuilderStateCopyWith(WorkoutPlanBuilderState value, $Res Function(WorkoutPlanBuilderState) _then) = _$WorkoutPlanBuilderStateCopyWithImpl;
 @useResult
 $Res call({
- LoadStatus status, String? planId, int? rowVersion, String title, String description, String targetGoal, String difficulty, int? durationWeeks, bool isTemplate, String memberId, List<WorkoutPlanExerciseInput> exercises, bool dirty, bool saving, String? errorMessage, Failure? failure, WorkoutPlan? savedPlan
+ LoadStatus status, String? planId, int? rowVersion, String title, String description, String targetGoal, String difficulty, int? durationWeeks, bool isTemplate, String memberId, String primaryObjective12w, String milestone4w, int? sessionsPerWeek, int? targetSessionDurationMinutes, String splitType, List<String> progressionMethods, bool showBlueprintErrors, List<WorkoutPlanExerciseInput> exercises, bool dirty, bool saving, String? errorMessage, Failure? failure, WorkoutPlan? savedPlan
 });
 
 
@@ -63,7 +65,7 @@ class _$WorkoutPlanBuilderStateCopyWithImpl<$Res>
 
 /// Create a copy of WorkoutPlanBuilderState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? planId = freezed,Object? rowVersion = freezed,Object? title = null,Object? description = null,Object? targetGoal = null,Object? difficulty = null,Object? durationWeeks = freezed,Object? isTemplate = null,Object? memberId = null,Object? exercises = null,Object? dirty = null,Object? saving = null,Object? errorMessage = freezed,Object? failure = freezed,Object? savedPlan = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? planId = freezed,Object? rowVersion = freezed,Object? title = null,Object? description = null,Object? targetGoal = null,Object? difficulty = null,Object? durationWeeks = freezed,Object? isTemplate = null,Object? memberId = null,Object? primaryObjective12w = null,Object? milestone4w = null,Object? sessionsPerWeek = freezed,Object? targetSessionDurationMinutes = freezed,Object? splitType = null,Object? progressionMethods = null,Object? showBlueprintErrors = null,Object? exercises = null,Object? dirty = null,Object? saving = null,Object? errorMessage = freezed,Object? failure = freezed,Object? savedPlan = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,planId: freezed == planId ? _self.planId : planId // ignore: cast_nullable_to_non_nullable
@@ -75,7 +77,14 @@ as String,difficulty: null == difficulty ? _self.difficulty : difficulty // igno
 as String,durationWeeks: freezed == durationWeeks ? _self.durationWeeks : durationWeeks // ignore: cast_nullable_to_non_nullable
 as int?,isTemplate: null == isTemplate ? _self.isTemplate : isTemplate // ignore: cast_nullable_to_non_nullable
 as bool,memberId: null == memberId ? _self.memberId : memberId // ignore: cast_nullable_to_non_nullable
-as String,exercises: null == exercises ? _self.exercises : exercises // ignore: cast_nullable_to_non_nullable
+as String,primaryObjective12w: null == primaryObjective12w ? _self.primaryObjective12w : primaryObjective12w // ignore: cast_nullable_to_non_nullable
+as String,milestone4w: null == milestone4w ? _self.milestone4w : milestone4w // ignore: cast_nullable_to_non_nullable
+as String,sessionsPerWeek: freezed == sessionsPerWeek ? _self.sessionsPerWeek : sessionsPerWeek // ignore: cast_nullable_to_non_nullable
+as int?,targetSessionDurationMinutes: freezed == targetSessionDurationMinutes ? _self.targetSessionDurationMinutes : targetSessionDurationMinutes // ignore: cast_nullable_to_non_nullable
+as int?,splitType: null == splitType ? _self.splitType : splitType // ignore: cast_nullable_to_non_nullable
+as String,progressionMethods: null == progressionMethods ? _self.progressionMethods : progressionMethods // ignore: cast_nullable_to_non_nullable
+as List<String>,showBlueprintErrors: null == showBlueprintErrors ? _self.showBlueprintErrors : showBlueprintErrors // ignore: cast_nullable_to_non_nullable
+as bool,exercises: null == exercises ? _self.exercises : exercises // ignore: cast_nullable_to_non_nullable
 as List<WorkoutPlanExerciseInput>,dirty: null == dirty ? _self.dirty : dirty // ignore: cast_nullable_to_non_nullable
 as bool,saving: null == saving ? _self.saving : saving // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
@@ -166,10 +175,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  String? planId,  int? rowVersion,  String title,  String description,  String targetGoal,  String difficulty,  int? durationWeeks,  bool isTemplate,  String memberId,  List<WorkoutPlanExerciseInput> exercises,  bool dirty,  bool saving,  String? errorMessage,  Failure? failure,  WorkoutPlan? savedPlan)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  String? planId,  int? rowVersion,  String title,  String description,  String targetGoal,  String difficulty,  int? durationWeeks,  bool isTemplate,  String memberId,  String primaryObjective12w,  String milestone4w,  int? sessionsPerWeek,  int? targetSessionDurationMinutes,  String splitType,  List<String> progressionMethods,  bool showBlueprintErrors,  List<WorkoutPlanExerciseInput> exercises,  bool dirty,  bool saving,  String? errorMessage,  Failure? failure,  WorkoutPlan? savedPlan)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WorkoutPlanBuilderState() when $default != null:
-return $default(_that.status,_that.planId,_that.rowVersion,_that.title,_that.description,_that.targetGoal,_that.difficulty,_that.durationWeeks,_that.isTemplate,_that.memberId,_that.exercises,_that.dirty,_that.saving,_that.errorMessage,_that.failure,_that.savedPlan);case _:
+return $default(_that.status,_that.planId,_that.rowVersion,_that.title,_that.description,_that.targetGoal,_that.difficulty,_that.durationWeeks,_that.isTemplate,_that.memberId,_that.primaryObjective12w,_that.milestone4w,_that.sessionsPerWeek,_that.targetSessionDurationMinutes,_that.splitType,_that.progressionMethods,_that.showBlueprintErrors,_that.exercises,_that.dirty,_that.saving,_that.errorMessage,_that.failure,_that.savedPlan);case _:
   return orElse();
 
 }
@@ -187,10 +196,10 @@ return $default(_that.status,_that.planId,_that.rowVersion,_that.title,_that.des
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  String? planId,  int? rowVersion,  String title,  String description,  String targetGoal,  String difficulty,  int? durationWeeks,  bool isTemplate,  String memberId,  List<WorkoutPlanExerciseInput> exercises,  bool dirty,  bool saving,  String? errorMessage,  Failure? failure,  WorkoutPlan? savedPlan)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  String? planId,  int? rowVersion,  String title,  String description,  String targetGoal,  String difficulty,  int? durationWeeks,  bool isTemplate,  String memberId,  String primaryObjective12w,  String milestone4w,  int? sessionsPerWeek,  int? targetSessionDurationMinutes,  String splitType,  List<String> progressionMethods,  bool showBlueprintErrors,  List<WorkoutPlanExerciseInput> exercises,  bool dirty,  bool saving,  String? errorMessage,  Failure? failure,  WorkoutPlan? savedPlan)  $default,) {final _that = this;
 switch (_that) {
 case _WorkoutPlanBuilderState():
-return $default(_that.status,_that.planId,_that.rowVersion,_that.title,_that.description,_that.targetGoal,_that.difficulty,_that.durationWeeks,_that.isTemplate,_that.memberId,_that.exercises,_that.dirty,_that.saving,_that.errorMessage,_that.failure,_that.savedPlan);case _:
+return $default(_that.status,_that.planId,_that.rowVersion,_that.title,_that.description,_that.targetGoal,_that.difficulty,_that.durationWeeks,_that.isTemplate,_that.memberId,_that.primaryObjective12w,_that.milestone4w,_that.sessionsPerWeek,_that.targetSessionDurationMinutes,_that.splitType,_that.progressionMethods,_that.showBlueprintErrors,_that.exercises,_that.dirty,_that.saving,_that.errorMessage,_that.failure,_that.savedPlan);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +216,10 @@ return $default(_that.status,_that.planId,_that.rowVersion,_that.title,_that.des
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  String? planId,  int? rowVersion,  String title,  String description,  String targetGoal,  String difficulty,  int? durationWeeks,  bool isTemplate,  String memberId,  List<WorkoutPlanExerciseInput> exercises,  bool dirty,  bool saving,  String? errorMessage,  Failure? failure,  WorkoutPlan? savedPlan)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  String? planId,  int? rowVersion,  String title,  String description,  String targetGoal,  String difficulty,  int? durationWeeks,  bool isTemplate,  String memberId,  String primaryObjective12w,  String milestone4w,  int? sessionsPerWeek,  int? targetSessionDurationMinutes,  String splitType,  List<String> progressionMethods,  bool showBlueprintErrors,  List<WorkoutPlanExerciseInput> exercises,  bool dirty,  bool saving,  String? errorMessage,  Failure? failure,  WorkoutPlan? savedPlan)?  $default,) {final _that = this;
 switch (_that) {
 case _WorkoutPlanBuilderState() when $default != null:
-return $default(_that.status,_that.planId,_that.rowVersion,_that.title,_that.description,_that.targetGoal,_that.difficulty,_that.durationWeeks,_that.isTemplate,_that.memberId,_that.exercises,_that.dirty,_that.saving,_that.errorMessage,_that.failure,_that.savedPlan);case _:
+return $default(_that.status,_that.planId,_that.rowVersion,_that.title,_that.description,_that.targetGoal,_that.difficulty,_that.durationWeeks,_that.isTemplate,_that.memberId,_that.primaryObjective12w,_that.milestone4w,_that.sessionsPerWeek,_that.targetSessionDurationMinutes,_that.splitType,_that.progressionMethods,_that.showBlueprintErrors,_that.exercises,_that.dirty,_that.saving,_that.errorMessage,_that.failure,_that.savedPlan);case _:
   return null;
 
 }
@@ -222,7 +231,7 @@ return $default(_that.status,_that.planId,_that.rowVersion,_that.title,_that.des
 
 
 class _WorkoutPlanBuilderState extends WorkoutPlanBuilderState {
-  const _WorkoutPlanBuilderState({this.status = LoadStatus.initial, this.planId, this.rowVersion, this.title = '', this.description = '', this.targetGoal = '', this.difficulty = '', this.durationWeeks, this.isTemplate = false, this.memberId = '', final  List<WorkoutPlanExerciseInput> exercises = const <WorkoutPlanExerciseInput>[], this.dirty = false, this.saving = false, this.errorMessage, this.failure, this.savedPlan}): _exercises = exercises,super._();
+  const _WorkoutPlanBuilderState({this.status = LoadStatus.initial, this.planId, this.rowVersion, this.title = '', this.description = '', this.targetGoal = '', this.difficulty = '', this.durationWeeks, this.isTemplate = false, this.memberId = '', this.primaryObjective12w = '', this.milestone4w = '', this.sessionsPerWeek, this.targetSessionDurationMinutes, this.splitType = '', final  List<String> progressionMethods = const <String>[], this.showBlueprintErrors = false, final  List<WorkoutPlanExerciseInput> exercises = const <WorkoutPlanExerciseInput>[], this.dirty = false, this.saving = false, this.errorMessage, this.failure, this.savedPlan}): _progressionMethods = progressionMethods,_exercises = exercises,super._();
   
 
 @override@JsonKey() final  LoadStatus status;
@@ -235,6 +244,21 @@ class _WorkoutPlanBuilderState extends WorkoutPlanBuilderState {
 @override final  int? durationWeeks;
 @override@JsonKey() final  bool isTemplate;
 @override@JsonKey() final  String memberId;
+@override@JsonKey() final  String primaryObjective12w;
+@override@JsonKey() final  String milestone4w;
+@override final  int? sessionsPerWeek;
+@override final  int? targetSessionDurationMinutes;
+@override@JsonKey() final  String splitType;
+ final  List<String> _progressionMethods;
+@override@JsonKey() List<String> get progressionMethods {
+  if (_progressionMethods is EqualUnmodifiableListView) return _progressionMethods;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_progressionMethods);
+}
+
+/// Set once the user tries to leave the Blueprint step, so errors only
+/// appear after a first attempt.
+@override@JsonKey() final  bool showBlueprintErrors;
  final  List<WorkoutPlanExerciseInput> _exercises;
 @override@JsonKey() List<WorkoutPlanExerciseInput> get exercises {
   if (_exercises is EqualUnmodifiableListView) return _exercises;
@@ -259,16 +283,16 @@ _$WorkoutPlanBuilderStateCopyWith<_WorkoutPlanBuilderState> get copyWith => __$W
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkoutPlanBuilderState&&(identical(other.status, status) || other.status == status)&&(identical(other.planId, planId) || other.planId == planId)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.targetGoal, targetGoal) || other.targetGoal == targetGoal)&&(identical(other.difficulty, difficulty) || other.difficulty == difficulty)&&(identical(other.durationWeeks, durationWeeks) || other.durationWeeks == durationWeeks)&&(identical(other.isTemplate, isTemplate) || other.isTemplate == isTemplate)&&(identical(other.memberId, memberId) || other.memberId == memberId)&&const DeepCollectionEquality().equals(other._exercises, _exercises)&&(identical(other.dirty, dirty) || other.dirty == dirty)&&(identical(other.saving, saving) || other.saving == saving)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.savedPlan, savedPlan) || other.savedPlan == savedPlan));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkoutPlanBuilderState&&(identical(other.status, status) || other.status == status)&&(identical(other.planId, planId) || other.planId == planId)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.targetGoal, targetGoal) || other.targetGoal == targetGoal)&&(identical(other.difficulty, difficulty) || other.difficulty == difficulty)&&(identical(other.durationWeeks, durationWeeks) || other.durationWeeks == durationWeeks)&&(identical(other.isTemplate, isTemplate) || other.isTemplate == isTemplate)&&(identical(other.memberId, memberId) || other.memberId == memberId)&&(identical(other.primaryObjective12w, primaryObjective12w) || other.primaryObjective12w == primaryObjective12w)&&(identical(other.milestone4w, milestone4w) || other.milestone4w == milestone4w)&&(identical(other.sessionsPerWeek, sessionsPerWeek) || other.sessionsPerWeek == sessionsPerWeek)&&(identical(other.targetSessionDurationMinutes, targetSessionDurationMinutes) || other.targetSessionDurationMinutes == targetSessionDurationMinutes)&&(identical(other.splitType, splitType) || other.splitType == splitType)&&const DeepCollectionEquality().equals(other._progressionMethods, _progressionMethods)&&(identical(other.showBlueprintErrors, showBlueprintErrors) || other.showBlueprintErrors == showBlueprintErrors)&&const DeepCollectionEquality().equals(other._exercises, _exercises)&&(identical(other.dirty, dirty) || other.dirty == dirty)&&(identical(other.saving, saving) || other.saving == saving)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.savedPlan, savedPlan) || other.savedPlan == savedPlan));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,planId,rowVersion,title,description,targetGoal,difficulty,durationWeeks,isTemplate,memberId,const DeepCollectionEquality().hash(_exercises),dirty,saving,errorMessage,failure,savedPlan);
+int get hashCode => Object.hashAll([runtimeType,status,planId,rowVersion,title,description,targetGoal,difficulty,durationWeeks,isTemplate,memberId,primaryObjective12w,milestone4w,sessionsPerWeek,targetSessionDurationMinutes,splitType,const DeepCollectionEquality().hash(_progressionMethods),showBlueprintErrors,const DeepCollectionEquality().hash(_exercises),dirty,saving,errorMessage,failure,savedPlan]);
 
 @override
 String toString() {
-  return 'WorkoutPlanBuilderState(status: $status, planId: $planId, rowVersion: $rowVersion, title: $title, description: $description, targetGoal: $targetGoal, difficulty: $difficulty, durationWeeks: $durationWeeks, isTemplate: $isTemplate, memberId: $memberId, exercises: $exercises, dirty: $dirty, saving: $saving, errorMessage: $errorMessage, failure: $failure, savedPlan: $savedPlan)';
+  return 'WorkoutPlanBuilderState(status: $status, planId: $planId, rowVersion: $rowVersion, title: $title, description: $description, targetGoal: $targetGoal, difficulty: $difficulty, durationWeeks: $durationWeeks, isTemplate: $isTemplate, memberId: $memberId, primaryObjective12w: $primaryObjective12w, milestone4w: $milestone4w, sessionsPerWeek: $sessionsPerWeek, targetSessionDurationMinutes: $targetSessionDurationMinutes, splitType: $splitType, progressionMethods: $progressionMethods, showBlueprintErrors: $showBlueprintErrors, exercises: $exercises, dirty: $dirty, saving: $saving, errorMessage: $errorMessage, failure: $failure, savedPlan: $savedPlan)';
 }
 
 
@@ -279,7 +303,7 @@ abstract mixin class _$WorkoutPlanBuilderStateCopyWith<$Res> implements $Workout
   factory _$WorkoutPlanBuilderStateCopyWith(_WorkoutPlanBuilderState value, $Res Function(_WorkoutPlanBuilderState) _then) = __$WorkoutPlanBuilderStateCopyWithImpl;
 @override @useResult
 $Res call({
- LoadStatus status, String? planId, int? rowVersion, String title, String description, String targetGoal, String difficulty, int? durationWeeks, bool isTemplate, String memberId, List<WorkoutPlanExerciseInput> exercises, bool dirty, bool saving, String? errorMessage, Failure? failure, WorkoutPlan? savedPlan
+ LoadStatus status, String? planId, int? rowVersion, String title, String description, String targetGoal, String difficulty, int? durationWeeks, bool isTemplate, String memberId, String primaryObjective12w, String milestone4w, int? sessionsPerWeek, int? targetSessionDurationMinutes, String splitType, List<String> progressionMethods, bool showBlueprintErrors, List<WorkoutPlanExerciseInput> exercises, bool dirty, bool saving, String? errorMessage, Failure? failure, WorkoutPlan? savedPlan
 });
 
 
@@ -296,7 +320,7 @@ class __$WorkoutPlanBuilderStateCopyWithImpl<$Res>
 
 /// Create a copy of WorkoutPlanBuilderState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? planId = freezed,Object? rowVersion = freezed,Object? title = null,Object? description = null,Object? targetGoal = null,Object? difficulty = null,Object? durationWeeks = freezed,Object? isTemplate = null,Object? memberId = null,Object? exercises = null,Object? dirty = null,Object? saving = null,Object? errorMessage = freezed,Object? failure = freezed,Object? savedPlan = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? planId = freezed,Object? rowVersion = freezed,Object? title = null,Object? description = null,Object? targetGoal = null,Object? difficulty = null,Object? durationWeeks = freezed,Object? isTemplate = null,Object? memberId = null,Object? primaryObjective12w = null,Object? milestone4w = null,Object? sessionsPerWeek = freezed,Object? targetSessionDurationMinutes = freezed,Object? splitType = null,Object? progressionMethods = null,Object? showBlueprintErrors = null,Object? exercises = null,Object? dirty = null,Object? saving = null,Object? errorMessage = freezed,Object? failure = freezed,Object? savedPlan = freezed,}) {
   return _then(_WorkoutPlanBuilderState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,planId: freezed == planId ? _self.planId : planId // ignore: cast_nullable_to_non_nullable
@@ -308,7 +332,14 @@ as String,difficulty: null == difficulty ? _self.difficulty : difficulty // igno
 as String,durationWeeks: freezed == durationWeeks ? _self.durationWeeks : durationWeeks // ignore: cast_nullable_to_non_nullable
 as int?,isTemplate: null == isTemplate ? _self.isTemplate : isTemplate // ignore: cast_nullable_to_non_nullable
 as bool,memberId: null == memberId ? _self.memberId : memberId // ignore: cast_nullable_to_non_nullable
-as String,exercises: null == exercises ? _self._exercises : exercises // ignore: cast_nullable_to_non_nullable
+as String,primaryObjective12w: null == primaryObjective12w ? _self.primaryObjective12w : primaryObjective12w // ignore: cast_nullable_to_non_nullable
+as String,milestone4w: null == milestone4w ? _self.milestone4w : milestone4w // ignore: cast_nullable_to_non_nullable
+as String,sessionsPerWeek: freezed == sessionsPerWeek ? _self.sessionsPerWeek : sessionsPerWeek // ignore: cast_nullable_to_non_nullable
+as int?,targetSessionDurationMinutes: freezed == targetSessionDurationMinutes ? _self.targetSessionDurationMinutes : targetSessionDurationMinutes // ignore: cast_nullable_to_non_nullable
+as int?,splitType: null == splitType ? _self.splitType : splitType // ignore: cast_nullable_to_non_nullable
+as String,progressionMethods: null == progressionMethods ? _self._progressionMethods : progressionMethods // ignore: cast_nullable_to_non_nullable
+as List<String>,showBlueprintErrors: null == showBlueprintErrors ? _self.showBlueprintErrors : showBlueprintErrors // ignore: cast_nullable_to_non_nullable
+as bool,exercises: null == exercises ? _self._exercises : exercises // ignore: cast_nullable_to_non_nullable
 as List<WorkoutPlanExerciseInput>,dirty: null == dirty ? _self.dirty : dirty // ignore: cast_nullable_to_non_nullable
 as bool,saving: null == saving ? _self.saving : saving // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
