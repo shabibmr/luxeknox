@@ -12,8 +12,6 @@ class _$AccountUpdate extends AccountUpdate {
   @override
   final int? parentId;
   @override
-  final bool? clearParentId;
-  @override
   final bool? isActive;
   @override
   final bool? isBank;
@@ -21,12 +19,7 @@ class _$AccountUpdate extends AccountUpdate {
   factory _$AccountUpdate([void Function(AccountUpdateBuilder)? updates]) =>
       (AccountUpdateBuilder()..update(updates))._build();
 
-  _$AccountUpdate._(
-      {this.name,
-      this.parentId,
-      this.clearParentId,
-      this.isActive,
-      this.isBank})
+  _$AccountUpdate._({this.name, this.parentId, this.isActive, this.isBank})
       : super._();
   @override
   AccountUpdate rebuild(void Function(AccountUpdateBuilder) updates) =>
@@ -41,7 +34,6 @@ class _$AccountUpdate extends AccountUpdate {
     return other is AccountUpdate &&
         name == other.name &&
         parentId == other.parentId &&
-        clearParentId == other.clearParentId &&
         isActive == other.isActive &&
         isBank == other.isBank;
   }
@@ -51,7 +43,6 @@ class _$AccountUpdate extends AccountUpdate {
     var _$hash = 0;
     _$hash = $jc(_$hash, name.hashCode);
     _$hash = $jc(_$hash, parentId.hashCode);
-    _$hash = $jc(_$hash, clearParentId.hashCode);
     _$hash = $jc(_$hash, isActive.hashCode);
     _$hash = $jc(_$hash, isBank.hashCode);
     _$hash = $jf(_$hash);
@@ -63,7 +54,6 @@ class _$AccountUpdate extends AccountUpdate {
     return (newBuiltValueToStringHelper(r'AccountUpdate')
           ..add('name', name)
           ..add('parentId', parentId)
-          ..add('clearParentId', clearParentId)
           ..add('isActive', isActive)
           ..add('isBank', isBank))
         .toString();
@@ -82,11 +72,6 @@ class AccountUpdateBuilder
   int? get parentId => _$this._parentId;
   set parentId(int? parentId) => _$this._parentId = parentId;
 
-  bool? _clearParentId;
-  bool? get clearParentId => _$this._clearParentId;
-  set clearParentId(bool? clearParentId) =>
-      _$this._clearParentId = clearParentId;
-
   bool? _isActive;
   bool? get isActive => _$this._isActive;
   set isActive(bool? isActive) => _$this._isActive = isActive;
@@ -104,7 +89,6 @@ class AccountUpdateBuilder
     if ($v != null) {
       _name = $v.name;
       _parentId = $v.parentId;
-      _clearParentId = $v.clearParentId;
       _isActive = $v.isActive;
       _isBank = $v.isBank;
       _$v = null;
@@ -130,7 +114,6 @@ class AccountUpdateBuilder
         _$AccountUpdate._(
           name: name,
           parentId: parentId,
-          clearParentId: clearParentId,
           isActive: isActive,
           isBank: isBank,
         );
