@@ -20,8 +20,6 @@ part 'notification.g.dart';
 /// * [dataPayload] 
 /// * [senderUserId] 
 /// * [createdAt] - UTC ISO-8601
-/// * [priority] 
-/// * [typeCode] 
 /// * [isRead] 
 /// * [readAt] 
 @BuiltValue()
@@ -48,14 +46,6 @@ abstract class Notification implements Built<Notification, NotificationBuilder> 
   @BuiltValueField(wireName: r'created_at')
   DateTime get createdAt;
 
-  @BuiltValueField(wireName: r'priority')
-  NotificationPriorityEnum? get priority;
-  // enum priorityEnum {  normal,  high,  };
-
-  @BuiltValueField(wireName: r'type_code')
-  NotificationTypeCodeEnum? get typeCode;
-  // enum typeCodeEnum {  membership_expiry,  session_reminder,  payment_due,  announcement,  freeze_pending,  booking_confirmed,  booking_cancelled,  session_waitlist_promoted,  trainer_assigned,  broadcast,  workout_safety_alert,  };
-
   @BuiltValueField(wireName: r'is_read')
   bool? get isRead;
 
@@ -67,8 +57,7 @@ abstract class Notification implements Built<Notification, NotificationBuilder> 
   factory Notification([void updates(NotificationBuilder b)]) = _$Notification;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(NotificationBuilder b) => b
-      ..priority = NotificationPriorityEnum.valueOf('normal');
+  static void _defaults(NotificationBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
   static Serializer<Notification> get serializer => _$NotificationSerializer();
@@ -127,20 +116,6 @@ class _$NotificationSerializer implements PrimitiveSerializer<Notification> {
       object.createdAt,
       specifiedType: const FullType(DateTime),
     );
-    if (object.priority != null) {
-      yield r'priority';
-      yield serializers.serialize(
-        object.priority,
-        specifiedType: const FullType(NotificationPriorityEnum),
-      );
-    }
-    if (object.typeCode != null) {
-      yield r'type_code';
-      yield serializers.serialize(
-        object.typeCode,
-        specifiedType: const FullType(NotificationTypeCodeEnum),
-      );
-    }
     if (object.isRead != null) {
       yield r'is_read';
       yield serializers.serialize(
@@ -230,22 +205,6 @@ class _$NotificationSerializer implements PrimitiveSerializer<Notification> {
           ) as DateTime;
           result.createdAt = valueDes;
           break;
-        case r'priority':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(NotificationPriorityEnum),
-          ) as NotificationPriorityEnum?;
-          if (valueDes == null) continue;
-          result.priority = valueDes;
-          break;
-        case r'type_code':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(NotificationTypeCodeEnum),
-          ) as NotificationTypeCodeEnum?;
-          if (valueDes == null) continue;
-          result.typeCode = valueDes;
-          break;
         case r'is_read':
           final valueDes = serializers.deserialize(
             value,
@@ -291,52 +250,4 @@ class _$NotificationSerializer implements PrimitiveSerializer<Notification> {
   }
 }
 
-
-class NotificationPriorityEnum extends EnumClass {
-
-  @BuiltValueEnumConst(wireName: r'normal')
-  static const NotificationPriorityEnum normal = _$notificationPriorityEnum_normal;
-  @BuiltValueEnumConst(wireName: r'high')
-  static const NotificationPriorityEnum high = _$notificationPriorityEnum_high;
-
-  static Serializer<NotificationPriorityEnum> get serializer => _$notificationPriorityEnumSerializer;
-
-  const NotificationPriorityEnum._(String name): super(name);
-
-  static BuiltSet<NotificationPriorityEnum> get values => _$notificationPriorityEnumValues;
-  static NotificationPriorityEnum valueOf(String name) => _$notificationPriorityEnumValueOf(name);
-}
-
-class NotificationTypeCodeEnum extends EnumClass {
-
-  @BuiltValueEnumConst(wireName: r'membership_expiry')
-  static const NotificationTypeCodeEnum membershipExpiry = _$notificationTypeCodeEnum_membershipExpiry;
-  @BuiltValueEnumConst(wireName: r'session_reminder')
-  static const NotificationTypeCodeEnum sessionReminder = _$notificationTypeCodeEnum_sessionReminder;
-  @BuiltValueEnumConst(wireName: r'payment_due')
-  static const NotificationTypeCodeEnum paymentDue = _$notificationTypeCodeEnum_paymentDue;
-  @BuiltValueEnumConst(wireName: r'announcement')
-  static const NotificationTypeCodeEnum announcement = _$notificationTypeCodeEnum_announcement;
-  @BuiltValueEnumConst(wireName: r'freeze_pending')
-  static const NotificationTypeCodeEnum freezePending = _$notificationTypeCodeEnum_freezePending;
-  @BuiltValueEnumConst(wireName: r'booking_confirmed')
-  static const NotificationTypeCodeEnum bookingConfirmed = _$notificationTypeCodeEnum_bookingConfirmed;
-  @BuiltValueEnumConst(wireName: r'booking_cancelled')
-  static const NotificationTypeCodeEnum bookingCancelled = _$notificationTypeCodeEnum_bookingCancelled;
-  @BuiltValueEnumConst(wireName: r'session_waitlist_promoted')
-  static const NotificationTypeCodeEnum sessionWaitlistPromoted = _$notificationTypeCodeEnum_sessionWaitlistPromoted;
-  @BuiltValueEnumConst(wireName: r'trainer_assigned')
-  static const NotificationTypeCodeEnum trainerAssigned = _$notificationTypeCodeEnum_trainerAssigned;
-  @BuiltValueEnumConst(wireName: r'broadcast')
-  static const NotificationTypeCodeEnum broadcast = _$notificationTypeCodeEnum_broadcast;
-  @BuiltValueEnumConst(wireName: r'workout_safety_alert')
-  static const NotificationTypeCodeEnum workoutSafetyAlert = _$notificationTypeCodeEnum_workoutSafetyAlert;
-
-  static Serializer<NotificationTypeCodeEnum> get serializer => _$notificationTypeCodeEnumSerializer;
-
-  const NotificationTypeCodeEnum._(String name): super(name);
-
-  static BuiltSet<NotificationTypeCodeEnum> get values => _$notificationTypeCodeEnumValues;
-  static NotificationTypeCodeEnum valueOf(String name) => _$notificationTypeCodeEnumValueOf(name);
-}
 

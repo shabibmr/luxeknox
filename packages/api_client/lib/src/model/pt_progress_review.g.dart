@@ -6,6 +6,62 @@ part of 'pt_progress_review.dart';
 // BuiltValueGenerator
 // **************************************************************************
 
+const PtProgressReviewProgressHighlightsEnum
+    _$ptProgressReviewProgressHighlightsEnum_improvedTechnique =
+    const PtProgressReviewProgressHighlightsEnum._('improvedTechnique');
+const PtProgressReviewProgressHighlightsEnum
+    _$ptProgressReviewProgressHighlightsEnum_increasedStrength =
+    const PtProgressReviewProgressHighlightsEnum._('increasedStrength');
+const PtProgressReviewProgressHighlightsEnum
+    _$ptProgressReviewProgressHighlightsEnum_improvedConditioning =
+    const PtProgressReviewProgressHighlightsEnum._('improvedConditioning');
+const PtProgressReviewProgressHighlightsEnum
+    _$ptProgressReviewProgressHighlightsEnum_betterConsistency =
+    const PtProgressReviewProgressHighlightsEnum._('betterConsistency');
+const PtProgressReviewProgressHighlightsEnum
+    _$ptProgressReviewProgressHighlightsEnum_improvedMobility =
+    const PtProgressReviewProgressHighlightsEnum._('improvedMobility');
+const PtProgressReviewProgressHighlightsEnum
+    _$ptProgressReviewProgressHighlightsEnum_goalMilestone =
+    const PtProgressReviewProgressHighlightsEnum._('goalMilestone');
+const PtProgressReviewProgressHighlightsEnum
+    _$ptProgressReviewProgressHighlightsEnum_other =
+    const PtProgressReviewProgressHighlightsEnum._('other');
+
+PtProgressReviewProgressHighlightsEnum
+    _$ptProgressReviewProgressHighlightsEnumValueOf(String name) {
+  switch (name) {
+    case 'improvedTechnique':
+      return _$ptProgressReviewProgressHighlightsEnum_improvedTechnique;
+    case 'increasedStrength':
+      return _$ptProgressReviewProgressHighlightsEnum_increasedStrength;
+    case 'improvedConditioning':
+      return _$ptProgressReviewProgressHighlightsEnum_improvedConditioning;
+    case 'betterConsistency':
+      return _$ptProgressReviewProgressHighlightsEnum_betterConsistency;
+    case 'improvedMobility':
+      return _$ptProgressReviewProgressHighlightsEnum_improvedMobility;
+    case 'goalMilestone':
+      return _$ptProgressReviewProgressHighlightsEnum_goalMilestone;
+    case 'other':
+      return _$ptProgressReviewProgressHighlightsEnum_other;
+    default:
+      throw ArgumentError(name);
+  }
+}
+
+final BuiltSet<PtProgressReviewProgressHighlightsEnum>
+    _$ptProgressReviewProgressHighlightsEnumValues = BuiltSet<
+        PtProgressReviewProgressHighlightsEnum>(const <PtProgressReviewProgressHighlightsEnum>[
+  _$ptProgressReviewProgressHighlightsEnum_improvedTechnique,
+  _$ptProgressReviewProgressHighlightsEnum_increasedStrength,
+  _$ptProgressReviewProgressHighlightsEnum_improvedConditioning,
+  _$ptProgressReviewProgressHighlightsEnum_betterConsistency,
+  _$ptProgressReviewProgressHighlightsEnum_improvedMobility,
+  _$ptProgressReviewProgressHighlightsEnum_goalMilestone,
+  _$ptProgressReviewProgressHighlightsEnum_other,
+]);
+
 const PtProgressReviewStatusEnum _$ptProgressReviewStatusEnum_draft =
     const PtProgressReviewStatusEnum._('draft');
 const PtProgressReviewStatusEnum
@@ -45,8 +101,53 @@ final BuiltSet<PtProgressReviewStatusEnum> _$ptProgressReviewStatusEnumValues =
   _$ptProgressReviewStatusEnum_archived,
 ]);
 
+Serializer<PtProgressReviewProgressHighlightsEnum>
+    _$ptProgressReviewProgressHighlightsEnumSerializer =
+    _$PtProgressReviewProgressHighlightsEnumSerializer();
 Serializer<PtProgressReviewStatusEnum> _$ptProgressReviewStatusEnumSerializer =
     _$PtProgressReviewStatusEnumSerializer();
+
+class _$PtProgressReviewProgressHighlightsEnumSerializer
+    implements PrimitiveSerializer<PtProgressReviewProgressHighlightsEnum> {
+  static const Map<String, Object> _toWire = const <String, Object>{
+    'improvedTechnique': 'improved_technique',
+    'increasedStrength': 'increased_strength',
+    'improvedConditioning': 'improved_conditioning',
+    'betterConsistency': 'better_consistency',
+    'improvedMobility': 'improved_mobility',
+    'goalMilestone': 'goal_milestone',
+    'other': 'other',
+  };
+  static const Map<Object, String> _fromWire = const <Object, String>{
+    'improved_technique': 'improvedTechnique',
+    'increased_strength': 'increasedStrength',
+    'improved_conditioning': 'improvedConditioning',
+    'better_consistency': 'betterConsistency',
+    'improved_mobility': 'improvedMobility',
+    'goal_milestone': 'goalMilestone',
+    'other': 'other',
+  };
+
+  @override
+  final Iterable<Type> types = const <Type>[
+    PtProgressReviewProgressHighlightsEnum
+  ];
+  @override
+  final String wireName = 'PtProgressReviewProgressHighlightsEnum';
+
+  @override
+  Object serialize(Serializers serializers,
+          PtProgressReviewProgressHighlightsEnum object,
+          {FullType specifiedType = FullType.unspecified}) =>
+      _toWire[object.name] ?? object.name;
+
+  @override
+  PtProgressReviewProgressHighlightsEnum deserialize(
+          Serializers serializers, Object serialized,
+          {FullType specifiedType = FullType.unspecified}) =>
+      PtProgressReviewProgressHighlightsEnum.valueOf(
+          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
+}
 
 class _$PtProgressReviewStatusEnumSerializer
     implements PrimitiveSerializer<PtProgressReviewStatusEnum> {
@@ -99,7 +200,7 @@ class _$PtProgressReview extends PtProgressReview {
   @override
   final BuiltList<PerformanceMarkerSnapshot>? performanceMarkersSnapshot;
   @override
-  final BuiltList<String>? progressHighlights;
+  final BuiltSet<PtProgressReviewProgressHighlightsEnum>? progressHighlights;
   @override
   final String? highlightsOtherText;
   @override
@@ -298,10 +399,13 @@ class PtProgressReviewBuilder
           ListBuilder<PerformanceMarkerSnapshot>? performanceMarkersSnapshot) =>
       _$this._performanceMarkersSnapshot = performanceMarkersSnapshot;
 
-  ListBuilder<String>? _progressHighlights;
-  ListBuilder<String> get progressHighlights =>
-      _$this._progressHighlights ??= ListBuilder<String>();
-  set progressHighlights(ListBuilder<String>? progressHighlights) =>
+  SetBuilder<PtProgressReviewProgressHighlightsEnum>? _progressHighlights;
+  SetBuilder<PtProgressReviewProgressHighlightsEnum> get progressHighlights =>
+      _$this._progressHighlights ??=
+          SetBuilder<PtProgressReviewProgressHighlightsEnum>();
+  set progressHighlights(
+          SetBuilder<PtProgressReviewProgressHighlightsEnum>?
+              progressHighlights) =>
       _$this._progressHighlights = progressHighlights;
 
   String? _highlightsOtherText;

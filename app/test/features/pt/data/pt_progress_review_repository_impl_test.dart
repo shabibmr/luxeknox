@@ -49,7 +49,9 @@ api.PtProgressReview _apiReview({
                 ..targetVal = '80kg x 5',
             ),
           ])
-      ..progressHighlights = ListBuilder<String>(['consistency'])
+      ..progressHighlights = SetBuilder<api.PtProgressReviewProgressHighlightsEnum>([
+          api.PtProgressReviewProgressHighlightsEnum.betterConsistency,
+        ])
       ..highlightsOtherText = 'Showed up every week'
       ..trainerSummary = 'Strong progress'
       ..clientFeedback = 'Feeling better'
@@ -135,7 +137,7 @@ void main() {
       expect(review.bodyMetricsSnapshot.single.metric, 'Weight_kg');
       expect(review.bodyMetricsSnapshot.single.changeVal, -4);
       expect(review.performanceMarkersSnapshot.single.marker, 'bench_press');
-      expect(review.progressHighlights, ['consistency']);
+      expect(review.progressHighlights, ['better_consistency']);
       expect(review.highlightsOtherText, 'Showed up every week');
       expect(review.trainerSummary, 'Strong progress');
       expect(review.nextReviewDate, DateTime(2026, 6, 30));

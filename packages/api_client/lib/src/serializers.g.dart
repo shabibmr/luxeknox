@@ -31,6 +31,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(BalanceSheetAccount.serializer)
       ..add(BalanceSheetReport.serializer)
       ..add(BodyMetricSnapshot.serializer)
+      ..add(BodyMetricSnapshotRowEnum.serializer)
       ..add(BookRequest.serializer)
       ..add(BroadcastRequest.serializer)
       ..add(BroadcastRequestAudienceEnum.serializer)
@@ -270,6 +271,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PtProductWrite.serializer)
       ..add(PtProgressReview.serializer)
       ..add(PtProgressReviewDraft.serializer)
+      ..add(PtProgressReviewDraftEdit.serializer)
+      ..add(PtProgressReviewDraftEditProgressHighlightsEnum.serializer)
+      ..add(PtProgressReviewDraftProgressHighlightsEnum.serializer)
+      ..add(PtProgressReviewProgressHighlightsEnum.serializer)
       ..add(PtProgressReviewStatusEnum.serializer)
       ..add(PtPurchaseRequest.serializer)
       ..add(PtPurchaseResult.serializer)
@@ -395,8 +400,9 @@ Serializers _$serializers = (Serializers().toBuilder()
               BuiltList, const [const FullType(PerformanceMarkerSnapshot)]),
           () => ListBuilder<PerformanceMarkerSnapshot>())
       ..addBuilderFactory(
-          const FullType(BuiltList, const [const FullType(String)]),
-          () => ListBuilder<String>())
+          const FullType(BuiltSet,
+              const [const FullType(PtProgressReviewProgressHighlightsEnum)]),
+          () => SetBuilder<PtProgressReviewProgressHighlightsEnum>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [
             const FullType(BuiltMap, const [
@@ -842,7 +848,17 @@ Serializers _$serializers = (Serializers().toBuilder()
             const FullType(String),
             const FullType.nullable(JsonObject)
           ]),
-          () => MapBuilder<String, JsonObject?>()))
+          () => MapBuilder<String, JsonObject?>())
+      ..addBuilderFactory(
+          const FullType(BuiltSet, const [
+            const FullType(PtProgressReviewDraftEditProgressHighlightsEnum)
+          ]),
+          () => SetBuilder<PtProgressReviewDraftEditProgressHighlightsEnum>())
+      ..addBuilderFactory(
+          const FullType(BuiltSet, const [
+            const FullType(PtProgressReviewDraftProgressHighlightsEnum)
+          ]),
+          () => SetBuilder<PtProgressReviewDraftProgressHighlightsEnum>()))
     .build();
 
 // ignore_for_file: deprecated_member_use_from_same_package,type=lint

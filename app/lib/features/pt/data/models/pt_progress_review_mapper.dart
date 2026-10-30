@@ -67,7 +67,8 @@ PtProgressReview ptProgressReviewFromApi(api.PtProgressReview r) {
         _performanceMarkerFromApi(m),
     ],
     progressHighlights: [
-      for (final h in r.progressHighlights ?? const <String>[]) h,
+      if (r.progressHighlights != null)
+        for (final h in r.progressHighlights!) _highlightWireName(h.name),
     ],
     highlightsOtherText: r.highlightsOtherText,
     trainerSummary: r.trainerSummary,
@@ -107,3 +108,9 @@ api.PtProgressReviewDraft ptProgressReviewDraftToApi(
           : dateTimeToApiDate(input.nextReviewDate!),
   );
 }
+
+/// `improvedTechnique` -> `improved_technique`, the stored highlight key.
+String _highlightWireName(String name) => name.replaceAllMapped(
+  RegExp('[A-Z]'),
+  (m) => '_${m[0]!.toLowerCase()}',
+);

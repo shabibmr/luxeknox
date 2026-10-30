@@ -6,6 +6,109 @@ part of 'pt_progress_review_draft.dart';
 // BuiltValueGenerator
 // **************************************************************************
 
+const PtProgressReviewDraftProgressHighlightsEnum
+    _$ptProgressReviewDraftProgressHighlightsEnum_improvedTechnique =
+    const PtProgressReviewDraftProgressHighlightsEnum._('improvedTechnique');
+const PtProgressReviewDraftProgressHighlightsEnum
+    _$ptProgressReviewDraftProgressHighlightsEnum_increasedStrength =
+    const PtProgressReviewDraftProgressHighlightsEnum._('increasedStrength');
+const PtProgressReviewDraftProgressHighlightsEnum
+    _$ptProgressReviewDraftProgressHighlightsEnum_improvedConditioning =
+    const PtProgressReviewDraftProgressHighlightsEnum._('improvedConditioning');
+const PtProgressReviewDraftProgressHighlightsEnum
+    _$ptProgressReviewDraftProgressHighlightsEnum_betterConsistency =
+    const PtProgressReviewDraftProgressHighlightsEnum._('betterConsistency');
+const PtProgressReviewDraftProgressHighlightsEnum
+    _$ptProgressReviewDraftProgressHighlightsEnum_improvedMobility =
+    const PtProgressReviewDraftProgressHighlightsEnum._('improvedMobility');
+const PtProgressReviewDraftProgressHighlightsEnum
+    _$ptProgressReviewDraftProgressHighlightsEnum_goalMilestone =
+    const PtProgressReviewDraftProgressHighlightsEnum._('goalMilestone');
+const PtProgressReviewDraftProgressHighlightsEnum
+    _$ptProgressReviewDraftProgressHighlightsEnum_other =
+    const PtProgressReviewDraftProgressHighlightsEnum._('other');
+
+PtProgressReviewDraftProgressHighlightsEnum
+    _$ptProgressReviewDraftProgressHighlightsEnumValueOf(String name) {
+  switch (name) {
+    case 'improvedTechnique':
+      return _$ptProgressReviewDraftProgressHighlightsEnum_improvedTechnique;
+    case 'increasedStrength':
+      return _$ptProgressReviewDraftProgressHighlightsEnum_increasedStrength;
+    case 'improvedConditioning':
+      return _$ptProgressReviewDraftProgressHighlightsEnum_improvedConditioning;
+    case 'betterConsistency':
+      return _$ptProgressReviewDraftProgressHighlightsEnum_betterConsistency;
+    case 'improvedMobility':
+      return _$ptProgressReviewDraftProgressHighlightsEnum_improvedMobility;
+    case 'goalMilestone':
+      return _$ptProgressReviewDraftProgressHighlightsEnum_goalMilestone;
+    case 'other':
+      return _$ptProgressReviewDraftProgressHighlightsEnum_other;
+    default:
+      throw ArgumentError(name);
+  }
+}
+
+final BuiltSet<PtProgressReviewDraftProgressHighlightsEnum>
+    _$ptProgressReviewDraftProgressHighlightsEnumValues = BuiltSet<
+        PtProgressReviewDraftProgressHighlightsEnum>(const <PtProgressReviewDraftProgressHighlightsEnum>[
+  _$ptProgressReviewDraftProgressHighlightsEnum_improvedTechnique,
+  _$ptProgressReviewDraftProgressHighlightsEnum_increasedStrength,
+  _$ptProgressReviewDraftProgressHighlightsEnum_improvedConditioning,
+  _$ptProgressReviewDraftProgressHighlightsEnum_betterConsistency,
+  _$ptProgressReviewDraftProgressHighlightsEnum_improvedMobility,
+  _$ptProgressReviewDraftProgressHighlightsEnum_goalMilestone,
+  _$ptProgressReviewDraftProgressHighlightsEnum_other,
+]);
+
+Serializer<PtProgressReviewDraftProgressHighlightsEnum>
+    _$ptProgressReviewDraftProgressHighlightsEnumSerializer =
+    _$PtProgressReviewDraftProgressHighlightsEnumSerializer();
+
+class _$PtProgressReviewDraftProgressHighlightsEnumSerializer
+    implements
+        PrimitiveSerializer<PtProgressReviewDraftProgressHighlightsEnum> {
+  static const Map<String, Object> _toWire = const <String, Object>{
+    'improvedTechnique': 'improved_technique',
+    'increasedStrength': 'increased_strength',
+    'improvedConditioning': 'improved_conditioning',
+    'betterConsistency': 'better_consistency',
+    'improvedMobility': 'improved_mobility',
+    'goalMilestone': 'goal_milestone',
+    'other': 'other',
+  };
+  static const Map<Object, String> _fromWire = const <Object, String>{
+    'improved_technique': 'improvedTechnique',
+    'increased_strength': 'increasedStrength',
+    'improved_conditioning': 'improvedConditioning',
+    'better_consistency': 'betterConsistency',
+    'improved_mobility': 'improvedMobility',
+    'goal_milestone': 'goalMilestone',
+    'other': 'other',
+  };
+
+  @override
+  final Iterable<Type> types = const <Type>[
+    PtProgressReviewDraftProgressHighlightsEnum
+  ];
+  @override
+  final String wireName = 'PtProgressReviewDraftProgressHighlightsEnum';
+
+  @override
+  Object serialize(Serializers serializers,
+          PtProgressReviewDraftProgressHighlightsEnum object,
+          {FullType specifiedType = FullType.unspecified}) =>
+      _toWire[object.name] ?? object.name;
+
+  @override
+  PtProgressReviewDraftProgressHighlightsEnum deserialize(
+          Serializers serializers, Object serialized,
+          {FullType specifiedType = FullType.unspecified}) =>
+      PtProgressReviewDraftProgressHighlightsEnum.valueOf(
+          _fromWire[serialized] ?? (serialized is String ? serialized : ''));
+}
+
 class _$PtProgressReviewDraft extends PtProgressReviewDraft {
   @override
   final Date reviewPeriodStart;
@@ -21,6 +124,11 @@ class _$PtProgressReviewDraft extends PtProgressReviewDraft {
   final String? nextPhaseTrainingFocus;
   @override
   final Date? nextReviewDate;
+  @override
+  final BuiltSet<PtProgressReviewDraftProgressHighlightsEnum>?
+      progressHighlights;
+  @override
+  final String? highlightsOtherText;
 
   factory _$PtProgressReviewDraft(
           [void Function(PtProgressReviewDraftBuilder)? updates]) =>
@@ -33,7 +141,9 @@ class _$PtProgressReviewDraft extends PtProgressReviewDraft {
       this.clientFeedback,
       this.nextPhaseGoal,
       this.nextPhaseTrainingFocus,
-      this.nextReviewDate})
+      this.nextReviewDate,
+      this.progressHighlights,
+      this.highlightsOtherText})
       : super._();
   @override
   PtProgressReviewDraft rebuild(
@@ -54,7 +164,9 @@ class _$PtProgressReviewDraft extends PtProgressReviewDraft {
         clientFeedback == other.clientFeedback &&
         nextPhaseGoal == other.nextPhaseGoal &&
         nextPhaseTrainingFocus == other.nextPhaseTrainingFocus &&
-        nextReviewDate == other.nextReviewDate;
+        nextReviewDate == other.nextReviewDate &&
+        progressHighlights == other.progressHighlights &&
+        highlightsOtherText == other.highlightsOtherText;
   }
 
   @override
@@ -67,6 +179,8 @@ class _$PtProgressReviewDraft extends PtProgressReviewDraft {
     _$hash = $jc(_$hash, nextPhaseGoal.hashCode);
     _$hash = $jc(_$hash, nextPhaseTrainingFocus.hashCode);
     _$hash = $jc(_$hash, nextReviewDate.hashCode);
+    _$hash = $jc(_$hash, progressHighlights.hashCode);
+    _$hash = $jc(_$hash, highlightsOtherText.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -80,7 +194,9 @@ class _$PtProgressReviewDraft extends PtProgressReviewDraft {
           ..add('clientFeedback', clientFeedback)
           ..add('nextPhaseGoal', nextPhaseGoal)
           ..add('nextPhaseTrainingFocus', nextPhaseTrainingFocus)
-          ..add('nextReviewDate', nextReviewDate))
+          ..add('nextReviewDate', nextReviewDate)
+          ..add('progressHighlights', progressHighlights)
+          ..add('highlightsOtherText', highlightsOtherText))
         .toString();
   }
 }
@@ -124,6 +240,20 @@ class PtProgressReviewDraftBuilder
   set nextReviewDate(Date? nextReviewDate) =>
       _$this._nextReviewDate = nextReviewDate;
 
+  SetBuilder<PtProgressReviewDraftProgressHighlightsEnum>? _progressHighlights;
+  SetBuilder<PtProgressReviewDraftProgressHighlightsEnum>
+      get progressHighlights => _$this._progressHighlights ??=
+          SetBuilder<PtProgressReviewDraftProgressHighlightsEnum>();
+  set progressHighlights(
+          SetBuilder<PtProgressReviewDraftProgressHighlightsEnum>?
+              progressHighlights) =>
+      _$this._progressHighlights = progressHighlights;
+
+  String? _highlightsOtherText;
+  String? get highlightsOtherText => _$this._highlightsOtherText;
+  set highlightsOtherText(String? highlightsOtherText) =>
+      _$this._highlightsOtherText = highlightsOtherText;
+
   PtProgressReviewDraftBuilder() {
     PtProgressReviewDraft._defaults(this);
   }
@@ -138,6 +268,8 @@ class PtProgressReviewDraftBuilder
       _nextPhaseGoal = $v.nextPhaseGoal;
       _nextPhaseTrainingFocus = $v.nextPhaseTrainingFocus;
       _nextReviewDate = $v.nextReviewDate;
+      _progressHighlights = $v.progressHighlights?.toBuilder();
+      _highlightsOtherText = $v.highlightsOtherText;
       _$v = null;
     }
     return this;
@@ -157,18 +289,35 @@ class PtProgressReviewDraftBuilder
   PtProgressReviewDraft build() => _build();
 
   _$PtProgressReviewDraft _build() {
-    final _$result = _$v ??
-        _$PtProgressReviewDraft._(
-          reviewPeriodStart: BuiltValueNullFieldError.checkNotNull(
-              reviewPeriodStart, r'PtProgressReviewDraft', 'reviewPeriodStart'),
-          reviewPeriodEnd: BuiltValueNullFieldError.checkNotNull(
-              reviewPeriodEnd, r'PtProgressReviewDraft', 'reviewPeriodEnd'),
-          trainerSummary: trainerSummary,
-          clientFeedback: clientFeedback,
-          nextPhaseGoal: nextPhaseGoal,
-          nextPhaseTrainingFocus: nextPhaseTrainingFocus,
-          nextReviewDate: nextReviewDate,
-        );
+    _$PtProgressReviewDraft _$result;
+    try {
+      _$result = _$v ??
+          _$PtProgressReviewDraft._(
+            reviewPeriodStart: BuiltValueNullFieldError.checkNotNull(
+                reviewPeriodStart,
+                r'PtProgressReviewDraft',
+                'reviewPeriodStart'),
+            reviewPeriodEnd: BuiltValueNullFieldError.checkNotNull(
+                reviewPeriodEnd, r'PtProgressReviewDraft', 'reviewPeriodEnd'),
+            trainerSummary: trainerSummary,
+            clientFeedback: clientFeedback,
+            nextPhaseGoal: nextPhaseGoal,
+            nextPhaseTrainingFocus: nextPhaseTrainingFocus,
+            nextReviewDate: nextReviewDate,
+            progressHighlights: _progressHighlights?.build(),
+            highlightsOtherText: highlightsOtherText,
+          );
+    } catch (_) {
+      late String _$failedField;
+      try {
+        _$failedField = 'progressHighlights';
+        _progressHighlights?.build();
+      } catch (e) {
+        throw BuiltValueNestedFieldError(
+            r'PtProgressReviewDraft', _$failedField, e.toString());
+      }
+      rethrow;
+    }
     replace(_$result);
     return _$result;
   }
