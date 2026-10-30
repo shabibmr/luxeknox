@@ -15,6 +15,7 @@ import type { DrizzleDb } from '../platform/db/client';
 export interface MeasurementValueDetail extends MeasurementValue {
   metric_name?: string;
   unit_of_measure?: string;
+  category?: string;
 }
 
 export interface MeasurementWithValues extends Measurement {
@@ -168,6 +169,7 @@ export class MeasurementRepository extends BaseRepository<
         value: measurementValues.value,
         metric_name: goalMetrics.name,
         unit_of_measure: goalMetrics.unit_of_measure,
+        category: goalMetrics.category,
       })
       .from(measurementValues)
       .innerJoin(goalMetrics, eq(measurementValues.metric_id, goalMetrics.id))

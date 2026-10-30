@@ -1,21 +1,40 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { z } from 'zod';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { GoalRepository } from '../goal/goal.repository';
+import { MeasurementRepository } from '../goal/measurement.repository';
 import { MemberRepository } from '../people/member.repository';
 import { requireScopedMember } from '../people/require-scoped-member';
 import { AuditService } from '../platform/audit/audit.service';
+import type { DrizzleDb } from '../platform/db/client';
+import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
 import type {
   BodyMetricSnapshot,
   NewPtProgressReview,
   PerformanceMarkerSnapshot,
   PtProgressReview,
 } from '../platform/db/schema/personal-training';
+import { runInTransaction } from '../platform/db/transaction-context';
 import { BusinessRuleError, ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import { PtAccessService } from './pt-access.service';
 import { PtProgressReviewRepository } from './pt-progress-review.repository';
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD');
+
+export const PAGE8_PROGRESS_HIGHLIGHTS = [
+  'Improved technique',
+  'Increased strength',
+  'Improved conditioning',
+  'Better consistency',
+  'Improved mobility',
+  'Goal milestone achieved',
+] as const;
+
+const progressHighlightsSchema = z
+  .array(z.enum(PAGE8_PROGRESS_HIGHLIGHTS))
+  .refine((items) => new Set(items).size === items.length, {
+    message: 'progress_highlights must not contain duplicates',
+  });
 
 export const ptProgressReviewDraftSchema = z.object({
   review_period_start: isoDate,
@@ -25,21 +44,39 @@ export const ptProgressReviewDraftSchema = z.object({
   next_phase_goal: z.string().optional().nullable(),
   next_phase_training_focus: z.string().optional().nullable(),
   next_review_date: isoDate.optional().nullable(),
+  progress_highlights: progressHighlightsSchema.optional(),
+  highlights_other_text: z.string().optional().nullable(),
 });
 export type PtProgressReviewDraftDto = z.infer<typeof ptProgressReviewDraftSchema>;
 
-/** Goal statuses whose progress is reported on a review card. */
+/** Goal statuses that may supply a review target. Abandoned goals do not. */
 const REPORTED_GOAL_STATUSES = new Set(['in_progress', 'achieved']);
 /** Mirrors `GOAL_METRIC_CATEGORIES` minus strength (body card columns). */
 const BODY_METRIC_CATEGORIES = new Set(['body_composition', 'circumference']);
 const PERFORMANCE_METRIC_CATEGORIES = new Set(['strength']);
 
-type SnapshotGoal = {
+type SnapshotMeasurementValue = {
+  metric_id: number;
+  metric_name: string;
+  category: string;
+  unit_of_measure: string;
+  value: number;
+};
+
+type SnapshotMeasurementSession = {
+  recorded_at: Date;
+  values: SnapshotMeasurementValue[];
+};
+
+type SnapshotMetricTarget = {
+  metric_id: number;
   status: string;
-  baseline_value: number;
-  current_value: number;
   target_value: number;
-  metric: { name: string; category: string; unit_of_measure: string };
+};
+
+type SnapshotPeriod = {
+  review_period_start: string;
+  review_period_end: string;
 };
 
 function round2(n: number): number {
@@ -56,37 +93,126 @@ function signedWithUnit(value: number, unit: string): string {
   return `${sign}${rounded} ${unit}`;
 }
 
-function reportedGoalsIn(goals: SnapshotGoal[], categories: Set<string>): SnapshotGoal[] {
-  return goals.filter(
-    (g) => REPORTED_GOAL_STATUSES.has(g.status) && categories.has(g.metric.category),
-  );
+function inReviewPeriod(recordedAt: Date, period: SnapshotPeriod): boolean {
+  const day = recordedAt.toISOString().slice(0, 10);
+  return day >= period.review_period_start && day <= period.review_period_end;
 }
 
-/** Numeric Page 8 body measures: `change_val` is always `current - start`. */
-export function buildBodyMetricSnapshot(goals: SnapshotGoal[]): BodyMetricSnapshot[] {
-  return reportedGoalsIn(goals, BODY_METRIC_CATEGORIES).map((g) => ({
-    metric: g.metric.name,
-    start_val: g.baseline_value,
-    current_val: g.current_value,
-    change_val: round2(g.current_value - g.baseline_value),
-    target_val: g.target_value,
+type MetricSeries = {
+  metric_id: number;
+  name: string;
+  unit: string;
+  earliestAt: number;
+  earliest: number;
+  latestAt: number;
+  latest: number;
+};
+
+function seriesFor(
+  sessions: SnapshotMeasurementSession[],
+  period: SnapshotPeriod,
+  categories: Set<string>,
+): MetricSeries[] {
+  const byMetric = new Map<number, MetricSeries>();
+  for (const session of sessions) {
+    if (!inReviewPeriod(session.recorded_at, period)) continue;
+    const at = session.recorded_at.getTime();
+    for (const point of session.values) {
+      if (!categories.has(point.category)) continue;
+      const existing = byMetric.get(point.metric_id);
+      if (!existing) {
+        byMetric.set(point.metric_id, {
+          metric_id: point.metric_id,
+          name: point.metric_name,
+          unit: point.unit_of_measure,
+          earliestAt: at,
+          earliest: point.value,
+          latestAt: at,
+          latest: point.value,
+        });
+        continue;
+      }
+      if (at < existing.earliestAt) {
+        existing.earliestAt = at;
+        existing.earliest = point.value;
+      }
+      if (at >= existing.latestAt) {
+        existing.latestAt = at;
+        existing.latest = point.value;
+      }
+    }
+  }
+  return [...byMetric.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function targetFor(metricId: number, goals: SnapshotMetricTarget[]): number | null {
+  const match = goals.find(
+    (goal) => goal.metric_id === metricId && REPORTED_GOAL_STATUSES.has(goal.status),
+  );
+  return match ? match.target_value : null;
+}
+
+/** Numeric Page 8 body measures from in-window measurement sessions. */
+export function buildBodyMetricSnapshot(
+  sessions: SnapshotMeasurementSession[],
+  period: SnapshotPeriod,
+  goals: SnapshotMetricTarget[],
+): BodyMetricSnapshot[] {
+  return seriesFor(sessions, period, BODY_METRIC_CATEGORIES).map((series) => ({
+    metric: series.name,
+    start_val: series.earliest,
+    current_val: series.latest,
+    change_val: round2(series.latest - series.earliest),
+    target_val: targetFor(series.metric_id, goals),
   }));
 }
 
 /** Strength markers as unit-bearing strings for `performance_markers_snapshot`. */
 export function buildPerformanceMarkerSnapshot(
-  goals: SnapshotGoal[],
+  sessions: SnapshotMeasurementSession[],
+  period: SnapshotPeriod,
+  goals: SnapshotMetricTarget[],
 ): PerformanceMarkerSnapshot[] {
-  return reportedGoalsIn(goals, PERFORMANCE_METRIC_CATEGORIES).map((g) => {
-    const unit = g.metric.unit_of_measure;
+  return seriesFor(sessions, period, PERFORMANCE_METRIC_CATEGORIES).map((series) => {
+    const target = targetFor(series.metric_id, goals);
     return {
-      marker: g.metric.name,
-      start_val: withUnit(g.baseline_value, unit),
-      current_val: withUnit(g.current_value, unit),
-      change_val: signedWithUnit(g.current_value - g.baseline_value, unit),
-      target_val: withUnit(g.target_value, unit),
+      marker: series.name,
+      start_val: withUnit(series.earliest, series.unit),
+      current_val: withUnit(series.latest, series.unit),
+      change_val: signedWithUnit(series.latest - series.earliest, series.unit),
+      target_val: target == null ? null : withUnit(target, series.unit),
     };
   });
+}
+
+function toSnapshotSessions(
+  rows: Array<{
+    recorded_at: Date;
+    values: Array<{
+      metric_id: number;
+      value: number;
+      metric_name?: string;
+      category?: string;
+      unit_of_measure?: string;
+    }>;
+  }>,
+): SnapshotMeasurementSession[] {
+  return rows.map((row) => ({
+    recorded_at: row.recorded_at,
+    values: row.values.flatMap((value) =>
+      value.metric_name && value.category && value.unit_of_measure
+        ? [
+            {
+              metric_id: value.metric_id,
+              metric_name: value.metric_name,
+              category: value.category,
+              unit_of_measure: value.unit_of_measure,
+              value: value.value,
+            },
+          ]
+        : [],
+    ),
+  }));
 }
 
 function nullableTrimmed(value: string | null | undefined): string | null {
@@ -102,6 +228,9 @@ export class PtProgressReviewService {
     private readonly goalRepository: GoalRepository,
     private readonly ptAccess: PtAccessService,
     private readonly auditService: AuditService,
+    private readonly measurementRepository: MeasurementRepository,
+    @Inject(DRIZZLE_DB_TOKEN)
+    private readonly db: DrizzleDb<any>,
   ) {}
 
   async createDraft(
@@ -121,36 +250,46 @@ export class PtProgressReviewService {
       throw new BusinessRuleError('A trainer must be assigned to the member to draft a review');
     }
 
+    const { rows: sessions } = await this.measurementRepository.findManyByMemberId(memberId);
     const { rows: goals } = await this.goalRepository.findManyByMemberId(memberId);
-    const now = new Date();
-
-    const id = await this.repository.insertReview({
-      member_id: memberId,
-      trainer_id: trainerId,
+    const period = {
       review_period_start: dto.review_period_start,
       review_period_end: dto.review_period_end,
-      body_metrics_snapshot: buildBodyMetricSnapshot(goals),
-      performance_markers_snapshot: buildPerformanceMarkerSnapshot(goals),
-      trainer_summary: nullableTrimmed(dto.trainer_summary),
-      client_feedback: nullableTrimmed(dto.client_feedback),
-      next_phase_goal: nullableTrimmed(dto.next_phase_goal),
-      next_phase_training_focus: nullableTrimmed(dto.next_phase_training_focus),
-      next_review_date: dto.next_review_date ?? null,
-      status: 'draft',
-      created_at: now,
-    });
+    };
+    const measured = toSnapshotSessions(sessions);
+    const now = new Date();
 
-    const saved = await this.repository.findReviewById(id);
-    if (!saved) throw new NotFoundError('Progress review not found');
+    return runInTransaction(this.db, async () => {
+      const id = await this.repository.insertReview({
+        member_id: memberId,
+        trainer_id: trainerId,
+        review_period_start: dto.review_period_start,
+        review_period_end: dto.review_period_end,
+        body_metrics_snapshot: buildBodyMetricSnapshot(measured, period, goals),
+        performance_markers_snapshot: buildPerformanceMarkerSnapshot(measured, period, goals),
+        progress_highlights: dto.progress_highlights ?? null,
+        highlights_other_text: nullableTrimmed(dto.highlights_other_text),
+        trainer_summary: nullableTrimmed(dto.trainer_summary),
+        client_feedback: nullableTrimmed(dto.client_feedback),
+        next_phase_goal: nullableTrimmed(dto.next_phase_goal),
+        next_phase_training_focus: nullableTrimmed(dto.next_phase_training_focus),
+        next_review_date: dto.next_review_date ?? null,
+        status: 'draft',
+        created_at: now,
+      });
 
-    await this.auditService.recordAudit({
-      actorUserId: actor.id,
-      action: 'pt_progress_review.drafted',
-      entityName: 'pt_progress_reviews',
-      entityId: id,
-      afterState: saved,
+      const saved = await this.repository.findReviewById(id);
+      if (!saved) throw new NotFoundError('Progress review not found');
+
+      await this.auditService.recordAudit({
+        actorUserId: actor.id,
+        action: 'pt_progress_review.drafted',
+        entityName: 'pt_progress_reviews',
+        entityId: id,
+        afterState: saved,
+      });
+      return saved;
     });
-    return saved;
   }
 
   async get(id: number, actor: AuthenticatedUser): Promise<PtProgressReview> {
