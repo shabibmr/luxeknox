@@ -68,6 +68,8 @@ class Routes {
       '/progress/measurements/history';
   static const String memberProgressPhotos = '/progress/photos';
   static const String memberProgressNotes = '/progress/notes';
+  static const String memberProgressReview = '/progress/reviews/:id';
+  static String memberProgressReviewById(String id) => '/progress/reviews/$id';
 
   // Profile Stack
   static const String memberProfile = '/profile';
@@ -115,6 +117,14 @@ class Routes {
       '/trainer/members/:id/workout-history';
   static const String trainerMembersWorkoutActive =
       '/trainer/members/:id/workout/active';
+  static const String trainerMembersProgressReview =
+      '/trainer/members/:id/progress-review';
+  static String trainerMembersProgressReviewByMember(String id) =>
+      '/trainer/members/$id/progress-review';
+  static String trainerMembersProgressReviewById(
+    String memberId,
+    String reviewId,
+  ) => '/trainer/members/$memberId/progress-review/$reviewId';
   static const String trainerMembersDietHistory =
       '/trainer/members/:id/diet-history';
 
@@ -175,6 +185,14 @@ class Routes {
       '/admin/members/:id/workout-history';
   static const String adminMembersDietHistory =
       '/admin/members/:id/diet-history';
+  static const String adminMembersProgressReview =
+      '/admin/members/:id/progress-review';
+  static String adminMembersProgressReviewByMember(String id) =>
+      '/admin/members/$id/progress-review';
+  static String adminMembersProgressReviewById(
+    String memberId,
+    String reviewId,
+  ) => '/admin/members/$memberId/progress-review/$reviewId';
   static const String adminMembersGoals = '/admin/members/:id/goals';
   static const String adminMembersGoalsMeasurements =
       '/admin/members/:id/goals/measurements';

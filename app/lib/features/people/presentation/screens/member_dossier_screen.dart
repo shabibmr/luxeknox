@@ -397,6 +397,15 @@ class _DossierContentState extends State<_DossierContent>
                 ? Routes.adminMemberById(partnerId)
                 : Routes.trainerMemberById(partnerId),
           ),
+          onOpenProgressReview: (trainerName) {
+            final id = person.id.toString();
+            context.push(
+              _isAdminShell
+                  ? Routes.adminMembersProgressReviewByMember(id)
+                  : Routes.trainerMembersProgressReviewByMember(id),
+              extra: trainerName,
+            );
+          },
         ),
         const Divider(),
         ListTile(
@@ -651,6 +660,7 @@ class _PersonalTrainingSection extends StatelessWidget {
     required this.onChangePt,
     required this.onRenewPt,
     required this.onOpenPartner,
+    required this.onOpenProgressReview,
   });
 
   final MemberDossierState state;
@@ -662,6 +672,7 @@ class _PersonalTrainingSection extends StatelessWidget {
   final ValueChanged<PtSubscription> onChangePt;
   final ValueChanged<PtSubscription> onRenewPt;
   final ValueChanged<String> onOpenPartner;
+  final ValueChanged<String?> onOpenProgressReview;
 
   @override
   Widget build(BuildContext context) {
@@ -759,6 +770,12 @@ class _PersonalTrainingSection extends StatelessWidget {
             child: const Text(PeopleStrings.addPersonalTraining),
           ),
         // Goals apply to every member, not only those with personal training.
+        if (!isAdminShell)
+          ListTile(
+            title: const Text(PtStrings.progressReviewTitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => onOpenProgressReview(shown?.trainerName),
+          ),
         ListTile(
           title: const Text(PeopleStrings.goals),
           trailing: const Icon(Icons.chevron_right),

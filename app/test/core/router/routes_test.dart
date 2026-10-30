@@ -39,6 +39,7 @@ void main() {
         Routes.memberProgressMeasurements,
         Routes.memberProgressPhotos,
         Routes.memberProgressNotes,
+        Routes.memberProgressReview,
         Routes.memberProfile,
         Routes.memberProfileEdit,
         Routes.memberProfileHealth,
@@ -59,6 +60,7 @@ void main() {
         Routes.trainerMembersGoalsMeasurementsNew,
         Routes.trainerMembersWorkoutHistory,
         Routes.trainerMembersWorkoutActive,
+        Routes.trainerMembersProgressReview,
         Routes.trainerSchedule,
         Routes.trainerScheduleDetail,
         Routes.trainerScheduleAvailability,
@@ -86,6 +88,7 @@ void main() {
         Routes.adminMembersAssignMembership,
         Routes.adminMembersWorkoutHistory,
         Routes.adminMembersDietHistory,
+        Routes.adminMembersProgressReview,
         Routes.adminMembersGoals,
         Routes.adminMemberships,
         Routes.adminMembershipsDetail,
@@ -130,7 +133,7 @@ void main() {
       // set's length equals the number of entries listed.
       expect(
         allRoutes.length,
-        106,
+        109,
         reason: 'All route constants should be unique; duplicate values found',
       );
     });
@@ -178,6 +181,26 @@ void main() {
       expect(
         Routes.adminMembersDietHistoryById('9'),
         '/admin/members/9/diet-history',
+      );
+      expect(
+        Routes.memberProgressReviewById('7'),
+        '/progress/reviews/7',
+      );
+      expect(
+        Routes.trainerMembersProgressReviewByMember('3'),
+        '/trainer/members/3/progress-review',
+      );
+      expect(
+        Routes.trainerMembersProgressReviewById('3', '7'),
+        '/trainer/members/3/progress-review/7',
+      );
+      expect(
+        Routes.adminMembersProgressReviewByMember('9'),
+        '/admin/members/9/progress-review',
+      );
+      expect(
+        Routes.adminMembersProgressReviewById('9', '7'),
+        '/admin/members/9/progress-review/7',
       );
       expect(
         Routes.trainerPlansDietVersionsById('5'),
