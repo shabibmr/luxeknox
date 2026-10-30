@@ -19,7 +19,9 @@ part 'workout_plan_exercises_write_exercises_inner.g.dart';
 /// * [targetWeightKg] 
 /// * [restSeconds] 
 /// * [restBetweenExercisesSeconds] 
-/// * [notes] 
+/// * [targetRir] - Reps in reserve. At most one decimal place. On update, an omitted field is left unchanged. Null or blank stores empty.
+/// * [targetDurationSeconds] - Timed-set duration in seconds. On update, an omitted field is left unchanged. Null or blank stores empty.
+/// * [notes] - On update, an omitted field is left unchanged. Null or blank stores empty.
 @BuiltValue()
 abstract class WorkoutPlanExercisesWriteExercisesInner implements Built<WorkoutPlanExercisesWriteExercisesInner, WorkoutPlanExercisesWriteExercisesInnerBuilder> {
   @BuiltValueField(wireName: r'exercise_id')
@@ -46,6 +48,15 @@ abstract class WorkoutPlanExercisesWriteExercisesInner implements Built<WorkoutP
   @BuiltValueField(wireName: r'rest_between_exercises_seconds')
   int? get restBetweenExercisesSeconds;
 
+  /// Reps in reserve. At most one decimal place. On update, an omitted field is left unchanged. Null or blank stores empty.
+  @BuiltValueField(wireName: r'target_rir')
+  num? get targetRir;
+
+  /// Timed-set duration in seconds. On update, an omitted field is left unchanged. Null or blank stores empty.
+  @BuiltValueField(wireName: r'target_duration_seconds')
+  int? get targetDurationSeconds;
+
+  /// On update, an omitted field is left unchanged. Null or blank stores empty.
   @BuiltValueField(wireName: r'notes')
   String? get notes;
 
@@ -119,6 +130,20 @@ class _$WorkoutPlanExercisesWriteExercisesInnerSerializer implements PrimitiveSe
       yield r'rest_between_exercises_seconds';
       yield serializers.serialize(
         object.restBetweenExercisesSeconds,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.targetRir != null) {
+      yield r'target_rir';
+      yield serializers.serialize(
+        object.targetRir,
+        specifiedType: const FullType(num),
+      );
+    }
+    if (object.targetDurationSeconds != null) {
+      yield r'target_duration_seconds';
+      yield serializers.serialize(
+        object.targetDurationSeconds,
         specifiedType: const FullType(int),
       );
     }
@@ -212,6 +237,22 @@ class _$WorkoutPlanExercisesWriteExercisesInnerSerializer implements PrimitiveSe
           ) as int?;
           if (valueDes == null) continue;
           result.restBetweenExercisesSeconds = valueDes;
+          break;
+        case r'target_rir':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
+          if (valueDes == null) continue;
+          result.targetRir = valueDes;
+          break;
+        case r'target_duration_seconds':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.targetDurationSeconds = valueDes;
           break;
         case r'notes':
           final valueDes = serializers.deserialize(

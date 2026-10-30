@@ -15,6 +15,8 @@ Name | Type | Description | Notes
 **dataPayload** | [**BuiltMap&lt;String, JsonObject&gt;**](JsonObject.md) |  | [optional] 
 **senderUserId** | **int** |  | [optional] 
 **createdAt** | [**DateTime**](DateTime.md) | UTC ISO-8601 | 
+**priority** | **String** |  | [optional] [default to 'normal']
+**typeCode** | **String** |  | [optional] 
 **isRead** | **bool** |  | [optional] 
 **readAt** | [**DateTime**](DateTime.md) |  | [optional] 
 

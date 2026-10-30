@@ -64,7 +64,6 @@ api.AccountUpdate toAccountUpdate({
     (b) => b
       ..name = name
       ..parentId = parentId == null ? null : int.tryParse(parentId)
-      ..clearParentId = clearParentId
       ..isActive = isActive
       ..isBank = isBank,
   );
