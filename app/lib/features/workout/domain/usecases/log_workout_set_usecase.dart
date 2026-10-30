@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../entities/performed_set_metrics.dart';
 import '../entities/workout_session_set.dart';
 import '../repositories/workout_session_repository.dart';
 
@@ -12,45 +13,52 @@ class LogWorkoutSetParams extends Equatable {
     required this.sessionId,
     required this.exerciseId,
     required this.setNumber,
-    this.repsCompleted,
-    this.weightLiftedKg,
-    this.rpeScore,
-    this.targetRir,
-    this.actualRir,
-    this.targetDurationSeconds,
-    this.actualDurationSeconds,
-    this.isCompleted = true,
-    this.notes,
+    this.metrics = const PerformedSetMetrics(),
   });
+
+  factory LogWorkoutSetParams.fromFields({
+    required String sessionId,
+    required String exerciseId,
+    required int setNumber,
+    int? repsCompleted,
+    num? weightLiftedKg,
+    num? rpeScore,
+    num? actualRir,
+    int? actualDurationSeconds,
+    bool? isCompleted = true,
+    String? notes,
+  }) {
+    return LogWorkoutSetParams(
+      sessionId: sessionId,
+      exerciseId: exerciseId,
+      setNumber: setNumber,
+      metrics: PerformedSetMetrics(
+        repsCompleted: repsCompleted,
+        weightLiftedKg: weightLiftedKg,
+        rpeScore: rpeScore,
+        actualRir: actualRir,
+        actualDurationSeconds: actualDurationSeconds,
+        isCompleted: isCompleted,
+        notes: notes,
+      ),
+    );
+  }
 
   final String sessionId;
   final String exerciseId;
   final int setNumber;
-  final int? repsCompleted;
-  final num? weightLiftedKg;
-  final num? rpeScore;
-  final num? targetRir;
-  final num? actualRir;
-  final int? targetDurationSeconds;
-  final int? actualDurationSeconds;
-  final bool? isCompleted;
-  final String? notes;
+  final PerformedSetMetrics metrics;
+
+  int? get repsCompleted => metrics.repsCompleted;
+  num? get weightLiftedKg => metrics.weightLiftedKg;
+  num? get rpeScore => metrics.rpeScore;
+  num? get actualRir => metrics.actualRir;
+  int? get actualDurationSeconds => metrics.actualDurationSeconds;
+  bool? get isCompleted => metrics.isCompleted;
+  String? get notes => metrics.notes;
 
   @override
-  List<Object?> get props => [
-    sessionId,
-    exerciseId,
-    setNumber,
-    repsCompleted,
-    weightLiftedKg,
-    rpeScore,
-    targetRir,
-    actualRir,
-    targetDurationSeconds,
-    actualDurationSeconds,
-    isCompleted,
-    notes,
-  ];
+  List<Object?> get props => [sessionId, exerciseId, setNumber, metrics];
 }
 
 @lazySingleton
@@ -66,15 +74,7 @@ class LogWorkoutSetUseCase
       params.sessionId,
       exerciseId: params.exerciseId,
       setNumber: params.setNumber,
-      repsCompleted: params.repsCompleted,
-      weightLiftedKg: params.weightLiftedKg,
-      rpeScore: params.rpeScore,
-      targetRir: params.targetRir,
-      actualRir: params.actualRir,
-      targetDurationSeconds: params.targetDurationSeconds,
-      actualDurationSeconds: params.actualDurationSeconds,
-      isCompleted: params.isCompleted,
-      notes: params.notes,
+      metrics: params.metrics,
     );
   }
 }

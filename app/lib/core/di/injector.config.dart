@@ -636,6 +636,8 @@ import '../../features/pt/domain/usecases/manager_approve_pt_progress_review_use
 import '../../features/pt/domain/usecases/pt_usecases.dart' as _i929;
 import '../../features/pt/domain/usecases/trainer_sign_pt_progress_review_usecase.dart'
     as _i277;
+import '../../features/pt/domain/usecases/update_pt_progress_review_card_usecase.dart'
+    as _i1;
 import '../../features/pt/presentation/cubit/pt_packages_cubit.dart' as _i965;
 import '../../features/pt/presentation/cubit/sell_pt_cubit.dart' as _i122;
 import '../../features/reports/data/datasources/report_remote_datasource.dart'
@@ -882,6 +884,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i361.Dio>(),
       ),
     );
+    gh.lazySingleton<_i70.WorkoutSessionRemoteDataSource>(
+      () => _i70.WorkoutSessionRemoteDataSourceImpl(gh<_i633.WORKApi>()),
+    );
     gh.lazySingleton<_i963.SessionRemoteDataSource>(
       () => _i963.SessionRemoteDataSourceImpl(
         gh<_i633.AUTHApi>(),
@@ -984,12 +989,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i62.CheckInGoalUseCase>(
       () => _i62.CheckInGoalUseCase(gh<_i608.GoalsRepository>()),
-    );
-    gh.lazySingleton<_i70.WorkoutSessionRemoteDataSource>(
-      () => _i70.WorkoutSessionRemoteDataSourceImpl(
-        gh<_i633.WORKApi>(),
-        gh<_i361.Dio>(),
-      ),
     );
     gh.lazySingleton<_i563.NotificationsRepository>(
       () => _i201.NotificationsRepositoryImpl(
@@ -1568,6 +1567,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i277.TrainerSignPtProgressReviewUseCase>(
       () => _i277.TrainerSignPtProgressReviewUseCase(
+        gh<_i845.PtProgressReviewRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i1.UpdatePtProgressReviewCardUseCase>(
+      () => _i1.UpdatePtProgressReviewCardUseCase(
         gh<_i845.PtProgressReviewRepository>(),
       ),
     );

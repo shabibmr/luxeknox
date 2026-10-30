@@ -4,6 +4,10 @@ import '../network/error_interceptor.dart';
 import 'failures.dart';
 
 Failure mapThrownToFailure(Object e) {
+  if (e is Failure) return e;
+  if (e is FormatException) {
+    return ValidationFailure([e.message]);
+  }
   if (e is DioException) {
     if (e.error is FailureDioException) {
       return (e.error! as FailureDioException).failure;

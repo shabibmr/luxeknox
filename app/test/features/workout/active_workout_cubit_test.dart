@@ -836,9 +836,7 @@ void main() {
           exerciseId: '100',
           repsCompleted: 8,
           weightLiftedKg: 50,
-          targetRir: 2,
           actualRir: 2,
-          targetDurationSeconds: 45,
           actualDurationSeconds: 40,
         ),
       );
@@ -848,9 +846,7 @@ void main() {
           setId: 'set1',
           reps: 10,
           weightKg: 55,
-          targetRir: 1,
           actualRir: 1,
-          targetDurationSeconds: 60,
           actualDurationSeconds: 58,
         ),
       );
@@ -860,17 +856,13 @@ void main() {
       final loggedCaptured =
           verify(() => logSet(captureAny())).captured.single
               as LogWorkoutSetParams;
-      expect(loggedCaptured.targetRir, 2);
       expect(loggedCaptured.actualRir, 2);
-      expect(loggedCaptured.targetDurationSeconds, 45);
       expect(loggedCaptured.actualDurationSeconds, 40);
 
       final editedCaptured =
           verify(() => updateSet(captureAny())).captured.single
               as UpdateWorkoutSetParams;
-      expect(editedCaptured.targetRir, 1);
       expect(editedCaptured.actualRir, 1);
-      expect(editedCaptured.targetDurationSeconds, 60);
       expect(editedCaptured.actualDurationSeconds, 58);
     },
   );

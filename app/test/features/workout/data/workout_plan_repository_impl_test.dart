@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/features/workout/data/datasources/workout_plan_remote_datasource.dart';
 import 'package:luxeknox/features/workout/data/repositories/workout_plan_repository_impl.dart';
+import 'package:luxeknox/features/workout/domain/entities/workout_plan_exercise_input.dart';
 import 'package:luxeknox/features/workout/domain/repositories/workout_plan_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -35,6 +36,9 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(api.WorkoutPlanWrite((b) => b..title = 'fallback'));
+    registerFallbackValue(
+      api.WorkoutPlanExercisesWrite((b) => b..rowVersion = 1),
+    );
   });
 
   setUp(() {
@@ -116,6 +120,33 @@ void main() {
       );
     });
 
+    test('blank and whitespace split/measure sent as null on create and update (Issue #53)', () async {
+      when(() => remote.createPlan(any())).thenAnswer((_) async => _samplePlan());
+      when(() => remote.updatePlan(any(), any())).thenAnswer((_) async => _samplePlan());
+
+      // Create with whitespace
+      await repository.createPlan(
+        title: 'Whitespace Plan',
+        splitType: '   ',
+        mainSuccessMeasure: '  ',
+      );
+      final createWrite = verify(() => remote.createPlan(captureAny())).captured.first as api.WorkoutPlanWrite;
+      expect(createWrite.splitType, isNull);
+      expect(createWrite.mainSuccessMeasure, isNull);
+
+      // Update with whitespace
+      await repository.updatePlan(
+        '10',
+        rowVersion: 1,
+        title: 'Whitespace Update',
+        splitType: ' ',
+        mainSuccessMeasure: '',
+      );
+      final updateWrite = verify(() => remote.updatePlan(10, captureAny())).captured.first as api.WorkoutPlanWrite;
+      expect(updateWrite.splitType, isNull);
+      expect(updateWrite.mainSuccessMeasure, isNull);
+    });
+
     test('validates sessionsPerWeek range (1-14)', () async {
       final result = await repository.createPlan(
         title: 'Invalid Frequency',
@@ -146,6 +177,163 @@ void main() {
         );
       }, (_) => fail('expected Left'));
       verifyNever(() => remote.createPlan(any()));
+    });
+  });
+
+  group('WorkoutPlanRepositoryImpl exercises RIR and duration (Issue #53)', () {
+    test('replaceExercises round-trips target RIR and duration', () async {
+      when(
+        () => remote.replaceExercises(any(), any()),
+      ).thenAnswer((_) async => _samplePlan());
+
+      final exercises = [
+        const WorkoutPlanExerciseInput(
+          exerciseId: '101',
+          dayNumber: 1,
+          orderIndex: 0,
+          targetSets: 3,
+          targetRir: 2.5,
+          targetDurationSeconds: 45,
+        ),
+      ];
+
+      final result = await repository.replaceExercises(
+        '10',
+        rowVersion: 1,
+        exercises: exercises,
+      );
+
+      expect(result.isRight(), isTrue);
+      final captured = verify(
+        () => remote.replaceExercises(10, captureAny()),
+      ).captured.first as api.WorkoutPlanExercisesWrite;
+
+      expect(captured.exercises.length, 1);
+      expect(captured.exercises.first.targetRir, 2.5);
+      expect(captured.exercises.first.targetDurationSeconds, 45);
+    });
+
+    test('replaceExercises rejects out-of-range RIR and duration', () async {
+      // RIR > 10
+      final resultHighRir = await repository.replaceExercises(
+        '10',
+        rowVersion: 1,
+        exercises: [
+          const WorkoutPlanExerciseInput(
+            exerciseId: '1',
+            dayNumber: 1,
+            orderIndex: 0,
+            targetRir: 11,
+          ),
+        ],
+      );
+      resultHighRir.fold(
+        (f) => expect((f as ValidationFailure).details, contains('RIR must be 0–10')),
+        (_) => fail('expected Left'),
+      );
+
+      // RIR < 0
+      final resultLowRir = await repository.replaceExercises(
+        '10',
+        rowVersion: 1,
+        exercises: [
+          const WorkoutPlanExerciseInput(
+            exerciseId: '1',
+            dayNumber: 1,
+            orderIndex: 0,
+            targetRir: -0.5,
+          ),
+        ],
+      );
+      resultLowRir.fold(
+        (f) => expect((f as ValidationFailure).details, contains('RIR must be 0–10')),
+        (_) => fail('expected Left'),
+      );
+
+      // Negative duration
+      final resultNegDuration = await repository.replaceExercises(
+        '10',
+        rowVersion: 1,
+        exercises: [
+          const WorkoutPlanExerciseInput(
+            exerciseId: '1',
+            dayNumber: 1,
+            orderIndex: 0,
+            targetDurationSeconds: -10,
+          ),
+        ],
+      );
+      resultNegDuration.fold(
+        (f) => expect(
+          (f as ValidationFailure).details,
+          contains('Duration seconds must be non-negative'),
+        ),
+        (_) => fail('expected Left'),
+      );
+    });
+
+    test('replaceExercises rejects malformed RIR (> 1 decimal place)', () async {
+      final result = await repository.replaceExercises(
+        '10',
+        rowVersion: 1,
+        exercises: [
+          const WorkoutPlanExerciseInput(
+            exerciseId: '1',
+            dayNumber: 1,
+            orderIndex: 0,
+            targetRir: 2.55,
+          ),
+        ],
+      );
+
+      result.fold(
+        (f) => expect(
+          (f as ValidationFailure).details,
+          contains('RIR must have at most one decimal place'),
+        ),
+        (_) => fail('expected Left'),
+      );
+    });
+
+    test('malformed RIR from API becomes ValidationFailure, not silent null (Issue #53)', () async {
+      when(() => remote.getPlan(any())).thenAnswer((_) async {
+        return api.WorkoutPlan(
+          (b) => b
+            ..id = 10
+            ..title = 'Plan with Bad RIR'
+            ..isTemplate = false
+            ..status = api.WorkoutPlanStatusEnum.active
+            ..rowVersion = 1
+            ..currentVersion.replace(
+              api.WorkoutPlanVersion(
+                (vb) => vb
+                  ..id = 1
+                  ..workoutPlanId = 10
+                  ..versionNumber = 1
+                  ..exercises.replace([
+                    api.WorkoutPlanExercise(
+                      (eb) => eb
+                        ..id = 1
+                        ..workoutPlanVersionId = 1
+                        ..exerciseId = 5
+                        ..dayNumber = 1
+                        ..orderIndex = 0
+                        ..targetRir = 'not-a-number',
+                    ),
+                  ]),
+              ),
+            ),
+        );
+      });
+
+      final result = await repository.getPlan('10');
+      result.fold(
+        (f) {
+          expect(f, isA<ValidationFailure>());
+          expect((f as ValidationFailure).details, contains('Malformed target RIR: not-a-number'));
+        },
+        (_) => fail('expected Left(ValidationFailure)'),
+      );
     });
   });
 }

@@ -11,6 +11,14 @@ import 'package:mocktail/mocktail.dart';
 class MockLifestyleIntakeRemoteDataSource extends Mock
     implements LifestyleIntakeRemoteDataSource {}
 
+class MockLifestylePriority extends Mock implements api.LifestylePriority {}
+
+class MockPriorityEnum extends Mock
+    implements api.LifestylePriorityPriorityEnum {
+  @override
+  String toString() => 'unknown_priority';
+}
+
 api.LifestyleIntake _apiIntake({String? sleep = '7.5'}) {
   return api.LifestyleIntake(
     (b) => b
@@ -121,6 +129,55 @@ void main() {
 
       expect(result.isLeft(), isTrue);
     });
+
+    test(
+      'returns ValidationFailure when an unknown activity level is returned',
+      () async {
+        when(() => remote.get(10)).thenAnswer(
+          (_) async =>
+              _apiIntake().rebuild((b) => b..activityLevel = 'extreme_parkour'),
+        );
+
+        final result = await repository.get(10);
+
+        expect(result.isLeft(), isTrue);
+        final failure = _leftOf(result);
+        expect(failure, isA<ValidationFailure>());
+        expect(
+          (failure as ValidationFailure).details.first,
+          contains('Unknown ActivityLevel: extreme_parkour'),
+        );
+      },
+    );
+
+    test(
+      'returns ValidationFailure when an unknown priority enum is returned',
+      () async {
+        final mockEnum = MockPriorityEnum();
+        final mockPriority = MockLifestylePriority();
+        when(() => mockPriority.priority).thenReturn(mockEnum);
+        when(() => mockPriority.currentStatus).thenReturn('status');
+        when(() => mockPriority.firstAction).thenReturn('action');
+
+        final intake = _apiIntake().rebuild(
+          (b) => b
+            ..lifestylePriorities = ListBuilder<api.LifestylePriority>([
+              mockPriority,
+            ]),
+        );
+        when(() => remote.get(10)).thenAnswer((_) async => intake);
+
+        final result = await repository.get(10);
+
+        expect(result.isLeft(), isTrue);
+        final failure = _leftOf(result);
+        expect(failure, isA<ValidationFailure>());
+        expect(
+          (failure as ValidationFailure).details.first,
+          contains('Unknown LifestylePriorityPriorityEnum'),
+        );
+      },
+    );
   });
 
   group('save', () {

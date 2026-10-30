@@ -286,7 +286,7 @@ void main() {
     const exerciseName =
         'Back Squat with a very long prescribed name for a narrow phone';
 
-    final squat = WorkoutPlanExercise(
+    final squat = const WorkoutPlanExercise(
       exerciseId: 'ex1',
       exerciseName: exerciseName,
       dayNumber: 1,
@@ -387,7 +387,7 @@ void main() {
     testWidgets(
       'from 600dp up to 840dp keeps the dense column without overflow',
       (tester) async {
-        final denseExercise = WorkoutPlanExercise(
+        final denseExercise = const WorkoutPlanExercise(
           exerciseId: 'ex1',
           exerciseName: exerciseName,
           dayNumber: 1,
@@ -454,14 +454,14 @@ void main() {
     testWidgets(
       'finished prescribed sets are one short line and complete stays available',
       (tester) async {
-        final donePlan = WorkoutPlan(
+        final donePlan = const WorkoutPlan(
           id: 'p1',
           title: 'Strength',
           isTemplate: false,
           status: WorkoutPlanStatus.active,
           rowVersion: 1,
           exercises: [
-            const WorkoutPlanExercise(
+            WorkoutPlanExercise(
               exerciseId: 'ex1',
               exerciseName: 'Back Squat',
               dayNumber: 1,

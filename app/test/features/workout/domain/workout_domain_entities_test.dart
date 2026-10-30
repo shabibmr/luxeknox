@@ -1,6 +1,8 @@
 import 'package:api_client/api_client.dart' as api;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:luxeknox/features/workout/data/models/workout_plan_mappers.dart';
+import 'package:luxeknox/features/workout/domain/entities/performed_set_metrics.dart';
+import 'package:luxeknox/features/workout/domain/entities/session_completion.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_plan.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_plan_exercise.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_plan_exercise_input.dart';
@@ -9,55 +11,55 @@ import 'package:luxeknox/features/workout/domain/entities/workout_session.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_session_set.dart';
 
 void main() {
-  group('WorkoutPlan entity & mappers', () {
-    test('WorkoutPlan stores blueprint fields and checks props equality', () {
-      const plan = WorkoutPlan(
-        id: '10',
-        title: 'Hypertrophy Phase 1',
-        description: '12-week block',
-        memberId: '42',
-        trainerId: '7',
-        targetGoal: 'Hypertrophy',
-        difficulty: 'intermediate',
-        durationWeeks: 12,
-        isTemplate: false,
-        status: WorkoutPlanStatus.active,
-        rowVersion: 1,
-        primaryObjective12w: 'Add 5kg lean mass',
-        milestone4w: 'Bench 80kg x 8',
-        sessionsPerWeek: 4,
-        targetSessionDurationMinutes: 60,
-        splitType: 'Upper / Lower',
-        cardioProtocol: '20m LISS twice weekly',
-        mobilityProtocol: 'Daily hip openers',
-        progressionMethods: ['load', 'reps', 'volume'],
-        mainSuccessMeasure: 'Chest & arm circumference',
-        trainerProgrammingNotes: 'Focus on eccentric control',
-      );
+  group('WorkoutPlan entity & mappers with blueprint support', () {
+    test(
+      'WorkoutPlan contains all macrocycle blueprint fields (PTF-12 / PTF-25)',
+      () {
+        const plan = WorkoutPlan(
+          id: '1',
+          title: 'Hypertrophy Block A',
+          isTemplate: false,
+          status: WorkoutPlanStatus.active,
+          rowVersion: 1,
+          primaryObjective12w: 'Add 5kg lean mass',
+          milestone4w: 'Baseline hypertrophy assessment',
+          sessionsPerWeek: 4,
+          targetSessionDurationMinutes: 60,
+          splitType: 'Upper / Lower',
+          cardioProtocol: 'Zone 2 20m 2x/wk',
+          mobilityProtocol: 'Thoracic & hip openers',
+          progressionMethods: ['volume', 'density'],
+          mainSuccessMeasure: 'Chest & arm circumference',
+          trainerProgrammingNotes: 'Emphasize mind-muscle connection',
+        );
 
-      expect(plan.primaryObjective12w, 'Add 5kg lean mass');
-      expect(plan.milestone4w, 'Bench 80kg x 8');
-      expect(plan.sessionsPerWeek, 4);
-      expect(plan.targetSessionDurationMinutes, 60);
-      expect(plan.splitType, 'Upper / Lower');
-      expect(plan.cardioProtocol, '20m LISS twice weekly');
-      expect(plan.mobilityProtocol, 'Daily hip openers');
-      expect(plan.progressionMethods, ['load', 'reps', 'volume']);
-      expect(plan.mainSuccessMeasure, 'Chest & arm circumference');
-      expect(plan.trainerProgrammingNotes, 'Focus on eccentric control');
-    });
+        expect(plan.primaryObjective12w, 'Add 5kg lean mass');
+        expect(plan.milestone4w, 'Baseline hypertrophy assessment');
+        expect(plan.sessionsPerWeek, 4);
+        expect(plan.targetSessionDurationMinutes, 60);
+        expect(plan.splitType, 'Upper / Lower');
+        expect(plan.cardioProtocol, 'Zone 2 20m 2x/wk');
+        expect(plan.mobilityProtocol, 'Thoracic & hip openers');
+        expect(plan.progressionMethods, ['volume', 'density']);
+        expect(plan.mainSuccessMeasure, 'Chest & arm circumference');
+        expect(
+          plan.trainerProgrammingNotes,
+          'Emphasize mind-muscle connection',
+        );
+      },
+    );
 
     test(
-      'maps api.WorkoutPlan to domain WorkoutPlan with all blueprint fields',
+      'maps api.WorkoutPlan with blueprint fields to domain WorkoutPlan',
       () {
         final apiPlan = api.WorkoutPlan(
           (b) => b
-            ..id = 101
+            ..id = 42
             ..title = 'Strength 101'
-            ..isTemplate = false
-            ..status = api.WorkoutPlanStatusEnum.active
+            ..isTemplate = true
+            ..status = api.WorkoutPlanStatusEnum.draft
             ..rowVersion = 2
-            ..primaryObjective12w = 'Double bodyweight deadlift'
+            ..primaryObjective12w = 'Squat 180kg'
             ..milestone4w = 'Deadlift 140kg x 3'
             ..sessionsPerWeek = 3
             ..targetSessionDurationMinutes = 75
@@ -74,9 +76,8 @@ void main() {
 
         final domain = apiPlan.toDomain();
 
-        expect(domain.id, '101');
-        expect(domain.title, 'Strength 101');
-        expect(domain.primaryObjective12w, 'Double bodyweight deadlift');
+        expect(domain.id, '42');
+        expect(domain.primaryObjective12w, 'Squat 180kg');
         expect(domain.milestone4w, 'Deadlift 140kg x 3');
         expect(domain.sessionsPerWeek, 3);
         expect(domain.targetSessionDurationMinutes, 75);
@@ -119,11 +120,22 @@ void main() {
       expect(write.mainSuccessMeasure, 'Total S/B/D');
       expect(write.trainerProgrammingNotes, 'Watch right knee tracking');
     });
+
+    test('toWorkoutPlanWrite sends blank or whitespace split and measure as null (Issue #53)', () {
+      final write = toWorkoutPlanWrite(
+        title: 'Whitespace Test',
+        splitType: '   ',
+        mainSuccessMeasure: '\t \n ',
+      );
+
+      expect(write.splitType, isNull);
+      expect(write.mainSuccessMeasure, isNull);
+    });
   });
 
   group('WorkoutPlanExercise & WorkoutPlanExerciseInput', () {
     test(
-      'WorkoutPlanExercise supports targetRir, targetDurationSeconds, notes',
+      'WorkoutPlanExercise supports numeric targetRir, targetDurationSeconds, notes (Issue #53)',
       () {
         const exercise = WorkoutPlanExercise(
           id: '1',
@@ -133,19 +145,19 @@ void main() {
           orderIndex: 0,
           targetSets: 3,
           targetReps: '1',
-          targetRir: '2',
+          targetRir: 2,
           targetDurationSeconds: 45,
           notes: 'Keep pelvis tucked',
         );
 
-        expect(exercise.targetRir, '2');
+        expect(exercise.targetRir, 2);
         expect(exercise.targetRirNum, 2);
         expect(exercise.targetDurationSeconds, 45);
         expect(exercise.notes, 'Keep pelvis tucked');
       },
     );
 
-    test('maps api.WorkoutPlanExercise to domain WorkoutPlanExercise', () {
+    test('maps api.WorkoutPlanExercise to domain WorkoutPlanExercise with parsed numeric RIR', () {
       final apiExercise = api.WorkoutPlanExercise(
         (b) => b
           ..id = 12
@@ -163,23 +175,48 @@ void main() {
       final domain = apiExercise.toDomain();
 
       expect(domain.id, '12');
-      expect(domain.targetRir, '1.5');
+      expect(domain.targetRir, 1.5);
       expect(domain.targetDurationSeconds, 30);
       expect(domain.notes, 'Pause at bottom');
     });
 
-    test('WorkoutPlanExerciseInput copyWith works', () {
+    test('WorkoutPlanExerciseInput supports targetRir and targetDurationSeconds', () {
       const input = WorkoutPlanExerciseInput(
         exerciseId: '55',
         dayNumber: 1,
         orderIndex: 0,
         targetSets: 3,
+        targetRir: 2.5,
+        targetDurationSeconds: 45,
         notes: 'Hold strict',
       );
 
-      final updated = input.copyWith(targetSets: 4);
+      expect(input.targetRir, 2.5);
+      expect(input.targetDurationSeconds, 45);
+
+      final updated = input.copyWith(targetSets: 4, targetRir: 1.0);
       expect(updated.targetSets, 4);
+      expect(updated.targetRir, 1.0);
+      expect(updated.targetDurationSeconds, 45);
       expect(updated.notes, 'Hold strict');
+    });
+
+    test('toWorkoutPlanExercisesWrite serializes targetRir and targetDurationSeconds (Issue #53)', () {
+      final write = toWorkoutPlanExercisesWrite(
+        rowVersion: 1,
+        exercises: const [
+          WorkoutPlanExerciseInput(
+            exerciseId: '55',
+            dayNumber: 1,
+            orderIndex: 0,
+            targetRir: 2.5,
+            targetDurationSeconds: 45,
+          ),
+        ],
+      );
+
+      expect(write.exercises.first.targetRir, 2.5);
+      expect(write.exercises.first.targetDurationSeconds, 45);
     });
   });
 
@@ -198,18 +235,16 @@ void main() {
           targetRir: '2',
           actualRir: '1.5',
           targetDurationSeconds: 0,
-          actualDurationSeconds: 35,
+          actualDurationSeconds: 30,
           isCompleted: true,
-          notes: 'RPE 8.5 felt good',
+          notes: 'Solid effort',
         );
 
         expect(set.targetRir, '2');
-        expect(set.targetRirNum, 2);
         expect(set.actualRir, '1.5');
-        expect(set.actualRirNum, 1.5);
         expect(set.targetDurationSeconds, 0);
-        expect(set.actualDurationSeconds, 35);
-        expect(set.notes, 'RPE 8.5 felt good');
+        expect(set.actualDurationSeconds, 30);
+        expect(set.rpeScore, 8.5);
       },
     );
 
@@ -242,42 +277,42 @@ void main() {
     });
 
     test(
-      'toWorkoutSetWrite and toWorkoutSetUpdate serialize RIR and duration',
+      'toWorkoutSetWrite and toWorkoutSetUpdate serialize performed metrics and NEVER targets (Issue #54)',
       () {
         final write = toWorkoutSetWrite(
           exerciseId: '12',
           setNumber: 1,
-          repsCompleted: 10,
-          weightLiftedKg: 60,
-          rpeScore: 8,
-          targetRir: 2,
-          actualRir: 1.5,
-          targetDurationSeconds: 30,
-          actualDurationSeconds: 32,
-          isCompleted: true,
-          notes: 'First set',
+          metrics: const PerformedSetMetrics(
+            repsCompleted: 10,
+            weightLiftedKg: 60,
+            rpeScore: 8,
+            actualRir: 1.5,
+            actualDurationSeconds: 32,
+            isCompleted: true,
+            notes: 'First set',
+          ),
         );
 
         expect(write.exerciseId, 12);
-        expect(write.targetRir, 2);
+        expect(write.targetRir, isNull, reason: 'Target RIR must never be sent in set writes');
+        expect(write.targetDurationSeconds, isNull, reason: 'Target duration must never be sent in set writes');
         expect(write.actualRir, 1.5);
-        expect(write.targetDurationSeconds, 30);
         expect(write.actualDurationSeconds, 32);
         expect(write.notes, 'First set');
 
         final update = toWorkoutSetUpdate(
-          repsCompleted: 12,
-          targetRir: 1,
-          actualRir: 0.5,
-          targetDurationSeconds: 40,
-          actualDurationSeconds: 45,
-          notes: 'Updated note',
+          const PerformedSetMetrics(
+            repsCompleted: 12,
+            actualRir: 0.5,
+            actualDurationSeconds: 45,
+            notes: 'Updated note',
+          ),
         );
 
         expect(update.repsCompleted, 12);
-        expect(update.targetRir, 1);
+        expect(update.targetRir, isNull, reason: 'Target RIR must never be sent in set updates');
+        expect(update.targetDurationSeconds, isNull, reason: 'Target duration must never be sent in set updates');
         expect(update.actualRir, 0.5);
-        expect(update.targetDurationSeconds, 40);
         expect(update.actualDurationSeconds, 45);
         expect(update.notes, 'Updated note');
       },
@@ -365,25 +400,24 @@ void main() {
     );
 
     test(
-      'toWorkoutSessionComplete packages multi-metric ratings and notes',
+      'toWorkoutSessionComplete packages SessionCompletion with NO client-supplied timestamps (Issue #54)',
       () {
-        final signedAt = DateTime(2026, 3, 1, 11, 0);
         final complete = toWorkoutSessionComplete(
-          clientFeedbackRating: 5,
-          effortRating: 8,
-          satisfactionRating: 9,
-          painDiscomfortScore: 5,
-          painNotes: 'Hamstring tweak on last set',
-          notes: 'Session finished early',
-          trainerNotes: 'Referral sent to physio',
-          nextSessionPlan: 'Upper body only',
-          sessionFocus: 'Lower Posterior',
-          warmupProtocol: 'RDL warmups',
-          cooldownProtocol: 'Static stretch',
-          clientSigned: true,
-          trainerSigned: true,
-          clientSignedAt: signedAt,
-          trainerSignedAt: signedAt,
+          const SessionCompletion(
+            clientFeedbackRating: 5,
+            effortRating: 8,
+            satisfactionRating: 9,
+            painDiscomfortScore: 5,
+            painNotes: 'Hamstring tweak on last set',
+            notes: 'Session finished early',
+            trainerNotes: 'Referral sent to physio',
+            nextSessionPlan: 'Upper body only',
+            sessionFocus: 'Lower Posterior',
+            warmupProtocol: 'RDL warmups',
+            cooldownProtocol: 'Static stretch',
+            clientSigned: true,
+            trainerSigned: true,
+          ),
         );
 
         expect(complete.clientFeedbackRating, 5);
@@ -399,8 +433,8 @@ void main() {
         expect(complete.cooldownProtocol, 'Static stretch');
         expect(complete.clientSigned, isTrue);
         expect(complete.trainerSigned, isTrue);
-        expect(complete.clientSignedAt, signedAt);
-        expect(complete.trainerSignedAt, signedAt);
+        expect(complete.clientSignedAt, isNull, reason: 'Signed-at timestamps are server-stamped');
+        expect(complete.trainerSignedAt, isNull, reason: 'Signed-at timestamps are server-stamped');
       },
     );
   });

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/pt_progress_review.dart';
 import '../pt_strings.dart';
 
-/// The six discussed items. The API does not accept edits, so they are read-only.
+/// The six discussed items, read-only. Drafts are edited in `ReviewCardEditor`.
 class ReviewChecklistCard extends StatelessWidget {
   const ReviewChecklistCard({super.key, required this.checklist});
 

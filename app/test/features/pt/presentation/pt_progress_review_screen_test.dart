@@ -13,8 +13,9 @@ import 'package:luxeknox/features/pt/domain/usecases/export_pt_progress_review_p
 import 'package:luxeknox/features/pt/domain/usecases/get_pt_progress_review_usecase.dart';
 import 'package:luxeknox/features/pt/domain/usecases/manager_approve_pt_progress_review_usecase.dart';
 import 'package:luxeknox/features/pt/domain/usecases/trainer_sign_pt_progress_review_usecase.dart';
+import 'package:luxeknox/features/pt/domain/usecases/update_pt_progress_review_card_usecase.dart';
 import 'package:luxeknox/features/pt/presentation/cubit/pt_progress_review_cubit.dart';
-import 'package:luxeknox/features/pt/presentation/pdf_card_saver.dart';
+import 'package:luxeknox/features/pt/presentation/pdf_card_saver_io.dart';
 import 'package:luxeknox/features/pt/presentation/pt_strings.dart';
 import 'package:luxeknox/features/pt/presentation/screens/pt_progress_review_screen.dart';
 
@@ -45,7 +46,7 @@ void main() {
       nextPhaseGoal: nextPhaseGoal,
       nextPhaseTrainingFocus: nextPhaseTrainingFocus,
       nextReviewDate: DateTime.utc(2026, 12, 1),
-      progressHighlights: const ['Lost 4.4 kg', 'Consistency'],
+      progressHighlights: const ['increased_strength', 'better_consistency'],
       reviewChecklist: const PtReviewChecklist(
         goalsReviewed: true,
         measurementsReviewed: true,
@@ -53,19 +54,19 @@ void main() {
       bodyMetricsSnapshot: const [
         BodyMetricSnapshot(
           metric: 'Body weight',
-          startVal: 80,
-          currentVal: 75.6,
-          changeVal: -4.4,
-          targetVal: 72,
+          startValue: 80,
+          currentValue: 75.6,
+          changeValue: -4.4,
+          targetValue: 72,
         ),
       ],
       performanceMarkersSnapshot: const [
         PerformanceMarkerSnapshot(
           marker: 'Squat',
-          startVal: '60 kg',
-          currentVal: '80 kg',
-          changeVal: '+20 kg',
-          targetVal: '100 kg',
+          startValue: '60 kg',
+          currentValue: '80 kg',
+          changeValue: '+20 kg',
+          targetValue: '100 kg',
         ),
       ],
       trainerSignedAt: trainerSignedAt,
@@ -85,6 +86,7 @@ void main() {
       ClientSignPtProgressReviewUseCase(repository),
       ManagerApprovePtProgressReviewUseCase(repository),
       ExportPtProgressReviewPdfUseCase(repository),
+      UpdatePtProgressReviewCardUseCase(repository),
     );
   }
 
@@ -133,8 +135,8 @@ void main() {
     expect(find.text('Squat'), findsOneWidget);
     expect(find.text('60 kg'), findsOneWidget);
     expect(find.text('+20 kg'), findsOneWidget);
-    expect(find.text('Lost 4.4 kg'), findsOneWidget);
-    expect(find.text('Consistency'), findsOneWidget);
+    expect(find.text('Increased strength'), findsOneWidget);
+    expect(find.text('Better consistency'), findsOneWidget);
     expect(find.text(PtStrings.goalsReviewed), findsOneWidget);
     expect(find.text(PtStrings.programUpdated), findsOneWidget);
     expect(find.text('Build strength'), findsOneWidget);
@@ -146,9 +148,7 @@ void main() {
     expect(find.text(PtStrings.approveReview), findsNothing);
   });
 
-  testWidgets('trainer drafts, signs, and exports the presentation card', (
-    tester,
-  ) async {
+  testWidgets('trainer drafts and signs the review', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1200, 2200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
@@ -198,16 +198,8 @@ void main() {
     expect(find.text(PtStrings.signAsTrainer), findsNothing);
     expect(find.text('2026-10-01'), findsOneWidget);
 
-    await tester.ensureVisible(find.text(PtStrings.exportPdf));
-    await tester.tap(find.text(PtStrings.exportPdf));
-    await tester.pump();
-    await tester.pump();
-
-    expect(repository.calls, contains('exportPdf:7'));
-    expect(find.text(PtStrings.exported), findsOneWidget);
-    expect(saver.filename, 'pt-review-7.pdf');
-    expect(saver.bytes, Uint8List.fromList(const [1, 2, 3, 4]));
-    expect(find.text('/tmp/pt-review-7.pdf'), findsOneWidget);
+    expect(_exportButton(tester).onPressed, isNull);
+    expect(find.text(PtStrings.exportLocked), findsOneWidget);
   });
 
   testWidgets('client signs after the trainer', (tester) async {
@@ -268,6 +260,10 @@ void main() {
     await tester.pump();
     await tester.pump();
     expect(repository.calls, contains('exportPdf:7'));
+    expect(find.text(PtStrings.exported), findsOneWidget);
+    expect(saver.filename, 'pt-review-7.pdf');
+    expect(saver.bytes, Uint8List.fromList(const [1, 2, 3, 4]));
+    expect(find.text('/tmp/pt-review-7.pdf'), findsOneWidget);
   });
 
   testWidgets('a refused sign stays on the review and shows the reason', (
@@ -300,18 +296,240 @@ void main() {
     );
   });
 
-  test('savePresentationCard writes the PDF bytes', () async {
-    const name = 'pt-review-spec.pdf';
-    final path = await savePresentationCard(
-      name,
-      Uint8List.fromList(const [9, 8]),
+  test(
+    'savePresentationCard writes the PDF bytes and opens the share flow',
+    () async {
+      const name = 'pt-review-spec.pdf';
+      String? sharedPath;
+      final path = await savePresentationCard(
+        name,
+        Uint8List.fromList(const [9, 8]),
+        share: (path, filename) async => sharedPath = path,
+      );
+      expect(path, isNotNull);
+      expect(sharedPath, path);
+      final file = File(path!);
+      addTearDown(file.deleteSync);
+      expect(file.readAsBytesSync(), Uint8List.fromList(const [9, 8]));
+    },
+  );
+
+  group('export gate', () {
+    Future<void> pumpAs(
+      WidgetTester tester,
+      PtProgressReviewAudience audience,
+      PtProgressReview shown,
+    ) async {
+      repository.current = shown;
+      await pumpLoaded(
+        tester,
+        PtProgressReviewScreen(
+          audience: audience,
+          reviewId: 7,
+          memberId: 42,
+          cubitBuilder: cubit,
+          savePdf: saver.call,
+        ),
+      );
+    }
+
+    for (final status in [
+      PtProgressReviewStatus.draft,
+      PtProgressReviewStatus.pendingClientSign,
+      PtProgressReviewStatus.pendingManagerApproval,
+    ]) {
+      testWidgets('is disabled with a reason while $status', (tester) async {
+        await pumpAs(
+          tester,
+          PtProgressReviewAudience.manager,
+          review(status: status, trainerSignedAt: DateTime.utc(2026, 10, 1)),
+        );
+        expect(_exportButton(tester).onPressed, isNull);
+        expect(find.text(PtStrings.exportLocked), findsOneWidget);
+      });
+    }
+
+    testWidgets('is enabled once all three have signed', (tester) async {
+      await pumpAs(
+        tester,
+        PtProgressReviewAudience.member,
+        review(
+          status: PtProgressReviewStatus.approved,
+          trainerSignedAt: DateTime.utc(2026, 10, 1),
+          clientSignedAt: DateTime.utc(2026, 10, 2),
+          managerSignedAt: DateTime.utc(2026, 10, 3),
+        ),
+      );
+      expect(_exportButton(tester).onPressed, isNotNull);
+      expect(find.text(PtStrings.exportLocked), findsNothing);
+    });
+  });
+
+  group('highlights and checklist', () {
+    Future<void> pumpTrainer(WidgetTester tester) => pumpLoaded(
+      tester,
+      PtProgressReviewScreen(
+        audience: PtProgressReviewAudience.trainer,
+        reviewId: 7,
+        memberId: 42,
+        cubitBuilder: cubit,
+      ),
     );
-    expect(path, isNotNull);
-    final file = File(path!);
-    addTearDown(file.deleteSync);
-    expect(file.readAsBytesSync(), Uint8List.fromList(const [9, 8]));
+
+    FilledButton signButton(WidgetTester tester) => tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, PtStrings.signAsTrainer),
+    );
+
+    testWidgets('trainer edits in draft and must save before signing', (
+      tester,
+    ) async {
+      await pumpTrainer(tester);
+
+      await tester.ensureVisible(find.byKey(const Key('highlight-other')));
+      await tester.tap(find.byKey(const Key('highlight-goal_milestone')));
+      await tester.tap(find.byKey(const Key('highlight-other')));
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('highlight-other-text')),
+        '  First pull-up ',
+      );
+      await tester.tap(find.text(PtStrings.attendanceReviewed));
+      await tester.pump();
+      await tester.pump();
+
+      expect(signButton(tester).onPressed, isNull);
+      expect(find.text(PtStrings.unsavedCard), findsOneWidget);
+
+      await tester.ensureVisible(find.text(PtStrings.saveCard));
+      await tester.tap(find.text(PtStrings.saveCard));
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      final saved = repository.lastCardEdit!;
+      expect(saved.progressHighlights, [
+        'increased_strength',
+        'better_consistency',
+        'goal_milestone',
+        'other',
+      ]);
+      expect(saved.highlightsOtherText, 'First pull-up');
+      expect(saved.reviewChecklist.attendanceReviewed, isTrue);
+      expect(saved.reviewChecklist.goalsReviewed, isTrue);
+      expect(find.text(PtStrings.cardSaved), findsOneWidget);
+      expect(find.text(PtStrings.unsavedCard), findsNothing);
+      expect(signButton(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('are read-only for member and manager', (tester) async {
+      for (final audience in [
+        PtProgressReviewAudience.member,
+        PtProgressReviewAudience.manager,
+      ]) {
+        repository.current = review(
+          status: PtProgressReviewStatus.pendingClientSign,
+          trainerSignedAt: DateTime.utc(2026, 10, 1),
+        );
+        await tester.pumpWidget(const SizedBox());
+        await pumpLoaded(
+          tester,
+          PtProgressReviewScreen(
+            audience: audience,
+            reviewId: 7,
+            memberId: 42,
+            cubitBuilder: cubit,
+          ),
+        );
+        expect(find.text('Increased strength'), findsOneWidget);
+        expect(find.text(PtStrings.goalsReviewed), findsOneWidget);
+        expect(find.text(PtStrings.saveCard), findsNothing);
+        expect(find.byType(FilterChip), findsNothing);
+        final boxes = tester.widgetList<CheckboxListTile>(
+          find.byType(CheckboxListTile),
+        );
+        expect(boxes.every((c) => c.onChanged == null), isTrue);
+      }
+    });
+
+    testWidgets('trainer cannot edit once the review is signed', (
+      tester,
+    ) async {
+      repository.current = review(
+        status: PtProgressReviewStatus.pendingClientSign,
+        trainerSignedAt: DateTime.utc(2026, 10, 1),
+      );
+      await pumpTrainer(tester);
+      expect(find.text(PtStrings.saveCard), findsNothing);
+      expect(find.byType(FilterChip), findsNothing);
+    });
+
+    testWidgets(
+      'lifecycle: trainer edits and signs, member signs, manager approves, export opens',
+      (tester) async {
+        Future<void> openAs(PtProgressReviewAudience audience) async {
+          await tester.pumpWidget(const SizedBox());
+          await pumpLoaded(
+            tester,
+            PtProgressReviewScreen(
+              audience: audience,
+              reviewId: 7,
+              memberId: 42,
+              cubitBuilder: cubit,
+              savePdf: saver.call,
+            ),
+          );
+        }
+
+        Future<void> tapText(WidgetTester tester, String text) async {
+          await tester.ensureVisible(find.text(text));
+          await tester.tap(find.text(text));
+          await tester.pump();
+          await tester.pump();
+          await tester.pump();
+        }
+
+        await openAs(PtProgressReviewAudience.trainer);
+        await tester.ensureVisible(
+          find.byKey(const Key('highlight-goal_milestone')),
+        );
+        await tester.tap(find.byKey(const Key('highlight-goal_milestone')));
+        await tester.pump();
+        await tapText(tester, PtStrings.nextGoalsAgreed);
+        await tapText(tester, PtStrings.saveCard);
+        await tapText(tester, PtStrings.signAsTrainer);
+        expect(find.text(PtStrings.statusClient), findsOneWidget);
+
+        await openAs(PtProgressReviewAudience.member);
+        expect(find.text('Goal milestone'), findsOneWidget);
+        expect(
+          tester
+              .widget<CheckboxListTile>(
+                find.widgetWithText(
+                  CheckboxListTile,
+                  PtStrings.nextGoalsAgreed,
+                ),
+              )
+              .value,
+          isTrue,
+        );
+        expect(_exportButton(tester).onPressed, isNull);
+        await tapText(tester, PtStrings.signAsClient);
+        expect(find.text(PtStrings.statusManager), findsOneWidget);
+
+        await openAs(PtProgressReviewAudience.manager);
+        expect(find.text('Goal milestone'), findsOneWidget);
+        await tapText(tester, PtStrings.approveReview);
+        expect(find.text(PtStrings.statusApproved), findsOneWidget);
+        expect(_exportButton(tester).onPressed, isNotNull);
+      },
+    );
   });
 }
+
+OutlinedButton _exportButton(WidgetTester tester) =>
+    tester.widget<OutlinedButton>(
+      find.widgetWithText(OutlinedButton, PtStrings.exportPdf),
+    );
 
 class _RecordingSaver {
   String? filename;
@@ -331,6 +549,7 @@ class _FakeReviewRepository implements PtProgressReviewRepository {
   final List<String> calls = [];
   PtProgressReviewDraftInput? lastDraft;
   Failure? signFailure;
+  PtProgressReviewCardEdit? lastCardEdit;
 
   PtProgressReview _with({
     required PtProgressReviewStatus status,
@@ -339,6 +558,8 @@ class _FakeReviewRepository implements PtProgressReviewRepository {
     DateTime? managerSignedAt,
     String? trainerSummary,
     String? nextPhaseGoal,
+    List<String>? progressHighlights,
+    PtReviewChecklist? reviewChecklist,
   }) {
     return PtProgressReview(
       id: current.id,
@@ -350,12 +571,12 @@ class _FakeReviewRepository implements PtProgressReviewRepository {
       createdAt: current.createdAt,
       bodyMetricsSnapshot: current.bodyMetricsSnapshot,
       performanceMarkersSnapshot: current.performanceMarkersSnapshot,
-      progressHighlights: current.progressHighlights,
+      progressHighlights: progressHighlights ?? current.progressHighlights,
       trainerSummary: trainerSummary ?? current.trainerSummary,
       nextPhaseGoal: nextPhaseGoal ?? current.nextPhaseGoal,
       nextPhaseTrainingFocus: current.nextPhaseTrainingFocus,
       nextReviewDate: current.nextReviewDate,
-      reviewChecklist: current.reviewChecklist,
+      reviewChecklist: reviewChecklist ?? current.reviewChecklist,
       trainerSignedAt: trainerSignedAt ?? current.trainerSignedAt,
       clientSignedAt: clientSignedAt ?? current.clientSignedAt,
       managerSignedAt: managerSignedAt ?? current.managerSignedAt,
@@ -379,6 +600,21 @@ class _FakeReviewRepository implements PtProgressReviewRepository {
   @override
   Future<Either<Failure, PtProgressReview>> get(int reviewId) async {
     calls.add('get:$reviewId');
+    return Right(current);
+  }
+
+  @override
+  Future<Either<Failure, PtProgressReview>> updateCard(
+    int reviewId,
+    PtProgressReviewCardEdit edit,
+  ) async {
+    calls.add('updateCard:$reviewId');
+    lastCardEdit = edit;
+    current = _with(
+      status: current.status,
+      progressHighlights: edit.progressHighlights,
+      reviewChecklist: edit.reviewChecklist,
+    );
     return Right(current);
   }
 

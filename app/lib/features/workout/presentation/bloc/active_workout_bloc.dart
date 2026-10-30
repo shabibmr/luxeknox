@@ -9,6 +9,8 @@ import '../../../../core/presentation/load_status.dart';
 import '../../domain/entities/workout_plan.dart';
 import '../../domain/entities/workout_plan_exercise.dart';
 import '../../domain/entities/workout_session.dart';
+import '../../domain/entities/performed_set_metrics.dart';
+import '../../domain/entities/session_completion.dart';
 import '../../domain/entities/workout_session_set.dart';
 import '../../domain/usecases/complete_workout_session_usecase.dart';
 import '../../domain/usecases/delete_workout_set_usecase.dart';
@@ -62,9 +64,7 @@ final class ActiveWorkoutSetLogged extends ActiveWorkoutEvent {
     this.repsCompleted,
     this.weightLiftedKg,
     this.rpeScore,
-    this.targetRir,
     this.actualRir,
-    this.targetDurationSeconds,
     this.actualDurationSeconds,
     this.notes,
   });
@@ -73,9 +73,7 @@ final class ActiveWorkoutSetLogged extends ActiveWorkoutEvent {
   final int? repsCompleted;
   final num? weightLiftedKg;
   final num? rpeScore;
-  final num? targetRir;
   final num? actualRir;
-  final int? targetDurationSeconds;
   final int? actualDurationSeconds;
   final String? notes;
 
@@ -85,9 +83,7 @@ final class ActiveWorkoutSetLogged extends ActiveWorkoutEvent {
     repsCompleted,
     weightLiftedKg,
     rpeScore,
-    targetRir,
     actualRir,
-    targetDurationSeconds,
     actualDurationSeconds,
     notes,
   ];
@@ -99,9 +95,7 @@ final class ActiveWorkoutSetEdited extends ActiveWorkoutEvent {
     this.reps,
     this.weightKg,
     this.rpe,
-    this.targetRir,
     this.actualRir,
-    this.targetDurationSeconds,
     this.actualDurationSeconds,
     this.notes,
   });
@@ -110,9 +104,7 @@ final class ActiveWorkoutSetEdited extends ActiveWorkoutEvent {
   final int? reps;
   final num? weightKg;
   final num? rpe;
-  final num? targetRir;
   final num? actualRir;
-  final int? targetDurationSeconds;
   final int? actualDurationSeconds;
   final String? notes;
 
@@ -122,9 +114,7 @@ final class ActiveWorkoutSetEdited extends ActiveWorkoutEvent {
     reps,
     weightKg,
     rpe,
-    targetRir,
     actualRir,
-    targetDurationSeconds,
     actualDurationSeconds,
     notes,
   ];
@@ -523,14 +513,14 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
         sessionId: sessionId,
         exerciseId: event.exerciseId,
         setNumber: setNumber,
-        repsCompleted: event.repsCompleted,
-        weightLiftedKg: event.weightLiftedKg,
-        rpeScore: event.rpeScore,
-        targetRir: event.targetRir,
-        actualRir: event.actualRir,
-        targetDurationSeconds: event.targetDurationSeconds,
-        actualDurationSeconds: event.actualDurationSeconds,
-        notes: event.notes,
+        metrics: PerformedSetMetrics(
+          repsCompleted: event.repsCompleted,
+          weightLiftedKg: event.weightLiftedKg,
+          rpeScore: event.rpeScore,
+          actualRir: event.actualRir,
+          actualDurationSeconds: event.actualDurationSeconds,
+          notes: event.notes,
+        ),
       ),
     );
 
@@ -579,10 +569,12 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
         sessionId: sessionId,
         exerciseId: event.exerciseId,
         setNumber: setNumber,
-        repsCompleted: 0,
-        weightLiftedKg: 0,
-        isCompleted: false,
-        notes: noteContent,
+        metrics: PerformedSetMetrics(
+          repsCompleted: 0,
+          weightLiftedKg: 0,
+          isCompleted: false,
+          notes: noteContent,
+        ),
       ),
     );
 
@@ -625,14 +617,14 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
       UpdateWorkoutSetParams(
         sessionId: current.session!.id,
         setId: event.setId,
-        reps: event.reps,
-        weightKg: event.weightKg,
-        rpe: event.rpe,
-        targetRir: event.targetRir,
-        actualRir: event.actualRir,
-        targetDurationSeconds: event.targetDurationSeconds,
-        actualDurationSeconds: event.actualDurationSeconds,
-        notes: event.notes,
+        metrics: PerformedSetMetrics(
+          repsCompleted: event.reps,
+          weightLiftedKg: event.weightKg,
+          rpeScore: event.rpe,
+          actualRir: event.actualRir,
+          actualDurationSeconds: event.actualDurationSeconds,
+          notes: event.notes,
+        ),
       ),
     );
 
@@ -729,12 +721,14 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
     final result = await _completeSession(
       CompleteWorkoutSessionParams(
         sessionId: current.session!.id,
-        notes: event.notes,
-        clientFeedbackRating: event.clientFeedbackRating,
-        effortRating: event.effortRating,
-        satisfactionRating: event.satisfactionRating,
-        painDiscomfortScore: event.painDiscomfortScore,
-        painNotes: event.painNotes,
+        completion: SessionCompletion(
+          notes: event.notes,
+          clientFeedbackRating: event.clientFeedbackRating,
+          effortRating: event.effortRating,
+          satisfactionRating: event.satisfactionRating,
+          painDiscomfortScore: event.painDiscomfortScore,
+          painNotes: event.painNotes,
+        ),
       ),
     );
     result.fold(

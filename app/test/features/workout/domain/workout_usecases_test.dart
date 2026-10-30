@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:luxeknox/features/workout/domain/entities/performed_set_metrics.dart';
+import 'package:luxeknox/features/workout/domain/entities/session_completion.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_plan.dart';
+import 'package:luxeknox/features/workout/domain/entities/workout_plan_exercise_input.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_plan_status.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_session.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_session_set.dart';
@@ -9,6 +12,7 @@ import 'package:luxeknox/features/workout/domain/repositories/workout_session_re
 import 'package:luxeknox/features/workout/domain/usecases/complete_workout_session_usecase.dart';
 import 'package:luxeknox/features/workout/domain/usecases/create_workout_plan_usecase.dart';
 import 'package:luxeknox/features/workout/domain/usecases/log_workout_set_usecase.dart';
+import 'package:luxeknox/features/workout/domain/usecases/replace_workout_plan_exercises_usecase.dart';
 import 'package:luxeknox/features/workout/domain/usecases/update_workout_plan_usecase.dart';
 import 'package:luxeknox/features/workout/domain/usecases/update_workout_set_usecase.dart';
 import 'package:mocktail/mocktail.dart';
@@ -32,9 +36,7 @@ const _sampleSet = WorkoutSessionSet(
   workoutSessionId: '10',
   exerciseId: '5',
   setNumber: 1,
-  targetRir: '2',
   actualRir: '1.5',
-  targetDurationSeconds: 30,
   actualDurationSeconds: 30,
 );
 
@@ -48,6 +50,12 @@ final _sampleSession = WorkoutSession(
 );
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(const PerformedSetMetrics());
+    registerFallbackValue(const SessionCompletion());
+    registerFallbackValue(const <WorkoutPlanExerciseInput>[]);
+  });
+
   group('Workout UseCases with blueprint and RIR/pain support', () {
     late MockPlanRepository planRepo;
     late MockSessionRepository sessionRepo;
@@ -90,6 +98,8 @@ void main() {
           primaryObjective12w: 'Reach milestone',
           sessionsPerWeek: 3,
           progressionMethods: ['load', 'volume'],
+          splitType: 'Upper / Lower',
+          mainSuccessMeasure: '1RM Bench',
         ),
       );
 
@@ -100,6 +110,8 @@ void main() {
           primaryObjective12w: 'Reach milestone',
           sessionsPerWeek: 3,
           progressionMethods: ['load', 'volume'],
+          splitType: 'Upper / Lower',
+          mainSuccessMeasure: '1RM Bench',
         ),
       ).called(1);
     });
@@ -141,6 +153,8 @@ void main() {
             rowVersion: 2,
             title: 'Updated Plan',
             primaryObjective12w: 'New goal',
+            splitType: 'PPL',
+            mainSuccessMeasure: '3RM Squat',
           ),
         );
 
@@ -151,28 +165,61 @@ void main() {
             rowVersion: 2,
             title: 'Updated Plan',
             primaryObjective12w: 'New goal',
+            splitType: 'PPL',
+            mainSuccessMeasure: '3RM Squat',
           ),
         ).called(1);
       },
     );
 
+    test('ReplaceWorkoutPlanExercisesUseCase roundtrips target RIR and duration', () async {
+      when(
+        () => planRepo.replaceExercises(
+          any(),
+          rowVersion: any(named: 'rowVersion'),
+          changelog: any(named: 'changelog'),
+          exercises: any(named: 'exercises'),
+        ),
+      ).thenAnswer((_) async => const Right(_samplePlan));
+
+      final useCase = ReplaceWorkoutPlanExercisesUseCase(planRepo);
+      final exercises = [
+        const WorkoutPlanExerciseInput(
+          exerciseId: '55',
+          dayNumber: 1,
+          orderIndex: 0,
+          targetSets: 3,
+          targetRir: 2.5,
+          targetDurationSeconds: 45,
+        ),
+      ];
+      final result = await useCase(
+        ReplaceWorkoutPlanExercisesParams(
+          id: '1',
+          rowVersion: 2,
+          exercises: exercises,
+        ),
+      );
+
+      expect(result.isRight(), isTrue);
+      verify(
+        () => planRepo.replaceExercises(
+          '1',
+          rowVersion: 2,
+          exercises: exercises,
+        ),
+      ).called(1);
+    });
+
     test(
-      'LogWorkoutSetUseCase forwards targetRir, actualRir, target/actual duration',
+      'LogWorkoutSetUseCase forwards PerformedSetMetrics and never a target',
       () async {
         when(
           () => sessionRepo.logSet(
             any(),
             exerciseId: any(named: 'exerciseId'),
             setNumber: any(named: 'setNumber'),
-            repsCompleted: any(named: 'repsCompleted'),
-            weightLiftedKg: any(named: 'weightLiftedKg'),
-            rpeScore: any(named: 'rpeScore'),
-            targetRir: any(named: 'targetRir'),
-            actualRir: any(named: 'actualRir'),
-            targetDurationSeconds: any(named: 'targetDurationSeconds'),
-            actualDurationSeconds: any(named: 'actualDurationSeconds'),
-            isCompleted: any(named: 'isCompleted'),
-            notes: any(named: 'notes'),
+            metrics: any(named: 'metrics'),
           ),
         ).thenAnswer((_) async => const Right(_sampleSet));
 
@@ -182,11 +229,11 @@ void main() {
             sessionId: '10',
             exerciseId: '5',
             setNumber: 1,
-            targetRir: 2,
-            actualRir: 1.5,
-            targetDurationSeconds: 30,
-            actualDurationSeconds: 30,
-            notes: 'Isometric plank',
+            metrics: PerformedSetMetrics(
+              actualRir: 1.5,
+              actualDurationSeconds: 30,
+              notes: 'Isometric plank',
+            ),
           ),
         );
 
@@ -196,33 +243,24 @@ void main() {
             '10',
             exerciseId: '5',
             setNumber: 1,
-            targetRir: 2,
-            actualRir: 1.5,
-            targetDurationSeconds: 30,
-            actualDurationSeconds: 30,
-            isCompleted: true,
-            notes: 'Isometric plank',
+            metrics: const PerformedSetMetrics(
+              actualRir: 1.5,
+              actualDurationSeconds: 30,
+              notes: 'Isometric plank',
+            ),
           ),
         ).called(1);
       },
     );
 
     test(
-      'UpdateWorkoutSetUseCase forwards targetRir, actualRir, duration',
+      'UpdateWorkoutSetUseCase forwards PerformedSetMetrics and never a target',
       () async {
         when(
           () => sessionRepo.updateSet(
             any(),
             any(),
-            reps: any(named: 'reps'),
-            weightKg: any(named: 'weightKg'),
-            rpe: any(named: 'rpe'),
-            targetRir: any(named: 'targetRir'),
-            actualRir: any(named: 'actualRir'),
-            targetDurationSeconds: any(named: 'targetDurationSeconds'),
-            actualDurationSeconds: any(named: 'actualDurationSeconds'),
-            isCompleted: any(named: 'isCompleted'),
-            notes: any(named: 'notes'),
+            metrics: any(named: 'metrics'),
           ),
         ).thenAnswer((_) async => const Right(_sampleSet));
 
@@ -231,10 +269,10 @@ void main() {
           const UpdateWorkoutSetParams(
             sessionId: '10',
             setId: '1',
-            targetRir: 1,
-            actualRir: 0.5,
-            targetDurationSeconds: 45,
-            actualDurationSeconds: 50,
+            metrics: PerformedSetMetrics(
+              actualRir: 0.5,
+              actualDurationSeconds: 50,
+            ),
           ),
         );
 
@@ -243,48 +281,38 @@ void main() {
           () => sessionRepo.updateSet(
             '10',
             '1',
-            targetRir: 1,
-            actualRir: 0.5,
-            targetDurationSeconds: 45,
-            actualDurationSeconds: 50,
+            metrics: const PerformedSetMetrics(
+              actualRir: 0.5,
+              actualDurationSeconds: 50,
+            ),
           ),
         ).called(1);
       },
     );
 
     test(
-      'CompleteWorkoutSessionUseCase forwards multi-metric ratings and pain data',
+      'CompleteWorkoutSessionUseCase forwards SessionCompletion value object with no client timestamps',
       () async {
         when(
           () => sessionRepo.completeSession(
             any(),
-            notes: any(named: 'notes'),
-            clientFeedbackRating: any(named: 'clientFeedbackRating'),
-            effortRating: any(named: 'effortRating'),
-            satisfactionRating: any(named: 'satisfactionRating'),
-            painDiscomfortScore: any(named: 'painDiscomfortScore'),
-            painNotes: any(named: 'painNotes'),
-            trainerNotes: any(named: 'trainerNotes'),
-            nextSessionPlan: any(named: 'nextSessionPlan'),
-            sessionFocus: any(named: 'sessionFocus'),
-            warmupProtocol: any(named: 'warmupProtocol'),
-            cooldownProtocol: any(named: 'cooldownProtocol'),
-            clientSigned: any(named: 'clientSigned'),
-            trainerSigned: any(named: 'trainerSigned'),
-            clientSignedAt: any(named: 'clientSignedAt'),
-            trainerSignedAt: any(named: 'trainerSignedAt'),
+            completion: any(named: 'completion'),
           ),
         ).thenAnswer((_) async => Right(_sampleSession));
 
         final useCase = CompleteWorkoutSessionUseCase(sessionRepo);
+        const completion = SessionCompletion(
+          effortRating: 8,
+          satisfactionRating: 9,
+          painDiscomfortScore: 0,
+          painNotes: null,
+          nextSessionPlan: 'Deload next week',
+        );
+
         final result = await useCase(
           const CompleteWorkoutSessionParams(
             sessionId: '10',
-            effortRating: 8,
-            satisfactionRating: 9,
-            painDiscomfortScore: 0,
-            painNotes: null,
-            nextSessionPlan: 'Deload next week',
+            completion: completion,
           ),
         );
 
@@ -292,11 +320,7 @@ void main() {
         verify(
           () => sessionRepo.completeSession(
             '10',
-            effortRating: 8,
-            satisfactionRating: 9,
-            painDiscomfortScore: 0,
-            painNotes: null,
-            nextSessionPlan: 'Deload next week',
+            completion: completion,
           ),
         ).called(1);
       },

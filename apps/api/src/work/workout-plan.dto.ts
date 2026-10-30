@@ -24,11 +24,11 @@ const workoutPlanBlueprintFields = {
   milestone_4w: z.string().optional().nullable(),
   sessions_per_week: z.number().int().min(1).max(14).optional().nullable(),
   target_session_duration_minutes: z.number().int().min(15).max(180).optional().nullable(),
-  split_type: z.string().trim().max(64).optional().nullable(),
+  split_type: z.string().trim().min(1, 'split_type cannot be blank').max(64, 'split_type cannot exceed 64 characters').optional().nullable(),
   cardio_protocol: z.string().optional().nullable(),
   mobility_protocol: z.string().optional().nullable(),
   progression_methods: progressionMethodsSchema.optional().nullable(),
-  main_success_measure: z.string().trim().max(255).optional().nullable(),
+  main_success_measure: z.string().trim().min(1, 'main_success_measure cannot be blank').max(255, 'main_success_measure cannot exceed 255 characters').optional().nullable(),
   trainer_programming_notes: z.string().optional().nullable(),
 };
 

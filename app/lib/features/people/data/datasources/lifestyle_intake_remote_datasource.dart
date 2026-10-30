@@ -1,5 +1,5 @@
 import 'package:api_client/api_client.dart' as api;
-import 'package:dio/dio.dart';
+import '../../../../core/network/api_response_unwrap.dart';
 import 'package:injectable/injectable.dart';
 
 abstract class LifestyleIntakeRemoteDataSource {
@@ -15,21 +15,9 @@ class LifestyleIntakeRemoteDataSourceImpl
 
   final api.HEALTHApi _healthApi;
 
-  T _unwrap<T>(Response<T> response) {
-    final data = response.data;
-    if (data == null) {
-      throw DioException(
-        requestOptions: response.requestOptions,
-        type: DioExceptionType.badResponse,
-        response: response,
-      );
-    }
-    return data;
-  }
-
   @override
   Future<api.LifestyleIntake> get(int memberId) async {
-    return _unwrap(await _healthApi.getLifestyleIntake(id: memberId));
+    return unwrapApiResponse(await _healthApi.getLifestyleIntake(id: memberId));
   }
 
   @override
@@ -37,7 +25,7 @@ class LifestyleIntakeRemoteDataSourceImpl
     int memberId,
     api.LifestyleIntakeWrite body,
   ) async {
-    return _unwrap(
+    return unwrapApiResponse(
       await _healthApi.putLifestyleIntake(
         id: memberId,
         lifestyleIntakeWrite: body,

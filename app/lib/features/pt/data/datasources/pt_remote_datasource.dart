@@ -1,5 +1,5 @@
 import 'package:api_client/api_client.dart' as api;
-import 'package:dio/dio.dart';
+import '../../../../core/network/api_response_unwrap.dart';
 import 'package:injectable/injectable.dart';
 
 abstract class PtRemoteDataSource {
@@ -40,29 +40,19 @@ class PtRemoteDataSourceImpl implements PtRemoteDataSource {
 
   final api.PTApi _api;
 
-  T _unwrap<T>(Response<T> response) {
-    final data = response.data;
-    if (data == null) {
-      throw DioException(
-        requestOptions: response.requestOptions,
-        type: DioExceptionType.badResponse,
-        response: response,
-      );
-    }
-    return data;
-  }
-
   @override
   Future<api.PtProductPage> listProducts({String? q, int? limit}) async =>
-      _unwrap(await _api.listPtProducts(q: q, limit: limit));
+      unwrapApiResponse(await _api.listPtProducts(q: q, limit: limit));
 
   @override
   Future<api.PtProduct> createProduct(api.PtProductWrite write) async =>
-      _unwrap(await _api.createPtProduct(ptProductWrite: write));
+      unwrapApiResponse(await _api.createPtProduct(ptProductWrite: write));
 
   @override
   Future<api.PtProduct> updateProduct(int id, api.PtProductWrite write) async =>
-      _unwrap(await _api.updatePtProduct(id: id, ptProductWrite: write));
+      unwrapApiResponse(
+        await _api.updatePtProduct(id: id, ptProductWrite: write),
+      );
 
   @override
   Future<api.PtScheduleGrid> scheduleGrid({
@@ -72,7 +62,7 @@ class PtRemoteDataSourceImpl implements PtRemoteDataSource {
     required String weekdays,
     int? partnerMemberId,
     int? excludeSubscriptionId,
-  }) async => _unwrap(
+  }) async => unwrapApiResponse(
     await _api.getPtScheduleGrid(
       memberId: memberId,
       ptProductId: ptProductId,
@@ -87,7 +77,7 @@ class PtRemoteDataSourceImpl implements PtRemoteDataSource {
   Future<api.PtPaymentPreview> paymentPreview({
     required int ptProductId,
     String? discountAmount,
-  }) async => _unwrap(
+  }) async => unwrapApiResponse(
     await _api.getPtPaymentPreview(
       ptProductId: ptProductId,
       discountAmount: discountAmount,
@@ -98,7 +88,7 @@ class PtRemoteDataSourceImpl implements PtRemoteDataSource {
   Future<api.PtPurchaseResult> purchase({
     required api.PtPurchaseRequest request,
     String? idempotencyKey,
-  }) async => _unwrap(
+  }) async => unwrapApiResponse(
     await _api.purchasePtSubscription(
       ptPurchaseRequest: request,
       headers: idempotencyKey == null
@@ -111,14 +101,15 @@ class PtRemoteDataSourceImpl implements PtRemoteDataSource {
   Future<api.PtPurchaseResult> renew(
     int id,
     api.PtRenewRequest request,
-  ) async =>
-      _unwrap(await _api.renewPtSubscription(id: id, ptRenewRequest: request));
+  ) async => unwrapApiResponse(
+    await _api.renewPtSubscription(id: id, ptRenewRequest: request),
+  );
 
   @override
   Future<api.PtSubscription> reassignTrainer(
     int id,
     api.PtReassignTrainerRequest request,
-  ) async => _unwrap(
+  ) async => unwrapApiResponse(
     await _api.reassignPtTrainer(id: id, ptReassignTrainerRequest: request),
   );
 
@@ -126,10 +117,11 @@ class PtRemoteDataSourceImpl implements PtRemoteDataSource {
   Future<api.PtSubscription> changeSlot(
     int id,
     api.PtChangeSlotRequest request,
-  ) async =>
-      _unwrap(await _api.changePtSlot(id: id, ptChangeSlotRequest: request));
+  ) async => unwrapApiResponse(
+    await _api.changePtSlot(id: id, ptChangeSlotRequest: request),
+  );
 
   @override
   Future<api.MemberPtSummary> memberSummary(int memberId) async =>
-      _unwrap(await _api.getMemberPtSummary(id: memberId));
+      unwrapApiResponse(await _api.getMemberPtSummary(id: memberId));
 }

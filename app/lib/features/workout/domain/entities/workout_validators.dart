@@ -1,24 +1,44 @@
+import '../../../../core/error/failures.dart';
+
 /// Shared domain validators for workout entities and repository inputs.
 class WorkoutValidators {
   const WorkoutValidators._();
 
-  static String? validateSessionsPerWeek(int? value) {
-    if (value != null && (value < 1 || value > 14)) {
-      return 'Sessions per week must be 1–14';
+  /// Validates that [value], if non-null, is within [min] and [max] inclusive.
+  static String? validateRange<T extends num>(
+    T? value, {
+    required num min,
+    required num max,
+    required String label,
+    String unit = '',
+  }) {
+    if (value != null && (value < min || value > max)) {
+      final unitStr = unit.isNotEmpty ? ' $unit' : '';
+      return '$label must be $min–$max$unitStr';
     }
     return null;
+  }
+
+  static String? validateSessionsPerWeek(int? value) {
+    return validateRange(value, min: 1, max: 14, label: 'Sessions per week');
   }
 
   static String? validateSessionDurationMinutes(int? value) {
-    if (value != null && (value < 15 || value > 180)) {
-      return 'Session duration must be 15–180 minutes';
-    }
-    return null;
+    return validateRange(
+      value,
+      min: 15,
+      max: 180,
+      label: 'Session duration',
+      unit: 'minutes',
+    );
   }
 
   static String? validateRir(num? value) {
-    if (value != null && (value < 0 || value > 10)) {
-      return 'RIR must be 0–10';
+    if (value == null) return null;
+    final rangeError = validateRange(value, min: 0, max: 10, label: 'RIR');
+    if (rangeError != null) return rangeError;
+    if (((value * 10).round() - (value * 10)).abs() > 1e-6) {
+      return 'RIR must have at most one decimal place';
     }
     return null;
   }
@@ -31,30 +51,56 @@ class WorkoutValidators {
   }
 
   static String? validateClientFeedbackRating(int? value) {
-    if (value != null && (value < 1 || value > 5)) {
-      return 'Rating must be 1–5';
-    }
-    return null;
+    return validateRange(value, min: 1, max: 5, label: 'Rating');
   }
 
   static String? validateEffortRating(int? value) {
-    if (value != null && (value < 1 || value > 10)) {
-      return 'Effort rating must be 1–10';
-    }
-    return null;
+    return validateRange(value, min: 1, max: 10, label: 'Effort rating');
   }
 
   static String? validateSatisfactionRating(int? value) {
-    if (value != null && (value < 1 || value > 10)) {
-      return 'Satisfaction rating must be 1–10';
+    return validateRange(value, min: 1, max: 10, label: 'Satisfaction rating');
+  }
+
+  static String? validatePainDiscomfortScore(int? value) {
+    return validateRange(
+      value,
+      min: 0,
+      max: 10,
+      label: 'Pain / discomfort score',
+    );
+  }
+
+  /// Evaluates an ordered list of validation error strings and returns the
+  /// first non-null as a [ValidationFailure], collapsing validate-then-wrap ladders.
+  static ValidationFailure? firstFailure(List<String?> errors) {
+    for (final err in errors) {
+      if (err != null) return ValidationFailure([err]);
     }
     return null;
   }
 
-  static String? validatePainDiscomfortScore(int? value) {
-    if (value != null && (value < 0 || value > 10)) {
-      return 'Pain / discomfort score must be 0–10';
+  /// Parses an RIR input (numeric or String) into a [num].
+  /// Throws [FormatException] if the input cannot be parsed or is non-finite.
+  static num? parseRir(dynamic value) {
+    if (value == null) return null;
+    if (value is num) {
+      if (value.isNaN || value.isInfinite) {
+        throw const FormatException('Malformed RIR: not a finite number');
+      }
+      return value;
     }
-    return null;
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) return null;
+      final parsed = num.tryParse(trimmed);
+      if (parsed == null) {
+        throw FormatException('Malformed RIR: "$value"');
+      }
+      return parsed;
+    }
+    throw FormatException(
+      'Malformed RIR: unsupported type ${value.runtimeType}',
+    );
   }
 }

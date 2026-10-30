@@ -4,16 +4,16 @@ import 'package:api_client/api_client.dart' as api;
 import '../../domain/entities/lifestyle_intake.dart';
 
 LifestylePriorityDomain _domainFromApi(api.LifestylePriorityPriorityEnum e) {
-  if (e == api.LifestylePriorityPriorityEnum.sleep) {
-    return LifestylePriorityDomain.sleep;
-  }
-  if (e == api.LifestylePriorityPriorityEnum.nutrition) {
-    return LifestylePriorityDomain.nutrition;
-  }
-  if (e == api.LifestylePriorityPriorityEnum.activity) {
-    return LifestylePriorityDomain.activity;
-  }
-  return LifestylePriorityDomain.recovery;
+  return switch (e) {
+    api.LifestylePriorityPriorityEnum.sleep => LifestylePriorityDomain.sleep,
+    api.LifestylePriorityPriorityEnum.nutrition =>
+      LifestylePriorityDomain.nutrition,
+    api.LifestylePriorityPriorityEnum.activity =>
+      LifestylePriorityDomain.activity,
+    api.LifestylePriorityPriorityEnum.recovery =>
+      LifestylePriorityDomain.recovery,
+    _ => throw FormatException('Unknown LifestylePriorityPriorityEnum: $e'),
+  };
 }
 
 api.LifestylePriorityPriorityEnum _domainToApi(LifestylePriorityDomain d) {
@@ -29,10 +29,14 @@ api.LifestylePriorityPriorityEnum _domainToApi(LifestylePriorityDomain d) {
 }
 
 ActivityLevel? _activityFromApi(String? s) {
-  for (final level in ActivityLevel.values) {
-    if (level.name == s) return level;
-  }
-  return null;
+  if (s == null) return null;
+  return switch (s) {
+    'sedentary' => ActivityLevel.sedentary,
+    'light' => ActivityLevel.light,
+    'moderate' => ActivityLevel.moderate,
+    'high' => ActivityLevel.high,
+    _ => throw FormatException('Unknown ActivityLevel: $s'),
+  };
 }
 
 LifestyleIntake lifestyleIntakeFromApi(api.LifestyleIntake i) {

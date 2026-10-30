@@ -23,20 +23,20 @@ class MeasuresComparisonTable extends StatelessWidget {
         DataRow(
           cells: [
             DataCell(Text(metric.metric)),
-            DataCell(Text(formatReviewMeasure(metric.startVal))),
-            DataCell(Text(formatReviewMeasure(metric.currentVal))),
-            DataCell(Text(formatReviewMeasure(metric.changeVal, signed: true))),
-            DataCell(Text(formatReviewMeasure(metric.targetVal))),
+            DataCell(Text(formatReviewMeasure(metric.startValue))),
+            DataCell(Text(formatReviewMeasure(metric.currentValue))),
+            DataCell(Text(formatReviewMeasure(metric.changeValue, signed: true))),
+            DataCell(Text(formatReviewMeasure(metric.targetValue))),
           ],
         ),
       for (final marker in performanceMarkers)
         DataRow(
           cells: [
             DataCell(Text(marker.marker)),
-            DataCell(Text(marker.startVal ?? PtStrings.emptyValue)),
-            DataCell(Text(marker.currentVal ?? PtStrings.emptyValue)),
-            DataCell(Text(marker.changeVal ?? PtStrings.emptyValue)),
-            DataCell(Text(marker.targetVal ?? PtStrings.emptyValue)),
+            DataCell(Text(marker.startValue ?? PtStrings.emptyValue)),
+            DataCell(Text(marker.currentValue ?? PtStrings.emptyValue)),
+            DataCell(Text(marker.changeValue ?? PtStrings.emptyValue)),
+            DataCell(Text(marker.targetValue ?? PtStrings.emptyValue)),
           ],
         ),
     ];

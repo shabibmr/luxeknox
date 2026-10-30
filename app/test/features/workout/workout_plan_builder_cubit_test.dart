@@ -2,6 +2,7 @@ import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/core/presentation/load_status.dart';
 import 'package:luxeknox/features/exercises/domain/entities/exercise.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_plan.dart';
+import 'package:luxeknox/features/workout/domain/entities/workout_plan_exercise.dart';
 import 'package:luxeknox/features/workout/domain/entities/workout_plan_status.dart';
 import 'package:luxeknox/features/workout/domain/usecases/create_workout_plan_usecase.dart';
 import 'package:luxeknox/features/workout/domain/usecases/get_workout_plan_usecase.dart';
@@ -425,6 +426,101 @@ void main() {
               as UpdateWorkoutPlanParams;
       expect(params.primaryObjective12w, 'Lose 6 kg');
       expect(params.splitType, 'PPL');
+    });
+  });
+
+  group('target RIR and timed duration on plan exercises (Issue #53)', () {
+    test('setExerciseTargetRir sets RIR, ignores out-of-range, and can clear', () async {
+      final cubit = buildCubit();
+      await cubit.init();
+      cubit.addExercise(exerciseA, dayNumber: 1);
+
+      cubit.setExerciseTargetRir(dayNumber: 1, indexInDay: 0, targetRir: 2.5);
+      expect(cubit.state.exercises.first.targetRir, 2.5);
+
+      // Out of range ignored (> 10)
+      cubit.setExerciseTargetRir(dayNumber: 1, indexInDay: 0, targetRir: 11);
+      expect(cubit.state.exercises.first.targetRir, 2.5);
+
+      // Out of range ignored (< 0)
+      cubit.setExerciseTargetRir(dayNumber: 1, indexInDay: 0, targetRir: -1);
+      expect(cubit.state.exercises.first.targetRir, 2.5);
+
+      // Clear to null
+      cubit.setExerciseTargetRir(dayNumber: 1, indexInDay: 0, targetRir: null);
+      expect(cubit.state.exercises.first.targetRir, isNull);
+    });
+
+    test('setExerciseTargetDurationSeconds sets duration, ignores negative, and can clear', () async {
+      final cubit = buildCubit();
+      await cubit.init();
+      cubit.addExercise(exerciseA, dayNumber: 1);
+
+      cubit.setExerciseTargetDurationSeconds(dayNumber: 1, indexInDay: 0, targetDurationSeconds: 45);
+      expect(cubit.state.exercises.first.targetDurationSeconds, 45);
+
+      // Negative ignored
+      cubit.setExerciseTargetDurationSeconds(dayNumber: 1, indexInDay: 0, targetDurationSeconds: -10);
+      expect(cubit.state.exercises.first.targetDurationSeconds, 45);
+
+      // Clear to null
+      cubit.setExerciseTargetDurationSeconds(dayNumber: 1, indexInDay: 0, targetDurationSeconds: null);
+      expect(cubit.state.exercises.first.targetDurationSeconds, isNull);
+    });
+
+    test('reopening plan restores saved target RIR and duration', () async {
+      final existingPlan = const WorkoutPlan(
+        id: '20',
+        title: 'Saved Plan',
+        isTemplate: false,
+        status: WorkoutPlanStatus.draft,
+        rowVersion: 1,
+        exercises: [
+          WorkoutPlanExercise(
+            id: '1',
+            exerciseId: '10',
+            exerciseName: 'Squat',
+            dayNumber: 1,
+            orderIndex: 0,
+            targetRir: 1.5,
+            targetDurationSeconds: 60,
+          ),
+        ],
+      );
+      when(() => getPlan('20')).thenAnswer((_) async => Right(existingPlan));
+
+      final cubit = buildCubit();
+      await cubit.init(planId: '20');
+
+      expect(cubit.state.exercises.length, 1);
+      expect(cubit.state.exercises.first.targetRir, 1.5);
+      expect(cubit.state.exercises.first.targetDurationSeconds, 60);
+    });
+
+    test('save forwards target RIR and duration to replaceExercises', () async {
+      when(() => createPlan(any())).thenAnswer((_) async => Right(plan(id: '30')));
+      when(() => replaceExercises(any())).thenAnswer((_) async => Right(plan(id: '30')));
+
+      final cubit = buildCubit();
+      await cubit.init();
+      cubit
+        ..setTitle('Test Plan')
+        ..setPrimaryObjective12w('Goal')
+        ..setMilestone4w('Milestone')
+        ..setSessionsPerWeek(3)
+        ..setTargetSessionDurationMinutes(60)
+        ..setSplitType('Full Body')
+        ..addExercise(exerciseA, dayNumber: 1)
+        ..setExerciseTargetRir(dayNumber: 1, indexInDay: 0, targetRir: 2.0)
+        ..setExerciseTargetDurationSeconds(dayNumber: 1, indexInDay: 0, targetDurationSeconds: 45);
+
+      expect(await cubit.save(), isTrue);
+
+      final replacedParams = verify(() => replaceExercises(captureAny())).captured.single
+          as ReplaceWorkoutPlanExercisesParams;
+      expect(replacedParams.exercises.length, 1);
+      expect(replacedParams.exercises.first.targetRir, 2.0);
+      expect(replacedParams.exercises.first.targetDurationSeconds, 45);
     });
   });
 }

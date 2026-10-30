@@ -17,6 +17,7 @@ class TriPartySignoffTracker extends StatelessWidget {
     required this.onClientSign,
     required this.onManagerApprove,
     required this.onExport,
+    this.trainerSignEnabled = true,
   });
 
   final PtProgressReview review;
@@ -26,6 +27,9 @@ class TriPartySignoffTracker extends StatelessWidget {
   final VoidCallback onClientSign;
   final VoidCallback onManagerApprove;
   final VoidCallback onExport;
+
+  /// False while the trainer has unsaved highlight or checklist edits.
+  final bool trainerSignEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +55,11 @@ class TriPartySignoffTracker extends StatelessWidget {
             _party(context, PtStrings.trainerParty, review.trainerSignedAt),
             if (showTrainer)
               FilledButton(
-                onPressed: acting ? null : onTrainerSign,
+                onPressed: acting || !trainerSignEnabled ? null : onTrainerSign,
                 child: const Text(PtStrings.signAsTrainer),
               ),
+            if (showTrainer && !trainerSignEnabled)
+              Text(PtStrings.unsavedCard, style: theme.textTheme.bodySmall),
             _party(context, PtStrings.clientParty, review.clientSignedAt),
             if (showClient)
               FilledButton(
@@ -68,9 +74,17 @@ class TriPartySignoffTracker extends StatelessWidget {
               ),
             const SizedBox(height: 8),
             OutlinedButton(
-              onPressed: acting ? null : onExport,
+              onPressed: acting || !review.canExportPdf ? null : onExport,
               child: const Text(PtStrings.exportPdf),
             ),
+            if (!review.canExportPdf)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  PtStrings.exportLocked,
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
           ],
         ),
       ),

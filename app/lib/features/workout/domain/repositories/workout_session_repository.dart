@@ -3,6 +3,8 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/pagination/cursor_page.dart';
 import '../entities/exercise_history_session.dart';
+import '../entities/performed_set_metrics.dart';
+import '../entities/session_completion.dart';
 import '../entities/workout_session.dart';
 import '../entities/workout_session_set.dart';
 
@@ -23,19 +25,21 @@ abstract class WorkoutSessionRepository {
     String sessionId, {
     required String exerciseId,
     required int setNumber,
+    PerformedSetMetrics metrics = const PerformedSetMetrics(),
     int? repsCompleted,
     num? weightLiftedKg,
     num? rpeScore,
-    num? targetRir,
     num? actualRir,
-    int? targetDurationSeconds,
     int? actualDurationSeconds,
     bool? isCompleted,
     String? notes,
+    num? targetRir,
+    int? targetDurationSeconds,
   });
 
   Future<Either<Failure, WorkoutSession>> completeSession(
     String sessionId, {
+    SessionCompletion completion = const SessionCompletion(),
     String? notes,
     int? clientFeedbackRating,
     int? effortRating,
@@ -49,8 +53,6 @@ abstract class WorkoutSessionRepository {
     String? cooldownProtocol,
     bool? clientSigned,
     bool? trainerSigned,
-    DateTime? clientSignedAt,
-    DateTime? trainerSignedAt,
   });
 
   Future<Either<Failure, WorkoutSession?>> getActiveSession(String memberId);
@@ -58,15 +60,16 @@ abstract class WorkoutSessionRepository {
   Future<Either<Failure, WorkoutSessionSet>> updateSet(
     String sessionId,
     String setId, {
+    PerformedSetMetrics metrics = const PerformedSetMetrics(),
     int? reps,
     num? weightKg,
     num? rpe,
-    num? targetRir,
     num? actualRir,
-    int? targetDurationSeconds,
     int? actualDurationSeconds,
     bool? isCompleted,
     String? notes,
+    num? targetRir,
+    int? targetDurationSeconds,
   });
 
   Future<Either<Failure, Unit>> deleteSet(String sessionId, String setId);

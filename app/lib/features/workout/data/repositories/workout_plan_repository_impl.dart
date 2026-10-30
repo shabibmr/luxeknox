@@ -24,16 +24,26 @@ class WorkoutPlanRepositoryImpl implements WorkoutPlanRepository {
     int? sessionsPerWeek,
     int? targetSessionDurationMinutes,
   }) {
-    final freqError = WorkoutValidators.validateSessionsPerWeek(
-      sessionsPerWeek,
-    );
-    if (freqError != null) return ValidationFailure([freqError]);
+    return WorkoutValidators.firstFailure([
+      WorkoutValidators.validateSessionsPerWeek(sessionsPerWeek),
+      WorkoutValidators.validateSessionDurationMinutes(
+        targetSessionDurationMinutes,
+      ),
+    ]);
+  }
 
-    final durError = WorkoutValidators.validateSessionDurationMinutes(
-      targetSessionDurationMinutes,
-    );
-    if (durError != null) return ValidationFailure([durError]);
-
+  ValidationFailure? _validateExercises(
+    List<WorkoutPlanExerciseInput> exercises,
+  ) {
+    for (final exercise in exercises) {
+      final failure = WorkoutValidators.firstFailure([
+        WorkoutValidators.validateRir(exercise.targetRir),
+        WorkoutValidators.validateDurationSeconds(
+          exercise.targetDurationSeconds,
+        ),
+      ]);
+      if (failure != null) return failure;
+    }
     return null;
   }
 
@@ -200,6 +210,8 @@ class WorkoutPlanRepositoryImpl implements WorkoutPlanRepository {
   }) async {
     final intId = _parseId(id);
     if (intId == null) return const Left(NotFoundFailure());
+    final validationError = _validateExercises(exercises);
+    if (validationError != null) return Left(validationError);
     try {
       final updated = await _remoteDataSource.replaceExercises(
         intId,

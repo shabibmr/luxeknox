@@ -13,6 +13,8 @@ class WorkoutPlanExerciseInput extends Equatable {
     this.restBetweenExercisesSeconds,
     this.notes,
     this.exerciseName,
+    this.targetRir,
+    this.targetDurationSeconds,
   });
 
   final String exerciseId;
@@ -25,6 +27,8 @@ class WorkoutPlanExerciseInput extends Equatable {
   final int? restBetweenExercisesSeconds;
   final String? notes;
   final String? exerciseName;
+  final num? targetRir;
+  final int? targetDurationSeconds;
 
   WorkoutPlanExerciseInput copyWith({
     String? exerciseId,
@@ -37,6 +41,8 @@ class WorkoutPlanExerciseInput extends Equatable {
     int? restBetweenExercisesSeconds,
     String? notes,
     String? exerciseName,
+    num? targetRir,
+    int? targetDurationSeconds,
   }) {
     return WorkoutPlanExerciseInput(
       exerciseId: exerciseId ?? this.exerciseId,
@@ -50,6 +56,9 @@ class WorkoutPlanExerciseInput extends Equatable {
           restBetweenExercisesSeconds ?? this.restBetweenExercisesSeconds,
       notes: notes ?? this.notes,
       exerciseName: exerciseName ?? this.exerciseName,
+      targetRir: targetRir ?? this.targetRir,
+      targetDurationSeconds:
+          targetDurationSeconds ?? this.targetDurationSeconds,
     );
   }
 
@@ -65,5 +74,7 @@ class WorkoutPlanExerciseInput extends Equatable {
     restBetweenExercisesSeconds,
     notes,
     exerciseName,
+    targetRir,
+    targetDurationSeconds,
   ];
 }

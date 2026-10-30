@@ -14,8 +14,7 @@ class MockPtProgressReviewRemoteDataSource extends Mock
     implements PtProgressReviewRemoteDataSource {}
 
 api.PtProgressReview _apiReview({
-  api.PtProgressReviewStatusEnum status =
-      api.PtProgressReviewStatusEnum.draft,
+  api.PtProgressReviewStatusEnum status = api.PtProgressReviewStatusEnum.draft,
   DateTime? trainerSignedAt,
   DateTime? clientSignedAt,
   DateTime? managerSignedAt,
@@ -49,9 +48,10 @@ api.PtProgressReview _apiReview({
                 ..targetVal = '80kg x 5',
             ),
           ])
-      ..progressHighlights = SetBuilder<api.PtProgressReviewProgressHighlightsEnum>([
-          api.PtProgressReviewProgressHighlightsEnum.betterConsistency,
-        ])
+      ..progressHighlights =
+          SetBuilder<api.PtProgressReviewProgressHighlightsEnum>([
+            api.PtProgressReviewProgressHighlightsEnum.betterConsistency,
+          ])
       ..highlightsOtherText = 'Showed up every week'
       ..trainerSummary = 'Strong progress'
       ..clientFeedback = 'Feeling better'
@@ -80,10 +80,7 @@ api.PtProgressReview _apiReview({
   );
 }
 
-PtProgressReviewDraftInput _draftInput({
-  DateTime? start,
-  DateTime? end,
-}) {
+PtProgressReviewDraftInput _draftInput({DateTime? start, DateTime? end}) {
   return PtProgressReviewDraftInput(
     memberId: 10,
     reviewPeriodStart: start ?? DateTime(2026, 1, 1),
@@ -104,6 +101,7 @@ void main() {
   late PtProgressReviewRepositoryImpl repository;
 
   setUpAll(() {
+    registerFallbackValue(api.PtProgressReviewDraftEdit());
     registerFallbackValue(
       api.PtProgressReviewDraft(
         (b) => b
@@ -135,7 +133,7 @@ void main() {
       expect(review.reviewPeriodEnd, DateTime(2026, 3, 31));
       expect(review.status, PtProgressReviewStatus.draft);
       expect(review.bodyMetricsSnapshot.single.metric, 'Weight_kg');
-      expect(review.bodyMetricsSnapshot.single.changeVal, -4);
+      expect(review.bodyMetricsSnapshot.single.changeValue, -4);
       expect(review.performanceMarkersSnapshot.single.marker, 'bench_press');
       expect(review.progressHighlights, ['better_consistency']);
       expect(review.highlightsOtherText, 'Showed up every week');
@@ -155,17 +153,17 @@ void main() {
       expect(body.nextReviewDate, api.Date(2026, 6, 30));
     });
 
-    test('refuses an end date before the start without a server call', () async {
-      final result = await repository.createDraft(
-        _draftInput(
-          start: DateTime(2026, 3, 31),
-          end: DateTime(2026, 1, 1),
-        ),
-      );
+    test(
+      'refuses an end date before the start without a server call',
+      () async {
+        final result = await repository.createDraft(
+          _draftInput(start: DateTime(2026, 3, 31), end: DateTime(2026, 1, 1)),
+        );
 
-      expect(_leftOf(result), isA<ValidationFailure>());
-      verifyNever(() => remote.createDraft(any(), any()));
-    });
+        expect(_leftOf(result), isA<ValidationFailure>());
+        verifyNever(() => remote.createDraft(any(), any()));
+      },
+    );
 
     test('allows equal start and end dates', () async {
       when(
@@ -173,10 +171,7 @@ void main() {
       ).thenAnswer((_) async => _apiReview());
 
       final result = await repository.createDraft(
-        _draftInput(
-          start: DateTime(2026, 2, 1),
-          end: DateTime(2026, 2, 1),
-        ),
+        _draftInput(start: DateTime(2026, 2, 1), end: DateTime(2026, 2, 1)),
       );
 
       expect(result.isRight(), isTrue);
@@ -289,6 +284,55 @@ void main() {
     });
   });
 
+  group('updateCard', () {
+    test('sends highlights and checklist with their wire names', () async {
+      when(
+        () => remote.updateCard(any(), any()),
+      ).thenAnswer((_) async => _apiReview());
+
+      final result = await repository.updateCard(
+        7,
+        const PtProgressReviewCardEdit(
+          progressHighlights: ['improved_technique', 'other'],
+          highlightsOtherText: 'First pull-up',
+          reviewChecklist: PtReviewChecklist(goalsReviewed: true),
+        ),
+      );
+
+      expect(result.isRight(), isTrue);
+      final body =
+          verify(() => remote.updateCard(7, captureAny())).captured.single
+              as api.PtProgressReviewDraftEdit;
+      expect(body.progressHighlights!.map((h) => h.name).toSet(), {
+        'improvedTechnique',
+        'other',
+      });
+      expect(body.highlightsOtherText, 'First pull-up');
+      expect(body.reviewChecklist!.goalsReviewed, isTrue);
+      expect(body.reviewChecklist!.nextGoalsAgreed, isFalse);
+    });
+
+    test('returns a Failure when the review is no longer a draft', () async {
+      when(() => remote.updateCard(any(), any())).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(),
+          type: DioExceptionType.badResponse,
+          response: Response(requestOptions: RequestOptions(), statusCode: 409),
+        ),
+      );
+
+      final result = await repository.updateCard(
+        7,
+        const PtProgressReviewCardEdit(
+          progressHighlights: [],
+          reviewChecklist: PtReviewChecklist(),
+        ),
+      );
+
+      expect(result.isLeft(), isTrue);
+    });
+  });
+
   group('exportPdf', () {
     test('returns the PDF bytes', () async {
       final bytes = Uint8List.fromList([0x25, 0x50, 0x44, 0x46]); // %PDF
@@ -306,10 +350,7 @@ void main() {
         DioException(
           requestOptions: RequestOptions(),
           type: DioExceptionType.badResponse,
-          response: Response(
-            requestOptions: RequestOptions(),
-            statusCode: 422,
-          ),
+          response: Response(requestOptions: RequestOptions(), statusCode: 422),
         ),
       );
 

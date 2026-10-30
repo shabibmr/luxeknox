@@ -4,65 +4,71 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../entities/session_completion.dart';
 import '../entities/workout_session.dart';
 import '../repositories/workout_session_repository.dart';
 
 class CompleteWorkoutSessionParams extends Equatable {
   const CompleteWorkoutSessionParams({
     required this.sessionId,
-    this.notes,
-    this.clientFeedbackRating,
-    this.effortRating,
-    this.satisfactionRating,
-    this.painDiscomfortScore,
-    this.painNotes,
-    this.trainerNotes,
-    this.nextSessionPlan,
-    this.sessionFocus,
-    this.warmupProtocol,
-    this.cooldownProtocol,
-    this.clientSigned,
-    this.trainerSigned,
-    this.clientSignedAt,
-    this.trainerSignedAt,
+    this.completion = const SessionCompletion(),
   });
 
+  factory CompleteWorkoutSessionParams.fromFields({
+    required String sessionId,
+    String? notes,
+    int? clientFeedbackRating,
+    int? effortRating,
+    int? satisfactionRating,
+    int? painDiscomfortScore,
+    String? painNotes,
+    String? trainerNotes,
+    String? nextSessionPlan,
+    String? sessionFocus,
+    String? warmupProtocol,
+    String? cooldownProtocol,
+    bool? clientSigned,
+    bool? trainerSigned,
+  }) {
+    return CompleteWorkoutSessionParams(
+      sessionId: sessionId,
+      completion: SessionCompletion(
+        notes: notes,
+        clientFeedbackRating: clientFeedbackRating,
+        effortRating: effortRating,
+        satisfactionRating: satisfactionRating,
+        painDiscomfortScore: painDiscomfortScore,
+        painNotes: painNotes,
+        trainerNotes: trainerNotes,
+        nextSessionPlan: nextSessionPlan,
+        sessionFocus: sessionFocus,
+        warmupProtocol: warmupProtocol,
+        cooldownProtocol: cooldownProtocol,
+        clientSigned: clientSigned,
+        trainerSigned: trainerSigned,
+      ),
+    );
+  }
+
   final String sessionId;
-  final String? notes;
-  final int? clientFeedbackRating;
-  final int? effortRating;
-  final int? satisfactionRating;
-  final int? painDiscomfortScore;
-  final String? painNotes;
-  final String? trainerNotes;
-  final String? nextSessionPlan;
-  final String? sessionFocus;
-  final String? warmupProtocol;
-  final String? cooldownProtocol;
-  final bool? clientSigned;
-  final bool? trainerSigned;
-  final DateTime? clientSignedAt;
-  final DateTime? trainerSignedAt;
+  final SessionCompletion completion;
+
+  String? get notes => completion.notes;
+  int? get clientFeedbackRating => completion.clientFeedbackRating;
+  int? get effortRating => completion.effortRating;
+  int? get satisfactionRating => completion.satisfactionRating;
+  int? get painDiscomfortScore => completion.painDiscomfortScore;
+  String? get painNotes => completion.painNotes;
+  String? get trainerNotes => completion.trainerNotes;
+  String? get nextSessionPlan => completion.nextSessionPlan;
+  String? get sessionFocus => completion.sessionFocus;
+  String? get warmupProtocol => completion.warmupProtocol;
+  String? get cooldownProtocol => completion.cooldownProtocol;
+  bool? get clientSigned => completion.clientSigned;
+  bool? get trainerSigned => completion.trainerSigned;
 
   @override
-  List<Object?> get props => [
-    sessionId,
-    notes,
-    clientFeedbackRating,
-    effortRating,
-    satisfactionRating,
-    painDiscomfortScore,
-    painNotes,
-    trainerNotes,
-    nextSessionPlan,
-    sessionFocus,
-    warmupProtocol,
-    cooldownProtocol,
-    clientSigned,
-    trainerSigned,
-    clientSignedAt,
-    trainerSignedAt,
-  ];
+  List<Object?> get props => [sessionId, completion];
 }
 
 @lazySingleton
@@ -78,21 +84,7 @@ class CompleteWorkoutSessionUseCase
   ) {
     return _repository.completeSession(
       params.sessionId,
-      notes: params.notes,
-      clientFeedbackRating: params.clientFeedbackRating,
-      effortRating: params.effortRating,
-      satisfactionRating: params.satisfactionRating,
-      painDiscomfortScore: params.painDiscomfortScore,
-      painNotes: params.painNotes,
-      trainerNotes: params.trainerNotes,
-      nextSessionPlan: params.nextSessionPlan,
-      sessionFocus: params.sessionFocus,
-      warmupProtocol: params.warmupProtocol,
-      cooldownProtocol: params.cooldownProtocol,
-      clientSigned: params.clientSigned,
-      trainerSigned: params.trainerSigned,
-      clientSignedAt: params.clientSignedAt,
-      trainerSignedAt: params.trainerSignedAt,
+      completion: params.completion,
     );
   }
 }

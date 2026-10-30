@@ -153,6 +153,8 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
               restBetweenExercisesSeconds: e.restBetweenExercisesSeconds,
               notes: e.notes,
               exerciseName: e.exerciseName,
+              targetRir: e.targetRir,
+              targetDurationSeconds: e.targetDurationSeconds,
             ),
           )
           .toList(),
@@ -333,12 +335,62 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
     );
   }
 
+  void setExerciseTargetRir({
+    required int dayNumber,
+    required int indexInDay,
+    required num? targetRir,
+  }) {
+    if (targetRir != null && (targetRir < 0 || targetRir > 10)) {
+      return;
+    }
+    _replaceDayExercise(
+      dayNumber: dayNumber,
+      indexInDay: indexInDay,
+      update: (current) {
+        if (current.targetRir == targetRir) return current;
+        return _copyExercise(
+          current,
+          targetRir: targetRir,
+          clearTargetRir: targetRir == null,
+        );
+      },
+    );
+  }
+
+  void setExerciseTargetDurationSeconds({
+    required int dayNumber,
+    required int indexInDay,
+    required int? targetDurationSeconds,
+  }) {
+    if (targetDurationSeconds != null && targetDurationSeconds < 0) {
+      return;
+    }
+    _replaceDayExercise(
+      dayNumber: dayNumber,
+      indexInDay: indexInDay,
+      update: (current) {
+        if (current.targetDurationSeconds == targetDurationSeconds) {
+          return current;
+        }
+        return _copyExercise(
+          current,
+          targetDurationSeconds: targetDurationSeconds,
+          clearTargetDurationSeconds: targetDurationSeconds == null,
+        );
+      },
+    );
+  }
+
   WorkoutPlanExerciseInput _copyExercise(
     WorkoutPlanExerciseInput current, {
     int? restSeconds,
     int? restBetweenExercisesSeconds,
     bool clearRestSeconds = false,
     bool clearRestBetweenExercises = false,
+    num? targetRir,
+    bool clearTargetRir = false,
+    int? targetDurationSeconds,
+    bool clearTargetDurationSeconds = false,
   }) {
     return WorkoutPlanExerciseInput(
       exerciseId: current.exerciseId,
@@ -351,6 +403,10 @@ class WorkoutPlanBuilderCubit extends Cubit<WorkoutPlanBuilderState> {
       restBetweenExercisesSeconds: clearRestBetweenExercises
           ? null
           : restBetweenExercisesSeconds ?? current.restBetweenExercisesSeconds,
+      targetRir: clearTargetRir ? null : targetRir ?? current.targetRir,
+      targetDurationSeconds: clearTargetDurationSeconds
+          ? null
+          : targetDurationSeconds ?? current.targetDurationSeconds,
       notes: current.notes,
       exerciseName: current.exerciseName,
     );

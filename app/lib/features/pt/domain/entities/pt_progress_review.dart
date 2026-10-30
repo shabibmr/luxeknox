@@ -13,54 +13,54 @@ enum PtProgressReviewStatus {
 /// (start / current / change / target).
 class BodyMetricSnapshot extends Equatable {
   final String metric;
-  final double? startVal;
-  final double? currentVal;
+  final double? startValue;
+  final double? currentValue;
 
   /// Always `current − start` when both sides are present on the server.
-  final double? changeVal;
-  final double? targetVal;
+  final double? changeValue;
+  final double? targetValue;
 
   const BodyMetricSnapshot({
     required this.metric,
-    this.startVal,
-    this.currentVal,
-    this.changeVal,
-    this.targetVal,
+    this.startValue,
+    this.currentValue,
+    this.changeValue,
+    this.targetValue,
   });
 
   @override
   List<Object?> get props => [
     metric,
-    startVal,
-    currentVal,
-    changeVal,
-    targetVal,
+    startValue,
+    currentValue,
+    changeValue,
+    targetValue,
   ];
 }
 
 /// One performance-marker row; values stay as strings (e.g. "80kg x 5").
 class PerformanceMarkerSnapshot extends Equatable {
   final String marker;
-  final String? startVal;
-  final String? currentVal;
-  final String? changeVal;
-  final String? targetVal;
+  final String? startValue;
+  final String? currentValue;
+  final String? changeValue;
+  final String? targetValue;
 
   const PerformanceMarkerSnapshot({
     required this.marker,
-    this.startVal,
-    this.currentVal,
-    this.changeVal,
-    this.targetVal,
+    this.startValue,
+    this.currentValue,
+    this.changeValue,
+    this.targetValue,
   });
 
   @override
   List<Object?> get props => [
     marker,
-    startVal,
-    currentVal,
-    changeVal,
-    targetVal,
+    startValue,
+    currentValue,
+    changeValue,
+    targetValue,
   ];
 }
 
@@ -81,6 +81,24 @@ class PtReviewChecklist extends Equatable {
     this.programUpdated = false,
     this.nextGoalsAgreed = false,
   });
+
+  PtReviewChecklist copyWith({
+    bool? goalsReviewed,
+    bool? measurementsReviewed,
+    bool? performanceReviewed,
+    bool? attendanceReviewed,
+    bool? programUpdated,
+    bool? nextGoalsAgreed,
+  }) {
+    return PtReviewChecklist(
+      goalsReviewed: goalsReviewed ?? this.goalsReviewed,
+      measurementsReviewed: measurementsReviewed ?? this.measurementsReviewed,
+      performanceReviewed: performanceReviewed ?? this.performanceReviewed,
+      attendanceReviewed: attendanceReviewed ?? this.attendanceReviewed,
+      programUpdated: programUpdated ?? this.programUpdated,
+      nextGoalsAgreed: nextGoalsAgreed ?? this.nextGoalsAgreed,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -147,6 +165,16 @@ class PtProgressReview extends Equatable {
     this.updatedAt,
   });
 
+  /// Highlights and checklist can only change while the review is a draft.
+  bool get isCardEditable => status == PtProgressReviewStatus.draft;
+
+  /// The PDF is offered once trainer, client and manager have all signed.
+  /// This is the single rule to change if export should open up earlier.
+  bool get canExportPdf =>
+      trainerSignedAt != null &&
+      clientSignedAt != null &&
+      managerSignedAt != null;
+
   @override
   List<Object?> get props => [
     id,
@@ -207,5 +235,27 @@ class PtProgressReviewDraftInput extends Equatable {
     nextPhaseGoal,
     nextPhaseTrainingFocus,
     nextReviewDate,
+  ];
+}
+
+/// Edit payload for a draft's presentation card: celebration highlights and
+/// the six-item checklist. Highlights are the stored wire keys
+/// (e.g. `improved_technique`, `other`).
+class PtProgressReviewCardEdit extends Equatable {
+  final List<String> progressHighlights;
+  final String? highlightsOtherText;
+  final PtReviewChecklist reviewChecklist;
+
+  const PtProgressReviewCardEdit({
+    required this.progressHighlights,
+    this.highlightsOtherText,
+    required this.reviewChecklist,
+  });
+
+  @override
+  List<Object?> get props => [
+    progressHighlights,
+    highlightsOtherText,
+    reviewChecklist,
   ];
 }

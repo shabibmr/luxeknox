@@ -12151,6 +12151,7 @@ components:
           nullable: true
         split_type:
           type: string
+          minLength: 1
           maxLength: 64
           nullable: true
         cardio_protocol:
@@ -12168,6 +12169,7 @@ components:
             enum: [load, reps, volume, density, technique]
         main_success_measure:
           type: string
+          minLength: 1
           maxLength: 255
           nullable: true
         trainer_programming_notes:

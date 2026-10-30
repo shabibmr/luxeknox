@@ -2,6 +2,7 @@ import 'package:api_client/api_client.dart' as api;
 import 'package:built_value/serializer.dart';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import '../../../../core/network/api_response_unwrap.dart';
 
 abstract class WorkoutPlanRemoteDataSource {
   Future<api.WorkoutPlanPage> listPlans({
@@ -38,18 +39,6 @@ class WorkoutPlanRemoteDataSourceImpl implements WorkoutPlanRemoteDataSource {
   final api.WORKApi _workApi;
   final Dio _dio;
 
-  T _unwrap<T>(Response<T> response) {
-    final data = response.data;
-    if (data == null) {
-      throw DioException(
-        requestOptions: response.requestOptions,
-        type: DioExceptionType.badResponse,
-        response: response,
-      );
-    }
-    return data;
-  }
-
   @override
   Future<api.WorkoutPlanPage> listPlans({
     int? limit,
@@ -57,7 +46,7 @@ class WorkoutPlanRemoteDataSourceImpl implements WorkoutPlanRemoteDataSource {
     int? memberId,
     bool? isTemplate,
   }) async {
-    return _unwrap(
+    return unwrapApiResponse(
       await _workApi.listWorkoutPlans(
         limit: limit,
         offset: offset,
@@ -69,17 +58,19 @@ class WorkoutPlanRemoteDataSourceImpl implements WorkoutPlanRemoteDataSource {
 
   @override
   Future<api.WorkoutPlan> getPlan(int id) async {
-    return _unwrap(await _workApi.getWorkoutPlan(id: id));
+    return unwrapApiResponse(await _workApi.getWorkoutPlan(id: id));
   }
 
   @override
   Future<api.WorkoutPlan> createPlan(api.WorkoutPlanWrite write) async {
-    return _unwrap(await _workApi.createWorkoutPlan(workoutPlanWrite: write));
+    return unwrapApiResponse(
+      await _workApi.createWorkoutPlan(workoutPlanWrite: write),
+    );
   }
 
   @override
   Future<api.WorkoutPlan> updatePlan(int id, api.WorkoutPlanWrite write) async {
-    return _unwrap(
+    return unwrapApiResponse(
       await _workApi.updateWorkoutPlan(id: id, workoutPlanWrite: write),
     );
   }
@@ -89,7 +80,7 @@ class WorkoutPlanRemoteDataSourceImpl implements WorkoutPlanRemoteDataSource {
     int id,
     api.WorkoutPlanExercisesWrite write,
   ) async {
-    return _unwrap(
+    return unwrapApiResponse(
       await _workApi.replaceWorkoutPlanExercises(
         id: id,
         workoutPlanExercisesWrite: write,
@@ -99,7 +90,7 @@ class WorkoutPlanRemoteDataSourceImpl implements WorkoutPlanRemoteDataSource {
 
   @override
   Future<api.WorkoutPlan> publish(int id) async {
-    return _unwrap(await _workApi.publishWorkoutPlan(id: id));
+    return unwrapApiResponse(await _workApi.publishWorkoutPlan(id: id));
   }
 
   @override
@@ -107,14 +98,7 @@ class WorkoutPlanRemoteDataSourceImpl implements WorkoutPlanRemoteDataSource {
     // WRK-007 forward-compatible; not yet on generated WORKApi.
     final response = await _dio.post<Object>('/workout-plans/$id/archive');
     try {
-      final raw = response.data;
-      if (raw == null) {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          type: DioExceptionType.badResponse,
-          response: response,
-        );
-      }
+      final raw = unwrapApiResponse(response);
       return api.standardSerializers.deserialize(
             raw,
             specifiedType: const FullType(api.WorkoutPlan),
@@ -134,13 +118,13 @@ class WorkoutPlanRemoteDataSourceImpl implements WorkoutPlanRemoteDataSource {
 
   @override
   Future<api.WorkoutPlan> assign(int id, api.AssignPlanRequest request) async {
-    return _unwrap(
+    return unwrapApiResponse(
       await _workApi.assignWorkoutPlan(id: id, assignPlanRequest: request),
     );
   }
 
   @override
   Future<api.WorkoutPlanVersionPage> listVersions(int id) async {
-    return _unwrap(await _workApi.listWorkoutPlanVersions(id: id));
+    return unwrapApiResponse(await _workApi.listWorkoutPlanVersions(id: id));
   }
 }

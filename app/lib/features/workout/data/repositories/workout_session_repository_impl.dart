@@ -5,6 +5,8 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/error/map_thrown.dart';
 import '../../../../core/pagination/cursor_page.dart';
 import '../../domain/entities/exercise_history_session.dart';
+import '../../domain/entities/performed_set_metrics.dart';
+import '../../domain/entities/session_completion.dart';
 import '../../domain/entities/workout_session.dart';
 import '../../domain/entities/workout_session_set.dart';
 import '../../domain/entities/workout_validators.dart';
@@ -20,58 +22,26 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
 
   int? _parseId(String id) => int.tryParse(id);
 
-  ValidationFailure? _validateSetMetrics({
-    num? targetRir,
-    num? actualRir,
-    int? targetDurationSeconds,
-    int? actualDurationSeconds,
-  }) {
-    final targetRirError = WorkoutValidators.validateRir(targetRir);
-    if (targetRirError != null) return ValidationFailure([targetRirError]);
-
-    final actualRirError = WorkoutValidators.validateRir(actualRir);
-    if (actualRirError != null) return ValidationFailure([actualRirError]);
-
-    final targetDurError = WorkoutValidators.validateDurationSeconds(
-      targetDurationSeconds,
-    );
-    if (targetDurError != null) return ValidationFailure([targetDurError]);
-
-    final actualDurError = WorkoutValidators.validateDurationSeconds(
-      actualDurationSeconds,
-    );
-    if (actualDurError != null) return ValidationFailure([actualDurError]);
-
-    return null;
+  ValidationFailure? _validateSetMetrics(PerformedSetMetrics metrics) {
+    return WorkoutValidators.firstFailure([
+      WorkoutValidators.validateRir(metrics.actualRir),
+      WorkoutValidators.validateDurationSeconds(metrics.actualDurationSeconds),
+    ]);
   }
 
-  ValidationFailure? _validateSessionRatings({
-    int? clientFeedbackRating,
-    int? effortRating,
-    int? satisfactionRating,
-    int? painDiscomfortScore,
-  }) {
-    final feedbackError = WorkoutValidators.validateClientFeedbackRating(
-      clientFeedbackRating,
-    );
-    if (feedbackError != null) return ValidationFailure([feedbackError]);
-
-    final effortError = WorkoutValidators.validateEffortRating(effortRating);
-    if (effortError != null) return ValidationFailure([effortError]);
-
-    final satisfactionError = WorkoutValidators.validateSatisfactionRating(
-      satisfactionRating,
-    );
-    if (satisfactionError != null) {
-      return ValidationFailure([satisfactionError]);
-    }
-
-    final painError = WorkoutValidators.validatePainDiscomfortScore(
-      painDiscomfortScore,
-    );
-    if (painError != null) return ValidationFailure([painError]);
-
-    return null;
+  ValidationFailure? _validateSessionRatings(SessionCompletion completion) {
+    return WorkoutValidators.firstFailure([
+      WorkoutValidators.validateClientFeedbackRating(
+        completion.clientFeedbackRating,
+      ),
+      WorkoutValidators.validateEffortRating(completion.effortRating),
+      WorkoutValidators.validateSatisfactionRating(
+        completion.satisfactionRating,
+      ),
+      WorkoutValidators.validatePainDiscomfortScore(
+        completion.painDiscomfortScore,
+      ),
+    ]);
   }
 
   @override
@@ -129,26 +99,34 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
     String sessionId, {
     required String exerciseId,
     required int setNumber,
+    PerformedSetMetrics metrics = const PerformedSetMetrics(),
     int? repsCompleted,
     num? weightLiftedKg,
     num? rpeScore,
-    num? targetRir,
     num? actualRir,
-    int? targetDurationSeconds,
     int? actualDurationSeconds,
     bool? isCompleted,
     String? notes,
+    num? targetRir,
+    int? targetDurationSeconds,
   }) async {
     final intId = _parseId(sessionId);
     if (intId == null || int.tryParse(exerciseId) == null) {
       return const Left(ValidationFailure(['Invalid session or exercise id']));
     }
-    final validationError = _validateSetMetrics(
-      targetRir: targetRir,
-      actualRir: actualRir,
-      targetDurationSeconds: targetDurationSeconds,
-      actualDurationSeconds: actualDurationSeconds,
-    );
+    final resolvedMetrics = metrics != const PerformedSetMetrics()
+        ? metrics
+        : PerformedSetMetrics(
+            repsCompleted: repsCompleted,
+            weightLiftedKg: weightLiftedKg,
+            rpeScore: rpeScore,
+            actualRir: actualRir,
+            actualDurationSeconds: actualDurationSeconds,
+            isCompleted: isCompleted,
+            notes: notes,
+          );
+
+    final validationError = _validateSetMetrics(resolvedMetrics);
     if (validationError != null) return Left(validationError);
     try {
       final logged = await _remoteDataSource.logSet(
@@ -156,15 +134,7 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
         toWorkoutSetWrite(
           exerciseId: exerciseId,
           setNumber: setNumber,
-          repsCompleted: repsCompleted,
-          weightLiftedKg: weightLiftedKg,
-          rpeScore: rpeScore,
-          targetRir: targetRir,
-          actualRir: actualRir,
-          targetDurationSeconds: targetDurationSeconds,
-          actualDurationSeconds: actualDurationSeconds,
-          isCompleted: isCompleted,
-          notes: notes,
+          metrics: resolvedMetrics,
         ),
       );
       return Right(logged.toDomain());
@@ -176,6 +146,7 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
   @override
   Future<Either<Failure, WorkoutSession>> completeSession(
     String sessionId, {
+    SessionCompletion completion = const SessionCompletion(),
     String? notes,
     int? clientFeedbackRating,
     int? effortRating,
@@ -189,36 +160,34 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
     String? cooldownProtocol,
     bool? clientSigned,
     bool? trainerSigned,
-    DateTime? clientSignedAt,
-    DateTime? trainerSignedAt,
   }) async {
     final intId = _parseId(sessionId);
     if (intId == null) return const Left(NotFoundFailure());
-    final ratingError = _validateSessionRatings(
-      clientFeedbackRating: clientFeedbackRating,
-      effortRating: effortRating,
-      satisfactionRating: satisfactionRating,
-      painDiscomfortScore: painDiscomfortScore,
-    );
+
+    final resolved = completion != const SessionCompletion()
+        ? completion
+        : SessionCompletion(
+            notes: notes,
+            clientFeedbackRating: clientFeedbackRating,
+            effortRating: effortRating,
+            satisfactionRating: satisfactionRating,
+            painDiscomfortScore: painDiscomfortScore,
+            painNotes: painNotes,
+            trainerNotes: trainerNotes,
+            nextSessionPlan: nextSessionPlan,
+            sessionFocus: sessionFocus,
+            warmupProtocol: warmupProtocol,
+            cooldownProtocol: cooldownProtocol,
+            clientSigned: clientSigned,
+            trainerSigned: trainerSigned,
+          );
+
+    final ratingError = _validateSessionRatings(resolved);
     if (ratingError != null) return Left(ratingError);
     try {
       final completed = await _remoteDataSource.completeSession(
         intId,
-        notes: notes,
-        clientFeedbackRating: clientFeedbackRating,
-        effortRating: effortRating,
-        satisfactionRating: satisfactionRating,
-        painDiscomfortScore: painDiscomfortScore,
-        painNotes: painNotes,
-        trainerNotes: trainerNotes,
-        nextSessionPlan: nextSessionPlan,
-        sessionFocus: sessionFocus,
-        warmupProtocol: warmupProtocol,
-        cooldownProtocol: cooldownProtocol,
-        clientSigned: clientSigned,
-        trainerSigned: trainerSigned,
-        clientSignedAt: clientSignedAt,
-        trainerSignedAt: trainerSignedAt,
+        completion: resolved,
       );
       return Right(completed.toDomain());
     } catch (e) {
@@ -250,43 +219,41 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
   Future<Either<Failure, WorkoutSessionSet>> updateSet(
     String sessionId,
     String setId, {
+    PerformedSetMetrics metrics = const PerformedSetMetrics(),
     int? reps,
     num? weightKg,
     num? rpe,
-    num? targetRir,
     num? actualRir,
-    int? targetDurationSeconds,
     int? actualDurationSeconds,
     bool? isCompleted,
     String? notes,
+    num? targetRir,
+    int? targetDurationSeconds,
   }) async {
     final sid = _parseId(sessionId);
     final stid = _parseId(setId);
     if (sid == null || stid == null) {
       return const Left(ValidationFailure(['Invalid session or set id']));
     }
-    final validationError = _validateSetMetrics(
-      targetRir: targetRir,
-      actualRir: actualRir,
-      targetDurationSeconds: targetDurationSeconds,
-      actualDurationSeconds: actualDurationSeconds,
-    );
+    final resolvedMetrics = metrics != const PerformedSetMetrics()
+        ? metrics
+        : PerformedSetMetrics(
+            repsCompleted: reps,
+            weightLiftedKg: weightKg,
+            rpeScore: rpe,
+            actualRir: actualRir,
+            actualDurationSeconds: actualDurationSeconds,
+            isCompleted: isCompleted,
+            notes: notes,
+          );
+
+    final validationError = _validateSetMetrics(resolvedMetrics);
     if (validationError != null) return Left(validationError);
     try {
       final updated = await _remoteDataSource.updateSet(
         sid,
         stid,
-        toWorkoutSetUpdate(
-          repsCompleted: reps,
-          weightLiftedKg: weightKg,
-          rpeScore: rpe,
-          targetRir: targetRir,
-          actualRir: actualRir,
-          targetDurationSeconds: targetDurationSeconds,
-          actualDurationSeconds: actualDurationSeconds,
-          isCompleted: isCompleted,
-          notes: notes,
-        ),
+        toWorkoutSetUpdate(resolvedMetrics),
       );
       return Right(updated.toDomain());
     } catch (e) {

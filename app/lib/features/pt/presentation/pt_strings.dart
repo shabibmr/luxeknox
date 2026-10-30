@@ -100,6 +100,12 @@ abstract final class PtStrings {
   static const noMeasures = 'No measures recorded.';
   static const highlightsTitle = 'Celebration highlights';
   static const noHighlights = 'No celebration highlights yet.';
+  static const highlightsOtherLabel = 'Other highlight';
+  static const saveCard = 'Save highlights and checklist';
+  static const cardSaved = 'Highlights and checklist saved';
+  static const unsavedCard = 'Save your changes before signing.';
+  static const exportLocked =
+      'Export is available once the trainer, client and manager have signed.';
   static const checklistTitle = 'Discussed';
   static const goalsReviewed = 'Goals reviewed';
   static const measurementsReviewed = 'Measurements reviewed';
@@ -137,4 +143,17 @@ abstract final class PtStrings {
   static const exported = 'Presentation card exported';
   static const reviewLoadFailed = 'Could not load this progress review.';
   static const reviewMissing = 'Open a progress review to continue.';
+
+  static const highlightLabels = <String, String>{
+    'improved_technique': 'Improved technique',
+    'increased_strength': 'Increased strength',
+    'improved_conditioning': 'Improved conditioning',
+    'better_consistency': 'Better consistency',
+    'improved_mobility': 'Improved mobility',
+    'goal_milestone': 'Goal milestone',
+    'other': 'Other',
+  };
+
+  /// Readable label for a stored highlight key; unknown text is shown as-is.
+  static String highlightLabel(String key) => highlightLabels[key] ?? key;
 }

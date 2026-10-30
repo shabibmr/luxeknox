@@ -1,7 +1,8 @@
 import 'package:api_client/api_client.dart' as api;
-import 'package:dio/dio.dart';
+import '../../../../core/network/api_response_unwrap.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../domain/entities/session_completion.dart';
 import '../models/workout_plan_mappers.dart';
 
 abstract class WorkoutSessionRemoteDataSource {
@@ -20,6 +21,7 @@ abstract class WorkoutSessionRemoteDataSource {
 
   Future<api.WorkoutSession> completeSession(
     int sessionId, {
+    SessionCompletion completion = const SessionCompletion(),
     String? notes,
     int? clientFeedbackRating,
     int? effortRating,
@@ -33,8 +35,6 @@ abstract class WorkoutSessionRemoteDataSource {
     String? cooldownProtocol,
     bool? clientSigned,
     bool? trainerSigned,
-    DateTime? clientSignedAt,
-    DateTime? trainerSignedAt,
   });
 
   Future<api.WorkoutSession> getActiveSession({int? memberId});
@@ -56,23 +56,9 @@ abstract class WorkoutSessionRemoteDataSource {
 @LazySingleton(as: WorkoutSessionRemoteDataSource)
 class WorkoutSessionRemoteDataSourceImpl
     implements WorkoutSessionRemoteDataSource {
-  WorkoutSessionRemoteDataSourceImpl(this._workApi, [Dio? dio]) : _dio = dio;
+  WorkoutSessionRemoteDataSourceImpl(this._workApi);
 
   final api.WORKApi _workApi;
-  // ignore: unused_field
-  final Dio? _dio;
-
-  T _unwrap<T>(Response<T> response) {
-    final data = response.data;
-    if (data == null) {
-      throw DioException(
-        requestOptions: response.requestOptions,
-        type: DioExceptionType.badResponse,
-        response: response,
-      );
-    }
-    return data;
-  }
 
   @override
   Future<api.WorkoutSessionPage> listSessions({
@@ -80,7 +66,7 @@ class WorkoutSessionRemoteDataSourceImpl
     int? limit,
     String? cursor,
   }) async {
-    return _unwrap(
+    return unwrapApiResponse(
       await _workApi.listWorkoutSessions(
         memberId: memberId,
         limit: limit,
@@ -93,7 +79,7 @@ class WorkoutSessionRemoteDataSourceImpl
   Future<api.WorkoutSession> startSession(
     api.WorkoutSessionCreate create,
   ) async {
-    return _unwrap(
+    return unwrapApiResponse(
       await _workApi.startWorkoutSession(workoutSessionCreate: create),
     );
   }
@@ -103,7 +89,7 @@ class WorkoutSessionRemoteDataSourceImpl
     int sessionId,
     api.WorkoutSetWrite write,
   ) async {
-    return _unwrap(
+    return unwrapApiResponse(
       await _workApi.logWorkoutSet(id: sessionId, workoutSetWrite: write),
     );
   }
@@ -111,6 +97,7 @@ class WorkoutSessionRemoteDataSourceImpl
   @override
   Future<api.WorkoutSession> completeSession(
     int sessionId, {
+    SessionCompletion completion = const SessionCompletion(),
     String? notes,
     int? clientFeedbackRating,
     int? effortRating,
@@ -124,55 +111,69 @@ class WorkoutSessionRemoteDataSourceImpl
     String? cooldownProtocol,
     bool? clientSigned,
     bool? trainerSigned,
-    DateTime? clientSignedAt,
-    DateTime? trainerSignedAt,
   }) async {
-    final trimmedNotes = notes?.trim();
-    final trimmedPainNotes = painNotes?.trim();
-    final trimmedTrainerNotes = trainerNotes?.trim();
-    final trimmedNextPlan = nextSessionPlan?.trim();
-    final trimmedFocus = sessionFocus?.trim();
-    final trimmedWarmup = warmupProtocol?.trim();
-    final trimmedCooldown = cooldownProtocol?.trim();
+    final resolved = completion != const SessionCompletion()
+        ? completion
+        : SessionCompletion(
+            notes: notes,
+            clientFeedbackRating: clientFeedbackRating,
+            effortRating: effortRating,
+            satisfactionRating: satisfactionRating,
+            painDiscomfortScore: painDiscomfortScore,
+            painNotes: painNotes,
+            trainerNotes: trainerNotes,
+            nextSessionPlan: nextSessionPlan,
+            sessionFocus: sessionFocus,
+            warmupProtocol: warmupProtocol,
+            cooldownProtocol: cooldownProtocol,
+            clientSigned: clientSigned,
+            trainerSigned: trainerSigned,
+          );
+
+    final trimmedNotes = resolved.notes?.trim();
+    final trimmedPainNotes = resolved.painNotes?.trim();
+    final trimmedTrainerNotes = resolved.trainerNotes?.trim();
+    final trimmedNextPlan = resolved.nextSessionPlan?.trim();
+    final trimmedFocus = resolved.sessionFocus?.trim();
+    final trimmedWarmup = resolved.warmupProtocol?.trim();
+    final trimmedCooldown = resolved.cooldownProtocol?.trim();
 
     final hasBody =
         (trimmedNotes != null && trimmedNotes.isNotEmpty) ||
-        clientFeedbackRating != null ||
-        effortRating != null ||
-        satisfactionRating != null ||
-        painDiscomfortScore != null ||
+        resolved.clientFeedbackRating != null ||
+        resolved.effortRating != null ||
+        resolved.satisfactionRating != null ||
+        resolved.painDiscomfortScore != null ||
         (trimmedPainNotes != null && trimmedPainNotes.isNotEmpty) ||
         (trimmedTrainerNotes != null && trimmedTrainerNotes.isNotEmpty) ||
         (trimmedNextPlan != null && trimmedNextPlan.isNotEmpty) ||
         (trimmedFocus != null && trimmedFocus.isNotEmpty) ||
         (trimmedWarmup != null && trimmedWarmup.isNotEmpty) ||
         (trimmedCooldown != null && trimmedCooldown.isNotEmpty) ||
-        clientSigned != null ||
-        trainerSigned != null ||
-        clientSignedAt != null ||
-        trainerSignedAt != null;
+        resolved.clientSigned != null ||
+        resolved.trainerSigned != null;
 
     final completeBody = hasBody
         ? toWorkoutSessionComplete(
-            notes: trimmedNotes,
-            clientFeedbackRating: clientFeedbackRating,
-            effortRating: effortRating,
-            satisfactionRating: satisfactionRating,
-            painDiscomfortScore: painDiscomfortScore,
-            painNotes: trimmedPainNotes,
-            trainerNotes: trimmedTrainerNotes,
-            nextSessionPlan: trimmedNextPlan,
-            sessionFocus: trimmedFocus,
-            warmupProtocol: trimmedWarmup,
-            cooldownProtocol: trimmedCooldown,
-            clientSigned: clientSigned,
-            trainerSigned: trainerSigned,
-            clientSignedAt: clientSignedAt,
-            trainerSignedAt: trainerSignedAt,
+            SessionCompletion(
+              notes: trimmedNotes,
+              clientFeedbackRating: resolved.clientFeedbackRating,
+              effortRating: resolved.effortRating,
+              satisfactionRating: resolved.satisfactionRating,
+              painDiscomfortScore: resolved.painDiscomfortScore,
+              painNotes: trimmedPainNotes,
+              trainerNotes: trimmedTrainerNotes,
+              nextSessionPlan: trimmedNextPlan,
+              sessionFocus: trimmedFocus,
+              warmupProtocol: trimmedWarmup,
+              cooldownProtocol: trimmedCooldown,
+              clientSigned: resolved.clientSigned,
+              trainerSigned: resolved.trainerSigned,
+            ),
           )
         : null;
 
-    return _unwrap(
+    return unwrapApiResponse(
       await _workApi.completeWorkoutSession(
         id: sessionId,
         workoutSessionComplete: completeBody,
@@ -182,7 +183,9 @@ class WorkoutSessionRemoteDataSourceImpl
 
   @override
   Future<api.WorkoutSession> getActiveSession({int? memberId}) async {
-    return _unwrap(await _workApi.getActiveWorkoutSession(memberId: memberId));
+    return unwrapApiResponse(
+      await _workApi.getActiveWorkoutSession(memberId: memberId),
+    );
   }
 
   @override
@@ -191,7 +194,7 @@ class WorkoutSessionRemoteDataSourceImpl
     int setId,
     api.WorkoutSetUpdate update,
   ) async {
-    return _unwrap(
+    return unwrapApiResponse(
       await _workApi.updateWorkoutSet(
         id: sessionId,
         setId: setId,
@@ -214,7 +217,7 @@ class WorkoutSessionRemoteDataSourceImpl
       memberId: memberId,
       exerciseId: exerciseId,
     );
-    final list = _unwrap(response);
+    final list = unwrapApiResponse(response);
     return list.toList();
   }
 }

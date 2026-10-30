@@ -45,6 +45,22 @@ class PtProgressReviewRepositoryImpl implements PtProgressReviewRepository {
   }
 
   @override
+  Future<Either<Failure, PtProgressReview>> updateCard(
+    int reviewId,
+    PtProgressReviewCardEdit edit,
+  ) async {
+    try {
+      final updated = await _remote.updateCard(
+        reviewId,
+        ptProgressReviewCardEditToApi(edit),
+      );
+      return Right(ptProgressReviewFromApi(updated));
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
   Future<Either<Failure, PtProgressReview>> trainerSign(int reviewId) async {
     try {
       return Right(
@@ -65,9 +81,7 @@ class PtProgressReviewRepositoryImpl implements PtProgressReviewRepository {
   }
 
   @override
-  Future<Either<Failure, PtProgressReview>> managerApprove(
-    int reviewId,
-  ) async {
+  Future<Either<Failure, PtProgressReview>> managerApprove(int reviewId) async {
     try {
       return Right(
         ptProgressReviewFromApi(await _remote.managerApprove(reviewId)),

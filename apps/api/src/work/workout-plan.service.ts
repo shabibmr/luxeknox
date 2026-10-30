@@ -52,6 +52,30 @@ const BLUEPRINT_KEYS = [
 
 type BlueprintKey = (typeof BLUEPRINT_KEYS)[number];
 
+function validateBlueprintFields(dto: {
+  split_type?: string | null;
+  main_success_measure?: string | null;
+}): void {
+  if (dto.split_type !== undefined && dto.split_type !== null) {
+    if (typeof dto.split_type !== 'string') {
+      throw new BadRequestError('split_type must be a string');
+    }
+    const trimmed = dto.split_type.trim();
+    if (trimmed.length === 0 || trimmed.length > 64) {
+      throw new BadRequestError('split_type must be between 1 and 64 characters');
+    }
+  }
+  if (dto.main_success_measure !== undefined && dto.main_success_measure !== null) {
+    if (typeof dto.main_success_measure !== 'string') {
+      throw new BadRequestError('main_success_measure must be a string');
+    }
+    const trimmed = dto.main_success_measure.trim();
+    if (trimmed.length === 0 || trimmed.length > 255) {
+      throw new BadRequestError('main_success_measure must be between 1 and 255 characters');
+    }
+  }
+}
+
 function nullableTrimmed(value: string | null | undefined): string | null {
   if (value == null) return null;
   const trimmed = value.trim();
@@ -64,11 +88,11 @@ function blueprintFromCreate(dto: WorkoutPlanCreateDto): Pick<NewWorkoutPlan, Bl
     milestone_4w: nullableTrimmed(dto.milestone_4w),
     sessions_per_week: dto.sessions_per_week ?? null,
     target_session_duration_minutes: dto.target_session_duration_minutes ?? null,
-    split_type: nullableTrimmed(dto.split_type),
+    split_type: dto.split_type != null ? dto.split_type.trim() : null,
     cardio_protocol: nullableTrimmed(dto.cardio_protocol),
     mobility_protocol: nullableTrimmed(dto.mobility_protocol),
     progression_methods: dto.progression_methods ?? null,
-    main_success_measure: nullableTrimmed(dto.main_success_measure),
+    main_success_measure: dto.main_success_measure != null ? dto.main_success_measure.trim() : null,
     trainer_programming_notes: nullableTrimmed(dto.trainer_programming_notes),
   };
 }
@@ -89,7 +113,7 @@ function blueprintPatchFromUpdate(dto: WorkoutPlanUpdateDto): Partial<Pick<NewWo
     patch.target_session_duration_minutes = dto.target_session_duration_minutes ?? null;
   }
   if ('split_type' in dto) {
-    patch.split_type = nullableTrimmed(dto.split_type);
+    patch.split_type = dto.split_type != null ? dto.split_type.trim() : null;
   }
   if ('cardio_protocol' in dto) {
     patch.cardio_protocol = nullableTrimmed(dto.cardio_protocol);
@@ -101,7 +125,7 @@ function blueprintPatchFromUpdate(dto: WorkoutPlanUpdateDto): Partial<Pick<NewWo
     patch.progression_methods = dto.progression_methods ?? null;
   }
   if ('main_success_measure' in dto) {
-    patch.main_success_measure = nullableTrimmed(dto.main_success_measure);
+    patch.main_success_measure = dto.main_success_measure != null ? dto.main_success_measure.trim() : null;
   }
   if ('trainer_programming_notes' in dto) {
     patch.trainer_programming_notes = nullableTrimmed(dto.trainer_programming_notes);
@@ -258,6 +282,7 @@ export class WorkoutPlanService {
   }
 
   async create(dto: WorkoutPlanCreateDto, actor: AuthenticatedUser): Promise<WorkoutPlanWithDetails> {
+    validateBlueprintFields(dto);
     const isTemplate = dto.is_template ?? false;
 
     if (isTemplate) {
@@ -324,6 +349,7 @@ export class WorkoutPlanService {
     dto: WorkoutPlanUpdateDto,
     actor: AuthenticatedUser,
   ): Promise<WorkoutPlanWithDetails> {
+    validateBlueprintFields(dto);
     const existing = await this.planRepo.findPlanById(id);
     if (!existing) {
       throw new NotFoundError('Workout plan not found');

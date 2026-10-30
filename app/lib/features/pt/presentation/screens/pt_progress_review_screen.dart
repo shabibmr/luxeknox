@@ -16,6 +16,7 @@ import '../../domain/usecases/create_pt_progress_review_draft_usecase.dart';
 import '../../domain/usecases/export_pt_progress_review_pdf_usecase.dart';
 import '../../domain/usecases/get_pt_progress_review_usecase.dart';
 import '../../domain/usecases/manager_approve_pt_progress_review_usecase.dart';
+import '../../domain/usecases/update_pt_progress_review_card_usecase.dart';
 import '../../domain/usecases/trainer_sign_pt_progress_review_usecase.dart';
 import '../cubit/pt_progress_review_cubit.dart';
 import '../pdf_card_saver.dart';
@@ -25,6 +26,7 @@ import '../widgets/celebration_highlight_chips.dart';
 import '../widgets/measures_comparison_table.dart';
 import '../widgets/next_phase_roadmap_card.dart';
 import '../widgets/progress_review_draft_form.dart';
+import '../widgets/review_card_editor.dart';
 import '../widgets/review_checklist_card.dart';
 import '../widgets/tri_party_signoff_tracker.dart';
 
@@ -68,6 +70,7 @@ class PtProgressReviewScreen extends StatelessWidget {
       getIt<ClientSignPtProgressReviewUseCase>(),
       getIt<ManagerApprovePtProgressReviewUseCase>(),
       getIt<ExportPtProgressReviewPdfUseCase>(),
+      getIt<UpdatePtProgressReviewCardUseCase>(),
     );
   }
 
@@ -261,7 +264,7 @@ void _openSavedReview(
   }
 }
 
-class _ReviewCard extends StatelessWidget {
+class _ReviewCard extends StatefulWidget {
   const _ReviewCard({
     required this.review,
     required this.audience,
@@ -277,12 +280,25 @@ class _ReviewCard extends StatelessWidget {
   final String? trainerName;
 
   @override
+  State<_ReviewCard> createState() => _ReviewCardState();
+}
+
+class _ReviewCardState extends State<_ReviewCard> {
+  bool _cardDirty = false;
+
+  @override
   Widget build(BuildContext context) {
+    final review = widget.review;
+    final audience = widget.audience;
+    final trainerName = widget.trainerName;
+    final memberName = widget.memberName;
     final theme = Theme.of(context);
     final cubit = context.read<PtProgressReviewCubit>();
-    final trainer = (trainerName == null || trainerName!.trim().isEmpty)
+    final editing =
+        audience == PtProgressReviewAudience.trainer && review.isCardEditable;
+    final trainer = (trainerName == null || trainerName.trim().isEmpty)
         ? '${PtStrings.trainerParty} #${review.trainerId}'
-        : trainerName!.trim();
+        : trainerName.trim();
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -298,8 +314,8 @@ class _ReviewCard extends StatelessWidget {
               ),
             ),
             Chip(label: Text(_statusLabel(review.status))),
-            if (memberName != null && memberName!.trim().isNotEmpty)
-              Text(memberName!.trim(), style: theme.textTheme.titleMedium),
+            if (memberName != null && memberName.trim().isNotEmpty)
+              Text(memberName.trim(), style: theme.textTheme.titleMedium),
             Text(trainer, style: theme.textTheme.titleMedium),
           ],
         ),
@@ -316,12 +332,23 @@ class _ReviewCard extends StatelessWidget {
           performanceMarkers: review.performanceMarkersSnapshot,
         ),
         const SizedBox(height: 12),
-        CelebrationHighlightChips(
-          highlights: review.progressHighlights,
-          otherText: review.highlightsOtherText,
-        ),
-        const SizedBox(height: 12),
-        ReviewChecklistCard(checklist: review.reviewChecklist),
+        if (editing)
+          ReviewCardEditor(
+            review: review,
+            saving: widget.acting,
+            onSave: cubit.saveCard,
+            onDirtyChanged: (dirty) {
+              if (mounted) setState(() => _cardDirty = dirty);
+            },
+          )
+        else ...[
+          CelebrationHighlightChips(
+            highlights: review.progressHighlights,
+            otherText: review.highlightsOtherText,
+          ),
+          const SizedBox(height: 12),
+          ReviewChecklistCard(checklist: review.reviewChecklist),
+        ],
         const SizedBox(height: 12),
         NextPhaseRoadmapCard(
           goal: review.nextPhaseGoal,
@@ -332,7 +359,8 @@ class _ReviewCard extends StatelessWidget {
         TriPartySignoffTracker(
           review: review,
           audience: audience,
-          acting: acting,
+          acting: widget.acting,
+          trainerSignEnabled: !_cardDirty,
           onTrainerSign: cubit.signAsTrainer,
           onClientSign: cubit.signAsClient,
           onManagerApprove: cubit.approveAsManager,

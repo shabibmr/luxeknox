@@ -14,6 +14,11 @@ abstract class PtProgressReviewRepository {
 
   Future<Either<Failure, PtProgressReview>> get(int reviewId);
 
+  Future<Either<Failure, PtProgressReview>> updateCard(
+    int reviewId,
+    PtProgressReviewCardEdit edit,
+  );
+
   Future<Either<Failure, PtProgressReview>> trainerSign(int reviewId);
 
   Future<Either<Failure, PtProgressReview>> clientSign(int reviewId);

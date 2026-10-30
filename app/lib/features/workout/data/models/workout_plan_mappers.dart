@@ -1,6 +1,8 @@
 import 'package:api_client/api_client.dart' as api;
 import 'package:built_collection/built_collection.dart';
 
+import '../../domain/entities/performed_set_metrics.dart';
+import '../../domain/entities/session_completion.dart';
 import '../../domain/entities/workout_plan.dart';
 import '../../domain/entities/workout_plan_exercise.dart';
 import '../../domain/entities/workout_plan_exercise_input.dart';
@@ -52,6 +54,16 @@ extension WorkoutPlanModelMapper on api.WorkoutPlan {
 
 extension WorkoutPlanExerciseModelMapper on api.WorkoutPlanExercise {
   WorkoutPlanExercise toDomain() {
+    num? parsedRir;
+    if (targetRir != null) {
+      final trimmed = targetRir!.trim();
+      if (trimmed.isNotEmpty) {
+        parsedRir = num.tryParse(trimmed);
+        if (parsedRir == null) {
+          throw FormatException('Malformed target RIR: $targetRir');
+        }
+      }
+    }
     return WorkoutPlanExercise(
       id: id.toString(),
       exerciseId: exerciseId.toString(),
@@ -64,10 +76,16 @@ extension WorkoutPlanExerciseModelMapper on api.WorkoutPlanExercise {
       restSeconds: restSeconds,
       restBetweenExercisesSeconds: restBetweenExercisesSeconds,
       notes: notes,
-      targetRir: targetRir,
+      targetRir: parsedRir,
       targetDurationSeconds: targetDurationSeconds,
     );
   }
+}
+
+String? _blankToNull(String? value) {
+  if (value == null) return null;
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
 }
 
 api.WorkoutPlanWrite toWorkoutPlanWrite({
@@ -106,10 +124,10 @@ api.WorkoutPlanWrite toWorkoutPlanWrite({
       ..milestone4w = milestone4w
       ..sessionsPerWeek = sessionsPerWeek
       ..targetSessionDurationMinutes = targetSessionDurationMinutes
-      ..splitType = splitType
+      ..splitType = _blankToNull(splitType)
       ..cardioProtocol = cardioProtocol
       ..mobilityProtocol = mobilityProtocol
-      ..mainSuccessMeasure = mainSuccessMeasure
+      ..mainSuccessMeasure = _blankToNull(mainSuccessMeasure)
       ..trainerProgrammingNotes = trainerProgrammingNotes;
 
     if (progressionMethods != null) {
@@ -143,6 +161,8 @@ api.WorkoutPlanExercisesWrite toWorkoutPlanExercisesWrite({
               ..targetWeightKg = e.targetWeightKg
               ..restSeconds = e.restSeconds
               ..restBetweenExercisesSeconds = e.restBetweenExercisesSeconds
+              ..targetRir = e.targetRir
+              ..targetDurationSeconds = e.targetDurationSeconds
               ..notes = e.notes,
           ),
         ),
@@ -237,90 +257,54 @@ api.WorkoutSessionCreate toWorkoutSessionCreate({
 api.WorkoutSetWrite toWorkoutSetWrite({
   required String exerciseId,
   required int setNumber,
-  int? repsCompleted,
-  num? weightLiftedKg,
-  num? rpeScore,
-  num? targetRir,
-  num? actualRir,
-  int? targetDurationSeconds,
-  int? actualDurationSeconds,
-  bool? isCompleted,
-  String? notes,
+  PerformedSetMetrics metrics = const PerformedSetMetrics(),
 }) {
   return api.WorkoutSetWrite(
     (b) => b
       ..exerciseId = int.parse(exerciseId)
       ..setNumber = setNumber
-      ..repsCompleted = repsCompleted
-      ..weightLiftedKg = weightLiftedKg
-      ..rpeScore = rpeScore
-      ..targetRir = targetRir
-      ..actualRir = actualRir
-      ..targetDurationSeconds = targetDurationSeconds
-      ..actualDurationSeconds = actualDurationSeconds
-      ..isCompleted = isCompleted
-      ..notes = notes,
+      ..repsCompleted = metrics.repsCompleted
+      ..weightLiftedKg = metrics.weightLiftedKg
+      ..rpeScore = metrics.rpeScore
+      ..actualRir = metrics.actualRir
+      ..actualDurationSeconds = metrics.actualDurationSeconds
+      ..isCompleted = metrics.isCompleted
+      ..notes = metrics.notes,
   );
 }
 
-api.WorkoutSetUpdate toWorkoutSetUpdate({
-  int? repsCompleted,
-  num? weightLiftedKg,
-  num? rpeScore,
-  num? targetRir,
-  num? actualRir,
-  int? targetDurationSeconds,
-  int? actualDurationSeconds,
-  bool? isCompleted,
-  String? notes,
-}) {
+api.WorkoutSetUpdate toWorkoutSetUpdate([
+  PerformedSetMetrics metrics = const PerformedSetMetrics(),
+]) {
   return api.WorkoutSetUpdate(
     (b) => b
-      ..repsCompleted = repsCompleted
-      ..weightLiftedKg = weightLiftedKg
-      ..rpeScore = rpeScore
-      ..targetRir = targetRir
-      ..actualRir = actualRir
-      ..targetDurationSeconds = targetDurationSeconds
-      ..actualDurationSeconds = actualDurationSeconds
-      ..isCompleted = isCompleted
-      ..notes = notes,
+      ..repsCompleted = metrics.repsCompleted
+      ..weightLiftedKg = metrics.weightLiftedKg
+      ..rpeScore = metrics.rpeScore
+      ..actualRir = metrics.actualRir
+      ..actualDurationSeconds = metrics.actualDurationSeconds
+      ..isCompleted = metrics.isCompleted
+      ..notes = metrics.notes,
   );
 }
 
-api.WorkoutSessionComplete toWorkoutSessionComplete({
-  int? clientFeedbackRating,
-  int? effortRating,
-  int? satisfactionRating,
-  int? painDiscomfortScore,
-  String? painNotes,
-  String? notes,
-  String? trainerNotes,
-  String? nextSessionPlan,
-  String? sessionFocus,
-  String? warmupProtocol,
-  String? cooldownProtocol,
-  bool? clientSigned,
-  bool? trainerSigned,
-  DateTime? clientSignedAt,
-  DateTime? trainerSignedAt,
-}) {
+api.WorkoutSessionComplete toWorkoutSessionComplete([
+  SessionCompletion completion = const SessionCompletion(),
+]) {
   return api.WorkoutSessionComplete(
     (b) => b
-      ..clientFeedbackRating = clientFeedbackRating
-      ..effortRating = effortRating
-      ..satisfactionRating = satisfactionRating
-      ..painDiscomfortScore = painDiscomfortScore
-      ..painNotes = painNotes
-      ..notes = notes
-      ..trainerNotes = trainerNotes
-      ..nextSessionPlan = nextSessionPlan
-      ..sessionFocus = sessionFocus
-      ..warmupProtocol = warmupProtocol
-      ..cooldownProtocol = cooldownProtocol
-      ..clientSigned = clientSigned
-      ..trainerSigned = trainerSigned
-      ..clientSignedAt = clientSignedAt
-      ..trainerSignedAt = trainerSignedAt,
+      ..clientFeedbackRating = completion.clientFeedbackRating
+      ..effortRating = completion.effortRating
+      ..satisfactionRating = completion.satisfactionRating
+      ..painDiscomfortScore = completion.painDiscomfortScore
+      ..painNotes = completion.painNotes
+      ..notes = completion.notes
+      ..trainerNotes = completion.trainerNotes
+      ..nextSessionPlan = completion.nextSessionPlan
+      ..sessionFocus = completion.sessionFocus
+      ..warmupProtocol = completion.warmupProtocol
+      ..cooldownProtocol = completion.cooldownProtocol
+      ..clientSigned = completion.clientSigned
+      ..trainerSigned = completion.trainerSigned,
   );
 }

@@ -852,7 +852,15 @@ describe('WorkoutPlanService', () => {
       const changes = planRepo.updatePlan.mock.calls[0][1] as Record<string, unknown>;
       expect(changes).toEqual(expect.objectContaining({ title: 'Renamed' }));
       expect(changes).not.toHaveProperty('primary_objective_12w');
+      expect(changes).not.toHaveProperty('milestone_4w');
+      expect(changes).not.toHaveProperty('sessions_per_week');
+      expect(changes).not.toHaveProperty('target_session_duration_minutes');
+      expect(changes).not.toHaveProperty('split_type');
+      expect(changes).not.toHaveProperty('cardio_protocol');
+      expect(changes).not.toHaveProperty('mobility_protocol');
       expect(changes).not.toHaveProperty('progression_methods');
+      expect(changes).not.toHaveProperty('main_success_measure');
+      expect(changes).not.toHaveProperty('trainer_programming_notes');
     });
 
     it('update_null_clears_objective', async () => {
@@ -931,6 +939,292 @@ describe('WorkoutPlanService', () => {
       );
     });
 
+    it('create_rejects_blank_and_whitespace_split_type_without_calling_repo', async () => {
+      const { service, planRepo } = buildService();
+
+      await expect(
+        service.create({ title: 'Plan', split_type: '' }, trainerActor),
+      ).rejects.toThrow(BadRequestError);
+      expect(planRepo.insertPlan).not.toHaveBeenCalled();
+
+      await expect(
+        service.create({ title: 'Plan', split_type: '   ' }, trainerActor),
+      ).rejects.toThrow(BadRequestError);
+      expect(planRepo.insertPlan).not.toHaveBeenCalled();
+    });
+
+    it('update_rejects_blank_and_whitespace_split_type_without_calling_repo', async () => {
+      const { service, planRepo } = buildService();
+
+      await expect(
+        service.update(10, { split_type: '', row_version: 1 }, trainerActor),
+      ).rejects.toThrow(BadRequestError);
+      expect(planRepo.findPlanById).not.toHaveBeenCalled();
+      expect(planRepo.updatePlan).not.toHaveBeenCalled();
+
+      await expect(
+        service.update(10, { split_type: '   ', row_version: 1 }, trainerActor),
+      ).rejects.toThrow(BadRequestError);
+      expect(planRepo.findPlanById).not.toHaveBeenCalled();
+      expect(planRepo.updatePlan).not.toHaveBeenCalled();
+    });
+
+    it('create_rejects_blank_and_whitespace_main_success_measure_without_calling_repo', async () => {
+      const { service, planRepo } = buildService();
+
+      await expect(
+        service.create({ title: 'Plan', main_success_measure: '' }, trainerActor),
+      ).rejects.toThrow(BadRequestError);
+      expect(planRepo.insertPlan).not.toHaveBeenCalled();
+
+      await expect(
+        service.create({ title: 'Plan', main_success_measure: '   ' }, trainerActor),
+      ).rejects.toThrow(BadRequestError);
+      expect(planRepo.insertPlan).not.toHaveBeenCalled();
+    });
+
+    it('update_rejects_blank_and_whitespace_main_success_measure_without_calling_repo', async () => {
+      const { service, planRepo } = buildService();
+
+      await expect(
+        service.update(10, { main_success_measure: '', row_version: 1 }, trainerActor),
+      ).rejects.toThrow(BadRequestError);
+      expect(planRepo.findPlanById).not.toHaveBeenCalled();
+      expect(planRepo.updatePlan).not.toHaveBeenCalled();
+
+      await expect(
+        service.update(10, { main_success_measure: '   ', row_version: 1 }, trainerActor),
+      ).rejects.toThrow(BadRequestError);
+      expect(planRepo.findPlanById).not.toHaveBeenCalled();
+      expect(planRepo.updatePlan).not.toHaveBeenCalled();
+    });
+
+    it('bounds_check_1_char_accepted_max_accepted_max_plus_1_rejected', async () => {
+      const { service, planRepo } = buildService();
+
+      planRepo.insertPlan.mockResolvedValue({
+        id: 10,
+        title: 'Plan',
+        status: 'draft',
+        row_version: 1,
+        created_at: new Date(),
+      });
+      planRepo.insertVersion.mockResolvedValue({
+        id: 101,
+        workout_plan_id: 10,
+        version_number: 1,
+        created_at: new Date(),
+      });
+
+      // 1 char accepted
+      await service.create(
+        { title: 'Plan', split_type: 'a', main_success_measure: 'b' },
+        trainerActor,
+      );
+      expect(planRepo.insertPlan).toHaveBeenCalledWith(
+        expect.objectContaining({ split_type: 'a', main_success_measure: 'b' }),
+      );
+
+      // Max accepted: 64 for split_type, 255 for main_success_measure
+      const maxSplit = 's'.repeat(64);
+      const maxMeasure = 'm'.repeat(255);
+      await service.create(
+        { title: 'Plan', split_type: maxSplit, main_success_measure: maxMeasure },
+        trainerActor,
+      );
+      expect(planRepo.insertPlan).toHaveBeenCalledWith(
+        expect.objectContaining({ split_type: maxSplit, main_success_measure: maxMeasure }),
+      );
+
+      // Max + 1 rejected
+      planRepo.insertPlan.mockClear();
+      await expect(
+        service.create({ title: 'Plan', split_type: 's'.repeat(65) }, trainerActor),
+      ).rejects.toThrow(BadRequestError);
+      expect(planRepo.insertPlan).not.toHaveBeenCalled();
+
+      await expect(
+        service.create({ title: 'Plan', main_success_measure: 'm'.repeat(256) }, trainerActor),
+      ).rejects.toThrow(BadRequestError);
+      expect(planRepo.insertPlan).not.toHaveBeenCalled();
+
+      // On update max + 1 rejected without calling repo
+      await expect(
+        service.update(10, { split_type: 's'.repeat(65), row_version: 1 }, trainerActor),
+      ).rejects.toThrow(BadRequestError);
+      expect(planRepo.findPlanById).not.toHaveBeenCalled();
+
+      await expect(
+        service.update(10, { main_success_measure: 'm'.repeat(256), row_version: 1 }, trainerActor),
+      ).rejects.toThrow(BadRequestError);
+      expect(planRepo.findPlanById).not.toHaveBeenCalled();
+    });
+
+    it('values_are_saved_trimmed_on_create_and_update', async () => {
+      const { service, planRepo } = buildService();
+
+      planRepo.insertPlan.mockResolvedValue({
+        id: 10,
+        title: 'Plan',
+        status: 'draft',
+        row_version: 1,
+        created_at: new Date(),
+      });
+      planRepo.insertVersion.mockResolvedValue({
+        id: 101,
+        workout_plan_id: 10,
+        version_number: 1,
+        created_at: new Date(),
+      });
+
+      await service.create(
+        { title: 'Plan', split_type: '   upper lower   ', main_success_measure: '   squat 100kg   ' },
+        trainerActor,
+      );
+      expect(planRepo.insertPlan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          split_type: 'upper lower',
+          main_success_measure: 'squat 100kg',
+        }),
+      );
+
+      planRepo.findPlanById
+        .mockResolvedValueOnce({
+          id: 10,
+          title: 'Plan',
+          member_id: 30,
+          trainer_id: 20,
+          status: 'draft',
+          is_template: false,
+          row_version: 1,
+        })
+        .mockResolvedValueOnce({
+          id: 10,
+          title: 'Plan',
+          member_id: 30,
+          trainer_id: 20,
+          status: 'draft',
+          is_template: false,
+          row_version: 2,
+        });
+      planRepo.updatePlan.mockResolvedValue({ id: 10 });
+
+      await service.update(
+        10,
+        { split_type: '   push pull legs   ', main_success_measure: '   bench 120kg   ', row_version: 1 },
+        trainerActor,
+      );
+      expect(planRepo.updatePlan).toHaveBeenCalledWith(
+        10,
+        expect.objectContaining({
+          split_type: 'push pull legs',
+          main_success_measure: 'bench 120kg',
+        }),
+        1,
+      );
+    });
+
+    it('update_null_clears_split_type_and_main_success_measure', async () => {
+      const { service, planRepo } = buildService();
+
+      planRepo.findPlanById
+        .mockResolvedValueOnce({
+          id: 10,
+          title: 'Plan',
+          member_id: 30,
+          trainer_id: 20,
+          status: 'draft',
+          is_template: false,
+          row_version: 1,
+          split_type: 'upper lower',
+          main_success_measure: 'squat 100kg',
+        })
+        .mockResolvedValueOnce({
+          id: 10,
+          title: 'Plan',
+          member_id: 30,
+          trainer_id: 20,
+          status: 'draft',
+          is_template: false,
+          row_version: 2,
+          split_type: null,
+          main_success_measure: null,
+        });
+      planRepo.updatePlan.mockResolvedValue({ id: 10 });
+
+      await service.update(
+        10,
+        { split_type: null, main_success_measure: null, row_version: 1 },
+        trainerActor,
+      );
+
+      const changes = planRepo.updatePlan.mock.calls[0][1];
+      expect(changes).toEqual(
+        expect.objectContaining({ split_type: null, main_success_measure: null }),
+      );
+    });
+
+    it('assign_copies_all_blueprint_fields_and_is_not_blocked_by_legacy_blank_values', async () => {
+      const { service, planRepo } = buildService();
+
+      const templateWithBlanks = {
+        id: 6,
+        title: 'Legacy Template With Blanks',
+        description: 'Legacy template description',
+        is_template: true,
+        target_goal: null,
+        difficulty: null,
+        duration_weeks: null,
+        trainer_id: 20,
+        status: 'active',
+        primary_objective_12w: 'Objective',
+        milestone_4w: 'Milestone',
+        sessions_per_week: 3,
+        target_session_duration_minutes: 45,
+        split_type: '',
+        cardio_protocol: 'Zone 2',
+        mobility_protocol: 'Hips',
+        progression_methods: ['load'],
+        main_success_measure: '   ',
+        trainer_programming_notes: 'Notes',
+        current_version: { id: 60, version_number: 1, exercises: [] },
+      };
+
+      planRepo.findPlanById
+        .mockResolvedValueOnce(templateWithBlanks)
+        .mockResolvedValueOnce({
+          id: 13,
+          title: 'Legacy Template With Blanks',
+          member_id: 30,
+          trainer_id: 20,
+          is_template: false,
+          status: 'active',
+          current_version: { id: 130, version_number: 1, exercises: [] },
+        });
+      planRepo.insertPlan.mockResolvedValue({ id: 13 });
+      planRepo.insertVersion.mockResolvedValue({ id: 130 });
+
+      const assigned = await service.assign(6, { member_id: 30 }, trainerActor);
+
+      expect(planRepo.insertPlan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          primary_objective_12w: 'Objective',
+          milestone_4w: 'Milestone',
+          sessions_per_week: 3,
+          target_session_duration_minutes: 45,
+          split_type: '',
+          cardio_protocol: 'Zone 2',
+          mobility_protocol: 'Hips',
+          progression_methods: ['load'],
+          main_success_measure: '   ',
+          trainer_programming_notes: 'Notes',
+          is_template: false,
+          status: 'active',
+        }),
+      );
+      expect(assigned).toBeDefined();
+    });
+
     it('schema_rejects_bad_blueprint_bounds', () => {
       const base = { title: 'x' };
 
@@ -971,9 +1265,31 @@ describe('WorkoutPlanService', () => {
         true,
       );
 
+      expect(workoutPlanCreateSchema.safeParse({ ...base, split_type: '' }).success).toBe(false);
+      expect(workoutPlanCreateSchema.safeParse({ ...base, split_type: '   ' }).success).toBe(false);
+      expect(workoutPlanCreateSchema.safeParse({ ...base, split_type: 'a' }).success).toBe(true);
+      expect(workoutPlanCreateSchema.safeParse({ ...base, split_type: 'a'.repeat(64) }).success).toBe(true);
       expect(
         workoutPlanCreateSchema.safeParse({ ...base, split_type: 'x'.repeat(65) }).success,
       ).toBe(false);
+
+      expect(workoutPlanCreateSchema.safeParse({ ...base, main_success_measure: '' }).success).toBe(false);
+      expect(workoutPlanCreateSchema.safeParse({ ...base, main_success_measure: '   ' }).success).toBe(false);
+      expect(workoutPlanCreateSchema.safeParse({ ...base, main_success_measure: 'a' }).success).toBe(true);
+      expect(workoutPlanCreateSchema.safeParse({ ...base, main_success_measure: 'a'.repeat(255) }).success).toBe(true);
+      expect(
+        workoutPlanCreateSchema.safeParse({ ...base, main_success_measure: 'a'.repeat(256) }).success,
+      ).toBe(false);
+
+      expect(workoutPlanUpdateSchema.safeParse({ split_type: '' }).success).toBe(false);
+      expect(workoutPlanUpdateSchema.safeParse({ split_type: '   ' }).success).toBe(false);
+      expect(workoutPlanUpdateSchema.safeParse({ split_type: null }).success).toBe(true);
+      expect(workoutPlanUpdateSchema.safeParse({ split_type: 'a' }).success).toBe(true);
+
+      expect(workoutPlanUpdateSchema.safeParse({ main_success_measure: '' }).success).toBe(false);
+      expect(workoutPlanUpdateSchema.safeParse({ main_success_measure: '   ' }).success).toBe(false);
+      expect(workoutPlanUpdateSchema.safeParse({ main_success_measure: null }).success).toBe(true);
+      expect(workoutPlanUpdateSchema.safeParse({ main_success_measure: 'a' }).success).toBe(true);
 
       expect(
         workoutPlanUpdateSchema.safeParse({ primary_objective_12w: null, row_version: 1 }).success,

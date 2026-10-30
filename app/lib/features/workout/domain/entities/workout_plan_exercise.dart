@@ -30,10 +30,10 @@ class WorkoutPlanExercise extends Equatable {
   final String? notes;
 
   // Micro-execution / Timed holds / RIR (PTF-13 / PTF-25)
-  final String? targetRir;
+  final num? targetRir;
   final int? targetDurationSeconds;
 
-  num? get targetRirNum => targetRir != null ? num.tryParse(targetRir!) : null;
+  num? get targetRirNum => targetRir;
 
   WorkoutPlanExercise copyWith({
     String? id,
@@ -47,7 +47,7 @@ class WorkoutPlanExercise extends Equatable {
     int? restSeconds,
     int? restBetweenExercisesSeconds,
     String? notes,
-    String? targetRir,
+    num? targetRir,
     int? targetDurationSeconds,
   }) {
     return WorkoutPlanExercise(

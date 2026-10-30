@@ -18,7 +18,8 @@ class CelebrationHighlightChips extends StatelessWidget {
     final theme = Theme.of(context);
     final chips = [
       for (final highlight in highlights)
-        if (highlight.trim().isNotEmpty) highlight.trim(),
+        if (highlight.trim().isNotEmpty && highlight != 'other')
+          PtStrings.highlightLabel(highlight.trim()),
       if (otherText != null && otherText!.trim().isNotEmpty) otherText!.trim(),
     ];
 

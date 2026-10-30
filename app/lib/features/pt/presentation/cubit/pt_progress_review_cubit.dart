@@ -13,6 +13,7 @@ import '../../domain/usecases/create_pt_progress_review_draft_usecase.dart';
 import '../../domain/usecases/export_pt_progress_review_pdf_usecase.dart';
 import '../../domain/usecases/get_pt_progress_review_usecase.dart';
 import '../../domain/usecases/manager_approve_pt_progress_review_usecase.dart';
+import '../../domain/usecases/update_pt_progress_review_card_usecase.dart';
 import '../../domain/usecases/trainer_sign_pt_progress_review_usecase.dart';
 import '../pt_strings.dart';
 
@@ -87,6 +88,7 @@ class PtProgressReviewCubit extends Cubit<PtProgressReviewState> {
     this._clientSign,
     this._managerApprove,
     this._exportPdf,
+    this._updateCard,
   ) : super(const PtProgressReviewState());
 
   final GetPtProgressReviewUseCase _getReview;
@@ -95,6 +97,7 @@ class PtProgressReviewCubit extends Cubit<PtProgressReviewState> {
   final ClientSignPtProgressReviewUseCase _clientSign;
   final ManagerApprovePtProgressReviewUseCase _managerApprove;
   final ExportPtProgressReviewPdfUseCase _exportPdf;
+  final UpdatePtProgressReviewCardUseCase _updateCard;
 
   void clearNotices() {
     if (state.notice == null &&
@@ -148,6 +151,27 @@ class PtProgressReviewCubit extends Cubit<PtProgressReviewState> {
     );
   }
 
+  Future<void> saveCard(PtProgressReviewCardEdit edit) async {
+    final review = state.review;
+    if (review == null || state.acting) return;
+    emit(state.copyWith(acting: true, actionError: null, notice: null));
+    final result = await _updateCard(
+      UpdatePtProgressReviewCardParams(review.id, edit),
+    );
+    result.fold(
+      (failure) => emit(
+        state.copyWith(acting: false, actionError: failureMessage(failure)),
+      ),
+      (updated) => emit(
+        state.copyWith(
+          acting: false,
+          review: updated,
+          notice: PtStrings.cardSaved,
+        ),
+      ),
+    );
+  }
+
   Future<void> signAsTrainer() =>
       _transition(_trainerSign, PtStrings.trainerSigned);
 
@@ -159,7 +183,7 @@ class PtProgressReviewCubit extends Cubit<PtProgressReviewState> {
 
   Future<void> exportPdf() async {
     final review = state.review;
-    if (review == null || state.acting) return;
+    if (review == null || state.acting || !review.canExportPdf) return;
     emit(state.copyWith(acting: true, actionError: null, notice: null));
     final result = await _exportPdf(review.id);
     result.fold(

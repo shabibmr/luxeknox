@@ -1,4 +1,5 @@
 import 'package:api_client/api_client.dart' as api;
+import 'package:built_collection/built_collection.dart';
 
 import '../../../membership/data/models/membership_date.dart';
 import '../../domain/entities/pt_progress_review.dart';
@@ -19,10 +20,10 @@ PtProgressReviewStatus _statusFromApi(api.PtProgressReviewStatusEnum status) {
 BodyMetricSnapshot _bodyMetricFromApi(api.BodyMetricSnapshot m) {
   return BodyMetricSnapshot(
     metric: m.metric,
-    startVal: m.startVal?.toDouble(),
-    currentVal: m.currentVal?.toDouble(),
-    changeVal: m.changeVal?.toDouble(),
-    targetVal: m.targetVal?.toDouble(),
+    startValue: m.startVal?.toDouble(),
+    currentValue: m.currentVal?.toDouble(),
+    changeValue: m.changeVal?.toDouble(),
+    targetValue: m.targetVal?.toDouble(),
   );
 }
 
@@ -31,10 +32,10 @@ PerformanceMarkerSnapshot _performanceMarkerFromApi(
 ) {
   return PerformanceMarkerSnapshot(
     marker: m.marker,
-    startVal: m.startVal,
-    currentVal: m.currentVal,
-    changeVal: m.changeVal,
-    targetVal: m.targetVal,
+    startValue: m.startVal,
+    currentValue: m.currentVal,
+    changeValue: m.changeVal,
+    targetValue: m.targetVal,
   );
 }
 
@@ -110,7 +111,35 @@ api.PtProgressReviewDraft ptProgressReviewDraftToApi(
 }
 
 /// `improvedTechnique` -> `improved_technique`, the stored highlight key.
-String _highlightWireName(String name) => name.replaceAllMapped(
-  RegExp('[A-Z]'),
-  (m) => '_${m[0]!.toLowerCase()}',
-);
+String _highlightWireName(String name) =>
+    name.replaceAllMapped(RegExp('[A-Z]'), (m) => '_${m[0]!.toLowerCase()}');
+
+/// `improved_technique` -> `improvedTechnique`, the generated enum name.
+String _highlightEnumName(String wire) =>
+    wire.replaceAllMapped(RegExp('_([a-z])'), (m) => m[1]!.toUpperCase());
+
+api.PtProgressReviewDraftEdit ptProgressReviewCardEditToApi(
+  PtProgressReviewCardEdit edit,
+) {
+  final c = edit.reviewChecklist;
+  return api.PtProgressReviewDraftEdit(
+    (b) => b
+      ..progressHighlights =
+          SetBuilder<api.PtProgressReviewDraftEditProgressHighlightsEnum>([
+            for (final h in edit.progressHighlights)
+              api.PtProgressReviewDraftEditProgressHighlightsEnum.valueOf(
+                _highlightEnumName(h),
+              ),
+          ])
+      ..highlightsOtherText = edit.highlightsOtherText
+      ..reviewChecklist = api.PtReviewChecklist(
+        (c2) => c2
+          ..goalsReviewed = c.goalsReviewed
+          ..measurementsReviewed = c.measurementsReviewed
+          ..performanceReviewed = c.performanceReviewed
+          ..attendanceReviewed = c.attendanceReviewed
+          ..programUpdated = c.programUpdated
+          ..nextGoalsAgreed = c.nextGoalsAgreed,
+      ).toBuilder(),
+  );
+}
