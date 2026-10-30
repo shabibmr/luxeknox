@@ -90,7 +90,7 @@ class ItemsState extends Equatable {
 class ItemsCubit extends Cubit<ItemsState> {
   ItemsCubit(
     this._getItems, {
-    this.debounceDuration = const Duration(milliseconds: 300),
+    @ignoreParam this.debounceDuration = const Duration(milliseconds: 300),
   }) : super(const ItemsState());
 
   final GetItemsUseCase _getItems;
