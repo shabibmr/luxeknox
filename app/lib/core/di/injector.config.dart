@@ -359,7 +359,7 @@ import '../../features/goals/presentation/cubit/progress_notes_cubit.dart'
 import '../../features/goals/presentation/cubit/progress_overview_cubit.dart'
     as _i311;
 import '../../features/goals/presentation/cubit/progress_photos_cubit.dart'
-    as _i635;
+    as _i636;
 import '../../features/goals/presentation/cubit/progress_timeline_cubit.dart'
     as _i28;
 import '../../features/inventory/data/datasources/inventory_remote_datasource.dart'
@@ -488,6 +488,8 @@ import '../../features/payments/presentation/cubit/payment_methods_cubit.dart'
     as _i792;
 import '../../features/payments/presentation/cubit/payments_ledger_cubit.dart'
     as _i853;
+import '../../features/people/data/datasources/lifestyle_intake_remote_datasource.dart'
+    as _i635;
 import '../../features/people/data/datasources/par_q_remote_datasource.dart'
     as _i914;
 import '../../features/people/data/datasources/people_remote_datasource.dart'
@@ -496,6 +498,8 @@ import '../../features/people/data/datasources/profile_remote_datasource.dart'
     as _i327;
 import '../../features/people/data/repositories/document_repository_impl.dart'
     as _i869;
+import '../../features/people/data/repositories/lifestyle_intake_repository_impl.dart'
+    as _i81;
 import '../../features/people/data/repositories/par_q_repository_impl.dart'
     as _i624;
 import '../../features/people/data/repositories/people_repository_impl.dart'
@@ -504,6 +508,8 @@ import '../../features/people/data/repositories/profile_repository_impl.dart'
     as _i887;
 import '../../features/people/domain/repositories/document_repository.dart'
     as _i211;
+import '../../features/people/domain/repositories/lifestyle_intake_repository.dart'
+    as _i1013;
 import '../../features/people/domain/repositories/par_q_repository.dart'
     as _i714;
 import '../../features/people/domain/repositories/people_repository.dart'
@@ -538,6 +544,8 @@ import '../../features/people/domain/usecases/get_assigned_trainer_usecase.dart'
     as _i502;
 import '../../features/people/domain/usecases/get_employee_usecase.dart'
     as _i780;
+import '../../features/people/domain/usecases/get_lifestyle_intake_usecase.dart'
+    as _i414;
 import '../../features/people/domain/usecases/get_member_usecase.dart' as _i562;
 import '../../features/people/domain/usecases/get_trainer_usecase.dart'
     as _i1034;
@@ -560,6 +568,8 @@ import '../../features/people/domain/usecases/list_trainers_usecase.dart'
     as _i383;
 import '../../features/people/domain/usecases/review_par_q_usecase.dart'
     as _i736;
+import '../../features/people/domain/usecases/save_lifestyle_intake_usecase.dart'
+    as _i52;
 import '../../features/people/domain/usecases/set_avatar_usecase.dart'
     as _i1012;
 import '../../features/people/domain/usecases/set_employee_status_usecase.dart'
@@ -639,7 +649,7 @@ import '../../features/scheduling/presentation/cubit/schedule_calendar_cubit.dar
 import '../../features/scheduling/presentation/cubit/schedule_detail_cubit.dart'
     as _i948;
 import '../../features/scheduling/presentation/cubit/schedule_form_cubit.dart'
-    as _i1013;
+    as _i1014;
 import '../../features/scheduling/presentation/cubit/schedule_history_cubit.dart'
     as _i706;
 import '../../features/scheduling/presentation/cubit/todays_sessions_cubit.dart'
@@ -984,6 +994,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i425.AttendanceRemoteDataSource>(
       () => _i425.AttendanceRemoteDataSourceImpl(gh<_i633.ATTNApi>()),
     );
+    gh.lazySingleton<_i635.LifestyleIntakeRemoteDataSource>(
+      () => _i635.LifestyleIntakeRemoteDataSourceImpl(gh<_i633.HEALTHApi>()),
+    );
     gh.factory<_i104.ForgotPasswordCubit>(
       () => _i104.ForgotPasswordCubit(gh<_i586.ForgotPasswordUseCase>()),
     );
@@ -998,6 +1011,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i995.MediaDownloader>(
       () => _i995.MediaDownloader(gh<_i700.SignedMediaResolver>()),
+    );
+    gh.lazySingleton<_i1013.LifestyleIntakeRepository>(
+      () => _i81.LifestyleIntakeRepositoryImpl(
+        gh<_i635.LifestyleIntakeRemoteDataSource>(),
+      ),
     );
     gh.lazySingleton<_i674.SettingsRepository>(
       () => _i955.SettingsRepositoryImpl(gh<_i140.SettingsRemoteDataSource>()),
@@ -1560,6 +1578,16 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i69.LoginCubit>(
       () => _i69.LoginCubit(gh<_i893.SessionCubit>()),
+    );
+    gh.lazySingleton<_i414.GetLifestyleIntakeUseCase>(
+      () => _i414.GetLifestyleIntakeUseCase(
+        gh<_i1013.LifestyleIntakeRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i52.SaveLifestyleIntakeUseCase>(
+      () => _i52.SaveLifestyleIntakeUseCase(
+        gh<_i1013.LifestyleIntakeRepository>(),
+      ),
     );
     gh.factory<_i772.ExpenseDetailCubit>(
       () => _i772.ExpenseDetailCubit(
@@ -2181,8 +2209,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i328.JournalsCubit>(
       () => _i328.JournalsCubit(gh<_i602.GetJournalsUseCase>()),
     );
-    gh.factory<_i635.ProgressPhotosCubit>(
-      () => _i635.ProgressPhotosCubit(
+    gh.factory<_i636.ProgressPhotosCubit>(
+      () => _i636.ProgressPhotosCubit(
         gh<_i748.ListProgressPhotosUseCase>(),
         gh<_i748.CreateProgressPhotoUseCase>(),
         gh<_i748.DeleteProgressPhotoUseCase>(),
@@ -2291,8 +2319,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i474.UpdateSettingsUseCase>(),
       ),
     );
-    gh.factory<_i1013.ScheduleFormCubit>(
-      () => _i1013.ScheduleFormCubit(
+    gh.factory<_i1014.ScheduleFormCubit>(
+      () => _i1014.ScheduleFormCubit(
         gh<_i777.CreateScheduleUseCase>(),
         gh<_i777.UpdateScheduleUseCase>(),
         gh<_i777.GetScheduleUseCase>(),
