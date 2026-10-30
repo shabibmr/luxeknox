@@ -28,6 +28,7 @@ void main() {
   final submission = ParQSubmission(
     memberId: 10,
     declarationAccepted: true,
+    clientSignature: 'ink',
     answers: List.filled(7, ParQAnswer.no),
   );
   const review = ParQTrainerReviewInput(

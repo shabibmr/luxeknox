@@ -19,6 +19,7 @@ void main() {
     memberId: 42,
     answers: List.filled(7, ParQAnswer.no),
     declarationAccepted: true,
+    clientSignature: 'ink',
   );
 
   final tScreening = ParQScreening(

@@ -33,6 +33,7 @@ api.ParQScreening _apiScreening({
       ..referralRequired = true
       ..referralReason = 'Cardiac history'
       ..declarationAccepted = true
+      ..clientSignature = 'data:image/png;base64,ink'
       ..clientSignedAt = DateTime.utc(2026, 3, 1)
       ..clearanceStatus = status
       ..createdAt = DateTime.utc(2026, 3, 1),
@@ -54,7 +55,8 @@ void main() {
           ..q5BoneJointProblem = false
           ..q6MedicationCondition = false
           ..q7OtherReason = false
-          ..declarationAccepted = api.ParQSubmitDeclarationAcceptedEnum.true_,
+          ..declarationAccepted = api.ParQSubmitDeclarationAcceptedEnum.true_
+          ..clientSignature = 'ink',
       ),
     );
     registerFallbackValue(
@@ -79,6 +81,7 @@ void main() {
   final submission = ParQSubmission(
     memberId: 10,
     declarationAccepted: true,
+    clientSignature: 'data:image/png;base64,ink',
     answers: const [
       ParQAnswer(yes: true, details: 'Mild arrhythmia'),
       ParQAnswer.no,
@@ -113,6 +116,11 @@ void main() {
           body.declarationAccepted,
           api.ParQSubmitDeclarationAcceptedEnum.true_,
         );
+        expect(body.clientSignature, 'data:image/png;base64,ink');
+        expect(
+          result.getOrElse((_) => fail('Expected Right')).clientSignature,
+          'data:image/png;base64,ink',
+        );
 
         final screening = result.getOrElse((_) => fail('Expected Right'));
         expect(screening.id, 5);
@@ -136,6 +144,7 @@ void main() {
           ParQSubmission(
             memberId: 10,
             declarationAccepted: false,
+            clientSignature: 'ink',
             answers: List.filled(7, ParQAnswer.no),
           ),
         );
@@ -148,6 +157,20 @@ void main() {
         verifyNever(() => remote.submit(any(), any()));
       },
     );
+
+    test('refuses a blank signature without calling the server', () async {
+      final result = await repository.submit(
+        ParQSubmission(
+          memberId: 10,
+          declarationAccepted: true,
+          clientSignature: '   ',
+          answers: List.filled(7, ParQAnswer.no),
+        ),
+      );
+
+      expect(result.isLeft(), isTrue);
+      verifyNever(() => remote.submit(any(), any()));
+    });
 
     test('returns a Failure when the server call throws', () async {
       when(() => remote.submit(any(), any())).thenThrow(
@@ -169,9 +192,8 @@ void main() {
   group('getLatest', () {
     test('maps the latest screening for the member', () async {
       when(() => remote.getLatest(any())).thenAnswer(
-        (_) async => _apiScreening(
-          status: api.ParQScreeningClearanceStatusEnum.passed,
-        ),
+        (_) async =>
+            _apiScreening(status: api.ParQScreeningClearanceStatusEnum.passed),
       );
 
       final result = await repository.getLatest(10);

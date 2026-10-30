@@ -29,6 +29,7 @@ import '../../../pt/presentation/screens/sell_pt_screen.dart';
 import '../../../scheduling/domain/entities/schedule_session.dart';
 import '../cubit/member_dossier_cubit.dart';
 import '../member_dossier_pt.dart';
+import '../member_health_visibility.dart';
 import '../people_strings.dart';
 import '../widgets/gender_radio_group.dart';
 import '../widgets/health_clearance_banner.dart';
@@ -57,6 +58,23 @@ class _MemberDossierBody extends StatelessWidget {
   const _MemberDossierBody({required this.memberId});
 
   final int memberId;
+
+  bool _showHealth(BuildContext context, MemberDossierState state) {
+    final person = state.person;
+    if (person == null || !context.can('health.read')) return false;
+    final session = context.read<SessionCubit>().state;
+    if (session is! SessionAuthenticated) return false;
+    final principal = session.principal;
+    return showMemberHealthSurfaces(
+      hasHealthRead: true,
+      userType: principal.userType,
+      isAssignedTrainer: resolveIsAssignedTrainer(
+        isTrainerPrincipal: principal.userType == UserType.trainer,
+        sessionProfileId: principal.profileId,
+        assignedTrainerId: person.assignedTrainerId,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +128,7 @@ class _MemberDossierBody extends StatelessWidget {
               return const AppLoading();
             }
             final overview = _DossierContent(state: state);
-            if (!context.can('health.read')) return overview;
+            if (!_showHealth(context, state)) return overview;
             return _HealthTabs(state: state, overview: overview);
           }(),
         );

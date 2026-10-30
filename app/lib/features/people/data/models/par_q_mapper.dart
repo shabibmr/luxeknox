@@ -35,6 +35,7 @@ ParQScreening parQScreeningFromApi(api.ParQScreening s) {
     referralRequired: s.referralRequired,
     referralReason: s.referralReason,
     declarationAccepted: s.declarationAccepted,
+    clientSignature: s.clientSignature,
     clientSignedAt: s.clientSignedAt,
     trainerSignedAt: s.trainerSignedAt,
     clearanceStatus: _statusFromApi(s.clearanceStatus),
@@ -66,7 +67,8 @@ api.ParQSubmit parQSubmitToApi(ParQSubmission s) {
       ..q6Details = _details(a[5])
       ..q7OtherReason = a[6].yes
       ..q7Details = _details(a[6])
-      ..declarationAccepted = api.ParQSubmitDeclarationAcceptedEnum.true_,
+      ..declarationAccepted = api.ParQSubmitDeclarationAcceptedEnum.true_
+      ..clientSignature = s.clientSignature,
   );
 }
 

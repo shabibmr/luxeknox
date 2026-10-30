@@ -24,7 +24,7 @@ class HealthClearanceBanner extends StatelessWidget {
 
     final (Key? key, Color color, IconData icon, String label) = unavailable
         ? (
-            null,
+            const ValueKey('clearance-neutral'),
             scheme.outline,
             Icons.help_outline,
             PeopleStrings.clearanceUnavailable,

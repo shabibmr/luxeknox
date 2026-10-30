@@ -33,6 +33,9 @@ class ParQRepositoryImpl implements ParQRepository {
         ValidationFailure(['The legal declaration must be accepted']),
       );
     }
+    if (submission.clientSignature.trim().isEmpty) {
+      return const Left(ValidationFailure(['A member signature is required']));
+    }
     try {
       final saved = await _remote.submit(
         submission.memberId,

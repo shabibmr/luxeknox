@@ -10,6 +10,7 @@ import '../../domain/usecases/submit_par_q_usecase.dart';
 import '../cubit/par_q_cubit.dart';
 import '../people_strings.dart';
 import 'par_q_signature_canvas.dart';
+import 'par_q_signature_codec.dart';
 
 /// Form component for the 7 PAR-Q+ health screening questions, expandable
 /// detail fields on YES, legal declaration checkbox, and touch signature.
@@ -163,6 +164,9 @@ class _ParQScreeningFormBodyState extends State<_ParQScreeningFormBody> {
       memberId: widget.memberId,
       answers: answers,
       declarationAccepted: true,
+      clientSignature: encodeParQSignature(
+        _signatureCanvasKey.currentState?.strokes ?? const [],
+      ),
     );
 
     await context.read<ParQCubit>().submit(submission);
@@ -248,10 +252,9 @@ class _ParQScreeningFormBodyState extends State<_ParQScreeningFormBody> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(
-                          color:
-                              _showDeclarationError
-                                  ? theme.colorScheme.error
-                                  : theme.colorScheme.outlineVariant,
+                          color: _showDeclarationError
+                              ? theme.colorScheme.error
+                              : theme.colorScheme.outlineVariant,
                         ),
                       ),
                       child: Padding(
@@ -366,23 +369,22 @@ class _ParQScreeningFormBodyState extends State<_ParQScreeningFormBody> {
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child:
-                          state.isSubmitting
-                              ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.white,
-                                ),
-                              )
-                              : const Text(
-                                PeopleStrings.parQSubmit,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                      child: state.isSubmitting
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: Colors.white,
                               ),
+                            )
+                          : const Text(
+                              PeopleStrings.parQSubmit,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                     const SizedBox(height: 24),
                   ],
@@ -421,10 +423,9 @@ class _QuestionCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color:
-              isYes
-                  ? theme.colorScheme.primary.withValues(alpha: 0.6)
-                  : theme.colorScheme.outlineVariant,
+          color: isYes
+              ? theme.colorScheme.primary.withValues(alpha: 0.6)
+              : theme.colorScheme.outlineVariant,
         ),
       ),
       child: Padding(
@@ -497,33 +498,37 @@ class _ClearanceStatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final (Color color, IconData icon, String title, String body) =
-        switch (screening.clearanceStatus) {
-          ParQClearanceStatus.passed => (
-            Colors.green.shade700,
-            Icons.check_circle_outline,
-            PeopleStrings.parQPassedTitle,
-            PeopleStrings.parQPassedBody,
-          ),
-          ParQClearanceStatus.pendingClearance => (
-            Colors.amber.shade800,
-            Icons.warning_amber_rounded,
-            PeopleStrings.parQPendingTitle,
-            PeopleStrings.parQPendingBody,
-          ),
-          ParQClearanceStatus.cleared => (
-            Colors.teal.shade700,
-            Icons.verified_outlined,
-            PeopleStrings.parQClearedTitle,
-            PeopleStrings.parQClearedBody,
-          ),
-          ParQClearanceStatus.rejected => (
-            theme.colorScheme.error,
-            Icons.block_outlined,
-            PeopleStrings.parQRejectedTitle,
-            PeopleStrings.parQRejectedBody,
-          ),
-        };
+    final (
+      Color color,
+      IconData icon,
+      String title,
+      String body,
+    ) = switch (screening.clearanceStatus) {
+      ParQClearanceStatus.passed => (
+        Colors.green.shade700,
+        Icons.check_circle_outline,
+        PeopleStrings.parQPassedTitle,
+        PeopleStrings.parQPassedBody,
+      ),
+      ParQClearanceStatus.pendingClearance => (
+        Colors.amber.shade800,
+        Icons.warning_amber_rounded,
+        PeopleStrings.parQPendingTitle,
+        PeopleStrings.parQPendingBody,
+      ),
+      ParQClearanceStatus.cleared => (
+        Colors.teal.shade700,
+        Icons.verified_outlined,
+        PeopleStrings.parQClearedTitle,
+        PeopleStrings.parQClearedBody,
+      ),
+      ParQClearanceStatus.rejected => (
+        theme.colorScheme.error,
+        Icons.block_outlined,
+        PeopleStrings.parQRejectedTitle,
+        PeopleStrings.parQRejectedBody,
+      ),
+    };
 
     return Card(
       elevation: 0,

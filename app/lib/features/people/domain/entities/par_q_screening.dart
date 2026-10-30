@@ -30,6 +30,9 @@ class ParQScreening extends Equatable {
   final bool referralRequired;
   final String? referralReason;
   final bool declarationAccepted;
+
+  /// Member ink stored with the screening. Empty when a legacy row has none.
+  final String clientSignature;
   final DateTime? clientSignedAt;
   final DateTime? trainerSignedAt;
   final ParQClearanceStatus clearanceStatus;
@@ -48,6 +51,7 @@ class ParQScreening extends Equatable {
     required this.referralRequired,
     this.referralReason,
     required this.declarationAccepted,
+    this.clientSignature = '',
     this.clientSignedAt,
     this.trainerSignedAt,
     required this.clearanceStatus,
@@ -72,6 +76,7 @@ class ParQScreening extends Equatable {
     referralRequired,
     referralReason,
     declarationAccepted,
+    clientSignature,
     clientSignedAt,
     trainerSignedAt,
     clearanceStatus,

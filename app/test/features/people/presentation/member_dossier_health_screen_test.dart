@@ -13,6 +13,7 @@ import 'package:luxeknox/features/membership/domain/usecases/get_memberships_use
 import 'package:luxeknox/features/people/domain/entities/lifestyle_intake.dart';
 import 'package:luxeknox/features/people/domain/entities/par_q_screening.dart';
 import 'package:luxeknox/features/people/domain/entities/person.dart';
+import 'package:luxeknox/features/people/domain/entities/trainer_profile.dart';
 import 'package:luxeknox/features/people/domain/usecases/get_lifestyle_intake_usecase.dart';
 import 'package:luxeknox/features/people/domain/usecases/get_member_usecase.dart';
 import 'package:luxeknox/features/people/domain/usecases/get_par_q_usecase.dart';
@@ -58,6 +59,8 @@ class MockSessionCubit extends MockCubit<SessionState>
     implements SessionCubit {}
 
 void main() {
+  late MockGetMemberUseCase getMember;
+  late MockGetTrainerUseCase getTrainer;
   late MockGetParQUseCase getParQ;
   late MockGetLifestyleIntakeUseCase getLifestyle;
   late MockSessionCubit sessionCubit;
@@ -71,10 +74,24 @@ void main() {
   );
 
   const trainer = Principal(
-    userId: '1',
+    userId: '9',
     userType: UserType.trainer,
     displayName: 'Trainer One',
-    profileId: 't1',
+    profileId: '9',
+  );
+
+  const admin = Principal(
+    userId: '2',
+    userType: UserType.admin,
+    displayName: 'Admin',
+    profileId: '2',
+  );
+
+  const manager = Principal(
+    userId: '3',
+    userType: UserType.employee,
+    displayName: 'Manager',
+    profileId: '3',
   );
 
   ParQScreening screening(ParQClearanceStatus status) => ParQScreening(
@@ -120,12 +137,12 @@ void main() {
     createdAt: DateTime.utc(2026, 3, 1),
   );
 
-  void signInWith(List<String> slugs) {
+  void signInWith(List<String> slugs, {Principal principal = admin}) {
     whenListen(
       sessionCubit,
       const Stream<SessionState>.empty(),
       initialState: SessionAuthenticated(
-        principal: trainer,
+        principal: principal,
         capabilities: Capabilities(slugs: slugs),
       ),
     );
@@ -135,10 +152,17 @@ void main() {
     registerFallbackValue(const GetMembershipsParams());
     registerFallbackValue(const GetAttendanceSummaryParams());
     registerFallbackValue(const ListSchedulesParams());
+    registerFallbackValue(0);
   });
 
   setUp(() {
-    final getMember = MockGetMemberUseCase();
+    getMember = MockGetMemberUseCase();
+    getTrainer = MockGetTrainerUseCase();
+    when(() => getTrainer(any())).thenAnswer(
+      (_) async => const Right(
+        TrainerProfile(id: 9, userId: 9, firstName: 'Trainer', lastName: 'One'),
+      ),
+    );
     final getMemberships = MockGetMembershipsUseCase();
     final getAttendance = MockGetAttendanceSummaryUseCase();
     final listSchedules = MockListSchedulesUseCase();
@@ -182,7 +206,7 @@ void main() {
         MockUpdateMemberUseCase(),
         getMemberships,
         getAttendance,
-        MockGetTrainerUseCase(),
+        getTrainer,
         listSchedules,
         getPtSummary,
         MockRenewPtUseCase(),
@@ -210,9 +234,9 @@ void main() {
 
   group('health clearance banner', () {
     testWidgets('is green when the latest screening passed', (tester) async {
-      when(() => getParQ(42)).thenAnswer(
-        (_) async => Right(screening(ParQClearanceStatus.passed)),
-      );
+      when(
+        () => getParQ(42),
+      ).thenAnswer((_) async => Right(screening(ParQClearanceStatus.passed)));
 
       await pumpDossier(tester);
 
@@ -221,9 +245,9 @@ void main() {
     });
 
     testWidgets('is green once a pending screening is cleared', (tester) async {
-      when(() => getParQ(42)).thenAnswer(
-        (_) async => Right(screening(ParQClearanceStatus.cleared)),
-      );
+      when(
+        () => getParQ(42),
+      ).thenAnswer((_) async => Right(screening(ParQClearanceStatus.cleared)));
 
       await pumpDossier(tester);
 
@@ -242,9 +266,9 @@ void main() {
     });
 
     testWidgets('is red when clearance was rejected', (tester) async {
-      when(() => getParQ(42)).thenAnswer(
-        (_) async => Right(screening(ParQClearanceStatus.rejected)),
-      );
+      when(
+        () => getParQ(42),
+      ).thenAnswer((_) async => Right(screening(ParQClearanceStatus.rejected)));
 
       await pumpDossier(tester);
 
@@ -270,7 +294,9 @@ void main() {
       await pumpDossier(tester);
 
       expect(find.text(PeopleStrings.clearanceUnavailable), findsOneWidget);
+      expect(find.byKey(const ValueKey('clearance-neutral')), findsOneWidget);
       expect(find.byKey(const ValueKey('clearance-green')), findsNothing);
+      expect(find.byKey(const ValueKey('clearance-red')), findsNothing);
     });
 
     testWidgets('is hidden from users without health.read', (tester) async {
@@ -284,6 +310,85 @@ void main() {
       expect(find.text(PeopleStrings.clearancePending), findsNothing);
       expect(find.text(PeopleStrings.dossierTabLifestyle), findsNothing);
       expect(find.text('John Doe'), findsOneWidget);
+    });
+
+    testWidgets('hides banner and Lifestyle tab from an unassigned trainer', (
+      tester,
+    ) async {
+      signInWith([
+        'health.read',
+        'memberships.read',
+        'pt_subscriptions.read',
+      ], principal: trainer);
+      when(() => getMember(42)).thenAnswer(
+        (_) async => const Right(
+          Person(
+            id: 42,
+            userId: 101,
+            membershipNumber: 'MEM-042',
+            firstName: 'John',
+            lastName: 'Doe',
+            assignedTrainerId: 4,
+          ),
+        ),
+      );
+      when(() => getParQ(42)).thenAnswer(
+        (_) async => Right(screening(ParQClearanceStatus.pendingClearance)),
+      );
+
+      await pumpDossier(tester);
+
+      expect(find.text(PeopleStrings.clearancePending), findsNothing);
+      expect(find.text(PeopleStrings.dossierTabLifestyle), findsNothing);
+      expect(find.text('John Doe'), findsOneWidget);
+    });
+
+    testWidgets('shows banner and Lifestyle tab to the assigned trainer', (
+      tester,
+    ) async {
+      signInWith([
+        'health.read',
+        'memberships.read',
+        'pt_subscriptions.read',
+      ], principal: trainer);
+      when(() => getMember(42)).thenAnswer(
+        (_) async => const Right(
+          Person(
+            id: 42,
+            userId: 101,
+            membershipNumber: 'MEM-042',
+            firstName: 'John',
+            lastName: 'Doe',
+            assignedTrainerId: 9,
+          ),
+        ),
+      );
+      when(
+        () => getParQ(42),
+      ).thenAnswer((_) async => Right(screening(ParQClearanceStatus.cleared)));
+
+      await pumpDossier(tester);
+
+      expect(find.text(PeopleStrings.clearanceCleared), findsOneWidget);
+      expect(find.text(PeopleStrings.dossierTabLifestyle), findsOneWidget);
+    });
+
+    testWidgets('shows banner and Lifestyle tab to a manager for any member', (
+      tester,
+    ) async {
+      signInWith([
+        'health.read',
+        'memberships.read',
+        'pt_subscriptions.read',
+      ], principal: manager);
+      when(
+        () => getParQ(42),
+      ).thenAnswer((_) async => Right(screening(ParQClearanceStatus.rejected)));
+
+      await pumpDossier(tester);
+
+      expect(find.text(PeopleStrings.clearanceRejected), findsOneWidget);
+      expect(find.text(PeopleStrings.dossierTabLifestyle), findsOneWidget);
     });
   });
 
