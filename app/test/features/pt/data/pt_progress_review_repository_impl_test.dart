@@ -206,6 +206,19 @@ void main() {
       expect(review.status, PtProgressReviewStatus.draft);
     });
 
+    test('maps archived status', () async {
+      when(() => remote.get(7)).thenAnswer(
+        (_) async =>
+            _apiReview(status: api.PtProgressReviewStatusEnum.archived),
+      );
+
+      final review = (await repository.get(
+        7,
+      )).getOrElse((_) => throw StateError('left'));
+
+      expect(review.status, PtProgressReviewStatus.archived);
+    });
+
     test('returns NotFoundFailure when the review is missing', () async {
       final request = RequestOptions();
       when(() => remote.get(7)).thenThrow(

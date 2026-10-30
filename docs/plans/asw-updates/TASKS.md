@@ -50,7 +50,7 @@ Source Document: [Luxe knox pt client  file.pdf](./Luxe%20knox%20pt%20client%20%
 - [x] PTF-23 Health domain: PAR-Q+ entities, repositories, and use cases <!-- id: 23 -->
 - [x] PTF-24 Lifestyle domain: lifestyle intake entities, repositories, and use cases <!-- id: 24 -->
 - [x] PTF-25 Workout domain: update workout plan, session, and set entities for RIR/Pain/Blueprint <!-- id: 25 -->
-- [ ] PTF-26 PT Review domain: progress review entity, repository, and use cases <!-- id: 26 -->
+- [x] PTF-26 PT Review domain: progress review entity, repository, and use cases <!-- id: 26 -->
 
 **Phase 8: Flutter UI & Screens**
 - [ ] PTF-27 Member Onboarding / Screen 04: `ParQScreeningForm` & touch signature <!-- id: 27 -->

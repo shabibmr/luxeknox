@@ -5,7 +5,12 @@ import 'package:fpdart/fpdart.dart';
 import 'package:luxeknox/core/error/failures.dart';
 import 'package:luxeknox/features/pt/domain/entities/pt_progress_review.dart';
 import 'package:luxeknox/features/pt/domain/repositories/pt_progress_review_repository.dart';
-import 'package:luxeknox/features/pt/domain/usecases/pt_progress_review_usecases.dart';
+import 'package:luxeknox/features/pt/domain/usecases/client_sign_pt_progress_review_usecase.dart';
+import 'package:luxeknox/features/pt/domain/usecases/create_pt_progress_review_draft_usecase.dart';
+import 'package:luxeknox/features/pt/domain/usecases/export_pt_progress_review_pdf_usecase.dart';
+import 'package:luxeknox/features/pt/domain/usecases/get_pt_progress_review_usecase.dart';
+import 'package:luxeknox/features/pt/domain/usecases/manager_approve_pt_progress_review_usecase.dart';
+import 'package:luxeknox/features/pt/domain/usecases/trainer_sign_pt_progress_review_usecase.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockPtProgressReviewRepository extends Mock
