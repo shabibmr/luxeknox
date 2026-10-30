@@ -8,7 +8,7 @@ void main() {
       'name': 'Super Admin',
       'slug': 'super_admin',
       'description': 'System owner',
-      'is_system': true,
+      'is_system_role': true,
       'created_at': '2026-10-10T14:00:00Z',
       'updated_at': '2026-10-10T14:00:00Z',
       'permissions': [],
