@@ -13,6 +13,7 @@ part 'account_update.g.dart';
 /// Properties:
 /// * [name] 
 /// * [parentId] 
+/// * [clearParentId] - Client-only. When true and parentId is null, serialize parent_id as null.
 /// * [isActive] 
 /// * [isBank] 
 @BuiltValue()
@@ -22,6 +23,9 @@ abstract class AccountUpdate implements Built<AccountUpdate, AccountUpdateBuilde
 
   @BuiltValueField(wireName: r'parent_id')
   int? get parentId;
+
+  @BuiltValueField(serialize: false)
+  bool? get clearParentId;
 
   @BuiltValueField(wireName: r'is_active')
   bool? get isActive;
@@ -65,6 +69,9 @@ class _$AccountUpdateSerializer implements PrimitiveSerializer<AccountUpdate> {
         object.parentId,
         specifiedType: const FullType(int),
       );
+    } else if (object.clearParentId == true) {
+      yield r'parent_id';
+      yield null;
     }
     if (object.isActive != null) {
       yield r'is_active';
