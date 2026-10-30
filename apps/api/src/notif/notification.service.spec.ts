@@ -104,13 +104,41 @@ describe('NotificationService (V13: NOT-003 to NOT-015)', () => {
       });
 
       expect(notifId).toBe(1);
-      expect(repo.insertNotification).toHaveBeenCalled();
+      expect(repo.insertNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ priority: 'normal' }),
+      );
       expect(repo.insertDeliveries).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({ notification_id: 1, user_id: 100 }),
           expect.objectContaining({ notification_id: 1, user_id: 101 }),
         ]),
       );
+    });
+
+    it('stores high priority and sends the push at that priority', async () => {
+      repo.findDevicesByUserId.mockResolvedValue([
+        { id: 1, device_token: 'valid_token_ios', device_platform: 'ios' },
+      ]);
+      repo.findDelivery.mockResolvedValue({ id: 10, retry_count: 0 });
+      const send = vi.spyOn(pushDispatcher, 'send').mockResolvedValue({
+        success: true,
+        messageId: 'msg_high',
+      });
+
+      await service.dispatch({
+        recipientUserIds: [200],
+        title: 'Workout safety alert',
+        message: 'Alex Rivera reported a pain score of 4/10. Notes: left knee.',
+        typeCode: 'workout_safety_alert',
+        priority: 'high',
+      });
+
+      expect(repo.insertNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ priority: 'high' }),
+      );
+      await vi.waitFor(() => {
+        expect(send).toHaveBeenCalledWith(expect.objectContaining({ priority: 'high' }));
+      });
     });
 
     it('records failed delivery state when device token triggers push gateway error', async () => {

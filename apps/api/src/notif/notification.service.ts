@@ -12,7 +12,7 @@ import {
 } from '../platform/errors/app-error';
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
-import type { UserDevice } from '../platform/db/schema/notifications';
+import type { NotificationPriority, UserDevice } from '../platform/db/schema/notifications';
 import {
   NotificationRepository,
   type BroadcastItem,
@@ -32,6 +32,7 @@ export interface DispatchNotificationOptions {
   title: string;
   message: string;
   typeCode?: string;
+  priority?: NotificationPriority;
   dataPayload?: Record<string, unknown> | null;
   senderUserId?: number | null;
   isBroadcast?: boolean;
@@ -63,6 +64,7 @@ export class NotificationService {
       title,
       message,
       typeCode,
+      priority = 'normal',
       dataPayload = null,
       senderUserId = null,
       isBroadcast = false,
@@ -94,6 +96,7 @@ export class NotificationService {
       sender_user_id: senderUserId,
       is_broadcast: isBroadcast,
       broadcast_audience: broadcastAudience ?? null,
+      priority,
       created_at: now,
     });
 
@@ -114,7 +117,15 @@ export class NotificationService {
 
     // 3. Dispatch push notifications
     for (const userId of uniqueRecipients) {
-      this.sendPushToUser(userId, notificationId, title, message, dataPayload, typeCode).catch(
+      this.sendPushToUser(
+        userId,
+        notificationId,
+        title,
+        message,
+        dataPayload,
+        typeCode,
+        priority,
+      ).catch(
         (err) => {
           this.logger.error(`Error sending push to user ${userId}: ${err.message}`);
         },
@@ -134,6 +145,7 @@ export class NotificationService {
     message: string,
     dataPayload?: Record<string, unknown> | null,
     typeCode?: string | null,
+    priority: NotificationPriority = 'normal',
   ): Promise<void> {
     const devices = await this.repository.findDevicesByUserId(userId);
     const delivery = await this.repository.findDelivery(notificationId, userId);
@@ -166,6 +178,7 @@ export class NotificationService {
           title,
           body: message,
           data: pushData,
+          priority,
         });
 
         if (result.success) {
@@ -407,6 +420,7 @@ export class NotificationService {
         notif.message,
         notif.data_payload,
         typeCode,
+        notif.priority ?? 'normal',
       );
       retried++;
     }

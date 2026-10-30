@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   `sender_user_id` BIGINT UNSIGNED NULL,
   `is_broadcast` BOOLEAN NOT NULL DEFAULT FALSE,
   `broadcast_audience` ENUM('all_members', 'assigned_clients', 'role') NULL,
+  `priority` ENUM('normal', 'high') NOT NULL DEFAULT 'normal',
   `created_at` DATETIME(3) NOT NULL,
   KEY `notifications_sender_user_id_idx` (`sender_user_id`),
   KEY `notifications_notification_type_id_idx` (`notification_type_id`),

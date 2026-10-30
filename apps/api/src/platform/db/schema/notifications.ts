@@ -23,8 +23,12 @@ export const NOTIFICATION_TYPE_CODES = [
   'session_waitlist_promoted',
   'trainer_assigned',
   'broadcast',
+  'workout_safety_alert',
 ] as const;
 export type NotificationTypeCode = (typeof NOTIFICATION_TYPE_CODES)[number];
+
+export const NOTIFICATION_PRIORITIES = ['normal', 'high'] as const;
+export type NotificationPriority = (typeof NOTIFICATION_PRIORITIES)[number];
 
 export const DEVICE_PLATFORMS = ['ios', 'android', 'web'] as const;
 export type DevicePlatform = (typeof DEVICE_PLATFORMS)[number];
@@ -68,6 +72,7 @@ export const notifications = mysqlTable(
       .references(() => users.id),
     is_broadcast: boolean('is_broadcast').notNull().default(false),
     broadcast_audience: mysqlEnum('broadcast_audience', BROADCAST_AUDIENCES),
+    priority: mysqlEnum('priority', NOTIFICATION_PRIORITIES).notNull().default('normal'),
     created_at: utcDatetime('created_at').notNull(),
   },
   (table) => [

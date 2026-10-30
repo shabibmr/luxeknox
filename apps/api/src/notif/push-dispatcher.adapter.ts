@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { DevicePlatform } from '../platform/db/schema/notifications';
+import type { DevicePlatform, NotificationPriority } from '../platform/db/schema/notifications';
 
 export interface PushMessagePayload {
   deviceToken: string;
@@ -7,6 +7,7 @@ export interface PushMessagePayload {
   title: string;
   body: string;
   data?: Record<string, unknown> | null;
+  priority?: NotificationPriority;
 }
 
 export interface PushDispatchResult {

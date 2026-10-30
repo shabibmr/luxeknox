@@ -10,6 +10,7 @@ describe('NotificationEventConsumer (NOT-009)', () => {
   let memberRepo: any;
   let scheduleRepo: any;
   let membershipRepo: any;
+  let employeeRepo: any;
 
   beforeEach(() => {
     eventBus = {
@@ -42,6 +43,9 @@ describe('NotificationEventConsumer (NOT-009)', () => {
         end_date: '2026-10-20',
       }),
     };
+    employeeRepo = {
+      listStaffForSafetyAlert: vi.fn().mockResolvedValue([]),
+    };
 
     consumer = new NotificationEventConsumer(
       eventBus as any,
@@ -50,6 +54,7 @@ describe('NotificationEventConsumer (NOT-009)', () => {
       memberRepo as any,
       scheduleRepo as any,
       membershipRepo as any,
+      employeeRepo as any,
     );
   });
 
@@ -60,6 +65,10 @@ describe('NotificationEventConsumer (NOT-009)', () => {
     expect(eventBus.on).toHaveBeenCalledWith('schedule.booking_cancelled', expect.any(Function));
     expect(eventBus.on).toHaveBeenCalledWith('schedule.waitlist_promoted', expect.any(Function));
     expect(eventBus.on).toHaveBeenCalledWith('member.trainer_assigned', expect.any(Function));
+    expect(eventBus.on).toHaveBeenCalledWith(
+      'workout_session.safety_alert',
+      expect.any(Function),
+    );
   });
 
   it('handles schedule.booked idempotently and dispatches booking confirmed notification', async () => {
@@ -170,6 +179,109 @@ describe('NotificationEventConsumer (NOT-009)', () => {
         }),
       }),
     );
+  });
+
+  const safetyPayload = {
+    sessionId: 44,
+    memberId: 10,
+    painDiscomfortScore: 4,
+    painNotes: 'left knee',
+    assignedTrainerUserId: 200,
+    sessionTrainerUserId: 201,
+  };
+
+  async function deliverSafetyAlert(payload: typeof safetyPayload = safetyPayload): Promise<void> {
+    await consumer.handleIdempotentEvent(
+      {
+        eventName: 'workout_session.safety_alert',
+        occurredAt: new Date(),
+        payload,
+      },
+      'workout_session.safety_alert',
+      async (body) => {
+        await (consumer as any).handleWorkoutSafetyAlert(body);
+      },
+    );
+  }
+
+  it('dispatches one high-priority workout safety alert to the assigned trainer, the session trainer, and each active Head Coach', async () => {
+    memberRepo.findById.mockResolvedValue({
+      id: 10,
+      user_id: 100,
+      first_name: 'Alex',
+      last_name: 'Rivera',
+    });
+    employeeRepo.listStaffForSafetyAlert.mockResolvedValue([
+      { user_id: 301, job_title: 'Head Coach', status: 'active' },
+      { user_id: 302, job_title: ' head coach ', status: 'active' },
+      { user_id: 303, job_title: 'HEAD COACH', status: 'active' },
+      { user_id: 304, job_title: 'Coach', status: 'active' },
+      { user_id: 305, job_title: 'Assistant Head Coach', status: 'active' },
+      { user_id: 306, job_title: 'Head Coach', status: 'terminated' },
+      { user_id: 200, job_title: 'Head Coach', status: 'active' },
+    ]);
+
+    await deliverSafetyAlert();
+
+    expect(notificationService.dispatch).toHaveBeenCalledTimes(1);
+    const dispatched = notificationService.dispatch.mock.calls[0][0];
+    expect(dispatched.recipientUserIds).toEqual([200, 201, 301, 302, 303]);
+    expect(dispatched.typeCode).toBe('workout_safety_alert');
+    expect(dispatched.priority).toBe('high');
+    expect(dispatched.title).toContain('Alex Rivera');
+    expect(dispatched.title).toContain('4');
+    expect(dispatched.title).toContain('left knee');
+    expect(dispatched.message).toContain('Alex Rivera');
+    expect(dispatched.message).toContain('4');
+    expect(dispatched.message).toContain('left knee');
+  });
+
+  it('keeps a long pain note in the message and fits the title to the stored limit', async () => {
+    memberRepo.findById.mockResolvedValue({
+      id: 10,
+      first_name: 'Alex',
+      last_name: 'Rivera',
+    });
+    const notes = 'k'.repeat(300);
+
+    await deliverSafetyAlert({
+      ...safetyPayload,
+      sessionTrainerUserId: null,
+      assignedTrainerUserId: 200,
+      painNotes: notes,
+    });
+
+    const dispatched = notificationService.dispatch.mock.calls[0][0];
+    expect(dispatched.title.length).toBeLessThanOrEqual(255);
+    expect(dispatched.title).toContain('Alex Rivera');
+    expect(dispatched.title).toContain('4');
+    expect(dispatched.message).toContain(notes);
+  });
+
+  it('notifies the assigned trainer once when that person also ran the session', async () => {
+    memberRepo.findById.mockResolvedValue({
+      id: 10,
+      first_name: 'Alex',
+      last_name: 'Rivera',
+    });
+    employeeRepo.listStaffForSafetyAlert.mockResolvedValue([]);
+
+    await deliverSafetyAlert({
+      ...safetyPayload,
+      sessionTrainerUserId: 200,
+    });
+
+    expect(notificationService.dispatch).toHaveBeenCalledTimes(1);
+    expect(notificationService.dispatch.mock.calls[0][0].recipientUserIds).toEqual([200]);
+  });
+
+  it('dispatches nothing when the same safety event is delivered again', async () => {
+    idempotencyRepo.findActive.mockResolvedValue({ id: 1 });
+
+    await deliverSafetyAlert();
+
+    expect(notificationService.dispatch).not.toHaveBeenCalled();
+    expect(idempotencyRepo.insert).not.toHaveBeenCalled();
   });
 
   it('skips freeze_pending dispatch when membership is missing', async () => {

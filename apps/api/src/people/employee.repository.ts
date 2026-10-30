@@ -151,6 +151,20 @@ export class EmployeeRepository extends BaseRepository<
     return Number(rows[0]?.value ?? 0);
   }
 
+  async listStaffForSafetyAlert(): Promise<
+    Array<{ user_id: number; job_title: string | null; status: EmployeeStatus }>
+  > {
+    const db = this.getDb() as any;
+    const rows = await db
+      .select({
+        user_id: employees.user_id,
+        job_title: employees.job_title,
+        status: employees.status,
+      })
+      .from(employees);
+    return rows as Array<{ user_id: number; job_title: string | null; status: EmployeeStatus }>;
+  }
+
   async countActive(): Promise<number> {
     const db = this.getDb() as any;
     const rows = await db

@@ -5,6 +5,7 @@ import { NotificationService } from './notification.service';
 import { MemberRepository } from '../people/member.repository';
 import { ScheduleRepository } from '../sched/schedule.repository';
 import { MembershipRepository } from '../memb/membership.repository';
+import { EmployeeRepository } from '../people/employee.repository';
 
 @Injectable()
 export class NotificationEventConsumer implements OnModuleInit {
@@ -17,6 +18,7 @@ export class NotificationEventConsumer implements OnModuleInit {
     private readonly memberRepository: MemberRepository,
     private readonly scheduleRepository: ScheduleRepository,
     private readonly membershipRepository: MembershipRepository,
+    private readonly employeeRepository: EmployeeRepository,
   ) {}
 
   onModuleInit(): void {
@@ -59,6 +61,13 @@ export class NotificationEventConsumer implements OnModuleInit {
     this.eventBus.on('member.trainer_assigned', (event: DomainEvent<any>) =>
       this.handleIdempotentEvent(event, 'member.trainer_assigned', (payload) =>
         this.handleTrainerAssigned(payload),
+      ),
+    );
+
+    // 7. Workout safety alert
+    this.eventBus.on('workout_session.safety_alert', (event: DomainEvent<any>) =>
+      this.handleIdempotentEvent(event, 'workout_session.safety_alert', (payload) =>
+        this.handleWorkoutSafetyAlert(payload),
       ),
     );
   }
@@ -231,6 +240,52 @@ export class NotificationEventConsumer implements OnModuleInit {
     });
   }
 
+  private async handleWorkoutSafetyAlert(payload: {
+    sessionId: number;
+    memberId: number;
+    painDiscomfortScore: number;
+    painNotes: string | null;
+    assignedTrainerUserId: number | null;
+    sessionTrainerUserId: number | null;
+  }): Promise<void> {
+    const member = await this.memberRepository.findById(payload.memberId);
+    const memberLabel = memberDisplayName(member, payload.memberId);
+    const notes = payload.painNotes?.trim() ?? '';
+    const score = payload.painDiscomfortScore;
+    const staff = await this.employeeRepository.listStaffForSafetyAlert();
+
+    const recipientUserIds: number[] = [];
+    const addRecipient = (userId: number | null | undefined) => {
+      if (userId == null || userId <= 0 || recipientUserIds.includes(userId)) return;
+      recipientUserIds.push(userId);
+    };
+
+    addRecipient(payload.assignedTrainerUserId);
+    addRecipient(payload.sessionTrainerUserId);
+    for (const person of staff) {
+      if (isActiveHeadCoach(person.job_title, person.status)) {
+        addRecipient(person.user_id);
+      }
+    }
+
+    if (recipientUserIds.length === 0) return;
+
+    const summary = `${memberLabel}, score ${score}/10. Notes: ${notes}`;
+    await this.notificationService.dispatch({
+      recipientUserIds,
+      title: fitNotificationTitle(`Workout safety alert: ${summary}`),
+      message: `${memberLabel} reported a pain score of ${score}/10. Notes: ${notes}.`,
+      typeCode: 'workout_safety_alert',
+      priority: 'high',
+      dataPayload: {
+        session_id: payload.sessionId,
+        member_id: payload.memberId,
+        pain_discomfort_score: score,
+        pain_notes: payload.painNotes,
+      },
+    });
+  }
+
   private async handleTrainerAssigned(payload: {
     memberId: number;
     userId: number;
@@ -244,4 +299,26 @@ export class NotificationEventConsumer implements OnModuleInit {
       dataPayload: { member_id: payload.memberId, trainer_id: payload.trainerId },
     });
   }
+}
+
+const NOTIFICATION_TITLE_MAX = 255;
+
+function fitNotificationTitle(title: string): string {
+  if (title.length <= NOTIFICATION_TITLE_MAX) return title;
+  return `${title.slice(0, NOTIFICATION_TITLE_MAX - 3)}...`;
+}
+
+function isActiveHeadCoach(jobTitle: string | null | undefined, status: string): boolean {
+  return status === 'active' && (jobTitle ?? '').trim().toLowerCase() === 'head coach';
+}
+
+function memberDisplayName(
+  member: { first_name?: string | null; last_name?: string | null } | null,
+  memberId: number,
+): string {
+  const name = [member?.first_name, member?.last_name]
+    .map((part) => part?.trim() ?? '')
+    .filter((part) => part.length > 0)
+    .join(' ');
+  return name || `Member #${memberId}`;
 }

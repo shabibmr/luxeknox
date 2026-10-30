@@ -51,16 +51,21 @@ export class FcmPushDispatcherAdapter implements PushDispatcherAdapter {
       data[key] = typeof value === 'string' ? value : String(value);
     }
 
+    const priority = payload.priority === 'high' ? 'high' : 'normal';
+
     try {
       const messageId = await this.messaging.send({
         token: payload.deviceToken,
         notification: { title: payload.title, body: payload.body },
         data,
         android: {
-          priority: 'high',
+          priority,
           notification: { channelId: 'luxeknox_push' },
         },
-        apns: { payload: { aps: { sound: 'default' } } },
+        apns: {
+          headers: { 'apns-priority': priority === 'high' ? '10' : '5' },
+          payload: { aps: { sound: 'default' } },
+        },
       });
       return { success: true, messageId };
     } catch (err) {
