@@ -88,7 +88,9 @@ import '../../features/reports/presentation/screens/reports_hub_screen.dart';
 import '../../features/people/presentation/screens/member_dossier_screen.dart';
 import '../../features/people/presentation/screens/members_directory_screen.dart';
 import '../../features/people/presentation/screens/trainers_directory_screen.dart';
+import '../../features/pt/presentation/pt_strings.dart';
 import '../../features/pt/presentation/screens/pt_packages_screen.dart';
+import '../../features/pt/presentation/screens/pt_progress_review_screen.dart';
 import '../../features/pt/presentation/screens/sell_pt_screen.dart';
 import '../../features/scheduling/presentation/screens/facilities_screen.dart';
 import '../../features/scheduling/presentation/screens/schedule_calendar_screen.dart';
@@ -203,6 +205,50 @@ StatefulShellRoute createAdminBranchRoute() {
                         memberId: memberId,
                       );
                     },
+                  ),
+                  GoRoute(
+                    path: 'progress-review',
+                    builder: (context, state) {
+                      final id = int.tryParse(state.pathParameters['id'] ?? '');
+                      if (id == null) {
+                        return const PlaceholderScreen(
+                          title: PtStrings.progressReviewTitle,
+                        );
+                      }
+                      return PtProgressReviewScreen(
+                        audience: PtProgressReviewAudience.manager,
+                        memberId: id,
+                        trainerName: state.extra is String
+                            ? state.extra as String
+                            : null,
+                      );
+                    },
+                    routes: [
+                      GoRoute(
+                        path: ':reviewId',
+                        builder: (context, state) {
+                          final memberId = int.tryParse(
+                            state.pathParameters['id'] ?? '',
+                          );
+                          final reviewId = int.tryParse(
+                            state.pathParameters['reviewId'] ?? '',
+                          );
+                          if (memberId == null || reviewId == null) {
+                            return const PlaceholderScreen(
+                              title: PtStrings.progressReviewTitle,
+                            );
+                          }
+                          return PtProgressReviewScreen(
+                            audience: PtProgressReviewAudience.manager,
+                            memberId: memberId,
+                            reviewId: reviewId,
+                            trainerName: state.extra is String
+                                ? state.extra as String
+                                : null,
+                          );
+                        },
+                      ),
+                    ],
                   ),
                   GoRoute(
                     path: 'goals',

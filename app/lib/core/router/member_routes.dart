@@ -10,6 +10,8 @@ import '../../features/membership/presentation/screens/membership_card_screen.da
 import '../../features/membership/presentation/screens/membership_freeze_history_screen.dart';
 import '../../features/membership/presentation/screens/membership_history_screen.dart';
 import '../../features/membership/presentation/screens/membership_packages_catalog_screen.dart';
+import '../../features/pt/presentation/pt_strings.dart';
+import '../../features/pt/presentation/screens/pt_progress_review_screen.dart';
 import '../../features/payments/presentation/payment_ledger_role.dart';
 import '../../features/payments/presentation/screens/payment_detail_screen.dart';
 import '../../features/payments/presentation/screens/payments_ledger_screen.dart';
@@ -261,11 +263,10 @@ StatefulShellRoute createMemberBranchRoute() {
               GoRoute(
                 path: 'overview',
                 builder: (context, state) {
-                  final profileId =
-                      sessionProfileId(context)?.toString() ?? '';
+                  final profileId = sessionProfileId(context)?.toString() ?? '';
                   return BlocProvider(
-                    create: (_) => getIt<ProgressOverviewCubit>()
-                      ..load(profileId),
+                    create: (_) =>
+                        getIt<ProgressOverviewCubit>()..load(profileId),
                     child: ProgressOverviewScreen(memberId: profileId),
                   );
                 },
@@ -278,8 +279,7 @@ StatefulShellRoute createMemberBranchRoute() {
               GoRoute(
                 path: 'measurements',
                 builder: (context, state) {
-                  final profileId =
-                      sessionProfileId(context)?.toString() ?? '';
+                  final profileId = sessionProfileId(context)?.toString() ?? '';
                   return BlocProvider(
                     create: (_) => getIt<MeasurementsCubit>()..load(profileId),
                     child: MeasurementsScreen(memberId: profileId),
@@ -307,6 +307,23 @@ StatefulShellRoute createMemberBranchRoute() {
               GoRoute(
                 path: 'notes',
                 builder: (context, state) => const ProgressNotesScreen(),
+              ),
+              GoRoute(
+                path: 'reviews/:id',
+                builder: (context, state) {
+                  final reviewId = int.tryParse(
+                    state.pathParameters['id'] ?? '',
+                  );
+                  if (reviewId == null) {
+                    return const PlaceholderScreen(
+                      title: PtStrings.progressReviewTitle,
+                    );
+                  }
+                  return PtProgressReviewScreen(
+                    audience: PtProgressReviewAudience.member,
+                    reviewId: reviewId,
+                  );
+                },
               ),
             ],
           ),

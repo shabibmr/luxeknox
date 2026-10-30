@@ -35,6 +35,8 @@ import '../../features/notifications/presentation/screens/broadcast_screen.dart'
 import '../../features/notifications/presentation/screens/notification_detail_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_inbox_screen.dart';
 import '../../features/reports/presentation/screens/report_viewer_screen.dart';
+import '../../features/pt/presentation/pt_strings.dart';
+import '../../features/pt/presentation/screens/pt_progress_review_screen.dart';
 import '../../features/payments/presentation/payment_ledger_role.dart';
 import '../../features/payments/presentation/screens/payments_ledger_screen.dart';
 import '../../features/people/presentation/screens/edit_trainer_profile_screen.dart';
@@ -181,8 +183,9 @@ StatefulShellRoute createTrainerBranchRoute() {
                         builder: (context, state) {
                           final id = state.pathParameters['id'] ?? '';
                           return BlocProvider(
-                            create: (_) => getIt<ProgressOverviewCubit>()
-                              ..load(id, includeCircumference: true),
+                            create: (_) =>
+                                getIt<ProgressOverviewCubit>()
+                                  ..load(id, includeCircumference: true),
                             child: ProgressOverviewScreen(
                               memberId: id,
                               isTrainerContext: true,
@@ -273,8 +276,7 @@ StatefulShellRoute createTrainerBranchRoute() {
                             path: 'edit',
                             builder: (context, state) {
                               final id = state.pathParameters['id'] ?? '';
-                              final goalId =
-                                  state.pathParameters['goalId']!;
+                              final goalId = state.pathParameters['goalId']!;
                               return GoalFormScreen(
                                 memberId: id,
                                 goalId: goalId,
@@ -366,6 +368,50 @@ StatefulShellRoute createTrainerBranchRoute() {
                         memberId: memberId,
                       );
                     },
+                  ),
+                  GoRoute(
+                    path: 'progress-review',
+                    builder: (context, state) {
+                      final id = int.tryParse(state.pathParameters['id'] ?? '');
+                      if (id == null) {
+                        return const PlaceholderScreen(
+                          title: PtStrings.progressReviewTitle,
+                        );
+                      }
+                      return PtProgressReviewScreen(
+                        audience: PtProgressReviewAudience.trainer,
+                        memberId: id,
+                        trainerName: state.extra is String
+                            ? state.extra as String
+                            : null,
+                      );
+                    },
+                    routes: [
+                      GoRoute(
+                        path: ':reviewId',
+                        builder: (context, state) {
+                          final memberId = int.tryParse(
+                            state.pathParameters['id'] ?? '',
+                          );
+                          final reviewId = int.tryParse(
+                            state.pathParameters['reviewId'] ?? '',
+                          );
+                          if (memberId == null || reviewId == null) {
+                            return const PlaceholderScreen(
+                              title: PtStrings.progressReviewTitle,
+                            );
+                          }
+                          return PtProgressReviewScreen(
+                            audience: PtProgressReviewAudience.trainer,
+                            memberId: memberId,
+                            reviewId: reviewId,
+                            trainerName: state.extra is String
+                                ? state.extra as String
+                                : null,
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -462,7 +508,8 @@ StatefulShellRoute createTrainerBranchRoute() {
                 path: 'workouts/create',
                 builder: (context, state) {
                   final memberId = state.uri.queryParameters['memberId'];
-                  final isTemplateParam = state.uri.queryParameters['isTemplate'];
+                  final isTemplateParam =
+                      state.uri.queryParameters['isTemplate'];
                   final isTemplate = isTemplateParam != null
                       ? isTemplateParam == 'true'
                       : (memberId == null);
@@ -511,7 +558,8 @@ StatefulShellRoute createTrainerBranchRoute() {
                 path: 'diets/create',
                 builder: (context, state) {
                   final memberId = state.uri.queryParameters['memberId'];
-                  final isTemplateParam = state.uri.queryParameters['isTemplate'];
+                  final isTemplateParam =
+                      state.uri.queryParameters['isTemplate'];
                   final isTemplate = isTemplateParam != null
                       ? isTemplateParam == 'true'
                       : (memberId == null);
