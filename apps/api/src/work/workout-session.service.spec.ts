@@ -346,19 +346,19 @@ describe('WorkoutSessionService', () => {
       });
       sessionRepo.insertSessionExercise.mockResolvedValue({ id: 503 });
 
-      await service.logSet(
-        50,
-        {
-          exercise_id: 3,
-          set_number: 1,
-          reps_completed: 10,
-          weight_lifted_kg: 40,
-          target_rir: 1.5,
-          target_duration_seconds: 45,
-          is_completed: true,
-        } as any,
-        memberActor,
-      );
+      const parsed = workoutSetWriteSchema.parse({
+        exercise_id: 3,
+        set_number: 1,
+        reps_completed: 10,
+        weight_lifted_kg: 40,
+        target_rir: 1.5,
+        target_duration_seconds: 45,
+        is_completed: true,
+      });
+      expect(parsed).not.toHaveProperty('target_rir');
+      expect(parsed).not.toHaveProperty('target_duration_seconds');
+
+      await service.logSet(50, parsed, memberActor);
 
       expect(sessionRepo.insertSessionExercise).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -859,6 +859,24 @@ describe('WorkoutSessionService', () => {
     });
   });
 
+  describe('updateSet ignores targets', () => {
+    it('does not write target_rir or target_duration_seconds', async () => {
+      const { service, sessionRepo } = buildService();
+      sessionRepo.findSessionById.mockResolvedValue({ id: 50, member_id: 30, completed_at: null });
+      sessionRepo.findSetInSession.mockResolvedValue({ id: 501, workout_session_id: 50 });
+      sessionRepo.updateSessionExercise.mockResolvedValue({ id: 501 });
+
+      const parsed = workoutSetUpdateSchema.parse({
+        notes: 'x',
+        target_rir: 2,
+        target_duration_seconds: 30,
+      });
+      await service.updateSet(50, 501, parsed, memberActor);
+
+      expect(sessionRepo.updateSessionExercise).toHaveBeenCalledWith(501, { notes: 'x' });
+    });
+  });
+
   describe('workoutSetWriteSchema & workoutSetUpdateSchema (PTF-13)', () => {
     it('validates a set with reps, duration, and RIR', () => {
       const parsed = workoutSetWriteSchema.parse({
@@ -1195,11 +1213,10 @@ describe('WorkoutSessionService', () => {
       });
       await service.complete(50, parsed, trainerActor);
 
-      const extra = sessionRepo.completeSession.mock.calls[0][6];
-      expect(extra.client_signed_at).toBeInstanceOf(Date);
-      expect(extra.trainer_signed_at).toBeInstanceOf(Date);
-      expect(extra.client_signed_at).not.toEqual(forgedClientSign);
-      expect(extra.trainer_signed_at).not.toEqual(forgedTrainerSign);
+      const [, completedAt, , , , , extra] = sessionRepo.completeSession.mock.calls[0];
+      expect(extra.client_signed_at).toEqual(completedAt);
+      expect(extra.trainer_signed_at).toEqual(completedAt);
+      expect(completedAt).not.toEqual(forgedClientSign);
     });
 
     it('rejects out-of-range effort, satisfaction and pain ratings', () => {
