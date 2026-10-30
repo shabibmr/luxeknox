@@ -48,29 +48,35 @@ void main() {
   });
 
   group('Health UseCases', () {
-    test('ListHealthHistoryUseCase calls repository.listHealthHistory', () async {
-      when(
-        () => mockRepository.listHealthHistory(1),
-      ).thenAnswer((_) async => Right([tHealthInfo]));
+    test(
+      'ListHealthHistoryUseCase calls repository.listHealthHistory',
+      () async {
+        when(
+          () => mockRepository.listHealthHistory(1),
+        ).thenAnswer((_) async => Right([tHealthInfo]));
 
-      final useCase = ListHealthHistoryUseCase(mockRepository);
-      final result = await useCase(1);
+        final useCase = ListHealthHistoryUseCase(mockRepository);
+        final result = await useCase(1);
 
-      expect(result.getOrElse((_) => const []), [tHealthInfo]);
-      verify(() => mockRepository.listHealthHistory(1)).called(1);
-    });
+        expect(result.getOrElse((_) => const []), [tHealthInfo]);
+        verify(() => mockRepository.listHealthHistory(1)).called(1);
+      },
+    );
 
-    test('CreateHealthRecordUseCase calls repository.createHealthRecord', () async {
-      when(
-        () => mockRepository.createHealthRecord(tHealthInfo),
-      ).thenAnswer((_) async => Right(tHealthInfo));
+    test(
+      'CreateHealthRecordUseCase calls repository.createHealthRecord',
+      () async {
+        when(
+          () => mockRepository.createHealthRecord(tHealthInfo),
+        ).thenAnswer((_) async => Right(tHealthInfo));
 
-      final useCase = CreateHealthRecordUseCase(mockRepository);
-      final result = await useCase(tHealthInfo);
+        final useCase = CreateHealthRecordUseCase(mockRepository);
+        final result = await useCase(tHealthInfo);
 
-      expect(result, Right<Failure, HealthInfo>(tHealthInfo));
-      verify(() => mockRepository.createHealthRecord(tHealthInfo)).called(1);
-    });
+        expect(result, Right<Failure, HealthInfo>(tHealthInfo));
+        verify(() => mockRepository.createHealthRecord(tHealthInfo)).called(1);
+      },
+    );
   });
 
   group('Medical Record UseCases', () {

@@ -90,7 +90,10 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     api.MemberHealthWrite write,
   ) async {
     return _unwrap(
-      await _healthApi.createMemberHealthRecord(id: memberId, memberHealthWrite: write),
+      await _healthApi.createMemberHealthRecord(
+        id: memberId,
+        memberHealthWrite: write,
+      ),
     );
   }
 

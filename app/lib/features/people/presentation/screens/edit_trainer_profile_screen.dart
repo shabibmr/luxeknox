@@ -124,9 +124,7 @@ class _TrainerProfileForm extends StatefulWidget {
 class _TrainerProfileFormState extends State<_TrainerProfileForm> {
   late final _firstName = TextEditingController(text: widget.profile.firstName);
   late final _lastName = TextEditingController(text: widget.profile.lastName);
-  late final _email = TextEditingController(
-    text: widget.profile.email ?? '',
-  );
+  late final _email = TextEditingController(text: widget.profile.email ?? '');
   late final _phone = TextEditingController(
     text: widget.profile.phoneNumber ?? '',
   );

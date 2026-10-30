@@ -8,7 +8,8 @@ import '../entities/par_q_screening.dart';
 import '../repositories/par_q_repository.dart';
 
 @lazySingleton
-class ReviewParQUseCase implements UseCase<ParQScreening, ParQTrainerReviewInput> {
+class ReviewParQUseCase
+    implements UseCase<ParQScreening, ParQTrainerReviewInput> {
   const ReviewParQUseCase(this._repository);
 
   final ParQRepository _repository;

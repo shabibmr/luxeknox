@@ -154,9 +154,12 @@ void main() {
       MemberPtSummary? pt = const MemberPtSummary(),
     }) => canSellPt(userType: userType, canCreatePt: canCreatePt, pt: pt);
 
-    test('admin with permission and no PT can sell (membership is bundled)', () {
-      expect(sell(), isTrue);
-    });
+    test(
+      'admin with permission and no PT can sell (membership is bundled)',
+      () {
+        expect(sell(), isTrue);
+      },
+    );
 
     test('allowed with no PT summary loaded yet', () {
       expect(sell(pt: null), isTrue);

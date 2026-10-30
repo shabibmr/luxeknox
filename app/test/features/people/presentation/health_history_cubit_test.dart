@@ -47,30 +47,42 @@ void main() {
   tearDown(() => cubit.close());
 
   group('HealthHistoryCubit.load', () {
-    test('emits records desc-sorted with currentIndex 0 when usecase succeeds', () async {
-      when(() => mockList(5)).thenAnswer((_) async => Right([tNewer, tOlder]));
+    test(
+      'emits records desc-sorted with currentIndex 0 when usecase succeeds',
+      () async {
+        when(
+          () => mockList(5),
+        ).thenAnswer((_) async => Right([tNewer, tOlder]));
 
-      await cubit.load(5);
+        await cubit.load(5);
 
-      expect(cubit.state.status, LoadStatus.success);
-      expect(cubit.state.records, [tNewer, tOlder]);
-      expect(cubit.state.currentIndex, 0);
-    });
+        expect(cubit.state.status, LoadStatus.success);
+        expect(cubit.state.records, [tNewer, tOlder]);
+        expect(cubit.state.currentIndex, 0);
+      },
+    );
 
-    test('emits a single synthetic blank record when history is empty', () async {
-      when(() => mockList(5)).thenAnswer((_) async => const Right(<HealthInfo>[]));
+    test(
+      'emits a single synthetic blank record when history is empty',
+      () async {
+        when(
+          () => mockList(5),
+        ).thenAnswer((_) async => const Right(<HealthInfo>[]));
 
-      await cubit.load(5);
+        await cubit.load(5);
 
-      expect(cubit.state.status, LoadStatus.success);
-      expect(cubit.state.records.length, 1);
-      expect(cubit.state.records[0].id, 0);
-      expect(cubit.state.records[0].memberId, 5);
-      expect(cubit.state.currentIndex, 0);
-    });
+        expect(cubit.state.status, LoadStatus.success);
+        expect(cubit.state.records.length, 1);
+        expect(cubit.state.records[0].id, 0);
+        expect(cubit.state.records[0].memberId, 5);
+        expect(cubit.state.currentIndex, 0);
+      },
+    );
 
     test('emits failure when usecase fails', () async {
-      when(() => mockList(5)).thenAnswer((_) async => const Left(NetworkFailure()));
+      when(
+        () => mockList(5),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
 
       await cubit.load(5);
 
@@ -96,8 +108,9 @@ void main() {
       when(() => mockList(5)).thenAnswer((_) async => Right([tOlder]));
       await cubit.load(5);
 
-      when(() => mockCreate(any()))
-          .thenAnswer((_) async => const Left(ValidationFailure(['Invalid height'])));
+      when(() => mockCreate(any())).thenAnswer(
+        (_) async => const Left(ValidationFailure(['Invalid height'])),
+      );
 
       await cubit.save(tOlder);
 
@@ -108,27 +121,37 @@ void main() {
   });
 
   group('HealthHistoryCubit.save guards against double-submit', () {
-    test('ignores a second save call while the first is still in flight', () async {
-      final completer = Completer<Either<Failure, HealthInfo>>();
-      when(() => mockCreate(any())).thenAnswer((_) => completer.future);
-      when(() => mockList(5)).thenAnswer((_) async => Right([tNewer, tOlder]));
+    test(
+      'ignores a second save call while the first is still in flight',
+      () async {
+        final completer = Completer<Either<Failure, HealthInfo>>();
+        when(() => mockCreate(any())).thenAnswer((_) => completer.future);
+        when(
+          () => mockList(5),
+        ).thenAnswer((_) async => Right([tNewer, tOlder]));
 
-      final first = cubit.save(tOlder);
-      final second = cubit.save(tOlder);
+        final first = cubit.save(tOlder);
+        final second = cubit.save(tOlder);
 
-      completer.complete(Right(tNewer));
-      await first;
-      await second;
+        completer.complete(Right(tNewer));
+        await first;
+        await second;
 
-      verify(() => mockCreate(any())).called(1);
-    });
+        verify(() => mockCreate(any())).called(1);
+      },
+    );
   });
 
   group('HealthHistoryCubit.previous/next', () {
     test('previous moves to an older record and next moves back', () async {
-      final oldest = HealthInfo(id: 3, memberId: 5, recordedAt: DateTime(2025, 12, 1));
-      when(() => mockList(5))
-          .thenAnswer((_) async => Right([tNewer, tOlder, oldest]));
+      final oldest = HealthInfo(
+        id: 3,
+        memberId: 5,
+        recordedAt: DateTime(2025, 12, 1),
+      );
+      when(
+        () => mockList(5),
+      ).thenAnswer((_) async => Right([tNewer, tOlder, oldest]));
       await cubit.load(5);
 
       expect(cubit.state.currentIndex, 0);

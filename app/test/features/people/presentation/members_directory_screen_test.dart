@@ -96,9 +96,8 @@ void main() {
       routes: [
         GoRoute(
           path: '/admin/members',
-          builder: (context, state) => const MembersDirectoryScreen(
-            addMemberPath: '/admin/members/add',
-          ),
+          builder: (context, state) =>
+              const MembersDirectoryScreen(addMemberPath: '/admin/members/add'),
           routes: [
             GoRoute(
               path: 'add',

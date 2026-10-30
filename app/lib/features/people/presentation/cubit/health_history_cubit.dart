@@ -40,7 +40,8 @@ class HealthHistoryCubit extends Cubit<HealthHistoryState> {
     );
     final result = await _list(memberId);
     result.fold(
-      (failure) => emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
+      (failure) =>
+          emit(state.copyWith(status: LoadStatus.failure, failure: failure)),
       (records) {
         if (records.isEmpty) {
           emit(
@@ -80,7 +81,11 @@ class HealthHistoryCubit extends Cubit<HealthHistoryState> {
       final result = await _create(edited);
       await result.fold(
         (failure) async => emit(
-          state.copyWith(status: LoadStatus.failure, failure: failure, message: null),
+          state.copyWith(
+            status: LoadStatus.failure,
+            failure: failure,
+            message: null,
+          ),
         ),
         (_) async => load(edited.memberId, message: 'saved'),
       );

@@ -43,8 +43,16 @@ void main() {
   late MockProfileRemoteDataSource mockRemote;
   late ProfileRepositoryImpl repository;
 
-  final tOlder = _apiRecord(id: 1, memberId: 10, recordedAt: DateTime(2026, 1, 1));
-  final tNewer = _apiRecord(id: 2, memberId: 10, recordedAt: DateTime(2026, 2, 1));
+  final tOlder = _apiRecord(
+    id: 1,
+    memberId: 10,
+    recordedAt: DateTime(2026, 1, 1),
+  );
+  final tNewer = _apiRecord(
+    id: 2,
+    memberId: 10,
+    recordedAt: DateTime(2026, 2, 1),
+  );
 
   setUpAll(() {
     registerFallbackValue(api.MemberHealthWrite((b) => b));
@@ -56,35 +64,39 @@ void main() {
   });
 
   group('ProfileRepositoryImpl.listHealthHistory', () {
-    test('returns desc-sorted HealthInfo list when remote datasource succeeds', () async {
-      when(() => mockRemote.listHealthHistory(10))
-          .thenAnswer((_) async => _page([tOlder, tNewer]));
+    test(
+      'returns desc-sorted HealthInfo list when remote datasource succeeds',
+      () async {
+        when(
+          () => mockRemote.listHealthHistory(10),
+        ).thenAnswer((_) async => _page([tOlder, tNewer]));
 
-      final result = await repository.listHealthHistory(10);
+        final result = await repository.listHealthHistory(10);
 
-      expect(result.isRight(), isTrue);
-      result.fold(
-        (_) => fail('Expected Right'),
-        (records) {
+        expect(result.isRight(), isTrue);
+        result.fold((_) => fail('Expected Right'), (records) {
           expect(records.length, 2);
           expect(records[0].id, 2);
           expect(records[1].id, 1);
-        },
-      );
-    });
+        });
+      },
+    );
 
-    test('returns NetworkFailure when remote datasource throws connection error', () async {
-      when(() => mockRemote.listHealthHistory(10)).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/members/10/health/history'),
-          type: DioExceptionType.connectionError,
-        ),
-      );
+    test(
+      'returns NetworkFailure when remote datasource throws connection error',
+      () async {
+        when(() => mockRemote.listHealthHistory(10)).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/members/10/health/history'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
 
-      final result = await repository.listHealthHistory(10);
+        final result = await repository.listHealthHistory(10);
 
-      expect(result, const Left(NetworkFailure()));
-    });
+        expect(result, const Left(NetworkFailure()));
+      },
+    );
   });
 
   group('ProfileRepositoryImpl.createHealthRecord', () {
@@ -95,33 +107,37 @@ void main() {
       recordedAt: DateTime(2026, 1, 1),
     );
 
-    test('returns created HealthInfo when remote datasource succeeds', () async {
-      when(() => mockRemote.createHealthRecord(10, any()))
-          .thenAnswer((_) async => tNewer);
+    test(
+      'returns created HealthInfo when remote datasource succeeds',
+      () async {
+        when(
+          () => mockRemote.createHealthRecord(10, any()),
+        ).thenAnswer((_) async => tNewer);
 
-      final result = await repository.createHealthRecord(tHealthInfo);
+        final result = await repository.createHealthRecord(tHealthInfo);
 
-      expect(result.isRight(), isTrue);
-      result.fold(
-        (_) => fail('Expected Right'),
-        (info) {
+        expect(result.isRight(), isTrue);
+        result.fold((_) => fail('Expected Right'), (info) {
           expect(info.id, 2);
           expect(info.recordedAt, tNewer.recordedAt);
-        },
-      );
-    });
+        });
+      },
+    );
 
-    test('returns NetworkFailure when remote datasource throws connection error', () async {
-      when(() => mockRemote.createHealthRecord(10, any())).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/members/10/health/history'),
-          type: DioExceptionType.connectionError,
-        ),
-      );
+    test(
+      'returns NetworkFailure when remote datasource throws connection error',
+      () async {
+        when(() => mockRemote.createHealthRecord(10, any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/members/10/health/history'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
 
-      final result = await repository.createHealthRecord(tHealthInfo);
+        final result = await repository.createHealthRecord(tHealthInfo);
 
-      expect(result, const Left(NetworkFailure()));
-    });
+        expect(result, const Left(NetworkFailure()));
+      },
+    );
   });
 }

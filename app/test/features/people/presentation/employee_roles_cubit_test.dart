@@ -58,8 +58,12 @@ void main() {
       'emits loading then success with employee and roles',
       build: buildCubit,
       setUp: () {
-        when(() => getEmployee(11)).thenAnswer((_) async => const Right(employee));
-        when(() => listRoles(any())).thenAnswer((_) async => const Right(roles));
+        when(
+          () => getEmployee(11),
+        ).thenAnswer((_) async => const Right(employee));
+        when(
+          () => listRoles(any()),
+        ).thenAnswer((_) async => const Right(roles));
       },
       act: (cubit) => cubit.load(11),
       expect: () => [
@@ -76,8 +80,9 @@ void main() {
       'emits failure when getEmployee fails',
       build: buildCubit,
       setUp: () {
-        when(() => getEmployee(11))
-            .thenAnswer((_) async => const Left(NotFoundFailure()));
+        when(
+          () => getEmployee(11),
+        ).thenAnswer((_) async => const Left(NotFoundFailure()));
       },
       act: (cubit) => cubit.load(11),
       expect: () => [
@@ -93,9 +98,12 @@ void main() {
       'emits failure when listRoles fails',
       build: buildCubit,
       setUp: () {
-        when(() => getEmployee(11)).thenAnswer((_) async => const Right(employee));
-        when(() => listRoles(any()))
-            .thenAnswer((_) async => const Left(NotFoundFailure()));
+        when(
+          () => getEmployee(11),
+        ).thenAnswer((_) async => const Right(employee));
+        when(
+          () => listRoles(any()),
+        ).thenAnswer((_) async => const Left(NotFoundFailure()));
       },
       act: (cubit) => cubit.load(11),
       expect: () => [
@@ -126,8 +134,9 @@ void main() {
         roles: roles,
       ),
       setUp: () {
-        when(() => assignRole(any()))
-            .thenAnswer((_) async => const Right(updatedEmployee));
+        when(
+          () => assignRole(any()),
+        ).thenAnswer((_) async => const Right(updatedEmployee));
       },
       act: (cubit) => cubit.assignRole(1),
       expect: () => [
