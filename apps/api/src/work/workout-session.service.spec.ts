@@ -1,4 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
+
+const runInTransactionSpy = vi.fn(async (_db: unknown, fn: () => Promise<unknown>) => fn());
+
+vi.mock('../platform/db/transaction-context', () => ({
+  runInTransaction: (_db: unknown, fn: () => Promise<unknown>) => runInTransactionSpy(_db, fn),
+  getAmbientTransaction: () => null,
+}));
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import {
   BadRequestError,
@@ -49,10 +56,10 @@ function buildService(overrides: {
   memberRepo?: Partial<Record<string, unknown>>;
   eventBus?: Partial<Record<string, unknown>>;
   ptAccess?: Partial<Record<string, unknown>> | null;
-  medicalHistoryRepo?: Partial<Record<string, unknown>>;
+  medicalHistoryRepo?: Partial<Record<string, unknown>> | null;
   trainerRepo?: Partial<Record<string, unknown>>;
-  employeeRepo?: Partial<Record<string, unknown>>;
-  notificationService?: Partial<Record<string, unknown>>;
+  auditService?: Partial<Record<string, unknown>> | null;
+  db?: unknown;
 } = {}) {
   const sessionRepo = {
     findSessions: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
@@ -103,10 +110,23 @@ function buildService(overrides: {
           ...overrides.ptAccess,
         };
 
-  const medicalHistoryRepo = {
-    insertHistory: vi.fn().mockResolvedValue(1),
-    ...overrides.medicalHistoryRepo,
-  };
+  const medicalHistoryRepo =
+    overrides.medicalHistoryRepo === null
+      ? undefined
+      : {
+          insertHistory: vi.fn().mockResolvedValue(1),
+          ...overrides.medicalHistoryRepo,
+        };
+
+  const auditService =
+    overrides.auditService === null
+      ? undefined
+      : {
+          recordAudit: vi.fn().mockResolvedValue(undefined),
+          ...overrides.auditService,
+        };
+
+  const mockDb = overrides.db !== undefined ? overrides.db : { transaction: vi.fn() };
 
   const trainerRepo = {
     findById: vi.fn().mockImplementation(async (id: number) => {
@@ -116,30 +136,17 @@ function buildService(overrides: {
     ...overrides.trainerRepo,
   };
 
-  const employeeRepo = {
-    findManyFiltered: vi.fn().mockResolvedValue({
-      rows: [{ id: 1, user_id: 10, job_title: 'Head Coach', status: 'active' }],
-      total: 1,
-    }),
-    ...overrides.employeeRepo,
-  };
-
-  const notificationService = {
-    dispatch: vi.fn().mockResolvedValue(1),
-    ...overrides.notificationService,
-  };
-
   const service = new WorkoutSessionService(
     sessionRepo as any,
     planRepo as any,
     memberRepo as any,
     eventBus as any,
     paginationHelper as any,
+    mockDb as any,
     ptAccess as any,
     medicalHistoryRepo as any,
     trainerRepo as any,
-    employeeRepo as any,
-    notificationService as any,
+    auditService as any,
   );
 
   return {
@@ -149,10 +156,11 @@ function buildService(overrides: {
     memberRepo,
     eventBus,
     ptAccess,
-    medicalHistoryRepo,
+    medicalHistoryRepo: medicalHistoryRepo as NonNullable<typeof medicalHistoryRepo>,
     trainerRepo,
-    employeeRepo,
-    notificationService,
+    auditService: auditService as NonNullable<typeof auditService>,
+    mockDb,
+    runInTransactionSpy,
   };
 }
 
@@ -1227,22 +1235,28 @@ describe('WorkoutSessionService', () => {
     });
   });
 
-  describe('high pain safety trigger (PTF-15)', () => {
+  describe('high pain safety trigger (PTF-15 / Issue #42)', () => {
     const startTime = new Date(Date.now() - 45 * 60 * 1000);
-    const arrangeSession = (sessionRepo: any) => {
+    const arrangeSession = (sessionRepo: any, trainerId = 20) => {
       sessionRepo.findSessionById.mockResolvedValue({
         id: 50,
         member_id: 30,
-        trainer_id: 20,
+        trainer_id: trainerId,
         started_at: startTime,
         completed_at: null,
         sets: [],
       });
     };
 
-    it('inserts an active medical history row and alerts trainer and head coach when pain >= 4', async () => {
-      const { service, sessionRepo, medicalHistoryRepo, notificationService, eventBus } =
-        buildService();
+    it('pain 4 and 10 insert one active history row, one audit entry, and emit one safety event in the same ambient transaction', async () => {
+      const {
+        service,
+        sessionRepo,
+        medicalHistoryRepo,
+        auditService,
+        eventBus,
+        runInTransactionSpy,
+      } = buildService();
       arrangeSession(sessionRepo);
 
       await service.complete(
@@ -1251,6 +1265,18 @@ describe('WorkoutSessionService', () => {
         trainerActor,
       );
 
+      expect(runInTransactionSpy).toHaveBeenCalled();
+      expect(sessionRepo.completeSession).toHaveBeenCalledWith(
+        50,
+        expect.any(Date),
+        expect.any(String),
+        expect.any(Number),
+        undefined,
+        undefined,
+        expect.objectContaining({ pain_discomfort_score: 4, pain_notes: 'Sharp left knee pain' }),
+      );
+
+      expect(medicalHistoryRepo.insertHistory).toHaveBeenCalledTimes(1);
       expect(medicalHistoryRepo.insertHistory).toHaveBeenCalledWith(
         expect.objectContaining({
           member_id: 30,
@@ -1259,25 +1285,147 @@ describe('WorkoutSessionService', () => {
           description: expect.stringContaining('Sharp left knee pain'),
         }),
       );
-      expect(notificationService.dispatch).toHaveBeenCalledWith(
+
+      expect(auditService.recordAudit).toHaveBeenCalledTimes(1);
+      expect(auditService.recordAudit).toHaveBeenCalledWith(
         expect.objectContaining({
-          recipientUserIds: expect.arrayContaining([2, 10]),
-          dataPayload: expect.objectContaining({ priority: 'high', session_id: 50 }),
+          actorUserId: trainerActor.id,
+          action: 'medical_history.created',
+          entityName: 'medical_histories',
+          entityId: 1,
+          afterState: expect.objectContaining({
+            member_id: 30,
+            clearance_status: 'active',
+          }),
         }),
       );
+
       expect(eventBus.emitSync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventName: 'workout_session.safety_alert',
+          payload: {
+            sessionId: 50,
+            memberId: 30,
+            painDiscomfortScore: 4,
+            painNotes: 'Sharp left knee pain',
+            assignedTrainerUserId: 2,
+            sessionTrainerUserId: 2,
+          },
+        }),
+      );
+
+      // Verify pain of 10 also inserts history, audit, and emits event
+      vi.clearAllMocks();
+      arrangeSession(sessionRepo);
+      await service.complete(50, { pain_discomfort_score: 10 }, trainerActor);
+
+      expect(medicalHistoryRepo.insertHistory).toHaveBeenCalledTimes(1);
+      expect(auditService.recordAudit).toHaveBeenCalledTimes(1);
+      expect(eventBus.emitSync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventName: 'workout_session.safety_alert',
+          payload: expect.objectContaining({
+            sessionId: 50,
+            memberId: 30,
+            painDiscomfortScore: 10,
+          }),
+        }),
+      );
+    });
+
+    it('pain 3, 0, omitted, and empty do not insert history, record audit, or emit safety alert', async () => {
+      const { service, sessionRepo, medicalHistoryRepo, auditService, eventBus } =
+        buildService();
+
+      const cases = [
+        { pain_discomfort_score: 3 },
+        { pain_discomfort_score: 0 },
+        {},
+        { pain_discomfort_score: null },
+      ];
+
+      for (const payload of cases) {
+        vi.clearAllMocks();
+        arrangeSession(sessionRepo);
+
+        await service.complete(50, payload, trainerActor);
+
+        expect(medicalHistoryRepo.insertHistory).not.toHaveBeenCalled();
+        expect(auditService.recordAudit).not.toHaveBeenCalled();
+        expect(eventBus.emitSync).not.toHaveBeenCalledWith(
+          expect.objectContaining({ eventName: 'workout_session.safety_alert' }),
+        );
+      }
+    });
+
+    it('rejects completion when history insert fails, leaving session incomplete', async () => {
+      const { service, sessionRepo, medicalHistoryRepo, eventBus } = buildService();
+      arrangeSession(sessionRepo);
+
+      medicalHistoryRepo.insertHistory.mockRejectedValueOnce(new Error('History insert failed'));
+
+      await expect(
+        service.complete(50, { pain_discomfort_score: 4 }, trainerActor),
+      ).rejects.toThrow('History insert failed');
+
+      expect(eventBus.emitSync).not.toHaveBeenCalledWith(
         expect.objectContaining({ eventName: 'workout_session.safety_alert' }),
       );
     });
 
-    it('does not trigger the safety alert when pain < 4', async () => {
-      const { service, sessionRepo, medicalHistoryRepo, notificationService } = buildService();
+    it('rejects completion when audit record fails, leaving session incomplete', async () => {
+      const { service, sessionRepo, auditService, eventBus } = buildService();
       arrangeSession(sessionRepo);
 
-      await service.complete(50, { pain_discomfort_score: 3 }, trainerActor);
+      auditService.recordAudit.mockRejectedValueOnce(new Error('Audit record failed'));
 
-      expect(medicalHistoryRepo.insertHistory).not.toHaveBeenCalled();
-      expect(notificationService.dispatch).not.toHaveBeenCalled();
+      await expect(
+        service.complete(50, { pain_discomfort_score: 4 }, trainerActor),
+      ).rejects.toThrow('Audit record failed');
+
+      expect(eventBus.emitSync).not.toHaveBeenCalledWith(
+        expect.objectContaining({ eventName: 'workout_session.safety_alert' }),
+      );
+    });
+
+    it('fails completion when medicalHistoryRepo or auditService collaborator is missing rather than skipping', async () => {
+      const missingHistory = buildService({ medicalHistoryRepo: null });
+      arrangeSession(missingHistory.sessionRepo);
+      await expect(
+        missingHistory.service.complete(50, { pain_discomfort_score: 4 }, trainerActor),
+      ).rejects.toThrow();
+
+      const missingAudit = buildService({ auditService: null });
+      arrangeSession(missingAudit.sessionRepo);
+      await expect(
+        missingAudit.service.complete(50, { pain_discomfort_score: 4 }, trainerActor),
+      ).rejects.toThrow();
+    });
+
+    it('populates assignedTrainerUserId and sessionTrainerUserId distinctly when cover trainer conducts session', async () => {
+      const { service, sessionRepo, trainerRepo, eventBus } = buildService();
+      // member 30 assigned trainer is 20 (user 2); session conducted by trainer 40 (user 4)
+      trainerRepo.findById.mockImplementation(async (id: number) => {
+        if (id === 20) return { id: 20, user_id: 2 };
+        if (id === 40) return { id: 40, user_id: 4 };
+        return null;
+      });
+      arrangeSession(sessionRepo, 40);
+
+      await service.complete(50, { pain_discomfort_score: 4 }, trainerActor);
+
+      expect(eventBus.emitSync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventName: 'workout_session.safety_alert',
+          payload: expect.objectContaining({
+            sessionId: 50,
+            memberId: 30,
+            painDiscomfortScore: 4,
+            assignedTrainerUserId: 2,
+            sessionTrainerUserId: 4,
+          }),
+        }),
+      );
     });
   });
 });
