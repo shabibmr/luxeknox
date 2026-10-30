@@ -12223,8 +12223,21 @@ components:
                 type: integer
               rest_between_exercises_seconds:
                 type: integer
+              target_rir:
+                type: number
+                minimum: 0
+                maximum: 10
+                nullable: true
+                description: Reps in reserve. At most one decimal place. On update, an omitted field is left unchanged. Null or blank stores empty.
+              target_duration_seconds:
+                type: integer
+                minimum: 0
+                nullable: true
+                description: Timed-set duration in seconds. On update, an omitted field is left unchanged. Null or blank stores empty.
               notes:
                 type: string
+                nullable: true
+                description: On update, an omitted field is left unchanged. Null or blank stores empty.
     AssignPlanRequest:
       type: object
       required: [member_id]
@@ -13099,6 +13112,25 @@ components:
           nullable: true
         created_at:
           $ref: "#/components/schemas/DateTime"
+        priority:
+          type: string
+          enum: [normal, high]
+          default: normal
+        type_code:
+          type: string
+          nullable: true
+          enum:
+            - membership_expiry
+            - session_reminder
+            - payment_due
+            - announcement
+            - freeze_pending
+            - booking_confirmed
+            - booking_cancelled
+            - session_waitlist_promoted
+            - trainer_assigned
+            - broadcast
+            - workout_safety_alert
         is_read:
           type: boolean
         read_at:

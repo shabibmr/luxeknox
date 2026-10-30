@@ -12422,6 +12422,14 @@
           "notNull": false,
           "autoincrement": false
         },
+        "priority": {
+          "name": "priority",
+          "type": "enum('normal','high')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'normal'"
+        },
         "created_at": {
           "name": "created_at",
           "type": "datetime(3)",

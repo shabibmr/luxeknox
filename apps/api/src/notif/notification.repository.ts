@@ -23,10 +23,12 @@ import { members } from '../platform/db/schema/members';
 export interface InboxItem {
   id: number;
   notification_type_id: number | null;
+  type_code: string | null;
   title: string;
   message: string;
   data_payload: Record<string, unknown> | null;
   sender_user_id: number | null;
+  priority: 'normal' | 'high';
   created_at: Date;
   is_read: boolean;
   read_at: Date | null;
@@ -85,16 +87,22 @@ export class NotificationRepository extends BaseRepository<
       .select({
         id: notifications.id,
         notification_type_id: notifications.notification_type_id,
+        type_code: notificationTypes.type_code,
         title: notifications.title,
         message: notifications.message,
         data_payload: notifications.data_payload,
         sender_user_id: notifications.sender_user_id,
+        priority: notifications.priority,
         created_at: notifications.created_at,
         is_read: notificationDeliveries.is_read,
         read_at: notificationDeliveries.read_at,
       })
       .from(notificationDeliveries)
       .innerJoin(notifications, eq(notificationDeliveries.notification_id, notifications.id))
+      .leftJoin(
+        notificationTypes,
+        eq(notifications.notification_type_id, notificationTypes.id),
+      )
       .where(and(...conditions))
       .orderBy(desc(notifications.created_at), desc(notifications.id))
       .limit(limit);
@@ -108,16 +116,22 @@ export class NotificationRepository extends BaseRepository<
       .select({
         id: notifications.id,
         notification_type_id: notifications.notification_type_id,
+        type_code: notificationTypes.type_code,
         title: notifications.title,
         message: notifications.message,
         data_payload: notifications.data_payload,
         sender_user_id: notifications.sender_user_id,
+        priority: notifications.priority,
         created_at: notifications.created_at,
         is_read: notificationDeliveries.is_read,
         read_at: notificationDeliveries.read_at,
       })
       .from(notificationDeliveries)
       .innerJoin(notifications, eq(notificationDeliveries.notification_id, notifications.id))
+      .leftJoin(
+        notificationTypes,
+        eq(notifications.notification_type_id, notificationTypes.id),
+      )
       .where(
         and(
           eq(notificationDeliveries.user_id, userId),

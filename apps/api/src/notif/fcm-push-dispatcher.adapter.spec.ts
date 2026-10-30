@@ -73,11 +73,33 @@ describe('FcmPushDispatcherAdapter', () => {
         type_code: 'session_reminder',
       },
       android: {
-        priority: 'high',
+        priority: 'normal',
         notification: { channelId: 'luxeknox_push' },
       },
-      apns: { payload: { aps: { sound: 'default' } } },
+      apns: {
+        headers: { 'apns-priority': '5' },
+        payload: { aps: { sound: 'default' } },
+      },
     });
+  });
+
+  it('sends a high-priority push when the notification priority is high', async () => {
+    await adapter.send({
+      deviceToken: 'device-token-1',
+      platform: 'android',
+      title: 'Workout safety alert',
+      body: 'Alex Rivera reported a pain score of 4/10.',
+      priority: 'high',
+    });
+
+    expect(sendMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        android: expect.objectContaining({ priority: 'high' }),
+        apns: expect.objectContaining({
+          headers: { 'apns-priority': '10' },
+        }),
+      }),
+    );
   });
 
   it('initializes dedicated fcm-push app even if a default app already exists', () => {

@@ -48,6 +48,11 @@ export const SEED_NOTIFICATION_TYPES: readonly NotificationTypeDefinition[] = [
     type_code: 'broadcast',
     template_text: '{{message}}',
   },
+  {
+    type_code: 'workout_safety_alert',
+    template_text:
+      '{{member_name}} reported a pain score of {{pain_score}}/10. Notes: {{pain_notes}}.',
+  },
 ] as const;
 
 /**

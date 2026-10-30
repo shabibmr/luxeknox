@@ -8,7 +8,11 @@ import {
   NotFoundError,
 } from '../platform/errors/app-error';
 import { WorkoutPlanService } from './workout-plan.service';
-import { workoutPlanCreateSchema, workoutPlanUpdateSchema } from './workout-plan.dto';
+import {
+  workoutPlanCreateSchema,
+  workoutPlanExercisesWriteSchema,
+  workoutPlanUpdateSchema,
+} from './workout-plan.dto';
 
 const adminActor: AuthenticatedUser = {
   id: 1,
@@ -973,6 +977,335 @@ describe('WorkoutPlanService', () => {
 
       expect(
         workoutPlanUpdateSchema.safeParse({ primary_objective_12w: null, row_version: 1 }).success,
+      ).toBe(true);
+    });
+  });
+
+  describe('plan exercise prescription', () => {
+    const existingPlan = {
+      id: 15,
+      title: 'Strength Block',
+      member_id: 30,
+      trainer_id: 20,
+      status: 'active',
+      row_version: 2,
+      is_template: false,
+    };
+
+    type Resolvable = {
+      mockResolvedValueOnce: (value: unknown) => Resolvable;
+      mockResolvedValue: (value: unknown) => unknown;
+    };
+
+    function stubReplace(
+      planRepo: {
+        findPlanById: Resolvable;
+        findLatestVersionByPlanId: Resolvable;
+        insertVersion: Resolvable;
+      },
+      readExercise: Record<string, unknown>,
+    ) {
+      planRepo.findPlanById
+        .mockResolvedValueOnce(existingPlan)
+        .mockResolvedValueOnce({
+          ...existingPlan,
+          row_version: 3,
+          current_version: {
+            id: 152,
+            version_number: 2,
+            exercises: [readExercise],
+          },
+        });
+      planRepo.findLatestVersionByPlanId.mockResolvedValue({
+        id: 151,
+        workout_plan_id: 15,
+        version_number: 1,
+      });
+      planRepo.insertVersion.mockResolvedValue({
+        id: 152,
+        workout_plan_id: 15,
+        version_number: 2,
+      });
+    }
+
+    it('persists target RIR, duration, and notes and returns them on read', async () => {
+      const { service, planRepo } = buildService();
+      stubReplace(planRepo, {
+        id: 1001,
+        exercise_id: 2,
+        day_number: 1,
+        order_index: 0,
+        target_rir: '2.0',
+        target_duration_seconds: 45,
+        notes: '  pause at the bottom  ',
+      });
+
+      const result = await service.replaceExercises(
+        15,
+        {
+          exercises: [
+            {
+              exercise_id: 2,
+              day_number: 1,
+              order_index: 0,
+              target_sets: 3,
+              target_reps: '10',
+              rest_seconds: 60,
+              target_rir: 2,
+              target_duration_seconds: 45,
+              notes: '  pause at the bottom  ',
+            },
+            {
+              exercise_id: 3,
+              day_number: 1,
+              order_index: 1,
+              target_sets: 1,
+              target_reps: '1',
+              rest_seconds: 0,
+              target_rir: 0,
+              target_duration_seconds: 0,
+              notes: 'hold',
+            },
+          ],
+        },
+        trainerActor,
+      );
+
+      expect(planRepo.insertPlanExercises).toHaveBeenCalledWith([
+        expect.objectContaining({
+          workout_plan_version_id: 152,
+          exercise_id: 2,
+          target_rir: '2.0',
+          target_duration_seconds: 45,
+          notes: '  pause at the bottom  ',
+        }),
+        expect.objectContaining({
+          exercise_id: 3,
+          target_rir: '0.0',
+          target_duration_seconds: 0,
+          notes: 'hold',
+        }),
+      ]);
+      expect(result.current_version?.exercises[0]).toEqual(
+        expect.objectContaining({
+          target_rir: '2.0',
+          target_duration_seconds: 45,
+          notes: '  pause at the bottom  ',
+        }),
+      );
+    });
+
+    it('stores an omitted or blank prescription as empty on a new line', async () => {
+      const { service, planRepo } = buildService();
+      stubReplace(planRepo, {
+        id: 1002,
+        exercise_id: 2,
+        day_number: 1,
+        order_index: 0,
+        target_rir: null,
+        target_duration_seconds: null,
+        notes: null,
+      });
+
+      await service.replaceExercises(
+        15,
+        {
+          exercises: [
+            {
+              exercise_id: 2,
+              day_number: 1,
+              order_index: 0,
+              target_sets: 3,
+              target_reps: '10',
+              rest_seconds: 60,
+              notes: '   ',
+            },
+          ],
+        },
+        trainerActor,
+      );
+
+      expect(planRepo.insertPlanExercises).toHaveBeenCalledWith([
+        expect.objectContaining({
+          target_rir: null,
+          target_duration_seconds: null,
+          notes: null,
+        }),
+      ]);
+    });
+
+    it('keeps an omitted prescription on update and clears an explicit empty', async () => {
+      const { service, planRepo } = buildService();
+      stubReplace(planRepo, {
+        id: 1003,
+        exercise_id: 2,
+        day_number: 1,
+        order_index: 0,
+        target_rir: '1.5',
+        target_duration_seconds: null,
+        notes: null,
+      });
+      planRepo.findExercisesByVersionId.mockResolvedValue([
+        {
+          exercise_id: 2,
+          day_number: 1,
+          order_index: 0,
+          target_rir: '1.5',
+          target_duration_seconds: 30,
+          notes: 'keep the pause',
+        },
+      ]);
+
+      await service.replaceExercises(
+        15,
+        {
+          exercises: [
+            {
+              exercise_id: 2,
+              day_number: 1,
+              order_index: 0,
+              target_sets: 3,
+              target_reps: '10',
+              rest_seconds: 60,
+              target_duration_seconds: null,
+              notes: '',
+            },
+          ],
+        },
+        trainerActor,
+      );
+
+      expect(planRepo.insertPlanExercises).toHaveBeenCalledWith([
+        expect.objectContaining({
+          target_rir: '1.5',
+          target_duration_seconds: null,
+          notes: null,
+        }),
+      ]);
+    });
+
+    it('copies prescription onto the plan created from a template', async () => {
+      const { service, planRepo } = buildService();
+      const template = {
+        id: 5,
+        title: 'Beginner Full Body',
+        description: null,
+        is_template: true,
+        target_goal: null,
+        difficulty: null,
+        duration_weeks: null,
+        trainer_id: 20,
+        status: 'active',
+        current_version: {
+          id: 50,
+          version_number: 1,
+          exercises: [
+            {
+              exercise_id: 1,
+              day_number: 1,
+              order_index: 0,
+              target_sets: 3,
+              target_reps: '10',
+              target_weight_kg: '50.00',
+              target_rir: '1.5',
+              target_duration_seconds: 40,
+              rest_seconds: 60,
+              rest_between_exercises_seconds: null,
+              notes: 'slow lower',
+            },
+          ],
+        },
+      };
+
+      planRepo.findPlanById
+        .mockResolvedValueOnce(template)
+        .mockResolvedValueOnce({
+          id: 12,
+          member_id: 30,
+          is_template: false,
+          status: 'active',
+          current_version: {
+            id: 120,
+            version_number: 1,
+            exercises: [
+              {
+                target_rir: '1.5',
+                target_duration_seconds: 40,
+                notes: 'slow lower',
+              },
+            ],
+          },
+        });
+      planRepo.insertPlan.mockResolvedValue({ id: 12 });
+      planRepo.insertVersion.mockResolvedValue({ id: 120 });
+
+      const assigned = await service.assign(5, { member_id: 30 }, trainerActor);
+
+      expect(planRepo.insertPlanExercises).toHaveBeenCalledWith([
+        expect.objectContaining({
+          workout_plan_version_id: 120,
+          target_rir: '1.5',
+          target_duration_seconds: 40,
+          notes: 'slow lower',
+        }),
+      ]);
+      expect(assigned.current_version?.exercises[0]).toEqual(
+        expect.objectContaining({
+          target_rir: '1.5',
+          target_duration_seconds: 40,
+          notes: 'slow lower',
+        }),
+      );
+    });
+
+    it('rejects out-of-range RIR and negative duration at the edge', () => {
+      const line = { exercise_id: 1, day_number: 1, order_index: 0 };
+
+      expect(
+        workoutPlanExercisesWriteSchema.safeParse({
+          exercises: [{ ...line, target_rir: -0.1 }],
+        }).success,
+      ).toBe(false);
+      expect(
+        workoutPlanExercisesWriteSchema.safeParse({
+          exercises: [{ ...line, target_rir: 10.1 }],
+        }).success,
+      ).toBe(false);
+      expect(
+        workoutPlanExercisesWriteSchema.safeParse({
+          exercises: [{ ...line, target_rir: 1.25 }],
+        }).success,
+      ).toBe(false);
+      expect(
+        workoutPlanExercisesWriteSchema.safeParse({
+          exercises: [{ ...line, target_duration_seconds: -1 }],
+        }).success,
+      ).toBe(false);
+      expect(
+        workoutPlanExercisesWriteSchema.safeParse({
+          exercises: [{ ...line, target_duration_seconds: 1.5 }],
+        }).success,
+      ).toBe(false);
+
+      expect(
+        workoutPlanExercisesWriteSchema.safeParse({
+          exercises: [{ ...line, target_rir: 0, target_duration_seconds: 0 }],
+        }).success,
+      ).toBe(true);
+      expect(
+        workoutPlanExercisesWriteSchema.safeParse({
+          exercises: [{ ...line, target_rir: 10, target_duration_seconds: 45 }],
+        }).success,
+      ).toBe(true);
+      expect(
+        workoutPlanExercisesWriteSchema.safeParse({
+          exercises: [{ ...line, target_rir: null, target_duration_seconds: null, notes: null }],
+        }).success,
+      ).toBe(true);
+      expect(
+        workoutPlanExercisesWriteSchema.safeParse({
+          exercises: [{ ...line, target_rir: '', target_duration_seconds: '' }],
+        }).success,
       ).toBe(true);
     });
   });
