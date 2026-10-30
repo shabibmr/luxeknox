@@ -294,15 +294,17 @@ export class PtProgressReviewService {
 
   async get(id: number, actor: AuthenticatedUser): Promise<PtProgressReview> {
     const review = await this.requireReview(id);
-    await requireScopedMember(this.memberRepository, review.member_id, actor);
+    const isReviewTrainer = actor.userType === 'trainer' && actor.profileId === review.trainer_id;
+    if (!isReviewTrainer) {
+      await requireScopedMember(this.memberRepository, review.member_id, actor);
+    }
     return review;
   }
 
-  /** draft -> pending_client_sign. Only the review's trainer (or an admin) may sign. */
+  /** draft -> pending_client_sign. Only the review's trainer may sign. */
   async trainerSign(id: number, actor: AuthenticatedUser): Promise<PtProgressReview> {
     const review = await this.requireReview(id);
-    await requireScopedMember(this.memberRepository, review.member_id, actor);
-    if (actor.userType === 'trainer' && actor.profileId !== review.trainer_id) {
+    if (actor.userType !== 'trainer' || actor.profileId !== review.trainer_id) {
       throw new ForbiddenError('Only the review trainer can sign this review');
     }
     await this.ptAccess.assertTrainerCanWrite(actor, review.member_id);
@@ -366,16 +368,18 @@ export class PtProgressReviewService {
     action: string,
     patch: Partial<NewPtProgressReview>,
   ): Promise<PtProgressReview> {
-    await this.repository.updateReview(before.id, patch);
-    const after = await this.requireReview(before.id);
-    await this.auditService.recordAudit({
-      actorUserId: actor.id,
-      action,
-      entityName: 'pt_progress_reviews',
-      entityId: before.id,
-      beforeState: before,
-      afterState: after,
+    return runInTransaction(this.db, async () => {
+      await this.repository.updateReview(before.id, patch);
+      const after = await this.requireReview(before.id);
+      await this.auditService.recordAudit({
+        actorUserId: actor.id,
+        action,
+        entityName: 'pt_progress_reviews',
+        entityId: before.id,
+        beforeState: before,
+        afterState: after,
+      });
+      return after;
     });
-    return after;
   }
 }

@@ -424,25 +424,80 @@ describe('PtProgressReviewService sign-off state machine', () => {
   const MEMBER: AuthenticatedUser = { ...ADMIN, id: 10, userType: 'member', profileId: 100 };
   let service: PtProgressReviewService;
   let repository: Record<string, ReturnType<typeof vi.fn>>;
+  let memberRepository: Record<string, ReturnType<typeof vi.fn>>;
+  let ptAccess: { assertTrainerCanWrite: ReturnType<typeof vi.fn> };
+  let audit: { recordAudit: ReturnType<typeof vi.fn> };
   let review: Record<string, unknown>;
+  let events: string[];
 
   beforeEach(() => {
+    events = [];
     review = { id: 7, member_id: 100, trainer_id: 9, status: 'draft' };
     repository = {
-      findReviewById: vi.fn().mockImplementation(async () => ({ ...review })),
-      updateReview: vi.fn().mockResolvedValue(undefined),
+      findReviewById: vi.fn().mockImplementation(async () => {
+        events.push('reload');
+        return { ...review };
+      }),
+      updateReview: vi.fn().mockImplementation(async () => {
+        events.push('update');
+      }),
     };
-    const memberRepository = {
+    memberRepository = {
       findById: vi.fn().mockResolvedValue({ id: 100, user_id: 10, assigned_trainer_id: 9 }),
+    };
+    ptAccess = { assertTrainerCanWrite: vi.fn().mockResolvedValue(undefined) };
+    audit = {
+      recordAudit: vi.fn().mockImplementation(async () => {
+        events.push('audit');
+      }),
+    };
+    const db = {
+      transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => {
+        events.push('tx-start');
+        try {
+          return await fn({});
+        } finally {
+          events.push('tx-end');
+        }
+      }),
     };
     service = new PtProgressReviewService(
       repository as any,
       memberRepository as any,
       {} as any,
-      { assertTrainerCanWrite: vi.fn().mockResolvedValue(undefined) } as any,
-      { recordAudit: vi.fn().mockResolvedValue(undefined) } as any,
+      ptAccess as any,
+      audit as any,
       {} as any,
-      {} as any,
+      db as any,
+    );
+  });
+
+  it('audits a trainer sign inside the same transaction as the status update', async () => {
+    await service.trainerSign(7, TRAINER);
+    expect(events).toEqual(['reload', 'tx-start', 'update', 'reload', 'audit', 'tx-end']);
+  });
+
+  it('rejects the sign-off when the audit write fails', async () => {
+    audit.recordAudit.mockImplementation(async () => {
+      throw new Error('audit failed');
+    });
+    await expect(service.trainerSign(7, TRAINER)).rejects.toThrow('audit failed');
+  });
+
+  it('lets the review trainer read a review they are not assigned to, and hides it from other trainers', async () => {
+    memberRepository.findById.mockResolvedValue({ id: 100, user_id: 10, assigned_trainer_id: 8 });
+    await expect(service.get(7, TRAINER)).resolves.toMatchObject({ id: 7, trainer_id: 9 });
+    await expect(service.get(7, { ...TRAINER, profileId: 99 })).rejects.toBeInstanceOf(NotFoundError);
+    await expect(service.get(7, { ...TRAINER, profileId: 8 })).resolves.toMatchObject({ id: 7 });
+  });
+
+  it('lets the review trainer sign a draft when they are not the assigned trainer', async () => {
+    memberRepository.findById.mockResolvedValue({ id: 100, user_id: 10, assigned_trainer_id: 8 });
+    await service.trainerSign(7, TRAINER);
+    expect(ptAccess.assertTrainerCanWrite).toHaveBeenCalledWith(TRAINER, 100);
+    expect(repository.updateReview).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({ status: 'pending_client_sign', trainer_signed_at: expect.any(Date) }),
     );
   });
 
@@ -473,10 +528,18 @@ describe('PtProgressReviewService sign-off state machine', () => {
     await expect(service.trainerSign(7, TRAINER)).rejects.toBeInstanceOf(BusinessRuleError);
   });
 
+  it('refuses trainer sign from an admin or employee', async () => {
+    await expect(service.trainerSign(7, ADMIN)).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(
+      service.trainerSign(7, { ...ADMIN, id: 3, userType: 'employee' }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    expect(repository.updateReview).not.toHaveBeenCalled();
+  });
+
   it('enforces who may sign at each stage', async () => {
-    // A trainer outside the member's row scope never sees the review (404).
+    // Another trainer is refused even when the review exists outside their row scope.
     await expect(service.trainerSign(7, { ...TRAINER, profileId: 99 })).rejects.toBeInstanceOf(
-      NotFoundError,
+      ForbiddenError,
     );
     review.status = 'pending_client_sign';
     await expect(service.clientSign(7, { ...MEMBER, id: 11 })).rejects.toBeInstanceOf(ForbiddenError);
