@@ -66,7 +66,7 @@ class GoLiveState extends Equatable {
 class GoLiveCubit extends Cubit<GoLiveState> {
   GoLiveCubit(
     this._repository, {
-    DateTime? initialDate,
+    @ignoreParam DateTime? initialDate,
   }) : super(GoLiveState(selectedDate: initialDate ?? DateTime.now()));
 
   final AccountingRepository _repository;

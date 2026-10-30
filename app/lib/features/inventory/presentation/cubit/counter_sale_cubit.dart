@@ -211,7 +211,7 @@ class CounterSaleCubit extends Cubit<CounterSaleState> {
     this._getPaymentMethods,
     this._listMembers,
     this._createCounterSale, {
-    this.debounceDuration = const Duration(milliseconds: 300),
+    @ignoreParam this.debounceDuration = const Duration(milliseconds: 300),
   }) : super(const CounterSaleState());
 
   final GetItemsUseCase _getItems;

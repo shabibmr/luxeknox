@@ -27,7 +27,7 @@ abstract class AccountsState with _$AccountsState {
 class AccountsCubit extends Cubit<AccountsState> {
   AccountsCubit(
     this._getAccounts, {
-    this.debounceDuration = const Duration(milliseconds: 300),
+    @ignoreParam this.debounceDuration = const Duration(milliseconds: 300),
   }) : super(const AccountsState());
 
   final GetAccountsUseCase _getAccounts;

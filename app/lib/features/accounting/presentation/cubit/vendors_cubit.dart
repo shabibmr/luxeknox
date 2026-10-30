@@ -75,7 +75,7 @@ class VendorsState extends Equatable {
 class VendorsCubit extends Cubit<VendorsState> {
   VendorsCubit(
     this._getVendors, {
-    this.debounceDuration = const Duration(milliseconds: 300),
+    @ignoreParam this.debounceDuration = const Duration(milliseconds: 300),
   }) : super(const VendorsState());
 
   final GetVendorsUseCase _getVendors;

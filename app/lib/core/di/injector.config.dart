@@ -1302,12 +1302,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i864.DeleteDeviceUseCase>(
       () => _i864.DeleteDeviceUseCase(gh<_i563.NotificationsRepository>()),
     );
-    gh.factory<_i533.GoLiveCubit>(
-      () => _i533.GoLiveCubit(
-        gh<_i330.AccountingRepository>(),
-        initialDate: gh<DateTime>(),
-      ),
-    );
     gh.lazySingleton<_i7.AlertsRepository>(
       () => _i56.AlertsRepositoryImpl(gh<_i1019.AlertsRemoteDataSource>()),
     );
@@ -1356,6 +1350,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i841.GetAttendanceSummaryUseCase>(),
         gh<_i841.ListAttendancesUseCase>(),
       ),
+    );
+    gh.factory<_i533.GoLiveCubit>(
+      () => _i533.GoLiveCubit(gh<_i330.AccountingRepository>()),
     );
     gh.lazySingleton<_i438.CreateAccountUseCase>(
       () => _i438.CreateAccountUseCase(gh<_i330.AccountingRepository>()),
@@ -1540,6 +1537,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i44.ListProgressNotesUseCase>(),
       ),
     );
+    gh.factory<_i495.AccountsCubit>(
+      () => _i495.AccountsCubit(gh<_i676.GetAccountsUseCase>()),
+    );
     gh.lazySingleton<_i744.GetPublicSettingsUseCase>(
       () => _i744.GetPublicSettingsUseCase(gh<_i674.SettingsRepository>()),
     );
@@ -1569,12 +1569,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i275.ExerciseRepository>(
       () => _i340.ExerciseRepositoryImpl(gh<_i100.ExerciseRemoteDataSource>()),
-    );
-    gh.factory<_i149.ItemsCubit>(
-      () => _i149.ItemsCubit(
-        gh<_i649.GetItemsUseCase>(),
-        debounceDuration: gh<Duration>(),
-      ),
     );
     gh.factory<_i69.LoginCubit>(
       () => _i69.LoginCubit(gh<_i893.SessionCubit>()),
@@ -1672,6 +1666,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i939.ReportRepository>(
       () => _i246.ReportRepositoryImpl(gh<_i996.ReportRemoteDataSource>()),
+    );
+    gh.factory<_i984.VendorsCubit>(
+      () => _i984.VendorsCubit(gh<_i612.GetVendorsUseCase>()),
     );
     gh.lazySingleton<_i250.SchedulingRepository>(
       () => _i651.SchedulingRepositoryImpl(
@@ -2099,11 +2096,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i950.PaymentVouchersCubit>(
       () => _i950.PaymentVouchersCubit(gh<_i539.GetPaymentVouchersUseCase>()),
     );
-    gh.factory<_i495.AccountsCubit>(
-      () => _i495.AccountsCubit(
-        gh<_i676.GetAccountsUseCase>(),
-        debounceDuration: gh<Duration>(),
-      ),
+    gh.factory<_i149.ItemsCubit>(
+      () => _i149.ItemsCubit(gh<_i649.GetItemsUseCase>()),
     );
     gh.factory<_i779.DietHistoryCubit>(
       () => _i779.DietHistoryCubit(gh<_i1025.ListDietLogsUseCase>()),
@@ -2115,15 +2109,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i87.AttendanceLiveFeedCubit(
         gh<_i841.ListAttendancesUseCase>(),
         gh<_i841.ListAttendanceHistoriesUseCase>(),
-      ),
-    );
-    gh.factory<_i734.CounterSaleCubit>(
-      () => _i734.CounterSaleCubit(
-        gh<_i649.GetItemsUseCase>(),
-        gh<_i789.GetPaymentMethodsUseCase>(),
-        gh<_i436.ListMembersUseCase>(),
-        gh<_i303.CreateCounterSaleUseCase>(),
-        debounceDuration: gh<Duration>(),
       ),
     );
     gh.lazySingleton<_i1063.CreateExerciseUseCase>(
@@ -2295,12 +2280,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i760.FundTransferFormCubit>(
       () => _i760.FundTransferFormCubit(gh<_i468.CreateFundTransferUseCase>()),
     );
-    gh.factory<_i984.VendorsCubit>(
-      () => _i984.VendorsCubit(
-        gh<_i612.GetVendorsUseCase>(),
-        debounceDuration: gh<Duration>(),
-      ),
-    );
     gh.factory<_i300.BookScheduleBloc>(
       () => _i300.BookScheduleBloc(gh<_i777.BookScheduleUseCase>()),
     );
@@ -2451,6 +2430,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1064.WorkoutPlanVersionsCubit>(
       () => _i1064.WorkoutPlanVersionsCubit(
         gh<_i516.ListWorkoutPlanVersionsUseCase>(),
+      ),
+    );
+    gh.factory<_i734.CounterSaleCubit>(
+      () => _i734.CounterSaleCubit(
+        gh<_i649.GetItemsUseCase>(),
+        gh<_i789.GetPaymentMethodsUseCase>(),
+        gh<_i436.ListMembersUseCase>(),
+        gh<_i303.CreateCounterSaleUseCase>(),
       ),
     );
     gh.factory<_i150.MemberDossierCubit>(
