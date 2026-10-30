@@ -20,6 +20,7 @@ Method | HTTP request | Description
 [**deleteMedicalHistory**](HEALTHApi.md#deletemedicalhistory) | **DELETE** /members/{id}/medical-histories/{historyId} | Soft-remove a medical history row
 [**deleteMemberDocument**](HEALTHApi.md#deletememberdocument) | **DELETE** /members/{id}/documents/{documentId} | Delete a document row
 [**getLifestyleIntake**](HEALTHApi.md#getlifestyleintake) | **GET** /members/{id}/lifestyle-intake | Get member lifestyle intake
+[**getParQ**](HEALTHApi.md#getparq) | **GET** /members/{id}/par-q | Get the latest PAR-Q+ screening
 [**listEmergencyContacts**](HEALTHApi.md#listemergencycontacts) | **GET** /users/{id}/emergency-contacts | Emergency contacts for a user
 [**listHealthConditions**](HEALTHApi.md#listhealthconditions) | **GET** /health-conditions | Condition catalog
 [**listMedicalHistories**](HEALTHApi.md#listmedicalhistories) | **GET** /members/{id}/medical-histories | Medical history list
@@ -492,6 +493,49 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**LifestyleIntake**](LifestyleIntake.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getParQ**
+> ParQScreening getParQ(id)
+
+Get the latest PAR-Q+ screening
+
+Returns the member's newest screening, whose `clearance_status` drives the dossier Health Clearance banner. 404 when the member has no screening on file. 
+
+### Example
+```dart
+import 'package:api_client/api.dart';
+
+final api = ApiClient().getHEALTHApi();
+final int id = 789; // int | 
+
+try {
+    final response = api.getParQ(id);
+    print(response);
+} on DioException catch (e) {
+    print('Exception when calling HEALTHApi->getParQ: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+
+### Return type
+
+[**ParQScreening**](ParQScreening.md)
 
 ### Authorization
 

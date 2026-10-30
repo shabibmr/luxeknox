@@ -547,6 +547,7 @@ import '../../features/people/domain/usecases/get_employee_usecase.dart'
 import '../../features/people/domain/usecases/get_lifestyle_intake_usecase.dart'
     as _i414;
 import '../../features/people/domain/usecases/get_member_usecase.dart' as _i562;
+import '../../features/people/domain/usecases/get_par_q_usecase.dart' as _i595;
 import '../../features/people/domain/usecases/get_trainer_usecase.dart'
     as _i1034;
 import '../../features/people/domain/usecases/list_documents_usecase.dart'
@@ -608,6 +609,7 @@ import '../../features/people/presentation/cubit/member_dossier_cubit.dart'
     as _i150;
 import '../../features/people/presentation/cubit/my_trainer_profile_cubit.dart'
     as _i634;
+import '../../features/people/presentation/cubit/par_q_cubit.dart' as _i329;
 import '../../features/people/presentation/cubit/trainer_form_cubit.dart'
     as _i20;
 import '../../features/people/presentation/cubit/trainers_directory_cubit.dart'
@@ -1269,6 +1271,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i947.ClearParQUseCase>(
       () => _i947.ClearParQUseCase(gh<_i714.ParQRepository>()),
+    );
+    gh.lazySingleton<_i595.GetParQUseCase>(
+      () => _i595.GetParQUseCase(gh<_i714.ParQRepository>()),
     );
     gh.lazySingleton<_i736.ReviewParQUseCase>(
       () => _i736.ReviewParQUseCase(gh<_i714.ParQRepository>()),
@@ -1967,6 +1972,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i645.GetPaymentsUseCase>(
       () => _i645.GetPaymentsUseCase(gh<_i663.PaymentsRepository>()),
     );
+    gh.factory<_i329.ParQCubit>(
+      () => _i329.ParQCubit(gh<_i49.SubmitParQUseCase>()),
+    );
     gh.factory<_i269.MembershipRenewCubit>(
       () => _i269.MembershipRenewCubit(
         gh<_i74.GetMembershipUseCase>(),
@@ -2477,6 +2485,20 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i639.ListDietPlansUseCase>(),
       ),
     );
+    gh.factory<_i150.MemberDossierCubit>(
+      () => _i150.MemberDossierCubit(
+        gh<_i562.GetMemberUseCase>(),
+        gh<_i862.UpdateMemberUseCase>(),
+        gh<_i370.GetMembershipsUseCase>(),
+        gh<_i841.GetAttendanceSummaryUseCase>(),
+        gh<_i1034.GetTrainerUseCase>(),
+        gh<_i777.ListSchedulesUseCase>(),
+        gh<_i929.GetMemberPtSummaryUseCase>(),
+        gh<_i929.RenewPtUseCase>(),
+        gh<_i595.GetParQUseCase>(),
+        gh<_i414.GetLifestyleIntakeUseCase>(),
+      ),
+    );
     gh.factory<_i628.DashboardAgendaCubit>(
       () => _i628.DashboardAgendaCubit(
         gh<_i777.ListSchedulesUseCase>(),
@@ -2494,18 +2516,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i789.GetPaymentMethodsUseCase>(),
         gh<_i436.ListMembersUseCase>(),
         gh<_i303.CreateCounterSaleUseCase>(),
-      ),
-    );
-    gh.factory<_i150.MemberDossierCubit>(
-      () => _i150.MemberDossierCubit(
-        gh<_i562.GetMemberUseCase>(),
-        gh<_i862.UpdateMemberUseCase>(),
-        gh<_i370.GetMembershipsUseCase>(),
-        gh<_i841.GetAttendanceSummaryUseCase>(),
-        gh<_i1034.GetTrainerUseCase>(),
-        gh<_i777.ListSchedulesUseCase>(),
-        gh<_i929.GetMemberPtSummaryUseCase>(),
-        gh<_i929.RenewPtUseCase>(),
       ),
     );
     gh.factory<_i559.ExerciseFormCubit>(

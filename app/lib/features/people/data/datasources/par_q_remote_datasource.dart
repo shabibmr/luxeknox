@@ -3,6 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 abstract class ParQRemoteDataSource {
+  Future<api.ParQScreening> getLatest(int memberId);
+
   Future<api.ParQScreening> submit(int memberId, api.ParQSubmit body);
 
   Future<api.ParQScreening> review(int memberId, api.ParQTrainerReview body);
@@ -26,6 +28,11 @@ class ParQRemoteDataSourceImpl implements ParQRemoteDataSource {
       );
     }
     return data;
+  }
+
+  @override
+  Future<api.ParQScreening> getLatest(int memberId) async {
+    return _unwrap(await _healthApi.getParQ(id: memberId));
   }
 
   @override

@@ -65,7 +65,9 @@ void main() {
       ),
     );
     registerFallbackValue(
-      api.ParQClearance((b) => b..decision = api.ParQClearanceDecisionEnum.cleared),
+      api.ParQClearance(
+        (b) => b..decision = api.ParQClearanceDecisionEnum.cleared,
+      ),
     );
   });
 
@@ -164,6 +166,40 @@ void main() {
     });
   });
 
+  group('getLatest', () {
+    test('maps the latest screening for the member', () async {
+      when(() => remote.getLatest(any())).thenAnswer(
+        (_) async => _apiScreening(
+          status: api.ParQScreeningClearanceStatusEnum.passed,
+        ),
+      );
+
+      final result = await repository.getLatest(10);
+
+      verify(() => remote.getLatest(10)).called(1);
+      final screening = result.getOrElse((_) => fail('Expected Right'));
+      expect(screening.id, 5);
+      expect(screening.clearanceStatus, ParQClearanceStatus.passed);
+      expect(screening.isPendingClearance, isFalse);
+    });
+
+    test('returns a Failure when the server call throws', () async {
+      when(() => remote.getLatest(any())).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/members/10/par-q'),
+          type: DioExceptionType.connectionTimeout,
+        ),
+      );
+
+      final result = await repository.getLatest(10);
+
+      expect(
+        result.swap().getOrElse((_) => fail('Expected Left')),
+        isA<NetworkFailure>(),
+      );
+    });
+  });
+
   group('trainerReview', () {
     test('sends notes and referral decision', () async {
       when(
@@ -192,9 +228,8 @@ void main() {
   group('clear', () {
     test('sends the decision and maps the cleared status', () async {
       when(() => remote.clear(any(), any())).thenAnswer(
-        (_) async => _apiScreening(
-          status: api.ParQScreeningClearanceStatusEnum.cleared,
-        ),
+        (_) async =>
+            _apiScreening(status: api.ParQScreeningClearanceStatusEnum.cleared),
       );
 
       final result = await repository.clear(

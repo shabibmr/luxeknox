@@ -84,6 +84,12 @@ export class ParQService {
     };
   }
 
+  /** The member's newest screening; 404 when none is on file. */
+  async getLatest(memberId: number, actor: AuthenticatedUser): Promise<ParQScreeningDto> {
+    await requireScopedMember(this.memberRepository, memberId, actor);
+    return this.toDto(await this.requireLatest(memberId));
+  }
+
   /**
    * Record a questionnaire. Any YES answer is positive and parks the member in
    * `pending_clearance` until a doctor referral is cleared; all-NO passes outright.

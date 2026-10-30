@@ -14,7 +14,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MemberDossierState {
 
- LoadStatus get status; Person? get person; Membership? get membership; MemberPtSummary? get pt; bool get ptUnavailable; bool get renewingPt; int? get visitsThisMonth; bool get membershipsUnavailable; TrainerProfile? get assignedTrainer; ScheduleSession? get nextSchedule; bool get editingProfile; String? get message; Failure? get failure;
+ LoadStatus get status; Person? get person; Membership? get membership; MemberPtSummary? get pt; bool get ptUnavailable; bool get renewingPt; int? get visitsThisMonth; bool get membershipsUnavailable; TrainerProfile? get assignedTrainer; ScheduleSession? get nextSchedule; bool get editingProfile;/// Newest PAR-Q+ screening; null when none is on file (see [healthUnavailable]).
+ ParQScreening? get parQ; bool get healthUnavailable; LifestyleIntake? get lifestyle; bool get lifestyleUnavailable; String? get message; Failure? get failure;
 /// Create a copy of MemberDossierState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,16 @@ $MemberDossierStateCopyWith<MemberDossierState> get copyWith => _$MemberDossierS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MemberDossierState&&(identical(other.status, status) || other.status == status)&&(identical(other.person, person) || other.person == person)&&(identical(other.membership, membership) || other.membership == membership)&&(identical(other.pt, pt) || other.pt == pt)&&(identical(other.ptUnavailable, ptUnavailable) || other.ptUnavailable == ptUnavailable)&&(identical(other.renewingPt, renewingPt) || other.renewingPt == renewingPt)&&(identical(other.visitsThisMonth, visitsThisMonth) || other.visitsThisMonth == visitsThisMonth)&&(identical(other.membershipsUnavailable, membershipsUnavailable) || other.membershipsUnavailable == membershipsUnavailable)&&(identical(other.assignedTrainer, assignedTrainer) || other.assignedTrainer == assignedTrainer)&&(identical(other.nextSchedule, nextSchedule) || other.nextSchedule == nextSchedule)&&(identical(other.editingProfile, editingProfile) || other.editingProfile == editingProfile)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MemberDossierState&&(identical(other.status, status) || other.status == status)&&(identical(other.person, person) || other.person == person)&&(identical(other.membership, membership) || other.membership == membership)&&(identical(other.pt, pt) || other.pt == pt)&&(identical(other.ptUnavailable, ptUnavailable) || other.ptUnavailable == ptUnavailable)&&(identical(other.renewingPt, renewingPt) || other.renewingPt == renewingPt)&&(identical(other.visitsThisMonth, visitsThisMonth) || other.visitsThisMonth == visitsThisMonth)&&(identical(other.membershipsUnavailable, membershipsUnavailable) || other.membershipsUnavailable == membershipsUnavailable)&&(identical(other.assignedTrainer, assignedTrainer) || other.assignedTrainer == assignedTrainer)&&(identical(other.nextSchedule, nextSchedule) || other.nextSchedule == nextSchedule)&&(identical(other.editingProfile, editingProfile) || other.editingProfile == editingProfile)&&(identical(other.parQ, parQ) || other.parQ == parQ)&&(identical(other.healthUnavailable, healthUnavailable) || other.healthUnavailable == healthUnavailable)&&(identical(other.lifestyle, lifestyle) || other.lifestyle == lifestyle)&&(identical(other.lifestyleUnavailable, lifestyleUnavailable) || other.lifestyleUnavailable == lifestyleUnavailable)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,person,membership,pt,ptUnavailable,renewingPt,visitsThisMonth,membershipsUnavailable,assignedTrainer,nextSchedule,editingProfile,message,failure);
+int get hashCode => Object.hash(runtimeType,status,person,membership,pt,ptUnavailable,renewingPt,visitsThisMonth,membershipsUnavailable,assignedTrainer,nextSchedule,editingProfile,parQ,healthUnavailable,lifestyle,lifestyleUnavailable,message,failure);
 
 @override
 String toString() {
-  return 'MemberDossierState(status: $status, person: $person, membership: $membership, pt: $pt, ptUnavailable: $ptUnavailable, renewingPt: $renewingPt, visitsThisMonth: $visitsThisMonth, membershipsUnavailable: $membershipsUnavailable, assignedTrainer: $assignedTrainer, nextSchedule: $nextSchedule, editingProfile: $editingProfile, message: $message, failure: $failure)';
+  return 'MemberDossierState(status: $status, person: $person, membership: $membership, pt: $pt, ptUnavailable: $ptUnavailable, renewingPt: $renewingPt, visitsThisMonth: $visitsThisMonth, membershipsUnavailable: $membershipsUnavailable, assignedTrainer: $assignedTrainer, nextSchedule: $nextSchedule, editingProfile: $editingProfile, parQ: $parQ, healthUnavailable: $healthUnavailable, lifestyle: $lifestyle, lifestyleUnavailable: $lifestyleUnavailable, message: $message, failure: $failure)';
 }
 
 
@@ -45,7 +46,7 @@ abstract mixin class $MemberDossierStateCopyWith<$Res>  {
   factory $MemberDossierStateCopyWith(MemberDossierState value, $Res Function(MemberDossierState) _then) = _$MemberDossierStateCopyWithImpl;
 @useResult
 $Res call({
- LoadStatus status, Person? person, Membership? membership, MemberPtSummary? pt, bool ptUnavailable, bool renewingPt, int? visitsThisMonth, bool membershipsUnavailable, TrainerProfile? assignedTrainer, ScheduleSession? nextSchedule, bool editingProfile, String? message, Failure? failure
+ LoadStatus status, Person? person, Membership? membership, MemberPtSummary? pt, bool ptUnavailable, bool renewingPt, int? visitsThisMonth, bool membershipsUnavailable, TrainerProfile? assignedTrainer, ScheduleSession? nextSchedule, bool editingProfile, ParQScreening? parQ, bool healthUnavailable, LifestyleIntake? lifestyle, bool lifestyleUnavailable, String? message, Failure? failure
 });
 
 
@@ -62,7 +63,7 @@ class _$MemberDossierStateCopyWithImpl<$Res>
 
 /// Create a copy of MemberDossierState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? person = freezed,Object? membership = freezed,Object? pt = freezed,Object? ptUnavailable = null,Object? renewingPt = null,Object? visitsThisMonth = freezed,Object? membershipsUnavailable = null,Object? assignedTrainer = freezed,Object? nextSchedule = freezed,Object? editingProfile = null,Object? message = freezed,Object? failure = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? person = freezed,Object? membership = freezed,Object? pt = freezed,Object? ptUnavailable = null,Object? renewingPt = null,Object? visitsThisMonth = freezed,Object? membershipsUnavailable = null,Object? assignedTrainer = freezed,Object? nextSchedule = freezed,Object? editingProfile = null,Object? parQ = freezed,Object? healthUnavailable = null,Object? lifestyle = freezed,Object? lifestyleUnavailable = null,Object? message = freezed,Object? failure = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,person: freezed == person ? _self.person : person // ignore: cast_nullable_to_non_nullable
@@ -75,6 +76,10 @@ as int?,membershipsUnavailable: null == membershipsUnavailable ? _self.membershi
 as bool,assignedTrainer: freezed == assignedTrainer ? _self.assignedTrainer : assignedTrainer // ignore: cast_nullable_to_non_nullable
 as TrainerProfile?,nextSchedule: freezed == nextSchedule ? _self.nextSchedule : nextSchedule // ignore: cast_nullable_to_non_nullable
 as ScheduleSession?,editingProfile: null == editingProfile ? _self.editingProfile : editingProfile // ignore: cast_nullable_to_non_nullable
+as bool,parQ: freezed == parQ ? _self.parQ : parQ // ignore: cast_nullable_to_non_nullable
+as ParQScreening?,healthUnavailable: null == healthUnavailable ? _self.healthUnavailable : healthUnavailable // ignore: cast_nullable_to_non_nullable
+as bool,lifestyle: freezed == lifestyle ? _self.lifestyle : lifestyle // ignore: cast_nullable_to_non_nullable
+as LifestyleIntake?,lifestyleUnavailable: null == lifestyleUnavailable ? _self.lifestyleUnavailable : lifestyleUnavailable // ignore: cast_nullable_to_non_nullable
 as bool,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
 as Failure?,
@@ -162,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  Person? person,  Membership? membership,  MemberPtSummary? pt,  bool ptUnavailable,  bool renewingPt,  int? visitsThisMonth,  bool membershipsUnavailable,  TrainerProfile? assignedTrainer,  ScheduleSession? nextSchedule,  bool editingProfile,  String? message,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LoadStatus status,  Person? person,  Membership? membership,  MemberPtSummary? pt,  bool ptUnavailable,  bool renewingPt,  int? visitsThisMonth,  bool membershipsUnavailable,  TrainerProfile? assignedTrainer,  ScheduleSession? nextSchedule,  bool editingProfile,  ParQScreening? parQ,  bool healthUnavailable,  LifestyleIntake? lifestyle,  bool lifestyleUnavailable,  String? message,  Failure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MemberDossierState() when $default != null:
-return $default(_that.status,_that.person,_that.membership,_that.pt,_that.ptUnavailable,_that.renewingPt,_that.visitsThisMonth,_that.membershipsUnavailable,_that.assignedTrainer,_that.nextSchedule,_that.editingProfile,_that.message,_that.failure);case _:
+return $default(_that.status,_that.person,_that.membership,_that.pt,_that.ptUnavailable,_that.renewingPt,_that.visitsThisMonth,_that.membershipsUnavailable,_that.assignedTrainer,_that.nextSchedule,_that.editingProfile,_that.parQ,_that.healthUnavailable,_that.lifestyle,_that.lifestyleUnavailable,_that.message,_that.failure);case _:
   return orElse();
 
 }
@@ -183,10 +188,10 @@ return $default(_that.status,_that.person,_that.membership,_that.pt,_that.ptUnav
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  Person? person,  Membership? membership,  MemberPtSummary? pt,  bool ptUnavailable,  bool renewingPt,  int? visitsThisMonth,  bool membershipsUnavailable,  TrainerProfile? assignedTrainer,  ScheduleSession? nextSchedule,  bool editingProfile,  String? message,  Failure? failure)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LoadStatus status,  Person? person,  Membership? membership,  MemberPtSummary? pt,  bool ptUnavailable,  bool renewingPt,  int? visitsThisMonth,  bool membershipsUnavailable,  TrainerProfile? assignedTrainer,  ScheduleSession? nextSchedule,  bool editingProfile,  ParQScreening? parQ,  bool healthUnavailable,  LifestyleIntake? lifestyle,  bool lifestyleUnavailable,  String? message,  Failure? failure)  $default,) {final _that = this;
 switch (_that) {
 case _MemberDossierState():
-return $default(_that.status,_that.person,_that.membership,_that.pt,_that.ptUnavailable,_that.renewingPt,_that.visitsThisMonth,_that.membershipsUnavailable,_that.assignedTrainer,_that.nextSchedule,_that.editingProfile,_that.message,_that.failure);case _:
+return $default(_that.status,_that.person,_that.membership,_that.pt,_that.ptUnavailable,_that.renewingPt,_that.visitsThisMonth,_that.membershipsUnavailable,_that.assignedTrainer,_that.nextSchedule,_that.editingProfile,_that.parQ,_that.healthUnavailable,_that.lifestyle,_that.lifestyleUnavailable,_that.message,_that.failure);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +208,10 @@ return $default(_that.status,_that.person,_that.membership,_that.pt,_that.ptUnav
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  Person? person,  Membership? membership,  MemberPtSummary? pt,  bool ptUnavailable,  bool renewingPt,  int? visitsThisMonth,  bool membershipsUnavailable,  TrainerProfile? assignedTrainer,  ScheduleSession? nextSchedule,  bool editingProfile,  String? message,  Failure? failure)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LoadStatus status,  Person? person,  Membership? membership,  MemberPtSummary? pt,  bool ptUnavailable,  bool renewingPt,  int? visitsThisMonth,  bool membershipsUnavailable,  TrainerProfile? assignedTrainer,  ScheduleSession? nextSchedule,  bool editingProfile,  ParQScreening? parQ,  bool healthUnavailable,  LifestyleIntake? lifestyle,  bool lifestyleUnavailable,  String? message,  Failure? failure)?  $default,) {final _that = this;
 switch (_that) {
 case _MemberDossierState() when $default != null:
-return $default(_that.status,_that.person,_that.membership,_that.pt,_that.ptUnavailable,_that.renewingPt,_that.visitsThisMonth,_that.membershipsUnavailable,_that.assignedTrainer,_that.nextSchedule,_that.editingProfile,_that.message,_that.failure);case _:
+return $default(_that.status,_that.person,_that.membership,_that.pt,_that.ptUnavailable,_that.renewingPt,_that.visitsThisMonth,_that.membershipsUnavailable,_that.assignedTrainer,_that.nextSchedule,_that.editingProfile,_that.parQ,_that.healthUnavailable,_that.lifestyle,_that.lifestyleUnavailable,_that.message,_that.failure);case _:
   return null;
 
 }
@@ -218,7 +223,7 @@ return $default(_that.status,_that.person,_that.membership,_that.pt,_that.ptUnav
 
 
 class _MemberDossierState implements MemberDossierState {
-  const _MemberDossierState({this.status = LoadStatus.initial, this.person, this.membership, this.pt, this.ptUnavailable = false, this.renewingPt = false, this.visitsThisMonth, this.membershipsUnavailable = false, this.assignedTrainer, this.nextSchedule, this.editingProfile = false, this.message, this.failure});
+  const _MemberDossierState({this.status = LoadStatus.initial, this.person, this.membership, this.pt, this.ptUnavailable = false, this.renewingPt = false, this.visitsThisMonth, this.membershipsUnavailable = false, this.assignedTrainer, this.nextSchedule, this.editingProfile = false, this.parQ, this.healthUnavailable = false, this.lifestyle, this.lifestyleUnavailable = false, this.message, this.failure});
   
 
 @override@JsonKey() final  LoadStatus status;
@@ -232,6 +237,11 @@ class _MemberDossierState implements MemberDossierState {
 @override final  TrainerProfile? assignedTrainer;
 @override final  ScheduleSession? nextSchedule;
 @override@JsonKey() final  bool editingProfile;
+/// Newest PAR-Q+ screening; null when none is on file (see [healthUnavailable]).
+@override final  ParQScreening? parQ;
+@override@JsonKey() final  bool healthUnavailable;
+@override final  LifestyleIntake? lifestyle;
+@override@JsonKey() final  bool lifestyleUnavailable;
 @override final  String? message;
 @override final  Failure? failure;
 
@@ -245,16 +255,16 @@ _$MemberDossierStateCopyWith<_MemberDossierState> get copyWith => __$MemberDossi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MemberDossierState&&(identical(other.status, status) || other.status == status)&&(identical(other.person, person) || other.person == person)&&(identical(other.membership, membership) || other.membership == membership)&&(identical(other.pt, pt) || other.pt == pt)&&(identical(other.ptUnavailable, ptUnavailable) || other.ptUnavailable == ptUnavailable)&&(identical(other.renewingPt, renewingPt) || other.renewingPt == renewingPt)&&(identical(other.visitsThisMonth, visitsThisMonth) || other.visitsThisMonth == visitsThisMonth)&&(identical(other.membershipsUnavailable, membershipsUnavailable) || other.membershipsUnavailable == membershipsUnavailable)&&(identical(other.assignedTrainer, assignedTrainer) || other.assignedTrainer == assignedTrainer)&&(identical(other.nextSchedule, nextSchedule) || other.nextSchedule == nextSchedule)&&(identical(other.editingProfile, editingProfile) || other.editingProfile == editingProfile)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MemberDossierState&&(identical(other.status, status) || other.status == status)&&(identical(other.person, person) || other.person == person)&&(identical(other.membership, membership) || other.membership == membership)&&(identical(other.pt, pt) || other.pt == pt)&&(identical(other.ptUnavailable, ptUnavailable) || other.ptUnavailable == ptUnavailable)&&(identical(other.renewingPt, renewingPt) || other.renewingPt == renewingPt)&&(identical(other.visitsThisMonth, visitsThisMonth) || other.visitsThisMonth == visitsThisMonth)&&(identical(other.membershipsUnavailable, membershipsUnavailable) || other.membershipsUnavailable == membershipsUnavailable)&&(identical(other.assignedTrainer, assignedTrainer) || other.assignedTrainer == assignedTrainer)&&(identical(other.nextSchedule, nextSchedule) || other.nextSchedule == nextSchedule)&&(identical(other.editingProfile, editingProfile) || other.editingProfile == editingProfile)&&(identical(other.parQ, parQ) || other.parQ == parQ)&&(identical(other.healthUnavailable, healthUnavailable) || other.healthUnavailable == healthUnavailable)&&(identical(other.lifestyle, lifestyle) || other.lifestyle == lifestyle)&&(identical(other.lifestyleUnavailable, lifestyleUnavailable) || other.lifestyleUnavailable == lifestyleUnavailable)&&(identical(other.message, message) || other.message == message)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,person,membership,pt,ptUnavailable,renewingPt,visitsThisMonth,membershipsUnavailable,assignedTrainer,nextSchedule,editingProfile,message,failure);
+int get hashCode => Object.hash(runtimeType,status,person,membership,pt,ptUnavailable,renewingPt,visitsThisMonth,membershipsUnavailable,assignedTrainer,nextSchedule,editingProfile,parQ,healthUnavailable,lifestyle,lifestyleUnavailable,message,failure);
 
 @override
 String toString() {
-  return 'MemberDossierState(status: $status, person: $person, membership: $membership, pt: $pt, ptUnavailable: $ptUnavailable, renewingPt: $renewingPt, visitsThisMonth: $visitsThisMonth, membershipsUnavailable: $membershipsUnavailable, assignedTrainer: $assignedTrainer, nextSchedule: $nextSchedule, editingProfile: $editingProfile, message: $message, failure: $failure)';
+  return 'MemberDossierState(status: $status, person: $person, membership: $membership, pt: $pt, ptUnavailable: $ptUnavailable, renewingPt: $renewingPt, visitsThisMonth: $visitsThisMonth, membershipsUnavailable: $membershipsUnavailable, assignedTrainer: $assignedTrainer, nextSchedule: $nextSchedule, editingProfile: $editingProfile, parQ: $parQ, healthUnavailable: $healthUnavailable, lifestyle: $lifestyle, lifestyleUnavailable: $lifestyleUnavailable, message: $message, failure: $failure)';
 }
 
 
@@ -265,7 +275,7 @@ abstract mixin class _$MemberDossierStateCopyWith<$Res> implements $MemberDossie
   factory _$MemberDossierStateCopyWith(_MemberDossierState value, $Res Function(_MemberDossierState) _then) = __$MemberDossierStateCopyWithImpl;
 @override @useResult
 $Res call({
- LoadStatus status, Person? person, Membership? membership, MemberPtSummary? pt, bool ptUnavailable, bool renewingPt, int? visitsThisMonth, bool membershipsUnavailable, TrainerProfile? assignedTrainer, ScheduleSession? nextSchedule, bool editingProfile, String? message, Failure? failure
+ LoadStatus status, Person? person, Membership? membership, MemberPtSummary? pt, bool ptUnavailable, bool renewingPt, int? visitsThisMonth, bool membershipsUnavailable, TrainerProfile? assignedTrainer, ScheduleSession? nextSchedule, bool editingProfile, ParQScreening? parQ, bool healthUnavailable, LifestyleIntake? lifestyle, bool lifestyleUnavailable, String? message, Failure? failure
 });
 
 
@@ -282,7 +292,7 @@ class __$MemberDossierStateCopyWithImpl<$Res>
 
 /// Create a copy of MemberDossierState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? person = freezed,Object? membership = freezed,Object? pt = freezed,Object? ptUnavailable = null,Object? renewingPt = null,Object? visitsThisMonth = freezed,Object? membershipsUnavailable = null,Object? assignedTrainer = freezed,Object? nextSchedule = freezed,Object? editingProfile = null,Object? message = freezed,Object? failure = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? person = freezed,Object? membership = freezed,Object? pt = freezed,Object? ptUnavailable = null,Object? renewingPt = null,Object? visitsThisMonth = freezed,Object? membershipsUnavailable = null,Object? assignedTrainer = freezed,Object? nextSchedule = freezed,Object? editingProfile = null,Object? parQ = freezed,Object? healthUnavailable = null,Object? lifestyle = freezed,Object? lifestyleUnavailable = null,Object? message = freezed,Object? failure = freezed,}) {
   return _then(_MemberDossierState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as LoadStatus,person: freezed == person ? _self.person : person // ignore: cast_nullable_to_non_nullable
@@ -295,6 +305,10 @@ as int?,membershipsUnavailable: null == membershipsUnavailable ? _self.membershi
 as bool,assignedTrainer: freezed == assignedTrainer ? _self.assignedTrainer : assignedTrainer // ignore: cast_nullable_to_non_nullable
 as TrainerProfile?,nextSchedule: freezed == nextSchedule ? _self.nextSchedule : nextSchedule // ignore: cast_nullable_to_non_nullable
 as ScheduleSession?,editingProfile: null == editingProfile ? _self.editingProfile : editingProfile // ignore: cast_nullable_to_non_nullable
+as bool,parQ: freezed == parQ ? _self.parQ : parQ // ignore: cast_nullable_to_non_nullable
+as ParQScreening?,healthUnavailable: null == healthUnavailable ? _self.healthUnavailable : healthUnavailable // ignore: cast_nullable_to_non_nullable
+as bool,lifestyle: freezed == lifestyle ? _self.lifestyle : lifestyle // ignore: cast_nullable_to_non_nullable
+as LifestyleIntake?,lifestyleUnavailable: null == lifestyleUnavailable ? _self.lifestyleUnavailable : lifestyleUnavailable // ignore: cast_nullable_to_non_nullable
 as bool,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
 as Failure?,

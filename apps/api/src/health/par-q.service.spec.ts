@@ -254,6 +254,31 @@ describe('ParQService', () => {
     });
   });
 
+  describe('getLatest', () => {
+    it('returns the latest screening for a scoped member', async () => {
+      const { service } = build(screening({ clearance_status: 'pending_clearance' }));
+
+      const result = await service.getLatest(100, ADMIN);
+
+      expect(result.id).toBe(5);
+      expect(result.clearance_status).toBe('pending_clearance');
+    });
+
+    it('404s when the member has no screening', async () => {
+      const { service } = build(null);
+
+      await expect(service.getLatest(100, ADMIN)).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it('does not write an audit record', async () => {
+      const { service, auditService } = build();
+
+      await service.getLatest(100, TRAINER);
+
+      expect(auditService.recordAudit).not.toHaveBeenCalled();
+    });
+  });
+
   describe('assertMayTrain', () => {
     it.each(['pending_clearance', 'rejected'] as const)('blocks when the latest is %s', async (status) => {
       const { service } = build(screening({ clearance_status: status }));

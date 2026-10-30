@@ -196,6 +196,7 @@ Class | Method | HTTP request | Description
 [*HEALTHApi*](doc/HEALTHApi.md) | [**deleteMedicalHistory**](doc/HEALTHApi.md#deletemedicalhistory) | **DELETE** /members/{id}/medical-histories/{historyId} | Soft-remove a medical history row
 [*HEALTHApi*](doc/HEALTHApi.md) | [**deleteMemberDocument**](doc/HEALTHApi.md#deletememberdocument) | **DELETE** /members/{id}/documents/{documentId} | Delete a document row
 [*HEALTHApi*](doc/HEALTHApi.md) | [**getLifestyleIntake**](doc/HEALTHApi.md#getlifestyleintake) | **GET** /members/{id}/lifestyle-intake | Get member lifestyle intake
+[*HEALTHApi*](doc/HEALTHApi.md) | [**getParQ**](doc/HEALTHApi.md#getparq) | **GET** /members/{id}/par-q | Get the latest PAR-Q+ screening
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listEmergencyContacts**](doc/HEALTHApi.md#listemergencycontacts) | **GET** /users/{id}/emergency-contacts | Emergency contacts for a user
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listHealthConditions**](doc/HEALTHApi.md#listhealthconditions) | **GET** /health-conditions | Condition catalog
 [*HEALTHApi*](doc/HEALTHApi.md) | [**listMedicalHistories**](doc/HEALTHApi.md#listmedicalhistories) | **GET** /members/{id}/medical-histories | Medical history list

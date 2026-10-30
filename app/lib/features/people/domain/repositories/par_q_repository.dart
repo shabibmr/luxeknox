@@ -6,6 +6,9 @@ import '../entities/par_q_screening.dart';
 
 /// PAR-Q+ health screening and the PT safety gate (screen 04).
 abstract class ParQRepository {
+  /// The member's newest screening; [NotFoundFailure] when none is on file.
+  Future<Either<Failure, ParQScreening>> getLatest(int memberId);
+
   Future<Either<Failure, ParQScreening>> submit(ParQSubmission submission);
 
   Future<Either<Failure, ParQScreening>> trainerReview(

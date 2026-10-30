@@ -11,6 +11,30 @@ abstract final class PeopleStrings {
   static const cancel = 'Cancel';
   static const noPermission = 'You do not have permission to view this page.';
   static const dossierTitle = 'Member';
+  static const dossierTabOverview = 'Overview';
+  static const dossierTabLifestyle = 'Lifestyle & Habits';
+  static const clearanceCleared = 'Health clearance: cleared to train';
+  static const clearancePending =
+      'Health clearance pending — PT booking is blocked';
+  static const clearanceRejected =
+      'Health clearance rejected — PT booking is blocked';
+  static const clearanceNone = 'No PAR-Q+ screening on file';
+  static const clearanceUnavailable = 'Health clearance unavailable';
+  static const lifestyleStress = 'Stress';
+  static const lifestyleSleep = 'Sleep';
+  static const lifestyleActivity = 'Activity level';
+  static String activityLevelLabel(String name) =>
+      '${name[0].toUpperCase()}${name.substring(1)}';
+  static const lifestyleNone ='No lifestyle consultation yet.';
+  static const lifestyleUnavailable = 'Lifestyle & habits unavailable';
+  static const lifestylePriorities = 'Top lifestyle priorities';
+  static const lifestyleDomainSleep = 'Sleep';
+  static const lifestyleDomainNutrition = 'Nutrition';
+  static const lifestyleDomainActivity = 'Activity';
+  static const lifestyleDomainRecovery = 'Recovery';
+  static String stressScore(int level) => '$level / 10';
+  static String sleepHours(double hours) =>
+      '${hours.toStringAsFixed(hours.truncateToDouble() == hours ? 0 : 1)} h';
   static const assignTrainer = 'Assign trainer';
   static const reassignTrainer = 'Reassign';
   static const unassignedTrainer = 'Unassigned';

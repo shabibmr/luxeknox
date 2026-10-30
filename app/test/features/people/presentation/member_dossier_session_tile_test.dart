@@ -21,6 +21,7 @@ import 'package:luxeknox/features/people/domain/usecases/get_member_usecase.dart
 import 'package:luxeknox/features/people/domain/usecases/get_trainer_usecase.dart';
 import 'package:luxeknox/features/people/domain/usecases/update_member_usecase.dart';
 import 'package:luxeknox/features/people/presentation/cubit/member_dossier_cubit.dart';
+import 'dossier_health_fakes.dart';
 import 'package:luxeknox/features/people/presentation/people_strings.dart';
 import 'package:luxeknox/features/people/presentation/screens/member_dossier_screen.dart';
 import 'package:luxeknox/features/pt/domain/entities/pt_subscription.dart';
@@ -215,6 +216,8 @@ void main() {
         listSchedules,
         getPtSummary,
         renewPt,
+        NoParQOnFile(),
+        NoLifestyleOnFile(),
       ),
     );
     getIt.registerFactory<GoalsListCubit>(
@@ -308,7 +311,10 @@ void main() {
   ) async {
     final ended = ptSub(status: PtSubscriptionStatus.completed);
     stubExtras(
-      pt: MemberPtSummary(history: [ended], trainerAccess: TrainerAccess.readOnly),
+      pt: MemberPtSummary(
+        history: [ended],
+        trainerAccess: TrainerAccess.readOnly,
+      ),
     );
 
     await pumpDossierAt(tester, '/trainer/members/42');

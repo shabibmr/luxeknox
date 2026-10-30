@@ -31,6 +31,8 @@ import '../cubit/member_dossier_cubit.dart';
 import '../member_dossier_pt.dart';
 import '../people_strings.dart';
 import '../widgets/gender_radio_group.dart';
+import '../widgets/health_clearance_banner.dart';
+import '../widgets/lifestyle_habits_tab.dart';
 import 'documents_screen.dart';
 import 'emergency_contacts_screen.dart';
 import 'health_detail_screen.dart';
@@ -107,10 +109,52 @@ class _MemberDossierBody extends StatelessWidget {
             if (state.person == null) {
               return const AppLoading();
             }
-            return _DossierContent(state: state);
+            final overview = _DossierContent(state: state);
+            if (!context.can('health.read')) return overview;
+            return _HealthTabs(state: state, overview: overview);
           }(),
         );
       },
+    );
+  }
+}
+
+/// Clearance banner above an Overview / "Lifestyle & Habits" tab pair.
+class _HealthTabs extends StatelessWidget {
+  const _HealthTabs({required this.state, required this.overview});
+
+  final MemberDossierState state;
+  final Widget overview;
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          HealthClearanceBanner(
+            parQ: state.parQ,
+            unavailable: state.healthUnavailable,
+          ),
+          const TabBar(
+            tabs: [
+              Tab(text: PeopleStrings.dossierTabOverview),
+              Tab(text: PeopleStrings.dossierTabLifestyle),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                overview,
+                LifestyleHabitsTab(
+                  intake: state.lifestyle,
+                  unavailable: state.lifestyleUnavailable,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -124,7 +168,12 @@ class _DossierContent extends StatefulWidget {
   State<_DossierContent> createState() => _DossierContentState();
 }
 
-class _DossierContentState extends State<_DossierContent> {
+class _DossierContentState extends State<_DossierContent>
+    with AutomaticKeepAliveClientMixin {
+  // Keeps an in-progress profile edit when the user flips to another tab.
+  @override
+  bool get wantKeepAlive => true;
+
   late final TextEditingController _notesController;
   late final TextEditingController _firstNameController;
   late final TextEditingController _lastNameController;
@@ -184,6 +233,7 @@ class _DossierContentState extends State<_DossierContent> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final state = widget.state;
     final person = state.person!;
     final membership = state.membership;
@@ -668,9 +718,7 @@ class _PersonalTrainingSection extends StatelessWidget {
           if (shown.isCouple && shown.partnerMemberName != null)
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(
-                PeopleStrings.coupleWith(shown.partnerMemberName!),
-              ),
+              title: Text(PeopleStrings.coupleWith(shown.partnerMemberName!)),
               trailing: shown.partnerMemberId == null
                   ? null
                   : const Icon(Icons.chevron_right),
@@ -717,7 +765,8 @@ class _PersonalTrainingSection extends StatelessWidget {
           onTap: () {
             final session = context.read<SessionCubit>().state;
             // Admin never gets a trainer photo bypass (C4.3).
-            final assigned = !isAdminShell &&
+            final assigned =
+                !isAdminShell &&
                 session is SessionAuthenticated &&
                 resolveIsAssignedTrainer(
                   isTrainerPrincipal:
@@ -754,9 +803,7 @@ class _PersonalTrainingSection extends StatelessWidget {
               context.push(path);
             },
           ),
-          if (!isAdminShell &&
-              status == PtDossierStatus.active &&
-              !readOnly)
+          if (!isAdminShell && status == PtDossierStatus.active && !readOnly)
             ListTile(
               title: const Text(PeopleStrings.startWorkoutSession),
               trailing: const Icon(Icons.chevron_right),

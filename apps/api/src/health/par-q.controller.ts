@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.guard';
@@ -20,6 +20,18 @@ import { ParQService } from './par-q.service';
 @Controller('members/:id/par-q')
 export class ParQController {
   constructor(private readonly service: ParQService) {}
+
+  @Get()
+  @RequirePermission('health.read')
+  @ApiOperation({ operationId: 'getParQ', summary: 'Get the latest PAR-Q+ screening' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, type: ParQScreeningDto })
+  async getLatest(
+    @Param('id', ParseIntPipe) memberId: number,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ): Promise<ParQScreeningDto> {
+    return this.service.getLatest(memberId, currentUser);
+  }
 
   @Post()
   @RequirePermission('health.lifestyle')

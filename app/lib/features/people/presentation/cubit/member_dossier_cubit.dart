@@ -13,9 +13,13 @@ import '../../../pt/domain/usecases/pt_usecases.dart';
 import '../../../scheduling/domain/entities/schedule_enums.dart';
 import '../../../scheduling/domain/entities/schedule_session.dart';
 import '../../../scheduling/domain/usecases/schedule_usecases.dart';
+import '../../domain/entities/lifestyle_intake.dart';
+import '../../domain/entities/par_q_screening.dart';
 import '../../domain/entities/person.dart';
 import '../../domain/entities/trainer_profile.dart';
+import '../../domain/usecases/get_lifestyle_intake_usecase.dart';
 import '../../domain/usecases/get_member_usecase.dart';
+import '../../domain/usecases/get_par_q_usecase.dart';
 import '../../domain/usecases/get_trainer_usecase.dart';
 import '../../domain/usecases/update_member_usecase.dart';
 import '../member_dossier_pt.dart';
@@ -36,6 +40,12 @@ abstract class MemberDossierState with _$MemberDossierState {
     TrainerProfile? assignedTrainer,
     ScheduleSession? nextSchedule,
     @Default(false) bool editingProfile,
+
+    /// Newest PAR-Q+ screening; null when none is on file (see [healthUnavailable]).
+    ParQScreening? parQ,
+    @Default(false) bool healthUnavailable,
+    LifestyleIntake? lifestyle,
+    @Default(false) bool lifestyleUnavailable,
     String? message,
     Failure? failure,
   }) = _MemberDossierState;
@@ -52,6 +62,8 @@ class MemberDossierCubit extends Cubit<MemberDossierState> {
     this._listSchedules,
     this._getPtSummary,
     this._renewPt,
+    this._getParQ,
+    this._getLifestyle,
   ) : super(const MemberDossierState());
 
   final GetMemberUseCase _getMember;
@@ -62,6 +74,8 @@ class MemberDossierCubit extends Cubit<MemberDossierState> {
   final ListSchedulesUseCase _listSchedules;
   final GetMemberPtSummaryUseCase _getPtSummary;
   final RenewPtUseCase _renewPt;
+  final GetParQUseCase _getParQ;
+  final GetLifestyleIntakeUseCase _getLifestyle;
 
   void setEditing(bool editing) {
     emit(state.copyWith(editingProfile: editing, message: null));
@@ -113,12 +127,16 @@ class MemberDossierCubit extends Cubit<MemberDossierState> {
             person.assignedTrainerId!,
           ).then((r) => r.fold((_) => null, (t) => t));
     final ptFuture = _getPtSummary(person.id);
+    final parQFuture = _getParQ(person.id);
+    final lifestyleFuture = _getLifestyle(person.id);
 
     final membershipsResult = await membershipsFuture;
     final attendanceResult = await attendanceFuture;
     final schedulesResult = await schedulesFuture;
     final trainer = await trainerFuture;
     final ptResult = await ptFuture;
+    final parQResult = await parQFuture;
+    final lifestyleResult = await lifestyleFuture;
     if (isClosed) return;
 
     Failure? membershipsFailure;
@@ -153,6 +171,17 @@ class MemberDossierCubit extends Cubit<MemberDossierState> {
         membershipsUnavailable: membershipsFailure != null,
         assignedTrainer: trainer,
         nextSchedule: nextSchedule,
+        // NotFound means nothing on file yet; any other failure is "unavailable".
+        parQ: parQResult.fold((_) => null, (s) => s),
+        healthUnavailable: parQResult.fold(
+          (f) => f is! NotFoundFailure,
+          (_) => false,
+        ),
+        lifestyle: lifestyleResult.fold((_) => null, (i) => i),
+        lifestyleUnavailable: lifestyleResult.fold(
+          (f) => f is! NotFoundFailure,
+          (_) => false,
+        ),
         failure: membershipsFailure,
         message: null,
       ),

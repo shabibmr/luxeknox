@@ -16,6 +16,15 @@ class ParQRepositoryImpl implements ParQRepository {
   final ParQRemoteDataSource _remote;
 
   @override
+  Future<Either<Failure, ParQScreening>> getLatest(int memberId) async {
+    try {
+      return Right(parQScreeningFromApi(await _remote.getLatest(memberId)));
+    } catch (e) {
+      return Left(mapThrownToFailure(e));
+    }
+  }
+
+  @override
   Future<Either<Failure, ParQScreening>> submit(
     ParQSubmission submission,
   ) async {
