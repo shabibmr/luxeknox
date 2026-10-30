@@ -2208,7 +2208,9 @@ paths:
       operationId: createPtProgressReviewDraft
       summary: Draft a PT progress review
       description: >
-        Snapshots in-progress and achieved goals into `body_metrics_snapshot` (change = current − start).
+        Snapshots in-window measurements into `body_metrics_snapshot` and
+        `performance_markers_snapshot` (change = current − start). Targets come
+        from in-progress or achieved goals, not from goal baseline or current values.
       tags: [PT]
       x-status: mvp
       x-parity: required
@@ -15374,6 +15376,21 @@ components:
           nullable: true
         next_review_date:
           $ref: "#/components/schemas/Date"
+          nullable: true
+        progress_highlights:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+              - Improved technique
+              - Increased strength
+              - Improved conditioning
+              - Better consistency
+              - Improved mobility
+              - Goal milestone achieved
+        highlights_other_text:
+          type: string
           nullable: true
     BodyMetricSnapshot:
       type: object

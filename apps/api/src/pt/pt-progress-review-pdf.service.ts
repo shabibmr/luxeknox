@@ -3,18 +3,9 @@ import PDFDocument from 'pdfkit';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { MemberRepository } from '../people/member.repository';
 import { TrainerRepository } from '../people/trainer.repository';
-import type { PtProgressReview, ReviewChecklist } from '../platform/db/schema/personal-training';
+import type { PtProgressReview } from '../platform/db/schema/personal-training';
 import { NotFoundError } from '../platform/errors/app-error';
-import { PtProgressReviewService } from './pt-progress-review.service';
-
-const CHECKLIST_LABELS: Array<[keyof ReviewChecklist, string]> = [
-  ['goals_reviewed', 'Goals reviewed'],
-  ['measurements_reviewed', 'Measurements reviewed'],
-  ['performance_reviewed', 'Performance reviewed'],
-  ['attendance_reviewed', 'Attendance reviewed'],
-  ['program_updated', 'Program updated'],
-  ['next_goals_agreed', 'Next goals agreed'],
-];
+import { PAGE8_PROGRESS_HIGHLIGHTS, PtProgressReviewService } from './pt-progress-review.service';
 
 export interface PresentationCardContext {
   memberName: string;
@@ -26,9 +17,14 @@ export interface PresentationCardFile {
   buffer: Buffer;
 }
 
-function fmtNum(value: number | null | undefined, signed = false): string {
+function fmtNum(value: number | null | undefined): string {
   if (value == null) return '-';
-  return signed && value > 0 ? `+${value}` : String(value);
+  return String(value);
+}
+
+function fmtText(value: string | null | undefined): string {
+  if (value == null || value === '') return '-';
+  return value;
 }
 
 function fmtDate(value: Date | string | null | undefined): string {
@@ -37,20 +33,35 @@ function fmtDate(value: Date | string | null | undefined): string {
   return Number.isNaN(d.getTime()) ? String(value) : d.toISOString().slice(0, 10);
 }
 
+function fourCells<T>(
+  row:
+    | {
+        start_val: T | null;
+        current_val: T | null;
+        change_val: T | null;
+        target_val: T | null;
+      }
+    | undefined,
+  format: (value: T | null | undefined) => string,
+): string[] {
+  if (!row) return ['-', '-', '-', '-'];
+  return [format(row.start_val), format(row.current_val), format(row.change_val), format(row.target_val)];
+}
+
 /** Renders the Page 8 progress review presentation card as an A4 PDF. */
 export function renderPresentationCard(
   review: PtProgressReview,
   ctx: PresentationCardContext,
 ): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: 'A4', margin: 40 });
+    const doc = new PDFDocument({ size: 'A4', margin: 40, compress: false });
     const chunks: Buffer[] = [];
     doc.on('data', (c: Buffer) => chunks.push(c));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
     const section = (title: string) => {
-      doc.moveDown(0.8).font('Helvetica-Bold').fontSize(12).text(title.toUpperCase(), 40);
+      doc.moveDown(0.8).font('Helvetica-Bold').fontSize(12).text(title, 40);
       doc.moveTo(40, doc.y).lineTo(doc.page.width - 40, doc.y).stroke();
       doc.moveDown(0.3).font('Helvetica').fontSize(10);
     };
@@ -58,70 +69,63 @@ export function renderPresentationCard(
     doc.font('Helvetica-Bold').fontSize(18).text('Luxe Knox - Progress Review Card', 40);
     doc.font('Helvetica').fontSize(10);
     doc.text(`Client: ${ctx.memberName}    Trainer: ${ctx.trainerName}`, 40);
-    doc.text(
-      `Review period: ${review.review_period_start} to ${review.review_period_end}    Status: ${review.status}`,
-      40,
-    );
+    doc.text(`Review period: ${review.review_period_start} to ${review.review_period_end}`, 40);
 
     section('Measures');
-    const cols = [40, 220, 300, 380, 460, 555];
-    const drawRow = (cells: string[], bold = false) => {
+    const measureCols = [40, 220, 300, 380, 460, 555];
+    const drawRow = (cells: string[], columns: number[], bold = false) => {
       const y = doc.y;
       doc.font(bold ? 'Helvetica-Bold' : 'Helvetica');
-      cells.forEach((cell, i) => doc.text(cell, cols[i], y, { width: cols[i + 1] - cols[i] - 4 }));
+      cells.forEach((cell, i) => {
+        if (!cell) return;
+        doc.text(cell, columns[i], y, { width: columns[i + 1] - columns[i] - 4 });
+      });
       doc.x = 40;
       doc.y = y + 16;
     };
-    drawRow(['Measure', 'Start', 'Current', 'Change', 'Target'], true);
-    for (const m of review.body_metrics_snapshot ?? []) {
-      drawRow([
-        m.metric,
-        fmtNum(m.start_val),
-        fmtNum(m.current_val),
-        fmtNum(m.change_val, true),
-        fmtNum(m.target_val),
-      ]);
-    }
-    for (const p of review.performance_markers_snapshot ?? []) {
-      drawRow([p.marker, p.start_val ?? '-', p.current_val ?? '-', p.change_val ?? '-', p.target_val ?? '-']);
-    }
+    drawRow(['Measure', 'Start', 'Current', 'Change', 'Target'], measureCols, true);
+    const body = review.body_metrics_snapshot ?? [];
+    const perf = review.performance_markers_snapshot ?? [];
+    const weight = body.find((m) => m.metric.toLowerCase() === 'weight');
+    const waist = body.find((m) => m.metric.toLowerCase() === 'waist');
+    const other = body.find((m) => {
+      const name = m.metric.toLowerCase();
+      return name !== 'weight' && name !== 'waist';
+    });
+    const strength = perf.find((p) => !/cardio/i.test(p.marker));
+    const cardio = perf.find((p) => /cardio/i.test(p.marker));
+    drawRow(['Weight', ...fourCells(weight, fmtNum)], measureCols);
+    drawRow(['Waist', ...fourCells(waist, fmtNum)], measureCols);
+    drawRow(['Strength marker', ...fourCells(strength, fmtText)], measureCols);
+    drawRow(['Cardio marker', ...fourCells(cardio, fmtText)], measureCols);
+    drawRow(['Other agreed metric', ...fourCells(other, fmtNum)], measureCols);
     doc.font('Helvetica');
 
-    const highlights = [...(review.progress_highlights ?? [])];
-    if (review.highlights_other_text) highlights.push(review.highlights_other_text);
-    if (highlights.length) {
-      section('Highlights');
-      highlights.forEach((h) => doc.text(`* ${h}`, 40));
+    section('Progress Highlights');
+    const selected = new Set(review.progress_highlights ?? []);
+    for (const label of PAGE8_PROGRESS_HIGHLIGHTS) {
+      doc.text(`${selected.has(label) ? '[x]' : '[ ]'} ${label}`, 40);
     }
+    const otherText = review.highlights_other_text?.trim();
+    doc.text(otherText ? `Other: ${otherText}` : 'Other:', 40);
 
-    if (review.review_checklist) {
-      section('Review checklist');
-      for (const [key, label] of CHECKLIST_LABELS) {
-        doc.text(`[${review.review_checklist[key] ? 'x' : ' '}] ${label}`, 40);
-      }
-    }
+    section("Trainer's progress summary");
+    if (review.trainer_summary) doc.text(review.trainer_summary, 40);
+    section('Client feedback');
+    if (review.client_feedback) doc.text(review.client_feedback, 40);
 
-    const narrative: Array<[string, string | null]> = [
-      ['Trainer summary', review.trainer_summary],
-      ['Client feedback', review.client_feedback],
-      ['Next phase goal', review.next_phase_goal],
-      ['Next phase training focus', review.next_phase_training_focus],
-      ['Next review date', review.next_review_date],
-      ['Final review notes', review.final_review_notes],
-    ];
-    for (const [title, body] of narrative) {
-      if (!body) continue;
-      section(title);
-      doc.text(body, 40);
-    }
-
-    section('Signatures');
-    doc.text(`Trainer: ${ctx.trainerName} - ${fmtDate(review.trainer_signed_at)}`, 40);
-    doc.text(`Client: ${ctx.memberName} - ${fmtDate(review.client_signed_at)}`, 40);
-    doc.text(
-      `Manager: ${review.manager_user_id != null ? `user #${review.manager_user_id}` : '-'} - ${fmtDate(review.manager_signed_at)}`,
-      40,
+    section('Next Phase');
+    const phaseCols = [40, 210, 380, 555];
+    drawRow(['Next goal', 'Training focus', 'Review date'], phaseCols, true);
+    drawRow(
+      [review.next_phase_goal ?? '', review.next_phase_training_focus ?? '', review.next_review_date ?? ''],
+      phaseCols,
     );
+
+    doc.text('Client acknowledgement', 40);
+    doc.text(fmtDate(review.client_signed_at), 40);
+    doc.text('Trainer acknowledgement', 40);
+    doc.text(fmtDate(review.trainer_signed_at), 40);
 
     doc.end();
   });
