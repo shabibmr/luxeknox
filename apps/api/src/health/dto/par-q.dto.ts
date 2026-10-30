@@ -1,15 +1,6 @@
 import { z } from 'zod';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-const QUESTIONS = [
-  ['q1_heart_condition', 'q1_details'],
-  ['q2_chest_pain_activity', 'q2_details'],
-  ['q3_chest_pain_rest', 'q3_details'],
-  ['q4_dizziness_consciousness', 'q4_details'],
-  ['q5_bone_joint_problem', 'q5_details'],
-  ['q6_medication_condition', 'q6_details'],
-  ['q7_other_reason', 'q7_details'],
-] as const;
+import { PAR_Q_QUESTIONS } from '../par-q-questions';
 
 const optionalText = z.string().optional().nullable();
 
@@ -32,14 +23,15 @@ export const parQSubmitSchema = z
     declaration_accepted: z.literal(true, {
       errorMap: () => ({ message: 'The PAR-Q+ declaration must be accepted' }),
     }),
+    client_signature: z.string().trim().min(1, 'A member signature is required'),
   })
   .superRefine((value, ctx) => {
-    for (const [key, detailsKey] of QUESTIONS) {
-      if (value[key] && !value[detailsKey]?.trim()) {
+    for (const { answer, details } of PAR_Q_QUESTIONS) {
+      if (value[answer] && !value[details]?.trim()) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          path: [detailsKey],
-          message: `${detailsKey} is required when ${key} is YES`,
+          path: [details],
+          message: `${details} is required when ${answer} is YES`,
         });
       }
     }
@@ -94,6 +86,7 @@ export class ParQScreeningDto {
   @ApiProperty({ type: Boolean }) referral_required!: boolean;
   @ApiPropertyOptional({ type: String, nullable: true }) referral_reason!: string | null;
   @ApiProperty({ type: Boolean }) declaration_accepted!: boolean;
+  @ApiProperty({ type: String }) client_signature!: string;
   @ApiPropertyOptional({ type: String, nullable: true }) client_signed_at!: string | null;
   @ApiPropertyOptional({ type: String, nullable: true }) trainer_signed_at!: string | null;
   @ApiProperty({

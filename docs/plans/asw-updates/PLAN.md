@@ -49,7 +49,7 @@ erDiagram
    * Adds `target_rir`, `actual_rir`, `target_duration_seconds`, `actual_duration_seconds` (for timed holds), and `notes`.
 5. **`workout_sessions` (Altered Table)**:
    * Adds `session_focus`, `warmup_protocol`, `cooldown_protocol`, `effort_rating` (1–10), `satisfaction_rating` (1–10), `pain_discomfort_score` (0–10), `pain_notes`, `next_session_plan`, and dual signatures `client_signed_at` & `trainer_signed_at`.
-6. **`pt_progress_reviews` (New Table — Backing Screen 45)**:
+6. **`pt_progress_reviews` (New Table — Backing Screen 47)**:
    * Tracks formal periodic reviews: `member_id`, `trainer_id`, `review_period_start`, `review_period_end`, `body_metrics_snapshot` JSON, `performance_markers_snapshot` JSON, `progress_highlights` JSON array, `trainer_summary`, `client_feedback`, `next_phase_goal`, `next_phase_training_focus`, `next_review_date`, `review_checklist` JSON, `final_review_notes`, and 3 sign-offs (`client_signed_at`, `trainer_signed_at`, `manager_signed_at`).
 7. **`members` & `pt_subscription_changes` (Altered Tables)**:
    * `members`: Adds `next_review_date`, `preferred_training_days_times`, `exercise_preferences`, and `coaching_notes`.
@@ -92,7 +92,7 @@ erDiagram
 
 ## 4. Flutter Frontend Implementation (`app/`)
 
-### 4.1 New Screen: Screen 45 (`PtProgressReviewScreen`)
+### 4.1 New Screen: Screen 47 (`PtProgressReviewScreen`)
 * Built in `app/lib/features/pt/presentation/screens/pt_progress_review_screen.dart`.
 * Layout:
   * Header: Review period date badge & assigned trainer.
@@ -150,7 +150,7 @@ The detailed execution breakdown comprises 32 discrete tasks registered in [TASK
 3. **Phase 6: Contract & Documentation (PTF-19 – PTF-21)**
    * OpenAPI spec update (**PTF-19**) consolidates all finalized backend DTOs/routes (PTF-08, PTF-11, PTF-12, PTF-13, PTF-14, PTF-17, PTF-18).
    * Database entities and FRD doc updates (**PTF-20**) depend on Phase 1 schemas (PTF-01..PTF-05).
-   * Consolidated screens matrix update (**PTF-21**) documents Screen 45 review flows (PTF-16, PTF-17).
+   * Consolidated screens matrix update (**PTF-21**) documents Screen 47 review flows (PTF-16, PTF-17).
 
 4. **Phase 7: Flutter Client & Domain (PTF-22 – PTF-26)**
    * API Client code generation (**PTF-22**) depends strictly on the OpenAPI contract (**PTF-19**).
@@ -160,7 +160,7 @@ The detailed execution breakdown comprises 32 discrete tasks registered in [TASK
    * PAR-Q+ Screening widget (**PTF-27**) depends on Health domain (PTF-23).
    * Member Dossier tabs & badge (**PTF-28**) depend on Health & Lifestyle domains (PTF-23, PTF-24).
    * Workout Plan Builder Blueprint step (**PTF-29**) and Live Workout Tracker with RIR/Pain modal (**PTF-30**) depend on Workout domain (PTF-25).
-   * Screen 45 Progress Review Screen (**PTF-31**) depends on PT Review domain (PTF-26) and PDF export endpoint (PTF-18).
+   * Screen 47 Progress Review Screen (**PTF-31**) depends on PT Review domain (PTF-26) and PDF export endpoint (PTF-18).
 
 6. **Phase 9: Comprehensive Verification (PTF-32)**
    * Final end-to-end integration test passes across API, OpenAPI schema validation, Flutter static analysis, unit/widget tests, and manual walkthroughs depend on the full implementation (PTF-06, PTF-09, PTF-15, PTF-20, PTF-21, PTF-27..PTF-31).

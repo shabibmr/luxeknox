@@ -128,6 +128,8 @@ class _$ParQScreening extends ParQScreening {
   @override
   final bool declarationAccepted;
   @override
+  final String clientSignature;
+  @override
   final DateTime? clientSignedAt;
   @override
   final DateTime? trainerSignedAt;
@@ -168,6 +170,7 @@ class _$ParQScreening extends ParQScreening {
       required this.referralRequired,
       this.referralReason,
       required this.declarationAccepted,
+      required this.clientSignature,
       this.clientSignedAt,
       this.trainerSignedAt,
       required this.clearanceStatus,
@@ -209,6 +212,7 @@ class _$ParQScreening extends ParQScreening {
         referralRequired == other.referralRequired &&
         referralReason == other.referralReason &&
         declarationAccepted == other.declarationAccepted &&
+        clientSignature == other.clientSignature &&
         clientSignedAt == other.clientSignedAt &&
         trainerSignedAt == other.trainerSignedAt &&
         clearanceStatus == other.clearanceStatus &&
@@ -243,6 +247,7 @@ class _$ParQScreening extends ParQScreening {
     _$hash = $jc(_$hash, referralRequired.hashCode);
     _$hash = $jc(_$hash, referralReason.hashCode);
     _$hash = $jc(_$hash, declarationAccepted.hashCode);
+    _$hash = $jc(_$hash, clientSignature.hashCode);
     _$hash = $jc(_$hash, clientSignedAt.hashCode);
     _$hash = $jc(_$hash, trainerSignedAt.hashCode);
     _$hash = $jc(_$hash, clearanceStatus.hashCode);
@@ -279,6 +284,7 @@ class _$ParQScreening extends ParQScreening {
           ..add('referralRequired', referralRequired)
           ..add('referralReason', referralReason)
           ..add('declarationAccepted', declarationAccepted)
+          ..add('clientSignature', clientSignature)
           ..add('clientSignedAt', clientSignedAt)
           ..add('trainerSignedAt', trainerSignedAt)
           ..add('clearanceStatus', clearanceStatus)
@@ -394,6 +400,11 @@ class ParQScreeningBuilder
   set declarationAccepted(bool? declarationAccepted) =>
       _$this._declarationAccepted = declarationAccepted;
 
+  String? _clientSignature;
+  String? get clientSignature => _$this._clientSignature;
+  set clientSignature(String? clientSignature) =>
+      _$this._clientSignature = clientSignature;
+
   DateTime? _clientSignedAt;
   DateTime? get clientSignedAt => _$this._clientSignedAt;
   set clientSignedAt(DateTime? clientSignedAt) =>
@@ -456,6 +467,7 @@ class ParQScreeningBuilder
       _referralRequired = $v.referralRequired;
       _referralReason = $v.referralReason;
       _declarationAccepted = $v.declarationAccepted;
+      _clientSignature = $v.clientSignature;
       _clientSignedAt = $v.clientSignedAt;
       _trainerSignedAt = $v.trainerSignedAt;
       _clearanceStatus = $v.clearanceStatus;
@@ -520,6 +532,8 @@ class ParQScreeningBuilder
           referralReason: referralReason,
           declarationAccepted: BuiltValueNullFieldError.checkNotNull(
               declarationAccepted, r'ParQScreening', 'declarationAccepted'),
+          clientSignature: BuiltValueNullFieldError.checkNotNull(
+              clientSignature, r'ParQScreening', 'clientSignature'),
           clientSignedAt: clientSignedAt,
           trainerSignedAt: trainerSignedAt,
           clearanceStatus: BuiltValueNullFieldError.checkNotNull(

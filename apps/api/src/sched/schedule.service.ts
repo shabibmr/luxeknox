@@ -16,6 +16,7 @@ import {
 import { createPaginatedResponse, PaginationHelper } from '../platform/http/pagination';
 import type { PaginatedResponse } from '../platform/http/pagination.dto';
 import { ParQService } from '../health/par-q.service';
+import { isPtSchedule } from './is-pt-schedule';
 import { TrainerRepository } from '../people/trainer.repository';
 import type { CancelRequestDto, ScheduleCreateDto, ScheduleTransitionDto, ScheduleUpdateDto } from './schedule.dto';
 import { scheduleFilterQuerySchema } from './schedule.dto';
@@ -530,7 +531,7 @@ export class ScheduleService {
       );
     }
 
-    if (schedule.pt_subscription_id != null) {
+    if (isPtSchedule(schedule)) {
       const participants = await this.repository.listParticipants(id);
       for (const participant of participants) {
         if (participant.booking_status !== 'cancelled') {

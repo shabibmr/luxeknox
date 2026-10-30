@@ -18,9 +18,7 @@ part 'workout_session_exercise.g.dart';
 /// * [repsCompleted] 
 /// * [weightLiftedKg] 
 /// * [rpeScore] 
-/// * [targetRir] - Decimal string.
 /// * [actualRir] - Decimal string.
-/// * [targetDurationSeconds] 
 /// * [actualDurationSeconds] 
 /// * [isCompleted] 
 /// * [notes] 
@@ -48,15 +46,8 @@ abstract class WorkoutSessionExercise implements Built<WorkoutSessionExercise, W
   num? get rpeScore;
 
   /// Decimal string.
-  @BuiltValueField(wireName: r'target_rir')
-  String? get targetRir;
-
-  /// Decimal string.
   @BuiltValueField(wireName: r'actual_rir')
   String? get actualRir;
-
-  @BuiltValueField(wireName: r'target_duration_seconds')
-  int? get targetDurationSeconds;
 
   @BuiltValueField(wireName: r'actual_duration_seconds')
   int? get actualDurationSeconds;
@@ -131,25 +122,11 @@ class _$WorkoutSessionExerciseSerializer implements PrimitiveSerializer<WorkoutS
         specifiedType: const FullType(num),
       );
     }
-    if (object.targetRir != null) {
-      yield r'target_rir';
-      yield serializers.serialize(
-        object.targetRir,
-        specifiedType: const FullType(String),
-      );
-    }
     if (object.actualRir != null) {
       yield r'actual_rir';
       yield serializers.serialize(
         object.actualRir,
         specifiedType: const FullType(String),
-      );
-    }
-    if (object.targetDurationSeconds != null) {
-      yield r'target_duration_seconds';
-      yield serializers.serialize(
-        object.targetDurationSeconds,
-        specifiedType: const FullType(int),
       );
     }
     if (object.actualDurationSeconds != null) {
@@ -248,14 +225,6 @@ class _$WorkoutSessionExerciseSerializer implements PrimitiveSerializer<WorkoutS
           if (valueDes == null) continue;
           result.rpeScore = valueDes;
           break;
-        case r'target_rir':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
-          result.targetRir = valueDes;
-          break;
         case r'actual_rir':
           final valueDes = serializers.deserialize(
             value,
@@ -263,14 +232,6 @@ class _$WorkoutSessionExerciseSerializer implements PrimitiveSerializer<WorkoutS
           ) as String?;
           if (valueDes == null) continue;
           result.actualRir = valueDes;
-          break;
-        case r'target_duration_seconds':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(int),
-          ) as int?;
-          if (valueDes == null) continue;
-          result.targetDurationSeconds = valueDes;
           break;
         case r'actual_duration_seconds':
           final valueDes = serializers.deserialize(

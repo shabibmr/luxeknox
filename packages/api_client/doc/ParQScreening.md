@@ -30,13 +30,14 @@ Name | Type | Description | Notes
 **referralRequired** | **bool** |  | 
 **referralReason** | **String** |  | [optional] 
 **declarationAccepted** | **bool** |  | 
-**clientSignedAt** | [**DateTime**](DateTime.md) |  | [optional] 
-**trainerSignedAt** | [**DateTime**](DateTime.md) |  | [optional] 
+**clientSignature** | **String** |  | 
+**clientSignedAt** | [**DateTime**](DateTime.md) | UTC ISO-8601 | [optional] 
+**trainerSignedAt** | [**DateTime**](DateTime.md) | UTC ISO-8601 | [optional] 
 **clearanceStatus** | **String** |  | 
-**clearedAt** | [**DateTime**](DateTime.md) |  | [optional] 
+**clearedAt** | [**DateTime**](DateTime.md) | UTC ISO-8601 | [optional] 
 **clearedByUserId** | **int** |  | [optional] 
 **createdAt** | [**DateTime**](DateTime.md) | UTC ISO-8601 | 
-**updatedAt** | [**DateTime**](DateTime.md) |  | [optional] 
+**updatedAt** | [**DateTime**](DateTime.md) | UTC ISO-8601 | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

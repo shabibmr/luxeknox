@@ -1,9 +1,25 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import type { ParQScreening } from '../platform/db/schema/par-q';
 import { BusinessRuleError, ForbiddenError, NotFoundError } from '../platform/errors/app-error';
 import { parQSubmitSchema, parQTrainerReviewSchema, type ParQSubmitDto } from './dto/par-q.dto';
 import { MEDICAL_CLEARANCE_REQUIRED, ParQService } from './par-q.service';
+
+const { txState } = vi.hoisted(() => ({
+  txState: { latest: null as ParQScreening | null },
+}));
+
+vi.mock('../platform/db/transaction-context', () => ({
+  runInTransaction: async (_db: unknown, fn: () => Promise<unknown>) => {
+    const snapshot = txState.latest ? { ...txState.latest } : null;
+    try {
+      return await fn();
+    } catch (error) {
+      txState.latest = snapshot;
+      throw error;
+    }
+  },
+}));
 
 const ADMIN: AuthenticatedUser = {
   id: 1,
@@ -35,6 +51,8 @@ const MEMBER: AuthenticatedUser = {
   sessionId: 4,
 };
 
+const CLIENT_SIGNATURE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB';
+
 const ALL_NO: ParQSubmitDto = {
   q1_heart_condition: false,
   q2_chest_pain_activity: false,
@@ -44,6 +62,7 @@ const ALL_NO: ParQSubmitDto = {
   q6_medication_condition: false,
   q7_other_reason: false,
   declaration_accepted: true,
+  client_signature: CLIENT_SIGNATURE,
 };
 
 function screening(overrides: Partial<ParQScreening> = {}): ParQScreening {
@@ -70,6 +89,7 @@ function screening(overrides: Partial<ParQScreening> = {}): ParQScreening {
     referral_required: false,
     referral_reason: null,
     declaration_accepted: true,
+    client_signature: CLIENT_SIGNATURE,
     client_signed_at: new Date('2026-01-01T00:00:00Z'),
     trainer_signed_at: null,
     trainer_user_id: null,
@@ -83,10 +103,16 @@ function screening(overrides: Partial<ParQScreening> = {}): ParQScreening {
 }
 
 function build(latest: ParQScreening | null = screening()) {
+  txState.latest = latest ? { ...latest } : null;
   const repository = {
-    findLatestByMemberId: vi.fn().mockResolvedValue(latest),
-    insert: vi.fn().mockResolvedValue(5),
-    updateById: vi.fn().mockResolvedValue(undefined),
+    findLatestByMemberId: vi.fn(async () => txState.latest),
+    insert: vi.fn(async (values: Partial<ParQScreening>) => {
+      txState.latest = screening({ id: 5, ...values });
+      return 5;
+    }),
+    updateById: vi.fn(async (_id: number, values: Partial<ParQScreening>) => {
+      txState.latest = { ...txState.latest!, ...values };
+    }),
   };
   const memberRepository = {
     findById: vi.fn().mockResolvedValue({
@@ -96,7 +122,12 @@ function build(latest: ParQScreening | null = screening()) {
     }),
   };
   const auditService = { recordAudit: vi.fn().mockResolvedValue(undefined) };
-  const service = new ParQService(repository as any, memberRepository as any, auditService as any);
+  const service = new ParQService(
+    repository as any,
+    memberRepository as any,
+    auditService as any,
+    {} as any,
+  );
   return { service, repository, auditService };
 }
 
@@ -155,6 +186,26 @@ describe('ParQService', () => {
         'clearance_status',
       ]);
     });
+
+    it('stores the member signature and returns it', async () => {
+      const { service } = build(null);
+
+      const result = await service.submit(100, ALL_NO, ADMIN);
+
+      expect(result.client_signature).toBe(CLIENT_SIGNATURE);
+    });
+
+    it('leaves the previous screening unchanged when the audit write throws', async () => {
+      const previous = screening({ id: 3, clearance_status: 'passed' });
+      const { service, auditService } = build(previous);
+      auditService.recordAudit.mockRejectedValue(new Error('audit down'));
+
+      await expect(service.submit(100, ALL_NO, ADMIN)).rejects.toThrow('audit down');
+
+      const latest = await service.getLatest(100, ADMIN);
+      expect(latest.id).toBe(3);
+      expect(latest.clearance_status).toBe('passed');
+    });
   });
 
   describe('submit validation', () => {
@@ -165,6 +216,17 @@ describe('ParQService', () => {
 
     it('requires the declaration to be accepted', () => {
       const result = parQSubmitSchema.safeParse({ ...ALL_NO, declaration_accepted: false });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects a submission without a signature', () => {
+      const { client_signature: _omitted, ...withoutSignature } = ALL_NO;
+      const result = parQSubmitSchema.safeParse(withoutSignature);
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects a blank signature', () => {
+      const result = parQSubmitSchema.safeParse({ ...ALL_NO, client_signature: '   ' });
       expect(result.success).toBe(false);
     });
 
@@ -226,6 +288,26 @@ describe('ParQService', () => {
         ),
       ).rejects.toBeInstanceOf(NotFoundError);
     });
+
+    it('leaves screening notes unchanged when the audit write throws', async () => {
+      const previous = screening({
+        clearance_status: 'pending_clearance',
+        trainer_screening_notes: null,
+      });
+      const { service, auditService } = build(previous);
+      auditService.recordAudit.mockRejectedValue(new Error('audit down'));
+
+      await expect(
+        service.trainerReview(
+          100,
+          { trainer_screening_notes: 'Knee history', referral_required: false },
+          TRAINER,
+        ),
+      ).rejects.toThrow('audit down');
+
+      const latest = await service.getLatest(100, ADMIN);
+      expect(latest.trainer_screening_notes).toBeNull();
+    });
   });
 
   describe('clear', () => {
@@ -252,6 +334,18 @@ describe('ParQService', () => {
       );
       expect(repository.updateById).not.toHaveBeenCalled();
     });
+
+    it('leaves clearance unchanged when the audit write throws', async () => {
+      const previous = screening({ clearance_status: 'pending_clearance' });
+      const { service, auditService } = build(previous);
+      auditService.recordAudit.mockRejectedValue(new Error('audit down'));
+
+      await expect(service.clear(100, { decision: 'cleared' }, ADMIN)).rejects.toThrow('audit down');
+
+      const latest = await service.getLatest(100, ADMIN);
+      expect(latest.clearance_status).toBe('pending_clearance');
+      expect(latest.cleared_by_user_id).toBeNull();
+    });
   });
 
   describe('getLatest', () => {
@@ -262,6 +356,7 @@ describe('ParQService', () => {
 
       expect(result.id).toBe(5);
       expect(result.clearance_status).toBe('pending_clearance');
+      expect(result.client_signature).toBe(CLIENT_SIGNATURE);
     });
 
     it('404s when the member has no screening', async () => {

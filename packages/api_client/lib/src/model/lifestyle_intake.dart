@@ -29,7 +29,7 @@ part 'lifestyle_intake.g.dart';
 /// * [lifestylePriorities] 
 /// * [conductedByTrainerId] 
 /// * [createdAt] - UTC ISO-8601
-/// * [updatedAt] 
+/// * [updatedAt] - UTC ISO-8601
 @BuiltValue()
 abstract class LifestyleIntake implements Built<LifestyleIntake, LifestyleIntakeBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -82,6 +82,7 @@ abstract class LifestyleIntake implements Built<LifestyleIntake, LifestyleIntake
   @BuiltValueField(wireName: r'created_at')
   DateTime get createdAt;
 
+  /// UTC ISO-8601
   @BuiltValueField(wireName: r'updated_at')
   DateTime? get updatedAt;
 

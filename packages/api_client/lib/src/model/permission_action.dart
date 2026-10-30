@@ -25,6 +25,12 @@ class PermissionAction extends EnumClass {
   static const PermissionAction export_ = _$export_;
   @BuiltValueEnumConst(wireName: r'broadcast')
   static const PermissionAction broadcast = _$broadcast;
+  @BuiltValueEnumConst(wireName: r'write')
+  static const PermissionAction write = _$write;
+  @BuiltValueEnumConst(wireName: r'client_sign')
+  static const PermissionAction clientSign = _$clientSign;
+  @BuiltValueEnumConst(wireName: r'lifestyle')
+  static const PermissionAction lifestyle = _$lifestyle;
 
   static Serializer<PermissionAction> get serializer => _$permissionActionSerializer;
 

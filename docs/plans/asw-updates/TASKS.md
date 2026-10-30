@@ -22,8 +22,8 @@ Source Document: [Luxe knox pt client  file.pdf](./Luxe%20knox%20pt%20client%20%
 
 **Phase 2: Backend PAR-Q+ & Safety Gate**
 - [x] PTF-07 `ParQService`: submit questionnaire, compute positive flag, handle doctor referral <!-- id: 7 -->
-- [x] PTF-08 `ParQController` endpoints & DTO validation <!-- id: 8 -->
-- [x] PTF-09 Scheduling gate interceptor: block PT booking when `pending_clearance` <!-- id: 9 -->
+- [x] PTF-08 `ParQController` endpoints & Zod validation on `/v1` <!-- id: 8 -->
+- [x] PTF-09 Scheduling gate: BR-HEALTH-003 (`pending_clearance` and `rejected` block PT booking and PT session start) <!-- id: 9 -->
 
 **Phase 3: Backend Lifestyle Intake & Macrocycle Program Design**
 - [x] PTF-10 `LifestyleIntakeService`: upsert habits, stress (1–10), and 4 lifestyle priorities <!-- id: 10 -->
@@ -43,7 +43,7 @@ Source Document: [Luxe knox pt client  file.pdf](./Luxe%20knox%20pt%20client%20%
 **Phase 6: Contract and Docs**
 - [x] PTF-19 Update `docs/openapi/v1.yaml` with all new schemas and paths <!-- id: 19 -->
 - [x] PTF-20 Update `docs/database-entities.md` and `docs/backend-frd.md` <!-- id: 20 -->
-- [x] PTF-21 Update `docs/screens/consolidated-screens.md` with Screen 45 <!-- id: 21 -->
+- [x] PTF-21 Update `docs/screens/consolidated-screens.md` with Screen 47 (`PtProgressReviewScreen`) <!-- id: 21 -->
 
 **Phase 7: Flutter Data & Domain**
 - [x] PTF-22 Regenerate `packages/api_client` from updated OpenAPI spec <!-- id: 22 -->
@@ -53,11 +53,11 @@ Source Document: [Luxe knox pt client  file.pdf](./Luxe%20knox%20pt%20client%20%
 - [x] PTF-26 PT Review domain: progress review entity, repository, and use cases <!-- id: 26 -->
 
 **Phase 8: Flutter UI & Screens**
-- [x] PTF-27 Member Onboarding / Screen 04: `ParQScreeningForm` & touch signature <!-- id: 27 -->
-- [x] PTF-28 Member Dossier: Health Clearance badge & "Lifestyle & Habits" consultation tab <!-- id: 28 -->
+- [ ] PTF-27 Member Onboarding / Screen 04: `ParQScreeningForm` & touch signature <!-- id: 27 -->
+- [ ] PTF-28 Member Dossier: Health Clearance badge & "Lifestyle & Habits" consultation tab <!-- id: 28 -->
 - [x] PTF-29 Screen 28 (`WorkoutPlanBuilder`): Macrocycle Blueprint form step <!-- id: 29 -->
 - [x] PTF-30 Screen 31 (`LiveWorkoutSessionTracker`): RIR stepper, timed sets stopwatch, Post-Workout Rating modal <!-- id: 30 -->
-- [x] PTF-31 Screen 45 (`PtProgressReviewScreen`): Review Card, delta table, badges, 3-way sign-off, PDF export <!-- id: 31 -->
+- [ ] PTF-31 Screen 47 (`PtProgressReviewScreen`): Review Card, delta table, badges, 3-way sign-off, PDF export <!-- id: 31 -->
 
 **Phase 9: Verification**
 - [ ] PTF-32 Full automated test suite passes (`api:test`, `flutter test`, `openapi:check`) & manual walkthrough <!-- id: 32 -->
@@ -138,7 +138,7 @@ flowchart TD
         PTF28["PTF-28: Dossier Lifestyle & Clearance Tab"]
         PTF29["PTF-29: Screen 28 Blueprint Step"]
         PTF30["PTF-30: Screen 31 Live Tracker & Pain Modal"]
-        PTF31["PTF-31: Screen 45 Progress Review Screen"]
+        PTF31["PTF-31: Screen 47 Progress Review Screen"]
         PTF23 --> PTF27
         PTF23 & PTF24 --> PTF28
         PTF25 --> PTF29
@@ -186,7 +186,7 @@ flowchart TD
 | **PTF-28** | Member Dossier Health Clearance & Lifestyle tab | **PTF-23**, **PTF-24** |
 | **PTF-29** | Macrocycle Blueprint step in `WorkoutPlanBuilder` | **PTF-25** |
 | **PTF-30** | Live Tracker RIR, Timed Sets & Post-Workout Feedback Modal | **PTF-25** |
-| **PTF-31** | Build Screen 45 (`PtProgressReviewScreen`) | **PTF-26**, **PTF-18** |
+| **PTF-31** | Build Screen 47 (`PtProgressReviewScreen`) | **PTF-26**, **PTF-18** |
 | **PTF-32** | Full automated pass & manual walkthrough | **PTF-06**, **PTF-09**, **PTF-15**, **PTF-20**, **PTF-21**, **PTF-27**, **PTF-28**, **PTF-29**, **PTF-30**, **PTF-31** |
 
 ---
@@ -251,14 +251,14 @@ flowchart TD
 #### PTF-08: `ParQController` endpoints & DTO validation
 * **Files:** `apps/api/src/health/par-q.controller.ts`, `apps/api/src/health/dto/par-q.dto.ts`
 * **Dependencies:** PTF-07
-* **Changes:** Expose `POST /api/v1/members/:id/par-q`, `PATCH /api/v1/members/:id/par-q/trainer-review`, and `POST /api/v1/members/:id/par-q/clearance` with class-validator decorators.
+* **Changes:** Expose `POST /v1/members/:id/par-q`, `PATCH /v1/members/:id/par-q/trainer-review`, and `POST /v1/members/:id/par-q/clearance` with Zod validation. `GET /v1/members/:id/par-q` (latest screening) is an accepted addition.
 * **Done criteria:** Endpoints return expected 201/200 responses with validated payloads.
 
 #### PTF-09: Scheduling gate interceptor
 * **Files:** `apps/api/src/sched/scheduling.service.ts`, `apps/api/src/sched/scheduling.service.spec.ts`
 * **Dependencies:** PTF-07
-* **Changes:** Check `par_q_screenings.clearance_status` when booking or starting PT sessions. If `'pending_clearance'`, reject with `BusinessRuleError('MEDICAL_CLEARANCE_REQUIRED')`.
-* **Done criteria:** Unit test confirms booking is blocked when clearance is pending.
+* **Changes:** Follow BR-HEALTH-003: block PT booking and PT session start when the latest screening is `pending_clearance` or `rejected` (`BusinessRuleError('MEDICAL_CLEARANCE_REQUIRED')`). `passed`, `cleared`, and no screening allow training. A PT schedule is one with `pt_subscription_id` set.
+* **Done criteria:** Unit test confirms booking is blocked when clearance is pending or rejected.
 
 ---
 
@@ -345,8 +345,8 @@ flowchart TD
 #### PTF-21: Update consolidated screens matrix
 * **Files:** `docs/screens/consolidated-screens.md`
 * **Dependencies:** PTF-16, PTF-17
-* **Changes:** Add **Screen 45: `PtProgressReviewScreen`** with Member, Trainer, and Admin role variations.
-* **Done criteria:** Screen matrix reflects 45 unified screens.
+* **Changes:** Add **Screen 47: `PtProgressReviewScreen`** with Member, Trainer, and Admin role variations.
+* **Done criteria:** Screen matrix reflects 47 unified screens. Reports remains Screen 45.
 
 ---
 
@@ -415,7 +415,7 @@ flowchart TD
   * If pain score $> 0$, prompt for pain notes.
 * **Done criteria:** Completing workout submits multi-rating payload and triggers alerts when appropriate.
 
-#### PTF-31: Build Screen 45 (`PtProgressReviewScreen`)
+#### PTF-31: Build Screen 47 (`PtProgressReviewScreen`)
 * **Files:** `app/lib/features/pt/presentation/screens/pt_progress_review_screen.dart`, `app/lib/features/pt/presentation/widgets/`
 * **Dependencies:** PTF-26, PTF-18
 * **Changes:**

@@ -34,13 +34,14 @@ part 'par_q_screening.g.dart';
 /// * [referralRequired] 
 /// * [referralReason] 
 /// * [declarationAccepted] 
-/// * [clientSignedAt] 
-/// * [trainerSignedAt] 
+/// * [clientSignature] 
+/// * [clientSignedAt] - UTC ISO-8601
+/// * [trainerSignedAt] - UTC ISO-8601
 /// * [clearanceStatus] 
-/// * [clearedAt] 
+/// * [clearedAt] - UTC ISO-8601
 /// * [clearedByUserId] 
 /// * [createdAt] - UTC ISO-8601
-/// * [updatedAt] 
+/// * [updatedAt] - UTC ISO-8601
 @BuiltValue()
 abstract class ParQScreening implements Built<ParQScreening, ParQScreeningBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -109,9 +110,14 @@ abstract class ParQScreening implements Built<ParQScreening, ParQScreeningBuilde
   @BuiltValueField(wireName: r'declaration_accepted')
   bool get declarationAccepted;
 
+  @BuiltValueField(wireName: r'client_signature')
+  String get clientSignature;
+
+  /// UTC ISO-8601
   @BuiltValueField(wireName: r'client_signed_at')
   DateTime? get clientSignedAt;
 
+  /// UTC ISO-8601
   @BuiltValueField(wireName: r'trainer_signed_at')
   DateTime? get trainerSignedAt;
 
@@ -119,6 +125,7 @@ abstract class ParQScreening implements Built<ParQScreening, ParQScreeningBuilde
   ParQScreeningClearanceStatusEnum get clearanceStatus;
   // enum clearanceStatusEnum {  passed,  pending_clearance,  cleared,  rejected,  };
 
+  /// UTC ISO-8601
   @BuiltValueField(wireName: r'cleared_at')
   DateTime? get clearedAt;
 
@@ -129,6 +136,7 @@ abstract class ParQScreening implements Built<ParQScreening, ParQScreeningBuilde
   @BuiltValueField(wireName: r'created_at')
   DateTime get createdAt;
 
+  /// UTC ISO-8601
   @BuiltValueField(wireName: r'updated_at')
   DateTime? get updatedAt;
 
@@ -282,6 +290,11 @@ class _$ParQScreeningSerializer implements PrimitiveSerializer<ParQScreening> {
     yield serializers.serialize(
       object.declarationAccepted,
       specifiedType: const FullType(bool),
+    );
+    yield r'client_signature';
+    yield serializers.serialize(
+      object.clientSignature,
+      specifiedType: const FullType(String),
     );
     if (object.clientSignedAt != null) {
       yield r'client_signed_at';
@@ -513,6 +526,13 @@ class _$ParQScreeningSerializer implements PrimitiveSerializer<ParQScreening> {
             specifiedType: const FullType(bool),
           ) as bool;
           result.declarationAccepted = valueDes;
+          break;
+        case r'client_signature':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.clientSignature = valueDes;
           break;
         case r'client_signed_at':
           final valueDes = serializers.deserialize(

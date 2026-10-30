@@ -9897,7 +9897,7 @@ components:
       enum: [active, inactive, suspended]
     PermissionAction:
       type: string
-      enum: [create, read, update, delete, approve, export, broadcast]
+      enum: [create, read, update, delete, approve, export, broadcast, write, client_sign, lifestyle]
     Health:
       type: object
       required: [status, timestamp]
@@ -12349,17 +12349,10 @@ components:
         rpe_score:
           type: number
           nullable: true
-        target_rir:
-          type: string
-          nullable: true
-          description: Decimal string.
         actual_rir:
           type: string
           nullable: true
           description: Decimal string.
-        target_duration_seconds:
-          type: integer
-          nullable: true
         actual_duration_seconds:
           type: integer
           nullable: true
@@ -15173,8 +15166,8 @@ components:
 
     ParQSubmit:
       type: object
-      required: [q1_heart_condition, q2_chest_pain_activity, q3_chest_pain_rest, q4_dizziness_consciousness, q5_bone_joint_problem, q6_medication_condition, q7_other_reason, declaration_accepted]
-      description: Every YES answer requires its `*_details` text.
+      required: [q1_heart_condition, q2_chest_pain_activity, q3_chest_pain_rest, q4_dizziness_consciousness, q5_bone_joint_problem, q6_medication_condition, q7_other_reason, declaration_accepted, client_signature]
+      description: Every YES answer requires its `*_details` text. A member signature is required.
       properties:
         q1_heart_condition:
           type: boolean
@@ -15214,6 +15207,10 @@ components:
         declaration_accepted:
           type: boolean
           enum: [true]
+        client_signature:
+          type: string
+          minLength: 1
+          description: Member ink signature (data URL or stroke payload).
     ParQTrainerReview:
       type: object
       required: [trainer_screening_notes, referral_required]
@@ -15236,7 +15233,7 @@ components:
           enum: [cleared, rejected]
     ParQScreening:
       type: object
-      required: [id, member_id, version, q1_heart_condition, q2_chest_pain_activity, q3_chest_pain_rest, q4_dizziness_consciousness, q5_bone_joint_problem, q6_medication_condition, q7_other_reason, has_positive_answer, referral_required, declaration_accepted, clearance_status, created_at]
+      required: [id, member_id, version, q1_heart_condition, q2_chest_pain_activity, q3_chest_pain_rest, q4_dizziness_consciousness, q5_bone_joint_problem, q6_medication_condition, q7_other_reason, has_positive_answer, referral_required, declaration_accepted, client_signature, clearance_status, created_at]
       properties:
         id:
           $ref: "#/components/schemas/Id"
@@ -15291,20 +15288,19 @@ components:
           nullable: true
         declaration_accepted:
           type: boolean
-        client_signed_at:
+        client_signature:
           type: string
-          format: date-time
+        client_signed_at:
+          $ref: "#/components/schemas/DateTime"
           nullable: true
         trainer_signed_at:
-          type: string
-          format: date-time
+          $ref: "#/components/schemas/DateTime"
           nullable: true
         clearance_status:
           type: string
           enum: [passed, pending_clearance, cleared, rejected]
         cleared_at:
-          type: string
-          format: date-time
+          $ref: "#/components/schemas/DateTime"
           nullable: true
         cleared_by_user_id:
           type: integer
@@ -15313,8 +15309,7 @@ components:
         created_at:
           $ref: "#/components/schemas/DateTime"
         updated_at:
-          type: string
-          format: date-time
+          $ref: "#/components/schemas/DateTime"
           nullable: true
     LifestylePriority:
       type: object
@@ -15437,8 +15432,7 @@ components:
         created_at:
           $ref: "#/components/schemas/DateTime"
         updated_at:
-          type: string
-          format: date-time
+          $ref: "#/components/schemas/DateTime"
           nullable: true
     PtProgressReviewDraft:
       type: object
@@ -15624,20 +15618,17 @@ components:
           type: string
           nullable: true
         client_signed_at:
-          type: string
-          format: date-time
+          $ref: "#/components/schemas/DateTime"
           nullable: true
         trainer_signed_at:
-          type: string
-          format: date-time
+          $ref: "#/components/schemas/DateTime"
           nullable: true
         manager_user_id:
           type: integer
           format: int64
           nullable: true
         manager_signed_at:
-          type: string
-          format: date-time
+          $ref: "#/components/schemas/DateTime"
           nullable: true
         status:
           type: string
@@ -15645,8 +15636,7 @@ components:
         created_at:
           $ref: "#/components/schemas/DateTime"
         updated_at:
-          type: string
-          format: date-time
+          $ref: "#/components/schemas/DateTime"
           nullable: true
     WorkoutSessionComplete:
       type: object

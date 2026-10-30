@@ -172,7 +172,7 @@ Capability legend used in screens (backend must enforce the same):
 
 A permission is `module` + `action` with a stable `slug` (example: `memberships.approve`).
 
-Canonical actions: `create`, `read`, `update`, `delete`, `approve`, `export`, `broadcast`.
+Canonical actions: `create`, `read`, `update`, `delete`, `approve`, `export`, `broadcast`, plus the actions this product already uses: `write`, `client_sign`, and `lifestyle`.
 
 ### 7.2 System roles (seed)
 
@@ -281,7 +281,7 @@ Health data is **sensitive**. Extra audit on Admin reads of medical rows is requ
 | FR-HEALTH-008 | Dossier health summary includes: allergies, high-risk conditions, uncleared medical items, primary emergency contact. |
 | FR-HEALTH-009 | Admin CRUD on `health_conditions`. |
 | FR-HEALTH-010 | Every Admin read/write of `member_health` and `medical_histories` writes `audit_logs`. |
-| FR-HEALTH-011 | PAR-Q+ submit (`POST /members/{id}/par-q`, `health.lifestyle`): seven YES/NO questions, each YES requires its `qN_details` text, and `declaration_accepted` must be true. Every submit inserts a new `par_q_screenings` row; the latest row is current. `client_signed_at` is stamped by the server. |
+| FR-HEALTH-011 | PAR-Q+ submit (`POST /members/{id}/par-q`, `health.lifestyle`): seven YES/NO questions, each YES requires its `qN_details` text, `declaration_accepted` must be true, and `client_signature` is required. Every submit inserts a new `par_q_screenings` row; the latest row is current (`GET /members/{id}/par-q`). `client_signed_at` is stamped by the server; the signature is stored and returned. |
 | FR-HEALTH-012 | Any YES answer sets `has_positive_answer` and `referral_required` and parks the screening in `pending_clearance`; all-NO sets `clearance_status = passed`. |
 | FR-HEALTH-013 | Trainer review (`PATCH /members/{id}/par-q/trainer-review`, `health.lifestyle`) records `trainer_screening_notes` (required), `referral_required` and `referral_reason` (required when a referral is required) on the latest screening, and stamps `trainer_signed_at` and `trainer_user_id`. Members cannot review their own questionnaire. |
 | FR-HEALTH-014 | Clearance decision (`POST /members/{id}/par-q/clearance`, `health.approve`) takes `decision` `cleared` \| `rejected` and is valid only while the latest screening is `pending_clearance` (otherwise 422). It stamps `cleared_at` and `cleared_by_user_id`. |
@@ -535,7 +535,7 @@ Session attendance also updates `schedule_participants.attended` (SCHED). Keep g
 | :--- | :--- |
 | FR-WORK-003 | Trainer creates a plan for an assigned member, or a personal draft. Admin creates templates and any member plan. |
 | FR-WORK-004 | Plan fields: title, description, target_goal, difficulty, duration_weeks, status `draft` \| `active` \| `archived`, plus the optional macrocycle blueprint: `primary_objective_12w`, `milestone_4w`, `sessions_per_week` (1–14), `target_session_duration_minutes` (15–180), `split_type`, `cardio_protocol`, `mobility_protocol`, `progression_methods` (unique values of `load` \| `reps` \| `volume` \| `density` \| `technique`), `main_success_measure`, `trainer_programming_notes`. |
-| FR-WORK-005 | Plan exercises attach to **`workout_plan_version_id`** (not the plan root): day_number, exercise_id, order_index, target_sets, target_reps, target_weight_kg, rest_seconds, notes. |
+| FR-WORK-005 | Plan exercises attach to **`workout_plan_version_id`** (not the plan root): day_number, exercise_id, order_index, target_sets, target_reps, target_weight_kg, rest_seconds, `target_rir`, `target_duration_seconds`, notes. |
 | FR-WORK-006 | Publishing draft → `active`. A member may have multiple archived plans but **one** `active` assigned plan (MVP). Activating another archives the previous. |
 | FR-WORK-007 | Editing an `active` plan writes `workout_plan_versions` (version_number++, changelog) **before** mutating exercises. Member-facing reads use current version. |
 | FR-WORK-008 | Assign template → copy to a new member plan (not a live alias). Copy includes exercises. |

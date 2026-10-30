@@ -24,13 +24,13 @@ Name | Type | Description | Notes
 **nextReviewDate** | [**Date**](Date.md) |  | [optional] 
 **reviewChecklist** | [**PtReviewChecklist**](PtReviewChecklist.md) |  | [optional] 
 **finalReviewNotes** | **String** |  | [optional] 
-**clientSignedAt** | [**DateTime**](DateTime.md) |  | [optional] 
-**trainerSignedAt** | [**DateTime**](DateTime.md) |  | [optional] 
+**clientSignedAt** | [**DateTime**](DateTime.md) | UTC ISO-8601 | [optional] 
+**trainerSignedAt** | [**DateTime**](DateTime.md) | UTC ISO-8601 | [optional] 
 **managerUserId** | **int** |  | [optional] 
-**managerSignedAt** | [**DateTime**](DateTime.md) |  | [optional] 
+**managerSignedAt** | [**DateTime**](DateTime.md) | UTC ISO-8601 | [optional] 
 **status** | **String** |  | 
 **createdAt** | [**DateTime**](DateTime.md) | UTC ISO-8601 | 
-**updatedAt** | [**DateTime**](DateTime.md) |  | [optional] 
+**updatedAt** | [**DateTime**](DateTime.md) | UTC ISO-8601 | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

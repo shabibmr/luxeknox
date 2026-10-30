@@ -19,6 +19,7 @@ export async function seedPtClientFile(db: DrizzleDb<any>): Promise<{
   parQSeeded: boolean;
   lifestyleSeeded: boolean;
   reviewSeeded: boolean;
+  skipped: 'no_member' | 'no_trainer' | null;
 }> {
   const now = new Date();
 
@@ -67,7 +68,7 @@ export async function seedPtClientFile(db: DrizzleDb<any>): Promise<{
 
   if (!memberId) {
     console.warn('[Seed PtClientFile] No member found to attach seed records. Skipping.');
-    return { parQSeeded: false, lifestyleSeeded: false, reviewSeeded: false };
+    return { parQSeeded: false, lifestyleSeeded: false, reviewSeeded: false, skipped: 'no_member' };
   }
 
   let parQSeeded = false;
@@ -96,6 +97,7 @@ export async function seedPtClientFile(db: DrizzleDb<any>): Promise<{
       trainer_screening_notes: 'Client completed initial health intake without restrictions.',
       referral_required: false,
       declaration_accepted: true,
+      client_signature: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB',
       client_signed_at: now,
       trainer_signed_at: now,
       trainer_user_id: trainerUserId,
@@ -159,14 +161,18 @@ export async function seedPtClientFile(db: DrizzleDb<any>): Promise<{
   }
 
   // 3. Seed PT Progress Review
-  if (trainerId) {
-    const existingReview = await db
+  if (!trainerId) {
+    console.warn('[Seed PtClientFile] No trainer found; skipping progress review.');
+    return { parQSeeded, lifestyleSeeded, reviewSeeded: false, skipped: 'no_trainer' };
+  }
+
+  const existingReview = await db
       .select({ id: ptProgressReviews.id })
       .from(ptProgressReviews)
       .where(eq(ptProgressReviews.member_id, memberId))
       .limit(1);
 
-    if (!existingReview[0]) {
+  if (!existingReview[0]) {
       const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
       const thirtyDaysHence = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
@@ -206,9 +212,8 @@ export async function seedPtClientFile(db: DrizzleDb<any>): Promise<{
         created_at: now,
         updated_at: now,
       });
-      reviewSeeded = true;
-    }
+    reviewSeeded = true;
   }
 
-  return { parQSeeded, lifestyleSeeded, reviewSeeded };
+  return { parQSeeded, lifestyleSeeded, reviewSeeded, skipped: null };
 }

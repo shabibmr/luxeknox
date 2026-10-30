@@ -32,13 +32,13 @@ part 'pt_progress_review.g.dart';
 /// * [nextReviewDate] 
 /// * [reviewChecklist] 
 /// * [finalReviewNotes] 
-/// * [clientSignedAt] 
-/// * [trainerSignedAt] 
+/// * [clientSignedAt] - UTC ISO-8601
+/// * [trainerSignedAt] - UTC ISO-8601
 /// * [managerUserId] 
-/// * [managerSignedAt] 
+/// * [managerSignedAt] - UTC ISO-8601
 /// * [status] 
 /// * [createdAt] - UTC ISO-8601
-/// * [updatedAt] 
+/// * [updatedAt] - UTC ISO-8601
 @BuiltValue()
 abstract class PtProgressReview implements Built<PtProgressReview, PtProgressReviewBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -90,15 +90,18 @@ abstract class PtProgressReview implements Built<PtProgressReview, PtProgressRev
   @BuiltValueField(wireName: r'final_review_notes')
   String? get finalReviewNotes;
 
+  /// UTC ISO-8601
   @BuiltValueField(wireName: r'client_signed_at')
   DateTime? get clientSignedAt;
 
+  /// UTC ISO-8601
   @BuiltValueField(wireName: r'trainer_signed_at')
   DateTime? get trainerSignedAt;
 
   @BuiltValueField(wireName: r'manager_user_id')
   int? get managerUserId;
 
+  /// UTC ISO-8601
   @BuiltValueField(wireName: r'manager_signed_at')
   DateTime? get managerSignedAt;
 
@@ -110,6 +113,7 @@ abstract class PtProgressReview implements Built<PtProgressReview, PtProgressRev
   @BuiltValueField(wireName: r'created_at')
   DateTime get createdAt;
 
+  /// UTC ISO-8601
   @BuiltValueField(wireName: r'updated_at')
   DateTime? get updatedAt;
 

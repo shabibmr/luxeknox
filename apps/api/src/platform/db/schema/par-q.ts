@@ -46,6 +46,7 @@ export const parQScreenings = mysqlTable(
     referral_required: boolean('referral_required').notNull(),
     referral_reason: text('referral_reason'),
     declaration_accepted: boolean('declaration_accepted').notNull().default(false),
+    client_signature: text('client_signature'),
     client_signed_at: utcDatetime('client_signed_at'),
     trainer_signed_at: utcDatetime('trainer_signed_at'),
     trainer_user_id: bigint('trainer_user_id', { mode: 'number', unsigned: true }).references(

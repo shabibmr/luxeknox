@@ -121,6 +121,38 @@ describe('BookingService', () => {
       expect(repository.insertParticipant).not.toHaveBeenCalled();
     });
 
+    it('blocks booking a PT schedule when the latest screening is rejected', async () => {
+      const { service, repository, parQService } = buildService({
+        findById: vi.fn().mockResolvedValue(baseSchedule({ pt_subscription_id: 7 })),
+      });
+      parQService.assertMayTrain.mockRejectedValue(new BusinessRuleError('MEDICAL_CLEARANCE_REQUIRED'));
+
+      await expect(service.book(5, {}, memberActor)).rejects.toThrow('MEDICAL_CLEARANCE_REQUIRED');
+      expect(parQService.assertMayTrain).toHaveBeenCalledWith(50);
+      expect(repository.insertParticipant).not.toHaveBeenCalled();
+    });
+
+    it('allows booking a PT schedule when the member has no screening on file', async () => {
+      const { service, parQService, repository } = buildService({
+        findById: vi.fn().mockResolvedValue(baseSchedule({ pt_subscription_id: 7 })),
+        findParticipant: vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce({
+          id: 101,
+          schedule_id: 5,
+          member_id: 50,
+          booking_status: 'booked',
+          attended: null,
+          booked_at: new Date(),
+          marked_at: null,
+        }),
+      });
+
+      const participant = await service.book(5, {}, memberActor);
+
+      expect(parQService.assertMayTrain).toHaveBeenCalledWith(50);
+      expect(participant.booking_status).toBe('booked');
+      expect(repository.insertParticipant).toHaveBeenCalled();
+    });
+
     it('does not apply the PAR-Q gate to non-PT schedules', async () => {
       const { service, parQService } = buildService({
         findParticipant: vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce({

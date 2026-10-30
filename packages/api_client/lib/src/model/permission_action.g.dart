@@ -13,6 +13,9 @@ const PermissionAction _$delete = const PermissionAction._('delete');
 const PermissionAction _$approve = const PermissionAction._('approve');
 const PermissionAction _$export_ = const PermissionAction._('export_');
 const PermissionAction _$broadcast = const PermissionAction._('broadcast');
+const PermissionAction _$write = const PermissionAction._('write');
+const PermissionAction _$clientSign = const PermissionAction._('clientSign');
+const PermissionAction _$lifestyle = const PermissionAction._('lifestyle');
 
 PermissionAction _$valueOf(String name) {
   switch (name) {
@@ -30,6 +33,12 @@ PermissionAction _$valueOf(String name) {
       return _$export_;
     case 'broadcast':
       return _$broadcast;
+    case 'write':
+      return _$write;
+    case 'clientSign':
+      return _$clientSign;
+    case 'lifestyle':
+      return _$lifestyle;
     default:
       throw ArgumentError(name);
   }
@@ -44,6 +53,9 @@ final BuiltSet<PermissionAction> _$values =
   _$approve,
   _$export_,
   _$broadcast,
+  _$write,
+  _$clientSign,
+  _$lifestyle,
 ]);
 
 class _$PermissionActionMeta {
@@ -55,6 +67,9 @@ class _$PermissionActionMeta {
   PermissionAction get approve => _$approve;
   PermissionAction get export_ => _$export_;
   PermissionAction get broadcast => _$broadcast;
+  PermissionAction get write => _$write;
+  PermissionAction get clientSign => _$clientSign;
+  PermissionAction get lifestyle => _$lifestyle;
   PermissionAction valueOf(String name) => _$valueOf(name);
   BuiltSet<PermissionAction> get values => _$values;
 }
@@ -77,6 +92,9 @@ class _$PermissionActionSerializer
     'approve': 'approve',
     'export_': 'export',
     'broadcast': 'broadcast',
+    'write': 'write',
+    'clientSign': 'client_sign',
+    'lifestyle': 'lifestyle',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'create': 'create',
@@ -86,6 +104,9 @@ class _$PermissionActionSerializer
     'approve': 'approve',
     'export': 'export_',
     'broadcast': 'broadcast',
+    'write': 'write',
+    'client_sign': 'clientSign',
+    'lifestyle': 'lifestyle',
   };
 
   @override

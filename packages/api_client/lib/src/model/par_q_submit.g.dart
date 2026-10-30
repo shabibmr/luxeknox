@@ -89,6 +89,8 @@ class _$ParQSubmit extends ParQSubmit {
   final String? q7Details;
   @override
   final ParQSubmitDeclarationAcceptedEnum declarationAccepted;
+  @override
+  final String clientSignature;
 
   factory _$ParQSubmit([void Function(ParQSubmitBuilder)? updates]) =>
       (ParQSubmitBuilder()..update(updates))._build();
@@ -108,7 +110,8 @@ class _$ParQSubmit extends ParQSubmit {
       this.q6Details,
       required this.q7OtherReason,
       this.q7Details,
-      required this.declarationAccepted})
+      required this.declarationAccepted,
+      required this.clientSignature})
       : super._();
   @override
   ParQSubmit rebuild(void Function(ParQSubmitBuilder) updates) =>
@@ -135,7 +138,8 @@ class _$ParQSubmit extends ParQSubmit {
         q6Details == other.q6Details &&
         q7OtherReason == other.q7OtherReason &&
         q7Details == other.q7Details &&
-        declarationAccepted == other.declarationAccepted;
+        declarationAccepted == other.declarationAccepted &&
+        clientSignature == other.clientSignature;
   }
 
   @override
@@ -156,6 +160,7 @@ class _$ParQSubmit extends ParQSubmit {
     _$hash = $jc(_$hash, q7OtherReason.hashCode);
     _$hash = $jc(_$hash, q7Details.hashCode);
     _$hash = $jc(_$hash, declarationAccepted.hashCode);
+    _$hash = $jc(_$hash, clientSignature.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -177,7 +182,8 @@ class _$ParQSubmit extends ParQSubmit {
           ..add('q6Details', q6Details)
           ..add('q7OtherReason', q7OtherReason)
           ..add('q7Details', q7Details)
-          ..add('declarationAccepted', declarationAccepted))
+          ..add('declarationAccepted', declarationAccepted)
+          ..add('clientSignature', clientSignature))
         .toString();
   }
 }
@@ -255,6 +261,11 @@ class ParQSubmitBuilder implements Builder<ParQSubmit, ParQSubmitBuilder> {
           ParQSubmitDeclarationAcceptedEnum? declarationAccepted) =>
       _$this._declarationAccepted = declarationAccepted;
 
+  String? _clientSignature;
+  String? get clientSignature => _$this._clientSignature;
+  set clientSignature(String? clientSignature) =>
+      _$this._clientSignature = clientSignature;
+
   ParQSubmitBuilder() {
     ParQSubmit._defaults(this);
   }
@@ -277,6 +288,7 @@ class ParQSubmitBuilder implements Builder<ParQSubmit, ParQSubmitBuilder> {
       _q7OtherReason = $v.q7OtherReason;
       _q7Details = $v.q7Details;
       _declarationAccepted = $v.declarationAccepted;
+      _clientSignature = $v.clientSignature;
       _$v = null;
     }
     return this;
@@ -323,6 +335,8 @@ class ParQSubmitBuilder implements Builder<ParQSubmit, ParQSubmitBuilder> {
           q7Details: q7Details,
           declarationAccepted: BuiltValueNullFieldError.checkNotNull(
               declarationAccepted, r'ParQSubmit', 'declarationAccepted'),
+          clientSignature: BuiltValueNullFieldError.checkNotNull(
+              clientSignature, r'ParQSubmit', 'clientSignature'),
         );
     replace(_$result);
     return _$result;

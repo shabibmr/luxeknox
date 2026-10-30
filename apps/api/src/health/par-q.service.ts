@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.guard';
 import { AuditService } from '../platform/audit/audit.service';
-import type { ParQScreening } from '../platform/db/schema/par-q';
+import type { DrizzleDb } from '../platform/db/client';
+import { DRIZZLE_DB_TOKEN } from '../platform/db/drizzle.module';
+import type { NewParQScreening, ParQScreening } from '../platform/db/schema/par-q';
+import { runInTransaction } from '../platform/db/transaction-context';
 import {
   BusinessRuleError,
   ForbiddenError,
@@ -15,6 +18,7 @@ import type {
   ParQSubmitDto,
   ParQTrainerReviewDto,
 } from './dto/par-q.dto';
+import { PAR_Q_QUESTIONS } from './par-q-questions';
 import { ParQRepository } from './par-q.repository';
 
 export const MEDICAL_CLEARANCE_REQUIRED = 'MEDICAL_CLEARANCE_REQUIRED';
@@ -48,32 +52,29 @@ export class ParQService {
     private readonly repository: ParQRepository,
     private readonly memberRepository: MemberRepository,
     private readonly auditService: AuditService,
+    @Inject(DRIZZLE_DB_TOKEN)
+    private readonly db: DrizzleDb<any>,
   ) {}
 
   toDto(row: ParQScreening): ParQScreeningDto {
+    const answers = Object.fromEntries(
+      PAR_Q_QUESTIONS.flatMap((question) => [
+        [question.answer, row[question.answer]],
+        [question.details, row[question.details] ?? null],
+      ]),
+    ) as Pick<ParQScreeningDto, (typeof PAR_Q_QUESTIONS)[number]['answer' | 'details']>;
+
     return {
       id: row.id,
       member_id: row.member_id,
       version: row.version,
-      q1_heart_condition: row.q1_heart_condition,
-      q1_details: row.q1_details ?? null,
-      q2_chest_pain_activity: row.q2_chest_pain_activity,
-      q2_details: row.q2_details ?? null,
-      q3_chest_pain_rest: row.q3_chest_pain_rest,
-      q3_details: row.q3_details ?? null,
-      q4_dizziness_consciousness: row.q4_dizziness_consciousness,
-      q4_details: row.q4_details ?? null,
-      q5_bone_joint_problem: row.q5_bone_joint_problem,
-      q5_details: row.q5_details ?? null,
-      q6_medication_condition: row.q6_medication_condition,
-      q6_details: row.q6_details ?? null,
-      q7_other_reason: row.q7_other_reason,
-      q7_details: row.q7_details ?? null,
+      ...answers,
       has_positive_answer: row.has_positive_answer,
       trainer_screening_notes: row.trainer_screening_notes ?? null,
       referral_required: row.referral_required,
       referral_reason: row.referral_reason ?? null,
       declaration_accepted: row.declaration_accepted,
+      client_signature: row.client_signature ?? '',
       client_signed_at: row.client_signed_at?.toISOString() ?? null,
       trainer_signed_at: row.trainer_signed_at?.toISOString() ?? null,
       clearance_status: row.clearance_status,
@@ -101,51 +102,39 @@ export class ParQService {
   ): Promise<ParQScreeningDto> {
     await requireScopedMember(this.memberRepository, memberId, actor);
 
-    const hasPositiveAnswer = [
-      dto.q1_heart_condition,
-      dto.q2_chest_pain_activity,
-      dto.q3_chest_pain_rest,
-      dto.q4_dizziness_consciousness,
-      dto.q5_bone_joint_problem,
-      dto.q6_medication_condition,
-      dto.q7_other_reason,
-    ].some(Boolean);
+    const questionValues = Object.fromEntries(
+      PAR_Q_QUESTIONS.flatMap((question) => [
+        [question.answer, dto[question.answer]],
+        [question.details, nullableTrimmed(dto[question.details])],
+      ]),
+    ) as Pick<NewParQScreening, (typeof PAR_Q_QUESTIONS)[number]['answer' | 'details']>;
+    const hasPositiveAnswer = PAR_Q_QUESTIONS.some((question) => dto[question.answer]);
 
     const now = new Date();
-    const id = await this.repository.insert({
-      member_id: memberId,
-      q1_heart_condition: dto.q1_heart_condition,
-      q1_details: nullableTrimmed(dto.q1_details),
-      q2_chest_pain_activity: dto.q2_chest_pain_activity,
-      q2_details: nullableTrimmed(dto.q2_details),
-      q3_chest_pain_rest: dto.q3_chest_pain_rest,
-      q3_details: nullableTrimmed(dto.q3_details),
-      q4_dizziness_consciousness: dto.q4_dizziness_consciousness,
-      q4_details: nullableTrimmed(dto.q4_details),
-      q5_bone_joint_problem: dto.q5_bone_joint_problem,
-      q5_details: nullableTrimmed(dto.q5_details),
-      q6_medication_condition: dto.q6_medication_condition,
-      q6_details: nullableTrimmed(dto.q6_details),
-      q7_other_reason: dto.q7_other_reason,
-      q7_details: nullableTrimmed(dto.q7_details),
-      has_positive_answer: hasPositiveAnswer,
-      referral_required: hasPositiveAnswer,
-      declaration_accepted: dto.declaration_accepted,
-      client_signed_at: now,
-      clearance_status: hasPositiveAnswer ? 'pending_clearance' : 'passed',
-      created_at: now,
-      updated_at: now,
-    });
+    return runInTransaction(this.db, async () => {
+      const id = await this.repository.insert({
+        member_id: memberId,
+        ...questionValues,
+        has_positive_answer: hasPositiveAnswer,
+        referral_required: hasPositiveAnswer,
+        declaration_accepted: dto.declaration_accepted,
+        client_signature: dto.client_signature.trim(),
+        client_signed_at: now,
+        clearance_status: hasPositiveAnswer ? 'pending_clearance' : 'passed',
+        created_at: now,
+        updated_at: now,
+      });
 
-    const saved = await this.requireLatest(memberId);
-    await this.auditService.recordAudit({
-      actorUserId: actor.id,
-      action: 'par_q.submitted',
-      entityName: 'par_q_screenings',
-      entityId: id,
-      afterState: auditView(saved),
+      const saved = await this.requireLatest(memberId);
+      await this.auditService.recordAudit({
+        actorUserId: actor.id,
+        action: 'par_q.submitted',
+        entityName: 'par_q_screenings',
+        entityId: id,
+        afterState: auditView(saved),
+      });
+      return this.toDto(saved);
     });
-    return this.toDto(saved);
   }
 
   /** Trainer screening notes and referral call on the member's latest questionnaire. */
@@ -158,28 +147,31 @@ export class ParQService {
       throw new ForbiddenError('Members cannot review their own PAR-Q+');
     }
     await requireScopedMember(this.memberRepository, memberId, actor);
-    const before = await this.requireLatest(memberId);
 
-    const now = new Date();
-    await this.repository.updateById(before.id, {
-      trainer_screening_notes: dto.trainer_screening_notes.trim(),
-      referral_required: dto.referral_required,
-      referral_reason: dto.referral_required ? nullableTrimmed(dto.referral_reason) : null,
-      trainer_signed_at: now,
-      trainer_user_id: actor.id,
-      updated_at: now,
-    });
+    return runInTransaction(this.db, async () => {
+      const before = await this.requireLatest(memberId);
 
-    const saved = await this.requireLatest(memberId);
-    await this.auditService.recordAudit({
-      actorUserId: actor.id,
-      action: 'par_q.trainer_reviewed',
-      entityName: 'par_q_screenings',
-      entityId: before.id,
-      beforeState: auditView(before),
-      afterState: auditView(saved),
+      const now = new Date();
+      await this.repository.updateById(before.id, {
+        trainer_screening_notes: dto.trainer_screening_notes.trim(),
+        referral_required: dto.referral_required,
+        referral_reason: dto.referral_required ? nullableTrimmed(dto.referral_reason) : null,
+        trainer_signed_at: now,
+        trainer_user_id: actor.id,
+        updated_at: now,
+      });
+
+      const saved = await this.requireLatest(memberId);
+      await this.auditService.recordAudit({
+        actorUserId: actor.id,
+        action: 'par_q.trainer_reviewed',
+        entityName: 'par_q_screenings',
+        entityId: before.id,
+        beforeState: auditView(before),
+        afterState: auditView(saved),
+      });
+      return this.toDto(saved);
     });
-    return this.toDto(saved);
   }
 
   /** Admin decision on a pending screening, usually after the doctor's sign-off. */
@@ -189,31 +181,34 @@ export class ParQService {
     actor: AuthenticatedUser,
   ): Promise<ParQScreeningDto> {
     await requireScopedMember(this.memberRepository, memberId, actor);
-    const before = await this.requireLatest(memberId);
-    if (before.clearance_status !== 'pending_clearance') {
-      throw new BusinessRuleError(
-        `Only a screening in 'pending_clearance' can be decided; this one is '${before.clearance_status}'`,
-      );
-    }
 
-    const now = new Date();
-    await this.repository.updateById(before.id, {
-      clearance_status: dto.decision,
-      cleared_at: now,
-      cleared_by_user_id: actor.id,
-      updated_at: now,
-    });
+    return runInTransaction(this.db, async () => {
+      const before = await this.requireLatest(memberId);
+      if (before.clearance_status !== 'pending_clearance') {
+        throw new BusinessRuleError(
+          `Only a screening in 'pending_clearance' can be decided; this one is '${before.clearance_status}'`,
+        );
+      }
 
-    const saved = await this.requireLatest(memberId);
-    await this.auditService.recordAudit({
-      actorUserId: actor.id,
-      action: dto.decision === 'cleared' ? 'par_q.cleared' : 'par_q.rejected',
-      entityName: 'par_q_screenings',
-      entityId: before.id,
-      beforeState: auditView(before),
-      afterState: auditView(saved),
+      const now = new Date();
+      await this.repository.updateById(before.id, {
+        clearance_status: dto.decision,
+        cleared_at: now,
+        cleared_by_user_id: actor.id,
+        updated_at: now,
+      });
+
+      const saved = await this.requireLatest(memberId);
+      await this.auditService.recordAudit({
+        actorUserId: actor.id,
+        action: dto.decision === 'cleared' ? 'par_q.cleared' : 'par_q.rejected',
+        entityName: 'par_q_screenings',
+        entityId: before.id,
+        beforeState: auditView(before),
+        afterState: auditView(saved),
+      });
+      return this.toDto(saved);
     });
-    return this.toDto(saved);
   }
 
   /**

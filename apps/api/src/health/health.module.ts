@@ -10,6 +10,6 @@ import { ParQService } from './par-q.service';
   imports: [PlatformModule, RbacModule, forwardRef(() => PeopleModule)],
   controllers: [ParQController],
   providers: [ParQRepository, ParQService],
-  exports: [ParQRepository, ParQService],
+  exports: [ParQService],
 })
-export class ParQModule {}
+export class HealthModule {}

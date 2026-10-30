@@ -101,7 +101,24 @@ ALTER TABLE `workout_plans` ADD `main_success_measure` varchar(255);--> statemen
 ALTER TABLE `workout_plans` ADD `trainer_programming_notes` text;--> statement-breakpoint
 ALTER TABLE `workout_session_exercises` ADD `actual_rir` decimal(3,1);--> statement-breakpoint
 ALTER TABLE `workout_session_exercises` ADD `actual_duration_seconds` int;--> statement-breakpoint
-ALTER TABLE `workout_session_exercises` ADD `notes` text;--> statement-breakpoint
+-- Notes may already exist from the unjournaled 0027_workout_session_exercise_notes.sql.
+DROP PROCEDURE IF EXISTS `__migrate_0032_ensure_notes`;
+DELIMITER $$
+CREATE PROCEDURE `__migrate_0032_ensure_notes`()
+BEGIN
+  DECLARE v_exists INT DEFAULT 0;
+  SELECT COUNT(*) INTO v_exists FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'workout_session_exercises'
+      AND COLUMN_NAME = 'notes';
+  IF v_exists = 0 THEN
+    ALTER TABLE `workout_session_exercises` ADD `notes` text;
+  END IF;
+END$$
+DELIMITER ;
+CALL `__migrate_0032_ensure_notes`();
+DROP PROCEDURE `__migrate_0032_ensure_notes`;
+--> statement-breakpoint
 ALTER TABLE `workout_sessions` ADD `session_focus` varchar(120);--> statement-breakpoint
 ALTER TABLE `workout_sessions` ADD `warmup_protocol` text;--> statement-breakpoint
 ALTER TABLE `workout_sessions` ADD `cooldown_protocol` text;--> statement-breakpoint

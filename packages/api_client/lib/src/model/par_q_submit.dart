@@ -9,7 +9,7 @@ import 'package:built_value/serializer.dart';
 
 part 'par_q_submit.g.dart';
 
-/// Every YES answer requires its `*_details` text.
+/// Every YES answer requires its `*_details` text. A member signature is required.
 ///
 /// Properties:
 /// * [q1HeartCondition] 
@@ -27,6 +27,7 @@ part 'par_q_submit.g.dart';
 /// * [q7OtherReason] 
 /// * [q7Details] 
 /// * [declarationAccepted] 
+/// * [clientSignature] - Member ink signature (data URL or stroke payload).
 @BuiltValue()
 abstract class ParQSubmit implements Built<ParQSubmit, ParQSubmitBuilder> {
   @BuiltValueField(wireName: r'q1_heart_condition')
@@ -74,6 +75,10 @@ abstract class ParQSubmit implements Built<ParQSubmit, ParQSubmitBuilder> {
   @BuiltValueField(wireName: r'declaration_accepted')
   ParQSubmitDeclarationAcceptedEnum get declarationAccepted;
   // enum declarationAcceptedEnum {  true,  };
+
+  /// Member ink signature (data URL or stroke payload).
+  @BuiltValueField(wireName: r'client_signature')
+  String get clientSignature;
 
   ParQSubmit._();
 
@@ -186,6 +191,11 @@ class _$ParQSubmitSerializer implements PrimitiveSerializer<ParQSubmit> {
     yield serializers.serialize(
       object.declarationAccepted,
       specifiedType: const FullType(ParQSubmitDeclarationAcceptedEnum),
+    );
+    yield r'client_signature';
+    yield serializers.serialize(
+      object.clientSignature,
+      specifiedType: const FullType(String),
     );
   }
 
@@ -321,6 +331,13 @@ class _$ParQSubmitSerializer implements PrimitiveSerializer<ParQSubmit> {
             specifiedType: const FullType(ParQSubmitDeclarationAcceptedEnum),
           ) as ParQSubmitDeclarationAcceptedEnum;
           result.declarationAccepted = valueDes;
+          break;
+        case r'client_signature':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.clientSignature = valueDes;
           break;
         default:
           unhandled.add(key);

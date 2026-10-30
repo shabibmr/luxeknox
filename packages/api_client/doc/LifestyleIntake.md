@@ -24,7 +24,7 @@ Name | Type | Description | Notes
 **lifestylePriorities** | [**BuiltList&lt;LifestylePriority&gt;**](LifestylePriority.md) |  | [optional] 
 **conductedByTrainerId** | **int** |  | [optional] 
 **createdAt** | [**DateTime**](DateTime.md) | UTC ISO-8601 | 
-**updatedAt** | [**DateTime**](DateTime.md) |  | [optional] 
+**updatedAt** | [**DateTime**](DateTime.md) | UTC ISO-8601 | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

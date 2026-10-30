@@ -204,6 +204,13 @@
       "when": 1793084026912,
       "tag": "0032_pt_client_file_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1793100000000,
+      "tag": "0033_par_q_client_signature",
+      "breakpoints": true
     }
   ]
 }

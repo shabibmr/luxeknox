@@ -13,6 +13,7 @@ import {
   NotFoundError,
 } from '../platform/errors/app-error';
 import { ParQService } from '../health/par-q.service';
+import { isPtSchedule } from './is-pt-schedule';
 import { MemberRepository } from '../people/member.repository';
 import { SettingsService } from '../sys/settings.service';
 import type { BookRequestDto, CancelBookingRequestDto } from './booking.dto';
@@ -80,7 +81,7 @@ export class BookingService {
       throw new NotFoundError('Member not found');
     }
 
-    if (schedule.pt_subscription_id != null) {
+    if (isPtSchedule(schedule)) {
       await this.parQService.assertMayTrain(memberId);
     }
 

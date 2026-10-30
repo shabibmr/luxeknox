@@ -309,6 +309,50 @@ describe('ScheduleService', () => {
       expect(repository.updateSchedule).not.toHaveBeenCalled();
     });
 
+    it('blocks starting a PT schedule when a waitlisted participant lacks medical clearance', async () => {
+      const { service, repository, parQService } = buildService({
+        findById: vi.fn().mockResolvedValue({ ...scheduledRow, pt_subscription_id: 7 }),
+        listParticipants: vi.fn().mockResolvedValue([
+          { id: 1, schedule_id: 40, member_id: 61, booking_status: 'cancelled' },
+          { id: 3, schedule_id: 40, member_id: 63, booking_status: 'waitlisted' },
+        ]),
+      });
+      parQService.assertMayTrain.mockRejectedValue(new BusinessRuleError('MEDICAL_CLEARANCE_REQUIRED'));
+
+      await expect(service.start(40, {}, adminActor)).rejects.toThrow('MEDICAL_CLEARANCE_REQUIRED');
+      expect(parQService.assertMayTrain).toHaveBeenCalledWith(63);
+      expect(repository.updateSchedule).not.toHaveBeenCalled();
+    });
+
+    it('blocks starting a PT schedule when the latest screening is rejected', async () => {
+      const { service, repository, parQService } = buildService({
+        findById: vi.fn().mockResolvedValue({ ...scheduledRow, pt_subscription_id: 7 }),
+        listParticipants: vi.fn().mockResolvedValue([
+          { id: 2, schedule_id: 40, member_id: 62, booking_status: 'booked' },
+        ]),
+      });
+      parQService.assertMayTrain.mockRejectedValue(new BusinessRuleError('MEDICAL_CLEARANCE_REQUIRED'));
+
+      await expect(service.start(40, {}, adminActor)).rejects.toThrow('MEDICAL_CLEARANCE_REQUIRED');
+      expect(parQService.assertMayTrain).toHaveBeenCalledWith(62);
+      expect(repository.updateSchedule).not.toHaveBeenCalled();
+    });
+
+    it('allows starting a PT schedule when the member has no screening on file', async () => {
+      const ptRow = { ...scheduledRow, pt_subscription_id: 7 };
+      const { service, repository, parQService } = buildService({
+        findById: vi.fn().mockResolvedValueOnce(ptRow).mockResolvedValueOnce({ ...ptRow, status: 'ongoing', row_version: 2 }),
+        listParticipants: vi.fn().mockResolvedValue([
+          { id: 2, schedule_id: 40, member_id: 62, booking_status: 'booked' },
+        ]),
+      });
+
+      await service.start(40, {}, adminActor);
+
+      expect(parQService.assertMayTrain).toHaveBeenCalledWith(62);
+      expect(repository.updateSchedule).toHaveBeenCalled();
+    });
+
     it('rejects starting a schedule that is not scheduled', async () => {
       const { service } = buildService({
         findById: vi.fn().mockResolvedValue({ ...scheduledRow, status: 'ongoing' }),

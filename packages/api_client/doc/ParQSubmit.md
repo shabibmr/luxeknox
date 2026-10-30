@@ -23,6 +23,7 @@ Name | Type | Description | Notes
 **q7OtherReason** | **bool** |  | 
 **q7Details** | **String** |  | [optional] 
 **declarationAccepted** | **bool** |  | 
+**clientSignature** | **String** | Member ink signature (data URL or stroke payload). | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

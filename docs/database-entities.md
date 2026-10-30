@@ -228,7 +228,7 @@ pie title Database Entities Distribution (89 Tables)
 ### `pt_progress_reviews`
 
 * **Purpose**: Periodic PT progress review with a snapshot of the member's metrics, and a three-party sign-off (trainer, client, manager).
-* **Supporting Screens**: PT Progress Review (Screen 45), PT review presentation card (PDF).
+* **Supporting Screens**: PT Progress Review (Screen 47), PT review presentation card (PDF).
 * **Key Attributes**: `id`, `member_id` (FK), `trainer_id` (FK), `review_period_start`, `review_period_end` (dates), `body_metrics_snapshot` (JSON array of `{metric, start_val, current_val, change_val, target_val}` numbers), `performance_markers_snapshot` (JSON array of `{marker, start_val, current_val, change_val, target_val}` strings), `progress_highlights` (JSON string array), `highlights_other_text`, `trainer_summary`, `client_feedback`, `next_phase_goal`, `next_phase_training_focus`, `next_review_date`, `review_checklist` (JSON of booleans: `goals_reviewed`, `measurements_reviewed`, `performance_reviewed`, `attendance_reviewed`, `program_updated`, `next_goals_agreed`), `final_review_notes`, `client_signed_at`, `trainer_signed_at`, `manager_user_id` (FK to users, nullable), `manager_signed_at`, `status`, `created_at`, `updated_at`.
 * **`status`**: `draft` | `pending_client_sign` | `pending_manager_approval` | `approved` | `archived`. Indexed on `member_id`, `trainer_id` and `status`.
 
