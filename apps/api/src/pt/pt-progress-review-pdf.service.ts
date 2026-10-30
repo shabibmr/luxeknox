@@ -33,6 +33,21 @@ function fmtDate(value: Date | string | null | undefined): string {
   return Number.isNaN(d.getTime()) ? String(value) : d.toISOString().slice(0, 10);
 }
 
+function fourCells<T>(
+  row:
+    | {
+        start_val: T | null;
+        current_val: T | null;
+        change_val: T | null;
+        target_val: T | null;
+      }
+    | undefined,
+  format: (value: T | null | undefined) => string,
+): string[] {
+  if (!row) return ['-', '-', '-', '-'];
+  return [format(row.start_val), format(row.current_val), format(row.change_val), format(row.target_val)];
+}
+
 /** Renders the Page 8 progress review presentation card as an A4 PDF. */
 export function renderPresentationCard(
   review: PtProgressReview,
@@ -77,21 +92,13 @@ export function renderPresentationCard(
       const name = m.metric.toLowerCase();
       return name !== 'weight' && name !== 'waist';
     });
-    const strength = perf[0];
+    const strength = perf.find((p) => !/cardio/i.test(p.marker));
     const cardio = perf.find((p) => /cardio/i.test(p.marker));
-    const bodyCells = (metric: (typeof body)[number] | undefined): string[] =>
-      metric
-        ? [fmtNum(metric.start_val), fmtNum(metric.current_val), fmtNum(metric.change_val), fmtNum(metric.target_val)]
-        : ['-', '-', '-', '-'];
-    const perfCells = (marker: (typeof perf)[number] | undefined): string[] =>
-      marker
-        ? [fmtText(marker.start_val), fmtText(marker.current_val), fmtText(marker.change_val), fmtText(marker.target_val)]
-        : ['-', '-', '-', '-'];
-    drawRow(['Weight', ...bodyCells(weight)], measureCols);
-    drawRow(['Waist', ...bodyCells(waist)], measureCols);
-    drawRow(['Strength marker', ...perfCells(strength)], measureCols);
-    drawRow(['Cardio marker', ...perfCells(cardio)], measureCols);
-    drawRow(['Other agreed metric', ...bodyCells(other)], measureCols);
+    drawRow(['Weight', ...fourCells(weight, fmtNum)], measureCols);
+    drawRow(['Waist', ...fourCells(waist, fmtNum)], measureCols);
+    drawRow(['Strength marker', ...fourCells(strength, fmtText)], measureCols);
+    drawRow(['Cardio marker', ...fourCells(cardio, fmtText)], measureCols);
+    drawRow(['Other agreed metric', ...fourCells(other, fmtNum)], measureCols);
     doc.font('Helvetica');
 
     section('Progress Highlights');

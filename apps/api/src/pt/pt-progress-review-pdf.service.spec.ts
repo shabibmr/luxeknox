@@ -127,6 +127,57 @@ describe('renderPresentationCard', () => {
     expect(text).not.toContain('Chest');
   });
 
+  it('does not put a cardio marker on the strength row when cardio is listed first', async () => {
+    const buf = await renderPresentationCard(
+      {
+        ...review,
+        performance_markers_snapshot: [
+          { marker: 'Easy cardio', start_val: '30:00', current_val: '28:00', change_val: '-2:00', target_val: '25:00' },
+          { marker: 'Squat', start_val: '40 kg', current_val: '55 kg', change_val: '+15 kg', target_val: '60 kg' },
+        ],
+      },
+      { memberName: 'Asha K', trainerName: 'Ravi T' },
+    );
+    const text = presentationCardText(buf);
+    const between = (start: string, end: string) =>
+      text.slice(text.indexOf(start), text.indexOf(end, text.indexOf(start) + start.length));
+    const strength = between('Strength marker', 'Cardio marker');
+    expect(strength).toContain('40 kg');
+    expect(strength).toContain('55 kg');
+    expect(strength).toContain('+15 kg');
+    expect(strength).toContain('60 kg');
+    expect(strength).not.toContain('30:00');
+    const cardio = between('Cardio marker', 'Other agreed metric');
+    expect(cardio).toContain('30:00');
+    expect(cardio).toContain('28:00');
+    expect(cardio).toContain('-2:00');
+    expect(cardio).toContain('25:00');
+    expect(cardio).not.toContain('Squat');
+  });
+
+  it('leaves the strength row blank when the only marker is cardio', async () => {
+    const buf = await renderPresentationCard(
+      {
+        ...review,
+        performance_markers_snapshot: [
+          { marker: 'Easy cardio', start_val: '30:00', current_val: '28:00', change_val: '-2:00', target_val: '25:00' },
+        ],
+      },
+      { memberName: 'Asha K', trainerName: 'Ravi T' },
+    );
+    const text = presentationCardText(buf);
+    const between = (start: string, end: string) =>
+      text.slice(text.indexOf(start), text.indexOf(end, text.indexOf(start) + start.length));
+    const strength = between('Strength marker', 'Cardio marker');
+    expect(strength).not.toContain('30:00');
+    expect(strength).toContain('-');
+    const cardio = between('Cardio marker', 'Other agreed metric');
+    expect(cardio).toContain('30:00');
+    expect(cardio).toContain('28:00');
+    expect(cardio).toContain('-2:00');
+    expect(cardio).toContain('25:00');
+  });
+
   it('checks Page 8 progress highlights and shows other text', async () => {
     const buf = await renderPresentationCard(
       {

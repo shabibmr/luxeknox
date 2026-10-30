@@ -304,7 +304,9 @@ export class PtProgressReviewService {
   /** draft -> pending_client_sign. Only the review's trainer may sign. */
   async trainerSign(id: number, actor: AuthenticatedUser): Promise<PtProgressReview> {
     const review = await this.requireReview(id);
-    if (actor.userType !== 'trainer' || actor.profileId !== review.trainer_id) {
+    const isReviewTrainer = actor.userType === 'trainer' && actor.profileId === review.trainer_id;
+    if (!isReviewTrainer) {
+      await requireScopedMember(this.memberRepository, review.member_id, actor);
       throw new ForbiddenError('Only the review trainer can sign this review');
     }
     await this.ptAccess.assertTrainerCanWrite(actor, review.member_id);

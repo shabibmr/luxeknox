@@ -528,6 +528,14 @@ describe('PtProgressReviewService sign-off state machine', () => {
     await expect(service.trainerSign(7, TRAINER)).rejects.toBeInstanceOf(BusinessRuleError);
   });
 
+  it('refuses an assigned trainer who is not the review trainer', async () => {
+    memberRepository.findById.mockResolvedValue({ id: 100, user_id: 10, assigned_trainer_id: 8 });
+    await expect(service.trainerSign(7, { ...TRAINER, profileId: 8 })).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
+    expect(repository.updateReview).not.toHaveBeenCalled();
+  });
+
   it('refuses trainer sign from an admin or employee', async () => {
     await expect(service.trainerSign(7, ADMIN)).rejects.toBeInstanceOf(ForbiddenError);
     await expect(
@@ -537,9 +545,9 @@ describe('PtProgressReviewService sign-off state machine', () => {
   });
 
   it('enforces who may sign at each stage', async () => {
-    // Another trainer is refused even when the review exists outside their row scope.
+    // A trainer who is not assigned to the member must not learn that the review exists.
     await expect(service.trainerSign(7, { ...TRAINER, profileId: 99 })).rejects.toBeInstanceOf(
-      ForbiddenError,
+      NotFoundError,
     );
     review.status = 'pending_client_sign';
     await expect(service.clientSign(7, { ...MEMBER, id: 11 })).rejects.toBeInstanceOf(ForbiddenError);
