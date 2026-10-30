@@ -150,6 +150,22 @@ abstract final class WorkoutStrings {
   static const add30sRest = '+30s Rest';
   static const setNotesLabel = 'Set notes / form cues (optional)';
   static const setDetails = 'Set details';
+  static const rirLabel = 'RIR';
+  static const actualRirLabel = 'RIR (Reps in Reserve)';
+  static const durationSecondsLabel = 'Duration (seconds)';
+  static const timedModeToggleReps = 'Reps mode';
+  static const timedModeToggleDuration = 'Timed / Stopwatch';
+  static const stopwatchStart = 'Start';
+  static const stopwatchStop = 'Stop';
+  static const stopwatchReset = 'Reset';
+  static const effortRatingLabel = 'Effort (1–10)';
+  static const satisfactionRatingLabel = 'Satisfaction (1–10)';
+  static const painDiscomfortLabel = 'Pain / Discomfort (0–10)';
+  static const painNotesLabel = 'Pain notes (required when score > 0)';
+  static const painNotesHint =
+      'Describe location, severity, and movement that caused discomfort...';
+  static const highDiscomfortAlert =
+      'High discomfort score reported: safety alert flagged for coaching staff';
   static const exerciseComments = 'Exercise comments';
   static const setComments = 'Set comments';
   static const moreExerciseActions = 'Exercise actions';

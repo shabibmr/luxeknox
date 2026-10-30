@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +25,7 @@ import '../widgets/session_comments_sheet.dart';
 import '../widgets/skip_reason_dialog.dart';
 import '../widgets/workout_plan_picker_sheet.dart';
 import '../workout_strings.dart';
+import '../widgets/post_workout_feedback_modal.dart';
 
 const _wideSessionWidth = 840.0;
 const _sessionColumnKey = ValueKey<String>('active-workout-column');
@@ -35,19 +37,21 @@ String? _errorText(ActiveWorkoutState state) {
   return failureMessage(failure);
 }
 
-class _CompleteFeedback {
-  const _CompleteFeedback({this.notes, this.rating});
-
-  final String? notes;
-  final int? rating;
-}
-
 class _SetFieldsResult {
-  const _SetFieldsResult({this.reps, this.weightKg, this.rpe, this.notes});
+  const _SetFieldsResult({
+    this.reps,
+    this.weightKg,
+    this.rpe,
+    this.rir,
+    this.durationSeconds,
+    this.notes,
+  });
 
   final int? reps;
   final num? weightKg;
   final num? rpe;
+  final num? rir;
+  final int? durationSeconds;
   final String? notes;
 }
 
@@ -448,9 +452,15 @@ class _InProgressPanelState extends State<_InProgressPanel> {
   final _repsController = TextEditingController();
   final _weightController = TextEditingController();
   final _rpeController = TextEditingController();
+  final _rirController = TextEditingController();
+  final _durationController = TextEditingController();
   final _notesController = TextEditingController();
   Exercise? _selectedFreeExercise;
   String? _lastSyncedExerciseId;
+  bool _isDurationMode = false;
+  int _stopwatchSeconds = 0;
+  Timer? _stopwatchTimer;
+  bool _isStopwatchRunning = false;
 
   @override
   void initState() {
@@ -498,14 +508,22 @@ class _InProgressPanelState extends State<_InProgressPanel> {
       }
 
       _rpeController.text = '';
+      _rirController.text = '';
+      _durationController.text = '';
+      _stopwatchSeconds = 0;
+      _stopwatchTimer?.cancel();
+      _isStopwatchRunning = false;
     }
   }
 
   @override
   void dispose() {
+    _stopwatchTimer?.cancel();
     _repsController.dispose();
     _weightController.dispose();
     _rpeController.dispose();
+    _rirController.dispose();
+    _durationController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -532,12 +550,62 @@ class _InProgressPanelState extends State<_InProgressPanel> {
     _repsController.text = updated.toString();
   }
 
+  void _adjustRir(num delta) {
+    final current = num.tryParse(_rirController.text.trim()) ?? 0;
+    final updated = (current + delta).clamp(0, 10);
+    _rirController.text = updated % 1 == 0
+        ? updated.toInt().toString()
+        : updated.toString();
+  }
+
+  void _adjustDuration(int delta) {
+    final current =
+        int.tryParse(_durationController.text.trim()) ?? _stopwatchSeconds;
+    final updated = (current + delta).clamp(0, 3600);
+    _durationController.text = updated.toString();
+    setState(() {
+      _stopwatchSeconds = updated;
+    });
+  }
+
+  void _toggleStopwatch() {
+    if (_isStopwatchRunning) {
+      _stopwatchTimer?.cancel();
+      setState(() => _isStopwatchRunning = false);
+    } else {
+      _stopwatchTimer?.cancel();
+      _stopwatchTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        setState(() {
+          _stopwatchSeconds++;
+          _durationController.text = _stopwatchSeconds.toString();
+        });
+      });
+      setState(() => _isStopwatchRunning = true);
+    }
+  }
+
+  void _resetStopwatch() {
+    _stopwatchTimer?.cancel();
+    setState(() {
+      _isStopwatchRunning = false;
+      _stopwatchSeconds = 0;
+      _durationController.text = '';
+    });
+  }
+
   void _submit() {
     final exerciseId = _selectedExerciseId;
     if (exerciseId == null) return;
-    final reps = int.tryParse(_repsController.text.trim());
+    final reps = _isDurationMode
+        ? null
+        : int.tryParse(_repsController.text.trim());
     final weight = num.tryParse(_weightController.text.trim());
     final rpe = num.tryParse(_rpeController.text.trim());
+    final rir = num.tryParse(_rirController.text.trim());
+    final duration = _isDurationMode
+        ? (int.tryParse(_durationController.text.trim()) ??
+              (_stopwatchSeconds > 0 ? _stopwatchSeconds : null))
+        : null;
     final notes = _notesController.text.trim();
 
     context.read<ActiveWorkoutBloc>().add(
@@ -546,10 +614,15 @@ class _InProgressPanelState extends State<_InProgressPanel> {
         repsCompleted: reps,
         weightLiftedKg: weight,
         rpeScore: rpe,
+        actualRir: rir,
+        actualDurationSeconds: duration,
         notes: notes.isEmpty ? null : notes,
       ),
     );
     _notesController.clear();
+    _rirController.clear();
+    _durationController.clear();
+    _resetStopwatch();
   }
 
   Future<void> _skip() async {
@@ -575,6 +648,8 @@ class _InProgressPanelState extends State<_InProgressPanel> {
       initialReps: set.repsCompleted,
       initialWeightKg: set.weightLiftedKg,
       initialRpe: set.rpeScore,
+      initialRir: set.actualRirNum,
+      initialDurationSeconds: set.actualDurationSeconds,
       initialNotes: set.notes,
     );
     if (result == null || !context.mounted) return;
@@ -584,6 +659,8 @@ class _InProgressPanelState extends State<_InProgressPanel> {
         reps: result.reps,
         weightKg: result.weightKg,
         rpe: result.rpe,
+        actualRir: result.rir,
+        actualDurationSeconds: result.durationSeconds,
         notes: result.notes,
       ),
     );
@@ -935,39 +1012,212 @@ class _InProgressPanelState extends State<_InProgressPanel> {
                         ),
                         const SizedBox(height: 12),
 
-                        // Reps Stepper Row
+                        // Mode Toggle: Reps vs Timed / Stopwatch
+                        SegmentedButton<bool>(
+                          key: const ValueKey('timed-mode-toggle'),
+                          segments: const [
+                            ButtonSegment<bool>(
+                              value: false,
+                              label: Text(WorkoutStrings.timedModeToggleReps),
+                              icon: Icon(Icons.repeat),
+                            ),
+                            ButtonSegment<bool>(
+                              value: true,
+                              label: Text(
+                                WorkoutStrings.timedModeToggleDuration,
+                              ),
+                              icon: Icon(Icons.timer_outlined),
+                            ),
+                          ],
+                          selected: {_isDurationMode},
+                          onSelectionChanged: (set) =>
+                              setState(() => _isDurationMode = set.first),
+                        ),
+                        const SizedBox(height: 12),
+
+                        if (!_isDurationMode) ...[
+                          // Reps Stepper Row
+                          Row(
+                            children: [
+                              IconButton.filledTonal(
+                                onPressed: isTimerActive
+                                    ? null
+                                    : () => _adjustReps(-1),
+                                icon: const Icon(Icons.remove),
+                                tooltip: '-1 rep',
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
+                                  key: const ValueKey('set-reps-field'),
+                                  controller: _repsController,
+                                  enabled: !isTimerActive,
+                                  decoration: const InputDecoration(
+                                    labelText: WorkoutStrings.repsLabel,
+                                    border: OutlineInputBorder(),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton.filledTonal(
+                                onPressed: isTimerActive
+                                    ? null
+                                    : () => _adjustReps(1),
+                                icon: const Icon(Icons.add),
+                                tooltip: '+1 rep',
+                              ),
+                            ],
+                          ),
+                        ] else ...[
+                          // Stopwatch Card & Duration Stepper
+                          Card(
+                            color: theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.5),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.timer_outlined,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '${_stopwatchSeconds}s',
+                                        style: theme.textTheme.titleLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      FilledButton.tonalIcon(
+                                        key: const ValueKey(
+                                          'stopwatch-toggle-btn',
+                                        ),
+                                        onPressed: isTimerActive
+                                            ? null
+                                            : _toggleStopwatch,
+                                        icon: Icon(
+                                          _isStopwatchRunning
+                                              ? Icons.pause
+                                              : Icons.play_arrow,
+                                        ),
+                                        label: Text(
+                                          _isStopwatchRunning
+                                              ? WorkoutStrings.stopwatchStop
+                                              : WorkoutStrings.stopwatchStart,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      IconButton(
+                                        key: const ValueKey(
+                                          'stopwatch-reset-btn',
+                                        ),
+                                        tooltip: WorkoutStrings.stopwatchReset,
+                                        onPressed: isTimerActive
+                                            ? null
+                                            : _resetStopwatch,
+                                        icon: const Icon(Icons.refresh),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              IconButton.filledTonal(
+                                onPressed: isTimerActive
+                                    ? null
+                                    : () => _adjustDuration(-5),
+                                icon: const Icon(Icons.remove),
+                                tooltip: '-5s',
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
+                                  key: const ValueKey('set-duration-field'),
+                                  controller: _durationController,
+                                  enabled: !isTimerActive,
+                                  decoration: const InputDecoration(
+                                    labelText:
+                                        WorkoutStrings.durationSecondsLabel,
+                                    border: OutlineInputBorder(),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton.filledTonal(
+                                onPressed: isTimerActive
+                                    ? null
+                                    : () => _adjustDuration(5),
+                                icon: const Icon(Icons.add),
+                                tooltip: '+5s',
+                              ),
+                            ],
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+
+                        // RIR Stepper Row
                         Row(
                           children: [
                             IconButton.filledTonal(
                               onPressed: isTimerActive
                                   ? null
-                                  : () => _adjustReps(-1),
+                                  : () => _adjustRir(-1),
                               icon: const Icon(Icons.remove),
-                              tooltip: '-1 rep',
+                              tooltip: '-1 RIR',
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: TextField(
-                                controller: _repsController,
+                                key: const ValueKey('set-rir-field'),
+                                controller: _rirController,
                                 enabled: !isTimerActive,
                                 decoration: const InputDecoration(
-                                  labelText: WorkoutStrings.repsLabel,
+                                  labelText: WorkoutStrings.actualRirLabel,
                                   border: OutlineInputBorder(),
                                   contentPadding: EdgeInsets.symmetric(
                                     horizontal: 12,
                                     vertical: 12,
                                   ),
                                 ),
-                                keyboardType: TextInputType.number,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
                               ),
                             ),
                             const SizedBox(width: 8),
                             IconButton.filledTonal(
                               onPressed: isTimerActive
                                   ? null
-                                  : () => _adjustReps(1),
+                                  : () => _adjustRir(1),
                               icon: const Icon(Icons.add),
-                              tooltip: '+1 rep',
+                              tooltip: '+1 RIR',
                             ),
                           ],
                         ),
@@ -1190,6 +1440,17 @@ class _InProgressPanelState extends State<_InProgressPanel> {
                                       'RPE: ${s.rpeScore}',
                                       style: theme.textTheme.bodySmall,
                                     ),
+                                  if (s.actualRir != null &&
+                                      s.actualRir!.isNotEmpty)
+                                    Text(
+                                      'RIR: ${s.actualRir}',
+                                      style: theme.textTheme.bodySmall,
+                                    ),
+                                  if (s.actualDurationSeconds != null)
+                                    Text(
+                                      'Duration: ${s.actualDurationSeconds}s',
+                                      style: theme.textTheme.bodySmall,
+                                    ),
                                   if (s.notes != null && s.notes!.isNotEmpty)
                                     Text(
                                       'Note: ${s.notes}',
@@ -1407,23 +1668,133 @@ class _InProgressPanelState extends State<_InProgressPanel> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  SegmentedButton<bool>(
+                    key: const ValueKey('timed-mode-toggle-phone'),
+                    segments: const [
+                      ButtonSegment<bool>(
+                        value: false,
+                        label: Text(WorkoutStrings.timedModeToggleReps),
+                        icon: Icon(Icons.repeat),
+                      ),
+                      ButtonSegment<bool>(
+                        value: true,
+                        label: Text(WorkoutStrings.timedModeToggleDuration),
+                        icon: Icon(Icons.timer_outlined),
+                      ),
+                    ],
+                    selected: {_isDurationMode},
+                    onSelectionChanged: (set) =>
+                        setState(() => _isDurationMode = set.first),
+                  ),
+                  const SizedBox(height: 12),
+                  if (!_isDurationMode)
+                    _stepperRow(
+                      onDecrement: isTimerActive ? null : () => _adjustReps(-1),
+                      onIncrement: isTimerActive ? null : () => _adjustReps(1),
+                      decrementTooltip: '-1 rep',
+                      incrementTooltip: '+1 rep',
+                      field: TextField(
+                        controller: _repsController,
+                        enabled: !isTimerActive,
+                        decoration: const InputDecoration(
+                          labelText: WorkoutStrings.repsLabel,
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    )
+                  else ...[
+                    Card(
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.5),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${_stopwatchSeconds}s',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                FilledButton.tonal(
+                                  onPressed: isTimerActive
+                                      ? null
+                                      : _toggleStopwatch,
+                                  child: Text(
+                                    _isStopwatchRunning
+                                        ? WorkoutStrings.stopwatchStop
+                                        : WorkoutStrings.stopwatchStart,
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: WorkoutStrings.stopwatchReset,
+                                  onPressed: isTimerActive
+                                      ? null
+                                      : _resetStopwatch,
+                                  icon: const Icon(Icons.refresh),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _stepperRow(
+                      onDecrement: isTimerActive
+                          ? null
+                          : () => _adjustDuration(-5),
+                      onIncrement: isTimerActive
+                          ? null
+                          : () => _adjustDuration(5),
+                      decrementTooltip: '-5s',
+                      incrementTooltip: '+5s',
+                      field: TextField(
+                        controller: _durationController,
+                        enabled: !isTimerActive,
+                        decoration: const InputDecoration(
+                          labelText: WorkoutStrings.durationSecondsLabel,
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
                   _stepperRow(
-                    onDecrement: isTimerActive ? null : () => _adjustReps(-1),
-                    onIncrement: isTimerActive ? null : () => _adjustReps(1),
-                    decrementTooltip: '-1 rep',
-                    incrementTooltip: '+1 rep',
+                    onDecrement: isTimerActive ? null : () => _adjustRir(-1),
+                    onIncrement: isTimerActive ? null : () => _adjustRir(1),
+                    decrementTooltip: '-1 RIR',
+                    incrementTooltip: '+1 RIR',
                     field: TextField(
-                      controller: _repsController,
+                      controller: _rirController,
                       enabled: !isTimerActive,
                       decoration: const InputDecoration(
-                        labelText: WorkoutStrings.repsLabel,
+                        labelText: WorkoutStrings.actualRirLabel,
                         border: OutlineInputBorder(),
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 12,
                         ),
                       ),
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                     ),
                   ),
                   ExpansionTile(
@@ -1604,6 +1975,26 @@ class _InProgressPanelState extends State<_InProgressPanel> {
         ),
       );
     }
+    if (set.actualRir != null && set.actualRir!.isNotEmpty) {
+      lines.add(
+        Text(
+          'RIR: ${set.actualRir}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall,
+        ),
+      );
+    }
+    if (set.actualDurationSeconds != null) {
+      lines.add(
+        Text(
+          'Duration: ${set.actualDurationSeconds}s',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall,
+        ),
+      );
+    }
     if (set.notes != null && set.notes!.isNotEmpty) {
       lines.add(
         Text(
@@ -1638,78 +2029,16 @@ class _InProgressPanelState extends State<_InProgressPanel> {
   }
 
   Future<void> _confirmComplete(BuildContext context) async {
-    final notesController = TextEditingController();
-    var rating = 0;
-    final feedback = await showDialog<_CompleteFeedback>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text(WorkoutStrings.completeConfirmTitle),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(WorkoutStrings.completeConfirmMessage),
-                    const SizedBox(height: 16),
-                    const Text(WorkoutStrings.ratingLabel),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        for (var i = 1; i <= 5; i++)
-                          IconButton(
-                            onPressed: () => setDialogState(() => rating = i),
-                            icon: Icon(
-                              i <= rating ? Icons.star : Icons.star_border,
-                            ),
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: notesController,
-                      decoration: const InputDecoration(
-                        labelText: WorkoutStrings.notesLabel,
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 3,
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text(WorkoutStrings.completeConfirmCancel),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    final raw = notesController.text.trim();
-                    Navigator.of(dialogContext).pop(
-                      _CompleteFeedback(
-                        notes: raw.isEmpty ? null : raw,
-                        rating: rating == 0 ? null : rating,
-                      ),
-                    );
-                  },
-                  child: const Text(WorkoutStrings.completeConfirmAction),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-    notesController.dispose();
-    if (feedback == null || !context.mounted) return;
+    final result = await PostWorkoutFeedbackModal.show(context);
+    if (result == null || !context.mounted) return;
     context.read<ActiveWorkoutBloc>().add(
       ActiveWorkoutCompletionRequested(
-        notes: feedback.notes,
-        clientFeedbackRating: feedback.rating,
+        notes: result.notes,
+        clientFeedbackRating: result.satisfactionRating,
+        effortRating: result.effortRating,
+        satisfactionRating: result.satisfactionRating,
+        painDiscomfortScore: result.painDiscomfortScore,
+        painNotes: result.painNotes,
       ),
     );
   }
@@ -1721,6 +2050,8 @@ Future<_SetFieldsResult?> _showSetFieldsSheet(
   int? initialReps,
   num? initialWeightKg,
   num? initialRpe,
+  num? initialRir,
+  int? initialDurationSeconds,
   String? initialNotes,
 }) {
   final repsController = TextEditingController(
@@ -1731,6 +2062,12 @@ Future<_SetFieldsResult?> _showSetFieldsSheet(
   );
   final rpeController = TextEditingController(
     text: initialRpe?.toString() ?? '',
+  );
+  final rirController = TextEditingController(
+    text: initialRir?.toString() ?? '',
+  );
+  final durationController = TextEditingController(
+    text: initialDurationSeconds?.toString() ?? '',
   );
   final notesController = TextEditingController(text: initialNotes ?? '');
 
@@ -1780,6 +2117,26 @@ Future<_SetFieldsResult?> _showSetFieldsSheet(
             ),
             const SizedBox(height: 8),
             TextField(
+              controller: rirController,
+              decoration: const InputDecoration(
+                labelText: WorkoutStrings.actualRirLabel,
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: durationController,
+              decoration: const InputDecoration(
+                labelText: WorkoutStrings.durationSecondsLabel,
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 8),
+            TextField(
               controller: notesController,
               decoration: const InputDecoration(
                 labelText: WorkoutStrings.notesLabel,
@@ -1795,6 +2152,10 @@ Future<_SetFieldsResult?> _showSetFieldsSheet(
                     reps: int.tryParse(repsController.text.trim()),
                     weightKg: num.tryParse(weightController.text.trim()),
                     rpe: num.tryParse(rpeController.text.trim()),
+                    rir: num.tryParse(rirController.text.trim()),
+                    durationSeconds: int.tryParse(
+                      durationController.text.trim(),
+                    ),
                     notes: notes.isEmpty ? null : notes,
                   ),
                 );
@@ -1977,6 +2338,65 @@ class _CompletedPanel extends StatelessWidget {
                   title: const Text(WorkoutStrings.completedAtLabel),
                   subtitle: Text(
                     WorkoutStrings.sessionTime(session.completedAt!),
+                  ),
+                ),
+              if (session.effortRating != null)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text(WorkoutStrings.effortRatingLabel),
+                  subtitle: Text('${session.effortRating} / 10'),
+                ),
+              if (session.satisfactionRating != null)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text(WorkoutStrings.satisfactionRatingLabel),
+                  subtitle: Text('${session.satisfactionRating} / 10'),
+                ),
+              if (session.painDiscomfortScore != null)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text(WorkoutStrings.painDiscomfortLabel),
+                  subtitle: Text('${session.painDiscomfortScore} / 10'),
+                ),
+              if (session.painNotes != null && session.painNotes!.isNotEmpty)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text(WorkoutStrings.painNotesLabel),
+                  subtitle: Text(session.painNotes!),
+                ),
+              if (session.painDiscomfortScore != null &&
+                  session.painDiscomfortScore! >= 4)
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.errorContainer.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          WorkoutStrings.highDiscomfortAlert,
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onErrorContainer,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               const Spacer(),

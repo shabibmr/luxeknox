@@ -62,6 +62,10 @@ final class ActiveWorkoutSetLogged extends ActiveWorkoutEvent {
     this.repsCompleted,
     this.weightLiftedKg,
     this.rpeScore,
+    this.targetRir,
+    this.actualRir,
+    this.targetDurationSeconds,
+    this.actualDurationSeconds,
     this.notes,
   });
 
@@ -69,6 +73,10 @@ final class ActiveWorkoutSetLogged extends ActiveWorkoutEvent {
   final int? repsCompleted;
   final num? weightLiftedKg;
   final num? rpeScore;
+  final num? targetRir;
+  final num? actualRir;
+  final int? targetDurationSeconds;
+  final int? actualDurationSeconds;
   final String? notes;
 
   @override
@@ -77,6 +85,10 @@ final class ActiveWorkoutSetLogged extends ActiveWorkoutEvent {
     repsCompleted,
     weightLiftedKg,
     rpeScore,
+    targetRir,
+    actualRir,
+    targetDurationSeconds,
+    actualDurationSeconds,
     notes,
   ];
 }
@@ -87,6 +99,10 @@ final class ActiveWorkoutSetEdited extends ActiveWorkoutEvent {
     this.reps,
     this.weightKg,
     this.rpe,
+    this.targetRir,
+    this.actualRir,
+    this.targetDurationSeconds,
+    this.actualDurationSeconds,
     this.notes,
   });
 
@@ -94,10 +110,24 @@ final class ActiveWorkoutSetEdited extends ActiveWorkoutEvent {
   final int? reps;
   final num? weightKg;
   final num? rpe;
+  final num? targetRir;
+  final num? actualRir;
+  final int? targetDurationSeconds;
+  final int? actualDurationSeconds;
   final String? notes;
 
   @override
-  List<Object?> get props => [setId, reps, weightKg, rpe, notes];
+  List<Object?> get props => [
+    setId,
+    reps,
+    weightKg,
+    rpe,
+    targetRir,
+    actualRir,
+    targetDurationSeconds,
+    actualDurationSeconds,
+    notes,
+  ];
 }
 
 final class ActiveWorkoutSetSkipped extends ActiveWorkoutEvent {
@@ -128,13 +158,28 @@ final class ActiveWorkoutCompletionRequested extends ActiveWorkoutEvent {
   const ActiveWorkoutCompletionRequested({
     this.notes,
     this.clientFeedbackRating,
+    this.effortRating,
+    this.satisfactionRating,
+    this.painDiscomfortScore,
+    this.painNotes,
   });
 
   final String? notes;
   final int? clientFeedbackRating;
+  final int? effortRating;
+  final int? satisfactionRating;
+  final int? painDiscomfortScore;
+  final String? painNotes;
 
   @override
-  List<Object?> get props => [notes, clientFeedbackRating];
+  List<Object?> get props => [
+    notes,
+    clientFeedbackRating,
+    effortRating,
+    satisfactionRating,
+    painDiscomfortScore,
+    painNotes,
+  ];
 }
 
 final class ActiveWorkoutReset extends ActiveWorkoutEvent {
@@ -481,6 +526,10 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
         repsCompleted: event.repsCompleted,
         weightLiftedKg: event.weightLiftedKg,
         rpeScore: event.rpeScore,
+        targetRir: event.targetRir,
+        actualRir: event.actualRir,
+        targetDurationSeconds: event.targetDurationSeconds,
+        actualDurationSeconds: event.actualDurationSeconds,
         notes: event.notes,
       ),
     );
@@ -579,6 +628,10 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
         reps: event.reps,
         weightKg: event.weightKg,
         rpe: event.rpe,
+        targetRir: event.targetRir,
+        actualRir: event.actualRir,
+        targetDurationSeconds: event.targetDurationSeconds,
+        actualDurationSeconds: event.actualDurationSeconds,
         notes: event.notes,
       ),
     );
@@ -678,6 +731,10 @@ class ActiveWorkoutBloc extends Bloc<ActiveWorkoutEvent, ActiveWorkoutState> {
         sessionId: current.session!.id,
         notes: event.notes,
         clientFeedbackRating: event.clientFeedbackRating,
+        effortRating: event.effortRating,
+        satisfactionRating: event.satisfactionRating,
+        painDiscomfortScore: event.painDiscomfortScore,
+        painNotes: event.painNotes,
       ),
     );
     result.fold(

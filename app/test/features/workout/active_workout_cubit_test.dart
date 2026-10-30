@@ -816,4 +816,102 @@ void main() {
       expect(bloc.state.loggedSets.single.weightLiftedKg, 55);
     },
   );
+
+  blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
+    'logs and edits set with RIR and timed duration (PTF-30)',
+    build: () {
+      when(() => startSession(any())).thenAnswer((_) async => Right(session()));
+      when(() => getPlan('3')).thenAnswer((_) async => Right(plan()));
+      when(() => logSet(any())).thenAnswer((_) async => Right(loggedSet()));
+      when(() => updateSet(any())).thenAnswer((_) async => Right(loggedSet()));
+      return buildBloc();
+    },
+    act: (bloc) async {
+      bloc.add(const ActiveWorkoutStarted(workoutPlanId: '3'));
+      await bloc.stream.firstWhere(
+        (s) => s.status == LoadStatus.success && s.session != null,
+      );
+      bloc.add(
+        const ActiveWorkoutSetLogged(
+          exerciseId: '100',
+          repsCompleted: 8,
+          weightLiftedKg: 50,
+          targetRir: 2,
+          actualRir: 2,
+          targetDurationSeconds: 45,
+          actualDurationSeconds: 40,
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s.loggedSets.length == 1);
+      bloc.add(
+        const ActiveWorkoutSetEdited(
+          setId: 'set1',
+          reps: 10,
+          weightKg: 55,
+          targetRir: 1,
+          actualRir: 1,
+          targetDurationSeconds: 60,
+          actualDurationSeconds: 58,
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s.status == LoadStatus.success);
+    },
+    verify: (bloc) {
+      final loggedCaptured =
+          verify(() => logSet(captureAny())).captured.single
+              as LogWorkoutSetParams;
+      expect(loggedCaptured.targetRir, 2);
+      expect(loggedCaptured.actualRir, 2);
+      expect(loggedCaptured.targetDurationSeconds, 45);
+      expect(loggedCaptured.actualDurationSeconds, 40);
+
+      final editedCaptured =
+          verify(() => updateSet(captureAny())).captured.single
+              as UpdateWorkoutSetParams;
+      expect(editedCaptured.targetRir, 1);
+      expect(editedCaptured.actualRir, 1);
+      expect(editedCaptured.targetDurationSeconds, 60);
+      expect(editedCaptured.actualDurationSeconds, 58);
+    },
+  );
+
+  blocTest<ActiveWorkoutBloc, ActiveWorkoutState>(
+    'complete forwards effort, satisfaction, pain score, and pain notes (PTF-30)',
+    build: () {
+      when(() => startSession(any())).thenAnswer((_) async => Right(session()));
+      when(() => getPlan('3')).thenAnswer((_) async => Right(plan()));
+      when(() => completeSession(any())).thenAnswer(
+        (_) async => Right(session(completedAt: DateTime.utc(2026, 1, 1, 1))),
+      );
+      return buildBloc();
+    },
+    act: (bloc) async {
+      bloc.add(const ActiveWorkoutStarted(workoutPlanId: '3'));
+      await bloc.stream.firstWhere(
+        (s) => s.status == LoadStatus.success && s.session != null,
+      );
+      bloc.add(
+        const ActiveWorkoutCompletionRequested(
+          notes: 'Great pump overall',
+          clientFeedbackRating: 5,
+          effortRating: 8,
+          satisfactionRating: 9,
+          painDiscomfortScore: 4,
+          painNotes: 'Left knee ache on deep squats',
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s.completed);
+    },
+    verify: (bloc) {
+      final captured =
+          verify(() => completeSession(captureAny())).captured.single
+              as CompleteWorkoutSessionParams;
+      expect(captured.notes, 'Great pump overall');
+      expect(captured.clientFeedbackRating, 5);
+      expect(captured.effortRating, 8);
+      expect(captured.satisfactionRating, 9);
+      expect(captured.painDiscomfortScore, 4);
+      expect(captured.painNotes, 'Left knee ache on deep squats');
+    },
+  );
 }

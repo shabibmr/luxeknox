@@ -56,7 +56,7 @@ Source Document: [Luxe knox pt client  file.pdf](./Luxe%20knox%20pt%20client%20%
 - [x] PTF-27 Member Onboarding / Screen 04: `ParQScreeningForm` & touch signature <!-- id: 27 -->
 - [x] PTF-28 Member Dossier: Health Clearance badge & "Lifestyle & Habits" consultation tab <!-- id: 28 -->
 - [x] PTF-29 Screen 28 (`WorkoutPlanBuilder`): Macrocycle Blueprint form step <!-- id: 29 -->
-- [ ] PTF-30 Screen 31 (`LiveWorkoutSessionTracker`): RIR stepper, timed sets stopwatch, Post-Workout Rating modal <!-- id: 30 -->
+- [x] PTF-30 Screen 31 (`LiveWorkoutSessionTracker`): RIR stepper, timed sets stopwatch, Post-Workout Rating modal <!-- id: 30 -->
 - [ ] PTF-31 Screen 45 (`PtProgressReviewScreen`): Review Card, delta table, badges, 3-way sign-off, PDF export <!-- id: 31 -->
 
 **Phase 9: Verification**
