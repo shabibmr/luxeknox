@@ -258,9 +258,7 @@ void main() {
           ..repsCompleted = 5
           ..weightLiftedKg = 120
           ..rpeScore = 9
-          ..targetRir = '1'
           ..actualRir = '0.5'
-          ..targetDurationSeconds = 0
           ..actualDurationSeconds = 25
           ..isCompleted = true
           ..notes = 'Near failure',
@@ -269,9 +267,9 @@ void main() {
       final domain = apiSet.toDomain();
 
       expect(domain.id, '300');
-      expect(domain.targetRir, '1');
+      expect(domain.targetRir, isNull);
       expect(domain.actualRir, '0.5');
-      expect(domain.targetDurationSeconds, 0);
+      expect(domain.targetDurationSeconds, isNull);
       expect(domain.actualDurationSeconds, 25);
       expect(domain.notes, 'Near failure');
     });

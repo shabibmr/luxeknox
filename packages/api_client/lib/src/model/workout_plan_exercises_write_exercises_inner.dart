@@ -19,7 +19,9 @@ part 'workout_plan_exercises_write_exercises_inner.g.dart';
 /// * [targetWeightKg] 
 /// * [restSeconds] 
 /// * [restBetweenExercisesSeconds] 
-/// * [notes] 
+/// * [targetRir] - Reps in reserve. At most one decimal place. On update, an omitted field is left unchanged. Null or blank stores empty.
+/// * [targetDurationSeconds] - Timed-set duration in seconds. On update, an omitted field is left unchanged. Null or blank stores empty.
+/// * [notes] - On update, an omitted field is left unchanged. Null or blank stores empty.
 @BuiltValue()
 abstract class WorkoutPlanExercisesWriteExercisesInner implements Built<WorkoutPlanExercisesWriteExercisesInner, WorkoutPlanExercisesWriteExercisesInnerBuilder> {
   @BuiltValueField(wireName: r'exercise_id')
@@ -54,6 +56,7 @@ abstract class WorkoutPlanExercisesWriteExercisesInner implements Built<WorkoutP
   @BuiltValueField(wireName: r'target_duration_seconds')
   int? get targetDurationSeconds;
 
+  /// On update, an omitted field is left unchanged. Null or blank stores empty.
   @BuiltValueField(wireName: r'notes')
   String? get notes;
 
