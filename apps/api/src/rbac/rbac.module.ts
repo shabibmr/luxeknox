@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
 import { PlatformModule } from '../platform/platform.module';
 import { PermissionCache } from './permission-cache';
 import { PermissionController } from './permission.controller';
@@ -20,10 +19,8 @@ import { RoleService } from './role.service';
     PermissionGuard,
     RoleService,
     PermissionService,
-    {
-      provide: APP_GUARD,
-      useClass: PermissionGuard,
-    },
+    // PermissionGuard is registered as a global APP_GUARD in AuthModule, right
+    // after AuthGuard, so the two always run in the right order.
   ],
   exports: [PermissionCache, PermissionGuard, RoleRepository, PermissionRepository],
 })
