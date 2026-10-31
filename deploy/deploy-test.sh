@@ -42,7 +42,8 @@ if [ "$TARGET" != "--app-only" ]; then
   pnpm install --frozen-lockfile
   pnpm --filter api build
 
-  cp "$TEST_API_DIR/.env" apps/api/.env
+  # Migrate/seed read the test env from the process environment (dotenv never overrides
+  # already-set vars), so the developer's local apps/api/.env is left untouched.
   if [ "${RESET_DB:-0}" = "1" ]; then
     echo "==> Resetting luxeknox_test"
     (set -a; . "$TEST_API_DIR/.env"; set +a
@@ -50,10 +51,10 @@ if [ "$TARGET" != "--app-only" ]; then
        -e "DROP DATABASE IF EXISTS luxeknox_test; CREATE DATABASE luxeknox_test CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci")
   fi
   echo "==> Migrating luxeknox_test"
-  pnpm --filter api db:migrate
+  (set -a; . "$TEST_API_DIR/.env"; set +a; pnpm --filter api db:migrate)
   if [ "${SEED:-0}" = "1" ]; then
     echo "==> Seeding luxeknox_test"
-    pnpm --filter api db:seed
+    (set -a; . "$TEST_API_DIR/.env"; set +a; pnpm --filter api db:seed)
   fi
 
   echo "==> Syncing API to $TEST_API_DIR"
@@ -73,11 +74,11 @@ fi
 
 if [ "$TARGET" != "--api-only" ]; then
   command -v flutter >/dev/null || { echo "error: flutter not found on PATH" >&2; exit 1; }
-  echo "==> Building Flutter web (base /test/, API https://api.luxeknox.com/test)"
+  echo "==> Building Flutter web (base /test/, API https://api.luxeknox.com/test/v1)"
   pushd app >/dev/null
   flutter pub get
   flutter build web --release --base-href /test/ \
-    --dart-define=API_BASE_URL=https://api.luxeknox.com/test \
+    --dart-define=API_BASE_URL=https://api.luxeknox.com/test/v1 \
     --dart-define=ENV=staging
   popd >/dev/null
 
